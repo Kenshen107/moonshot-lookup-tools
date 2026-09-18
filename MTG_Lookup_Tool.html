@@ -7506,6 +7506,18 @@
         // first instead of always re-walking the whole chain from the top.
         let moonshotLastWorkingMethod = null; // null = direct, otherwise an index into MOONSHOT_PROXIES
 
+        // A stock check fires off dozens of fetchMoonshotJSON calls at once
+        // (one per candidate product, then one per available variant) via
+        // Promise.all. If the assumed-good method above stops working
+        // mid-session, every one of those calls would otherwise discover
+        // that independently and in parallel - a thundering herd all
+        // re-walking direct + both proxies (each retried, each time-boxed)
+        // at the same moment, which is exactly the kind of burst that gets
+        // a free CORS proxy to rate-limit or slow down further. This holds
+        // the one in-flight rediscovery so concurrent callers wait on it and
+        // reuse its answer instead of each re-walking the chain themselves.
+        let moonshotDiscoveryPromise = null;
+
         async function fetchWithTimeout(url, timeoutMs) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -7537,27 +7549,52 @@
         }
 
         async function fetchMoonshotJSON(url) {
-            // Try whatever method worked last time first - most sessions keep
-            // using the same network path, so this avoids re-paying the cost
-            // of failed attempts on every single lookup. Proxy indices are
-            // derived from MOONSHOT_PROXIES itself (not hardcoded) so this
-            // never drifts out of sync again if a proxy is added/removed -
-            // it previously hardcoded a 3rd proxy index that no longer
-            // existed, throwing "buildUrl is not a function" on every check
-            // that fell through to it.
-            const order = [moonshotLastWorkingMethod, null, ...MOONSHOT_PROXIES.map((_, i) => i)]
-                .filter((v, i, arr) => arr.indexOf(v) === i); // de-dupe, preserve order
+            // Fast path: try whatever method worked last time - most sessions
+            // keep using the same network path, so this avoids re-paying the
+            // cost of a full walk on every single lookup.
+            const fastResult = await tryMethodWithRetry(url, moonshotLastWorkingMethod);
+            if (fastResult !== undefined) return fastResult;
 
+            // The assumed-good method just failed - rediscover which method
+            // (if any) currently works. Concurrent callers share this one
+            // walk instead of each independently re-walking direct + both
+            // proxies (see the comment on moonshotDiscoveryPromise above).
+            if (!moonshotDiscoveryPromise) {
+                moonshotDiscoveryPromise = discoverMoonshotMethod(url).finally(() => {
+                    moonshotDiscoveryPromise = null;
+                });
+                const { methodIndex, result } = await moonshotDiscoveryPromise;
+                if (methodIndex === undefined) {
+                    console.warn('All Moonshot fetch attempts (direct + proxies) failed for', url);
+                    return null;
+                }
+                return result; // this call's own URL is what discovery just fetched - reuse it
+            }
+
+            const { methodIndex } = await moonshotDiscoveryPromise;
+            if (methodIndex === undefined) {
+                console.warn('All Moonshot fetch attempts (direct + proxies) failed for', url);
+                return null;
+            }
+            const result = await tryMethodWithRetry(url, methodIndex);
+            return result === undefined ? null : result;
+        }
+
+        // Proxy indices are derived from MOONSHOT_PROXIES itself (not
+        // hardcoded) so this never drifts out of sync if a proxy is
+        // added/removed - it previously hardcoded a 3rd proxy index that no
+        // longer existed, throwing "buildUrl is not a function" on every
+        // check that fell through to it.
+        async function discoverMoonshotMethod(url) {
+            const order = [null, ...MOONSHOT_PROXIES.map((_, i) => i)];
             for (const methodIndex of order) {
                 const result = await tryMethodWithRetry(url, methodIndex);
                 if (result !== undefined) {
                     moonshotLastWorkingMethod = methodIndex;
-                    return result;
+                    return { methodIndex, result };
                 }
             }
-
-            console.warn('All Moonshot fetch attempts (direct + proxies) failed for', url);
-            return null;
+            return { methodIndex: undefined, result: undefined };
         }
 
         // Pull condition-level availability (NM/LP/MP/HP/D/etc.) for one product
