@@ -1777,6 +1777,55 @@
             border-color: var(--brand);
         }
 
+        /* Prev/Next through whatever list the modal was opened from (Set
+           Primer's currently displayed cards, in their on-screen order).
+           Fixed to the viewport rather than the modal itself so they stay
+           put beside the card regardless of the modal's own scroll
+           position. Touch devices get the swipe gesture below instead -
+           these are hidden there since a floating button just adds visual
+           noise on a screen already showing a swipeable card. */
+        .card-modal-nav {
+            display: none;
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--bg-inset);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-size: 1.5em;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-modal-nav.visible {
+            display: flex;
+        }
+
+        .card-modal-nav:hover:not(:disabled) {
+            background: #333;
+            border-color: var(--brand);
+        }
+
+        .card-modal-nav:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .card-modal-nav-prev { left: 16px; }
+        .card-modal-nav-next { right: 16px; }
+
+        @media (hover: none) {
+            .card-modal-nav { display: none !important; }
+        }
+
         .card-modal-body {
             display: grid;
             grid-template-columns: 240px 1fr;
@@ -4083,10 +4132,12 @@
 
     <!-- Set Primer card detail popup -->
     <div class="card-modal-overlay" id="cardModalOverlay" onclick="if (event.target === this) closeCardModal()">
+        <button type="button" class="card-modal-nav card-modal-nav-prev" id="cardModalPrev" aria-label="Previous card" onclick="navigateCardModal(-1)">‹</button>
         <div class="card-modal">
             <button type="button" class="card-modal-close" aria-label="Close card details" onclick="closeCardModal()">✕</button>
             <div class="card-modal-body" id="cardModalBody"></div>
         </div>
+        <button type="button" class="card-modal-nav card-modal-nav-next" id="cardModalNext" aria-label="Next card" onclick="navigateCardModal(1)">›</button>
     </div>
 
     <!-- Toast notification -->
@@ -4987,6 +5038,12 @@
         let setPrimerTypeFilter = new Set(); // selected main card types (e.g. "Creature", "Instant") - empty means no filter
         let setPrimerBonusSheets = []; // the companion bonus-sheet sets merged into the currently-loaded set, if any
 
+        // The cards actually on screen right now, in on-screen order -
+        // whichever sort/group mode and filters are active. Rebuilt on every
+        // render so the card popup's Prev/Next (arrows + swipe) walks the
+        // same order you're browsing, not the raw fetch order.
+        let setPrimerDisplayOrder = [];
+
         async function loadSetPrimer(set) {
             const resultsDiv = document.getElementById('setPrimerResults');
             resultsDiv.innerHTML = `<div class="loading">Loading ${set.name}...</div>`;
@@ -5139,6 +5196,7 @@
             const resultsDiv = document.getElementById('setPrimerResults');
             if (cards.length === 0) {
                 resultsDiv.innerHTML = `<div class="error">No cards found for this set (it may be a token-only or memorabilia set).</div>`;
+                setPrimerDisplayOrder = [];
                 return;
             }
 
@@ -5208,6 +5266,7 @@
             if (displayCards.length === 0) {
                 html += `<div class="error">No cards in this set match the current filters.</div>`;
                 resultsDiv.innerHTML = html;
+                setPrimerDisplayOrder = [];
                 return;
             }
 
@@ -5219,9 +5278,10 @@
                 const priced = [...displayCards].sort((a, b) =>
                     (parseFloat(b.prices && b.prices.usd) || 0) - (parseFloat(a.prices && a.prices.usd) || 0)
                 );
+                setPrimerDisplayOrder = priced;
                 html += `
                     <div class="card-tile-grid">
-                        ${priced.map((c, i) => buildCardTileHTML(c, `#${i + 1}`)).join('')}
+                        ${priced.map((c, i) => buildCardTileHTML(c, `#${i + 1}`, i)).join('')}
                     </div>
                 `;
             } else if (setPrimerGroupMode === 'popular') {
@@ -5237,10 +5297,12 @@
                     .sort((a, b) => a.edhrec_rank - b.edhrec_rank);
                 if (popular.length === 0) {
                     html += `<div class="error">No popularity data for this set yet - it may be too new or too niche for EDHREC to have ranked anything in it.</div>`;
+                    setPrimerDisplayOrder = [];
                 } else {
+                    setPrimerDisplayOrder = popular;
                     html += `
                         <div class="card-tile-grid">
-                            ${popular.map((c, i) => buildCardTileHTML(c, `#${i + 1}`)).join('')}
+                            ${popular.map((c, i) => buildCardTileHTML(c, `#${i + 1}`, i)).join('')}
                         </div>
                     `;
                 }
@@ -5257,10 +5319,12 @@
                     .sort((a, b) => new Date(b.date) - new Date(a.date));
                 if (dated.length === 0) {
                     html += `<div class="error">No spoiler or release date data available for this set.</div>`;
+                    setPrimerDisplayOrder = [];
                 } else {
+                    setPrimerDisplayOrder = dated.map(d => d.card);
                     html += `
                         <div class="card-tile-grid">
-                            ${dated.map(d => buildCardTileHTML(d.card, new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))).join('')}
+                            ${dated.map((d, i) => buildCardTileHTML(d.card, new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), i)).join('')}
                         </div>
                     `;
                 }
@@ -5269,6 +5333,13 @@
                 const order = setPrimerGroupMode === 'color' ? COLOR_GROUP_ORDER : RARITY_DISPLAY_ORDER;
                 const labels = setPrimerGroupMode === 'color' ? COLOR_GROUP_LABELS : RARITY_LABELS;
                 const colors = setPrimerGroupMode === 'color' ? COLOR_GROUP_COLORS : RARITY_COLORS;
+
+                // Flattened in the same order the sections below render in,
+                // so the popup's Prev/Next walks top-to-bottom through the
+                // sections exactly as they appear on screen.
+                setPrimerDisplayOrder = [];
+                order.forEach(key => { if (groups[key]) setPrimerDisplayOrder.push(...groups[key]); });
+                setPrimerDisplayOrder.forEach((c, i) => { c._displayIdx = i; });
 
                 order.forEach(key => {
                     const list = groups[key];
@@ -5281,7 +5352,7 @@
                                     const imgUrl = getCardImageSmall(c);
                                     const safeName = c.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                                     return `
-                                        <div class="primer-card-tile" onclick="openCardModal(setPrimerCards[${c._primerIdx}])">
+                                        <div class="primer-card-tile" onclick="openCardModal(setPrimerDisplayOrder[${c._displayIdx}], setPrimerDisplayOrder, ${c._displayIdx})">
                                             ${imgUrl
                                                 ? `<img src="${imgUrl}" alt="${safeName}" loading="lazy">`
                                                 : `<div class="primer-card-noimg">${c.name}</div>`}
@@ -5318,8 +5389,41 @@
         // tiles. Shows image, oracle text, legality, printings, and Moonshot
         // stock right in the popup; "Full Lookup" is still one click away for
         // pricing/rulings if that's ever needed.
-        function openCardModal(card) {
+        // Prev/Next state for the modal - set whenever openCardModal is given
+        // a navList (the on-screen order of whatever grid it was opened
+        // from) and cleared otherwise, so e.g. clicking into "All Printings"
+        // (which reopens the modal on a different card with no navList)
+        // correctly drops the arrows/swipe instead of leaving them wired to
+        // the list you browsed in from.
+        let cardModalNavList = null;
+        let cardModalNavIndex = -1;
+
+        function updateCardModalNavButtons() {
+            const prevBtn = document.getElementById('cardModalPrev');
+            const nextBtn = document.getElementById('cardModalNext');
+            if (!prevBtn || !nextBtn) return;
+            const navigable = !!(cardModalNavList && cardModalNavList.length > 1 && cardModalNavIndex >= 0);
+            prevBtn.classList.toggle('visible', navigable);
+            nextBtn.classList.toggle('visible', navigable);
+            prevBtn.disabled = !navigable || cardModalNavIndex <= 0;
+            nextBtn.disabled = !navigable || cardModalNavIndex >= cardModalNavList.length - 1;
+        }
+
+        // Moves to the adjacent card in whichever list the modal was opened
+        // from (Set Primer's currently displayed cards, in their on-screen
+        // order) - shared by the arrow buttons, arrow keys, and swipe.
+        function navigateCardModal(delta) {
+            if (!cardModalNavList) return;
+            const newIndex = cardModalNavIndex + delta;
+            const card = cardModalNavList[newIndex];
             if (!card) return;
+            openCardModal(card, cardModalNavList, newIndex);
+        }
+
+        function openCardModal(card, navList, navIndex) {
+            if (!card) return;
+            cardModalNavList = navList || null;
+            cardModalNavIndex = (cardModalNavList && typeof navIndex === 'number') ? navIndex : -1;
             const overlay = document.getElementById('cardModalOverlay');
             const body = document.getElementById('cardModalBody');
             const imageUrl = getCardImageUrl(card);
@@ -5365,6 +5469,7 @@
                 </div>
             `;
             overlay.classList.add('open');
+            updateCardModalNavButtons();
 
             quickCheckMoonshotStockInto('cardModalMoonshot', card.name, setCode, setName);
             loadCardModalPrintings(card);
@@ -5410,6 +5515,9 @@
         function closeCardModal() {
             const overlay = document.getElementById('cardModalOverlay');
             if (overlay) overlay.classList.remove('open');
+            cardModalNavList = null;
+            cardModalNavIndex = -1;
+            updateCardModalNavButtons();
         }
 
         // Same popup, but for callers that only have a card NAME on hand
@@ -5449,8 +5557,51 @@
         }
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeCardModal();
+            if (e.key === 'Escape') { closeCardModal(); return; }
+
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                // Only hijack the arrow keys for card-to-card navigation
+                // when the modal is actually open on a navigable list, and
+                // never while the user is typing in a field (a text input
+                // elsewhere on the page could easily have focus at the same
+                // time the modal is up).
+                const overlay = document.getElementById('cardModalOverlay');
+                if (!overlay || !overlay.classList.contains('open') || !cardModalNavList) return;
+                const tag = (e.target && e.target.tagName || '').toLowerCase();
+                if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+                e.preventDefault();
+                navigateCardModal(e.key === 'ArrowLeft' ? -1 : 1);
+            }
         });
+
+        // Swipe through cardModalNavList on touch devices - left advances
+        // (next), right goes back (previous), same direction convention as
+        // swiping through photos. Listens on the modal body itself (not the
+        // whole overlay) so a swipe that starts on the backdrop doesn't
+        // fire, and stays a horizontal-only gesture (checked against the
+        // vertical delta) so it doesn't fight the body's own vertical
+        // scrolling. Attached once at load - cardModalBody's innerHTML gets
+        // replaced on every card, but the element itself is never recreated.
+        (function initCardModalSwipe() {
+            const SWIPE_THRESHOLD_PX = 50;
+            let startX = null, startY = null;
+            const body = document.getElementById('cardModalBody');
+            if (!body) return;
+            body.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }, { passive: true });
+            body.addEventListener('touchend', (e) => {
+                if (startX === null || !cardModalNavList) { startX = null; startY = null; return; }
+                const touch = e.changedTouches[0];
+                const dx = touch.clientX - startX;
+                const dy = touch.clientY - startY;
+                startX = null; startY = null;
+                if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) < Math.abs(dy)) return;
+                navigateCardModal(dx < 0 ? 1 : -1);
+            }, { passive: true });
+        })();
 
         // ============== JUDGE QUICK-REFERENCE ==============
         // The card lookup below (oracle text/rulings/legality) only answers
@@ -6203,7 +6354,12 @@
         // lists) instead of a new Scryfall tab, so browsing a list of staples
         // or recs never navigates away from where you were.
         const cardTileDataById = {}; // card.id -> full card object, for the popup's onclick
-        function buildCardTileHTML(card, rankLabel) {
+        // navIndex is this card's position in setPrimerDisplayOrder - passed
+        // only by Set Primer's price/popular/newest modes, whose flat
+        // ranked lists use this same tile. Every other caller (Commander
+        // Staples, Value Vintage, Discovery, ...) omits it and gets the
+        // plain non-navigable popup, unchanged.
+        function buildCardTileHTML(card, rankLabel, navIndex) {
             const imgUrl = getCardImageSmall(card);
             const usd = card.prices && card.prices.usd;
             const safeName = card.name.replace(/'/g, "\\'");
@@ -6212,7 +6368,9 @@
                 : `<span class="card-tile-price na">N/A</span>`;
             const tileId = `tile-${card.id}`;
             cardTileDataById[card.id] = card;
-            const openCard = `openCardModal(cardTileDataById['${card.id}'])`;
+            const openCard = typeof navIndex === 'number'
+                ? `openCardModal(cardTileDataById['${card.id}'], setPrimerDisplayOrder, ${navIndex})`
+                : `openCardModal(cardTileDataById['${card.id}'])`;
 
             return `
                 <div class="card-tile" id="${tileId}">
