@@ -79,6 +79,7 @@
     button.small { padding: 6px 12px; font-size: 0.85em; }
 
     .setup-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+    .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 0.9em; color: var(--text-secondary); cursor: pointer; }
 
     .card-checklist {
         max-height: 320px;
@@ -123,23 +124,24 @@
 
     .flip-area {
         display: grid;
-        grid-template-columns: 260px 1fr;
+        grid-template-columns: 340px 1fr;
         gap: 24px;
         align-items: start;
     }
 
     .flip-card-img {
         width: 100%;
-        max-width: 260px;
+        max-width: 340px;
         border-radius: var(--radius-lg);
         border: 1px solid var(--border);
         box-shadow: var(--shadow-md);
         cursor: zoom-in;
     }
+    .zoom-hint { display: block; text-align: center; color: var(--text-muted); font-size: 0.8em; margin-top: 6px; }
 
     .flip-placeholder {
         width: 100%;
-        max-width: 260px;
+        max-width: 340px;
         aspect-ratio: 5 / 7;
         border: 2px dashed var(--border);
         border-radius: var(--radius-lg);
@@ -152,9 +154,9 @@
         font-size: 0.9em;
     }
 
-    .flip-detail h3 { color: var(--text-heading); margin-bottom: 6px; font-size: 1.4em; }
-    .flip-detail .type-line { color: var(--text-secondary); margin-bottom: 12px; font-style: italic; }
-    .flip-detail .oracle-text { white-space: pre-wrap; line-height: 1.5; margin-bottom: 16px; }
+    .flip-detail h3 { color: var(--text-heading); margin-bottom: 8px; font-size: 1.7em; }
+    .flip-detail .type-line { color: var(--text-secondary); margin-bottom: 14px; font-style: italic; font-size: 1.05em; }
+    .flip-detail .oracle-text { white-space: pre-wrap; line-height: 1.6; margin-bottom: 16px; font-size: 1.15em; }
     .flip-detail .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
     .ongoing-tag {
@@ -233,7 +235,7 @@
 
     @media (max-width: 700px) {
         .flip-area { grid-template-columns: 1fr; }
-        .flip-card-img, .flip-placeholder { max-width: 220px; margin: 0 auto; }
+        .flip-card-img, .flip-placeholder { max-width: 300px; margin: 0 auto; }
     }
 </style>
 </head>
@@ -248,6 +250,10 @@
             <button id="loadSchemesBtn" onclick="loadSchemes()">Load All Schemes from Scryfall</button>
             <button class="secondary small" onclick="toggleAll(true)">Select All</button>
             <button class="secondary small" onclick="toggleAll(false)">Select None</button>
+            <label class="checkbox-label">
+                <input type="checkbox" id="includeFunnyCheckbox">
+                Include joke / Un-set schemes
+            </label>
             <span id="loadStatus" class="empty-note"></span>
         </div>
         <div id="checklistWrap" class="hidden">
@@ -331,7 +337,8 @@
         btn.disabled = true;
         status.textContent = 'Loading schemes from Scryfall...';
         try {
-            let url = `${API_BASE}/cards/search?q=type%3Ascheme+-set_type%3Afunny&order=name&unique=cards`;
+            const includeFunny = document.getElementById('includeFunnyCheckbox').checked;
+            let url = `${API_BASE}/cards/search?q=type%3Ascheme${includeFunny ? '' : '+-set_type%3Afunny'}&order=name&unique=cards`;
             let cards = [];
             while (url) {
                 const res = await fetch(url);
@@ -423,7 +430,7 @@
         const img = imageUrl(card);
 
         document.getElementById('flipImgWrap').innerHTML = img
-            ? `<img class="flip-card-img" src="${img}" alt="${escapeHtml(card.name)}" onclick="openLightbox('${img.replace(/'/g,"\\'")}','${escapeHtml(card.name)}')">`
+            ? `<img class="flip-card-img" src="${img}" alt="${escapeHtml(card.name)}" onclick="openLightbox('${img.replace(/'/g,"\\'")}','${escapeHtml(card.name)}')"><span class="zoom-hint">Tap card to enlarge</span>`
             : `<div class="flip-placeholder">${escapeHtml(card.name)}</div>`;
 
         document.getElementById('flipDetail').innerHTML = `

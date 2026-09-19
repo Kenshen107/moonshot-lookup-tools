@@ -83,6 +83,7 @@
     button.chaos-btn:hover { background: #ff7373; }
 
     .setup-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+    .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 0.9em; color: var(--text-secondary); cursor: pointer; }
     .empty-note { color: var(--text-muted); font-style: italic; }
 
     input[type="text"] {
@@ -97,8 +98,8 @@
 
     .players-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 24px;
     }
 
     .player-card {
@@ -129,9 +130,9 @@
        reads correctly without turning the phone. */
     .plane-frame {
         width: 100%;
-        max-width: 300px;
+        max-width: 420px;
         aspect-ratio: 7 / 5;
-        margin: 0 auto 10px;
+        margin: 0 auto 6px;
         position: relative;
         overflow: hidden;
         border-radius: var(--radius-lg);
@@ -139,6 +140,7 @@
         box-shadow: var(--shadow-md);
         background: var(--bg-panel-raised);
     }
+    .zoom-hint { display: block; text-align: center; color: var(--text-muted); font-size: 0.8em; margin-bottom: 10px; }
     .plane-frame.phenom-frame { border-color: var(--color-chaos); box-shadow: 0 0 16px rgba(224, 92, 92, 0.35); }
     .plane-frame img {
         position: absolute;
@@ -161,18 +163,18 @@
         font-size: 0.85em;
     }
 
-    .plane-name { text-align: center; font-weight: bold; color: var(--text-heading); margin-bottom: 2px; }
-    .plane-type { text-align: center; color: var(--text-secondary); font-size: 0.8em; font-style: italic; margin-bottom: 8px; }
+    .plane-name { text-align: center; font-weight: bold; color: var(--text-heading); margin-bottom: 3px; font-size: 1.2em; }
+    .plane-type { text-align: center; color: var(--text-secondary); font-size: 0.9em; font-style: italic; margin-bottom: 10px; }
     .plane-oracle-text {
         white-space: pre-wrap;
-        font-size: 0.85em;
-        line-height: 1.4;
+        font-size: 1.05em;
+        line-height: 1.55;
         background: var(--bg-panel);
         border: 1px solid var(--border-subtle);
         border-radius: var(--radius-sm);
-        padding: 10px;
+        padding: 12px;
         margin-bottom: 10px;
-        max-height: 140px;
+        max-height: 240px;
         overflow-y: auto;
     }
 
@@ -279,6 +281,7 @@
     }
     .lightbox-overlay.open { display: flex; }
     .lightbox-overlay img { max-width: 90vw; max-height: 90vh; border-radius: var(--radius-lg); }
+    .lightbox-overlay img.rotate-90 { transform: rotate(90deg); max-width: 90vh; max-height: 90vw; }
 
     .back-link { display: block; text-align: center; margin-top: 20px; color: var(--color-link); }
 </style>
@@ -292,6 +295,10 @@
         <h2>1. Load Cards &amp; Add Players</h2>
         <div class="setup-row">
             <button id="loadBtn" onclick="loadPlaneCards()">Load All Planes &amp; Phenomena from Scryfall</button>
+            <label class="checkbox-label">
+                <input type="checkbox" id="includeFunnyCheckbox">
+                Include joke / Un-set cards
+            </label>
             <span id="loadStatus" class="empty-note"></span>
         </div>
         <div class="setup-row hidden" id="addPlayerRow">
@@ -327,7 +334,8 @@
         btn.disabled = true;
         status.textContent = 'Loading planes and phenomena from Scryfall...';
         try {
-            let url = `${API_BASE}/cards/search?q=(type%3Aplane+or+type%3Aphenomenon)+-set_type%3Afunny&order=name&unique=cards`;
+            const includeFunny = document.getElementById('includeFunnyCheckbox').checked;
+            let url = `${API_BASE}/cards/search?q=(type%3Aplane+or+type%3Aphenomenon)${includeFunny ? '' : '+-set_type%3Afunny'}&order=name&unique=cards`;
             let cards = [];
             while (url) {
                 const res = await fetch(url);
@@ -511,6 +519,7 @@
                             ? `<img src="${phenomImg}" alt="${escapeHtml(phenom.name)}" onclick="openLightbox('${phenomImg.replace(/'/g,"\\'")}','${escapeHtml(phenom.name)}')">`
                             : `<div class="plane-placeholder-text">${escapeHtml(phenom.name)}</div>`}
                     </div>
+                    ${phenomImg ? '<span class="zoom-hint">Tap card to enlarge</span>' : ''}
                     <span class="phenom-tag">Phenomenon Revealed</span>
                     <div class="plane-name">${escapeHtml(phenom.name)}</div>
                     <div class="plane-type">${escapeHtml(phenom.type_line)}</div>
@@ -530,6 +539,7 @@
                                 : `<div class="plane-placeholder-text">${escapeHtml(p.current.name)}</div>`)
                             : `<div class="plane-placeholder-text">No active plane yet</div>`}
                     </div>
+                    ${(p.current && img) ? '<span class="zoom-hint">Tap card to enlarge</span>' : ''}
                     ${p.current ? `
                         <div class="plane-name">${escapeHtml(p.current.name)}</div>
                         <div class="plane-type">${escapeHtml(p.current.type_line)}</div>
@@ -573,8 +583,10 @@
     }
 
     function openLightbox(src, alt) {
-        document.getElementById('lightboxImg').src = src;
-        document.getElementById('lightboxImg').alt = alt;
+        const img = document.getElementById('lightboxImg');
+        img.src = src;
+        img.alt = alt;
+        img.classList.add('rotate-90');
         document.getElementById('lightboxOverlay').classList.add('open');
     }
     function closeLightbox() {
