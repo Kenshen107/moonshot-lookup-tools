@@ -24,6 +24,7 @@
         --color-success: #7ee787;
         --color-link: #6cb2ff;
         --color-ongoing: #d9a441;
+        --color-high: #e05c5c;
         --radius-sm: 4px;
         --radius-md: 8px;
         --radius-lg: 12px;
@@ -82,34 +83,123 @@
     .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 0.9em; color: var(--text-secondary); cursor: pointer; }
 
     .card-checklist {
-        max-height: 320px;
+        max-height: 420px;
         overflow-y: auto;
         border: 1px solid var(--border);
         border-radius: var(--radius-sm);
         background: var(--bg-inset);
         padding: 8px;
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 4px;
     }
 
-    .card-checklist label {
+    .scheme-row {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         padding: 6px 8px;
         border-radius: var(--radius-sm);
         cursor: pointer;
-        font-size: 0.9em;
     }
-    .card-checklist label:hover { background: var(--bg-panel-raised); }
+    .scheme-row:hover { background: var(--bg-panel-raised); }
+    .scheme-thumb {
+        width: 36px;
+        height: 50px;
+        object-fit: cover;
+        object-position: top center;
+        border-radius: 3px;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+        cursor: zoom-in;
+    }
+    .scheme-thumb-blank {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-panel-raised);
+        color: var(--text-muted);
+        font-size: 0.75em;
+    }
+    .scheme-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+    .scheme-name {
+        font-size: 0.9em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .scheme-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+    .tier-badge {
+        font-size: 0.65em;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .tier-low { background: rgba(126, 231, 135, 0.12); color: var(--color-success); border: 1px solid var(--color-success); }
+    .tier-medium { background: rgba(217, 164, 65, 0.12); color: var(--color-ongoing); border: 1px solid var(--color-ongoing); }
+    .tier-high { background: rgba(224, 92, 92, 0.12); color: var(--color-high); border: 1px solid var(--color-high); }
     .card-checklist .badge {
-        font-size: 0.72em;
+        font-size: 0.65em;
         color: var(--color-ongoing);
         border: 1px solid var(--color-ongoing);
         border-radius: 3px;
-        padding: 0 4px;
-        margin-left: auto;
+        padding: 1px 6px;
+    }
+
+    .preset-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+    .preset-row .preset-label { color: var(--text-secondary); font-size: 0.85em; margin-right: 4px; }
+    button.preset-btn { padding: 8px 14px; font-size: 0.85em; }
+    button.theme-btn { background: var(--bg-panel-raised); }
+    button.theme-btn:hover { background: #444; }
+
+    .preview-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .preview-overlay.open { display: flex; }
+    .preview-panel {
+        background: var(--bg-panel);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg);
+        max-width: 640px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 20px;
+        position: relative;
+        box-shadow: var(--shadow-lg);
+    }
+    .preview-close { position: absolute; top: 12px; right: 12px; width: auto; }
+    .preview-body { display: grid; grid-template-columns: 220px 1fr; gap: 20px; margin-bottom: 16px; }
+    .preview-img { width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border); }
+    .preview-info h3 { font-size: 1.4em; margin-bottom: 6px; color: var(--text-heading); }
+    .preview-info .type-line { color: var(--text-secondary); font-style: italic; margin-bottom: 8px; }
+    .preview-info .oracle-text { white-space: pre-wrap; line-height: 1.5; margin: 10px 0; }
+    .theme-tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+    .theme-chip-static {
+        font-size: 0.72em;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: var(--bg-panel-raised);
+        color: var(--text-secondary);
+    }
+    .preview-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 12px;
+    }
+    @media (max-width: 600px) {
+        .preview-body { grid-template-columns: 1fr; }
     }
 
     .status-bar {
@@ -257,6 +347,22 @@
             <span id="loadStatus" class="empty-note"></span>
         </div>
         <div id="checklistWrap" class="hidden">
+            <div class="preset-row">
+                <span class="preset-label">Power presets:</span>
+                <button class="secondary small preset-btn" onclick="applyPowerPreset('Low')">Low Power</button>
+                <button class="secondary small preset-btn" onclick="applyPowerPreset('Medium')">Medium Power</button>
+                <button class="secondary small preset-btn" onclick="applyPowerPreset('High')">High Power</button>
+            </div>
+            <div class="preset-row">
+                <span class="preset-label">Themed decks:</span>
+                <button class="theme-btn small preset-btn" onclick="applyThemePreset('damage')">Damage &amp; Removal</button>
+                <button class="theme-btn small preset-btn" onclick="applyThemePreset('cardadv')">Card Advantage</button>
+                <button class="theme-btn small preset-btn" onclick="applyThemePreset('extraturns')">Extra Turns &amp; Combat</button>
+                <button class="theme-btn small preset-btn" onclick="applyThemePreset('group')">Group Effects</button>
+                <button class="theme-btn small preset-btn" onclick="applyThemePreset('land')">Land &amp; Mana</button>
+                <button class="theme-btn small preset-btn" onclick="applyThemePreset('ongoing')">Ongoing / Grindy</button>
+            </div>
+            <p class="empty-note" style="margin-bottom:10px;">Power and theme are an approximate heuristic based on each scheme's own text (extra turns, tutoring, mass removal, etc.) - not an official rating. Click a card's thumbnail to preview it full-size before deciding.</p>
             <div class="card-checklist" id="cardChecklist"></div>
             <div class="setup-row" style="margin-top:14px;">
                 <button id="startBtn" onclick="startGame()">Shuffle &amp; Start Game</button>
@@ -324,12 +430,78 @@
     <img id="lightboxImg" src="" alt="">
 </div>
 
+<div class="preview-overlay" id="previewOverlay" onclick="if(event.target===this) closePreview()">
+    <div class="preview-panel">
+        <button class="small secondary preview-close" onclick="closePreview()">Close &times;</button>
+        <div id="previewContent"></div>
+    </div>
+</div>
+
 <script>
     const API_BASE = 'https://api.scryfall.com';
     let allSchemes = [];
     let deck = [];
     let discard = [];
     let ongoing = [];
+    let previewIndex = -1;
+
+    const THEME_LABELS = {
+        damage: 'Damage & Removal',
+        cardadv: 'Card Advantage',
+        extraturns: 'Extra Turns & Combat',
+        group: 'Group Effects',
+        land: 'Land & Mana',
+        ongoing: 'Ongoing / Grindy'
+    };
+
+    // Approximate power/theme tagging based on keywords in each scheme's own
+    // oracle text. This isn't an official rating - Scryfall has no such
+    // field for schemes - just a heuristic to help sort a big pile of
+    // cards into something browsable before building a deck.
+    const POWER_KEYWORDS = [
+        { re: /extra turn/i, weight: 3 },
+        { re: /additional combat phase/i, weight: 2 },
+        { re: /search your library for any card/i, weight: 3 },
+        { re: /search your library for a card/i, weight: 2 },
+        { re: /destroy all/i, weight: 3 },
+        { re: /destroy target/i, weight: 1 },
+        { re: /loses the game/i, weight: 4 },
+        { re: /wins the game/i, weight: 4 },
+        { re: /damage to each opponent/i, weight: 1 },
+        { re: /damage to (target|that) (player|opponent)/i, weight: 1 },
+        { re: /draw (a|two|three|seven) cards?/i, weight: 1 },
+        { re: /each opponent (sacrifices|discards|loses)/i, weight: 2 },
+        { re: /shuffle your hand and graveyard into your library/i, weight: 2 }
+    ];
+
+    function computeCardMeta(cards) {
+        const scored = cards.map(c => {
+            const text = c.oracle_text || '';
+            let score = 0;
+            for (const k of POWER_KEYWORDS) if (k.re.test(text)) score += k.weight;
+            if (/ongoing/i.test(c.type_line)) score += 1;
+            return score;
+        });
+        const sorted = [...scored].sort((a, b) => a - b);
+        const quantile = p => sorted[Math.floor(p * (sorted.length - 1))];
+        const lowMax = quantile(0.33);
+        const medMax = quantile(0.66);
+
+        cards.forEach((c, i) => {
+            const text = c.oracle_text || '';
+            const score = scored[i];
+            c._power = score;
+            c._tier = score <= lowMax ? 'Low' : (score <= medMax ? 'Medium' : 'High');
+            const themes = [];
+            if (/destroy|damage|sacrifice/i.test(text)) themes.push('damage');
+            if (/draw|search your library/i.test(text)) themes.push('cardadv');
+            if (/extra turn|additional combat/i.test(text)) themes.push('extraturns');
+            if (/each player/i.test(text)) themes.push('group');
+            if (/\bland\b|\bmana\b/i.test(text)) themes.push('land');
+            if (/ongoing/i.test(c.type_line)) themes.push('ongoing');
+            c._themes = themes;
+        });
+    }
 
     async function loadSchemes() {
         const btn = document.getElementById('loadSchemesBtn');
@@ -348,6 +520,7 @@
                 url = data.has_more ? data.next_page : null;
             }
             allSchemes = cards;
+            computeCardMeta(allSchemes);
             status.textContent = `Loaded ${cards.length} scheme cards.`;
             renderChecklist();
             document.getElementById('checklistWrap').classList.remove('hidden');
@@ -358,14 +531,29 @@
         }
     }
 
+    function thumbUrl(card) {
+        if (card.image_uris) return card.image_uris.small || card.image_uris.normal;
+        if (card.card_faces && card.card_faces[0].image_uris) return card.card_faces[0].image_uris.small || card.card_faces[0].image_uris.normal;
+        return null;
+    }
+
     function renderChecklist() {
         const wrap = document.getElementById('cardChecklist');
         wrap.innerHTML = allSchemes.map((c, i) => {
             const isOngoing = /ongoing/i.test(c.type_line);
-            return `<label>
+            const thumb = thumbUrl(c);
+            return `<label class="scheme-row">
                 <input type="checkbox" checked data-idx="${i}" onchange="updateSelectedCount()">
-                <span>${c.name}</span>
-                ${isOngoing ? '<span class="badge">Ongoing</span>' : ''}
+                ${thumb
+                    ? `<img class="scheme-thumb" src="${thumb}" alt="" title="Preview ${escapeHtml(c.name)}" onclick="event.preventDefault(); event.stopPropagation(); openPreview(${i})">`
+                    : `<span class="scheme-thumb scheme-thumb-blank" onclick="event.preventDefault(); event.stopPropagation(); openPreview(${i})">?</span>`}
+                <span class="scheme-info">
+                    <span class="scheme-name">${escapeHtml(c.name)}</span>
+                    <span class="scheme-badges">
+                        <span class="tier-badge tier-${c._tier.toLowerCase()}">${c._tier}</span>
+                        ${isOngoing ? '<span class="badge">Ongoing</span>' : ''}
+                    </span>
+                </span>
             </label>`;
         }).join('');
         updateSelectedCount();
@@ -379,6 +567,72 @@
     function updateSelectedCount() {
         const n = document.querySelectorAll('#cardChecklist input:checked').length;
         document.getElementById('selectedCount').textContent = `${n} of ${allSchemes.length} schemes selected`;
+    }
+
+    function applyPowerPreset(tier) {
+        document.querySelectorAll('#cardChecklist input[type=checkbox]').forEach(cb => {
+            const card = allSchemes[Number(cb.dataset.idx)];
+            cb.checked = card._tier === tier;
+        });
+        updateSelectedCount();
+    }
+
+    function applyThemePreset(theme) {
+        document.querySelectorAll('#cardChecklist input[type=checkbox]').forEach(cb => {
+            const card = allSchemes[Number(cb.dataset.idx)];
+            cb.checked = card._themes.includes(theme);
+        });
+        updateSelectedCount();
+    }
+
+    function openPreview(idx) {
+        previewIndex = idx;
+        renderPreview();
+        document.getElementById('previewOverlay').classList.add('open');
+    }
+
+    function renderPreview() {
+        const card = allSchemes[previewIndex];
+        const img = imageUrl(card);
+        const isOngoing = /ongoing/i.test(card.type_line);
+        const cb = document.querySelector(`#cardChecklist input[data-idx="${previewIndex}"]`);
+        const checked = cb ? cb.checked : false;
+        document.getElementById('previewContent').innerHTML = `
+            <div class="preview-body">
+                <div>${img ? `<img class="preview-img" src="${img}" alt="${escapeHtml(card.name)}">` : ''}</div>
+                <div class="preview-info">
+                    <h3>${escapeHtml(card.name)}</h3>
+                    <div class="type-line">${escapeHtml(card.type_line)}</div>
+                    <span class="tier-badge tier-${card._tier.toLowerCase()}">${card._tier} Power</span>
+                    ${isOngoing ? ' <span class="badge">Ongoing</span>' : ''}
+                    ${card._themes.length ? `<div class="theme-tags">${card._themes.map(t => `<span class="theme-chip-static">${THEME_LABELS[t]}</span>`).join('')}</div>` : ''}
+                    <div class="oracle-text">${escapeHtml(card.oracle_text || '')}</div>
+                    <button class="small ${checked ? 'secondary' : ''}" onclick="toggleCardChecked(${previewIndex})">${checked ? 'Remove from Deck' : 'Add to Deck'}</button>
+                </div>
+            </div>
+            <div class="preview-nav">
+                <button class="small secondary" onclick="navigatePreview(-1)">&larr; Prev</button>
+                <span class="empty-note">${previewIndex + 1} / ${allSchemes.length}</span>
+                <button class="small secondary" onclick="navigatePreview(1)">Next &rarr;</button>
+            </div>
+        `;
+    }
+
+    function navigatePreview(delta) {
+        previewIndex = (previewIndex + delta + allSchemes.length) % allSchemes.length;
+        renderPreview();
+    }
+
+    function toggleCardChecked(idx) {
+        const cb = document.querySelector(`#cardChecklist input[data-idx="${idx}"]`);
+        if (!cb) return;
+        cb.checked = !cb.checked;
+        updateSelectedCount();
+        renderPreview();
+    }
+
+    function closePreview() {
+        document.getElementById('previewOverlay').classList.remove('open');
     }
 
     function shuffle(arr) {
@@ -539,7 +793,13 @@
     function closeLightbox() {
         document.getElementById('lightboxOverlay').classList.remove('open');
     }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeLightbox(); closePreview(); }
+        if (document.getElementById('previewOverlay').classList.contains('open')) {
+            if (e.key === 'ArrowLeft') navigatePreview(-1);
+            if (e.key === 'ArrowRight') navigatePreview(1);
+        }
+    });
 </script>
 </body>
 </html>
