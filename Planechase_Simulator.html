@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planechase Simulator</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+        --brand: #1777a1;
+        --brand-light: #3aa3d1;
+        --bg-canvas: #1a1a1a;
+        --bg-panel: #2a2a2a;
+        --bg-panel-raised: #333333;
+        --bg-inset: #1a1a1a;
+        --text-primary: #e0e0e0;
+        --text-secondary: #909090;
+        --text-muted: #707070;
+        --text-heading: #ffffff;
+        --border: #404040;
+        --border-subtle: #333333;
+        --color-error: #ff9999;
+        --color-success: #7ee787;
+        --color-link: #6cb2ff;
+        --color-chaos: #e05c5c;
+        --color-planeswalk: #5c8de0;
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --shadow-md: 0 6px 14px rgba(0, 0, 0, 0.3);
+        --focus-ring: 0 0 0 2px var(--brand-light);
+        --transition-fast: 0.15s ease;
+    }
+
+    body {
+        background: var(--bg-canvas);
+        color: var(--text-primary);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+        min-height: 100vh;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    h1 { text-align: center; margin-bottom: 6px; color: var(--text-heading); font-size: 2em; }
+    .subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 25px; }
+
+    .panel {
+        background: var(--bg-panel);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .panel h2 {
+        font-size: 1em;
+        margin-bottom: 12px;
+        color: #b0b0b0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    button {
+        padding: 12px 18px;
+        background: var(--brand);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 1em;
+        cursor: pointer;
+        transition: background var(--transition-fast);
+    }
+    button:hover { background: var(--brand-light); }
+    button:disabled { background: var(--bg-panel-raised); color: var(--text-muted); cursor: not-allowed; }
+    button.secondary { background: var(--bg-panel-raised); }
+    button.secondary:hover { background: #444; }
+    button.small { padding: 6px 12px; font-size: 0.85em; }
+    button.danger { background: #7a2222; }
+    button.danger:hover { background: #9a2c2c; }
+
+    .setup-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+    .empty-note { color: var(--text-muted); font-style: italic; }
+
+    input[type="text"] {
+        padding: 10px;
+        background: var(--bg-inset);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.95em;
+    }
+    input[type="text"]:focus { outline: none; border-color: var(--brand); box-shadow: var(--focus-ring); }
+
+    .players-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .player-card {
+        background: var(--bg-inset);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 16px;
+    }
+
+    .player-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        gap: 8px;
+    }
+    .player-header input[type="text"] { flex: 1; font-weight: bold; }
+
+    .player-stats { color: var(--text-secondary); font-size: 0.85em; margin-bottom: 12px; }
+    .player-stats b { color: var(--text-primary); }
+
+    .plane-img-wrap { text-align: center; margin-bottom: 12px; }
+    .plane-img {
+        width: 100%;
+        max-width: 220px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
+        cursor: zoom-in;
+    }
+    .plane-placeholder {
+        width: 100%;
+        max-width: 220px;
+        aspect-ratio: 5 / 7;
+        margin: 0 auto;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 16px;
+        font-size: 0.85em;
+    }
+
+    .plane-name { text-align: center; font-weight: bold; color: var(--text-heading); margin-bottom: 2px; }
+    .plane-type { text-align: center; color: var(--text-secondary); font-size: 0.8em; font-style: italic; margin-bottom: 8px; }
+
+    .player-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
+
+    .chain-log {
+        font-size: 0.78em;
+        color: var(--text-muted);
+        max-height: 70px;
+        overflow-y: auto;
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 6px;
+    }
+    .chain-log div { padding: 2px 0; }
+    .chain-log .phenom { color: var(--color-chaos); }
+
+    .die-face {
+        font-size: 2em;
+        font-weight: bold;
+        text-align: center;
+        min-width: 70px;
+        padding: 8px 0;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--brand);
+        background: var(--bg-panel-raised);
+        margin: 0 auto 6px;
+    }
+    .die-face.chaos { color: var(--color-chaos); border-color: var(--color-chaos); }
+    .die-face.planeswalk { color: var(--color-planeswalk); border-color: var(--color-planeswalk); }
+    .die-face.blank { color: var(--text-muted); }
+
+    .die-result-label { text-align: center; font-size: 0.8em; color: var(--text-secondary); margin-bottom: 8px; }
+
+    .lightbox-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.85);
+        z-index: 999;
+        align-items: center;
+        justify-content: center;
+    }
+    .lightbox-overlay.open { display: flex; }
+    .lightbox-overlay img { max-width: 90vw; max-height: 90vh; border-radius: var(--radius-lg); }
+
+    .back-link { display: block; text-align: center; margin-top: 20px; color: var(--color-link); }
+
+    .legend {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        font-size: 0.85em;
+        color: var(--text-secondary);
+        margin-top: 10px;
+    }
+    .legend span.chaos { color: var(--color-chaos); }
+    .legend span.planeswalk { color: var(--color-planeswalk); }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Planechase Simulator</h1>
+    <p class="subtitle">Each player gets their own planar deck and planar zone, so multiple planes can be active around the table at once.</p>
+
+    <div class="panel" id="setupPanel">
+        <h2>1. Load Cards &amp; Add Players</h2>
+        <div class="setup-row">
+            <button id="loadBtn" onclick="loadPlaneCards()">Load All Planes &amp; Phenomena from Scryfall</button>
+            <span id="loadStatus" class="empty-note"></span>
+        </div>
+        <div class="setup-row hidden" id="addPlayerRow">
+            <input type="text" id="newPlayerName" placeholder="Player name" onkeydown="if(event.key==='Enter')addPlayer()">
+            <button class="secondary" onclick="addPlayer()">Add Player</button>
+            <span id="playerCountNote" class="empty-note"></span>
+        </div>
+    </div>
+
+    <div class="panel hidden" id="playersPanel">
+        <h2>2. Play</h2>
+        <div class="players-grid" id="playersGrid"></div>
+    </div>
+
+    <a class="back-link" href="MTG_Lookup_Tool.html">&larr; Back to MTG Lookup Tool</a>
+</div>
+
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+    const API_BASE = 'https://api.scryfall.com';
+    let allPlaneCards = [];
+    let players = [];
+    let nextPlayerId = 1;
+
+    async function loadPlaneCards() {
+        const btn = document.getElementById('loadBtn');
+        const status = document.getElementById('loadStatus');
+        btn.disabled = true;
+        status.textContent = 'Loading planes and phenomena from Scryfall...';
+        try {
+            let url = `${API_BASE}/cards/search?q=(type%3Aplane+or+type%3Aphenomenon)&order=name&unique=cards`;
+            let cards = [];
+            while (url) {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Scryfall request failed');
+                const data = await res.json();
+                cards = cards.concat(data.data);
+                url = data.has_more ? data.next_page : null;
+            }
+            allPlaneCards = cards;
+            const planeCount = cards.filter(c => /^Plane\b/.test(c.type_line)).length;
+            const phenomCount = cards.length - planeCount;
+            status.textContent = `Loaded ${cards.length} cards (${planeCount} planes, ${phenomCount} phenomena).`;
+            document.getElementById('addPlayerRow').classList.remove('hidden');
+        } catch (err) {
+            status.textContent = 'Error loading cards: ' + err.message;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function addPlayer() {
+        if (allPlaneCards.length === 0) {
+            alert('Load cards first.');
+            return;
+        }
+        const nameInput = document.getElementById('newPlayerName');
+        const name = nameInput.value.trim() || `Player ${players.length + 1}`;
+        nameInput.value = '';
+
+        players.push({
+            id: nextPlayerId++,
+            name,
+            deck: shuffle([...allPlaneCards]),
+            discard: [],
+            current: null,
+            log: []
+        });
+
+        document.getElementById('playersPanel').classList.remove('hidden');
+        renderPlayers();
+        document.getElementById('playerCountNote').textContent = `${players.length} player(s) at the table`;
+    }
+
+    function removePlayer(id) {
+        players = players.filter(p => p.id !== id);
+        renderPlayers();
+        document.getElementById('playerCountNote').textContent = `${players.length} player(s) at the table`;
+    }
+
+    function isPhenomenon(card) {
+        return /^Phenomenon\b/.test(card.type_line);
+    }
+
+    function imageUrl(card) {
+        if (card.image_uris) return card.image_uris.normal || card.image_uris.large;
+        if (card.card_faces && card.card_faces[0].image_uris) return card.card_faces[0].image_uris.normal;
+        return null;
+    }
+
+    // Planeswalk: discard current plane (if any), reveal cards from the top of
+    // the planar deck. Phenomena trigger immediately and are set aside without
+    // becoming the active card; the reveal continues automatically until a
+    // Plane card is turned face up, which becomes the new active plane.
+    function planeswalk(player) {
+        if (player.current) player.discard.push(player.current);
+        player.current = null;
+        player.log = [];
+
+        let safety = 0;
+        while (safety++ < 100) {
+            if (player.deck.length === 0) {
+                if (player.discard.length === 0) break;
+                player.deck = shuffle([...player.discard]);
+                player.discard = [];
+            }
+            const card = player.deck.pop();
+            if (isPhenomenon(card)) {
+                player.log.push({ phenom: true, name: card.name, text: card.oracle_text || '' });
+                player.discard.push(card);
+                continue;
+            }
+            player.current = card;
+            break;
+        }
+        renderPlayers();
+    }
+
+    function rollDie(player) {
+        const roll = Math.floor(Math.random() * 6) + 1;
+        // 6-sided planar die: 1 face = Planeswalk symbol, 1 face = Chaos
+        // symbol, 4 faces blank, matching the real Planar/Chaos die odds.
+        let face;
+        if (roll === 1) face = 'planeswalk';
+        else if (roll === 2) face = 'chaos';
+        else face = 'blank';
+
+        player.lastRoll = face;
+
+        if (face === 'planeswalk') {
+            planeswalk(player);
+        } else {
+            renderPlayers();
+        }
+    }
+
+    function discardChaosNote(player) {
+        // Purely informational marker; chaos triggers must be resolved
+        // manually per the active plane's printed ability.
+        renderPlayers();
+    }
+
+    function renderPlayers() {
+        const grid = document.getElementById('playersGrid');
+        grid.innerHTML = players.map(p => {
+            const img = p.current ? imageUrl(p.current) : null;
+            const dieFace = p.lastRoll;
+            const dieLabel = dieFace === 'planeswalk' ? 'PLANESWALK'
+                : dieFace === 'chaos' ? 'CHAOS'
+                : dieFace === 'blank' ? 'BLANK' : '-';
+            const dieClass = dieFace || '';
+            const dieSymbol = dieFace === 'planeswalk' ? '⊕' : dieFace === 'chaos' ? '☢' : dieFace === 'blank' ? '○' : '?';
+
+            return `<div class="player-card">
+                <div class="player-header">
+                    <input type="text" value="${escapeHtml(p.name)}" onchange="renamePlayer(${p.id}, this.value)">
+                    <button class="small danger" onclick="removePlayer(${p.id})">Remove</button>
+                </div>
+                <div class="player-stats">Planar deck: <b>${p.deck.length}</b> &middot; Discard: <b>${p.discard.length}</b></div>
+
+                <div class="plane-img-wrap">
+                    ${p.current
+                        ? (img
+                            ? `<img class="plane-img" src="${img}" alt="${escapeHtml(p.current.name)}" onclick="openLightbox('${img.replace(/'/g,"\\'")}','${escapeHtml(p.current.name)}')">`
+                            : `<div class="plane-placeholder">${escapeHtml(p.current.name)}</div>`)
+                        : `<div class="plane-placeholder">No active plane yet</div>`}
+                </div>
+                ${p.current ? `
+                    <div class="plane-name">${escapeHtml(p.current.name)}</div>
+                    <div class="plane-type">${escapeHtml(p.current.type_line)}</div>
+                ` : ''}
+
+                <div class="player-actions">
+                    <button class="small" onclick="planeswalk(players.find(pl=>pl.id===${p.id}))">Planeswalk</button>
+                    <button class="small secondary" onclick="rollDie(players.find(pl=>pl.id===${p.id}))">Roll Planar Die</button>
+                </div>
+
+                <div class="die-face ${dieClass}">${dieSymbol}</div>
+                <div class="die-result-label">${dieLabel}</div>
+
+                ${p.log && p.log.length ? `<div class="chain-log">
+                    ${p.log.map(l => `<div class="${l.phenom ? 'phenom' : ''}">${l.phenom ? 'Phenomenon triggered: ' : ''}<b>${escapeHtml(l.name)}</b>${l.phenom ? ' &mdash; resolve its ability, then keep revealing.' : ''}</div>`).join('')}
+                </div>` : ''}
+            </div>`;
+        }).join('');
+    }
+
+    function renamePlayer(id, name) {
+        const p = players.find(pl => pl.id === id);
+        if (p) p.name = name.trim() || p.name;
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+    }
+
+    function openLightbox(src, alt) {
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('lightboxImg').alt = alt;
+        document.getElementById('lightboxOverlay').classList.add('open');
+    }
+    function closeLightbox() {
+        document.getElementById('lightboxOverlay').classList.remove('open');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+</script>
+</body>
+</html>
