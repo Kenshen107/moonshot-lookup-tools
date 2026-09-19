@@ -11,6 +11,7 @@ Once GitHub Pages is enabled for this repo, the tools are at:
 - `https://<your-username>.github.io/<repo-name>/Pokemon_Lookup_Tool.html`
 - `https://<your-username>.github.io/<repo-name>/Archenemy_Simulator.html`
 - `https://<your-username>.github.io/<repo-name>/Planechase_Simulator.html`
+- `https://<your-username>.github.io/<repo-name>/MTG_Battle_Simulator.html`
 
 ## Local use
 
@@ -36,3 +37,16 @@ active plane) until a Plane card is turned face up. "Roll Planar Die"
 simulates the real 6-sided planar/chaos die (1 face Planeswalk symbol, 1 face
 Chaos symbol, 4 blank), and automatically triggers a planeswalk when the
 Planeswalk face comes up.
+
+## MTG Battle Simulator
+
+A single-player prototype: you vs. an AI opponent, each running a randomly
+generated 40-card deck (two colors + colorless, ~17 lands) drawn from a
+curated pool of ~36 original creatures. Unlike the other tools, this one
+doesn't call Scryfall - it's a self-contained simplified rules engine
+(untap/draw/main/combat/end, mana costs, tapping, summoning sickness,
+first strike, trample, deathtouch, lifelink, flying/reach, vigilance,
+haste, menace, defender) with a simple AI that plays lands, casts
+creatures, attacks, and blocks. This is the first milestone of a larger
+plan - deckbuilding, booster-pack loot boxes, and difficulty-scaled
+in-game currency are not built yet.
