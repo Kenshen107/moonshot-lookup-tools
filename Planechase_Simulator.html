@@ -79,6 +79,8 @@
     button.small { padding: 6px 12px; font-size: 0.85em; }
     button.danger { background: #7a2222; }
     button.danger:hover { background: #9a2c2c; }
+    button.chaos-btn { background: var(--color-chaos); }
+    button.chaos-btn:hover { background: #ff7373; }
 
     .setup-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
     .empty-note { color: var(--text-muted); font-style: italic; }
@@ -95,7 +97,7 @@
 
     .players-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         gap: 20px;
     }
 
@@ -104,7 +106,9 @@
         border: 2px solid var(--border);
         border-radius: var(--radius-md);
         padding: 16px;
+        transition: border-color 0.2s ease;
     }
+    .player-card.phenom-pending { border-color: var(--color-chaos); }
 
     .player-header {
         display: flex;
@@ -118,22 +122,36 @@
     .player-stats { color: var(--text-secondary); font-size: 0.85em; margin-bottom: 12px; }
     .player-stats b { color: var(--text-primary); }
 
-    .plane-img-wrap { text-align: center; margin-bottom: 12px; }
-    .plane-img {
+    /* Plane/Phenomenon cards are printed sideways on a normal portrait card
+       body, so the raw Scryfall scan is portrait-shaped. This frame rotates
+       the art 90deg into a landscape frame sized so the rotated image fills
+       it exactly (card ratio 5:7 rotated -> frame ratio 7:5), so the card
+       reads correctly without turning the phone. */
+    .plane-frame {
         width: 100%;
-        max-width: 220px;
+        max-width: 300px;
+        aspect-ratio: 7 / 5;
+        margin: 0 auto 10px;
+        position: relative;
+        overflow: hidden;
         border-radius: var(--radius-lg);
         border: 1px solid var(--border);
         box-shadow: var(--shadow-md);
+        background: var(--bg-panel-raised);
+    }
+    .plane-frame.phenom-frame { border-color: var(--color-chaos); box-shadow: 0 0 16px rgba(224, 92, 92, 0.35); }
+    .plane-frame img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 71.4286%;
+        height: 140%;
+        transform: translate(-50%, -50%) rotate(90deg);
         cursor: zoom-in;
     }
-    .plane-placeholder {
-        width: 100%;
-        max-width: 220px;
-        aspect-ratio: 5 / 7;
-        margin: 0 auto;
-        border: 2px dashed var(--border);
-        border-radius: var(--radius-lg);
+    .plane-frame .plane-placeholder-text {
+        position: absolute;
+        inset: 0;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -145,6 +163,33 @@
 
     .plane-name { text-align: center; font-weight: bold; color: var(--text-heading); margin-bottom: 2px; }
     .plane-type { text-align: center; color: var(--text-secondary); font-size: 0.8em; font-style: italic; margin-bottom: 8px; }
+    .plane-oracle-text {
+        white-space: pre-wrap;
+        font-size: 0.85em;
+        line-height: 1.4;
+        background: var(--bg-panel);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        padding: 10px;
+        margin-bottom: 10px;
+        max-height: 140px;
+        overflow-y: auto;
+    }
+
+    .phenom-tag {
+        display: block;
+        text-align: center;
+        background: var(--color-chaos);
+        color: #1a1a1a;
+        font-weight: bold;
+        font-size: 0.75em;
+        padding: 3px 8px;
+        border-radius: 3px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .phenom-hint { text-align: center; color: var(--color-chaos); font-size: 0.8em; margin-bottom: 10px; }
 
     .player-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
 
@@ -174,6 +219,54 @@
     .die-face.planeswalk { color: var(--color-planeswalk); border-color: var(--color-planeswalk); }
     .die-face.blank { color: var(--text-muted); }
 
+    @keyframes dieSpin {
+        0% { transform: scale(1) rotate(0deg); }
+        50% { transform: scale(1.15) rotate(180deg); }
+        100% { transform: scale(1) rotate(360deg); }
+    }
+    .die-face.rolling { animation: dieSpin 0.35s linear infinite; }
+
+    @keyframes chaosPulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 rgba(224, 92, 92, 0.7); }
+        25% { transform: scale(1.3); box-shadow: 0 0 10px 6px rgba(224, 92, 92, 0.9); }
+        50% { transform: scale(0.92); box-shadow: 0 0 22px 10px rgba(224, 92, 92, 0.75); }
+        75% { transform: scale(1.12); box-shadow: 0 0 12px 6px rgba(224, 92, 92, 0.6); }
+        100% { transform: scale(1); box-shadow: 0 0 0 rgba(224, 92, 92, 0); }
+    }
+    .die-face.chaos.landed { animation: chaosPulse 0.9s ease; }
+
+    @keyframes planeswalkPulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 rgba(92, 141, 224, 0.7); }
+        40% { transform: scale(1.18); box-shadow: 0 0 14px 6px rgba(92, 141, 224, 0.8); }
+        100% { transform: scale(1); box-shadow: 0 0 0 rgba(92, 141, 224, 0); }
+    }
+    .die-face.planeswalk.landed { animation: planeswalkPulse 0.7s ease; }
+
+    @keyframes chaosShake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-4px); }
+        40% { transform: translateX(4px); }
+        60% { transform: translateX(-3px); }
+        80% { transform: translateX(3px); }
+    }
+    .player-card.chaos-shake { animation: chaosShake 0.4s ease; }
+
+    @keyframes chaosBannerPop {
+        0% { opacity: 0; transform: scale(0.6); }
+        30% { opacity: 1; transform: scale(1.15); }
+        60% { transform: scale(1); }
+        100% { opacity: 0; transform: scale(1); }
+    }
+    .chaos-banner {
+        text-align: center;
+        font-weight: bold;
+        color: var(--color-chaos);
+        font-size: 1.05em;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+        animation: chaosBannerPop 1.1s ease;
+    }
+
     .die-result-label { text-align: center; font-size: 0.8em; color: var(--text-secondary); margin-bottom: 8px; }
 
     .lightbox-overlay {
@@ -188,17 +281,6 @@
     .lightbox-overlay img { max-width: 90vw; max-height: 90vh; border-radius: var(--radius-lg); }
 
     .back-link { display: block; text-align: center; margin-top: 20px; color: var(--color-link); }
-
-    .legend {
-        display: flex;
-        gap: 18px;
-        flex-wrap: wrap;
-        font-size: 0.85em;
-        color: var(--text-secondary);
-        margin-top: 10px;
-    }
-    .legend span.chaos { color: var(--color-chaos); }
-    .legend span.planeswalk { color: var(--color-planeswalk); }
 </style>
 </head>
 <body>
@@ -236,6 +318,8 @@
     let allPlaneCards = [];
     let players = [];
     let nextPlayerId = 1;
+
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
     async function loadPlaneCards() {
         const btn = document.getElementById('loadBtn');
@@ -287,7 +371,12 @@
             deck: shuffle([...allPlaneCards]),
             discard: [],
             current: null,
-            log: []
+            pendingPhenomenon: null,
+            log: [],
+            rolling: false,
+            rollFace: null,
+            lastRoll: null,
+            justLanded: false
         });
 
         document.getElementById('playersPanel').classList.remove('hidden');
@@ -311,105 +400,169 @@
         return null;
     }
 
-    // Planeswalk: discard current plane (if any), reveal cards from the top of
-    // the planar deck. Phenomena trigger immediately and are set aside without
-    // becoming the active card; the reveal continues automatically until a
-    // Plane card is turned face up, which becomes the new active plane.
-    function planeswalk(player) {
+    function getPlayer(id) {
+        return players.find(p => p.id === id);
+    }
+
+    // Planeswalk: discard the current plane (if any) and start revealing
+    // from the top of the planar deck.
+    function startPlaneswalk(player) {
+        if (!player || player.pendingPhenomenon || player.rolling) return;
         if (player.current) player.discard.push(player.current);
         player.current = null;
         player.log = [];
-
-        let safety = 0;
-        while (safety++ < 100) {
-            if (player.deck.length === 0) {
-                if (player.discard.length === 0) break;
-                player.deck = shuffle([...player.discard]);
-                player.discard = [];
-            }
-            const card = player.deck.pop();
-            if (isPhenomenon(card)) {
-                player.log.push({ phenom: true, name: card.name, text: card.oracle_text || '' });
-                player.discard.push(card);
-                continue;
-            }
-            player.current = card;
-            break;
-        }
-        renderPlayers();
+        revealNext(player);
     }
 
-    function rollDie(player) {
-        const roll = Math.floor(Math.random() * 6) + 1;
-        // 6-sided planar die: 1 face = Planeswalk symbol, 1 face = Chaos
-        // symbol, 4 faces blank, matching the real Planar/Chaos die odds.
-        let face;
-        if (roll === 1) face = 'planeswalk';
-        else if (roll === 2) face = 'chaos';
-        else face = 'blank';
-
-        player.lastRoll = face;
-
-        if (face === 'planeswalk') {
-            planeswalk(player);
+    // Reveals one card. A Phenomenon is shown as a prompt (its full text)
+    // and the chain pauses there until the table clicks Continue - it does
+    // not just flash by in a log. A Plane becomes the new active card and
+    // the chain stops.
+    function revealNext(player) {
+        if (player.deck.length === 0) {
+            if (player.discard.length === 0) {
+                renderPlayers();
+                return;
+            }
+            player.deck = shuffle([...player.discard]);
+            player.discard = [];
+        }
+        const card = player.deck.pop();
+        if (isPhenomenon(card)) {
+            player.pendingPhenomenon = card;
+            player.log.push({ phenom: true, name: card.name });
         } else {
-            renderPlayers();
+            player.current = card;
+            player.pendingPhenomenon = null;
         }
-    }
-
-    function discardChaosNote(player) {
-        // Purely informational marker; chaos triggers must be resolved
-        // manually per the active plane's printed ability.
         renderPlayers();
     }
+
+    // Called from the "Continue" button on a Phenomenon prompt: the
+    // phenomenon's ability has been resolved at the table, so it's
+    // discarded and the reveal continues automatically.
+    function continuePhenomenon(player) {
+        if (!player || !player.pendingPhenomenon) return;
+        player.discard.push(player.pendingPhenomenon);
+        player.pendingPhenomenon = null;
+        revealNext(player);
+    }
+
+    async function rollDie(player) {
+        if (!player || player.pendingPhenomenon || player.rolling) return;
+        player.rolling = true;
+        player.justLanded = false;
+        renderPlayers();
+
+        const faces = ['planeswalk', 'chaos', 'blank'];
+        const frames = 9;
+        for (let i = 0; i < frames; i++) {
+            player.rollFace = faces[Math.floor(Math.random() * faces.length)];
+            renderPlayers();
+            await sleep(65 + i * 16);
+        }
+
+        const roll = Math.floor(Math.random() * 6) + 1;
+        const face = roll === 1 ? 'planeswalk' : roll === 2 ? 'chaos' : 'blank';
+
+        player.rolling = false;
+        player.rollFace = null;
+        player.lastRoll = face;
+        player.justLanded = true;
+        const cardEl = document.getElementById(`player-${player.id}`);
+        if (face === 'chaos' && cardEl) {
+            cardEl.classList.add('chaos-shake');
+            setTimeout(() => cardEl.classList.remove('chaos-shake'), 450);
+        }
+        renderPlayers();
+        setTimeout(() => {
+            player.justLanded = false;
+            renderPlayers();
+        }, 1000);
+
+        if (face === 'planeswalk') startPlaneswalk(player);
+    }
+
+    const FACE_SYMBOL = { planeswalk: '⊕', chaos: '☢', blank: '○' };
 
     function renderPlayers() {
         const grid = document.getElementById('playersGrid');
         grid.innerHTML = players.map(p => {
-            const img = p.current ? imageUrl(p.current) : null;
-            const dieFace = p.lastRoll;
-            const dieLabel = dieFace === 'planeswalk' ? 'PLANESWALK'
-                : dieFace === 'chaos' ? 'CHAOS'
-                : dieFace === 'blank' ? 'BLANK' : '-';
-            const dieClass = dieFace || '';
-            const dieSymbol = dieFace === 'planeswalk' ? '⊕' : dieFace === 'chaos' ? '☢' : dieFace === 'blank' ? '○' : '?';
+            const showingFace = p.rolling ? p.rollFace : p.lastRoll;
+            const dieClass = [
+                showingFace || '',
+                p.rolling ? 'rolling' : '',
+                (p.justLanded && !p.rolling) ? 'landed' : ''
+            ].filter(Boolean).join(' ');
+            const dieSymbol = showingFace ? FACE_SYMBOL[showingFace] : '?';
+            const dieLabel = p.rolling ? 'Rolling...'
+                : p.lastRoll === 'planeswalk' ? 'PLANESWALK'
+                : p.lastRoll === 'chaos' ? 'CHAOS'
+                : p.lastRoll === 'blank' ? 'BLANK' : '-';
 
-            return `<div class="player-card">
+            const phenom = p.pendingPhenomenon;
+            const phenomImg = phenom ? imageUrl(phenom) : null;
+
+            let cardBody;
+            if (phenom) {
+                cardBody = `
+                    <div class="plane-frame phenom-frame">
+                        ${phenomImg
+                            ? `<img src="${phenomImg}" alt="${escapeHtml(phenom.name)}" onclick="openLightbox('${phenomImg.replace(/'/g,"\\'")}','${escapeHtml(phenom.name)}')">`
+                            : `<div class="plane-placeholder-text">${escapeHtml(phenom.name)}</div>`}
+                    </div>
+                    <span class="phenom-tag">Phenomenon Revealed</span>
+                    <div class="plane-name">${escapeHtml(phenom.name)}</div>
+                    <div class="plane-type">${escapeHtml(phenom.type_line)}</div>
+                    <div class="plane-oracle-text">${escapeHtml(phenom.oracle_text || 'No reminder text on file.')}</div>
+                    <div class="phenom-hint">Resolve this ability at the table, then continue revealing.</div>
+                    <div class="player-actions">
+                        <button class="small chaos-btn" onclick="continuePhenomenon(getPlayer(${p.id}))">Continue</button>
+                    </div>
+                `;
+            } else {
+                const img = p.current ? imageUrl(p.current) : null;
+                cardBody = `
+                    <div class="plane-frame">
+                        ${p.current
+                            ? (img
+                                ? `<img src="${img}" alt="${escapeHtml(p.current.name)}" onclick="openLightbox('${img.replace(/'/g,"\\'")}','${escapeHtml(p.current.name)}')">`
+                                : `<div class="plane-placeholder-text">${escapeHtml(p.current.name)}</div>`)
+                            : `<div class="plane-placeholder-text">No active plane yet</div>`}
+                    </div>
+                    ${p.current ? `
+                        <div class="plane-name">${escapeHtml(p.current.name)}</div>
+                        <div class="plane-type">${escapeHtml(p.current.type_line)}</div>
+                        <div class="plane-oracle-text">${escapeHtml(p.current.oracle_text || 'No reminder text on file.')}</div>
+                    ` : ''}
+                    <div class="player-actions">
+                        <button class="small" ${p.rolling ? 'disabled' : ''} onclick="startPlaneswalk(getPlayer(${p.id}))">Planeswalk</button>
+                        <button class="small secondary" ${p.rolling ? 'disabled' : ''} onclick="rollDie(getPlayer(${p.id}))">Roll Planar Die</button>
+                    </div>
+                    ${(p.justLanded && p.lastRoll === 'chaos') ? '<div class="chaos-banner">☢ CHAOS TRIGGERED! ☢</div>' : ''}
+                    <div class="die-face ${dieClass}">${dieSymbol}</div>
+                    <div class="die-result-label">${dieLabel}</div>
+                `;
+            }
+
+            return `<div class="player-card${phenom ? ' phenom-pending' : ''}" id="player-${p.id}">
                 <div class="player-header">
                     <input type="text" value="${escapeHtml(p.name)}" onchange="renamePlayer(${p.id}, this.value)">
                     <button class="small danger" onclick="removePlayer(${p.id})">Remove</button>
                 </div>
                 <div class="player-stats">Planar deck: <b>${p.deck.length}</b> &middot; Discard: <b>${p.discard.length}</b></div>
 
-                <div class="plane-img-wrap">
-                    ${p.current
-                        ? (img
-                            ? `<img class="plane-img" src="${img}" alt="${escapeHtml(p.current.name)}" onclick="openLightbox('${img.replace(/'/g,"\\'")}','${escapeHtml(p.current.name)}')">`
-                            : `<div class="plane-placeholder">${escapeHtml(p.current.name)}</div>`)
-                        : `<div class="plane-placeholder">No active plane yet</div>`}
-                </div>
-                ${p.current ? `
-                    <div class="plane-name">${escapeHtml(p.current.name)}</div>
-                    <div class="plane-type">${escapeHtml(p.current.type_line)}</div>
-                ` : ''}
-
-                <div class="player-actions">
-                    <button class="small" onclick="planeswalk(players.find(pl=>pl.id===${p.id}))">Planeswalk</button>
-                    <button class="small secondary" onclick="rollDie(players.find(pl=>pl.id===${p.id}))">Roll Planar Die</button>
-                </div>
-
-                <div class="die-face ${dieClass}">${dieSymbol}</div>
-                <div class="die-result-label">${dieLabel}</div>
+                ${cardBody}
 
                 ${p.log && p.log.length ? `<div class="chain-log">
-                    ${p.log.map(l => `<div class="${l.phenom ? 'phenom' : ''}">${l.phenom ? 'Phenomenon triggered: ' : ''}<b>${escapeHtml(l.name)}</b>${l.phenom ? ' &mdash; resolve its ability, then keep revealing.' : ''}</div>`).join('')}
+                    ${p.log.map(l => `<div class="${l.phenom ? 'phenom' : ''}">${l.phenom ? 'Phenomenon triggered: ' : 'Plane: '}<b>${escapeHtml(l.name)}</b></div>`).join('')}
                 </div>` : ''}
             </div>`;
         }).join('');
     }
 
     function renamePlayer(id, name) {
-        const p = players.find(pl => pl.id === id);
+        const p = getPlayer(id);
         if (p) p.name = name.trim() || p.name;
     }
 
