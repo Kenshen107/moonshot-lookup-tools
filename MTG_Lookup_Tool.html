@@ -2611,6 +2611,23 @@
             color: #6cb2ff;
         }
 
+        /* ---- Speculation Screener reason badges ---- */
+        .spec-reason-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .spec-reason-badge {
+            font-size: 0.68em;
+            background: #1e2c3d;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 2px 6px;
+            color: #cfe8ff;
+            white-space: nowrap;
+        }
+
         .card-tile-stock-btn:hover {
             background: #26364a;
         }
@@ -3434,6 +3451,7 @@
             <button type="button" class="game-tab" id="tabFormats" onclick="switchGame('formats')">📖 Format Rules</button>
             <button type="button" class="game-tab" id="tabValueVintage" onclick="switchGame('valuevintage')">🏆 Value Vintage</button>
             <button type="button" class="game-tab" id="tabSetPrimer" onclick="switchGame('setprimer')">🎁 Set Primer</button>
+            <button type="button" class="game-tab" id="tabSpeculation" onclick="switchGame('speculation')">📈 Speculation</button>
             <button type="button" class="game-tab" id="tabJudge" onclick="switchGame('judge')">⚖️ Judge Ref</button>
             <button type="button" class="game-tab" id="tabBuylist" onclick="switchGame('buylist')">💰 Buylist</button>
             <button type="button" class="game-tab" id="tabDiscovery" onclick="switchGame('discovery')">🧭 Card Discovery</button>
@@ -3544,6 +3562,33 @@
                     <a href="https://scryfall.com/sets" target="_blank" rel="noopener">Scryfall - full set index</a>
                 </div>
             </div>
+        </div>
+
+        <!-- ============== SPECULATION SCREENER ============== -->
+        <div id="speculationApp" style="display:none;">
+            <div class="formats-intro">
+                Ranks a set's cards by the same signals a speculator would eyeball by
+                hand - rarity/treatment, EDHREC pickup, and oracle text patterns
+                (tutors, cost reduction, recurring value) that have correlated with
+                price movement before. Defaults to the newest non-digital set on
+                Scryfall; pick a different one below to screen it instead.
+            </div>
+            <div class="guide-warn">
+                <strong>This is not a price prediction.</strong> It's a heuristic
+                screening tool built from public card data - it has no way to see
+                future reprints, banned-list changes, supply, or how a format
+                actually shakes out, and a high score here is not a guarantee of
+                anything. Speculating on singles is a real way to lose money, not
+                just make it. Treat this as a shortlist to research further, not
+                advice to buy.
+            </div>
+            <div class="search-box" style="max-width:500px; margin:0 auto 24px;">
+                <h2>Set to Screen</h2>
+                <input type="text" id="speculationSetSearch" placeholder="Type a set name... (defaults to newest)" autocomplete="off">
+                <div class="autocomplete-list" id="speculationSetAutocomplete"></div>
+            </div>
+            <div id="speculationSetLabel" class="set-primer-meta text-secondary" style="text-align:center; margin-bottom:12px;"></div>
+            <div id="speculationResults"></div>
         </div>
 
         <!-- ============== JUDGE QUICK-REFERENCE ============== -->
@@ -4234,6 +4279,7 @@
             formats:   { appId: 'formatsApp',   tabId: 'tabFormats',   title: '📖 Format Rules', onShow: renderFormatsGrid },
             valuevintage: { appId: 'valueVintageApp', tabId: 'tabValueVintage', title: '🏆 Value Vintage (V30)', onShow: renderValueVintagePanel },
             setprimer: { appId: 'setPrimerApp', tabId: 'tabSetPrimer', title: '🎁 Set Primer' },
+            speculation: { appId: 'speculationApp', tabId: 'tabSpeculation', title: '📈 Speculation Screener', onShow: showSpeculationTab },
             judge:     { appId: 'judgeApp',     tabId: 'tabJudge',     title: '⚖️ Judge Quick-Reference', onShow: showJudgeTab },
             buylist:   { appId: 'buylistApp',   tabId: 'tabBuylist',   title: '💰 Buylist / Store Credit Calculator', onShow: showBuylistTab },
             discovery: { appId: 'discoveryApp', tabId: 'tabDiscovery', title: '🧭 Card Discovery', onShow: showDiscoveryTab },
@@ -5382,6 +5428,188 @@
             performLookup(name);
         }
 
+        // ============== SPECULATION SCREENER ==============
+        // Ranks a set's cards by publicly-known signals a speculator would
+        // otherwise eyeball by hand: rarity/treatment premiums, EDHREC
+        // pickup, and oracle-text patterns (tutors, cost reduction,
+        // recurring value engines, etc.) that have correlated with price
+        // movement on past cards. This is explicitly NOT a price prediction
+        // - it can't see future reprints, banned-list changes, print run
+        // size, or how a format actually shakes out. It's a shortlist for
+        // further research, scored and reasoned so the "why" is visible
+        // instead of a black-box number - see the on-page disclaimer.
+        const SPECULATION_TEXT_SIGNALS = [
+            { label: 'Tutor effect', icon: '📜', weight: 3, pattern: /search your library/i },
+            { label: 'Free/alt-cost spell', icon: '📜', weight: 3, pattern: /without paying its mana cost|cast .* without paying/i },
+            { label: 'Extra turns', icon: '📜', weight: 3, pattern: /take an extra turn/i },
+            { label: "Can't be countered", icon: '📜', weight: 2, pattern: /can't be countered/i },
+            { label: 'Cost reduction', icon: '📜', weight: 2, pattern: /costs? \{[0-9]+\} less to cast|cost \{[0-9]+\} less/i },
+            { label: 'Recurring value engine', icon: '📜', weight: 2, pattern: /whenever you cast|at the beginning of (your|each) (upkeep|end step)/i },
+            { label: 'One-sided board wipe', icon: '📜', weight: 2, pattern: /destroy all|exile all|each opponent sacrifices/i },
+            { label: 'Efficient removal', icon: '📜', weight: 1, pattern: /destroy target creature|exile target creature|destroy target permanent/i },
+            { label: 'Card draw engine', icon: '📜', weight: 1, pattern: /draw (a|two|three) cards?/i }
+        ];
+
+        // Special-treatment premiums (showcase/extended art/borderless/full
+        // art) stack with rarity rather than replacing it - a showcase
+        // mythic and a showcase common are both "worth more than the plain
+        // version," just starting from different baselines.
+        function scoreCardForSpeculation(card) {
+            const reasons = [];
+            let score = 0;
+
+            const rarityWeight = { mythic: 30, rare: 15, special: 20, bonus: 20, uncommon: 4 }[card.rarity] || 0;
+            if (rarityWeight) {
+                score += rarityWeight;
+                const label = card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
+                reasons.push({ label: card.rarity === 'mythic' ? 'Mythic rarity' : label, icon: '💎' });
+            }
+
+            if (isLegendaryCreature(card)) {
+                score += 10;
+                reasons.push({ label: 'Legendary creature (Commander appeal)', icon: '👑' });
+            } else if ((card.type_line || '').includes('Legendary')) {
+                score += 5;
+                reasons.push({ label: 'Legendary permanent', icon: '👑' });
+            }
+
+            const frameEffects = card.frame_effects || [];
+            if (frameEffects.includes('showcase')) { score += 8; reasons.push({ label: 'Showcase frame', icon: '✨' }); }
+            if (frameEffects.includes('extendedart')) { score += 5; reasons.push({ label: 'Extended art', icon: '✨' }); }
+            if (card.border_color === 'borderless') { score += 8; reasons.push({ label: 'Borderless', icon: '✨' }); }
+            if (card.full_art) { score += 4; reasons.push({ label: 'Full art', icon: '✨' }); }
+
+            // Lower edhrec_rank = more played. Weight fades to 0 past a
+            // ~10000 rank rather than going negative - for a just-spoiled
+            // set most cards won't have a rank yet at all (too new for
+            // EDHREC to have indexed), and "no data yet" should read as
+            // neutral, not as a strike against the card.
+            if (typeof card.edhrec_rank === 'number') {
+                const edhrecScore = Math.max(0, 20 - (card.edhrec_rank / 500));
+                if (edhrecScore > 0) {
+                    score += edhrecScore;
+                    reasons.push({ label: `EDHREC rank #${card.edhrec_rank.toLocaleString()}`, icon: '🔥' });
+                }
+            }
+
+            const oracle = [card.oracle_text, ...(card.card_faces ? card.card_faces.map(f => f.oracle_text) : [])]
+                .filter(Boolean).join(' \n ');
+            SPECULATION_TEXT_SIGNALS.forEach(sig => {
+                if (sig.pattern.test(oracle)) {
+                    score += sig.weight;
+                    reasons.push({ label: sig.label, icon: sig.icon });
+                }
+            });
+
+            return { score, reasons };
+        }
+
+        let speculationCurrentSet = null;
+        let speculationCards = []; // [{ card, score, reasons }], sorted high to low
+        let speculationDisplayOrder = []; // flat card list in the same order, for the popup's Prev/Next
+        let speculationSetSearchTimeout;
+        let speculationAutocompleteResults = [];
+
+        // Runs once per session (guarded below) rather than on every tab
+        // switch - auto-picks whatever Scryfall considers the newest
+        // non-digital expansion/core set. loadAllSets() is already sorted
+        // newest release first, so this is just "first one that qualifies."
+        async function showSpeculationTab() {
+            if (speculationCurrentSet) return;
+            const sets = await loadAllSets();
+            const newest = sets.find(s => !s.digital && ['expansion', 'core'].includes(s.set_type));
+            if (newest) loadSpeculationSet(newest);
+        }
+
+        async function loadSpeculationSet(set) {
+            const resultsDiv = document.getElementById('speculationResults');
+            const labelDiv = document.getElementById('speculationSetLabel');
+            resultsDiv.innerHTML = `<div class="loading">Analyzing ${set.name}...</div>`;
+            speculationCurrentSet = set;
+            const year = set.released_at ? new Date(set.released_at).getFullYear() : '?';
+            if (labelDiv) labelDiv.textContent = `Screening: ${set.name} (${set.code.toUpperCase()}, ${year})`;
+
+            try {
+                const cards = await fetchAllSetCards(set.code);
+                const scored = cards
+                    .map(card => ({ card, ...scoreCardForSpeculation(card) }))
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 40); // top 40 - a full set's worth of tiles is noise, not signal
+                speculationCards = scored;
+                renderSpeculationResults(scored);
+            } catch (err) {
+                console.error('Error loading speculation set:', err);
+                resultsDiv.innerHTML = `<div class="error">❌ Couldn't load this set right now.</div>`;
+                speculationDisplayOrder = [];
+            }
+        }
+
+        function renderSpeculationResults(scored) {
+            const resultsDiv = document.getElementById('speculationResults');
+            if (scored.length === 0) {
+                resultsDiv.innerHTML = `<div class="error">No cards found for this set (it may be a token-only or memorabilia set).</div>`;
+                speculationDisplayOrder = [];
+                return;
+            }
+
+            speculationDisplayOrder = scored.map(s => s.card);
+
+            resultsDiv.innerHTML = `
+                <div class="staples-bulk-actions">
+                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('speculationResults')">Check Stock for All (${scored.length})</button>
+                </div>
+                <div class="card-tile-grid">
+                    ${scored.map((s, i) => {
+                        const badges = s.reasons.map(r => `<span class="spec-reason-badge">${r.icon} ${r.label}</span>`).join('');
+                        const extraHTML = badges ? `<div class="spec-reason-row">${badges}</div>` : '';
+                        return buildCardTileHTML(s.card, `#${i + 1} · ${s.score.toFixed(0)}pt`, i, 'speculationDisplayOrder', extraHTML);
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // Set picker - same search/score/autocomplete approach as Set
+        // Primer's (loadAllSets + scoreSetForSearch), just wired to its own
+        // input/list ids and to loadSpeculationSet instead.
+        document.getElementById('speculationSetSearch').addEventListener('input', function(e) {
+            clearTimeout(speculationSetSearchTimeout);
+            const query = e.target.value.trim().toLowerCase();
+            const list = document.getElementById('speculationSetAutocomplete');
+
+            if (query.length < 2) {
+                list.innerHTML = '';
+                return;
+            }
+
+            speculationSetSearchTimeout = setTimeout(async () => {
+                const sets = await loadAllSets();
+                const matches = sets
+                    .filter(s => s.name.toLowerCase().includes(query) || s.code.toLowerCase() === query)
+                    .sort((a, b) => scoreSetForSearch(b, query) - scoreSetForSearch(a, query))
+                    .slice(0, 15);
+                speculationAutocompleteResults = matches;
+
+                if (matches.length === 0) {
+                    list.innerHTML = '<div class="autocomplete-item">No matches found</div>';
+                    return;
+                }
+                list.innerHTML = matches.map((s, idx) => `
+                    <div class="autocomplete-item" onclick="selectSpeculationSet(${idx})">
+                        <strong>${s.name}</strong>
+                        <span class="text-secondary"> — ${s.code.toUpperCase()} · ${s.released_at ? new Date(s.released_at).getFullYear() : '?'}</span>
+                    </div>
+                `).join('');
+            }, 250);
+        });
+
+        function selectSpeculationSet(idx) {
+            const set = speculationAutocompleteResults[idx];
+            if (!set) return;
+            document.getElementById('speculationSetSearch').value = '';
+            document.getElementById('speculationSetAutocomplete').innerHTML = '';
+            loadSpeculationSet(set);
+        }
+
         // ============== CARD DETAIL POPUP ==============
         // The one shared "small window" for looking at a card without leaving
         // whatever tab/list you were browsing - used by Set Primer, ban lists
@@ -6354,12 +6582,15 @@
         // lists) instead of a new Scryfall tab, so browsing a list of staples
         // or recs never navigates away from where you were.
         const cardTileDataById = {}; // card.id -> full card object, for the popup's onclick
-        // navIndex is this card's position in setPrimerDisplayOrder - passed
-        // only by Set Primer's price/popular/newest modes, whose flat
-        // ranked lists use this same tile. Every other caller (Commander
-        // Staples, Value Vintage, Discovery, ...) omits it and gets the
-        // plain non-navigable popup, unchanged.
-        function buildCardTileHTML(card, rankLabel, navIndex) {
+        // navIndex is this card's position in a flat ranked-list global
+        // (navListVarName, default 'setPrimerDisplayOrder' - Set Primer's
+        // price/popular/newest modes were this tile's first navigable
+        // caller). Speculation Screener passes 'speculationDisplayOrder'
+        // instead. Every other caller (Commander Staples, Value Vintage,
+        // Discovery, ...) omits navIndex and gets the plain non-navigable
+        // popup, unchanged. extraHTML is arbitrary markup (e.g. Speculation's
+        // score-reason badges) inserted below the price row.
+        function buildCardTileHTML(card, rankLabel, navIndex, navListVarName, extraHTML) {
             const imgUrl = getCardImageSmall(card);
             const usd = card.prices && card.prices.usd;
             const safeName = card.name.replace(/'/g, "\\'");
@@ -6369,7 +6600,7 @@
             const tileId = `tile-${card.id}`;
             cardTileDataById[card.id] = card;
             const openCard = typeof navIndex === 'number'
-                ? `openCardModal(cardTileDataById['${card.id}'], setPrimerDisplayOrder, ${navIndex})`
+                ? `openCardModal(cardTileDataById['${card.id}'], ${navListVarName || 'setPrimerDisplayOrder'}, ${navIndex})`
                 : `openCardModal(cardTileDataById['${card.id}'])`;
 
             return `
@@ -6383,6 +6614,7 @@
                     <div class="card-tile-meta-row">
                         ${priceHTML}
                     </div>
+                    ${extraHTML || ''}
                     <button type="button" class="card-tile-stock-btn" onclick="checkTileMoonshotStock('${tileId}', '${safeName}')">Find at Moonshot →</button>
                     <div class="card-tile-stock-result" id="${tileId}-stock"></div>
                 </div>
