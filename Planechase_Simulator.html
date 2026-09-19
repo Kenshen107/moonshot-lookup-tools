@@ -327,7 +327,7 @@
         btn.disabled = true;
         status.textContent = 'Loading planes and phenomena from Scryfall...';
         try {
-            let url = `${API_BASE}/cards/search?q=(type%3Aplane+or+type%3Aphenomenon)&order=name&unique=cards`;
+            let url = `${API_BASE}/cards/search?q=(type%3Aplane+or+type%3Aphenomenon)+-set_type%3Afunny&order=name&unique=cards`;
             let cards = [];
             while (url) {
                 const res = await fetch(url);
