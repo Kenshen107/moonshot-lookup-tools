@@ -86,8 +86,13 @@
             font-size: 0.95em;
         }
 
-        .autocomplete-item:hover {
+        .autocomplete-item:hover,
+        .autocomplete-item.active {
             background: var(--bg-panel);
+        }
+
+        .autocomplete-item.active {
+            box-shadow: inset 3px 0 0 var(--brand);
         }
 
         .autocomplete-item:last-child {
@@ -3385,6 +3390,19 @@
             position: relative;
         }
 
+        /* Briefly pulses on the exact slot Enter/a suggestion click jumped
+           to, on top of (and more emphatic than) the plain gold .matched
+           ring every live-typed match already gets. */
+        .casemap-tile.jumped {
+            animation: casemap-jump-pulse 2s ease-out;
+            z-index: 4;
+        }
+
+        @keyframes casemap-jump-pulse {
+            0%, 40% { box-shadow: 0 0 0 3px #d97757, 0 0 16px 4px rgba(217, 119, 87, 0.8); }
+            100% { box-shadow: 0 0 0 2px #ffd700; }
+        }
+
         .casemap-loose .casemap-tile {
             border-left-color: #e05fc0;
         }
@@ -4164,7 +4182,8 @@
                 straight to a slot instead of scanning the whole case.
             </div>
             <div class="search-box" style="max-width:500px; margin:0 auto 24px;">
-                <input type="text" id="caseMapSearch" class="text-input" aria-label="Search the case map by card name or category" placeholder="Search by card name or category..." oninput="filterCaseMap()">
+                <input type="text" id="caseMapSearch" class="text-input" aria-label="Search the case map by card name or category" placeholder="Search by card name or category... (Enter jumps to it)" autocomplete="off">
+                <div class="autocomplete-list" id="caseMapAutocomplete"></div>
             </div>
             <div id="caseMapResults"></div>
         </div>
@@ -8938,7 +8957,7 @@
             const safeTitle = `#${item.spot} · ${item.category}${isEmpty ? '' : ' · ' + name}`.replace(/"/g, '&quot;');
             const posStyle = gridPos ? `grid-column:${gridPos.col}; grid-row:${gridPos.row};` : '';
             return `
-                <div class="casemap-tile${isEmpty ? ' empty' : ''}" style="border-left-color:${color}; ${posStyle}" data-name="${name.toLowerCase()}" data-category="${item.category.toLowerCase()}" ${isEmpty ? '' : `onclick="openCardModalByName('${lookupName}')"`} title="${safeTitle}">
+                <div class="casemap-tile${isEmpty ? ' empty' : ''}" style="border-left-color:${color}; ${posStyle}" data-name="${name.toLowerCase()}" data-category="${item.category.toLowerCase()}" data-spot="${item.spot}" ${isEmpty ? '' : `onclick="openCardModalByName('${lookupName}')"`} title="${safeTitle}">
                     <div class="casemap-tile-spot">#${item.spot}</div>
                     <div class="casemap-tile-name">${isEmpty ? '—' : name}</div>
                 </div>
@@ -9035,6 +9054,113 @@
                 tile.classList.toggle('dimmed', !match);
             });
         }
+
+        // Scrolls the case map to the given slot and gives it a brief pulse
+        // (on top of the plain gold ring every live-typed match already
+        // gets), so hitting Enter or picking a suggestion actually takes
+        // you there instead of just narrowing the grid down visually.
+        function jumpToCaseMapTile(item) {
+            const tile = document.querySelector(`.casemap-tile[data-spot="${item.spot}"]`);
+            if (!tile) return;
+            tile.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            tile.classList.remove('jumped');
+            void tile.offsetWidth; // force reflow so re-adding the class restarts the animation on repeat jumps to the same tile
+            tile.classList.add('jumped');
+            setTimeout(() => tile.classList.remove('jumped'), 2000);
+        }
+
+        // Ranks case-map matches so an exact/prefix name match floats above
+        // a card that merely mentions the query in its category (or vice
+        // versa) - same idea as scoreSetForSearch for the set pickers.
+        function scoreCaseMapMatch(item, query) {
+            const name = (item.name || '').toLowerCase();
+            const category = (item.category || '').toLowerCase();
+            if (name === query) return 1000;
+            if (name.startsWith(query)) return 500;
+            if (name.includes(query)) return 200;
+            if (category.startsWith(query)) return 100;
+            if (category.includes(query)) return 50;
+            return 0;
+        }
+
+        function findCaseMapMatches(query) {
+            return CASE_MAP_DATA
+                .filter(item => item.name && item.name !== 'N/A')
+                .map(item => ({ item, score: scoreCaseMapMatch(item, query) }))
+                .filter(m => m.score > 0)
+                .sort((a, b) => b.score - a.score || a.item.spot - b.item.spot)
+                .map(m => m.item);
+        }
+
+        let caseMapAutocompleteResults = [];
+        let caseMapAutocompleteActiveIndex = -1;
+
+        function renderCaseMapAutocompleteList() {
+            const list = document.getElementById('caseMapAutocomplete');
+            if (!list) return;
+            if (caseMapAutocompleteResults.length === 0) {
+                list.innerHTML = '';
+                return;
+            }
+            list.innerHTML = caseMapAutocompleteResults.map((item, idx) => `
+                <div class="autocomplete-item${idx === caseMapAutocompleteActiveIndex ? ' active' : ''}" onclick="selectCaseMapAutocomplete(${idx})">
+                    <strong>${item.name}</strong>
+                    <span class="text-secondary"> — ${item.category} · ${item.shelf}${item.side && item.side !== 'N/A' ? ' ' + item.side : ''} #${item.spot}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectCaseMapAutocomplete(idx) {
+            const item = caseMapAutocompleteResults[idx];
+            if (!item) return;
+            document.getElementById('caseMapSearch').value = item.name;
+            filterCaseMap();
+            caseMapAutocompleteResults = [];
+            caseMapAutocompleteActiveIndex = -1;
+            renderCaseMapAutocompleteList();
+            jumpToCaseMapTile(item);
+        }
+
+        document.getElementById('caseMapSearch').addEventListener('input', function(e) {
+            filterCaseMap();
+            const query = e.target.value.trim().toLowerCase();
+            caseMapAutocompleteResults = query ? findCaseMapMatches(query).slice(0, 10) : [];
+            // Top suggestion pre-highlighted (not just after an explicit
+            // arrow-down) so Enter works immediately after typing, the same
+            // way a lot of desktop search boxes behave.
+            caseMapAutocompleteActiveIndex = caseMapAutocompleteResults.length > 0 ? 0 : -1;
+            renderCaseMapAutocompleteList();
+        });
+
+        document.getElementById('caseMapSearch').addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowDown' && caseMapAutocompleteResults.length > 0) {
+                e.preventDefault();
+                caseMapAutocompleteActiveIndex = (caseMapAutocompleteActiveIndex + 1) % caseMapAutocompleteResults.length;
+                renderCaseMapAutocompleteList();
+            } else if (e.key === 'ArrowUp' && caseMapAutocompleteResults.length > 0) {
+                e.preventDefault();
+                caseMapAutocompleteActiveIndex = (caseMapAutocompleteActiveIndex - 1 + caseMapAutocompleteResults.length) % caseMapAutocompleteResults.length;
+                renderCaseMapAutocompleteList();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (caseMapAutocompleteActiveIndex >= 0) {
+                    selectCaseMapAutocomplete(caseMapAutocompleteActiveIndex);
+                } else {
+                    // No live suggestion list (e.g. Enter pressed again
+                    // after it already emptied itself on the last jump) -
+                    // fall back to re-deriving the top match from whatever
+                    // is still typed, so Enter isn't a no-op.
+                    const q = this.value.trim().toLowerCase();
+                    if (!q) return;
+                    const matches = findCaseMapMatches(q);
+                    if (matches.length > 0) jumpToCaseMapTile(matches[0]);
+                }
+            } else if (e.key === 'Escape') {
+                caseMapAutocompleteResults = [];
+                caseMapAutocompleteActiveIndex = -1;
+                renderCaseMapAutocompleteList();
+            }
+        });
 
         // Initialize
         loadHistory();
