@@ -3344,6 +3344,31 @@
             opacity: 1;
         }
 
+        .quiz-options-images .quiz-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+
+        .quiz-options-images .quiz-option img {
+            width: 100%;
+            max-width: 220px;
+            border-radius: 8px;
+        }
+
+        .quiz-full-card {
+            max-width: 280px;
+            border-radius: 12px;
+        }
+
+        .quiz-printing-line {
+            text-align: center;
+            font-size: 0.9em;
+            margin: -6px 0 14px;
+        }
+
         .quiz-option-key {
             color: #909090;
             margin-right: 6px;
@@ -4120,14 +4145,13 @@
 
         <!-- ============== CARD QUIZ ============== -->
         <div id="quizApp" style="display:none;">
-            <div class="formats-intro">
-                Multiple-choice practice on real cards - name a card from its art
-                or its rules text, match a set symbol to its set, and recall mana
-                value, rarity, card type, and format legality. Your score and
-                streak are just for you and reset when the page is refreshed.
-                Keyboard: <strong>1-4</strong> to answer, <strong>Enter</strong> for the next question.
+            <div class="guide-tabs" id="quizModeTabs">
+                <button type="button" class="guide-tab active" data-quiz-mode="cards" onclick="setQuizMode('cards')">🃏 Card Knowledge</button>
+                <button type="button" class="guide-tab" data-quiz-mode="price" onclick="setQuizMode('price')">💲 Price Check</button>
+                <button type="button" class="guide-tab" data-quiz-mode="casemap" onclick="setQuizMode('casemap')">🗂️ Case Map</button>
             </div>
-            <div class="staples-controls" style="flex-wrap:wrap;">
+            <div class="formats-intro" id="quizIntro"></div>
+            <div class="staples-controls" style="flex-wrap:wrap;" id="quizPoolRow">
                 <label class="text-secondary" style="font-size:0.85em;" for="quizPool">Cards from:</label>
                 <select id="quizPool" class="set-primer-select" onchange="changeQuizPool()">
                     <option value="recent">Recent sets (last 2 years)</option>
@@ -8017,15 +8041,33 @@
         }
 
         // ============== CARD QUIZ ==============
-        // Multiple-choice practice built from real Scryfall cards. Cards come
-        // from a random page of the chosen pool's search results and are kept
-        // in a local buffer - that buffer also supplies the wrong answers, so
-        // most questions need no extra request beyond the occasional refill.
-        // Score and streak are session-only (in memory), by design.
+        // Multiple-choice staff practice, in three modes that each keep their
+        // own session-only score and streak:
+        //  - Card Knowledge: questions about real Scryfall cards.
+        //  - Price Check: today's market price (never a prediction - see CLAUDE.md).
+        //  - Case Map: where things live in the store's hotlist case (CASE_MAP_DATA).
+        // Card-based modes draw from a random page of the chosen pool's search
+        // results, kept in a local buffer that also supplies the wrong answers,
+        // so most questions need no extra request beyond an occasional refill.
         const QUIZ_PAGE_SIZE = 175; // Scryfall search page size
         const QUIZ_BUFFER_MIN = 20; // refill below this so there are always enough wrong answers to draw from
         const QUIZ_FORMATS = ['standard', 'pioneer', 'modern', 'legacy', 'vintage', 'commander', 'pauper'];
         const QUIZ_FALLBACK_TYPES = ['Creature', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Land', 'Planeswalker', 'Artifact Creature', 'Legendary Creature', 'Enchantment Creature'];
+
+        const QUIZ_MODES = {
+            cards: {
+                intro: 'Multiple-choice practice on real cards - name a card from its art or its rules text, match a set symbol to its set, and recall mana value, rarity, card type, and format legality.',
+                usesPool: true
+            },
+            price: {
+                intro: 'Sharpen buylist and sales instincts: pick the price range a card is going for today, or which of two cards is worth more right now. Prices are current TCGplayer market prices via Scryfall (refreshed daily) - this is about knowing today\'s value, not guessing where it\'s headed.',
+                usesPool: true
+            },
+            casemap: {
+                intro: 'Learn the hotlist case: where a card sits, what\'s in a given slot, and which section a card belongs to. After each answer, "Show in case" jumps straight to that slot on the Case Map.',
+                usesPool: false
+            }
+        };
 
         function isoDateYearsAgo(years) {
             const d = new Date();
@@ -8042,39 +8084,74 @@
         };
 
         const QUIZ_TYPES = [
-            { key: 'art',    label: 'Name it from the art',  build: buildQuizArtQuestion },
-            { key: 'text',   label: 'Name it from its text', build: buildQuizTextQuestion },
-            { key: 'symbol', label: 'Set symbols',           build: buildQuizSymbolQuestion },
-            { key: 'mv',     label: 'Mana value',            build: buildQuizManaValueQuestion },
-            { key: 'rarity', label: 'Rarity',                build: buildQuizRarityQuestion },
-            { key: 'type',   label: 'Card type',             build: buildQuizTypeQuestion },
-            { key: 'format', label: 'Format legality',       build: buildQuizFormatQuestion }
+            { mode: 'cards',   key: 'art',        label: 'Name it from the art',   build: buildQuizArtQuestion },
+            { mode: 'cards',   key: 'text',       label: 'Name it from its text',  build: buildQuizTextQuestion },
+            { mode: 'cards',   key: 'symbol',     label: 'Set symbols',            build: buildQuizSymbolQuestion },
+            { mode: 'cards',   key: 'mv',         label: 'Mana value',             build: buildQuizManaValueQuestion },
+            { mode: 'cards',   key: 'rarity',     label: 'Rarity',                 build: buildQuizRarityQuestion },
+            { mode: 'cards',   key: 'type',       label: 'Card type',              build: buildQuizTypeQuestion },
+            { mode: 'cards',   key: 'format',     label: 'Format legality',        build: buildQuizFormatQuestion },
+            { mode: 'price',   key: 'priceRange', label: 'Price range',            build: buildQuizPriceRangeQuestion },
+            { mode: 'price',   key: 'priceHigher', label: 'Which is worth more?',  build: buildQuizPriceHigherQuestion },
+            { mode: 'casemap', key: 'caseWhere',  label: 'Where is this card?',    build: buildQuizCaseWhereQuestion },
+            { mode: 'casemap', key: 'caseWhich',  label: "What's in this slot?",   build: buildQuizCaseWhichQuestion },
+            { mode: 'casemap', key: 'caseSection', label: 'Which section?',        build: buildQuizCaseSectionQuestion }
         ];
 
+        let quizMode = 'cards';
         let quizPoolKey = 'recent';
         let quizBuffer = [];
         let quizPoolMaxPage = null;
         let quizPoolToken = 0; // bumped on pool change so in-flight refills/prepared questions are discarded
         const quizSeenIds = new Set();
-        let quizScore = { correct: 0, total: 0, streak: 0, best: 0 };
+        const quizSeenCaseSpots = new Set();
+        const quizDisabledTypes = new Set();
+        const quizScores = {
+            cards:   { correct: 0, total: 0, streak: 0, best: 0 },
+            price:   { correct: 0, total: 0, streak: 0, best: 0 },
+            casemap: { correct: 0, total: 0, streak: 0, best: 0 }
+        };
         let quizCurrent = null;
         let quizAnswered = false;
         let quizNextPromise = null;
         let quizInitialized = false;
+        let quizRenderToken = 0; // only the newest nextQuizQuestion() call may draw a question
 
         function showQuizTab() {
             if (quizInitialized) return;
             quizInitialized = true;
+            setQuizMode('cards');
+        }
+
+        function setQuizMode(mode) {
+            quizMode = mode;
+            quizNextPromise = null;
+            document.querySelectorAll('#quizModeTabs [data-quiz-mode]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.quizMode === mode);
+            });
+            document.getElementById('quizIntro').innerHTML =
+                `${QUIZ_MODES[mode].intro} Your score and streak are just for you and reset when the page is refreshed. Keyboard: <strong>1-4</strong> to answer, <strong>Enter</strong> for the next question.`;
+            document.getElementById('quizPoolRow').style.display = QUIZ_MODES[mode].usesPool ? '' : 'none';
             document.getElementById('quizTypes').innerHTML =
                 `<span class="text-secondary">Ask about:</span>` +
-                QUIZ_TYPES.map(t => `<label><input type="checkbox" id="quizType-${t.key}" checked onchange="onQuizTypeToggle(this)"> ${t.label}</label>`).join('');
+                QUIZ_TYPES.filter(t => t.mode === mode).map(t =>
+                    `<label><input type="checkbox" id="quizType-${t.key}" ${quizDisabledTypes.has(t.key) ? '' : 'checked'} onchange="onQuizTypeToggle(this, '${t.key}')"> ${t.label}</label>`
+                ).join('');
             renderQuizScoreboard();
             nextQuizQuestion();
         }
 
-        // At least one question type always stays on.
-        function onQuizTypeToggle(checkbox) {
-            if (!QUIZ_TYPES.some(t => document.getElementById(`quizType-${t.key}`).checked)) checkbox.checked = true;
+        function quizEnabledTypes() {
+            return QUIZ_TYPES.filter(t => t.mode === quizMode && !quizDisabledTypes.has(t.key));
+        }
+
+        // At least one question type per mode always stays on.
+        function onQuizTypeToggle(checkbox, key) {
+            if (checkbox.checked) quizDisabledTypes.delete(key); else quizDisabledTypes.add(key);
+            if (quizEnabledTypes().length === 0) {
+                quizDisabledTypes.delete(key);
+                checkbox.checked = true;
+            }
             quizNextPromise = null; // the prepared question may be a type that was just turned off
         }
 
@@ -8088,12 +8165,12 @@
         }
 
         function resetQuizScore() {
-            quizScore = { correct: 0, total: 0, streak: 0, best: 0 };
+            quizScores[quizMode] = { correct: 0, total: 0, streak: 0, best: 0 };
             renderQuizScoreboard();
         }
 
         function renderQuizScoreboard() {
-            const { correct, total, streak, best } = quizScore;
+            const { correct, total, streak, best } = quizScores[quizMode];
             const pct = total ? Math.round((correct / total) * 100) : 0;
             document.getElementById('quizScoreboard').innerHTML = `
                 <span>Score <strong>${correct} / ${total}</strong>${total ? ` (${pct}%)` : ''}</span>
@@ -8120,6 +8197,12 @@
             if (card.image_uris && card.image_uris.art_crop) return card.image_uris.art_crop;
             const face = card.card_faces && card.card_faces[0];
             return face && face.image_uris ? face.image_uris.art_crop : null;
+        }
+
+        function quizCardImage(card) {
+            if (card.image_uris && card.image_uris.normal) return card.image_uris.normal;
+            const face = card.card_faces && card.card_faces[0];
+            return face && face.image_uris ? face.image_uris.normal : getCardImageSmall(card);
         }
 
         // Front face's type line without subtypes: "Legendary Creature — Elf" -> "Legendary Creature".
@@ -8179,6 +8262,8 @@
         function quizArtHTML(card) {
             return `<img class="quiz-art" src="${quizArtCrop(card)}" alt="Card art">`;
         }
+
+        // ---- Card Knowledge questions ----
 
         function buildQuizArtQuestion(card) {
             const wrong = quizDistractors(card, c => c.name, 3);
@@ -8258,8 +8343,7 @@
         function buildQuizTypeQuestion(card) {
             const correct = quizMainType(card);
             if (!correct) return null;
-            const wrong = quizDistractors(card, c => quizMainType(c), 3)
-                .filter(t => t !== correct);
+            const wrong = quizDistractors(card, c => quizMainType(c), 3);
             quizShuffle(QUIZ_FALLBACK_TYPES).forEach(t => {
                 if (wrong.length < 3 && t !== correct && !wrong.includes(t)) wrong.push(t);
             });
@@ -8283,12 +8367,182 @@
             };
         }
 
-        // Picks a fresh card and tries the enabled question types in random
-        // order until one applies to it (e.g. lands have no mana-value question).
+        // ---- Price Check questions (today's market price only) ----
+
+        const QUIZ_PRICE_BANDS = [0, 1, 3, 5, 10, 20, 40, 75, 150, 300, Infinity];
+
+        function quizPrice(card) {
+            const v = parseFloat(card.prices && card.prices.usd);
+            return Number.isFinite(v) ? v : null;
+        }
+
+        function quizPriceBandLabel(i) {
+            const lo = QUIZ_PRICE_BANDS[i], hi = QUIZ_PRICE_BANDS[i + 1];
+            if (lo === 0) return `Under $${hi}`;
+            if (hi === Infinity) return `$${lo}+`;
+            return `$${lo} – $${hi}`;
+        }
+
+        function quizPrintingLine(card) {
+            return `${quizEscape(card.name)} <span class="text-secondary">· ${quizEscape(card.set_name || '')} (${(card.set || '').toUpperCase()} #${quizEscape(card.collector_number || '?')}), nonfoil</span>`;
+        }
+
+        // Four neighboring price bands containing the right one, at a random
+        // position - so the answer isn't always the middle option.
+        function buildQuizPriceRangeQuestion(card) {
+            const price = quizPrice(card);
+            if (price === null) return null;
+            const bandCount = QUIZ_PRICE_BANDS.length - 1;
+            const band = QUIZ_PRICE_BANDS.findIndex((lo, i) => price >= lo && price < QUIZ_PRICE_BANDS[i + 1]);
+            const start = Math.max(0, Math.min(bandCount - 4, band - Math.floor(Math.random() * 4)));
+            const labels = [0, 1, 2, 3].map(k => quizPriceBandLabel(start + k));
+            const correct = quizPriceBandLabel(band);
+            return {
+                typeLabel: 'Price range', prompt: 'Roughly what is this printing going for today?',
+                bodyHTML: `<img class="quiz-art quiz-full-card" src="${quizCardImage(card)}" alt="${quizEscape(card.name)}"><div class="quiz-printing-line">${quizPrintingLine(card)}</div>`,
+                correct, wrong: labels.filter(l => l !== correct), keepOrder: true,
+                explainHTML: `Market price today: <strong>${formatUsd(price)}</strong> (TCGplayer via Scryfall, refreshed daily).`
+            };
+        }
+
+        // Two cards whose prices differ enough (1.5x and at least $0.50)
+        // that the answer is knowable rather than a coin flip.
+        function buildQuizPriceHigherQuestion(card) {
+            const price = quizPrice(card);
+            if (price === null) return null;
+            const other = quizShuffle(quizBuffer).find(c => {
+                const p = quizPrice(c);
+                if (c.id === card.id || p === null || c.name === card.name) return false;
+                const [lo, hi] = [Math.min(p, price), Math.max(p, price)];
+                return hi - lo >= 0.5 && hi >= lo * 1.5;
+            });
+            if (!other) return null;
+            const otherPrice = quizPrice(other);
+            const pricier = price > otherPrice ? card : other;
+            const cheaper = pricier === card ? other : card;
+            const optionCards = quizShuffle([card, other]);
+            return {
+                typeLabel: 'Which is worth more?', prompt: 'Which of these sells for more right now?',
+                bodyHTML: '',
+                options: optionCards.map(c => c.name),
+                optionImages: optionCards.map(c => quizCardImage(c)),
+                correctIndex: optionCards.indexOf(pricier),
+                explainHTML: `${quizEscape(pricier.name)} (${quizEscape(pricier.set_name || '')}): <strong>${formatUsd(quizPrice(pricier))}</strong> · ${quizEscape(cheaper.name)} (${quizEscape(cheaper.set_name || '')}): <strong>${formatUsd(quizPrice(cheaper))}</strong><br><span class="text-secondary">TCGplayer market prices via Scryfall, refreshed daily.</span>`,
+                card: pricier
+            };
+        }
+
+        // ---- Case Map questions (from CASE_MAP_DATA) ----
+
+        function quizCaseItems() {
+            return CASE_MAP_DATA.filter(item => item.name && item.name.trim() && item.name.trim() !== 'N/A');
+        }
+
+        function quizCaseLocation(item) {
+            const side = item.side === 'Left' || item.side === 'Right' ? `${item.side} side` : 'Loose / overflow';
+            return `${item.shelf} · ${side} · #${item.spot}`;
+        }
+
+        // Wrong answers prefer the same shelf (or the same section, for
+        // name questions) so the question tests the layout, not a guess.
+        function quizCaseOthers(item, preferSame) {
+            const others = quizShuffle(quizCaseItems().filter(o => o.spot !== item.spot));
+            return [...others.filter(o => o[preferSame] === item[preferSame]), ...others.filter(o => o[preferSame] !== item[preferSame])];
+        }
+
+        function quizCaseActions(item) {
+            return `<button type="button" class="staples-sort-btn" onclick="showQuizCaseSlot(${item.spot})">Show in case</button>
+                    <button type="button" class="staples-sort-btn" onclick="openCardModalByName('${stripPrintingModifiers(item.name).trim().replace(/'/g, "\\'")}')">View card</button>`;
+        }
+
+        function quizCaseExplain(item) {
+            return `<strong>${quizEscape(item.name)}</strong> lives at ${quizCaseLocation(item)} in the <strong>${quizEscape(item.category)}</strong> section.`;
+        }
+
+        function buildQuizCaseWhereQuestion(item) {
+            // A card stocked in two slots would make two answers "right".
+            if (quizCaseItems().filter(o => o.name === item.name).length > 1) return null;
+            const wrong = [];
+            quizCaseOthers(item, 'shelf').forEach(o => {
+                const loc = quizCaseLocation(o);
+                if (wrong.length < 3 && !wrong.includes(loc)) wrong.push(loc);
+            });
+            return {
+                typeLabel: 'Case map', prompt: `Where is <strong>${quizEscape(item.name)}</strong> in the case?`,
+                bodyHTML: '', correct: quizCaseLocation(item), wrong,
+                explainHTML: quizCaseExplain(item), actionsHTML: quizCaseActions(item), caseItem: item
+            };
+        }
+
+        function buildQuizCaseWhichQuestion(item) {
+            const wrong = [];
+            quizCaseOthers(item, 'category').forEach(o => {
+                if (wrong.length < 3 && o.name !== item.name && !wrong.includes(o.name)) wrong.push(o.name);
+            });
+            return {
+                typeLabel: 'Case map', prompt: `Which card is in <strong>${quizCaseLocation(item)}</strong>?`,
+                bodyHTML: `<div class="text-secondary" style="text-align:center; margin-bottom:12px;">Section: ${quizEscape(item.category)}</div>`,
+                correct: item.name, wrong,
+                explainHTML: quizCaseExplain(item), actionsHTML: quizCaseActions(item), caseItem: item
+            };
+        }
+
+        function buildQuizCaseSectionQuestion(item) {
+            const categories = [...new Set(quizCaseItems().map(o => o.category))].filter(c => c !== item.category);
+            const wrong = quizShuffle(categories).slice(0, 3);
+            if (wrong.length < 3) return null;
+            return {
+                typeLabel: 'Case map', prompt: `Which section of the case holds <strong>${quizEscape(item.name)}</strong>?`,
+                bodyHTML: '', correct: item.category, wrong,
+                explainHTML: quizCaseExplain(item), actionsHTML: quizCaseActions(item), caseItem: item
+            };
+        }
+
+        function showQuizCaseSlot(spot) {
+            const item = CASE_MAP_DATA.find(o => o.spot === spot);
+            if (!item) return;
+            switchGame('casemap');
+            setTimeout(() => jumpToCaseMapTile(item), 50);
+        }
+
+        // ---- Question flow ----
+
+        function finishQuizQuestion(q, extra) {
+            const out = { ...q, ...extra };
+            if (!out.options) {
+                out.options = out.keepOrder ? [out.correct, ...out.wrong].sort((a, b) => quizPriceBandIndex(a) - quizPriceBandIndex(b)) : quizShuffle([out.correct, ...out.wrong]);
+                out.correctIndex = out.options.indexOf(out.correct);
+            }
+            return out;
+        }
+
+        function quizPriceBandIndex(label) {
+            for (let i = 0; i < QUIZ_PRICE_BANDS.length - 1; i++) if (quizPriceBandLabel(i) === label) return i;
+            return 0;
+        }
+
+        // Picks a fresh card (or case slot) and tries the enabled question
+        // types in random order until one applies to it (e.g. lands have no
+        // mana-value question, foil-only cards have no nonfoil price).
         async function prepareQuizQuestion() {
             const myToken = quizPoolToken;
+            const mode = quizMode;
+            const enabled = quizEnabledTypes();
+
+            if (mode === 'casemap') {
+                let items = quizCaseItems().filter(i => !quizSeenCaseSpots.has(i.spot));
+                if (items.length === 0) { quizSeenCaseSpots.clear(); items = quizCaseItems(); }
+                for (const item of quizShuffle(items).slice(0, 12)) {
+                    quizSeenCaseSpots.add(item.spot);
+                    for (const type of quizShuffle(enabled)) {
+                        const q = type.build(item);
+                        if (q) return finishQuizQuestion(q, { mode, token: myToken });
+                    }
+                }
+                throw new Error("Couldn't build a case map question.");
+            }
+
             await loadSymbology(); // rules-text questions render mana symbols while being built
-            const enabled = QUIZ_TYPES.filter(t => document.getElementById(`quizType-${t.key}`).checked);
             for (let attempt = 0; attempt < 12; attempt++) {
                 if (quizBuffer.length < QUIZ_BUFFER_MIN) await refillQuizBuffer();
                 if (myToken !== quizPoolToken) return null;
@@ -8298,10 +8552,7 @@
                 quizSeenIds.add(card.id);
                 for (const type of quizShuffle(enabled)) {
                     const q = await type.build(card);
-                    if (q) {
-                        const options = quizShuffle([q.correct, ...q.wrong]);
-                        return { ...q, card, options, correctIndex: options.indexOf(q.correct), token: myToken };
-                    }
+                    if (q) return finishQuizQuestion({ card, ...q }, { mode, token: myToken });
                 }
             }
             throw new Error("Couldn't build a question from these cards - try another pool.");
@@ -8309,20 +8560,25 @@
 
         async function nextQuizQuestion() {
             const area = document.getElementById('quizCardArea');
+            const myRender = ++quizRenderToken;
             area.innerHTML = `<div class="loading">Shuffling the deck...</div>`;
             quizAnswered = false;
+            quizCurrent = null;
             try {
                 const pending = quizNextPromise || prepareQuizQuestion();
                 quizNextPromise = null;
                 let q = await pending;
-                if (!q || q.token !== quizPoolToken) q = await prepareQuizQuestion(); // pool changed while it was being prepared
-                if (!q) return;
+                if (myRender !== quizRenderToken) return;
+                // The pool or mode changed while it was being prepared.
+                if (!q || q.token !== quizPoolToken || q.mode !== quizMode) q = await prepareQuizQuestion();
+                if (!q || myRender !== quizRenderToken) return;
                 quizCurrent = q;
                 renderQuizQuestion(q);
                 // Get the next one ready while this one is being answered.
                 quizNextPromise = prepareQuizQuestion();
                 quizNextPromise.catch(() => { quizNextPromise = null; });
             } catch (err) {
+                if (myRender !== quizRenderToken) return;
                 console.error('Error building quiz question:', err);
                 area.innerHTML = `
                     <div class="error">❌ Couldn't load a question: ${quizEscape(err.message)}</div>
@@ -8337,9 +8593,12 @@
                     <div class="quiz-type-label">${q.typeLabel}</div>
                     <div class="quiz-prompt">${q.prompt}</div>
                     ${q.bodyHTML}
-                    <div class="quiz-options">
+                    <div class="quiz-options${q.optionImages ? ' quiz-options-images' : ''}">
                         ${q.options.map((opt, i) => `
-                            <button type="button" class="quiz-option" id="quizOption-${i}" onclick="answerQuiz(${i})"><span class="quiz-option-key">${i + 1}</span>${quizEscape(opt)}</button>
+                            <button type="button" class="quiz-option" id="quizOption-${i}" onclick="answerQuiz(${i})">
+                                ${q.optionImages ? `<img src="${q.optionImages[i]}" alt="">` : ''}
+                                <span><span class="quiz-option-key">${i + 1}</span>${quizEscape(opt)}</span>
+                            </button>
                         `).join('')}
                     </div>
                     <div id="quizFeedback"></div>
@@ -8353,13 +8612,14 @@
             const q = quizCurrent;
             const right = index === q.correctIndex;
 
-            quizScore.total++;
+            const score = quizScores[q.mode];
+            score.total++;
             if (right) {
-                quizScore.correct++;
-                quizScore.streak++;
-                quizScore.best = Math.max(quizScore.best, quizScore.streak);
+                score.correct++;
+                score.streak++;
+                score.best = Math.max(score.best, score.streak);
             } else {
-                quizScore.streak = 0;
+                score.streak = 0;
             }
             renderQuizScoreboard();
 
@@ -8371,20 +8631,22 @@
             });
 
             const card = q.card;
-            const year = card.released_at ? new Date(card.released_at).getFullYear() : '';
-            const img = getCardImageSmall(card);
+            let detailHTML = q.explainHTML || '';
+            if (!detailHTML && card) {
+                const year = card.released_at ? new Date(card.released_at).getFullYear() : '';
+                detailHTML = `${quizEscape(card.name)} · ${quizEscape(card.type_line || '')}<br>
+                    ${quizEscape(card.set_name || '')} (${(card.set || '').toUpperCase()}${year ? `, ${year}` : ''}) · ${QUIZ_RARITY_LABELS[card.rarity] || card.rarity || ''} · Mana value ${card.cmc ?? '—'}`;
+            }
+            const img = card && !q.optionImages ? getCardImageSmall(card) : null;
             document.getElementById('quizFeedback').innerHTML = `
                 <div class="quiz-feedback">
                     ${img ? `<img src="${img}" alt="${quizEscape(card.name)}" onclick="openCardModal(quizCurrent.card)">` : ''}
                     <div>
                         <div style="font-weight:700;">${right ? '✅ Correct!' : `❌ Not quite - it's ${quizEscape(q.options[q.correctIndex])}.`}</div>
-                        <div class="text-secondary" style="font-size:0.88em; margin-top:4px;">
-                            ${quizEscape(card.name)} · ${quizEscape(card.type_line || '')}<br>
-                            ${quizEscape(card.set_name || '')} (${(card.set || '').toUpperCase()}${year ? `, ${year}` : ''}) · ${QUIZ_RARITY_LABELS[card.rarity] || card.rarity || ''} · Mana value ${card.cmc ?? '—'}
-                        </div>
+                        <div class="text-secondary" style="font-size:0.88em; margin-top:4px;">${detailHTML}</div>
                         <div class="quiz-feedback-actions">
                             <button type="button" class="staples-sort-btn active" onclick="nextQuizQuestion()">Next question →</button>
-                            <button type="button" class="staples-sort-btn" onclick="openCardModal(quizCurrent.card)">View full card</button>
+                            ${q.actionsHTML || (card ? `<button type="button" class="staples-sort-btn" onclick="openCardModal(quizCurrent.card)">View full card</button>` : '')}
                         </div>
                     </div>
                 </div>
