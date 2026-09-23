@@ -7,9 +7,36 @@ Staff tools for Moonshot Games, used at work in both stores (Noblesville and Pla
 - **No price speculation, ever.** Don't add features that predict, rank, or suggest which cards will go up in value, or anything that frames cards as investments. Showing current market prices is fine. Guessing at future prices is not. This applies to the whole repo.
 - **No new tabs, tools, or features without the owner's approval.** Build what was asked. If something extra seems useful, suggest it and wait for a yes before building it.
 - **Don't remove or rework existing features without asking first.**
+- **End every reply with these links**, so the owner always has them:
+  - Branch: `https://github.com/Kenshen107/moonshot-lookup-tools/tree/<the branch you're working on>`
+  - Main: https://github.com/Kenshen107/moonshot-lookup-tools/tree/main
+  - Live site: https://kenshen107.github.io/moonshot-lookup-tools/MTG_Lookup_Tool.html
 
 ## Working in this repo
 
 - Keep each tool a single self-contained HTML file. Don't add frameworks, build steps, or a backend.
 - In `MTG_Lookup_Tool.html`, tabs are driven by the `APP_VIEWS` table. The Buyer's Guide and Grading tabs use sub-tab tables (`BUYERS_GUIDE_SUBTABS`, `GUIDE_SUBTABS`). Reuse the existing helpers (card tiles, the card popup, Moonshot stock checks, `fetchScryfallSearchPage`) instead of writing new copies.
 - Scryfall search queries (otags especially) can't be guessed reliably. Mark anything not checked against live results as unverified or approximate, as the land-cycle data already does.
+
+## Seasonal themes (`MTG_Lookup_Tool.html`)
+
+The site's colors all come from the design tokens in the `:root` CSS block. A seasonal theme is an `html[data-theme="..."]` block that overrides some of them. The schedule script in `<head>` (`SEASONAL_THEMES` / `SEASONAL_SCHEDULES`) decides which theme is on, by the device's local date, repeating every year. Outside any season there's no `data-theme`, so the site uses the original look. Staff can switch a season off on their own device with the "Switch to classic look" button. Add `?theme=<key>` to the URL to preview any theme.
+
+### Original ("OG") theme — keep these, never edit them for a season
+
+| Token | Value | | Token | Value |
+|---|---|---|---|---|
+| `--brand` | `#1777a1` (Moonshot teal) | | `--text-primary` | `#e0e0e0` |
+| `--brand-light` | `#3aa3d1` | | `--text-secondary` | `#909090` |
+| `--bg-canvas` | `#1a1a1a` | | `--text-muted` | `#707070` |
+| `--bg-panel` | `#2a2a2a` | | `--text-heading` | `#ffffff` |
+| `--bg-panel-raised` | `#333333` | | `--border` | `#404040` |
+| `--bg-inset` | `#1a1a1a` | | `--border-subtle` | `#333333` |
+| `--color-link` | `#6cb2ff` | | `--color-success` | `#7ee787` |
+
+### Season log
+
+| Season | Dates (every year) | Themes |
+|---|---|---|
+| Fall / Halloween | Sept 22 – Oct 31 | Wednesdays: 🧪 Witching Wednesday (`witching`). Fridays: 🦇 Spooky Friday (`spooky`). Oct 31: 🎃 Halloween Night (`halloween`). Other days are picked at random from 🍂 Autumn Harvest (`harvest`), 🎃 Pumpkin Patch (`pumpkin`) and 🌕 Harvest Moon (`harvestmoon`). The pick is seeded by the date, so everyone sees the same theme all day, and the same theme never shows two days in a row. |
+| Christmas | _not built yet — next up_ | |
