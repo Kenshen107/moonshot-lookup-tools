@@ -386,8 +386,8 @@
         }
 
         .history-section {
-            background: #2a2a2a;
-            border: 2px solid #404040;
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
             border-radius: 8px;
             padding: 20px;
             margin-top: 30px;
@@ -445,7 +445,11 @@
             padding: 20px;
         }
 
-        /* ---- Design tokens ---- */
+        /* ---- Design tokens ----
+           This :root block IS the original ("classic") Moonshot look. Seasonal
+           themes below only override these tokens under html[data-theme="..."],
+           so never edit these values for a season - add a theme instead. The
+           original values are also recorded in CLAUDE.md. */
         :root {
             /* Brand accent (Moonshot Games teal) - the one accent color used
                throughout, rather than mixing in other one-off accents. */
@@ -490,6 +494,142 @@
 
             /* Motion */
             --transition-fast: 0.15s ease;
+        }
+
+        /* ---- Seasonal themes ----
+           Each one overrides the design tokens above; which one is active is
+           decided by the schedule script in <head>. Brand colors are kept dark
+           enough for the white button text that sits on them. */
+        html[data-theme="harvest"] {
+            --brand: #b9571a; --brand-light: #f0913f;
+            --bg-canvas: #1c1410; --bg-panel: #2a1f17; --bg-panel-raised: #35271c; --bg-inset: #17110d;
+            --border: #4a3526; --border-subtle: #35271c;
+            --text-heading: #ffe3c2; --color-link: #f5a55a;
+        }
+        html[data-theme="pumpkin"] {
+            --brand: #c4550f; --brand-light: #ff9a3c;
+            --bg-canvas: #141a12; --bg-panel: #1f261b; --bg-panel-raised: #2a3324; --bg-inset: #11160f;
+            --border: #3c4a33; --border-subtle: #2a3324;
+            --text-heading: #ffd9a8; --color-link: #ffb15c;
+        }
+        html[data-theme="harvestmoon"] {
+            --brand: #9a6b0c; --brand-light: #f2c94c;
+            --bg-canvas: #0f1424; --bg-panel: #1a2136; --bg-panel-raised: #232c46; --bg-inset: #0c1020;
+            --border: #33406a; --border-subtle: #232c46;
+            --text-heading: #fff4d1; --color-link: #f2c94c;
+        }
+        html[data-theme="spooky"] {
+            --brand: #c9530f; --brand-light: #ffa04d;
+            --bg-canvas: #150f1f; --bg-panel: #221830; --bg-panel-raised: #2d2040; --bg-inset: #110c19;
+            --border: #45325e; --border-subtle: #2d2040;
+            --text-heading: #ffe0c7; --color-link: #ffa04d;
+        }
+        html[data-theme="witching"] {
+            --brand: #3f7f1f; --brand-light: #9be564;
+            --bg-canvas: #120f1a; --bg-panel: #1d1928; --bg-panel-raised: #282236; --bg-inset: #0e0b14;
+            --border: #3b3350; --border-subtle: #282236;
+            --text-heading: #d9ffc2; --color-link: #9be564;
+        }
+        html[data-theme="halloween"] {
+            --brand: #c24e00; --brand-light: #ff9340;
+            --bg-canvas: #0b0b0b; --bg-panel: #1a1411; --bg-panel-raised: #241b16; --bg-inset: #080808;
+            --border: #3d2a1d; --border-subtle: #241b16;
+            --text-heading: #ffb870; --color-link: #ff9340;
+        }
+
+        /* A soft glow in each theme's colors behind everything. */
+        html[data-theme] body { background-attachment: fixed; }
+        html[data-theme="harvest"] body     { background-image: radial-gradient(ellipse at top, rgba(240, 145, 63, 0.16), transparent 60%); }
+        html[data-theme="pumpkin"] body     { background-image: radial-gradient(ellipse at bottom, rgba(255, 154, 60, 0.14), transparent 60%); }
+        html[data-theme="harvestmoon"] body { background-image: radial-gradient(circle at 88% 8%, rgba(242, 201, 76, 0.28), rgba(242, 201, 76, 0.06) 14%, transparent 40%); }
+        html[data-theme="spooky"] body      { background-image: radial-gradient(ellipse at top, rgba(140, 80, 200, 0.2), transparent 60%); }
+        html[data-theme="witching"] body    { background-image: radial-gradient(ellipse at bottom, rgba(111, 191, 59, 0.14), transparent 55%), radial-gradient(ellipse at top, rgba(120, 80, 180, 0.14), transparent 55%); }
+        html[data-theme="halloween"] body   { background-image: radial-gradient(ellipse at bottom, rgba(255, 106, 0, 0.18), transparent 60%); }
+
+        /* Today's-theme label + the Classic toggle, under the page title. */
+        .seasonal-badge {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: -18px 0 18px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .seasonal-badge[hidden] {
+            display: none;
+        }
+
+        .seasonal-badge button {
+            width: auto;
+            margin-top: 0;
+            padding: 4px 12px;
+            font-size: 0.9em;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 999px;
+        }
+
+        .seasonal-badge button:hover {
+            border-color: var(--brand-light);
+        }
+
+        /* Animation layer: fixed behind all page content (z-index -1), so the
+           opaque panels hide it wherever there's something to read - it only
+           shows in the gaps and margins. */
+        #seasonalFx {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .fx-p {
+            position: absolute;
+            line-height: 1;
+            opacity: 0.45;
+            will-change: transform, opacity;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        .fx-fall    { top: -8vh; animation-name: fx-fall; }
+        .fx-drift   { left: -10vw; animation-name: fx-drift; animation-timing-function: ease-in-out; }
+        .fx-rise    { bottom: -8vh; animation-name: fx-rise; }
+        .fx-twinkle { animation-name: fx-twinkle; animation-timing-function: ease-in-out; }
+
+        @keyframes fx-fall {
+            0%   { transform: translate(0, 0) rotate(0deg); }
+            50%  { transform: translate(var(--sway, 40px), 55vh) rotate(180deg); }
+            100% { transform: translate(0, 116vh) rotate(360deg); }
+        }
+
+        @keyframes fx-drift {
+            0%   { transform: translate(0, 0); }
+            25%  { transform: translate(30vw, -4vh); }
+            50%  { transform: translate(60vw, 3vh); }
+            75%  { transform: translate(90vw, -3vh); }
+            100% { transform: translate(122vw, 0); }
+        }
+
+        @keyframes fx-rise {
+            0%   { transform: translate(0, 0); opacity: 0; }
+            15%  { opacity: 0.45; }
+            85%  { opacity: 0.35; }
+            100% { transform: translate(var(--sway, 30px), -116vh); opacity: 0; }
+        }
+
+        @keyframes fx-twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.6); }
+            50%      { opacity: 0.6; transform: scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #seasonalFx { display: none; }
         }
 
         /* ---- Shared utility classes - built on the tokens above, used to
@@ -618,8 +758,8 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 20px;
-            background: #2a2a2a;
-            border: 2px solid #404040;
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
             border-radius: 8px;
             padding: 16px 22px;
             margin-bottom: 20px;
@@ -3797,8 +3937,145 @@
             }
         }
     </style>
+    <script>
+        // ============== SEASONAL THEMES ==============
+        // Runs in <head> so the theme is on the page before it first paints.
+        // Everything is by the device's local date, repeats every year, and
+        // only overrides the design tokens - no data-theme attribute means the
+        // original look. Seasons are added as new SEASONAL_SCHEDULES entries
+        // (see CLAUDE.md for the running list).
+        const SEASONAL_THEMES = {
+            harvest:     { label: 'Autumn Harvest',     icon: '🍂', fx: [['🍂', 'fall'], ['🍁', 'fall']] },
+            pumpkin:     { label: 'Pumpkin Patch',      icon: '🎃', fx: [['🍂', 'fall'], ['🎃', 'fall'], ['🍁', 'fall']] },
+            harvestmoon: { label: 'Harvest Moon',       icon: '🌕', fx: [['✨', 'twinkle'], ['⭐', 'twinkle']] },
+            spooky:      { label: 'Spooky Friday',      icon: '🦇', fx: [['🦇', 'drift']] },
+            witching:    { label: 'Witching Wednesday', icon: '🧪', fx: [['✨', 'rise'], ['🧪', 'rise']] },
+            halloween:   { label: 'Halloween Night',    icon: '🎃', fx: [['🦇', 'drift'], ['👻', 'drift'], ['🎃', 'fall']] }
+        };
+
+        // month/day are 1-based and inclusive. Fixed dates beat weekdays;
+        // weekdays (0 = Sunday) beat the random pool.
+        const SEASONAL_SCHEDULES = [
+            {
+                key: 'fall', name: 'fall', start: [9, 22], end: [10, 31],
+                fixedDates: { '10-31': 'halloween' },
+                weekdays: { 3: 'witching', 5: 'spooky' },
+                randomPool: ['harvest', 'pumpkin', 'harvestmoon']
+            }
+        ];
+
+        function seasonalScheduleFor(date) {
+            const md = (date.getMonth() + 1) * 100 + date.getDate();
+            return SEASONAL_SCHEDULES.find(s => md >= s.start[0] * 100 + s.start[1] && md <= s.end[0] * 100 + s.end[1]) || null;
+        }
+
+        // Same pick for everyone all day (seeded by the date), and never the
+        // same theme as yesterday actually got. depth caps the look-back,
+        // which only ever runs through a few random days in a row anyway.
+        function seasonalRandomPick(schedule, date, depth) {
+            const pool = schedule.randomPool;
+            let h = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+            h = Math.imul(h ^ (h >>> 15), 2246822519);
+            h = Math.imul(h ^ (h >>> 13), 3266489917);
+            let i = ((h ^ (h >>> 16)) >>> 0) % pool.length;
+            if (depth < 7) {
+                const yesterday = seasonalThemeFor(new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1), depth + 1);
+                if (yesterday && yesterday.key === pool[i]) i = (i + 1) % pool.length;
+            }
+            return pool[i];
+        }
+
+        function seasonalThemeFor(date, depth = 0) {
+            const schedule = seasonalScheduleFor(date);
+            if (!schedule) return null;
+            const md = `${date.getMonth() + 1}-${date.getDate()}`;
+            const key = (schedule.fixedDates && schedule.fixedDates[md])
+                || (schedule.weekdays && schedule.weekdays[date.getDay()])
+                || seasonalRandomPick(schedule, date, depth);
+            return { schedule, key };
+        }
+
+        function seasonalOffKey(schedule) {
+            return `seasonalThemeOff:${schedule.key}`;
+        }
+
+        function seasonalIsOff(schedule) {
+            try { return localStorage.getItem(seasonalOffKey(schedule)) === '1'; } catch (e) { return false; }
+        }
+
+        // ?theme=<key> previews any theme regardless of the date (and ignores
+        // the Classic toggle) - handy for checking a theme before its day comes up.
+        function seasonalToday() {
+            const preview = new URLSearchParams(location.search).get('theme');
+            if (preview && SEASONAL_THEMES[preview]) {
+                return { schedule: { key: 'preview', name: 'preview' }, key: preview, preview: true };
+            }
+            return seasonalThemeFor(new Date());
+        }
+
+        const SEASONAL_TODAY = seasonalToday();
+        if (SEASONAL_TODAY && (SEASONAL_TODAY.preview || !seasonalIsOff(SEASONAL_TODAY.schedule))) {
+            document.documentElement.setAttribute('data-theme', SEASONAL_TODAY.key);
+        }
+
+        function renderSeasonalBadge() {
+            const badge = document.getElementById('seasonalBadge');
+            if (!badge || !SEASONAL_TODAY) return;
+            const theme = SEASONAL_THEMES[SEASONAL_TODAY.key];
+            const on = document.documentElement.hasAttribute('data-theme');
+            badge.hidden = false;
+            badge.innerHTML = on
+                ? (SEASONAL_TODAY.preview
+                    ? `<span>${theme.icon} Previewing the <strong>${theme.label}</strong> theme</span>`
+                    : `<span>${theme.icon} Today's ${SEASONAL_TODAY.schedule.name} theme: <strong>${theme.label}</strong></span>
+                       <button type="button" onclick="setSeasonalThemeOn(false)">Switch to classic look</button>`)
+                : `<span>Classic look</span>
+                   <button type="button" onclick="setSeasonalThemeOn(true)">Turn ${theme.icon} ${SEASONAL_TODAY.schedule.name} theme back on</button>`;
+        }
+
+        function renderSeasonalFx() {
+            const layer = document.getElementById('seasonalFx');
+            if (!layer) return;
+            layer.innerHTML = '';
+            if (!document.documentElement.hasAttribute('data-theme')) return;
+            const fx = SEASONAL_THEMES[SEASONAL_TODAY.key].fx;
+            const count = window.innerWidth < 700 ? 10 : 18;
+            const rand = (min, max) => min + Math.random() * (max - min);
+            for (let i = 0; i < count; i++) {
+                const [glyph, motion] = fx[i % fx.length];
+                const el = document.createElement('span');
+                el.className = `fx-p fx-${motion}`;
+                el.textContent = glyph;
+                el.style.fontSize = `${rand(16, 30).toFixed(0)}px`;
+                el.style.animationDuration = `${rand(motion === 'twinkle' ? 3 : 12, motion === 'twinkle' ? 7 : 24).toFixed(1)}s`;
+                // Negative delays start each particle mid-animation, so the
+                // screen is already populated instead of everything spawning at once.
+                el.style.animationDelay = `-${rand(0, 24).toFixed(1)}s`;
+                el.style.setProperty('--sway', `${rand(-80, 80).toFixed(0)}px`);
+                if (motion === 'drift') el.style.top = `${rand(5, 85).toFixed(0)}vh`;
+                else if (motion === 'twinkle') { el.style.top = `${rand(2, 95).toFixed(0)}vh`; el.style.left = `${rand(1, 97).toFixed(0)}vw`; }
+                else el.style.left = `${rand(0, 98).toFixed(0)}vw`;
+                layer.appendChild(el);
+            }
+        }
+
+        function setSeasonalThemeOn(on) {
+            if (!SEASONAL_TODAY) return;
+            try { localStorage.setItem(seasonalOffKey(SEASONAL_TODAY.schedule), on ? '0' : '1'); } catch (e) { /* storage blocked - still switch for this visit */ }
+            if (on) document.documentElement.setAttribute('data-theme', SEASONAL_TODAY.key);
+            else document.documentElement.removeAttribute('data-theme');
+            renderSeasonalBadge();
+            renderSeasonalFx();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSeasonalBadge();
+            renderSeasonalFx();
+        });
+    </script>
 </head>
 <body>
+    <div id="seasonalFx" aria-hidden="true"></div>
     <div class="container">
         <div style="text-align:center; margin-bottom:10px;">
             <a href="Pokemon_Lookup_Tool.html" style="color:#6cb2ff; font-size:0.85em; text-decoration:none;">⚡ Looking for Pokémon? →</a>
@@ -3825,6 +4102,7 @@
         </div>
 
         <h1 id="pageTitle">🃏 MTG Card Lookup</h1>
+        <div class="seasonal-badge" id="seasonalBadge" hidden></div>
 
         <!-- Game tabs -->
         <div class="game-tabs" id="gameTabs">
