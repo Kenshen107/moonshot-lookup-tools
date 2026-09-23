@@ -1709,8 +1709,78 @@
             cursor: help;
         }
 
-        .lands-glossary-body {
-            margin-top: 12px;
+        details.lands-glossary {
+            margin-top: 28px;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 12px;
+        }
+
+        details.lands-glossary > summary {
+            font-weight: 700;
+            padding: 6px 0;
+        }
+
+        .lands-pkg {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .lands-pkg-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88em;
+        }
+
+        .lands-pkg-table th,
+        .lands-pkg-table td {
+            padding: 7px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .lands-pkg-table th {
+            color: #909090;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .lands-pkg-table tbody tr {
+            cursor: pointer;
+        }
+
+        .lands-pkg-table tbody tr:hover {
+            background: var(--bg-panel);
+        }
+
+        .lands-approx-dot {
+            color: #909090;
+            cursor: help;
+        }
+
+        /* ---- Full-art basics ---- */
+        .basic-meta {
+            font-size: 0.72em;
+            color: #909090;
+        }
+
+        .basic-prices {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 2px 8px;
+            font-size: 0.78em;
+            color: #b0b0b0;
+        }
+
+        .basic-prices strong {
+            color: #7ee787;
+        }
+
+        .basic-price-na {
+            color: #707070;
+            font-weight: 400;
         }
 
         .rarity-card-grid {
@@ -2556,7 +2626,7 @@
             border-color: var(--brand);
         }
 
-        /* Shared image-tile grid used by Commander Staples and Card Recommendations */
+        /* Shared image-tile grid used by the Buyer's Guide, Set Primer and Speculation */
         .card-tile-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -3612,7 +3682,6 @@
             <button type="button" class="game-tab" id="tabSpeculation" onclick="switchGame('speculation')">📈 Speculation</button>
             <button type="button" class="game-tab" id="tabJudge" onclick="switchGame('judge')">⚖️ Judge Ref</button>
             <button type="button" class="game-tab" id="tabBuylist" onclick="switchGame('buylist')">💰 Buylist</button>
-            <button type="button" class="game-tab" id="tabDiscovery" onclick="switchGame('discovery')">🧭 Card Discovery</button>
             <button type="button" class="game-tab" id="tabBrackets" onclick="switchGame('brackets')">🪜 Brackets</button>
             <button type="button" class="game-tab" id="tabGrading" onclick="switchGame('grading')">🔍 Grading & Fakes</button>
             <button type="button" class="game-tab" id="tabPullList" onclick="switchGame('pulllist')">📋 Pull List</button>
@@ -3657,6 +3726,13 @@
 
         <!-- ============== BUYER'S GUIDE ============== -->
         <div id="buyersGuideApp" style="display:none;">
+            <div class="guide-tabs" id="bgTabs">
+                <button type="button" class="guide-tab active" id="bgTabFinder" onclick="switchBuyersGuideTab('finder')">🔎 Card Finder</button>
+                <button type="button" class="guide-tab" id="bgTabLands" onclick="switchBuyersGuideTab('lands')">🗺️ Land Finder</button>
+                <button type="button" class="guide-tab" id="bgTabBasics" onclick="switchBuyersGuideTab('basics')">🏔️ Full-Art Basics</button>
+            </div>
+
+            <div id="bgFinderApp">
             <div class="formats-intro">
                 One place to help a customer find cards. Pick a theme (or type a
                 creature type), narrow it down by color, card type, mana value,
@@ -3766,6 +3842,84 @@
             </div>
 
             <div id="bgResults"></div>
+            </div>
+
+            <!-- ---- Land Finder ---- -->
+            <div id="landsApp" style="display:none;">
+                <div class="formats-intro">
+                    Pick the colors a deck plays and the most a customer wants to
+                    spend per land, and every land cycle that fits is pulled in -
+                    grouped by cycle, with what each cycle does and what it costs.
+                    The package totals at the top price out a full set of duals
+                    both the cheapest way and the most-played way.
+                </div>
+
+                <div class="recs-color-picker">
+                    <span class="recs-color-label">Deck colors:</span>
+                    <button type="button" class="recs-color-btn" id="landsColor-w" data-color="w" onclick="toggleLandsColor('w')">W</button>
+                    <button type="button" class="recs-color-btn" id="landsColor-u" data-color="u" onclick="toggleLandsColor('u')">U</button>
+                    <button type="button" class="recs-color-btn" id="landsColor-b" data-color="b" onclick="toggleLandsColor('b')">B</button>
+                    <button type="button" class="recs-color-btn" id="landsColor-r" data-color="r" onclick="toggleLandsColor('r')">R</button>
+                    <button type="button" class="recs-color-btn" id="landsColor-g" data-color="g" onclick="toggleLandsColor('g')">G</button>
+                    <button type="button" class="staples-sort-btn" id="landsColorless" onclick="toggleLandsColorless()">Colorless / utility only</button>
+                </div>
+
+                <div class="staples-controls" style="flex-wrap:wrap;">
+                    <span class="text-secondary" style="font-size:0.85em;">Max price per land:</span>
+                    <button type="button" class="staples-sort-btn active" data-budget="" onclick="setLandsBudget('')">Any</button>
+                    <button type="button" class="staples-sort-btn" data-budget="1" onclick="setLandsBudget('1')">$1</button>
+                    <button type="button" class="staples-sort-btn" data-budget="3" onclick="setLandsBudget('3')">$3</button>
+                    <button type="button" class="staples-sort-btn" data-budget="5" onclick="setLandsBudget('5')">$5</button>
+                    <button type="button" class="staples-sort-btn" data-budget="10" onclick="setLandsBudget('10')">$10</button>
+                    <button type="button" class="staples-sort-btn" data-budget="25" onclick="setLandsBudget('25')">$25</button>
+                    <span class="bg-range" style="width:120px;">$<input type="number" id="landsBudgetCustom" min="0" step="0.25" placeholder="custom" aria-label="Custom max price per land" oninput="scheduleLandsCustomBudget()"></span>
+                </div>
+                <div class="staples-controls">
+                    <span class="text-secondary" style="font-size:0.85em;">Within each cycle:</span>
+                    <button type="button" class="staples-sort-btn active" id="landsTierNormal" onclick="setLandsTier('normal')">🎯 Most played</button>
+                    <button type="button" class="staples-sort-btn" id="landsTierBudget" onclick="setLandsTier('budget')">💰 Cheapest first</button>
+                    <button type="button" class="staples-sort-btn" id="landsTierPremium" onclick="setLandsTier('premium')">💎 Priciest first</button>
+                </div>
+
+                <div id="landsResults"></div>
+
+                <details class="lands-glossary">
+                    <summary id="landsGlossarySummary">📖 Land cycle glossary - what every cycle does</summary>
+                    <div id="landsGlossary"></div>
+                </details>
+            </div>
+
+            <!-- ---- Full-Art Basics ---- -->
+            <div id="basicsApp" style="display:none;">
+                <div class="formats-intro">
+                    Every full-art printing of a basic land, which set it's from,
+                    and what it's going for nonfoil and foil. Prices are TCGplayer
+                    market prices via Scryfall, refreshed daily - click any land
+                    for the full card view or to check Moonshot's stock of that
+                    exact printing.
+                </div>
+                <div class="staples-controls" style="flex-wrap:wrap;" id="basicsTypePicker">
+                    <button type="button" class="staples-sort-btn active" data-basic="plains" onclick="selectBasicType('plains')">⚪ Plains</button>
+                    <button type="button" class="staples-sort-btn" data-basic="island" onclick="selectBasicType('island')">🔵 Island</button>
+                    <button type="button" class="staples-sort-btn" data-basic="swamp" onclick="selectBasicType('swamp')">⚫ Swamp</button>
+                    <button type="button" class="staples-sort-btn" data-basic="mountain" onclick="selectBasicType('mountain')">🔴 Mountain</button>
+                    <button type="button" class="staples-sort-btn" data-basic="forest" onclick="selectBasicType('forest')">🟢 Forest</button>
+                    <button type="button" class="staples-sort-btn" data-basic="wastes" onclick="selectBasicType('wastes')">◇ Wastes</button>
+                </div>
+                <div class="staples-controls" style="flex-wrap:wrap;">
+                    <select id="basicsSort" class="set-primer-select" aria-label="Sort full-art basics" onchange="renderBasics()">
+                        <option value="newest">Newest set first</option>
+                        <option value="oldest">Oldest set first</option>
+                        <option value="nonfoil-desc">Nonfoil price: high → low</option>
+                        <option value="nonfoil-asc">Nonfoil price: low → high</option>
+                        <option value="foil-desc">Foil price: high → low</option>
+                        <option value="foil-asc">Foil price: low → high</option>
+                    </select>
+                    <input type="text" id="basicsSetFilter" class="text-input" style="width:220px; padding:8px 10px;" placeholder="Filter by set name..." autocomplete="off" aria-label="Filter full-art basics by set name" oninput="renderBasics()">
+                    <label style="font-size:0.85em; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="basicsIncludeSnow" onchange="loadBasics()"> Include Snow-Covered</label>
+                </div>
+                <div id="basicsResults"></div>
+            </div>
         </div>
 
         <!-- ============== FORMAT RULES ============== -->
@@ -3995,121 +4149,6 @@
                     <a href="https://moonshotgamestore.com/" target="_blank" rel="noopener">Moonshot's live storefront</a>
                 </div>
             </div>
-        </div>
-
-        <!-- ============== COMMANDER STAPLES ============== -->
-        <!-- ============== CARD DISCOVERY (Staples / Recommendations / Lands) ============== -->
-        <div id="discoveryApp" style="display:none;">
-            <div class="guide-tabs" id="discoveryTabs">
-                <button type="button" class="guide-tab active" id="discoveryTabStaples" onclick="switchDiscoveryTab('staples')">👑 Staples</button>
-                <button type="button" class="guide-tab" id="discoveryTabRecs" onclick="switchDiscoveryTab('recs')">🧭 Recommendations</button>
-                <button type="button" class="guide-tab" id="discoveryTabLands" onclick="switchDiscoveryTab('lands')">🗺️ Lands</button>
-            </div>
-
-        <div id="staplesApp">
-            <div class="formats-intro">
-                The top played cards in Commander for each color and color pair,
-                ranked live from EDHREC's popularity data (via Scryfall) - a quick
-                way to spot which staples out of a trade-in pile are actually
-                worth buying.
-            </div>
-            <div class="staples-category-picker" id="staplesCategoryPicker"></div>
-            <div class="staples-controls" id="staplesControls" style="display:none;">
-                <span class="text-secondary" style="font-size:0.85em;">Sort by:</span>
-                <button type="button" class="staples-sort-btn active" id="staplesSortRank" onclick="setStaplesSortMode('rank')">EDHREC Rank</button>
-                <button type="button" class="staples-sort-btn" id="staplesSortPrice" onclick="setStaplesSortMode('price')">Price (High → Low)</button>
-            </div>
-            <div id="staplesResults"></div>
-
-            <div class="resource-section">
-                <h2>Resources</h2>
-                <p>Where this data comes from, and where to take it to actually build a list.</p>
-                <div class="resource-links">
-                    <a href="https://edhrec.com/" target="_blank" rel="noopener">EDHREC - the data source behind this tab</a>
-                    <a href="https://moxfield.com/" target="_blank" rel="noopener">Moxfield - deckbuilding & pricing</a>
-                    <a href="https://archidekt.com/" target="_blank" rel="noopener">Archidekt - deckbuilding (alt)</a>
-                    <a href="https://magic.wizards.com/en/formats/commander" target="_blank" rel="noopener">Official Commander format page</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============== CARD RECOMMENDATIONS ============== -->
-        <div id="recsApp" style="display:none;">
-            <div class="formats-intro">
-                Find cards for a specific deckbuilding role or theme, filtered to
-                fit any color identity - built for "what's good ramp in Golgari?"
-                questions at the counter. Pick the colors a commander would need
-                (or none, for colorless), then a category.
-            </div>
-            <div class="recs-color-picker">
-                <span class="recs-color-label">Color Identity:</span>
-                <button type="button" class="recs-color-btn" id="recsColor-w" data-color="w" onclick="toggleRecsColor('w')">W</button>
-                <button type="button" class="recs-color-btn" id="recsColor-u" data-color="u" onclick="toggleRecsColor('u')">U</button>
-                <button type="button" class="recs-color-btn" id="recsColor-b" data-color="b" onclick="toggleRecsColor('b')">B</button>
-                <button type="button" class="recs-color-btn" id="recsColor-r" data-color="r" onclick="toggleRecsColor('r')">R</button>
-                <button type="button" class="recs-color-btn" id="recsColor-g" data-color="g" onclick="toggleRecsColor('g')">G</button>
-                <span class="recs-color-hint">(none selected = Colorless)</span>
-            </div>
-
-            <div class="recs-tag-search">
-                <input type="text" id="recsTagSearchInput" aria-label="Search the community tag catalog" placeholder="🔍 Search 4,500+ tags (e.g. &quot;equipment&quot;, &quot;discard&quot;, &quot;landfall&quot;)..." autocomplete="off">
-                <div class="autocomplete-list" id="recsTagSearchResults"></div>
-                <div class="recs-tag-search-hint">The 22 buttons below are quick picks - this searches Scryfall's entire community tag catalog directly, first load takes a few seconds.</div>
-            </div>
-
-            <div class="staples-category-picker" id="recsCategoryPicker"></div>
-            <div id="recsSelectedCustomTag"></div>
-            <div id="recsResults"></div>
-
-            <div class="resource-section">
-                <h2>Resources</h2>
-                <p>Where these tags come from, and other places to keep digging for the right card.</p>
-                <div class="resource-links">
-                    <a href="https://tagger.scryfall.com/" target="_blank" rel="noopener">Scryfall Tagger - the tag source</a>
-                    <a href="https://edhrec.com/" target="_blank" rel="noopener">EDHREC - themes & synergy pages</a>
-                    <a href="https://moxfield.com/" target="_blank" rel="noopener">Moxfield - deckbuilding</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============== LANDS ============== -->
-        <div id="landsApp" style="display:none;">
-            <div class="formats-intro">
-                A mechanic checker for every named land cycle Magic has printed -
-                fetches, shocks, checks, fasts, slows, pains, bounce lands,
-                pathways, and more - so "what's the difference between a Check
-                Land and a Slow Land?" is answered right here. Nothing fetches
-                real cards until you ask for them: pick a color identity, then
-                click "Show cards" on whichever cycle you actually want to price
-                out for a budget vs. premium land package.
-            </div>
-            <div class="guide-callout" style="max-width:700px; margin:0 auto 16px;">
-                Cycles marked <strong>Show cards</strong> have a live Scryfall
-                search wired up and verified. A few less common cycles below are
-                description-only for now (marked <em>card search not verified
-                yet</em>) - their mechanic is accurate, but the search query
-                behind them hasn't been checked against live results yet.
-            </div>
-            <div class="recs-color-picker">
-                <span class="recs-color-label">Color Identity:</span>
-                <button type="button" class="recs-color-btn" id="landsColor-w" data-color="w" onclick="toggleLandsColor('w')">W</button>
-                <button type="button" class="recs-color-btn" id="landsColor-u" data-color="u" onclick="toggleLandsColor('u')">U</button>
-                <button type="button" class="recs-color-btn" id="landsColor-b" data-color="b" onclick="toggleLandsColor('b')">B</button>
-                <button type="button" class="recs-color-btn" id="landsColor-r" data-color="r" onclick="toggleLandsColor('r')">R</button>
-                <button type="button" class="recs-color-btn" id="landsColor-g" data-color="g" onclick="toggleLandsColor('g')">G</button>
-                <span class="recs-color-hint">(none selected = Colorless)</span>
-            </div>
-            <div class="staples-controls" id="landsControls">
-                <span class="text-secondary" style="font-size:0.85em;">Sort any expanded cycle by:</span>
-                <button type="button" class="staples-sort-btn" id="landsTierBudget" onclick="setLandsTier('budget')">💰 Budget (Cheapest First)</button>
-                <button type="button" class="staples-sort-btn active" id="landsTierNormal" onclick="setLandsTier('normal')">🎯 Normal (Most Played)</button>
-                <button type="button" class="staples-sort-btn" id="landsTierPremium" onclick="setLandsTier('premium')">💎 Premium (Priciest First)</button>
-            </div>
-            <div class="staples-bulk-actions">
-                <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('landsResults')">Check Stock for All Expanded Cards</button>
-            </div>
-            <div id="landsResults"></div>
-        </div>
         </div>
 
         <!-- ============== COMMANDER BRACKETS ============== -->
@@ -4567,7 +4606,6 @@
             speculation: { appId: 'speculationApp', tabId: 'tabSpeculation', title: '📈 Speculation Screener', onShow: showSpeculationTab },
             judge:     { appId: 'judgeApp',     tabId: 'tabJudge',     title: '⚖️ Judge Quick-Reference', onShow: showJudgeTab },
             buylist:   { appId: 'buylistApp',   tabId: 'tabBuylist',   title: '💰 Buylist / Store Credit Calculator', onShow: showBuylistTab },
-            discovery: { appId: 'discoveryApp', tabId: 'tabDiscovery', title: '🧭 Card Discovery', onShow: showDiscoveryTab },
             brackets:  { appId: 'bracketsApp',  tabId: 'tabBrackets',  title: '🪜 Commander Brackets', onShow: renderBracketsGuide },
             grading:   { appId: 'gradingApp',   tabId: 'tabGrading',   title: '🔍 Grading & Spotting Fakes' },
             pulllist:  { appId: 'pullListApp',  tabId: 'tabPullList',  title: '📋 Pull List' },
@@ -4587,23 +4625,23 @@
         }
 
         // ---- URL routing ----
-        // Keeps the address bar in sync with whichever tab (and Discovery/
-        // Grading sub-tab) is showing, so the browser's own back/forward
+        // Keeps the address bar in sync with whichever tab (and Buyer's
+        // Guide/Grading sub-tab) is showing, so the browser's own back/forward
         // buttons work and a specific screen can be bookmarked or shared as
-        // a link - e.g. #discovery/recs. switchGame/switchDiscoveryTab/
+        // a link - e.g. #buyersguide/lands. switchGame/switchBuyersGuideTab/
         // switchGuideTab each update these three vars and call pushRoute()
         // themselves; this layer never triggers a re-render on its own
         // except via popstate (back/forward) or the initial page load,
         // which avoids the switch functions and the URL fighting each
         // other in a loop.
         let currentGameMode = 'mtg';
-        let currentDiscoverySubtab = 'staples';
+        let currentBuyersGuideSubtab = 'finder';
         let currentGuideSubtab = 'gradingGuide';
         let isRestoringRoute = false;
 
         function currentRouteHash() {
             let route = currentGameMode;
-            if (route === 'discovery') route += '/' + currentDiscoverySubtab;
+            if (route === 'buyersguide') route += '/' + currentBuyersGuideSubtab;
             if (route === 'grading') route += '/' + currentGuideSubtab;
             return route;
         }
@@ -4628,11 +4666,17 @@
         function applyRouteFromHash() {
             const raw = location.hash.replace(/^#/, '');
             if (!raw) return;
-            const [mode, sub] = raw.split('/');
+            let [mode, sub] = raw.split('/');
+            // The old Card Discovery tab (Staples/Recommendations/Lands) was
+            // folded into the Buyer's Guide - keep its bookmarks working.
+            if (mode === 'discovery') {
+                mode = 'buyersguide';
+                sub = sub === 'lands' ? 'lands' : 'finder';
+            }
             isRestoringRoute = true;
             try {
                 switchGame(mode);
-                if (mode === 'discovery' && sub) switchDiscoveryTab(sub);
+                if (mode === 'buyersguide' && sub) switchBuyersGuideTab(sub);
                 if (mode === 'grading' && sub) switchGuideTab(sub);
             } finally {
                 isRestoringRoute = false;
@@ -4682,36 +4726,6 @@
             });
         }
 
-        // Commander Staples, Recommendations, and Lands share the same
-        // picker/results shape under the hood, so they live as sub-tabs of
-        // one "Card Discovery" tab instead of three separate top-level
-        // tabs - modeled directly on the existing switchGuideTab() pattern
-        // used by Grading & Fakes. Each sub-panel's own render function
-        // still runs on every switch to it, matching how it already
-        // behaved as a standalone tab (renderStaplesPicker etc. rebuild
-        // their picker each time they're shown, cheaply).
-        const DISCOVERY_SUBTABS = {
-            staples: { appId: 'staplesApp', tabId: 'discoveryTabStaples', onShow: renderStaplesPicker },
-            recs:    { appId: 'recsApp',    tabId: 'discoveryTabRecs',    onShow: renderRecsCategoryPicker },
-            lands:   { appId: 'landsApp',   tabId: 'discoveryTabLands',   onShow: renderLandsCategoryPicker }
-        };
-
-        function switchDiscoveryTab(which) {
-            const target = DISCOVERY_SUBTABS[which] ? which : 'staples';
-            Object.keys(DISCOVERY_SUBTABS).forEach(key => {
-                const sub = DISCOVERY_SUBTABS[key];
-                document.getElementById(sub.appId).style.display = (key === target) ? '' : 'none';
-                setTabActive(document.getElementById(sub.tabId), key === target);
-            });
-            DISCOVERY_SUBTABS[target].onShow();
-            currentDiscoverySubtab = target;
-            pushRoute();
-        }
-
-        function showDiscoveryTab() {
-            switchDiscoveryTab('staples');
-        }
-
         function switchGame(mode) {
             const view = APP_VIEWS[mode] ? mode : 'mtg';
             const title = document.getElementById('pageTitle');
@@ -4733,8 +4747,8 @@
             const mobileSelect = document.getElementById('mobileTabSelect');
             if (mobileSelect) mobileSelect.value = view;
 
-            // Set before onShow runs, not after - Discovery's onShow calls
-            // switchDiscoveryTab(), which reads currentGameMode to build the
+            // Set before onShow runs, not after - the Buyer's Guide's onShow
+            // calls switchBuyersGuideTab(), which reads currentGameMode to build the
             // route hash. If this ran after onShow, that read would still
             // see the PREVIOUS tab's mode and push a wrong/extra history
             // entry before immediately correcting itself.
@@ -5618,7 +5632,7 @@
             } else if (setPrimerGroupMode === 'popular') {
                 // "What's good from this set" for the counter - ranked by
                 // EDHREC's play-rate (lower edhrec_rank = played more), the
-                // same popularity signal Commander Staples already sorts by.
+                // same popularity signal the Buyer's Guide sorts by.
                 // Cards with no rank at all (never tracked - tokens, most
                 // Standard-only commons, etc.) are left out rather than
                 // dumped at the bottom, since "popular" shouldn't include
@@ -5898,7 +5912,7 @@
         // ============== CARD DETAIL POPUP ==============
         // The one shared "small window" for looking at a card without leaving
         // whatever tab/list you were browsing - used by Set Primer, ban lists
-        // (Format Rules + Value Vintage), and the Staples/Recommendations
+        // (Format Rules + Value Vintage), and the Buyer's Guide/Speculation
         // tiles. Shows image, oracle text, legality, printings, and Moonshot
         // stock right in the popup; "Full Lookup" is still one click away for
         // pricing/rulings if that's ever needed.
@@ -6747,132 +6761,19 @@
             focusBuylistValueInput(buylistRows.length - 1);
         }
 
-        // ============== COMMANDER STAPLES ==============
-        // Scryfall's card objects carry an edhrec_rank field (EDHREC's own
-        // popularity ranking, synced into Scryfall's data), and its search
-        // syntax accepts order=edhrec plus an exact color-identity filter
-        // (id=<colors>) - so "top played cards in this color/pair" is just a
-        // live Scryfall query, no scraping or third-party API needed.
-        const STAPLE_CATEGORIES = [
-            { code: 'c', label: 'Colorless', group: 'Colorless' },
-            { code: 'w', label: 'Mono-White', group: 'Mono-Color' },
-            { code: 'u', label: 'Mono-Blue', group: 'Mono-Color' },
-            { code: 'b', label: 'Mono-Black', group: 'Mono-Color' },
-            { code: 'r', label: 'Mono-Red', group: 'Mono-Color' },
-            { code: 'g', label: 'Mono-Green', group: 'Mono-Color' },
-            { code: 'wu', label: 'Azorius (WU)', group: 'Two-Color Pairs' },
-            { code: 'wb', label: 'Orzhov (WB)', group: 'Two-Color Pairs' },
-            { code: 'wr', label: 'Boros (WR)', group: 'Two-Color Pairs' },
-            { code: 'wg', label: 'Selesnya (WG)', group: 'Two-Color Pairs' },
-            { code: 'ub', label: 'Dimir (UB)', group: 'Two-Color Pairs' },
-            { code: 'ur', label: 'Izzet (UR)', group: 'Two-Color Pairs' },
-            { code: 'ug', label: 'Simic (UG)', group: 'Two-Color Pairs' },
-            { code: 'br', label: 'Rakdos (BR)', group: 'Two-Color Pairs' },
-            { code: 'bg', label: 'Golgari (BG)', group: 'Two-Color Pairs' },
-            { code: 'rg', label: 'Gruul (RG)', group: 'Two-Color Pairs' },
-            { code: 'gwu', label: 'Bant (GWU)', group: 'Three-Color (Shards)' },
-            { code: 'wub', label: 'Esper (WUB)', group: 'Three-Color (Shards)' },
-            { code: 'ubr', label: 'Grixis (UBR)', group: 'Three-Color (Shards)' },
-            { code: 'brg', label: 'Jund (BRG)', group: 'Three-Color (Shards)' },
-            { code: 'rgw', label: 'Naya (RGW)', group: 'Three-Color (Shards)' },
-            { code: 'wbg', label: 'Abzan (WBG)', group: 'Three-Color (Wedges)' },
-            { code: 'urw', label: 'Jeskai (URW)', group: 'Three-Color (Wedges)' },
-            { code: 'bgu', label: 'Sultai (BGU)', group: 'Three-Color (Wedges)' },
-            { code: 'rwb', label: 'Mardu (RWB)', group: 'Three-Color (Wedges)' },
-            { code: 'gur', label: 'Temur (GUR)', group: 'Three-Color (Wedges)' },
-            { code: 'ubrg', label: 'Non-White (Glint-Eye)', group: 'Four-Color' },
-            { code: 'wbrg', label: 'Non-Blue (Dune)', group: 'Four-Color' },
-            { code: 'wurg', label: 'Non-Black (Ink-Treader)', group: 'Four-Color' },
-            { code: 'wubg', label: 'Non-Red (Witch-Maw)', group: 'Four-Color' },
-            { code: 'wubr', label: 'Non-Green (Yore-Tiller)', group: 'Four-Color' },
-            { code: 'wubrg', label: 'Five-Color (WUBRG)', group: 'Five-Color' }
-        ];
-
-        let staplesCache = {}; // category code -> array of cards (top 100, edhrec order)
-        let staplesCurrentCode = null;
-        let staplesSortMode = 'rank'; // 'rank' or 'price'
-
-        function renderStaplesPicker() {
-            const picker = document.getElementById('staplesCategoryPicker');
-            if (picker.childElementCount > 0) return; // static - build once
-            let lastGroup = null;
-            let html = '';
-            STAPLE_CATEGORIES.forEach(cat => {
-                if (cat.group !== lastGroup) {
-                    html += `<div class="staples-category-divider">${cat.group}</div>`;
-                    lastGroup = cat.group;
-                }
-                html += `<button type="button" class="staples-category-btn" id="staplesCat-${cat.code}" onclick="selectStapleCategory('${cat.code}')">${cat.label}</button>`;
-            });
-            picker.innerHTML = html;
-        }
-
-        // Guards against a slow response for a previously-clicked category
-        // arriving after a faster response for one clicked right after it -
-        // same class of race condition as the Recommendations search below.
-        let staplesRequestToken = 0;
-
-        async function selectStapleCategory(code) {
-            const myToken = ++staplesRequestToken;
-            staplesCurrentCode = code;
-            document.querySelectorAll('.staples-category-btn').forEach(el => el.classList.remove('active'));
-            const btn = document.getElementById(`staplesCat-${code}`);
-            if (btn) btn.classList.add('active');
-
-            document.getElementById('staplesControls').style.display = '';
-            const resultsDiv = document.getElementById('staplesResults');
-            resultsDiv.innerHTML = `<div class="loading">Loading top staples...</div>`;
-
-            try {
-                await loadSymbology();
-                const cards = await loadStaplesCategory(code);
-                if (myToken !== staplesRequestToken) return; // a newer selection superseded this one
-                renderStaplesList(cards);
-            } catch (err) {
-                if (myToken !== staplesRequestToken) return;
-                console.error('Error loading staples:', err);
-                resultsDiv.innerHTML = `<div class="error">❌ Couldn't load staples right now.</div>`;
-            }
-        }
-
-        async function loadStaplesCategory(code) {
-            if (staplesCache[code]) return staplesCache[code];
-            // -set_type:funny excludes silver-bordered/Un-set joke cards, same as
-            // the Format Rules ban lists - EDHREC rank alone wouldn't filter these out.
-            const url = `${API_BASE}/cards/search?q=id%3D${code}+game%3Apaper+-set_type%3Afunny&order=edhrec&unique=cards`;
-            const res = await fetch(url);
-            if (!res.ok) {
-                if (res.status === 404) { staplesCache[code] = []; return []; } // no cards in this identity (shouldn't happen for these 16)
-                throw new Error(`Server error: ${res.status}`);
-            }
-            const data = await res.json();
-            const cards = (data.data || []).slice(0, 100);
-            staplesCache[code] = cards;
-            return cards;
-        }
-
-        function setStaplesSortMode(mode) {
-            staplesSortMode = mode;
-            document.getElementById('staplesSortRank').classList.toggle('active', mode === 'rank');
-            document.getElementById('staplesSortPrice').classList.toggle('active', mode === 'price');
-            if (staplesCurrentCode && staplesCache[staplesCurrentCode]) {
-                renderStaplesList(staplesCache[staplesCurrentCode]);
-            }
-        }
-
-        // Shared image-tile renderer for one card - used by both Commander
-        // Staples and Card Recommendations. rankLabel is optional badge text
-        // (e.g. "#3"); pass null/'' to omit it. Clicking the art or name opens
-        // the same in-tool card popup used everywhere else (Set Primer, ban
-        // lists) instead of a new Scryfall tab, so browsing a list of staples
-        // or recs never navigates away from where you were.
+        // ============== SHARED CARD TILES ==============
+        // Shared image-tile renderer for one card. rankLabel is optional
+        // badge text (e.g. "#3"); pass null/'' to omit it. Clicking the art
+        // or name opens the same in-tool card popup used everywhere else
+        // instead of a new Scryfall tab, so browsing a list never navigates
+        // away from where you were.
         const cardTileDataById = {}; // card.id -> full card object, for the popup's onclick
         // navIndex is this card's position in a flat ranked-list global
         // (navListVarName, default 'setPrimerDisplayOrder' - Set Primer's
         // price/popular/newest modes were this tile's first navigable
         // caller). Speculation Screener passes 'speculationDisplayOrder'
-        // instead. Every other caller (Commander Staples, Value Vintage,
-        // Discovery, ...) omits navIndex and gets the plain non-navigable
+        // instead (as do the Buyer's Guide and Land Finder with their own
+        // lists). Any caller that omits navIndex and gets the plain non-navigable
         // popup, unchanged. extraHTML is arbitrary markup (e.g. Speculation's
         // score-reason badges) inserted below the price row.
         function buildCardTileHTML(card, rankLabel, navIndex, navListVarName, extraHTML) {
@@ -6908,8 +6809,8 @@
 
         // Per-tile stock check - uses the fast single-listing check, not the
         // full "Check All Locations" scan. This runs across every visible
-        // tile when someone hits "Check Stock for All" (up to 100 cards on
-        // Commander Staples), so it needs to stay cheap per card - the deep
+        // tile when someone hits "Check Stock for All" (100+ cards in the
+        // Land Finder), so it needs to stay cheap per card - the deep
         // scan is ~8x the requests and was making that bulk pass far slower
         // than it needs to be for "is this roughly in stock" at a glance.
         async function checkTileMoonshotStock(tileId, cardName) {
@@ -6937,32 +6838,6 @@
                     return nameEl ? checkTileMoonshotStock(tile.id, nameEl.textContent) : Promise.resolve();
                 }));
             }
-        }
-
-        function renderStaplesList(cards) {
-            const resultsDiv = document.getElementById('staplesResults');
-            if (cards.length === 0) {
-                resultsDiv.innerHTML = `<div class="error">No staples found for this color identity.</div>`;
-                return;
-            }
-
-            // Rank order is whatever Scryfall/EDHREC returned; price order is a
-            // client-side re-sort of the same 100 cards - no extra fetch needed.
-            const ordered = staplesSortMode === 'price'
-                ? [...cards].sort((a, b) => (parseFloat(b.prices && b.prices.usd) || 0) - (parseFloat(a.prices && a.prices.usd) || 0))
-                : cards;
-
-            resultsDiv.innerHTML = `
-                <div class="staples-bulk-actions">
-                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('staplesResults')">Check Stock for All (${ordered.length})</button>
-                </div>
-                <div class="card-tile-grid" id="staplesTileGrid">
-                    ${ordered.map((c, i) => {
-                        const rankLabel = staplesSortMode === 'rank' ? `#${i + 1}` : (c.edhrec_rank ? `#${c.edhrec_rank}` : null);
-                        return buildCardTileHTML(c, rankLabel);
-                    }).join('')}
-                </div>
-            `;
         }
 
         // ============== COMMANDER BRACKETS ==============
@@ -7193,96 +7068,12 @@
             { key: 'mill', label: 'Mill', group: 'Popular Themes', query: 'otag:mill' }
         ];
 
-        let recsSelectedColors = [];
-        // Holds a full {key, label, query} object rather than just a key -
-        // curated picks from REC_CATEGORIES and one-off tags found via the
-        // search box both end up here in the same shape, so runRecsSearch
-        // doesn't need to know or care which source it came from.
-        let recsSelectedCategoryObj = null;
-        const recsCache = {}; // "categoryKey|colorString" -> cards
-
-        function renderRecsCategoryPicker() {
-            const picker = document.getElementById('recsCategoryPicker');
-            if (picker.childElementCount > 0) return; // static - build once
-            let lastGroup = null;
-            let html = '';
-            REC_CATEGORIES.forEach(cat => {
-                if (cat.group !== lastGroup) {
-                    html += `<div class="staples-category-divider">${cat.group}</div>`;
-                    lastGroup = cat.group;
-                }
-                html += `<button type="button" class="staples-category-btn" id="recsCat-${cat.key}" onclick="selectRecsCategory('${cat.key}')">${cat.label}</button>`;
-            });
-            picker.innerHTML = html;
-        }
-
         // Canonicalize whatever order the colors were clicked in to Scryfall's
         // expected WUBRG order - "c" (colorless) when nothing is selected.
         function canonicalColorString(colors) {
             const order = ['w', 'u', 'b', 'r', 'g'];
             const sorted = order.filter(c => colors.includes(c));
             return sorted.length > 0 ? sorted.join('') : 'c';
-        }
-
-        function toggleRecsColor(color) {
-            const idx = recsSelectedColors.indexOf(color);
-            if (idx === -1) recsSelectedColors.push(color); else recsSelectedColors.splice(idx, 1);
-            const btn = document.getElementById(`recsColor-${color}`);
-            if (btn) btn.classList.toggle('active');
-            if (recsSelectedCategoryObj) runRecsSearch();
-        }
-
-        function selectRecsCategory(key) {
-            const cat = REC_CATEGORIES.find(c => c.key === key);
-            if (!cat) return;
-            recsSelectedCategoryObj = cat;
-            document.getElementById('recsSelectedCustomTag').innerHTML = '';
-            document.querySelectorAll('#recsCategoryPicker .staples-category-btn').forEach(el => el.classList.remove('active'));
-            const btn = document.getElementById(`recsCat-${key}`);
-            if (btn) btn.classList.add('active');
-            runRecsSearch();
-        }
-
-        // Toggling a color while a category is already selected re-fires this
-        // immediately, and clicking a new category right after does too - two
-        // in-flight requests whose responses can arrive out of order. This
-        // token guards against a slower, now-stale response overwriting a
-        // newer one: only the response matching the CURRENT token gets rendered.
-        let recsRequestToken = 0;
-
-        async function runRecsSearch() {
-            const cat = recsSelectedCategoryObj;
-            if (!cat) return;
-
-            const myToken = ++recsRequestToken;
-            const colorStr = canonicalColorString(recsSelectedColors);
-            const cacheKey = `${cat.key}|${colorStr}`;
-            const resultsDiv = document.getElementById('recsResults');
-            resultsDiv.innerHTML = `<div class="loading">Loading recommendations...</div>`;
-
-            try {
-                await loadSymbology();
-                let cards = recsCache[cacheKey];
-                if (!cards) {
-                    // Bare id:<colors> is Scryfall's SUBSET match (a card whose
-                    // identity fits WITHIN these colors) - exactly what "what
-                    // can I play in a Golgari deck" means, unlike the exact-
-                    // identity match (id=) the Staples browser uses.
-                    const query = `${cat.query} id:${colorStr} game:paper -set_type:funny`;
-                    const url = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&unique=cards`;
-                    const res = await fetch(url);
-                    if (!res.ok && res.status !== 404) throw new Error(`Server error: ${res.status}`);
-                    const data = res.ok ? await res.json() : { data: [] };
-                    cards = (data.data || []).slice(0, 30);
-                    recsCache[cacheKey] = cards;
-                }
-                if (myToken !== recsRequestToken) return; // a newer search superseded this one
-                renderRecsResults(cards, cat);
-            } catch (err) {
-                if (myToken !== recsRequestToken) return;
-                console.error('Error loading recommendations:', err);
-                resultsDiv.innerHTML = `<div class="error">❌ Couldn't load recommendations right now.</div>`;
-            }
         }
 
         // ---- Full tag catalog search (beyond the 22 curated picks) ----
@@ -7365,34 +7156,6 @@
             });
         }
 
-        attachOracleTagSearch('recsTagSearchInput', 'recsTagSearchResults', 'selectCustomRecsTag');
-
-        function selectCustomRecsTag(slug, label) {
-            recsSelectedCategoryObj = { key: `custom:${slug}`, label, query: `otag:${slug}` };
-            document.querySelectorAll('#recsCategoryPicker .staples-category-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById('recsTagSearchInput').value = '';
-            document.getElementById('recsTagSearchResults').innerHTML = '';
-            document.getElementById('recsSelectedCustomTag').innerHTML =
-                `<div class="recs-custom-tag-banner">Showing: <strong>${label}</strong> (custom tag search - not one of the 22 quick picks)</div>`;
-            runRecsSearch();
-        }
-
-        function renderRecsResults(cards, cat) {
-            const resultsDiv = document.getElementById('recsResults');
-            if (cards.length === 0) {
-                resultsDiv.innerHTML = `<div class="error">No ${cat.label} found for this color identity.</div>`;
-                return;
-            }
-            resultsDiv.innerHTML = `
-                <div class="staples-bulk-actions">
-                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('recsResults')">Check Stock for All (${cards.length})</button>
-                </div>
-                <div class="card-tile-grid">
-                    ${cards.map(c => buildCardTileHTML(c, c.edhrec_rank ? `#${c.edhrec_rank}` : null)).join('')}
-                </div>
-            `;
-        }
-
         // ============== BUYER'S GUIDE ==============
         // The one focused "help a customer find cards" tool: a theme (one of
         // the verified REC_CATEGORIES, any community tag, or a creature type)
@@ -7420,7 +7183,33 @@
         let bgDisplayOrder = []; // key pieces then matches, in on-screen order, for the popup's Prev/Next
         let bgInitialized = false;
 
+        // Card Finder, Land Finder and Full-Art Basics are sub-tabs of one
+        // Buyer's Guide tab - same pattern as Grading & Fakes. Each one
+        // builds itself lazily the first time it's opened.
+        const BUYERS_GUIDE_SUBTABS = {
+            finder: { appId: 'bgFinderApp', tabId: 'bgTabFinder', onShow: showCardFinder },
+            lands:  { appId: 'landsApp',    tabId: 'bgTabLands',  onShow: showLandFinder },
+            basics: { appId: 'basicsApp',   tabId: 'bgTabBasics', onShow: showBasicsGuide }
+        };
+
+        function switchBuyersGuideTab(which) {
+            const target = BUYERS_GUIDE_SUBTABS[which] ? which : 'finder';
+            Object.keys(BUYERS_GUIDE_SUBTABS).forEach(key => {
+                const sub = BUYERS_GUIDE_SUBTABS[key];
+                document.getElementById(sub.appId).style.display = (key === target) ? '' : 'none';
+                setTabActive(document.getElementById(sub.tabId), key === target);
+            });
+            BUYERS_GUIDE_SUBTABS[target].onShow();
+            currentBuyersGuideSubtab = target;
+            pushRoute();
+        }
+
+        // Re-entering the tab lands back on whichever sub-tab was open last.
         function showBuyersGuideTab() {
+            switchBuyersGuideTab(currentBuyersGuideSubtab);
+        }
+
+        function showCardFinder() {
             if (bgInitialized) return;
             bgInitialized = true;
             renderBgThemePicker();
@@ -7706,9 +7495,10 @@
         // without that live check - this environment currently can't reach
         // Scryfall to verify a new otag slug, so rather than ship a query
         // that might be silently wrong (or worse, silently empty), those
-        // cycles show their mechanic in the glossary with no "Show cards"
-        // search wired up yet. Flip to true (and confirm the query) once
-        // it's been checked against a real response.
+        // cycles either get a best-effort search (LAND_APPROX_QUERIES below,
+        // labeled "approximate" in the UI) or stay glossary-only. Flip to
+        // true (and give it a real query) once it's been checked against a
+        // real response.
         const LAND_CATEGORIES = [
             { key: 'shockland', label: 'Shock Lands', group: 'Two-Color Cycles', query: 'otag:shockland', verified: true,
               description: 'Enters untapped if you pay 2 life; tapped otherwise. The default "just works" dual for most decks.' },
@@ -7811,184 +7601,479 @@
               description: 'Enters untapped and taps for one of three colors, but you must return a land of specific types to hand (or sacrifice it) to keep it - real fixing with a real upkeep cost.' }
         ];
 
-        let landsSelectedColors = [];
-        const landsCache = {}; // "categoryKey|colorString" -> cards
-        const landsFetchTokens = {}; // per-cycle stale-response guard, keyed by category key
-        const landsExpandedKeys = new Set(); // which cycles currently have their card grid open
-        let landsInitialized = false; // guards the build-glossary-once on first tab show
-
-        // Builds the always-visible glossary (name + mechanic + group for
-        // every cycle, verified or not) once. Nothing fetches real cards
-        // until a verified cycle's "Show cards" is clicked - see
-        // toggleLandsCycle.
-        function renderLandsCategoryPicker() {
-            if (!landsInitialized) {
-                landsInitialized = true;
-                renderLandsGlossary();
+        // Best-effort searches for the cycles that don't have a verified
+        // oracle tag, built from each cycle's distinctive type line, name,
+        // or rules text instead. Flagged "approximate" in the UI because
+        // they haven't been checked against live results the way the tagged
+        // ones were. Cycles with nothing distinctive enough to search on
+        // stay glossary-only.
+        const LAND_APPROX_QUERIES = {
+            truedual: 'is:reserved (t:plains or t:island or t:swamp or t:mountain or t:forest)',
+            bounceland: 'o:"return a land you control to its owner\'s hand"',
+            snowdual: 't:snow',
+            vividland: 'vivid o:"charge counter"',
+            gate: 't:gate',
+            scryland: 'temple o:"scry 1"',
+            pathway: 'pathway',
+            storageland: 'o:"storage counter"',
+            bondland: 'o:"two or more opponents"',
+            vergeland: 'verge',
+            taintedland: 'o:"only if you control a swamp"',
+            desertland: 't:desert',
+            panorama: 'panorama'
+        };
+        LAND_CATEGORIES.forEach(cat => {
+            if (!cat.query && LAND_APPROX_QUERIES[cat.key]) {
+                cat.query = LAND_APPROX_QUERIES[cat.key];
+                cat.approx = true;
             }
+        });
+
+        // Fetches, slow fetches and Panoramas have no color identity of
+        // their own (no mana symbols), so an identity filter alone would
+        // show all ten fetches for any deck. These get narrowed to the ones
+        // that can actually find one of the deck's basic land types.
+        const LAND_FETCHER_KEYS = new Set(['fetchland', 'slowfetchland', 'panorama']);
+        const BASIC_TYPE_FOR_COLOR = { w: 'plains', u: 'island', b: 'swamp', r: 'mountain', g: 'forest' };
+
+        const LANDS_FETCH_BATCH_SIZE = 4; // concurrent Scryfall requests per batch - their API asks callers not to burst
+        const LANDS_PER_CYCLE_LIMIT = 60;
+
+        let landsSelectedColors = [];
+        let landsColorlessOnly = false;
+        let landsBudget = ''; // '' = no limit, otherwise max USD per land
+        let landsTierMode = 'normal';
+        let landsRequestToken = 0;
+        let landsLastResults = null; // last completed search, so re-sorting never refetches
+        let landsDisplayOrder = []; // every land on screen in order, for the popup's Prev/Next
+        let landsBudgetTimeout;
+        const landsCache = {}; // "cycleKey|colors|budget" -> cards
+        let landsInitialized = false;
+
+        function showLandFinder() {
+            if (landsInitialized) return;
+            landsInitialized = true;
+            renderLandsGlossary();
+            renderLandsPrompt();
+        }
+
+        function landCycleStatusHTML(cat) {
+            if (cat.verified) return '';
+            return cat.approx
+                ? `<span class="lands-glossary-unverified" title="Found by rules text/type/name rather than a verified tag - may include a few extras or miss a printing.">approximate search</span>`
+                : `<span class="lands-glossary-unverified" title="Nothing distinctive enough to search on reliably yet - mechanic only.">no card search yet</span>`;
         }
 
         function renderLandsGlossary() {
-            const container = document.getElementById('landsResults');
+            document.getElementById('landsGlossarySummary').textContent =
+                `📖 Land cycle glossary - what every cycle does (all ${LAND_CATEGORIES.length})`;
             let lastGroup = null;
             let html = '';
             LAND_CATEGORIES.forEach(cat => {
                 if (cat.group !== lastGroup) {
-                    html += `<div class="staples-category-divider" style="margin:20px 0 4px;">${cat.group}</div>`;
+                    html += `<div class="staples-category-divider" style="margin:16px 0 4px;">${cat.group}</div>`;
                     lastGroup = cat.group;
                 }
-                const action = cat.verified
-                    ? `<button type="button" class="staples-sort-btn btn-compact" id="landsToggle-${cat.key}" onclick="toggleLandsCycle('${cat.key}')">Show cards →</button>`
-                    : `<span class="lands-glossary-unverified" title="Mechanic is accurate; the live card search behind it hasn't been checked against real Scryfall results yet.">Card search not verified yet</span>`;
                 html += `
-                    <div class="lands-glossary-row" id="landsGlossary-${cat.key}">
+                    <div class="lands-glossary-row">
                         <div class="lands-glossary-head">
                             <span class="lands-glossary-label">${cat.label}</span>
-                            ${action}
+                            ${landCycleStatusHTML(cat)}
                         </div>
                         <div class="lands-cycle-desc text-secondary">${cat.description}</div>
-                        <div class="lands-glossary-body" id="landsBody-${cat.key}" style="display:none;"></div>
                     </div>
                 `;
             });
-            container.innerHTML = html;
+            document.getElementById('landsGlossary').innerHTML = html;
+        }
+
+        function renderLandsPrompt() {
+            landsDisplayOrder = [];
+            document.getElementById('landsResults').innerHTML =
+                `<div class="moonshot-status" style="text-align:center; margin:18px 0;">Pick the deck's colors above to pull in every land that fits.</div>`;
+        }
+
+        function landsColorString() {
+            return landsColorlessOnly ? 'c' : canonicalColorString(landsSelectedColors);
         }
 
         function toggleLandsColor(color) {
             const idx = landsSelectedColors.indexOf(color);
             if (idx === -1) landsSelectedColors.push(color); else landsSelectedColors.splice(idx, 1);
-            const btn = document.getElementById(`landsColor-${color}`);
-            if (btn) btn.classList.toggle('active');
-            // Re-fetch under the new color identity for whatever cycles are
-            // currently expanded - collapsed cycles just fetch lazily next
-            // time they're opened, so this never re-fetches all of them.
-            landsExpandedKeys.forEach(key => loadLandsCycleCards(key));
+            document.getElementById(`landsColor-${color}`).classList.toggle('active', idx === -1);
+            if (landsColorlessOnly) {
+                landsColorlessOnly = false;
+                document.getElementById('landsColorless').classList.remove('active');
+            }
+            runLandsSearch();
         }
 
-        // Budget/Normal/Premium re-sort the same fetched card pools
-        // client-side (no re-fetch), applied to whatever cycles are
-        // currently expanded - "budget" and "premium" are just price
-        // ascending/descending, "normal" is EDHREC popularity order (what
-        // most decks actually run), matching the Staples price sort.
-        let landsTierMode = 'normal';
+        function toggleLandsColorless() {
+            landsColorlessOnly = !landsColorlessOnly;
+            document.getElementById('landsColorless').classList.toggle('active', landsColorlessOnly);
+            if (landsColorlessOnly) {
+                landsSelectedColors = [];
+                document.querySelectorAll('#landsApp .recs-color-btn').forEach(el => el.classList.remove('active'));
+            }
+            runLandsSearch();
+        }
+
+        function highlightLandsBudgetButtons() {
+            document.querySelectorAll('#landsApp [data-budget]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.budget === landsBudget);
+            });
+        }
+
+        function setLandsBudget(value) {
+            landsBudget = value;
+            document.getElementById('landsBudgetCustom').value = '';
+            highlightLandsBudgetButtons();
+            runLandsSearch();
+        }
+
+        function scheduleLandsCustomBudget() {
+            clearTimeout(landsBudgetTimeout);
+            landsBudgetTimeout = setTimeout(() => {
+                const v = parseFloat(document.getElementById('landsBudgetCustom').value);
+                landsBudget = Number.isFinite(v) && v >= 0 ? String(v) : '';
+                highlightLandsBudgetButtons();
+                runLandsSearch();
+            }, 500);
+        }
+
         function setLandsTier(mode) {
             landsTierMode = mode;
             document.getElementById('landsTierBudget').classList.toggle('active', mode === 'budget');
             document.getElementById('landsTierNormal').classList.toggle('active', mode === 'normal');
             document.getElementById('landsTierPremium').classList.toggle('active', mode === 'premium');
-            const colorStr = canonicalColorString(landsSelectedColors);
-            landsExpandedKeys.forEach(key => {
-                const cached = landsCache[`${key}|${colorStr}`];
-                if (cached) renderLandsCycleBody(key, cached);
+            if (landsLastResults) renderLandFinder(landsLastResults);
+        }
+
+        async function fetchLandsCycle(cat, colorStr, budget) {
+            const cacheKey = `${cat.key}|${colorStr}|${budget}`;
+            if (landsCache[cacheKey]) return landsCache[cacheKey];
+
+            // Bare id: is Scryfall's subset match - lands a deck of these
+            // colors can actually play, including colorless utility lands.
+            let query = `${cat.query} id:${colorStr} t:land -t:basic game:paper -set_type:funny`;
+            if (LAND_FETCHER_KEYS.has(cat.key) && colorStr !== 'c') {
+                query += ` (${colorStr.split('').map(c => `o:${BASIC_TYPE_FOR_COLOR[c]}`).join(' or ')})`;
+            }
+            if (budget) query += ` usd<=${budget}`;
+
+            const page = await fetchScryfallSearchPage(
+                `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&unique=cards`);
+            const cards = (page.data || []).slice(0, LANDS_PER_CYCLE_LIMIT);
+            landsCache[cacheKey] = cards;
+            return cards;
+        }
+
+        async function runLandsSearch() {
+            const myToken = ++landsRequestToken;
+            if (!landsColorlessOnly && landsSelectedColors.length === 0) {
+                landsLastResults = null;
+                renderLandsPrompt();
+                return;
+            }
+
+            const colorStr = landsColorString();
+            const budget = landsBudget;
+            const searchable = LAND_CATEGORIES.filter(c => c.query);
+            const results = {};
+            const failed = [];
+            let done = 0;
+            document.getElementById('landsResults').innerHTML =
+                `<div class="loading" id="landsProgress">Checking ${searchable.length} land cycles...</div>`;
+
+            await loadSymbology();
+            for (let i = 0; i < searchable.length; i += LANDS_FETCH_BATCH_SIZE) {
+                await Promise.all(searchable.slice(i, i + LANDS_FETCH_BATCH_SIZE).map(async cat => {
+                    try {
+                        results[cat.key] = await fetchLandsCycle(cat, colorStr, budget);
+                    } catch (err) {
+                        console.error(`Error loading ${cat.label}:`, err);
+                        failed.push(cat.label);
+                        results[cat.key] = [];
+                    }
+                    done++;
+                }));
+                if (myToken !== landsRequestToken) return; // colors/budget changed mid-search
+                const progress = document.getElementById('landsProgress');
+                if (progress) progress.textContent = `Checking land cycles... ${done}/${searchable.length}`;
+            }
+
+            landsLastResults = { results, failed, colorStr, budget };
+            renderLandFinder(landsLastResults);
+        }
+
+        function landPrice(card) {
+            const v = parseFloat(card.prices && card.prices.usd);
+            return Number.isFinite(v) ? v : null;
+        }
+
+        // Unpriced cards always sort last, whichever direction the price sort runs.
+        function sortLandsForTier(cards) {
+            if (landsTierMode === 'normal') return cards;
+            const dir = landsTierMode === 'budget' ? 1 : -1;
+            return [...cards].sort((a, b) => {
+                const pa = landPrice(a), pb = landPrice(b);
+                if (pa === null) return pb === null ? 0 : 1;
+                if (pb === null) return -1;
+                return dir * (pa - pb);
             });
         }
 
-        async function toggleLandsCycle(key) {
-            const cat = LAND_CATEGORIES.find(c => c.key === key);
-            if (!cat || !cat.verified) return;
-            const body = document.getElementById(`landsBody-${key}`);
-            const btn = document.getElementById(`landsToggle-${key}`);
-            if (landsExpandedKeys.has(key)) {
-                landsExpandedKeys.delete(key);
-                if (body) body.style.display = 'none';
-                if (btn) btn.textContent = 'Show cards →';
-                return;
-            }
-            landsExpandedKeys.add(key);
-            if (btn) btn.textContent = 'Hide cards';
-            if (body) body.style.display = '';
-            await loadLandsCycleCards(key);
+        function formatUsd(v) {
+            return `$${v.toFixed(2)}`;
         }
 
-        // Same stale-response race condition guard as Recommendations/
-        // Staples, scoped per cycle instead of globally - toggling a color
-        // while several cycles are expanded fires one fetch per expanded
-        // cycle, so each needs its own token rather than one shared counter
-        // that a different cycle's response could trip.
-        async function loadLandsCycleCards(key) {
-            const cat = LAND_CATEGORIES.find(c => c.key === key);
-            const body = document.getElementById(`landsBody-${key}`);
-            if (!cat || !body) return;
+        function renderLandFinder({ results, failed, colorStr, budget }) {
+            const resultsDiv = document.getElementById('landsResults');
+            const colorsLabel = colorStr === 'c' ? 'colorless' : colorStr.toUpperCase().split('').join('/');
+            const budgetLabel = budget ? `at ${formatUsd(Number(budget))} or less each` : 'at any price';
 
-            const myToken = (landsFetchTokens[key] = (landsFetchTokens[key] || 0) + 1);
-            const colorStr = canonicalColorString(landsSelectedColors);
-            const cacheKey = `${key}|${colorStr}`;
-            body.innerHTML = `<div class="loading">Loading ${cat.label}...</div>`;
+            // A land can match more than one cycle's search (an approximate
+            // one especially) - show it once, under the first cycle it hits.
+            const seen = new Set();
+            const cycles = [];
+            LAND_CATEGORIES.forEach(cat => {
+                const cards = (results[cat.key] || []).filter(c => !seen.has(c.id));
+                cards.forEach(c => seen.add(c.id));
+                if (cards.length === 0) return;
+                const prices = cards.map(landPrice).filter(p => p !== null);
+                cycles.push({
+                    cat,
+                    cards,
+                    min: prices.length ? Math.min(...prices) : null,
+                    max: prices.length ? Math.max(...prices) : null,
+                    setTotal: prices.reduce((sum, p) => sum + p, 0),
+                    unpriced: cards.length - prices.length
+                });
+            });
 
-            try {
-                await loadSymbology();
-                let cards = landsCache[cacheKey];
-                if (!cards) {
-                    // Subset match (bare id:) so picking 2 colors still shows
-                    // relevant mono/colorless lands, and picking 3+ colors
-                    // (for a Triome hunt) still surfaces the 2-color options
-                    // within it, not just exact 3-color matches.
-                    const query = `${cat.query} id:${colorStr} t:land game:paper -set_type:funny`;
-                    const url = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&unique=cards`;
-                    const res = await fetch(url);
-                    if (!res.ok && res.status !== 404) throw new Error(`Server error: ${res.status}`);
-                    const data = res.ok ? await res.json() : { data: [] };
-                    cards = (data.data || []).slice(0, 50);
-                    landsCache[cacheKey] = cards;
+            const emptyLabels = LAND_CATEGORIES
+                .filter(c => c.query && results[c.key] && results[c.key].length === 0 && !failed.includes(c.label))
+                .map(c => c.label);
+            const noSearchCount = LAND_CATEGORIES.filter(c => !c.query).length;
+
+            if (cycles.length === 0) {
+                landsDisplayOrder = [];
+                resultsDiv.innerHTML = `<div class="error">No lands fit ${colorsLabel} ${budgetLabel} - try raising the budget.</div>`;
+                return;
+            }
+
+            const totalLands = cycles.reduce((n, c) => n + c.cards.length, 0);
+            const byCost = [...cycles].sort((a, b) => a.setTotal - b.setTotal);
+            const packageRows = byCost.map(c => `
+                <tr onclick="document.getElementById('landsSection-${c.cat.key}').scrollIntoView({ behavior: 'smooth', block: 'start' })">
+                    <td>${c.cat.label}${c.cat.approx ? ' <span class="lands-approx-dot" title="approximate search">≈</span>' : ''}</td>
+                    <td>${c.cards.length}</td>
+                    <td>${c.min === null ? '—' : formatUsd(c.min)}</td>
+                    <td><strong>${formatUsd(c.setTotal)}</strong>${c.unpriced ? ` <span class="text-secondary">(+${c.unpriced} unpriced)</span>` : ''}</td>
+                </tr>
+            `).join('');
+
+            landsDisplayOrder = [];
+            let lastGroup = null;
+            let sectionsHTML = '';
+            cycles.forEach(({ cat, cards, min, max, setTotal }) => {
+                if (cat.group !== lastGroup) {
+                    sectionsHTML += `<div class="staples-category-divider" style="margin:22px 0 6px;">${cat.group}</div>`;
+                    lastGroup = cat.group;
                 }
-                if (myToken !== landsFetchTokens[key]) return; // superseded by a newer toggle/color change on this same cycle
-                renderLandsCycleBody(key, cards);
-            } catch (err) {
-                if (myToken !== landsFetchTokens[key]) return;
-                console.error(`Error loading ${cat.label}:`, err);
-                body.innerHTML = `<div class="error">❌ Couldn't load ${cat.label} right now.</div>`;
-            }
-        }
+                const ordered = sortLandsForTier(cards);
+                const tiles = ordered.map((c, i) => {
+                    const navIndex = landsDisplayOrder.push(c) - 1;
+                    const rankLabel = landsTierMode === 'normal'
+                        ? (c.edhrec_rank ? `#${c.edhrec_rank.toLocaleString()}` : null)
+                        : `#${i + 1}`;
+                    return buildCardTileHTML(c, rankLabel, navIndex, 'landsDisplayOrder');
+                }).join('');
+                const range = min === null ? '' : (min === max ? formatUsd(min) : `${formatUsd(min)} – ${formatUsd(max)}`);
+                sectionsHTML += `
+                    <div class="rarity-section" id="landsSection-${cat.key}">
+                        <div class="lands-glossary-head">
+                            <span class="lands-glossary-label">${cat.label}</span>
+                            <span class="text-secondary" style="font-size:0.85em;">${cards.length} land${cards.length === 1 ? '' : 's'}</span>
+                            ${cat.approx ? landCycleStatusHTML(cat) : ''}
+                            ${range ? `<span class="lands-price-range">${range} · all ${cards.length}: ${formatUsd(setTotal)}</span>` : ''}
+                        </div>
+                        <div class="lands-cycle-desc text-secondary" style="margin-bottom:10px;">${cat.description}</div>
+                        <div class="card-tile-grid">${tiles}</div>
+                    </div>
+                `;
+            });
 
-        function renderLandsCycleBody(key, cards) {
-            const cat = LAND_CATEGORIES.find(c => c.key === key);
-            const body = document.getElementById(`landsBody-${key}`);
-            if (!cat || !body) return;
-
-            updateLandsPriceRangeBadge(key, cards);
-
-            if (cards.length === 0) {
-                body.innerHTML = `<div class="error">No ${cat.label} found for this color identity.</div>`;
-                return;
-            }
-
-            const priceOf = c => parseFloat(c.prices && c.prices.usd) || 0;
-            let ordered = cards;
-            if (landsTierMode === 'budget') ordered = [...cards].sort((a, b) => priceOf(a) - priceOf(b));
-            else if (landsTierMode === 'premium') ordered = [...cards].sort((a, b) => priceOf(b) - priceOf(a));
-
-            body.innerHTML = `
-                <div class="card-tile-grid">
-                    ${ordered.map((c, i) => {
-                        const rankLabel = landsTierMode === 'normal'
-                            ? (c.edhrec_rank ? `#${c.edhrec_rank}` : null)
-                            : `#${i + 1}`;
-                        return buildCardTileHTML(c, rankLabel);
-                    }).join('')}
+            resultsDiv.innerHTML = `
+                <div class="bg-summary">
+                    <strong>${totalLands}</strong> lands across <strong>${cycles.length}</strong> cycles fit a ${colorsLabel} deck ${budgetLabel}.
                 </div>
+                <div class="lands-pkg">
+                    <div class="bg-section-title" style="margin-top:0;">💵 Land package cost, cheapest cycle first</div>
+                    <div class="bg-section-sub">"All" is every land shown for that cycle - for a 2-color deck that's usually the one dual in your colors; for 3+ colors it's the whole set across your color pairs. Click a row to jump to it.</div>
+                    <div class="buylist-table-wrap">
+                        <table class="lands-pkg-table">
+                            <thead><tr><th>Cycle</th><th>Lands</th><th>Cheapest</th><th>All of them</th></tr></thead>
+                            <tbody>${packageRows}</tbody>
+                        </table>
+                    </div>
+                </div>
+                ${failed.length ? `<div class="error" style="margin:10px 0;">Couldn't load: ${failed.join(', ')} - change a filter to retry.</div>` : ''}
+                <div class="staples-bulk-actions" style="margin-top:14px;">
+                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('landsResults')">Check Stock for All ${totalLands} Lands</button>
+                </div>
+                ${sectionsHTML}
+                ${emptyLabels.length ? `<div class="bg-section-sub" style="margin-top:16px;">Nothing in your colors ${budgetLabel} from: ${emptyLabels.join(', ')}.</div>` : ''}
+                ${noSearchCount ? `<div class="bg-section-sub">${noSearchCount} more cycles are described in the glossary below but don't have a card search yet.</div>` : ''}
             `;
         }
 
-        // Adds/updates the cheapest-priciest badge next to a cycle's "Show
-        // cards" button once its cards are known - lets someone eyeball a
-        // cycle's price range without having to actually expand it first
-        // for every cycle they're comparing.
-        function updateLandsPriceRangeBadge(key, cards) {
-            const head = document.querySelector(`#landsGlossary-${key} .lands-glossary-head`);
-            if (!head) return;
-            let badge = head.querySelector('.lands-price-range');
-            const priceOf = c => parseFloat(c.prices && c.prices.usd) || 0;
-            const prices = cards.map(priceOf).filter(p => p > 0);
-            const text = prices.length > 1
-                ? `$${Math.min(...prices).toFixed(2)} – $${Math.max(...prices).toFixed(2)}`
-                : prices.length === 1 ? `$${prices[0].toFixed(2)}` : '';
-            if (!badge) {
-                if (!text) return;
-                badge = document.createElement('span');
-                badge.className = 'lands-price-range';
-                head.insertBefore(badge, head.lastElementChild);
+        // ============== FULL-ART BASICS ==============
+        // Every full-art printing of one basic land type at a time - about
+        // 120-150 printings each, so one type is a single Scryfall page
+        // instead of paging through all ~720 at once.
+        const BASIC_TYPE_LABELS = { plains: 'Plains', island: 'Island', swamp: 'Swamp', mountain: 'Mountain', forest: 'Forest', wastes: 'Wastes' };
+        let basicsType = 'plains';
+        const basicsCache = {}; // "type|includeSnow" -> printings
+        let basicsRequestToken = 0;
+        let basicsCurrent = [];
+        let basicsDisplayOrder = [];
+        let basicsInitialized = false;
+
+        function showBasicsGuide() {
+            if (basicsInitialized) return;
+            basicsInitialized = true;
+            loadBasics();
+        }
+
+        function selectBasicType(type) {
+            basicsType = type;
+            document.querySelectorAll('#basicsTypePicker [data-basic]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.basic === type);
+            });
+            loadBasics();
+        }
+
+        async function loadBasics() {
+            const myToken = ++basicsRequestToken;
+            const includeSnow = document.getElementById('basicsIncludeSnow').checked;
+            const cacheKey = `${basicsType}|${includeSnow}`;
+            const resultsDiv = document.getElementById('basicsResults');
+            resultsDiv.innerHTML = `<div class="loading">Loading full-art ${BASIC_TYPE_LABELS[basicsType]}...</div>`;
+
+            try {
+                let prints = basicsCache[cacheKey];
+                if (!prints) {
+                    // Wastes has no basic land type to search on, so it's
+                    // matched by exact name instead.
+                    const typePart = basicsType === 'wastes'
+                        ? (includeSnow ? '(!wastes or !"snow-covered wastes")' : '!wastes')
+                        : `t:${basicsType}${includeSnow ? '' : ' -t:snow'}`;
+                    const query = `t:basic ${typePart} is:fullart game:paper`;
+                    let url = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&unique=prints&order=released&dir=desc`;
+                    prints = [];
+                    while (url) {
+                        const page = await fetchScryfallSearchPage(url);
+                        if (myToken !== basicsRequestToken) return;
+                        prints.push(...(page.data || []));
+                        url = page.has_more ? page.next_page : null;
+                    }
+                    basicsCache[cacheKey] = prints;
+                }
+                if (myToken !== basicsRequestToken) return;
+                basicsCurrent = prints;
+                renderBasics();
+            } catch (err) {
+                if (myToken !== basicsRequestToken) return;
+                console.error('Error loading full-art basics:', err);
+                resultsDiv.innerHTML = `<div class="error">❌ Couldn't load full-art basics right now: ${err.message}</div>`;
             }
-            badge.textContent = text;
+        }
+
+        function basicPrice(card, field) {
+            const v = parseFloat(card.prices && card.prices[field]);
+            return Number.isFinite(v) ? v : null;
+        }
+
+        function basicPriceHTML(v) {
+            return v === null ? '<span class="basic-price-na">—</span>' : formatUsd(v);
+        }
+
+        // For values dropped into a single-quoted string inside an onclick="..." attribute.
+        function jsAttrString(str) {
+            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function basicsPriceRange(list, field) {
+            const prices = list.map(c => basicPrice(c, field)).filter(p => p !== null);
+            if (prices.length === 0) return '—';
+            const min = Math.min(...prices), max = Math.max(...prices);
+            return min === max ? formatUsd(min) : `${formatUsd(min)} – ${formatUsd(max)}`;
+        }
+
+        function renderBasics() {
+            const resultsDiv = document.getElementById('basicsResults');
+            const filter = document.getElementById('basicsSetFilter').value.trim().toLowerCase();
+            const list = basicsCurrent.filter(c => !filter
+                || (c.set_name || '').toLowerCase().includes(filter)
+                || (c.set || '').toLowerCase() === filter);
+
+            const sortMode = document.getElementById('basicsSort').value;
+            const byPrice = (field, dir) => (a, b) => {
+                const pa = basicPrice(a, field), pb = basicPrice(b, field);
+                if (pa === null) return pb === null ? 0 : 1; // unpriced always last
+                if (pb === null) return -1;
+                return dir * (pa - pb);
+            };
+            const sorters = {
+                'newest': (a, b) => new Date(b.released_at) - new Date(a.released_at),
+                'oldest': (a, b) => new Date(a.released_at) - new Date(b.released_at),
+                'nonfoil-desc': byPrice('usd', -1),
+                'nonfoil-asc': byPrice('usd', 1),
+                'foil-desc': byPrice('usd_foil', -1),
+                'foil-asc': byPrice('usd_foil', 1)
+            };
+            list.sort(sorters[sortMode] || sorters.newest);
+            basicsDisplayOrder = list;
+
+            const label = BASIC_TYPE_LABELS[basicsType];
+            if (list.length === 0) {
+                resultsDiv.innerHTML = `<div class="error">No full-art ${label} printings${filter ? ` from a set matching "${filter}"` : ''}.</div>`;
+                return;
+            }
+
+            const setCount = new Set(list.map(c => c.set)).size;
+            const tiles = list.map((c, i) => {
+                const tileId = `tile-${c.id}`;
+                const img = getCardImageSmall(c);
+                const open = `openCardModal(basicsDisplayOrder[${i}], basicsDisplayOrder, ${i})`;
+                const year = c.released_at ? new Date(c.released_at).getFullYear() : '?';
+                const etched = basicPrice(c, 'usd_etched');
+                return `
+                    <div class="card-tile" id="${tileId}">
+                        ${img
+                            ? `<img src="${img}" alt="${(c.name + ' - ' + c.set_name).replace(/"/g, '&quot;')}" loading="lazy" onclick="${open}">`
+                            : `<div class="card-tile-noimg" onclick="${open}">${c.name}</div>`}
+                        <div class="card-tile-name" onclick="${open}" title="${(c.set_name || '').replace(/"/g, '&quot;')}">${c.set_name}</div>
+                        <div class="basic-meta">${c.set.toUpperCase()} #${c.collector_number} · ${year}${c.name !== label ? ` · ${c.name}` : ''}</div>
+                        <div class="basic-prices">
+                            <span>Nonfoil <strong>${basicPriceHTML(basicPrice(c, 'usd'))}</strong></span>
+                            <span>Foil <strong>${basicPriceHTML(basicPrice(c, 'usd_foil'))}</strong></span>
+                            ${etched !== null ? `<span>Etched <strong>${formatUsd(etched)}</strong></span>` : ''}
+                        </div>
+                        <button type="button" class="card-tile-stock-btn" onclick="quickCheckMoonshotStockInto('${tileId}-stock', '${jsAttrString(c.name)}', '${c.set.toUpperCase()}', '${jsAttrString(c.set_name || '')}')">Find at Moonshot →</button>
+                        <div class="card-tile-stock-result" id="${tileId}-stock"></div>
+                    </div>
+                `;
+            }).join('');
+
+            resultsDiv.innerHTML = `
+                <div class="bg-summary">
+                    <strong>${list.length}</strong> full-art ${label} printing${list.length === 1 ? '' : 's'} from <strong>${setCount}</strong> set${setCount === 1 ? '' : 's'}
+                    · Nonfoil ${basicsPriceRange(list, 'usd')} · Foil ${basicsPriceRange(list, 'usd_foil')}
+                </div>
+                <div class="card-tile-grid">${tiles}</div>
+            `;
         }
 
         // Major set types = the main constructed sets (skip tokens, promos, memorabilia, etc.)
@@ -8200,7 +8285,7 @@
         // and related-card clicks - one place that fetches a card and renders everything.
         // performLookup is reachable from a lot of places - the search box,
         // live search, history, related-card pills, and "Full Lookup" jumps
-        // from Set Primer/Staples/Recommendations/Brackets - so clicking
+        // from Set Primer/Buyer's Guide/Brackets - so clicking
         // through several cards in quick succession is a normal, not edge-
         // case, way to use this page. Same stale-response risk as the
         // Recommendations/Staples searches, so it gets the same token guard.
@@ -9871,10 +9956,10 @@
         loadPullListState();
         populateMobileTabSelect();
         initTablist('gameTabs', APP_VIEWS, 'mtg');
-        initTablist('discoveryTabs', DISCOVERY_SUBTABS, 'staples');
+        initTablist('bgTabs', BUYERS_GUIDE_SUBTABS, 'finder');
         initTablist('guideTabs', GUIDE_SUBTABS, 'gradingGuide');
         document.getElementById('mobileTabSelect').value = 'mtg';
-        // A bookmarked/shared link (e.g. #discovery/recs) opens straight to
+        // A bookmarked/shared link (e.g. #buyersguide/lands) opens straight to
         // that tab instead of always landing on MTG Card Lookup.
         if (location.hash) applyRouteFromHash();
         let alreadySeenValues = false;
