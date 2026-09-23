@@ -3089,6 +3089,103 @@
             position: relative;
         }
 
+        /* ---- Buyer's Guide ---- */
+        .bg-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            max-width: 900px;
+            margin: 0 auto 12px;
+            padding: 14px;
+            background: var(--bg-inset);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+        }
+
+        .bg-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .bg-field-label {
+            font-size: 0.72em;
+            color: #909090;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bg-field .set-primer-select,
+        .bg-field .text-input {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 0.9em;
+        }
+
+        .bg-range {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #707070;
+        }
+
+        .bg-range input {
+            width: 100%;
+            min-width: 0;
+            padding: 8px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.9em;
+        }
+
+        .bg-rarity-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+            font-size: 0.85em;
+        }
+
+        .bg-rarity-row label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .bg-summary {
+            text-align: center;
+            font-size: 0.85em;
+            color: #909090;
+            margin: 6px 0 14px;
+        }
+
+        .bg-summary a {
+            color: #6cb2ff;
+        }
+
+        .bg-section-title {
+            font-weight: 700;
+            font-size: 0.95em;
+            margin: 18px 0 4px;
+        }
+
+        .bg-section-sub {
+            font-size: 0.82em;
+            color: #909090;
+            margin-bottom: 10px;
+        }
+
+        .bg-key-section {
+            border: 1px solid #5c4d1a;
+            background: rgba(255, 215, 0, 0.04);
+            border-radius: var(--radius-md);
+            padding: 4px 14px 14px;
+            margin-bottom: 10px;
+        }
+
         .recs-tag-search-hint {
             font-size: 0.75em;
             color: #707070;
@@ -3508,6 +3605,7 @@
         <!-- Game tabs -->
         <div class="game-tabs" id="gameTabs">
             <button type="button" class="game-tab active" id="tabMtg" onclick="switchGame('mtg')">🔮 Magic: The Gathering</button>
+            <button type="button" class="game-tab" id="tabBuyersGuide" onclick="switchGame('buyersguide')">🛒 Buyer's Guide</button>
             <button type="button" class="game-tab" id="tabFormats" onclick="switchGame('formats')">📖 Format Rules</button>
             <button type="button" class="game-tab" id="tabValueVintage" onclick="switchGame('valuevintage')">🏆 Value Vintage</button>
             <button type="button" class="game-tab" id="tabSetPrimer" onclick="switchGame('setprimer')">🎁 Set Primer</button>
@@ -3555,6 +3653,119 @@
                 <div class="history-list" id="historyList"></div>
                 <button class="clear-history" onclick="clearHistory()">Clear History</button>
             </div>
+        </div>
+
+        <!-- ============== BUYER'S GUIDE ============== -->
+        <div id="buyersGuideApp" style="display:none;">
+            <div class="formats-intro">
+                One place to help a customer find cards. Pick a theme (or type a
+                creature type), narrow it down by color, card type, mana value,
+                price, rarity, and format - the most-played cards that match
+                everything are pulled to the top as <strong>Key Pieces</strong>,
+                and every other match is below it, sortable and pageable.
+            </div>
+
+            <div class="bg-field-label" style="text-align:center; margin-bottom:6px;">Theme</div>
+            <div class="staples-category-picker" id="bgThemePicker"></div>
+            <div class="recs-tag-search">
+                <input type="text" id="bgTagSearchInput" aria-label="Search the community tag catalog for a theme" placeholder="🔍 Or search 4,500+ community tags (e.g. &quot;equipment&quot;, &quot;discard&quot;, &quot;treasure&quot;)..." autocomplete="off">
+                <div class="autocomplete-list" id="bgTagSearchResults"></div>
+            </div>
+            <div id="bgActiveTheme"></div>
+
+            <div class="recs-color-picker">
+                <span class="recs-color-label">Color Identity:</span>
+                <button type="button" class="recs-color-btn" id="bgColor-w" data-color="w" onclick="toggleBgColor('w')">W</button>
+                <button type="button" class="recs-color-btn" id="bgColor-u" data-color="u" onclick="toggleBgColor('u')">U</button>
+                <button type="button" class="recs-color-btn" id="bgColor-b" data-color="b" onclick="toggleBgColor('b')">B</button>
+                <button type="button" class="recs-color-btn" id="bgColor-r" data-color="r" onclick="toggleBgColor('r')">R</button>
+                <button type="button" class="recs-color-btn" id="bgColor-g" data-color="g" onclick="toggleBgColor('g')">G</button>
+                <button type="button" class="staples-sort-btn" id="bgColorless" onclick="toggleBgColorless()">Colorless</button>
+                <select id="bgColorMode" class="set-primer-select" aria-label="Color identity match mode" onchange="runBuyersGuideSearch()">
+                    <option value="within">Fits in these colors (deck-building)</option>
+                    <option value="exact">Exactly these colors</option>
+                </select>
+            </div>
+
+            <div class="bg-filters">
+                <div class="bg-field">
+                    <label class="bg-field-label" for="bgTribe">Creature type (tribal)</label>
+                    <input type="text" id="bgTribe" class="text-input" placeholder="e.g. Elf, Dragon, Zombie" autocomplete="off" oninput="scheduleBuyersGuideSearch()">
+                </div>
+                <div class="bg-field">
+                    <label class="bg-field-label" for="bgType">Card type</label>
+                    <select id="bgType" class="set-primer-select" onchange="runBuyersGuideSearch()">
+                        <option value="">Any type</option>
+                        <option value="creature">Creature</option>
+                        <option value="instant">Instant</option>
+                        <option value="sorcery">Sorcery</option>
+                        <option value="artifact">Artifact</option>
+                        <option value="enchantment">Enchantment</option>
+                        <option value="planeswalker">Planeswalker</option>
+                        <option value="land">Land</option>
+                        <option value="battle">Battle</option>
+                        <option value="legendary creature">Legendary Creature (commanders)</option>
+                    </select>
+                </div>
+                <div class="bg-field">
+                    <span class="bg-field-label">Mana value</span>
+                    <div class="bg-range">
+                        <input type="number" id="bgMvMin" min="0" step="1" placeholder="min" aria-label="Minimum mana value" oninput="scheduleBuyersGuideSearch()">
+                        –
+                        <input type="number" id="bgMvMax" min="0" step="1" placeholder="max" aria-label="Maximum mana value" oninput="scheduleBuyersGuideSearch()">
+                    </div>
+                </div>
+                <div class="bg-field">
+                    <span class="bg-field-label">Price (USD)</span>
+                    <div class="bg-range">
+                        $<input type="number" id="bgPriceMin" min="0" step="0.25" placeholder="min" aria-label="Minimum price" oninput="scheduleBuyersGuideSearch()">
+                        –
+                        $<input type="number" id="bgPriceMax" min="0" step="0.25" placeholder="max" aria-label="Maximum price" oninput="scheduleBuyersGuideSearch()">
+                    </div>
+                </div>
+                <div class="bg-field">
+                    <label class="bg-field-label" for="bgFormat">Legal in</label>
+                    <select id="bgFormat" class="set-primer-select" onchange="runBuyersGuideSearch()">
+                        <option value="">Any format</option>
+                        <option value="commander">Commander</option>
+                        <option value="standard">Standard</option>
+                        <option value="pioneer">Pioneer</option>
+                        <option value="modern">Modern</option>
+                        <option value="legacy">Legacy</option>
+                        <option value="vintage">Vintage</option>
+                        <option value="pauper">Pauper</option>
+                    </select>
+                </div>
+                <div class="bg-field">
+                    <label class="bg-field-label" for="bgText">Rules text contains</label>
+                    <input type="text" id="bgText" class="text-input" placeholder="e.g. draw a card" autocomplete="off" oninput="scheduleBuyersGuideSearch()">
+                </div>
+                <div class="bg-field">
+                    <span class="bg-field-label">Rarity (none checked = any)</span>
+                    <div class="bg-rarity-row">
+                        <label><input type="checkbox" id="bgRarity-common" onchange="runBuyersGuideSearch()"> Common</label>
+                        <label><input type="checkbox" id="bgRarity-uncommon" onchange="runBuyersGuideSearch()"> Uncommon</label>
+                        <label><input type="checkbox" id="bgRarity-rare" onchange="runBuyersGuideSearch()"> Rare</label>
+                        <label><input type="checkbox" id="bgRarity-mythic" onchange="runBuyersGuideSearch()"> Mythic</label>
+                    </div>
+                </div>
+                <div class="bg-field">
+                    <label class="bg-field-label" for="bgSort">Sort by</label>
+                    <select id="bgSort" class="set-primer-select" onchange="runBuyersGuideSearch()">
+                        <option value="popular">🔥 Most played (EDHREC)</option>
+                        <option value="price-desc">💎 Price: high → low</option>
+                        <option value="price-asc">💰 Price: low → high</option>
+                        <option value="mv">Mana value: low → high</option>
+                        <option value="name">Name A → Z</option>
+                        <option value="newest">🆕 Newest printing first</option>
+                    </select>
+                </div>
+            </div>
+            <div style="text-align:center; margin-bottom:6px;">
+                <button type="button" class="set-primer-clear-filters" onclick="resetBuyersGuide()">Reset all filters</button>
+            </div>
+
+            <div id="bgResults"></div>
         </div>
 
         <!-- ============== FORMAT RULES ============== -->
@@ -4349,6 +4560,7 @@
         // element lookups and display-toggle lines to keep in sync.
         const APP_VIEWS = {
             mtg:       { appId: 'mtgApp',       tabId: 'tabMtg',       title: '🃏 MTG Card Lookup' },
+            buyersguide: { appId: 'buyersGuideApp', tabId: 'tabBuyersGuide', title: "🛒 Buyer's Guide", onShow: showBuyersGuideTab },
             formats:   { appId: 'formatsApp',   tabId: 'tabFormats',   title: '📖 Format Rules', onShow: renderFormatsGrid },
             valuevintage: { appId: 'valueVintageApp', tabId: 'tabValueVintage', title: '🏆 Value Vintage (V30)', onShow: renderValueVintagePanel },
             setprimer: { appId: 'setPrimerApp', tabId: 'tabSetPrimer', title: '🎁 Set Primer' },
@@ -7103,51 +7315,57 @@
             return allOracleTagsLoadPromise;
         }
 
-        let recsTagSearchTimeout;
-        let recsTagSearchToken = 0;
+        // Shared by Recommendations and the Buyer's Guide - onSelectFnName is
+        // a global function name (it ends up in an inline onclick) called
+        // with (slug, label) when a tag is picked.
+        function attachOracleTagSearch(inputId, listId, onSelectFnName) {
+            let timeout;
+            let token = 0;
+            document.getElementById(inputId).addEventListener('input', function(e) {
+                clearTimeout(timeout);
+                const query = e.target.value.trim().toLowerCase();
+                const listEl = document.getElementById(listId);
 
-        document.getElementById('recsTagSearchInput').addEventListener('input', function(e) {
-            clearTimeout(recsTagSearchTimeout);
-            const query = e.target.value.trim().toLowerCase();
-            const listEl = document.getElementById('recsTagSearchResults');
-
-            if (query.length < 2) {
-                listEl.innerHTML = '';
-                return;
-            }
-
-            recsTagSearchTimeout = setTimeout(async () => {
-                const myToken = ++recsTagSearchToken;
-                listEl.innerHTML = `<div class="loading">${allOracleTagsCache ? 'Searching...' : 'Loading tag catalog (one-time, ~6MB)...'}</div>`;
-                try {
-                    const allTags = await loadAllOracleTags();
-                    if (myToken !== recsTagSearchToken) return;
-                    const matches = allTags
-                        .filter(t => t.slug.includes(query) || t.desc.toLowerCase().includes(query) || t.aliases.some(a => a.toLowerCase().includes(query)))
-                        .sort((a, b) => b.count - a.count)
-                        .slice(0, 25);
-
-                    if (matches.length === 0) {
-                        listEl.innerHTML = '<div class="autocomplete-item">No matching tags found</div>';
-                        return;
-                    }
-                    listEl.innerHTML = matches.map(t => {
-                        const safeSlug = t.slug.replace(/'/g, "\\'");
-                        const safeLabel = t.slug.replace(/-/g, ' ').replace(/'/g, "\\'");
-                        return `
-                            <div class="autocomplete-item" onclick="selectCustomRecsTag('${safeSlug}', '${safeLabel}')">
-                                <strong>${t.slug}</strong> <span class="tag-count">(${t.count} cards)</span>
-                                ${t.desc ? `<span class="tag-desc">${t.desc.slice(0, 100)}</span>` : ''}
-                            </div>
-                        `;
-                    }).join('');
-                } catch (err) {
-                    if (myToken !== recsTagSearchToken) return;
-                    console.error('Error loading tag catalog:', err);
-                    listEl.innerHTML = '<div class="autocomplete-item text-error">Could not load the tag catalog right now.</div>';
+                if (query.length < 2) {
+                    listEl.innerHTML = '';
+                    return;
                 }
-            }, 300);
-        });
+
+                timeout = setTimeout(async () => {
+                    const myToken = ++token;
+                    listEl.innerHTML = `<div class="loading">${allOracleTagsCache ? 'Searching...' : 'Loading tag catalog (one-time, ~6MB)...'}</div>`;
+                    try {
+                        const allTags = await loadAllOracleTags();
+                        if (myToken !== token) return;
+                        const matches = allTags
+                            .filter(t => t.slug.includes(query) || t.desc.toLowerCase().includes(query) || t.aliases.some(a => a.toLowerCase().includes(query)))
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 25);
+
+                        if (matches.length === 0) {
+                            listEl.innerHTML = '<div class="autocomplete-item">No matching tags found</div>';
+                            return;
+                        }
+                        listEl.innerHTML = matches.map(t => {
+                            const safeSlug = t.slug.replace(/'/g, "\\'");
+                            const safeLabel = t.slug.replace(/-/g, ' ').replace(/'/g, "\\'");
+                            return `
+                                <div class="autocomplete-item" onclick="${onSelectFnName}('${safeSlug}', '${safeLabel}')">
+                                    <strong>${t.slug}</strong> <span class="tag-count">(${t.count} cards)</span>
+                                    ${t.desc ? `<span class="tag-desc">${t.desc.slice(0, 100)}</span>` : ''}
+                                </div>
+                            `;
+                        }).join('');
+                    } catch (err) {
+                        if (myToken !== token) return;
+                        console.error('Error loading tag catalog:', err);
+                        listEl.innerHTML = '<div class="autocomplete-item text-error">Could not load the tag catalog right now.</div>';
+                    }
+                }, 300);
+            });
+        }
+
+        attachOracleTagSearch('recsTagSearchInput', 'recsTagSearchResults', 'selectCustomRecsTag');
 
         function selectCustomRecsTag(slug, label) {
             recsSelectedCategoryObj = { key: `custom:${slug}`, label, query: `otag:${slug}` };
@@ -7173,6 +7391,294 @@
                     ${cards.map(c => buildCardTileHTML(c, c.edhrec_rank ? `#${c.edhrec_rank}` : null)).join('')}
                 </div>
             `;
+        }
+
+        // ============== BUYER'S GUIDE ==============
+        // The one focused "help a customer find cards" tool: a theme (one of
+        // the verified REC_CATEGORIES, any community tag, or a creature type)
+        // plus filters, all compiled into a single Scryfall query so every
+        // filter applies across the whole card pool server-side - not just
+        // to whatever page happened to load first.
+        const BG_SORTS = {
+            'popular':    { order: 'edhrec' },
+            'price-desc': { order: 'usd', dir: 'desc' },
+            'price-asc':  { order: 'usd', dir: 'asc' },
+            'mv':         { order: 'cmc', dir: 'asc' },
+            'name':       { order: 'name', dir: 'asc' },
+            'newest':     { order: 'released', dir: 'desc' }
+        };
+        const BG_KEY_PIECE_COUNT = 8;
+        const BG_RARITIES = ['common', 'uncommon', 'rare', 'mythic'];
+
+        let bgTheme = null; // {key, label, query} - same shape as REC_CATEGORIES entries
+        let bgColors = [];
+        let bgColorlessOnly = false;
+        let bgRequestToken = 0;
+        let bgSearchTimeout;
+        let bgNextPage = null;
+        let bgKeyIds = new Set();
+        let bgDisplayOrder = []; // key pieces then matches, in on-screen order, for the popup's Prev/Next
+        let bgInitialized = false;
+
+        function showBuyersGuideTab() {
+            if (bgInitialized) return;
+            bgInitialized = true;
+            renderBgThemePicker();
+            runBuyersGuideSearch();
+        }
+
+        function renderBgThemePicker() {
+            let lastGroup = null;
+            let html = `<button type="button" class="staples-category-btn active" id="bgTheme-none" onclick="selectBgTheme(null)">Any theme</button>`;
+            REC_CATEGORIES.forEach(cat => {
+                if (cat.group !== lastGroup) {
+                    html += `<div class="staples-category-divider">${cat.group}</div>`;
+                    lastGroup = cat.group;
+                }
+                html += `<button type="button" class="staples-category-btn" id="bgTheme-${cat.key}" onclick="selectBgTheme('${cat.key}')">${cat.label}</button>`;
+            });
+            document.getElementById('bgThemePicker').innerHTML = html;
+        }
+
+        function setBgTheme(theme, isCustom) {
+            bgTheme = theme;
+            document.querySelectorAll('#bgThemePicker .staples-category-btn').forEach(el => el.classList.remove('active'));
+            if (!isCustom) {
+                const btn = document.getElementById(`bgTheme-${theme ? theme.key : 'none'}`);
+                if (btn) btn.classList.add('active');
+            }
+            document.getElementById('bgActiveTheme').innerHTML = isCustom
+                ? `<div class="recs-custom-tag-banner">Theme: <strong>${theme.label}</strong> (community tag) <button type="button" class="set-primer-clear-filters" onclick="selectBgTheme(null)">✕ clear</button></div>`
+                : '';
+            runBuyersGuideSearch();
+        }
+
+        function selectBgTheme(key) {
+            setBgTheme(key ? REC_CATEGORIES.find(c => c.key === key) || null : null, false);
+        }
+
+        function selectBgCustomTag(slug, label) {
+            document.getElementById('bgTagSearchInput').value = '';
+            document.getElementById('bgTagSearchResults').innerHTML = '';
+            setBgTheme({ key: `custom:${slug}`, label, query: `otag:${slug}` }, true);
+        }
+
+        attachOracleTagSearch('bgTagSearchInput', 'bgTagSearchResults', 'selectBgCustomTag');
+
+        function toggleBgColor(color) {
+            const idx = bgColors.indexOf(color);
+            if (idx === -1) bgColors.push(color); else bgColors.splice(idx, 1);
+            document.getElementById(`bgColor-${color}`).classList.toggle('active', idx === -1);
+            if (bgColorlessOnly) {
+                bgColorlessOnly = false;
+                document.getElementById('bgColorless').classList.remove('active');
+            }
+            runBuyersGuideSearch();
+        }
+
+        // Colorless is its own toggle rather than "no colors picked" - here,
+        // no colors picked means no color filter at all, which is the more
+        // useful default when a customer hasn't said what they're playing.
+        function toggleBgColorless() {
+            bgColorlessOnly = !bgColorlessOnly;
+            document.getElementById('bgColorless').classList.toggle('active', bgColorlessOnly);
+            if (bgColorlessOnly) {
+                bgColors = [];
+                document.querySelectorAll('#buyersGuideApp .recs-color-btn').forEach(el => el.classList.remove('active'));
+            }
+            runBuyersGuideSearch();
+        }
+
+        function bgNumber(id) {
+            const v = parseFloat(document.getElementById(id).value);
+            return Number.isFinite(v) && v >= 0 ? v : null;
+        }
+
+        function buildBuyersGuideQuery() {
+            const parts = [];
+            if (bgTheme) parts.push(bgTheme.query);
+
+            const tribe = document.getElementById('bgTribe').value.trim().toLowerCase().replace(/[^a-z-]/g, '');
+            // Type line OR rules text, so the lords and payoffs that care
+            // about the type (but aren't that type themselves) come along too.
+            if (tribe) parts.push(`(t:${tribe} or o:${tribe})`);
+
+            if (bgColorlessOnly) {
+                parts.push('id:c');
+            } else if (bgColors.length > 0) {
+                const colorStr = canonicalColorString(bgColors);
+                parts.push(document.getElementById('bgColorMode').value === 'exact' ? `id=${colorStr}` : `id<=${colorStr}`);
+            }
+
+            const type = document.getElementById('bgType').value;
+            if (type) type.split(' ').forEach(t => parts.push(`t:${t}`));
+
+            const mvMin = bgNumber('bgMvMin'), mvMax = bgNumber('bgMvMax');
+            if (mvMin !== null) parts.push(`mv>=${mvMin}`);
+            if (mvMax !== null) parts.push(`mv<=${mvMax}`);
+
+            const priceMin = bgNumber('bgPriceMin'), priceMax = bgNumber('bgPriceMax');
+            if (priceMin !== null) parts.push(`usd>=${priceMin}`);
+            if (priceMax !== null) parts.push(`usd<=${priceMax}`);
+
+            const format = document.getElementById('bgFormat').value;
+            if (format) parts.push(`f:${format}`);
+
+            const text = document.getElementById('bgText').value.trim().replace(/"/g, '');
+            if (text) parts.push(`o:"${text}"`);
+
+            const rarities = BG_RARITIES.filter(r => document.getElementById(`bgRarity-${r}`).checked);
+            if (rarities.length > 0 && rarities.length < BG_RARITIES.length) {
+                parts.push(`(${rarities.map(r => `r:${r}`).join(' or ')})`);
+            }
+
+            parts.push('game:paper', '-set_type:funny');
+            return parts.join(' ');
+        }
+
+        function scheduleBuyersGuideSearch() {
+            clearTimeout(bgSearchTimeout);
+            bgSearchTimeout = setTimeout(runBuyersGuideSearch, 400);
+        }
+
+        // Scryfall answers a query that matches nothing with a 404, and a
+        // malformed one (e.g. a tag that doesn't exist) with a 400 whose
+        // "details" says what's wrong - worth surfacing instead of a generic error.
+        async function fetchScryfallSearchPage(url) {
+            const res = await fetch(url);
+            if (res.status === 404) return { data: [], total_cards: 0, has_more: false };
+            if (!res.ok) {
+                let details = '';
+                try { details = (await res.json()).details || ''; } catch (e) { /* non-JSON error body */ }
+                throw new Error(details || `Server error: ${res.status}`);
+            }
+            return res.json();
+        }
+
+        async function runBuyersGuideSearch() {
+            clearTimeout(bgSearchTimeout);
+            const myToken = ++bgRequestToken;
+            const resultsDiv = document.getElementById('bgResults');
+            resultsDiv.innerHTML = `<div class="loading">Searching...</div>`;
+
+            const query = buildBuyersGuideQuery();
+            const sort = BG_SORTS[document.getElementById('bgSort').value] || BG_SORTS.popular;
+            const baseUrl = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&unique=cards`;
+            const mainUrl = `${baseUrl}&order=${sort.order}${sort.dir ? `&dir=${sort.dir}` : ''}`;
+            // Key pieces only mean something once there's a theme to be
+            // "key" to - with no theme they'd just be the most-played cards
+            // in the whole game, which the popularity sort already shows.
+            const wantKeyPieces = !!(bgTheme || document.getElementById('bgTribe').value.trim());
+
+            try {
+                await loadSymbology();
+                const mainPromise = fetchScryfallSearchPage(mainUrl);
+                const keyPromise = !wantKeyPieces ? Promise.resolve(null)
+                    : sort.order === 'edhrec' ? mainPromise
+                    : fetchScryfallSearchPage(`${baseUrl}&order=edhrec`);
+                const [main, keyPage] = await Promise.all([mainPromise, keyPromise]);
+                if (myToken !== bgRequestToken) return;
+
+                const keyPieces = keyPage
+                    ? (keyPage.data || []).filter(c => typeof c.edhrec_rank === 'number').slice(0, BG_KEY_PIECE_COUNT)
+                    : [];
+                bgKeyIds = new Set(keyPieces.map(c => c.id));
+                bgNextPage = main.has_more ? main.next_page : null;
+                const matches = (main.data || []).filter(c => !bgKeyIds.has(c.id));
+                renderBuyersGuide(query, keyPieces, matches, main.total_cards || 0);
+            } catch (err) {
+                if (myToken !== bgRequestToken) return;
+                console.error("Error loading Buyer's Guide results:", err);
+                resultsDiv.innerHTML = `<div class="error">❌ Couldn't run that search: ${err.message}</div>`;
+            }
+        }
+
+        function bgMatchRankLabel(card) {
+            return document.getElementById('bgSort').value === 'popular' && card.edhrec_rank
+                ? `#${card.edhrec_rank.toLocaleString()}`
+                : null;
+        }
+
+        function renderBuyersGuide(query, keyPieces, matches, totalCards) {
+            const resultsDiv = document.getElementById('bgResults');
+            bgDisplayOrder = [...keyPieces, ...matches];
+
+            if (bgDisplayOrder.length === 0) {
+                resultsDiv.innerHTML = `<div class="error">No cards match all of these filters - try loosening one (price range and rules text are the usual culprits).</div>`;
+                return;
+            }
+
+            const themeLabel = bgTheme ? bgTheme.label : `${document.getElementById('bgTribe').value.trim()} tribal`;
+            const scryfallLink = `https://scryfall.com/search?q=${encodeURIComponent(query)}`;
+            const keyHTML = keyPieces.length === 0 ? '' : `
+                <div class="bg-key-section">
+                    <div class="bg-section-title">🔑 Key Pieces - ${themeLabel}</div>
+                    <div class="bg-section-sub">The most-played cards that fit every filter above - usually the first ones to show a customer building this theme.</div>
+                    <div class="card-tile-grid">
+                        ${keyPieces.map((c, i) => buildCardTileHTML(c, `🔑 ${i + 1}`, i, 'bgDisplayOrder')).join('')}
+                    </div>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = `
+                <div class="bg-summary">
+                    ${totalCards.toLocaleString()} matching card${totalCards === 1 ? '' : 's'}
+                    · <a href="${scryfallLink}" target="_blank" rel="noopener">open this exact search on Scryfall ↗</a>
+                </div>
+                <div class="staples-bulk-actions">
+                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('bgResults')">Check Stock for All Shown</button>
+                </div>
+                ${keyHTML}
+                ${matches.length > 0 ? `<div class="bg-section-title">${keyPieces.length > 0 ? 'More matches' : 'Matches'}</div>` : ''}
+                <div class="card-tile-grid" id="bgMatchGrid">
+                    ${matches.map((c, i) => buildCardTileHTML(c, bgMatchRankLabel(c), keyPieces.length + i, 'bgDisplayOrder')).join('')}
+                </div>
+                <div id="bgLoadMoreWrap" style="text-align:center; margin-top:16px;">${bgLoadMoreButtonHTML()}</div>
+            `;
+        }
+
+        function bgLoadMoreButtonHTML() {
+            return bgNextPage
+                ? `<button type="button" class="staples-sort-btn" onclick="loadMoreBuyersGuide()">Load more matches</button>`
+                : '';
+        }
+
+        async function loadMoreBuyersGuide() {
+            if (!bgNextPage) return;
+            const myToken = bgRequestToken; // a new search started meanwhile makes this page stale
+            const wrap = document.getElementById('bgLoadMoreWrap');
+            wrap.innerHTML = `<div class="loading">Loading more...</div>`;
+            try {
+                const page = await fetchScryfallSearchPage(bgNextPage);
+                if (myToken !== bgRequestToken) return;
+                bgNextPage = page.has_more ? page.next_page : null;
+                const more = (page.data || []).filter(c => !bgKeyIds.has(c.id));
+                const startIdx = bgDisplayOrder.length;
+                bgDisplayOrder.push(...more);
+                document.getElementById('bgMatchGrid').insertAdjacentHTML('beforeend',
+                    more.map((c, i) => buildCardTileHTML(c, bgMatchRankLabel(c), startIdx + i, 'bgDisplayOrder')).join(''));
+                wrap.innerHTML = bgLoadMoreButtonHTML();
+            } catch (err) {
+                if (myToken !== bgRequestToken) return;
+                console.error("Error loading more Buyer's Guide results:", err);
+                wrap.innerHTML = `<div class="error">❌ Couldn't load more right now.</div>${bgLoadMoreButtonHTML()}`;
+            }
+        }
+
+        function resetBuyersGuide() {
+            ['bgTribe', 'bgMvMin', 'bgMvMax', 'bgPriceMin', 'bgPriceMax', 'bgText', 'bgTagSearchInput'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            ['bgType', 'bgFormat'].forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('bgSort').value = 'popular';
+            document.getElementById('bgColorMode').value = 'within';
+            BG_RARITIES.forEach(r => { document.getElementById(`bgRarity-${r}`).checked = false; });
+            document.getElementById('bgTagSearchResults').innerHTML = '';
+            bgColors = [];
+            bgColorlessOnly = false;
+            document.querySelectorAll('#buyersGuideApp .recs-color-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('bgColorless').classList.remove('active');
+            setBgTheme(null, false);
         }
 
         // ============== LANDS ==============
