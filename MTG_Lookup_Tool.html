@@ -7217,7 +7217,7 @@
             { key: 'surveilland', label: 'Surveil Lands', group: 'Two-Color Cycles', query: '(otag:cycle-dual-surveil-land or otag:cycle-sos-surveil-dual)', verified: true,
               description: 'Always enters untapped; surveil 1 (look at the top card, keep or bin it) when it enters.' },
             { key: 'horizonland', label: 'Horizon / Canopy Lands', group: 'Two-Color Cycles', query: 'otag:cycle-horizon-land', verified: true,
-              description: 'Always enters untapped; can be sacrificed and pitched for a card when you don\'t need the land anymore.' },
+              description: 'Always enters untapped; taps for colorless free or a color for 1 damage. Can also be sacrificed and pitched for a card when you don\'t need the land anymore.' },
             { key: 'gainland', label: 'Gain Lands', group: 'Two-Color Cycles', query: 'otag:gainland', verified: true,
               description: 'Always enters tapped, but gains you 1 life when it does - budget fixing for slower decks.' },
             { key: 'filterland', label: 'Filter Lands', group: 'Two-Color Cycles', query: 'otag:filterland', verified: true,
@@ -7253,7 +7253,56 @@
             { key: 'pathway', label: 'Pathways', group: 'Multi-Color & Utility', query: null, verified: false,
               description: 'Modal double-faced land - choose one of two single-colored front faces when you play it, permanently locking in that half\'s color and land type.' },
             { key: 'storageland', label: 'Storage Lands', group: 'Multi-Color & Utility', query: null, verified: false,
-              description: 'Enters tapped; pay to add a charge counter over time, then remove counters to burst out several mana of one color in a single turn.' }
+              description: 'Always enters untapped, taps for colorless; pay to add a charge counter over time, then remove counters to burst out several mana of one color in a single turn.' },
+
+            // Added from a comprehensive third-party land-cycle catalog
+            // (pasted in by the person setting this up) rather than a live
+            // Scryfall check - mechanics below are trusted from that source,
+            // but query is still null/unverified same as the batch above.
+            // Deliberately left out from that source: the crossover-product
+            // reprints of mechanics already covered here under different
+            // flavor branding (Marvel/Avatar/Spider-Man/Final Fantasy/TMNT
+            // lands - each is just a Sacrifice-Draw, Campus, or plain Gain
+            // Land in different art), the Allied/Enemy split of Fetch/Fast/
+            // Creature Lands (same mechanic, different color pairs - already
+            // one cycle each above), and "Unique Duals," a catch-all bucket
+            // of one-off mechanics rather than an actual named cycle.
+            { key: 'bondland', label: 'Bond Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Enters untapped if you have 2+ opponents (tapped otherwise) - the same fixing as Gain Lands, but built to reward a multiplayer table.' },
+            { key: 'vergeland', label: 'Verge Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Always enters untapped; taps for one color freely, but needs a matching basic land type in play to tap for its second color.' },
+            { key: 'oldfilterland', label: 'Odyssey Filter Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'The original filter-land cycle: pay {1} and tap to add one mana of each of its two colors - no free colorless option like later filter lands.' },
+            { key: 'typedland', label: 'Typed Duals (Tapped, No Ability)', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Always enters tapped; taps for either of two colors and carries both basic land types (fetchable) - no other ability at all, the plainest fixing there is.' },
+            { key: 'temptpainland', label: 'Tempest Pain Duals', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Enters tapped, then taps for colorless free or a color for 1 damage - a slower, tap-land version of the classic Pain Land pattern.' },
+            { key: 'spellland', label: 'MH3 Spell Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Modal double-faced card - the front is a spell, the back is a plain tapped dual land, so it\'s a land slot only when you need it to be.' },
+            { key: 'triballand', label: 'Lorwyn Tribal Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Enters untapped if you reveal a card of the right creature type from hand; tapped otherwise - built around Lorwyn/Shadowmoor\'s tribal themes.' },
+            { key: 'hauntland', label: 'Haunt Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Enters tapped unless a player is at 13 life or less - a life-total check instead of the usual land-count or land-type checks.' },
+            { key: 'bridgeland', label: 'Bridge Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'An indestructible artifact land that enters tapped - the artifact typing matters for tribal-artifact synergies, the tap is the tradeoff for surviving most removal.' },
+            { key: 'taintedland', label: 'Tainted Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Taps for colorless normally, or for its color if you control a Swamp - every version of this cycle pairs with black.' },
+            { key: 'campusland', label: 'Campus Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Enters tapped; pay {4} and tap to scry 1 - a late-game value ability bolted onto a slow dual.' },
+            { key: 'clueland', label: 'Clue Room Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Enters tapped; pay {4} and tap to Investigate (create a Clue token) - card advantage for a big mana investment later.' },
+            { key: 'sacdrawland', label: 'Sacrifice-Draw Lands', group: 'Two-Color Cycles', query: null, verified: false,
+              description: 'Enters tapped; pay {4}, tap, and sacrifice it to draw a card - turns a land you no longer need into a card late.' },
+            { key: 'desertland', label: 'Desert Lands', group: 'Multi-Color & Utility', query: null, verified: false,
+              description: 'Enters tapped and deals 1 damage to an opponent when it does - a colorless utility land with the Desert subtype.' },
+            { key: 'taptriland', label: 'Tap Tri-Lands', group: 'Multi-Color & Utility', query: null, verified: false,
+              description: 'Enters tapped and taps for any of three colors - the original tri-land cycle, without a Triome\'s basic land types or cycling.' },
+            { key: 'slowfetchland', label: 'Slow Fetches', group: 'Multi-Color & Utility', query: null, verified: false,
+              description: 'Enters tapped; tap and sacrifice to search for a land with one of two basic land types - a budget fetch that costs tempo instead of life.' },
+            { key: 'panorama', label: 'Panoramas', group: 'Multi-Color & Utility', query: null, verified: false,
+              description: 'Taps for colorless; sacrifice and pay {1} to search for a basic land of one of three types, put onto the battlefield tapped.' },
+            { key: 'lairland', label: 'Lairs', group: 'Multi-Color & Utility', query: null, verified: false,
+              description: 'Enters untapped and taps for one of three colors, but you must return a land of specific types to hand (or sacrifice it) to keep it - real fixing with a real upkeep cost.' }
         ];
 
         let landsSelectedColors = [];
