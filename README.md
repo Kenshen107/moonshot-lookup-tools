@@ -1,6 +1,6 @@
 # Moonshot Games Lookup Tools
 
-Self-contained, single-file staff tools for Moonshot Games (Noblesville, IN & Plainfield, IN) — card lookup, a buyer's guide (card finder, land finder, full-art basics), format rules, judge reference, buylist calculator, set primer, speculation screener, commander brackets, grading & fakes guide, pull list parser, and a hotlist case map.
+Self-contained, single-file staff tools for Moonshot Games (Noblesville, IN & Plainfield, IN) — card lookup, a buyer's guide (card finder, land finder, full-art basics), format rules, judge reference, buylist calculator, set primer, commander brackets, grading & fakes guide, pull list parser, and a hotlist case map.
 
 No build step, no backend — everything is plain HTML/CSS/JS calling Scryfall's public API directly in the browser.
 
