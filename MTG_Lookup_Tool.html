@@ -3231,6 +3231,152 @@
             margin-bottom: 10px;
         }
 
+        /* ---- Card Quiz ---- */
+        .quiz-scoreboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 8px 18px;
+            max-width: 700px;
+            margin: 0 auto 16px;
+            padding: 10px 14px;
+            background: var(--bg-inset);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            font-size: 0.92em;
+        }
+
+        .quiz-scoreboard strong {
+            color: #7ee787;
+        }
+
+        .quiz-types {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px 14px;
+            max-width: 800px;
+            margin: 0 auto 14px;
+            font-size: 0.85em;
+        }
+
+        .quiz-types label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .quiz-card {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 18px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+        }
+
+        .quiz-type-label {
+            font-size: 0.72em;
+            color: #909090;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .quiz-prompt {
+            font-size: 1.15em;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .quiz-art {
+            display: block;
+            width: 100%;
+            max-width: 460px;
+            margin: 0 auto 14px;
+            border-radius: 8px;
+            border: 1px solid #404040;
+        }
+
+        .quiz-card .set-symbol {
+            width: 160px;
+            height: 160px;
+        }
+
+        .quiz-card .judge-oracle-text {
+            margin-bottom: 14px;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 10px;
+        }
+
+        .quiz-option {
+            margin-top: 0;
+            text-align: left;
+            background: var(--bg-inset);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .quiz-option:hover:not(:disabled) {
+            border-color: var(--brand);
+        }
+
+        .quiz-option:disabled {
+            cursor: default;
+            opacity: 0.6;
+        }
+
+        .quiz-option.correct {
+            border-color: #3fb950;
+            background: rgba(63, 185, 80, 0.15);
+            opacity: 1;
+        }
+
+        .quiz-option.wrong {
+            border-color: #f85149;
+            background: rgba(248, 81, 73, 0.15);
+            opacity: 1;
+        }
+
+        .quiz-option-key {
+            color: #909090;
+            margin-right: 6px;
+        }
+
+        .quiz-feedback {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .quiz-feedback img {
+            width: 110px;
+            border-radius: 6px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .quiz-feedback-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quiz-feedback-actions button {
+            width: auto;
+            margin-top: 0;
+        }
+
         .bg-key-section {
             border: 1px solid #5c4d1a;
             background: rgba(255, 215, 0, 0.04);
@@ -3668,6 +3814,7 @@
             <button type="button" class="game-tab" id="tabGrading" onclick="switchGame('grading')">🔍 Grading & Fakes</button>
             <button type="button" class="game-tab" id="tabPullList" onclick="switchGame('pulllist')">📋 Pull List</button>
             <button type="button" class="game-tab" id="tabCaseMap" onclick="switchGame('casemap')">🗂️ Case Map</button>
+            <button type="button" class="game-tab" id="tabQuiz" onclick="switchGame('quiz')">🧠 Card Quiz</button>
         </div>
 
         <!-- Mobile-only tab switcher - a native <select> instead of trying to
@@ -3969,6 +4116,29 @@
                     <a href="https://scryfall.com/sets" target="_blank" rel="noopener">Scryfall - full set index</a>
                 </div>
             </div>
+        </div>
+
+        <!-- ============== CARD QUIZ ============== -->
+        <div id="quizApp" style="display:none;">
+            <div class="formats-intro">
+                Multiple-choice practice on real cards - name a card from its art
+                or its rules text, match a set symbol to its set, and recall mana
+                value, rarity, card type, and format legality. Your score and
+                streak are just for you and reset when the page is refreshed.
+                Keyboard: <strong>1-4</strong> to answer, <strong>Enter</strong> for the next question.
+            </div>
+            <div class="staples-controls" style="flex-wrap:wrap;">
+                <label class="text-secondary" style="font-size:0.85em;" for="quizPool">Cards from:</label>
+                <select id="quizPool" class="set-primer-select" onchange="changeQuizPool()">
+                    <option value="recent">Recent sets (last 2 years)</option>
+                    <option value="standard">Standard-legal cards</option>
+                    <option value="commander">Popular Commander cards</option>
+                    <option value="all">All of Magic</option>
+                </select>
+            </div>
+            <div class="quiz-types" id="quizTypes"></div>
+            <div class="quiz-scoreboard" id="quizScoreboard"></div>
+            <div id="quizCardArea"></div>
         </div>
 
         <!-- ============== JUDGE QUICK-REFERENCE ============== -->
@@ -4563,7 +4733,8 @@
             brackets:  { appId: 'bracketsApp',  tabId: 'tabBrackets',  title: '🪜 Commander Brackets', onShow: renderBracketsGuide },
             grading:   { appId: 'gradingApp',   tabId: 'tabGrading',   title: '🔍 Grading & Spotting Fakes' },
             pulllist:  { appId: 'pullListApp',  tabId: 'tabPullList',  title: '📋 Pull List' },
-            casemap:   { appId: 'caseMapApp',   tabId: 'tabCaseMap',   title: '🗂️ Hotlist Case Map', onShow: showCaseMapTab }
+            casemap:   { appId: 'caseMapApp',   tabId: 'tabCaseMap',   title: '🗂️ Hotlist Case Map', onShow: showCaseMapTab },
+            quiz:      { appId: 'quizApp',      tabId: 'tabQuiz',      title: '🧠 Card Quiz', onShow: showQuizTab }
         };
 
         // Keeps a tab button's visual "active" state and its ARIA tab
@@ -7844,6 +8015,398 @@
                 <div class="card-tile-grid">${tiles}</div>
             `;
         }
+
+        // ============== CARD QUIZ ==============
+        // Multiple-choice practice built from real Scryfall cards. Cards come
+        // from a random page of the chosen pool's search results and are kept
+        // in a local buffer - that buffer also supplies the wrong answers, so
+        // most questions need no extra request beyond the occasional refill.
+        // Score and streak are session-only (in memory), by design.
+        const QUIZ_PAGE_SIZE = 175; // Scryfall search page size
+        const QUIZ_BUFFER_MIN = 20; // refill below this so there are always enough wrong answers to draw from
+        const QUIZ_FORMATS = ['standard', 'pioneer', 'modern', 'legacy', 'vintage', 'commander', 'pauper'];
+        const QUIZ_FALLBACK_TYPES = ['Creature', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Land', 'Planeswalker', 'Artifact Creature', 'Legendary Creature', 'Enchantment Creature'];
+
+        function isoDateYearsAgo(years) {
+            const d = new Date();
+            d.setFullYear(d.getFullYear() - years);
+            return d.toISOString().slice(0, 10);
+        }
+
+        const QUIZ_POOLS = {
+            recent:    { query: () => `date>=${isoDateYearsAgo(2)}`, order: 'name' },
+            standard:  { query: () => 'f:standard', order: 'name' },
+            // Top ~500 by EDHREC play rate - the Commander cards staff actually handle.
+            commander: { query: () => 'f:commander', order: 'edhrec', maxPages: 3 },
+            all:       { query: () => '', order: 'name' }
+        };
+
+        const QUIZ_TYPES = [
+            { key: 'art',    label: 'Name it from the art',  build: buildQuizArtQuestion },
+            { key: 'text',   label: 'Name it from its text', build: buildQuizTextQuestion },
+            { key: 'symbol', label: 'Set symbols',           build: buildQuizSymbolQuestion },
+            { key: 'mv',     label: 'Mana value',            build: buildQuizManaValueQuestion },
+            { key: 'rarity', label: 'Rarity',                build: buildQuizRarityQuestion },
+            { key: 'type',   label: 'Card type',             build: buildQuizTypeQuestion },
+            { key: 'format', label: 'Format legality',       build: buildQuizFormatQuestion }
+        ];
+
+        let quizPoolKey = 'recent';
+        let quizBuffer = [];
+        let quizPoolMaxPage = null;
+        let quizPoolToken = 0; // bumped on pool change so in-flight refills/prepared questions are discarded
+        const quizSeenIds = new Set();
+        let quizScore = { correct: 0, total: 0, streak: 0, best: 0 };
+        let quizCurrent = null;
+        let quizAnswered = false;
+        let quizNextPromise = null;
+        let quizInitialized = false;
+
+        function showQuizTab() {
+            if (quizInitialized) return;
+            quizInitialized = true;
+            document.getElementById('quizTypes').innerHTML =
+                `<span class="text-secondary">Ask about:</span>` +
+                QUIZ_TYPES.map(t => `<label><input type="checkbox" id="quizType-${t.key}" checked onchange="onQuizTypeToggle(this)"> ${t.label}</label>`).join('');
+            renderQuizScoreboard();
+            nextQuizQuestion();
+        }
+
+        // At least one question type always stays on.
+        function onQuizTypeToggle(checkbox) {
+            if (!QUIZ_TYPES.some(t => document.getElementById(`quizType-${t.key}`).checked)) checkbox.checked = true;
+            quizNextPromise = null; // the prepared question may be a type that was just turned off
+        }
+
+        function changeQuizPool() {
+            quizPoolKey = document.getElementById('quizPool').value;
+            quizPoolToken++;
+            quizBuffer = [];
+            quizPoolMaxPage = null;
+            quizNextPromise = null;
+            nextQuizQuestion();
+        }
+
+        function resetQuizScore() {
+            quizScore = { correct: 0, total: 0, streak: 0, best: 0 };
+            renderQuizScoreboard();
+        }
+
+        function renderQuizScoreboard() {
+            const { correct, total, streak, best } = quizScore;
+            const pct = total ? Math.round((correct / total) * 100) : 0;
+            document.getElementById('quizScoreboard').innerHTML = `
+                <span>Score <strong>${correct} / ${total}</strong>${total ? ` (${pct}%)` : ''}</span>
+                <span>🔥 Streak <strong>${streak}</strong></span>
+                <span>🏆 Best streak <strong>${best}</strong></span>
+                <button type="button" class="set-primer-clear-filters" onclick="resetQuizScore()">Reset</button>
+            `;
+        }
+
+        function quizEscape(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function quizShuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function quizArtCrop(card) {
+            if (card.image_uris && card.image_uris.art_crop) return card.image_uris.art_crop;
+            const face = card.card_faces && card.card_faces[0];
+            return face && face.image_uris ? face.image_uris.art_crop : null;
+        }
+
+        // Front face's type line without subtypes: "Legendary Creature — Elf" -> "Legendary Creature".
+        function quizMainType(card) {
+            const line = card.type_line || (card.card_faces && card.card_faces[0].type_line) || '';
+            return line.split(' // ')[0].split('—')[0].trim();
+        }
+
+        async function refillQuizBuffer() {
+            const myToken = quizPoolToken;
+            const pool = QUIZ_POOLS[quizPoolKey];
+            const query = `${pool.query()} game:paper -t:basic -set_type:funny`.trim();
+            const baseUrl = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&unique=cards&order=${pool.order}`;
+
+            // The first request only learns how many pages the pool has, so
+            // every refill after it (including the first real one) can jump
+            // to a random page instead of always starting at "A".
+            if (quizPoolMaxPage === null) {
+                const first = await fetchScryfallSearchPage(baseUrl);
+                if (myToken !== quizPoolToken) return;
+                const pages = Math.max(1, Math.ceil((first.total_cards || 0) / QUIZ_PAGE_SIZE));
+                quizPoolMaxPage = Math.min(pages, pool.maxPages || pages);
+                if ((first.data || []).length === 0) throw new Error('No cards found for this pool.');
+                if (quizPoolMaxPage === 1) {
+                    addToQuizBuffer(first.data);
+                    return;
+                }
+            }
+            const page = 1 + Math.floor(Math.random() * quizPoolMaxPage);
+            const res = await fetchScryfallSearchPage(`${baseUrl}&page=${page}`);
+            if (myToken !== quizPoolToken) return;
+            addToQuizBuffer(res.data || []);
+        }
+
+        function addToQuizBuffer(cards) {
+            const known = new Set(quizBuffer.map(c => c.id));
+            const fresh = cards.filter(c => quizArtCrop(c) && !known.has(c.id));
+            quizBuffer = quizShuffle([...quizBuffer, ...fresh]);
+        }
+
+        // Up to n distinct values from other buffered cards, preferring ones
+        // that share the answer card's main type so the wrong answers are
+        // plausible rather than obvious giveaways.
+        function quizDistractors(card, valueOf, n) {
+            const correct = valueOf(card);
+            const type = quizMainType(card);
+            const others = quizShuffle(quizBuffer.filter(c => c.id !== card.id));
+            const sameType = others.filter(c => quizMainType(c) === type);
+            const picked = [];
+            [...sameType, ...others].forEach(c => {
+                const v = valueOf(c);
+                if (picked.length < n && v && v !== correct && !picked.includes(v)) picked.push(v);
+            });
+            return picked;
+        }
+
+        function quizArtHTML(card) {
+            return `<img class="quiz-art" src="${quizArtCrop(card)}" alt="Card art">`;
+        }
+
+        function buildQuizArtQuestion(card) {
+            const wrong = quizDistractors(card, c => c.name, 3);
+            if (wrong.length < 3) return null;
+            return { typeLabel: 'Name the card', prompt: 'Which card is this art from?', bodyHTML: quizArtHTML(card), correct: card.name, wrong };
+        }
+
+        function buildQuizTextQuestion(card) {
+            const faces = card.card_faces && !card.oracle_text ? card.card_faces : [card];
+            let text = faces.map(f => f.oracle_text || '').filter(Boolean).join('\n—\n');
+            if (!text) return null;
+            // Blank out the card's own name (and a legend's short name, e.g.
+            // "Ragavan" for "Ragavan, Nimble Pilferer") so the text doesn't give it away.
+            const names = new Set();
+            [card, ...(card.card_faces || [])].forEach(f => {
+                if (!f.name) return;
+                f.name.split(' // ').forEach(n => { names.add(n); names.add(n.split(',')[0]); });
+            });
+            [...names].sort((a, b) => b.length - a.length).forEach(n => {
+                text = text.replace(new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi'), '▢▢▢▢');
+            });
+            const wrong = quizDistractors(card, c => c.name, 3);
+            if (wrong.length < 3) return null;
+            const html = quizEscape(text).replace(/\{[^}]+\}/g, t => renderManaCost(t));
+            return {
+                typeLabel: 'Name the card', prompt: 'Which card has this rules text?',
+                bodyHTML: `<div class="judge-oracle-text">${html}</div>`, correct: card.name, wrong
+            };
+        }
+
+        async function buildQuizSymbolQuestion(card) {
+            const sets = await loadAllSets();
+            const own = sets.find(s => s.code === card.set);
+            if (!own || !own.icon_svg_uri) return null;
+            const eligible = ['expansion', 'core', 'masters', 'commander', 'draft_innovation'];
+            // Nearby-in-time sets with a different symbol - shared symbols
+            // (promo sets reuse their parent's) would make two answers "right".
+            const candidates = sets
+                .filter(s => eligible.includes(s.set_type) && !s.digital && s.icon_svg_uri !== own.icon_svg_uri && s.name !== own.name)
+                .sort((a, b) => Math.abs(new Date(a.released_at) - new Date(own.released_at)) - Math.abs(new Date(b.released_at) - new Date(own.released_at)))
+                .slice(0, 15);
+            const wrong = [...new Set(quizShuffle(candidates).map(s => s.name))].slice(0, 3);
+            if (wrong.length < 3) return null;
+            return {
+                typeLabel: 'Set symbol', prompt: 'Which set does this symbol belong to?',
+                bodyHTML: `<div class="set-symbol"><img src="${own.icon_svg_uri}" alt="Set symbol"></div>`,
+                correct: own.name, wrong
+            };
+        }
+
+        function buildQuizManaValueQuestion(card) {
+            if (/Land/.test(quizMainType(card)) || typeof card.cmc !== 'number') return null;
+            const correct = card.cmc;
+            const pool = [];
+            for (let d = 1; pool.length < 6; d++) {
+                if (correct - d >= 0) pool.push(correct - d);
+                pool.push(correct + d);
+            }
+            const wrong = quizShuffle(pool.slice(0, 5)).slice(0, 3).map(String);
+            return {
+                typeLabel: 'Mana value', prompt: `What is the mana value of ${quizEscape(card.name)}?`,
+                bodyHTML: quizArtHTML(card), correct: String(correct), wrong
+            };
+        }
+
+        const QUIZ_RARITY_LABELS = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', mythic: 'Mythic Rare' };
+        function buildQuizRarityQuestion(card) {
+            const correct = QUIZ_RARITY_LABELS[card.rarity];
+            if (!correct) return null;
+            return {
+                typeLabel: 'Rarity', prompt: `What rarity is ${quizEscape(card.name)} in ${quizEscape(card.set_name || 'this set')}?`,
+                bodyHTML: quizArtHTML(card), correct,
+                wrong: Object.values(QUIZ_RARITY_LABELS).filter(r => r !== correct)
+            };
+        }
+
+        function buildQuizTypeQuestion(card) {
+            const correct = quizMainType(card);
+            if (!correct) return null;
+            const wrong = quizDistractors(card, c => quizMainType(c), 3)
+                .filter(t => t !== correct);
+            quizShuffle(QUIZ_FALLBACK_TYPES).forEach(t => {
+                if (wrong.length < 3 && t !== correct && !wrong.includes(t)) wrong.push(t);
+            });
+            return {
+                typeLabel: 'Card type', prompt: `What kind of card is ${quizEscape(card.name)}?`,
+                bodyHTML: quizArtHTML(card), correct, wrong: wrong.slice(0, 3)
+            };
+        }
+
+        function buildQuizFormatQuestion(card) {
+            const legalities = card.legalities || {};
+            const legal = QUIZ_FORMATS.filter(f => legalities[f] === 'legal' || legalities[f] === 'restricted');
+            const notLegal = QUIZ_FORMATS.filter(f => !legal.includes(f));
+            if (legal.length === 0 || notLegal.length < 3) return null;
+            const label = f => f.charAt(0).toUpperCase() + f.slice(1);
+            return {
+                typeLabel: 'Format legality', prompt: `${quizEscape(card.name)} is legal in only one of these formats. Which one?`,
+                bodyHTML: quizArtHTML(card),
+                correct: label(quizShuffle(legal)[0]),
+                wrong: quizShuffle(notLegal).slice(0, 3).map(label)
+            };
+        }
+
+        // Picks a fresh card and tries the enabled question types in random
+        // order until one applies to it (e.g. lands have no mana-value question).
+        async function prepareQuizQuestion() {
+            const myToken = quizPoolToken;
+            await loadSymbology(); // rules-text questions render mana symbols while being built
+            const enabled = QUIZ_TYPES.filter(t => document.getElementById(`quizType-${t.key}`).checked);
+            for (let attempt = 0; attempt < 12; attempt++) {
+                if (quizBuffer.length < QUIZ_BUFFER_MIN) await refillQuizBuffer();
+                if (myToken !== quizPoolToken) return null;
+                const card = quizBuffer.find(c => !quizSeenIds.has(c.id)) || quizBuffer[0];
+                if (!card) throw new Error('No cards available for this pool.');
+                quizBuffer = quizBuffer.filter(c => c.id !== card.id);
+                quizSeenIds.add(card.id);
+                for (const type of quizShuffle(enabled)) {
+                    const q = await type.build(card);
+                    if (q) {
+                        const options = quizShuffle([q.correct, ...q.wrong]);
+                        return { ...q, card, options, correctIndex: options.indexOf(q.correct), token: myToken };
+                    }
+                }
+            }
+            throw new Error("Couldn't build a question from these cards - try another pool.");
+        }
+
+        async function nextQuizQuestion() {
+            const area = document.getElementById('quizCardArea');
+            area.innerHTML = `<div class="loading">Shuffling the deck...</div>`;
+            quizAnswered = false;
+            try {
+                const pending = quizNextPromise || prepareQuizQuestion();
+                quizNextPromise = null;
+                let q = await pending;
+                if (!q || q.token !== quizPoolToken) q = await prepareQuizQuestion(); // pool changed while it was being prepared
+                if (!q) return;
+                quizCurrent = q;
+                renderQuizQuestion(q);
+                // Get the next one ready while this one is being answered.
+                quizNextPromise = prepareQuizQuestion();
+                quizNextPromise.catch(() => { quizNextPromise = null; });
+            } catch (err) {
+                console.error('Error building quiz question:', err);
+                area.innerHTML = `
+                    <div class="error">❌ Couldn't load a question: ${quizEscape(err.message)}</div>
+                    <div style="text-align:center; margin-top:10px;"><button type="button" class="staples-sort-btn" onclick="nextQuizQuestion()">Try again</button></div>
+                `;
+            }
+        }
+
+        function renderQuizQuestion(q) {
+            document.getElementById('quizCardArea').innerHTML = `
+                <div class="quiz-card">
+                    <div class="quiz-type-label">${q.typeLabel}</div>
+                    <div class="quiz-prompt">${q.prompt}</div>
+                    ${q.bodyHTML}
+                    <div class="quiz-options">
+                        ${q.options.map((opt, i) => `
+                            <button type="button" class="quiz-option" id="quizOption-${i}" onclick="answerQuiz(${i})"><span class="quiz-option-key">${i + 1}</span>${quizEscape(opt)}</button>
+                        `).join('')}
+                    </div>
+                    <div id="quizFeedback"></div>
+                </div>
+            `;
+        }
+
+        function answerQuiz(index) {
+            if (quizAnswered || !quizCurrent) return;
+            quizAnswered = true;
+            const q = quizCurrent;
+            const right = index === q.correctIndex;
+
+            quizScore.total++;
+            if (right) {
+                quizScore.correct++;
+                quizScore.streak++;
+                quizScore.best = Math.max(quizScore.best, quizScore.streak);
+            } else {
+                quizScore.streak = 0;
+            }
+            renderQuizScoreboard();
+
+            q.options.forEach((_, i) => {
+                const btn = document.getElementById(`quizOption-${i}`);
+                btn.disabled = true;
+                if (i === q.correctIndex) btn.classList.add('correct');
+                else if (i === index) btn.classList.add('wrong');
+            });
+
+            const card = q.card;
+            const year = card.released_at ? new Date(card.released_at).getFullYear() : '';
+            const img = getCardImageSmall(card);
+            document.getElementById('quizFeedback').innerHTML = `
+                <div class="quiz-feedback">
+                    ${img ? `<img src="${img}" alt="${quizEscape(card.name)}" onclick="openCardModal(quizCurrent.card)">` : ''}
+                    <div>
+                        <div style="font-weight:700;">${right ? '✅ Correct!' : `❌ Not quite - it's ${quizEscape(q.options[q.correctIndex])}.`}</div>
+                        <div class="text-secondary" style="font-size:0.88em; margin-top:4px;">
+                            ${quizEscape(card.name)} · ${quizEscape(card.type_line || '')}<br>
+                            ${quizEscape(card.set_name || '')} (${(card.set || '').toUpperCase()}${year ? `, ${year}` : ''}) · ${QUIZ_RARITY_LABELS[card.rarity] || card.rarity || ''} · Mana value ${card.cmc ?? '—'}
+                        </div>
+                        <div class="quiz-feedback-actions">
+                            <button type="button" class="staples-sort-btn active" onclick="nextQuizQuestion()">Next question →</button>
+                            <button type="button" class="staples-sort-btn" onclick="openCardModal(quizCurrent.card)">View full card</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 1-4 answer, Enter/N moves on - only while the quiz is on screen, the
+        // card popup is closed, and focus isn't in a text field.
+        document.addEventListener('keydown', function(e) {
+            if (currentGameMode !== 'quiz') return;
+            const overlay = document.getElementById('cardModalOverlay');
+            if (overlay && overlay.classList.contains('open')) return;
+            const tag = (e.target && e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+            if (!quizAnswered && quizCurrent && ['1', '2', '3', '4'].includes(e.key)) {
+                const i = Number(e.key) - 1;
+                if (i < quizCurrent.options.length) { e.preventDefault(); answerQuiz(i); }
+            } else if (quizAnswered && (e.key === 'Enter' || e.key.toLowerCase() === 'n')) {
+                e.preventDefault();
+                nextQuizQuestion();
+            }
+        });
 
         // Major set types = the main constructed sets (skip tokens, promos, memorabilia, etc.)
         const MAJOR_SET_TYPES = ['core', 'expansion'];
