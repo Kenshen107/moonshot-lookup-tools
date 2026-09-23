@@ -1899,6 +1899,56 @@
             cursor: help;
         }
 
+        .lands-pkg-table tbody tr.lands-row {
+            cursor: default;
+        }
+
+        .lands-row-name {
+            font-weight: 600;
+            color: var(--color-link);
+            cursor: pointer;
+        }
+
+        .lands-row-name:hover {
+            text-decoration: underline;
+        }
+
+        .lands-row-meta {
+            font-size: 0.8em;
+            margin-top: 2px;
+        }
+
+        .lands-row-stock {
+            width: 1%;
+            min-width: 90px;
+        }
+
+        .lands-row-stock .card-tile-stock-result {
+            min-width: 160px;
+            font-size: 0.85em;
+        }
+
+        .lands-pkg-total td {
+            font-weight: 700;
+            border-bottom: none;
+        }
+
+        /* Price-bracket chips: <$1 / $1-5 / $5-15 / $15-40 / $40+ */
+        .lands-bracket {
+            display: inline-block;
+            padding: 2px 8px;
+            border: 1px solid currentColor;
+            border-radius: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .lands-bracket-bulk { color: #a0a0a0; }
+        .lands-bracket-budget { color: #7ee787; }
+        .lands-bracket-mid { color: #6cb2ff; }
+        .lands-bracket-premium { color: #d2a8ff; }
+        .lands-bracket-high { color: #ffa657; }
+
         /* ---- Full-art basics ---- */
         .basic-meta {
             font-size: 0.72em;
@@ -3949,7 +3999,7 @@
             pumpkin:     { label: 'Pumpkin Patch',      icon: '🎃', fx: [['🍂', 'fall'], ['🎃', 'fall'], ['🍁', 'fall']] },
             harvestmoon: { label: 'Harvest Moon',       icon: '🌕', fx: [['✨', 'twinkle'], ['⭐', 'twinkle']] },
             spooky:      { label: 'Spooky Friday',      icon: '🦇', fx: [['🦇', 'drift']] },
-            witching:    { label: 'Witching Wednesday', icon: '🧪', fx: [['✨', 'rise'], ['🧪', 'rise']] },
+            witching:    { label: 'Witching Wednesday', icon: '🧹', fx: [['🧙‍♀️', 'drift'], ['🧹', 'drift'], ['✨', 'rise']] },
             halloween:   { label: 'Halloween Night',    icon: '🎃', fx: [['🦇', 'drift'], ['👻', 'drift'], ['🎃', 'fall']] }
         };
 
@@ -4279,11 +4329,11 @@
             <!-- ---- Land Finder ---- -->
             <div id="landsApp" style="display:none;">
                 <div class="formats-intro">
-                    Pick the colors a deck plays and the most a customer wants to
-                    spend per land, and every land cycle that fits is pulled in -
-                    grouped by cycle, with what each cycle does and what it costs.
-                    The package totals at the top price out a full set of duals
-                    both the cheapest way and the most-played way.
+                    Pick the deck's colors and what the customer wants to spend on
+                    lands in total. The package is the most-played lands that fix
+                    those colors and fit the budget, priced at the cheapest paper
+                    printing. Everything else in those colors is listed below it,
+                    sorted into price brackets.
                 </div>
 
                 <div class="recs-color-picker">
@@ -4297,20 +4347,22 @@
                 </div>
 
                 <div class="staples-controls" style="flex-wrap:wrap;">
-                    <span class="text-secondary" style="font-size:0.85em;">Max price per land:</span>
-                    <button type="button" class="staples-sort-btn active" data-budget="" onclick="setLandsBudget('')">Any</button>
-                    <button type="button" class="staples-sort-btn" data-budget="1" onclick="setLandsBudget('1')">$1</button>
-                    <button type="button" class="staples-sort-btn" data-budget="3" onclick="setLandsBudget('3')">$3</button>
-                    <button type="button" class="staples-sort-btn" data-budget="5" onclick="setLandsBudget('5')">$5</button>
+                    <span class="text-secondary" style="font-size:0.85em;">Total land budget:</span>
                     <button type="button" class="staples-sort-btn" data-budget="10" onclick="setLandsBudget('10')">$10</button>
                     <button type="button" class="staples-sort-btn" data-budget="25" onclick="setLandsBudget('25')">$25</button>
-                    <span class="bg-range" style="width:120px;">$<input type="number" id="landsBudgetCustom" min="0" step="0.25" placeholder="custom" aria-label="Custom max price per land" oninput="scheduleLandsCustomBudget()"></span>
+                    <button type="button" class="staples-sort-btn active" data-budget="50" onclick="setLandsBudget('50')">$50</button>
+                    <button type="button" class="staples-sort-btn" data-budget="100" onclick="setLandsBudget('100')">$100</button>
+                    <button type="button" class="staples-sort-btn" data-budget="250" onclick="setLandsBudget('250')">$250</button>
+                    <button type="button" class="staples-sort-btn" data-budget="" onclick="setLandsBudget('')">No limit</button>
+                    <span class="bg-range" style="width:120px;">$<input type="number" id="landsBudgetCustom" min="0" step="1" placeholder="custom" aria-label="Custom total land budget" oninput="scheduleLandsCustomBudget()"></span>
                 </div>
-                <div class="staples-controls">
-                    <span class="text-secondary" style="font-size:0.85em;">Within each cycle:</span>
-                    <button type="button" class="staples-sort-btn active" id="landsTierNormal" onclick="setLandsTier('normal')">🎯 Most played</button>
-                    <button type="button" class="staples-sort-btn" id="landsTierBudget" onclick="setLandsTier('budget')">💰 Cheapest first</button>
-                    <button type="button" class="staples-sort-btn" id="landsTierPremium" onclick="setLandsTier('premium')">💎 Priciest first</button>
+                <div class="staples-controls" style="flex-wrap:wrap;">
+                    <span class="text-secondary" style="font-size:0.85em;">Lands in the package:</span>
+                    <button type="button" class="staples-sort-btn" data-count="5" onclick="setLandsCount(5)">5</button>
+                    <button type="button" class="staples-sort-btn" data-count="8" onclick="setLandsCount(8)">8</button>
+                    <button type="button" class="staples-sort-btn active" data-count="10" onclick="setLandsCount(10)">10</button>
+                    <button type="button" class="staples-sort-btn" data-count="15" onclick="setLandsCount(15)">15</button>
+                    <button type="button" class="staples-sort-btn" data-count="20" onclick="setLandsCount(20)">20</button>
                 </div>
 
                 <div id="landsResults"></div>
@@ -7072,11 +7124,12 @@
         const MOONSHOT_BULK_CHECK_BATCH_SIZE = 4;
 
         async function checkAllVisibleStock(containerId) {
-            const tiles = [...document.querySelectorAll(`#${containerId} .card-tile`)];
+            // Card tiles, or the Land Finder's compact rows.
+            const tiles = [...document.querySelectorAll(`#${containerId} .card-tile, #${containerId} .lands-row`)];
             for (let i = 0; i < tiles.length; i += MOONSHOT_BULK_CHECK_BATCH_SIZE) {
                 const batch = tiles.slice(i, i + MOONSHOT_BULK_CHECK_BATCH_SIZE);
                 await Promise.all(batch.map(tile => {
-                    const nameEl = tile.querySelector('.card-tile-name');
+                    const nameEl = tile.querySelector('.card-tile-name, .lands-row-name');
                     return nameEl ? checkTileMoonshotStock(tile.id, nameEl.textContent) : Promise.resolve();
                 }));
             }
@@ -7881,15 +7934,32 @@
         const LANDS_FETCH_BATCH_SIZE = 4; // concurrent Scryfall requests per batch - their API asks callers not to burst
         const LANDS_PER_CYCLE_LIMIT = 60;
 
+        // Each cycle's search walks up to this many pages of printings (175
+        // a page). Results come most-played first, so a cap only ever drops
+        // the least-played lands, never part of one land's printings.
+        const LANDS_MAX_PRINT_PAGES = 3;
+
+        // Brackets for the price chips and the "every land" filter. A land's
+        // bracket comes from its cheapest paper printing; max is exclusive.
+        const LAND_PRICE_BRACKETS = [
+            { key: 'bulk',    label: 'Under $1', max: 1 },
+            { key: 'budget',  label: '$1–5',     max: 5 },
+            { key: 'mid',     label: '$5–15',    max: 15 },
+            { key: 'premium', label: '$15–40',   max: 40 },
+            { key: 'high',    label: '$40+',     max: Infinity }
+        ];
+
         let landsSelectedColors = [];
         let landsColorlessOnly = false;
-        let landsBudget = ''; // '' = no limit, otherwise max USD per land
-        let landsTierMode = 'normal';
+        let landsBudget = '50'; // total for the whole package; '' = no limit
+        let landsCount = 10; // lands in the package
+        let landsTierMode = 'normal'; // sort for the "every land" list
+        let landsBracketFilter = ''; // '' = every bracket
         let landsRequestToken = 0;
-        let landsLastResults = null; // last completed search, so re-sorting never refetches
+        let landsLastResults = null; // last completed search, so budget/sort changes never refetch
         let landsDisplayOrder = []; // every land on screen in order, for the popup's Prev/Next
         let landsBudgetTimeout;
-        const landsCache = {}; // "cycleKey|colors|budget" -> cards
+        const landsCache = {}; // "cycleKey|colors" -> one entry per land, at its cheapest printing
         let landsInitialized = false;
 
         function showLandFinder() {
@@ -7932,7 +8002,7 @@
         function renderLandsPrompt() {
             landsDisplayOrder = [];
             document.getElementById('landsResults').innerHTML =
-                `<div class="moonshot-status" style="text-align:center; margin:18px 0;">Pick the deck's colors above to pull in every land that fits.</div>`;
+                `<div class="moonshot-status" style="text-align:center; margin:18px 0;">Pick the deck's colors above to build a land package.</div>`;
         }
 
         function landsColorString() {
@@ -7960,6 +8030,12 @@
             runLandsSearch();
         }
 
+        // Budget, package size, sort and bracket all work on the lands
+        // already loaded - only a color change goes back to Scryfall.
+        function rerenderLands() {
+            if (landsLastResults) renderLandFinder(landsLastResults);
+        }
+
         function highlightLandsBudgetButtons() {
             document.querySelectorAll('#landsApp [data-budget]').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.budget === landsBudget);
@@ -7970,7 +8046,7 @@
             landsBudget = value;
             document.getElementById('landsBudgetCustom').value = '';
             highlightLandsBudgetButtons();
-            runLandsSearch();
+            rerenderLands();
         }
 
         function scheduleLandsCustomBudget() {
@@ -7979,20 +8055,60 @@
                 const v = parseFloat(document.getElementById('landsBudgetCustom').value);
                 landsBudget = Number.isFinite(v) && v >= 0 ? String(v) : '';
                 highlightLandsBudgetButtons();
-                runLandsSearch();
-            }, 500);
+                rerenderLands();
+            }, 400);
+        }
+
+        function setLandsCount(n) {
+            landsCount = n;
+            document.querySelectorAll('#landsApp [data-count]').forEach(btn => {
+                btn.classList.toggle('active', Number(btn.dataset.count) === n);
+            });
+            rerenderLands();
         }
 
         function setLandsTier(mode) {
             landsTierMode = mode;
-            document.getElementById('landsTierBudget').classList.toggle('active', mode === 'budget');
-            document.getElementById('landsTierNormal').classList.toggle('active', mode === 'normal');
-            document.getElementById('landsTierPremium').classList.toggle('active', mode === 'premium');
-            if (landsLastResults) renderLandFinder(landsLastResults);
+            rerenderLands();
         }
 
-        async function fetchLandsCycle(cat, colorStr, budget) {
-            const cacheKey = `${cat.key}|${colorStr}|${budget}`;
+        function setLandsBracket(key) {
+            landsBracketFilter = key;
+            rerenderLands();
+        }
+
+        // Collector-only printings (gold-bordered World Championship decks,
+        // oversized cards, memorabilia sets) aren't what a customer means by
+        // "the cheapest copy", so they never set a land's price.
+        function isPlayableLandPrinting(print) {
+            return !print.oversized && print.border_color !== 'gold' && print.set_type !== 'memorabilia';
+        }
+
+        // Non-foil market price, falling back to foil for foil-only printings.
+        function landPrintingPrice(print) {
+            const usd = parseFloat(print.prices && print.prices.usd);
+            if (Number.isFinite(usd)) return { price: usd, foilOnly: false };
+            const foil = parseFloat(print.prices && print.prices.usd_foil);
+            return Number.isFinite(foil) ? { price: foil, foilOnly: true } : null;
+        }
+
+        // Keeps one entry per land (in the order first seen, i.e. most
+        // played first): its cheapest printing, tagged with that price.
+        function addLandPrinting(byLand, print) {
+            if (!isPlayableLandPrinting(print)) return;
+            const key = print.oracle_id || print.name;
+            const p = landPrintingPrice(print);
+            const current = byLand.get(key);
+            const printings = current ? current._printings + 1 : 1;
+            if (!current || (p && (current._price === null || p.price < current._price))) {
+                byLand.set(key, { ...print, _price: p ? p.price : null, _foilOnly: p ? p.foilOnly : false, _printings: printings });
+            } else {
+                current._printings = printings;
+            }
+        }
+
+        async function fetchLandsCycle(cat, colorStr) {
+            const cacheKey = `${cat.key}|${colorStr}`;
             if (landsCache[cacheKey]) return landsCache[cacheKey];
 
             // Bare id: is Scryfall's subset match - lands a deck of these
@@ -8001,11 +8117,18 @@
             if (LAND_FETCHER_KEYS.has(cat.key) && colorStr !== 'c') {
                 query += ` (${colorStr.split('').map(c => `o:${BASIC_TYPE_FOR_COLOR[c]}`).join(' or ')})`;
             }
-            if (budget) query += ` usd<=${budget}`;
 
-            const page = await fetchScryfallSearchPage(
-                `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&unique=cards`);
-            const cards = (page.data || []).slice(0, LANDS_PER_CYCLE_LIMIT);
+            // unique=prints, not unique=cards: unique=cards returns Scryfall's
+            // default printing (often the newest and priciest), and the
+            // package needs the cheapest copy a customer could buy.
+            const byLand = new Map();
+            let url = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&unique=prints`;
+            for (let pages = 0; url && pages < LANDS_MAX_PRINT_PAGES; pages++) {
+                const page = await fetchScryfallSearchPage(url);
+                (page.data || []).forEach(print => addLandPrinting(byLand, print));
+                url = page.has_more ? page.next_page : null;
+            }
+            const cards = [...byLand.values()].slice(0, LANDS_PER_CYCLE_LIMIT);
             landsCache[cacheKey] = cards;
             return cards;
         }
@@ -8019,19 +8142,18 @@
             }
 
             const colorStr = landsColorString();
-            const budget = landsBudget;
             const searchable = LAND_CATEGORIES.filter(c => c.query);
             const results = {};
             const failed = [];
             let done = 0;
             document.getElementById('landsResults').innerHTML =
-                `<div class="loading" id="landsProgress">Checking ${searchable.length} land cycles...</div>`;
+                `<div class="loading" id="landsProgress">Pricing ${searchable.length} land cycles...</div>`;
 
             await loadSymbology();
             for (let i = 0; i < searchable.length; i += LANDS_FETCH_BATCH_SIZE) {
                 await Promise.all(searchable.slice(i, i + LANDS_FETCH_BATCH_SIZE).map(async cat => {
                     try {
-                        results[cat.key] = await fetchLandsCycle(cat, colorStr, budget);
+                        results[cat.key] = await fetchLandsCycle(cat, colorStr);
                     } catch (err) {
                         console.error(`Error loading ${cat.label}:`, err);
                         failed.push(cat.label);
@@ -8039,29 +8161,70 @@
                     }
                     done++;
                 }));
-                if (myToken !== landsRequestToken) return; // colors/budget changed mid-search
+                if (myToken !== landsRequestToken) return; // colors changed mid-search
                 const progress = document.getElementById('landsProgress');
-                if (progress) progress.textContent = `Checking land cycles... ${done}/${searchable.length}`;
+                if (progress) progress.textContent = `Pricing land cycles... ${done}/${searchable.length}`;
             }
 
-            landsLastResults = { results, failed, colorStr, budget };
+            landsLastResults = { results, failed, colorStr };
             renderLandFinder(landsLastResults);
         }
 
-        function landPrice(card) {
-            const v = parseFloat(card.prices && card.prices.usd);
-            return Number.isFinite(v) ? v : null;
+        function landBracket(price) {
+            return price === null ? null : LAND_PRICE_BRACKETS.find(b => price < b.max);
         }
 
-        // Unpriced cards always sort last, whichever direction the price sort runs.
-        function sortLandsForTier(cards) {
-            if (landsTierMode === 'normal') return cards;
+        // The package is for fixing: in a 2+ color deck a land only counts if
+        // it makes at least two of the deck's colors (a fetch counts if it
+        // can find two of the deck's basic types). A mono-color or colorless
+        // deck isn't fixing anything, so every land counts there.
+        function landFixesColors(card, cat, colorStr) {
+            if (colorStr.length < 2) return true;
+            const deckColors = colorStr.split('');
+            if (LAND_FETCHER_KEYS.has(cat.key)) {
+                const text = (card.oracle_text || '').toLowerCase();
+                return deckColors.filter(c => text.includes(BASIC_TYPE_FOR_COLOR[c])).length >= 2;
+            }
+            const makes = (card.produced_mana || card.color_identity || []).map(c => c.toLowerCase());
+            return deckColors.filter(c => makes.includes(c)).length >= 2;
+        }
+
+        // Most-played first. A land goes in if, after paying for it, there's
+        // still enough left to fill the remaining slots with the cheapest
+        // lands further down the list - so one pricey fetch can't eat the
+        // whole budget and leave the package lands short. The target is
+        // however many lands the budget can buy at all (up to count), so a
+        // short list never holds money back for slots nothing can fill.
+        function buildLandsPackage(candidates, budget, count) {
+            const priced = candidates.filter(l => l.price !== null);
+            let target = 0;
+            let cheapestSum = 0;
+            for (const p of priced.map(l => l.price).sort((a, b) => a - b)) {
+                if (target >= count || cheapestSum + p > budget + 0.005) break;
+                cheapestSum += p;
+                target++;
+            }
+            const picks = [];
+            let remaining = budget;
+            for (let i = 0; i < priced.length && picks.length < target; i++) {
+                const reserve = priced.slice(i + 1).map(l => l.price).sort((a, b) => a - b)
+                    .slice(0, target - picks.length - 1).reduce((sum, p) => sum + p, 0);
+                if (priced[i].price + reserve <= remaining + 0.005) {
+                    picks.push(priced[i]);
+                    remaining -= priced[i].price;
+                }
+            }
+            return picks;
+        }
+
+        // Unpriced lands always sort last, whichever direction the price sort runs.
+        function sortLandsForTier(lands) {
+            if (landsTierMode === 'normal') return lands;
             const dir = landsTierMode === 'budget' ? 1 : -1;
-            return [...cards].sort((a, b) => {
-                const pa = landPrice(a), pb = landPrice(b);
-                if (pa === null) return pb === null ? 0 : 1;
-                if (pb === null) return -1;
-                return dir * (pa - pb);
+            return [...lands].sort((a, b) => {
+                if (a.price === null) return b.price === null ? 0 : 1;
+                if (b.price === null) return -1;
+                return dir * (a.price - b.price);
             });
         }
 
@@ -8069,104 +8232,145 @@
             return `$${v.toFixed(2)}`;
         }
 
-        function renderLandFinder({ results, failed, colorStr, budget }) {
+        function landPriceChipHTML({ price, foilOnly }) {
+            if (price === null) return `<span class="text-muted">no price</span>`;
+            const b = landBracket(price);
+            return `<span class="lands-bracket lands-bracket-${b.key}" title="${b.label}">${formatUsd(price)}${foilOnly ? ' foil' : ''}</span>`;
+        }
+
+        // One compact row: name opens the card popup (at the cheapest
+        // printing), with cycle + set underneath and a quick stock check.
+        // prefix keeps row ids unique when a land is in more than one table.
+        function landRowHTML(land, prefix) {
+            const { card, cat } = land;
+            const navIndex = landsDisplayOrder.push(card) - 1;
+            const rowId = `landRow-${prefix}-${card.id}`;
+            const safeName = card.name.replace(/'/g, "\\'");
+            cardTileDataById[card.id] = card;
+            const printings = card._printings > 1 ? ` · cheapest of ${card._printings} printings` : '';
+            return `
+                <tr class="lands-row" id="${rowId}">
+                    <td>
+                        <span class="lands-row-name" onclick="openCardModal(cardTileDataById['${card.id}'], landsDisplayOrder, ${navIndex})">${card.name}</span>
+                        <div class="lands-row-meta text-secondary">
+                            <span title="${cat.description.replace(/"/g, '&quot;')}">${cat.label}</span>${cat.approx ? ' <span class="lands-approx-dot" title="approximate search">≈</span>' : ''}
+                            · ${card.set_name}${printings}
+                        </div>
+                    </td>
+                    <td>${landPriceChipHTML(land)}</td>
+                    <td class="lands-row-stock">
+                        <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkTileMoonshotStock('${rowId}', '${safeName}')">Stock</button>
+                        <div class="card-tile-stock-result" id="${rowId}-stock"></div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function landsTableHTML(id, lands, prefix, footer = '') {
+            return `
+                <div class="buylist-table-wrap" id="${id}">
+                    <table class="lands-pkg-table">
+                        <thead><tr><th>Land</th><th>Price</th><th>Moonshot</th></tr></thead>
+                        <tbody>${lands.map(l => landRowHTML(l, prefix)).join('')}</tbody>
+                        ${footer}
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderLandFinder({ results, failed, colorStr }) {
             const resultsDiv = document.getElementById('landsResults');
             const colorsLabel = colorStr === 'c' ? 'colorless' : colorStr.toUpperCase().split('').join('/');
-            const budgetLabel = budget ? `at ${formatUsd(Number(budget))} or less each` : 'at any price';
 
             // A land can match more than one cycle's search (an approximate
-            // one especially) - show it once, under the first cycle it hits.
+            // one especially) - count it once, under the first cycle it hits.
             const seen = new Set();
-            const cycles = [];
+            const pool = [];
             LAND_CATEGORIES.forEach(cat => {
-                const cards = (results[cat.key] || []).filter(c => !seen.has(c.id));
-                cards.forEach(c => seen.add(c.id));
-                if (cards.length === 0) return;
-                const prices = cards.map(landPrice).filter(p => p !== null);
-                cycles.push({
-                    cat,
-                    cards,
-                    min: prices.length ? Math.min(...prices) : null,
-                    max: prices.length ? Math.max(...prices) : null,
-                    setTotal: prices.reduce((sum, p) => sum + p, 0),
-                    unpriced: cards.length - prices.length
+                (results[cat.key] || []).forEach(card => {
+                    const key = card.oracle_id || card.name;
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    pool.push({ card, cat, price: card._price, foilOnly: card._foilOnly, fixes: landFixesColors(card, cat, colorStr) });
                 });
             });
+            const rank = l => l.card.edhrec_rank || Infinity;
+            pool.sort((a, b) => rank(a) - rank(b));
 
-            const emptyLabels = LAND_CATEGORIES
-                .filter(c => c.query && results[c.key] && results[c.key].length === 0 && !failed.includes(c.label))
-                .map(c => c.label);
-            const noSearchCount = LAND_CATEGORIES.filter(c => !c.query).length;
-
-            if (cycles.length === 0) {
-                landsDisplayOrder = [];
-                resultsDiv.innerHTML = `<div class="error">No lands fit ${colorsLabel} ${budgetLabel} - try raising the budget.</div>`;
+            landsDisplayOrder = [];
+            if (pool.length === 0) {
+                resultsDiv.innerHTML = `<div class="error">No lands found for a ${colorsLabel} deck.</div>`;
                 return;
             }
 
-            const totalLands = cycles.reduce((n, c) => n + c.cards.length, 0);
-            const byCost = [...cycles].sort((a, b) => a.setTotal - b.setTotal);
-            const packageRows = byCost.map(c => `
-                <tr onclick="document.getElementById('landsSection-${c.cat.key}').scrollIntoView({ behavior: 'smooth', block: 'start' })">
-                    <td>${c.cat.label}${c.cat.approx ? ' <span class="lands-approx-dot" title="approximate search">≈</span>' : ''}</td>
-                    <td>${c.cards.length}</td>
-                    <td>${c.min === null ? '—' : formatUsd(c.min)}</td>
-                    <td><strong>${formatUsd(c.setTotal)}</strong>${c.unpriced ? ` <span class="text-secondary">(+${c.unpriced} unpriced)</span>` : ''}</td>
-                </tr>
-            `).join('');
+            const budget = landsBudget === '' ? Infinity : Number(landsBudget);
+            const budgetLabel = budget === Infinity ? 'no budget limit' : `a ${formatUsd(budget)} budget`;
+            const fixers = pool.filter(l => l.fixes);
+            const picks = buildLandsPackage(fixers, budget, landsCount);
+            const picked = new Set(picks);
+            const total = picks.reduce((sum, l) => sum + l.price, 0);
+            const upgrades = fixers.filter(l => !picked.has(l) && l.price !== null).slice(0, 5);
+            const pricedFixers = fixers.filter(l => l.price !== null).length;
 
-            landsDisplayOrder = [];
-            let lastGroup = null;
-            let sectionsHTML = '';
-            cycles.forEach(({ cat, cards, min, max, setTotal }) => {
-                if (cat.group !== lastGroup) {
-                    sectionsHTML += `<div class="staples-category-divider" style="margin:22px 0 6px;">${cat.group}</div>`;
-                    lastGroup = cat.group;
-                }
-                const ordered = sortLandsForTier(cards);
-                const tiles = ordered.map((c, i) => {
-                    const navIndex = landsDisplayOrder.push(c) - 1;
-                    const rankLabel = landsTierMode === 'normal'
-                        ? (c.edhrec_rank ? `#${c.edhrec_rank.toLocaleString()}` : null)
-                        : `#${i + 1}`;
-                    return buildCardTileHTML(c, rankLabel, navIndex, 'landsDisplayOrder');
-                }).join('');
-                const range = min === null ? '' : (min === max ? formatUsd(min) : `${formatUsd(min)} – ${formatUsd(max)}`);
-                sectionsHTML += `
-                    <div class="rarity-section" id="landsSection-${cat.key}">
-                        <div class="lands-glossary-head">
-                            <span class="lands-glossary-label">${cat.label}</span>
-                            <span class="text-secondary" style="font-size:0.85em;">${cards.length} land${cards.length === 1 ? '' : 's'}</span>
-                            ${cat.approx ? landCycleStatusHTML(cat) : ''}
-                            ${range ? `<span class="lands-price-range">${range} · all ${cards.length}: ${formatUsd(setTotal)}</span>` : ''}
-                        </div>
-                        <div class="lands-cycle-desc text-secondary" style="margin-bottom:10px;">${cat.description}</div>
-                        <div class="card-tile-grid">${tiles}</div>
-                    </div>
-                `;
-            });
+            let packageNote = '';
+            if (picks.length < landsCount) {
+                packageNote = picks.length === pricedFixers
+                    ? `Only ${pricedFixers} priced land${pricedFixers === 1 ? '' : 's'} fix ${colorsLabel}, so that's the whole package.`
+                    : `Only ${picks.length} land${picks.length === 1 ? '' : 's'} fit ${budgetLabel} - raise the budget or pick a smaller package.`;
+            }
+
+            const packageHTML = picks.length ? `
+                ${landsTableHTML('landsPackageTable', picks, 'pkg', `
+                    <tfoot><tr class="lands-pkg-total"><td>${picks.length} land${picks.length === 1 ? '' : 's'}</td><td>${formatUsd(total)}</td><td></td></tr></tfoot>
+                `)}
+                <div class="staples-bulk-actions" style="margin-top:8px;">
+                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('landsPackageTable')">Check Stock for the Package</button>
+                </div>
+            ` : '';
+
+            const upgradesHTML = upgrades.length ? `
+                <div class="bg-section-title">⬆️ ${budget === Infinity ? 'Next most played' : 'If they can spend more'}</div>
+                <div class="bg-section-sub">The most-played ${colorsLabel} lands that didn't make the package.</div>
+                ${landsTableHTML('landsUpgradeTable', upgrades, 'up')}
+            ` : '';
+
+            const bracketButtons = [{ key: '', label: 'All', n: pool.length }]
+                .concat(LAND_PRICE_BRACKETS.map(b => ({ key: b.key, label: b.label, n: pool.filter(l => landBracket(l.price) === b).length })))
+                .map(b => `<button type="button" class="staples-sort-btn${landsBracketFilter === b.key ? ' active' : ''}" onclick="setLandsBracket('${b.key}')">${b.label} · ${b.n}</button>`)
+                .join('');
+            const listed = sortLandsForTier(landsBracketFilter
+                ? pool.filter(l => { const b = landBracket(l.price); return b && b.key === landsBracketFilter; })
+                : pool);
+            const sortButton = (mode, label) =>
+                `<button type="button" class="staples-sort-btn${landsTierMode === mode ? ' active' : ''}" id="landsTier${mode[0].toUpperCase()}${mode.slice(1)}" onclick="setLandsTier('${mode}')">${label}</button>`;
+
+            const noSearchCount = LAND_CATEGORIES.filter(c => !c.query).length;
 
             resultsDiv.innerHTML = `
-                <div class="bg-summary">
-                    <strong>${totalLands}</strong> lands across <strong>${cycles.length}</strong> cycles fit a ${colorsLabel} deck ${budgetLabel}.
-                </div>
                 <div class="lands-pkg">
-                    <div class="bg-section-title" style="margin-top:0;">💵 Land package cost, cheapest cycle first</div>
-                    <div class="bg-section-sub">"All" is every land shown for that cycle - for a 2-color deck that's usually the one dual in your colors; for 3+ colors it's the whole set across your color pairs. Click a row to jump to it.</div>
-                    <div class="buylist-table-wrap">
-                        <table class="lands-pkg-table">
-                            <thead><tr><th>Cycle</th><th>Lands</th><th>Cheapest</th><th>All of them</th></tr></thead>
-                            <tbody>${packageRows}</tbody>
-                        </table>
+                    <div class="bg-section-title" style="margin-top:0;">🧰 ${colorsLabel} land package · ${budgetLabel}</div>
+                    <div class="bg-section-sub">The ${landsCount} most-played lands that make at least two of the deck's colors, as long as they fit the budget. Prices are each land's cheapest paper printing - click a name to see it.</div>
+                    ${packageNote ? `<div class="moonshot-status" style="margin:6px 0;">${packageNote}</div>` : ''}
+                    ${packageHTML}
+                    ${upgradesHTML}
+                    ${failed.length ? `<div class="error" style="margin:10px 0;">Couldn't load: ${failed.join(', ')} - change a color to retry.</div>` : ''}
+
+                    <div class="bg-section-title">📋 Every ${colorsLabel} land by price (${pool.length})</div>
+                    <div class="staples-controls" style="flex-wrap:wrap; justify-content:flex-start;">${bracketButtons}</div>
+                    <div class="staples-controls" style="justify-content:flex-start;">
+                        <span class="text-secondary" style="font-size:0.85em;">Sort:</span>
+                        ${sortButton('normal', '🎯 Most played')}
+                        ${sortButton('budget', '💰 Cheapest first')}
+                        ${sortButton('premium', '💎 Priciest first')}
                     </div>
+                    ${listed.length
+                        ? `${landsTableHTML('landsAllTable', listed, 'all')}
+                           <div class="staples-bulk-actions" style="margin-top:8px;">
+                               <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('landsAllTable')">Check Stock for These ${listed.length}</button>
+                           </div>`
+                        : `<div class="moonshot-status">No ${colorsLabel} lands in this price bracket.</div>`}
+                    ${noSearchCount ? `<div class="bg-section-sub" style="margin-top:12px;">${noSearchCount} more cycles are described in the glossary below but don't have a card search yet.</div>` : ''}
                 </div>
-                ${failed.length ? `<div class="error" style="margin:10px 0;">Couldn't load: ${failed.join(', ')} - change a filter to retry.</div>` : ''}
-                <div class="staples-bulk-actions" style="margin-top:14px;">
-                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('landsResults')">Check Stock for All ${totalLands} Lands</button>
-                </div>
-                ${sectionsHTML}
-                ${emptyLabels.length ? `<div class="bg-section-sub" style="margin-top:16px;">Nothing in your colors ${budgetLabel} from: ${emptyLabels.join(', ')}.</div>` : ''}
-                ${noSearchCount ? `<div class="bg-section-sub">${noSearchCount} more cycles are described in the glossary below but don't have a card search yet.</div>` : ''}
             `;
         }
 
