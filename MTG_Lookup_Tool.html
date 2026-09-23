@@ -1671,6 +1671,21 @@
             margin-bottom: 10px;
         }
 
+        /* ---- Lands: all-cycles-at-once view ---- */
+        .lands-cycle-desc {
+            font-size: 0.85em;
+            margin: -4px 0 12px;
+        }
+
+        .lands-price-range {
+            float: right;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #7ee787;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
         .rarity-card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -3822,10 +3837,13 @@
         <!-- ============== LANDS ============== -->
         <div id="landsApp" style="display:none;">
             <div class="formats-intro">
-                Browse the best lands by named cycle - fetches, shocks, checks,
-                fasts, slows, pains, and more - filtered to any color identity.
-                Built for "what duals should I be stocking for a Golgari deck?"
-                questions at the counter.
+                Every named land cycle - fetches, shocks, checks, fasts, slows,
+                pains, and more - shown at once for any color identity, each with
+                its own mechanic and price range, so a whole mana base's worth of
+                options is visible in one scroll instead of clicking through
+                cycles one at a time. Built for "what duals should I be stocking
+                for a Golgari deck?" questions at the counter, or pricing out a
+                budget vs. premium land package.
             </div>
             <div class="recs-color-picker">
                 <span class="recs-color-label">Color Identity:</span>
@@ -3836,12 +3854,13 @@
                 <button type="button" class="recs-color-btn" id="landsColor-g" data-color="g" onclick="toggleLandsColor('g')">G</button>
                 <span class="recs-color-hint">(none selected = Colorless)</span>
             </div>
+            <div class="text-secondary" style="text-align:center; font-size:0.82em; margin-bottom:6px;">Jump to a cycle:</div>
             <div class="staples-category-picker" id="landsCategoryPicker"></div>
             <div class="staples-controls" id="landsControls" style="display:none;">
-                <span class="text-secondary" style="font-size:0.85em;">Price tier:</span>
-                <button type="button" class="staples-sort-btn" id="landsTierBudget" onclick="setLandsTier('budget')">💰 Budget</button>
+                <span class="text-secondary" style="font-size:0.85em;">Sort every cycle by:</span>
+                <button type="button" class="staples-sort-btn" id="landsTierBudget" onclick="setLandsTier('budget')">💰 Budget (Cheapest First)</button>
                 <button type="button" class="staples-sort-btn active" id="landsTierNormal" onclick="setLandsTier('normal')">🎯 Normal (Most Played)</button>
-                <button type="button" class="staples-sort-btn" id="landsTierPremium" onclick="setLandsTier('premium')">💎 Premium</button>
+                <button type="button" class="staples-sort-btn" id="landsTierPremium" onclick="setLandsTier('premium')">💎 Premium (Priciest First)</button>
             </div>
             <div id="landsResults"></div>
         </div>
@@ -7141,42 +7160,73 @@
         // real, but not something worth stocking or recommending over any
         // other cycle here).
         const LAND_CATEGORIES = [
-            { key: 'shockland', label: 'Shock Lands', group: 'Two-Color Cycles', query: 'otag:shockland' },
-            { key: 'checkland', label: 'Check Lands', group: 'Two-Color Cycles', query: 'otag:cycle-checkland' },
-            { key: 'fastland', label: 'Fast Lands', group: 'Two-Color Cycles', query: 'otag:cycle-fastland' },
-            { key: 'slowland', label: 'Slow Lands', group: 'Two-Color Cycles', query: 'otag:cycle-slowland' },
-            { key: 'painland', label: 'Pain Lands', group: 'Two-Color Cycles', query: 'otag:painland' },
-            { key: 'surveilland', label: 'Surveil Lands', group: 'Two-Color Cycles', query: '(otag:cycle-dual-surveil-land or otag:cycle-sos-surveil-dual)' },
-            { key: 'horizonland', label: 'Horizon / Canopy Lands', group: 'Two-Color Cycles', query: 'otag:cycle-horizon-land' },
-            { key: 'gainland', label: 'Gain Lands', group: 'Two-Color Cycles', query: 'otag:gainland' },
-            { key: 'filterland', label: 'Filter Lands', group: 'Two-Color Cycles', query: 'otag:filterland' },
-            { key: 'battleland', label: 'Battle Lands (Tango Lands)', group: 'Two-Color Cycles', query: 'otag:cycle-tangoland' },
-            { key: 'bicycleland', label: 'Bicycle Lands (Cycling Duals)', group: 'Two-Color Cycles', query: 'otag:cycle-dual-cycling-land' },
-            { key: 'revealland', label: 'Reveal Lands', group: 'Two-Color Cycles', query: 'otag:cycle-reveal-land' },
-            { key: 'fetchland', label: 'Fetch Lands', group: 'Multi-Color & Utility', query: 'otag:cycle-fetchland' },
-            { key: 'triland', label: 'Triomes (Tri-Lands)', group: 'Multi-Color & Utility', query: 'otag:triland' },
-            { key: 'creatureland', label: 'Creature Lands (Man-Lands)', group: 'Multi-Color & Utility', query: '(otag:creatureland or otag:cycle-restless-land)' },
-            { key: 'utilityland', label: 'Utility Lands (Colorless)', group: 'Multi-Color & Utility', query: 'otag:cycle-colorless-land' }
+            { key: 'shockland', label: 'Shock Lands', group: 'Two-Color Cycles', query: 'otag:shockland',
+              description: 'Enters untapped if you pay 2 life; tapped otherwise. The default "just works" dual for most decks.' },
+            { key: 'checkland', label: 'Check Lands', group: 'Two-Color Cycles', query: 'otag:cycle-checkland',
+              description: 'Enters untapped if you control a basic (or land with the right type) of one of its colors; tapped otherwise.' },
+            { key: 'fastland', label: 'Fast Lands', group: 'Two-Color Cycles', query: 'otag:cycle-fastland',
+              description: 'Enters untapped only while you control 2 or fewer other lands - great early, a tapped land late.' },
+            { key: 'slowland', label: 'Slow Lands', group: 'Two-Color Cycles', query: 'otag:cycle-slowland',
+              description: 'Enters untapped only if you control 2+ other lands - the mirror image of Fast Lands, better late than early.' },
+            { key: 'painland', label: 'Pain Lands', group: 'Two-Color Cycles', query: 'otag:painland',
+              description: 'Always enters untapped; taps for colorless free, or a color for 1 life.' },
+            { key: 'surveilland', label: 'Surveil Lands', group: 'Two-Color Cycles', query: '(otag:cycle-dual-surveil-land or otag:cycle-sos-surveil-dual)',
+              description: 'Always enters untapped; surveil 1 (look at the top card, keep or bin it) when it enters.' },
+            { key: 'horizonland', label: 'Horizon / Canopy Lands', group: 'Two-Color Cycles', query: 'otag:cycle-horizon-land',
+              description: 'Always enters untapped; can be sacrificed and pitched for a card when you don\'t need the land anymore.' },
+            { key: 'gainland', label: 'Gain Lands', group: 'Two-Color Cycles', query: 'otag:gainland',
+              description: 'Always enters tapped, but gains you 1 life when it does - budget fixing for slower decks.' },
+            { key: 'filterland', label: 'Filter Lands', group: 'Two-Color Cycles', query: 'otag:filterland',
+              description: 'Enters untapped and taps for colorless free, or filters a colored mana you already have into either of its two colors.' },
+            { key: 'battleland', label: 'Battle Lands (Tango Lands)', group: 'Two-Color Cycles', query: 'otag:cycle-tangoland',
+              description: 'Enters untapped only if you control 2+ basic lands; tapped otherwise - wants a basic-heavy manabase.' },
+            { key: 'bicycleland', label: 'Bicycle Lands (Cycling Duals)', group: 'Two-Color Cycles', query: 'otag:cycle-dual-cycling-land',
+              description: 'Always enters tapped, but can be discarded (cycled) for a card instead of played if you don\'t need the land.' },
+            { key: 'revealland', label: 'Reveal Lands', group: 'Two-Color Cycles', query: 'otag:cycle-reveal-land',
+              description: 'Enters untapped if you reveal a matching basic land type from hand; tapped otherwise.' },
+            { key: 'fetchland', label: 'Fetch Lands', group: 'Multi-Color & Utility', query: 'otag:cycle-fetchland',
+              description: 'Sacrifice (usually for 1 life) to search your library for a land with a matching type and put it onto the battlefield.' },
+            { key: 'triland', label: 'Triomes (Tri-Lands)', group: 'Multi-Color & Utility', query: 'otag:triland',
+              description: 'Always enters tapped; taps for any of three colors and carries all three basic land types (fetchable).' },
+            { key: 'creatureland', label: 'Creature Lands (Man-Lands)', group: 'Multi-Color & Utility', query: '(otag:creatureland or otag:cycle-restless-land)',
+              description: 'Always enters untapped; can be activated to become a creature - a mana source that doubles as a threat.' },
+            { key: 'utilityland', label: 'Utility Lands (Colorless)', group: 'Multi-Color & Utility', query: 'otag:cycle-colorless-land',
+              description: 'Colorless lands built around a strong standalone effect rather than color fixing.' }
         ];
 
         let landsSelectedColors = [];
-        let landsSelectedCategoryObj = null;
         const landsCache = {}; // "categoryKey|colorString" -> cards
         let landsRequestToken = 0;
+        let landsInitialized = false; // guards the auto-run-once on first tab show, same idea as Speculation's
 
+        // Static "jump to a cycle" nav - scrolls instead of filtering, since
+        // every cycle is shown at once now. Built once; the picker no longer
+        // tracks a "selected" category, so there's nothing to toggle .active
+        // on here.
         function renderLandsCategoryPicker() {
             const picker = document.getElementById('landsCategoryPicker');
-            if (picker.childElementCount > 0) return; // static - build once
-            let lastGroup = null;
-            let html = '';
-            LAND_CATEGORIES.forEach(cat => {
-                if (cat.group !== lastGroup) {
-                    html += `<div class="staples-category-divider">${cat.group}</div>`;
-                    lastGroup = cat.group;
-                }
-                html += `<button type="button" class="staples-category-btn" id="landsCat-${cat.key}" onclick="selectLandsCategory('${cat.key}')">${cat.label}</button>`;
-            });
-            picker.innerHTML = html;
+            if (picker.childElementCount === 0) {
+                let lastGroup = null;
+                let html = '';
+                LAND_CATEGORIES.forEach(cat => {
+                    if (cat.group !== lastGroup) {
+                        html += `<div class="staples-category-divider">${cat.group}</div>`;
+                        lastGroup = cat.group;
+                    }
+                    html += `<button type="button" class="staples-category-btn" onclick="scrollToLandsSection('${cat.key}')">${cat.label}</button>`;
+                });
+                picker.innerHTML = html;
+            }
+            document.getElementById('landsControls').style.display = '';
+            if (!landsInitialized) {
+                landsInitialized = true;
+                runLandsSearch();
+            }
+        }
+
+        function scrollToLandsSection(key) {
+            const el = document.getElementById(`landsSection-${key}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function toggleLandsColor(color) {
@@ -7184,22 +7234,12 @@
             if (idx === -1) landsSelectedColors.push(color); else landsSelectedColors.splice(idx, 1);
             const btn = document.getElementById(`landsColor-${color}`);
             if (btn) btn.classList.toggle('active');
-            if (landsSelectedCategoryObj) runLandsSearch();
-        }
-
-        function selectLandsCategory(key) {
-            const cat = LAND_CATEGORIES.find(c => c.key === key);
-            if (!cat) return;
-            landsSelectedCategoryObj = cat;
-            document.querySelectorAll('#landsCategoryPicker .staples-category-btn').forEach(el => el.classList.remove('active'));
-            const btn = document.getElementById(`landsCat-${key}`);
-            if (btn) btn.classList.add('active');
-            document.getElementById('landsControls').style.display = '';
             runLandsSearch();
         }
 
-        // Budget/Normal/Premium re-sort the same fetched card pool client-side
-        // (no re-fetch) - "budget" and "premium" are just price ascending/
+        // Budget/Normal/Premium re-sort the same fetched card pools
+        // client-side (no re-fetch), applied uniformly across every cycle
+        // section at once - "budget" and "premium" are just price ascending/
         // descending, "normal" is EDHREC popularity order (what most decks
         // actually run), matching the same idea as the Staples price sort.
         let landsTierMode = 'normal';
@@ -7208,44 +7248,67 @@
             document.getElementById('landsTierBudget').classList.toggle('active', mode === 'budget');
             document.getElementById('landsTierNormal').classList.toggle('active', mode === 'normal');
             document.getElementById('landsTierPremium').classList.toggle('active', mode === 'premium');
-            const cat = landsSelectedCategoryObj;
             const colorStr = canonicalColorString(landsSelectedColors);
-            const cards = landsCache[`${cat.key}|${colorStr}`];
-            if (cards) renderLandsResults(cards, cat);
+            const resultsByKey = {};
+            LAND_CATEGORIES.forEach(cat => {
+                const cached = landsCache[`${cat.key}|${colorStr}`];
+                if (cached) resultsByKey[cat.key] = cached;
+            });
+            if (Object.keys(resultsByKey).length > 0) renderAllLandsResults(resultsByKey);
         }
 
-        // Same stale-response race condition as Recommendations/Staples -
-        // toggling a color while a category is already picked re-fires this
-        // immediately, so a slower earlier response could otherwise land
-        // after a faster later one and show the wrong bucket's lands.
-        async function runLandsSearch() {
-            const cat = landsSelectedCategoryObj;
-            if (!cat) return;
+        // Fetches every cycle for the given color identity in small
+        // concurrent batches rather than all 16 at once - a burst of 16
+        // simultaneous requests is exactly the kind of spike Scryfall's API
+        // guidance asks callers to avoid, and this only needs to run once
+        // per color change (each cycle's result is cached after).
+        const LANDS_FETCH_BATCH_SIZE = 4;
+        async function fetchAllLandsCategories(colorStr) {
+            const resultsByKey = {};
+            for (let i = 0; i < LAND_CATEGORIES.length; i += LANDS_FETCH_BATCH_SIZE) {
+                const batch = LAND_CATEGORIES.slice(i, i + LANDS_FETCH_BATCH_SIZE);
+                await Promise.all(batch.map(async cat => {
+                    const cacheKey = `${cat.key}|${colorStr}`;
+                    let cards = landsCache[cacheKey];
+                    if (!cards) {
+                        // Subset match (bare id:) so picking 2 colors still shows
+                        // relevant mono/colorless lands, and picking 3+ colors
+                        // (for a Triome hunt) still surfaces the 2-color options
+                        // within it, not just exact 3-color matches.
+                        const query = `${cat.query} id:${colorStr} t:land game:paper -set_type:funny`;
+                        const url = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&unique=cards`;
+                        try {
+                            const res = await fetch(url);
+                            if (!res.ok && res.status !== 404) throw new Error(`Server error: ${res.status}`);
+                            const data = res.ok ? await res.json() : { data: [] };
+                            cards = (data.data || []).slice(0, 50);
+                        } catch (err) {
+                            console.error(`Error loading ${cat.label}:`, err);
+                            cards = [];
+                        }
+                        landsCache[cacheKey] = cards;
+                    }
+                    resultsByKey[cat.key] = cards;
+                }));
+            }
+            return resultsByKey;
+        }
 
+        // Same stale-response race condition guard as Recommendations/
+        // Staples - toggling a color re-fires this immediately, so a slower
+        // earlier response could otherwise land after a faster later one and
+        // show the wrong colors' lands.
+        async function runLandsSearch() {
             const myToken = ++landsRequestToken;
             const colorStr = canonicalColorString(landsSelectedColors);
-            const cacheKey = `${cat.key}|${colorStr}`;
             const resultsDiv = document.getElementById('landsResults');
-            resultsDiv.innerHTML = `<div class="loading">Loading lands...</div>`;
+            resultsDiv.innerHTML = `<div class="loading">Loading every cycle...</div>`;
 
             try {
                 await loadSymbology();
-                let cards = landsCache[cacheKey];
-                if (!cards) {
-                    // Subset match (bare id:) so picking 2 colors still shows
-                    // relevant mono/colorless lands, and picking 3+ colors
-                    // (for a Triome hunt) still surfaces the 2-color options
-                    // within it, not just exact 3-color matches.
-                    const query = `${cat.query} id:${colorStr} t:land game:paper -set_type:funny`;
-                    const url = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&unique=cards`;
-                    const res = await fetch(url);
-                    if (!res.ok && res.status !== 404) throw new Error(`Server error: ${res.status}`);
-                    const data = res.ok ? await res.json() : { data: [] };
-                    cards = (data.data || []).slice(0, 50);
-                    landsCache[cacheKey] = cards;
-                }
+                const resultsByKey = await fetchAllLandsCategories(colorStr);
                 if (myToken !== landsRequestToken) return; // a newer search superseded this one
-                renderLandsResults(cards, cat);
+                renderAllLandsResults(resultsByKey);
             } catch (err) {
                 if (myToken !== landsRequestToken) return;
                 console.error('Error loading lands:', err);
@@ -7253,37 +7316,68 @@
             }
         }
 
-        function renderLandsResults(cards, cat) {
+        function renderAllLandsResults(resultsByKey) {
             const resultsDiv = document.getElementById('landsResults');
-            if (cards.length === 0) {
-                resultsDiv.innerHTML = `<div class="error">No ${cat.label} found for this color identity.</div>`;
+            const nonEmpty = LAND_CATEGORIES.filter(cat => (resultsByKey[cat.key] || []).length > 0);
+            if (nonEmpty.length === 0) {
+                resultsDiv.innerHTML = `<div class="error">No lands found for this color identity.</div>`;
                 return;
             }
 
             const priceOf = c => parseFloat(c.prices && c.prices.usd) || 0;
-            let ordered = cards;
-            let tierNote = '';
-            if (landsTierMode === 'budget') {
-                ordered = [...cards].sort((a, b) => priceOf(a) - priceOf(b));
-                tierNote = `<div class="moonshot-status" style="text-align:center; margin-bottom:10px;">Cheapest first - great for a first mana base or a budget deck.</div>`;
-            } else if (landsTierMode === 'premium') {
-                ordered = [...cards].sort((a, b) => priceOf(b) - priceOf(a));
-                tierNote = `<div class="moonshot-status" style="text-align:center; margin-bottom:10px;">Priciest first - the versions collectors and high-power tables actually chase.</div>`;
-            }
+            const tierNote = landsTierMode === 'budget'
+                ? `<div class="moonshot-status" style="text-align:center; margin-bottom:14px;">Cheapest first in every cycle below - great for a first mana base or a budget deck.</div>`
+                : landsTierMode === 'premium'
+                    ? `<div class="moonshot-status" style="text-align:center; margin-bottom:14px;">Priciest first in every cycle below - the versions collectors and high-power tables actually chase.</div>`
+                    : '';
+
+            let lastGroup = null;
+            let sectionsHTML = '';
+            let totalCount = 0;
+
+            nonEmpty.forEach(cat => {
+                const cards = resultsByKey[cat.key];
+                totalCount += cards.length;
+
+                let ordered = cards;
+                if (landsTierMode === 'budget') ordered = [...cards].sort((a, b) => priceOf(a) - priceOf(b));
+                else if (landsTierMode === 'premium') ordered = [...cards].sort((a, b) => priceOf(b) - priceOf(a));
+
+                const prices = cards.map(priceOf).filter(p => p > 0);
+                const priceRangeHTML = prices.length > 0
+                    ? `<span class="lands-price-range">${prices.length > 1 ? `$${Math.min(...prices).toFixed(2)} – $${Math.max(...prices).toFixed(2)}` : `$${prices[0].toFixed(2)}`}</span>`
+                    : '';
+
+                if (cat.group !== lastGroup) {
+                    sectionsHTML += `<div class="staples-category-divider" style="margin:20px 0 4px;">${cat.group}</div>`;
+                    lastGroup = cat.group;
+                }
+
+                sectionsHTML += `
+                    <div class="rarity-section" id="landsSection-${cat.key}">
+                        <div class="rarity-section-header">
+                            ${cat.label} <span style="text-transform:none; letter-spacing:normal; font-weight:400; color:#909090;">(${cards.length})</span>
+                            ${priceRangeHTML}
+                        </div>
+                        <div class="lands-cycle-desc text-secondary">${cat.description}</div>
+                        <div class="card-tile-grid">
+                            ${ordered.map((c, i) => {
+                                const rankLabel = landsTierMode === 'normal'
+                                    ? (c.edhrec_rank ? `#${c.edhrec_rank}` : null)
+                                    : `#${i + 1}`;
+                                return buildCardTileHTML(c, rankLabel);
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
 
             resultsDiv.innerHTML = `
                 ${tierNote}
                 <div class="staples-bulk-actions">
-                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('landsResults')">Check Stock for All (${ordered.length})</button>
+                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('landsResults')">Check Stock for All (${totalCount})</button>
                 </div>
-                <div class="card-tile-grid">
-                    ${ordered.map((c, i) => {
-                        const rankLabel = landsTierMode === 'normal'
-                            ? (c.edhrec_rank ? `#${c.edhrec_rank}` : null)
-                            : `#${i + 1}`;
-                        return buildCardTileHTML(c, rankLabel);
-                    }).join('')}
-                </div>
+                ${sectionsHTML}
             `;
         }
 
