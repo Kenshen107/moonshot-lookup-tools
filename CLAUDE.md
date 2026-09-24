@@ -25,6 +25,15 @@ Staff tools for Moonshot Games, used at work in both stores (Noblesville and Pla
 
 Sealed product data (what's in each box, bundle, deck and kit) comes live from MTGJSON (`mtgjson.com/api/v5/SetList.json.gz`, which browsers can read directly). Commander decklists come from the per-set files (`<CODE>.json.gz`), loaded only when a decklist is opened. Photos come from TCGplayer's image CDN via each product's `tcgplayerProductId`. Buy-a-Box and Bundle promos come from Scryfall. Nothing is hand-maintained, so new sets show up on their own.
 
+## EDHREC data (`MTG_Lookup_Tool.html`)
+
+Commander play data comes live from EDHREC's JSON feed (`json.edhrec.com/pages/...`, which browsers can read directly). EDHREC has no official API, so every EDHREC panel is optional. If a page is missing or the feed changes, the panel shows nothing and the rest of the app keeps working. Always credit EDHREC with a link, as the panels already do. Use only current play data. Never use EDHREC's trend or "rising cards" data (that's price speculation territory) or its prices. Prices come from Scryfall at the cheapest paper printing (`cheapestPrintings`, which uses `prefer:usd-low`).
+
+- **Card Lookup:** "Commander play" shows how often the card is played and the commanders that play it most. For commanders, "Build around this commander" shows the bracket split, themes, card lists, similar commanders, and EDHREC's budget deck priced at the cheapest copies.
+- **Card popup:** "Build around this commander" opens Card Lookup with that guide expanded.
+- **Products:** "Upgrade this deck" on precon decklists shows the most-played and best-synergy cards for the deck's commander that aren't in the precon.
+- **Brackets tab:** the card checker, and the deck checker when the list has a Commander heading or tag, show which bracket EDHREC players build that commander at.
+
 ## Commander Brackets tab (`MTG_Lookup_Tool.html`)
 
 The bracket rules are written out by hand, because Wizards publishes them as articles, not data. Everything else on the tab comes live from Scryfall: the Game Changers list, the Commander banned list, and the mass-land-denial / extra-turn tags used by the checkers. When Wizards posts a bracket or banned-list update:
