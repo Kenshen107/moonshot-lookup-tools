@@ -2991,10 +2991,17 @@
         .bracket-card {
             background: #2a2a2a;
             border: 2px solid #404040;
-            border-left: 4px solid var(--brand);
+            border-left: 4px solid var(--bk-color, var(--brand));
             border-radius: 8px;
             padding: 20px;
         }
+
+        /* One color per bracket, used by the cards, chart headers and verdicts */
+        .bk-b1, .bk-col-1 { --bk-color: #7ee787; }
+        .bk-b2, .bk-col-2 { --bk-color: #6cb2ff; }
+        .bk-b3, .bk-col-3 { --bk-color: #d2a8ff; }
+        .bk-b4, .bk-col-4 { --bk-color: #ffa657; }
+        .bk-b5, .bk-col-5 { --bk-color: #ff7b72; }
 
         .bracket-header {
             display: flex;
@@ -3007,7 +3014,7 @@
         .bracket-number {
             font-size: 1.3em;
             font-weight: 700;
-            color: var(--brand-light);
+            color: var(--bk-color, var(--brand-light));
         }
 
         .bracket-name {
@@ -3058,6 +3065,357 @@
         .bracket-example strong {
             color: #c0c0c0;
             font-style: normal;
+        }
+
+        .bracket-blurb strong,
+        .bk-say strong {
+            color: var(--text-primary);
+        }
+
+        .bk-tagline {
+            margin-left: auto;
+            font-size: 0.85em;
+            font-style: italic;
+            color: var(--bk-color);
+        }
+
+        .bk-rule-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 12px 0;
+            font-size: 0.86em;
+        }
+
+        .bk-rule-cols ul {
+            margin: 4px 0 0;
+            padding-left: 18px;
+            color: #c0c0c0;
+            line-height: 1.5;
+        }
+
+        .bk-rule-head {
+            font-weight: 700;
+        }
+
+        .bk-yes { color: #7ee787; }
+        .bk-no { color: #ff9b94; }
+
+        .bk-say {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #b0b0b0;
+        }
+
+        .bk-asof {
+            max-width: 900px;
+            margin: -6px auto 10px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .bk-stale {
+            max-width: 900px;
+            margin: 0 auto 12px;
+            padding: 10px 14px;
+            border: 1px solid #ffcc80;
+            border-radius: 8px;
+            background: rgba(255, 204, 128, 0.1);
+            color: #ffcc80;
+            font-size: 0.88em;
+        }
+
+        .bk-nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            max-width: 900px;
+            margin: 0 auto 18px;
+        }
+
+        .bk-nav button {
+            width: auto;
+            padding: 6px 12px;
+            font-size: 0.8em;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text-primary);
+        }
+
+        .bk-nav button:hover {
+            border-color: var(--brand-light);
+        }
+
+        .bk-section {
+            max-width: 900px;
+            margin: 0 auto 22px;
+            padding: 20px 22px;
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            scroll-margin-top: 12px;
+        }
+
+        .bk-section h2 {
+            margin: 0 0 10px;
+            font-size: 1.2em;
+            color: var(--text-heading);
+        }
+
+        .bk-section > p {
+            color: #c0c0c0;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .bk-section .brackets-list {
+            margin-bottom: 0;
+        }
+
+        .bk-why-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 12px;
+        }
+
+        .bk-why-item {
+            background: var(--bg-inset);
+            border-radius: 6px;
+            padding: 12px 14px;
+            font-size: 0.86em;
+            line-height: 1.5;
+            color: #c0c0c0;
+        }
+
+        .bk-why-item strong {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--text-heading);
+        }
+
+        .bk-subhead {
+            margin: 18px 0 6px;
+            font-size: 1em;
+            color: var(--text-heading);
+        }
+
+        .bk-steps {
+            margin: 0;
+            padding-left: 22px;
+            font-size: 0.88em;
+            line-height: 1.6;
+            color: #c0c0c0;
+        }
+
+        .bk-note {
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .bk-compare {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+            min-width: 620px;
+        }
+
+        .bk-compare th,
+        .bk-compare td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-subtle);
+            text-align: center;
+        }
+
+        .bk-compare thead th {
+            color: var(--bk-color);
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        .bk-compare tbody th {
+            text-align: left;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .bk-cell-yes { color: #7ee787; }
+        .bk-cell-no { color: #ff9b94; }
+        .bk-cell-limit { color: #ffcc80; }
+        .bk-cell-info { color: var(--text-primary); }
+
+        .bk-input-row {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .bk-input-row input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .bk-input-row button {
+            width: auto;
+            padding: 8px 18px;
+        }
+
+        #bkDeckInput {
+            width: 100%;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 0.9em;
+            padding: 10px;
+            background: var(--bg-inset);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            resize: vertical;
+        }
+
+        .bk-card-result {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            margin-top: 8px;
+        }
+
+        .bk-card-result img {
+            width: 150px;
+            border-radius: 8px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .bk-card-result-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .bk-card-result-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--text-heading);
+            cursor: pointer;
+        }
+
+        .bk-card-verdict {
+            margin: 8px 0;
+            font-size: 0.95em;
+        }
+
+        .bk-verdict {
+            display: inline-block;
+            padding: 3px 10px;
+            border: 1px solid var(--bk-color, #ff9b94);
+            border-radius: 12px;
+            color: var(--bk-color, #ff9b94);
+            font-weight: 700;
+        }
+
+        .bk-flags {
+            border-collapse: collapse;
+            font-size: 0.86em;
+        }
+
+        .bk-flags td {
+            padding: 4px 12px 4px 0;
+            vertical-align: top;
+        }
+
+        .bk-flag-on td:nth-child(2),
+        .bk-deck-group.bk-flag-on .bk-deck-group-head strong {
+            color: #ffcc80;
+            font-weight: 700;
+        }
+
+        .bk-reasons,
+        .bk-still-check ul {
+            margin: 4px 0 10px;
+            padding-left: 20px;
+            font-size: 0.86em;
+            line-height: 1.5;
+            color: #c0c0c0;
+        }
+
+        .bk-deck-group {
+            padding: 8px 0;
+            border-top: 1px solid var(--border-subtle);
+            font-size: 0.88em;
+        }
+
+        .bk-deck-names {
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+
+        .bk-card-link {
+            cursor: pointer;
+            color: var(--color-link);
+        }
+
+        .bk-still-check {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: var(--bg-inset);
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .bk-gc-count {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .bk-gc-group {
+            margin-top: 14px;
+        }
+
+        .bk-gc-group-head {
+            font-weight: 700;
+            color: var(--text-heading);
+        }
+
+        .bk-gc-group-blurb {
+            font-size: 0.82em;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .bk-gc-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            column-gap: 16px;
+        }
+
+        .bk-timeline-item {
+            padding: 10px 0 10px 14px;
+            border-left: 3px solid var(--border);
+        }
+
+        .bk-timeline-date {
+            font-weight: 700;
+            color: var(--color-link);
+            text-decoration: none;
+        }
+
+        .bk-timeline-item ul {
+            margin: 4px 0 0;
+            padding-left: 18px;
+            font-size: 0.86em;
+            line-height: 1.5;
+            color: #c0c0c0;
+        }
+
+        @media (max-width: 600px) {
+            .bk-section { padding: 16px 14px; }
+            .bk-rule-cols { grid-template-columns: 1fr; }
+            .bk-tagline { margin-left: 0; width: 100%; }
+            .bk-card-result { flex-direction: column; }
+            .bk-card-result img { width: 120px; }
         }
 
         .judge-concepts-grid {
@@ -3260,20 +3618,6 @@
             width: auto;
             display: block;
             margin: 16px auto 0;
-        }
-
-        .game-changers-section {
-            max-width: 700px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .game-changers-section h2 {
-            color: #b0b0b0;
-            text-transform: uppercase;
-            font-size: 1em;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
         }
 
         .game-changer-item {
@@ -4664,36 +5008,107 @@
         <!-- ============== COMMANDER BRACKETS ============== -->
         <div id="bracketsApp" style="display:none;">
             <div class="formats-intro">
-                Commander Brackets are a rough power-level scale (1-5) so playgroups
-                can agree on what kind of game they're sitting down for before it
-                starts. Treat the specifics below as a working guide - your
-                playgroup's own read on a deck always wins.
+                Commander Brackets are Wizards' official 1-5 scale for the kind of
+                game a deck is built for - from a casual theme deck to a
+                tournament cEDH list. Saying your bracket before the game starts
+                gets everyone a game they'll enjoy.
             </div>
-            <div class="brackets-list" id="bracketsList"></div>
-            <div class="game-changers-section">
-                <h2>Game Changers List</h2>
-                <div class="formats-intro" style="margin-bottom:14px;">
-                    The card pool that separates Brackets 2-4 - pulled live from
-                    Scryfall's own Game Changers tag, so it stays current as the
-                    list is updated. It's not one specific mechanic - cards land
-                    here for explosive/free mana, unconditional tutors, card
-                    advantage that snowballs out of control, one-sided board
-                    control, hard locks, or a way to just win the game outright.
-                    Each one below says which.
-                </div>
-                <div id="gameChangersList" class="format-banlist-items" style="max-height:400px; max-width:700px; margin:0 auto;"></div>
-            </div>
+            <div class="bk-asof" id="bracketsAsOf"></div>
+            <div class="bk-stale" id="bracketsStale" hidden></div>
 
-            <div class="resource-section">
-                <h2>Resources</h2>
-                <p>The official word on Brackets and Commander's own banned list, straight from Wizards.</p>
-                <div class="resource-links">
+            <nav class="bk-nav" aria-label="Brackets sections">
+                <button type="button" onclick="scrollToBracketSection('bkWhy')">Why brackets</button>
+                <button type="button" onclick="scrollToBracketSection('bkCompare')">Compare</button>
+                <button type="button" onclick="scrollToBracketSection('bkBrackets')">The 5 brackets</button>
+                <button type="button" onclick="scrollToBracketSection('bkCardCheck')">Check a card</button>
+                <button type="button" onclick="scrollToBracketSection('bkDeckCheck')">Check a deck</button>
+                <button type="button" onclick="scrollToBracketSection('bkGameChangers')">Game Changers</button>
+                <button type="button" onclick="scrollToBracketSection('bkBanned')">Banned list</button>
+                <button type="button" onclick="scrollToBracketSection('bkHistory')">Update history</button>
+            </nav>
+
+            <section class="bk-section" id="bkWhy">
+                <h2>Why play by brackets?</h2>
+                <div class="bk-why-grid">
+                    <div class="bk-why-item">
+                        <strong>It's a pre-game conversation</strong>
+                        <span>Before shuffling up, everyone says their deck's bracket, plus anything worth knowing ("Bracket 3, with a late-game combo"). Matching brackets means a pet theme deck doesn't get run over and a tuned deck isn't stuck at a table it will steamroll.</span>
+                    </div>
+                    <div class="bk-why-item">
+                        <strong>It describes the game, not just the cards</strong>
+                        <span>Each bracket has a few hard lines - Game Changers, mass land denial, extra turns, two-card combos - and an expected game length. The hard lines set the lowest bracket a deck can be; how fast and how reliably it wins decides the rest.</span>
+                    </div>
+                    <div class="bk-why-item">
+                        <strong>Intent counts</strong>
+                        <span>A deck with zero Game Changers that reliably wins on turn 5 isn't a Bracket 2 deck. When a deck is on the edge, call it the higher bracket.</span>
+                    </div>
+                    <div class="bk-why-item">
+                        <strong>At the store</strong>
+                        <span>At Commander nights, ask each player's bracket and seat similar brackets together; keep cEDH (Bracket 5) at its own table. When a customer asks "will this card push my deck up?", use Check a card below.</span>
+                    </div>
+                </div>
+                <h3 class="bk-subhead">Finding a deck's bracket in 3 steps</h3>
+                <ol class="bk-steps">
+                    <li><strong>Count its Game Changers.</strong> None: Bracket 1 or 2. One to three: Bracket 3 or higher. Four or more: Bracket 4 or higher.</li>
+                    <li><strong>Check the hard lines.</strong> Mass land denial, chained extra turns, or a two-card combo that can win early each mean Bracket 4 or higher. A two-card combo that only comes together late (around turn 6+) is fine in Bracket 3.</li>
+                    <li><strong>Compare it to the game length.</strong> If the deck usually wins before its bracket's expected turn, move it up a bracket.</li>
+                </ol>
+                <p class="bk-note">The deck checker below does steps 1 and 2 for you. Step 3 is the player's honest call.</p>
+            </section>
+
+            <section class="bk-section" id="bkCompare">
+                <h2>The brackets side by side</h2>
+                <div class="buylist-table-wrap"><table class="bk-compare" id="bracketsCompare"></table></div>
+                <p class="bk-note">Tutors have no bracket limits - the strongest ones are Game Changers, so they're counted there. The banned list applies to every bracket.</p>
+            </section>
+
+            <section class="bk-section" id="bkBrackets">
+                <h2>The 5 brackets</h2>
+                <div class="brackets-list" id="bracketsList"></div>
+            </section>
+
+            <section class="bk-section" id="bkCardCheck">
+                <h2>Check a card</h2>
+                <p>Is it a Game Changer, banned, mass land denial, or an extra-turn card - and what's the lowest bracket it fits in? Checked live against Scryfall.</p>
+                <div class="bk-input-row">
+                    <input type="text" id="bkCardInput" placeholder="Card name, e.g. Rhystic Study" aria-label="Card name to check" autocomplete="off">
+                    <button type="button" onclick="checkBracketCard()">Check</button>
+                </div>
+                <div id="bkCardResult"></div>
+            </section>
+
+            <section class="bk-section" id="bkDeckCheck">
+                <h2>Check a deck</h2>
+                <p>Paste a decklist (Moxfield, Archidekt, or plain "1 Card Name" lines). It counts Game Changers, mass land denial, extra-turn cards and banned cards, and tells you the lowest bracket those allow.</p>
+                <textarea id="bkDeckInput" rows="8" placeholder="1 Sol Ring&#10;1 Rhystic Study (TMT) 42&#10;1x Cyclonic Rift [Removal]" aria-label="Decklist to check"></textarea>
+                <div class="bk-input-row"><button type="button" onclick="checkBracketDeck()">Check deck</button></div>
+                <div id="bkDeckResult"></div>
+            </section>
+
+            <section class="bk-section" id="bkGameChangers">
+                <h2>Game Changers</h2>
+                <p>The official list of cards that push a deck to Bracket 3 or higher, pulled live from Scryfall so it's always the current list. Grouped by why each card made the list - click any card to see it.</p>
+                <div id="gameChangersList"></div>
+            </section>
+
+            <section class="bk-section" id="bkBanned">
+                <h2>Commander banned list</h2>
+                <p>Banned cards aren't allowed in any bracket. Pulled live from Scryfall.</p>
+                <button type="button" class="format-banlist-btn" onclick="loadFormatBanlist('commander', 'bracketsBanlist', this)">Show the banned list</button>
+                <div id="bracketsBanlist" class="format-banlist-container"></div>
+            </section>
+
+            <section class="bk-section" id="bkHistory">
+                <h2>Update history</h2>
+                <p>The brackets are still officially in beta, so Wizards updates them a few times a year. What changed, newest first:</p>
+                <div class="bk-timeline" id="bracketsTimeline"></div>
+                <div class="resource-links" style="margin-top:14px;">
                     <a href="https://magic.wizards.com/en/formats/commander" target="_blank" rel="noopener">Official Commander format page</a>
-                    <a href="https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-february-9-2026" target="_blank" rel="noopener">Commander Brackets Beta update</a>
                     <a href="https://magic.wizards.com/en/banned-restricted-list" target="_blank" rel="noopener">Banned & Restricted List (official)</a>
+                    <a href="https://commanderspellbook.com/" target="_blank" rel="noopener">Commander Spellbook - look up combos</a>
                     <a href="https://edhrec.com/" target="_blank" rel="noopener">EDHREC</a>
                 </div>
-            </div>
+            </section>
         </div>
 
         <!-- ============== GRADING & SPOTTING FAKES ============== -->
@@ -7211,97 +7626,201 @@
         }
 
         // ============== COMMANDER BRACKETS ==============
-        // Deck-building guidance is static (Wizards' own framework), but the
-        // Game Changers list that Brackets 2-4 hinge on is fetched live from
-        // Scryfall's own game_changer field/is:gamechanger tag, so it can't
-        // silently go stale here if that list is ever updated.
+        // The bracket rules themselves can't be fetched (Wizards publishes
+        // them as articles, not data), so they're written out here and
+        // stamped with the update they match. Everything that IS data - the
+        // Game Changers list, the banned list, which cards are mass land
+        // denial / extra turns - is pulled live from Scryfall, and the page
+        // warns on its own if the live Game Changers list stops matching the
+        // one this text was written against (a sure sign of a new update).
+        const BRACKETS_RULES_AS_OF = {
+            update: 'February 9, 2026',
+            url: 'https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-february-9-2026',
+            lastChecked: 'September 24, 2026'
+        };
+
         const BRACKET_INFO = [
             {
                 number: 1,
                 name: 'Exhibition',
-                blurb: 'Ultra-casual, "for fun" decks built around a theme or joke rather than winning efficiently - think "every creature has to be a dog" over raw power.',
-                rules: [
-                    'No Game Changers',
-                    'No two-card infinite combos',
-                    'No chained extra-turn effects',
-                    'No intentional mass land denial'
-                ],
-                example: 'A tribal/theme deck with no removal suite to speak of - games are meant to go long and feel like a story, not a race.'
+                tagline: 'Theme over winning',
+                who: 'Players who want a story, a joke, or a tightly themed build - the fun is seeing the theme come together, not racing to win.',
+                games: 'Long and relaxed - expect at least 9 turns.',
+                allowed: ['Any theme or restriction you like', 'Tutors', 'Normal removal and interaction'],
+                notAllowed: ['Game Changers', 'Mass land denial', 'Extra-turn cards (none at all)', 'Intentional two-card infinite combos'],
+                example: 'Only creatures with hats in the art, or a deck that retells a story from Magic lore.',
+                say: '"Mine\'s a Bracket 1 theme deck - it isn\'t really trying to win."'
             },
             {
                 number: 2,
                 name: 'Core',
-                blurb: 'The average, out-of-the-box Commander experience - roughly the power level of a stock preconstructed deck.',
-                rules: [
-                    'No Game Changers',
-                    'No two-card infinite combos',
-                    'No chained extra-turn effects',
-                    'No intentional mass land denial'
-                ],
-                example: 'A precon (or a lightly-upgraded one) - on-curve creatures, a handful of removal spells, no fast mana, nothing built to end the game early.'
+                tagline: 'Straightforward and fair',
+                who: 'Most casual players. The deck has a clear plan, and its cards are picked for fun and synergy more than maximum efficiency.',
+                games: 'Everyone gets to do their thing - expect at least 8 turns. Interaction is there, but it isn\'t oppressive.',
+                allowed: ['Tutors', 'A few extra-turn cards, as long as they aren\'t chained or looped'],
+                notAllowed: ['Game Changers', 'Mass land denial', 'Intentional two-card infinite combos', 'Chaining extra turns'],
+                example: 'A Dragons deck with a normal amount of ramp and removal, and big splashy finishers.',
+                say: '"Bracket 2 - no Game Changers, nothing crazy."'
             },
             {
                 number: 3,
                 name: 'Upgraded',
-                blurb: 'A real, synergy-driven deck that\'s been built up past precon level, but still capped so it doesn\'t run away with the game before turn 8-10.',
-                rules: [
-                    'A small number of Game Changers allowed (a few, not the whole list)',
-                    'No early two-card infinite combo intended to end the game out of nowhere',
-                    'Extra-turn chaining still avoided',
-                    'Mass land denial still avoided'
-                ],
-                example: 'A precon\'s shell upgraded with 2-3 Game Changers (say, a Rhystic Study and a Cyclonic Rift), a tuned mana base, and a tighter removal suite - but no combo finish.'
+                tagline: 'Tuned, but still fair',
+                who: 'Decks upgraded past a typical precon: strong synergy, good card quality, efficient removal, and a few of the format\'s best cards.',
+                games: 'Powerful turns happen, but games shouldn\'t be decided early - expect at least 6 turns.',
+                allowed: ['Up to 3 Game Changers', 'A few extra-turn cards (not chained)', 'Two-card combos that only come together late (around turn 6+)', 'Tutors'],
+                notAllowed: ['4 or more Game Changers', 'Mass land denial', 'Cheap two-card infinite combos that can win early', 'Chaining extra turns'],
+                example: 'A tuned Aristocrats deck running Smothering Tithe and Rhystic Study, with a combo finish that needs a lot of mana.',
+                say: '"Bracket 3, two Game Changers, and a combo that shows up late."'
             },
             {
                 number: 4,
                 name: 'Optimized',
-                blurb: 'High power - "battlecruiser to near-cEDH." No cap on Game Changers or combos; the deck is built to win efficiently, just not tuned against a specific competitive meta.',
-                rules: [
-                    'Game Changers unrestricted',
-                    'Two-card combos allowed',
-                    'Fast mana and tutors allowed',
-                    'Still generally a step below tournament-tuned cEDH'
-                ],
-                example: 'A tuned aristocrats or spellslinger shell with efficient tutors, fast mana, and a real combo finish, aiming to close games by turn 6-8.'
+                tagline: 'Lethal, consistent, fast',
+                who: 'Players bringing their highest-power builds - fast mana, efficient tutors, strong interaction - without tuning for a tournament metagame.',
+                games: 'Can end as early as turn 4. Expect a lot of interaction and a real race.',
+                allowed: ['Any number of Game Changers', 'Mass land denial', 'Extra turns, chained or not', 'Two-card combos at any point', 'Anything not on the banned list'],
+                notAllowed: ['Banned cards'],
+                example: 'A combo deck with fast mana and a tutor package, built to win as soon as it can.',
+                say: '"Bracket 4 - it\'s fast, and it has combos."'
             },
             {
                 number: 5,
                 name: 'cEDH',
-                blurb: 'The fully optimized, competitive tournament metagame - every efficient piece is fair game, and the deck is built and tested against what else is winning right now.',
-                rules: [
-                    'No restrictions',
-                    'Built and tuned against the current competitive meta',
-                    'Games are commonly decided by turn 3-4'
-                ],
-                example: 'A cEDH staple shell - fast mana, stax pieces, a tutor-able combo, and a dense interaction suite, built to win before the table can react.'
+                tagline: 'Competitive metagame',
+                who: 'Tournament players. The difference from Bracket 4 isn\'t the cards - it\'s that the deck is built and tested to beat the current competitive metagame.',
+                games: 'Can end on any turn. Tight play and knowing the metagame are expected.',
+                allowed: ['Everything not on the banned list'],
+                notAllowed: ['Banned cards'],
+                example: 'An established cEDH list, tuned against what\'s winning tournaments right now.',
+                say: '"This is a cEDH deck." (and play it at a cEDH table)'
             }
         ];
 
+        // Side-by-side chart. Each cell: [kind, text] - kind colors it
+        // (yes = allowed, no = not allowed, limit = allowed with a limit).
+        const BRACKET_COMPARE = [
+            { label: 'Game Changers', cells: [['no', 'None'], ['no', 'None'], ['limit', 'Up to 3'], ['yes', 'Unlimited'], ['yes', 'Unlimited']] },
+            { label: 'Mass land denial', cells: [['no', 'No'], ['no', 'No'], ['no', 'No'], ['yes', 'Yes'], ['yes', 'Yes']] },
+            { label: 'Extra-turn cards', cells: [['no', 'None'], ['limit', 'A few, never chained'], ['limit', 'A few, never chained'], ['yes', 'Yes'], ['yes', 'Yes']] },
+            { label: 'Two-card infinite combos', cells: [['no', 'No'], ['no', 'No'], ['limit', 'Only late (turn 6+)'], ['yes', 'Yes'], ['yes', 'Yes']] },
+            { label: 'Tutors', cells: [['yes', 'Yes'], ['yes', 'Yes'], ['yes', 'Yes'], ['yes', 'Yes'], ['yes', 'Yes']] },
+            { label: 'Games usually last', cells: [['info', '9+ turns'], ['info', '8+ turns'], ['info', '6+ turns'], ['info', '4+ turns'], ['info', 'Any length']] }
+        ];
+
+        // Newest first. Summaries of Wizards' own announcements (linked).
+        const BRACKET_HISTORY = [
+            {
+                date: 'February 9, 2026',
+                url: 'https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-february-9-2026',
+                changes: [
+                    'No changes to the brackets themselves.',
+                    'Game Changers: Farewell and Biorhythm added (Biorhythm was unbanned straight onto the list) - 53 cards total.',
+                    'Lutri, the Spellchaser unbanned, but still banned as a companion.',
+                    'The proposed hybrid mana color-identity change was shelved - the rule stays as it is.'
+                ]
+            },
+            {
+                date: 'December 11, 2025',
+                url: 'https://magic.wizards.com/en/news/announcements/commander-format-panel-update-december-11-2025',
+                changes: ['Commander Format Panel member rotation. No rule changes.']
+            },
+            {
+                date: 'October 21, 2025',
+                url: 'https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-october-21-2025',
+                changes: [
+                    'Each bracket got an expected game length: 9+ turns, 8+, 6+, 4+, any.',
+                    'Tutor limits removed - the strongest tutors are Game Changers already.',
+                    'Bracket 2 is no longer described as "precon level", since precons vary so much in power.',
+                    'Game Changers: 10 removed - Expropriate, Jin-Gitaxias, Core Augur, Sway of the Stars, Vorinclex, Voice of Hunger, Kinnan, Bonder Prodigy, Urza, Lord High Artificer, Winota, Joiner of Forces, Yuriko, the Tiger\'s Shadow, Deflecting Swat and Food Chain.'
+                ]
+            },
+            {
+                date: 'April 22, 2025',
+                url: 'https://magic.wizards.com/en/news/announcements/commander-brackets-beta-update-april-22-2025',
+                changes: [
+                    'No changes to the brackets themselves.',
+                    'Game Changers: 18 added, 2 removed (Trouble in Pairs and Trinisphere).',
+                    'Five cards unbanned, including Coalition Victory and Gifts Ungiven.'
+                ]
+            },
+            {
+                date: 'February 2025',
+                url: 'https://magic.wizards.com/en/news/announcements/introducing-commander-brackets-beta',
+                changes: ['Commander Brackets (beta) introduced: five brackets and the first Game Changers list.']
+            }
+        ];
+
+        // Why each Game Changer made the list, grouped. Also doubles as the
+        // list this page was written against: a live Game Changer missing
+        // from here (or a name here that's no longer live) trips the
+        // "brackets may have been updated" warning.
+        const GAME_CHANGER_GROUPS = [
+            { label: '⚡ Fast mana', blurb: 'Gets far ahead on mana, usually in the first few turns.',
+              cards: ['Ancient Tomb', 'Chrome Mox', 'Gaea\'s Cradle', 'Grim Monolith', 'Jeska\'s Will', 'Lion\'s Eye Diamond', 'Mana Vault', 'Mishra\'s Workshop', 'Mox Diamond', 'Serra\'s Sanctum'] },
+            { label: '🔎 Tutors', blurb: 'Finds exactly the card the deck needs, making it far more consistent.',
+              cards: ['Crop Rotation', 'Demonic Tutor', 'Enlightened Tutor', 'Gamble', 'Gifts Ungiven', 'Imperial Seal', 'Intuition', 'Mystical Tutor', 'Natural Order', 'Survival of the Fittest', 'Vampiric Tutor', 'Worldly Tutor'] },
+            { label: '🛡️ Free or one-sided interaction', blurb: 'Answers or protection so efficient it swings the whole game.',
+              cards: ['Cyclonic Rift', 'Farewell', 'Fierce Guardianship', 'Force of Will', 'Teferi\'s Protection'] },
+            { label: '📈 Card and value engines', blurb: 'Snowballing advantage the table struggles to keep up with.',
+              cards: ['Ad Nauseam', 'Bolas\'s Citadel', 'Consecrated Sphinx', 'Field of the Dead', 'Necropotence', 'Notion Thief', 'Orcish Bowmasters', 'Panoptic Mirror', 'Rhystic Study', 'Seedborn Muse', 'Smothering Tithe', 'The One Ring', 'Underworld Breach'] },
+            { label: '🔒 Locks and taxes', blurb: 'Stops opponents from playing the game the way they want to.',
+              cards: ['Aura Shards', 'Braids, Cabal Minion', 'Drannith Magistrate', 'Glacial Chasm', 'Grand Arbiter Augustin IV', 'Humility', 'Narset, Parter of Veils', 'Opposition Agent', 'Tergrid, God of Fright // Tergrid\'s Lantern', 'The Tabernacle at Pendrell Vale'] },
+            { label: '🏆 Win the game', blurb: 'Ends the game on the spot, or close to it.',
+              cards: ['Biorhythm', 'Coalition Victory', 'Thassa\'s Oracle'] }
+        ];
+
         let bracketsRendered = false;
-        let gameChangersLoaded = false;
+
+        function scrollToBracketSection(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
         function renderBracketsGuide() {
-            if (!bracketsRendered) {
-                bracketsRendered = true;
-                document.getElementById('bracketsList').innerHTML = BRACKET_INFO.map(b => `
-                    <div class="bracket-card">
-                        <div class="bracket-header">
-                            <span class="bracket-number">Bracket ${b.number}</span>
-                            <span class="bracket-name">${b.name}</span>
-                        </div>
-                        <div class="bracket-blurb">${b.blurb}</div>
-                        <ul class="bracket-rules">
-                            ${b.rules.map(r => `<li>${r}</li>`).join('')}
-                        </ul>
-                        <div class="bracket-example"><strong>Example:</strong> ${b.example}</div>
-                    </div>
-                `).join('');
-            }
+            if (bracketsRendered) return;
+            bracketsRendered = true;
 
-            if (!gameChangersLoaded) {
-                gameChangersLoaded = true;
-                loadGameChangers();
-            }
+            document.getElementById('bracketsAsOf').innerHTML =
+                `Rules match Wizards' <a href="${BRACKETS_RULES_AS_OF.url}" target="_blank" rel="noopener" class="text-link">${BRACKETS_RULES_AS_OF.update} update</a> · last checked ${BRACKETS_RULES_AS_OF.lastChecked}. Game Changers and the banned list below are live.`;
+
+            document.getElementById('bracketsCompare').innerHTML = `
+                <thead><tr><th></th>${BRACKET_INFO.map(b => `<th class="bk-col-${b.number}">${b.number} · ${b.name}</th>`).join('')}</tr></thead>
+                <tbody>${BRACKET_COMPARE.map(row => `
+                    <tr><th scope="row">${row.label}</th>${row.cells.map(([kind, text]) => `<td class="bk-cell bk-cell-${kind}">${text}</td>`).join('')}</tr>
+                `).join('')}</tbody>
+            `;
+
+            document.getElementById('bracketsList').innerHTML = BRACKET_INFO.map(b => `
+                <div class="bracket-card bk-b${b.number}" id="bracketCard${b.number}">
+                    <div class="bracket-header">
+                        <span class="bracket-number">Bracket ${b.number}</span>
+                        <span class="bracket-name">${b.name}</span>
+                        <span class="bk-tagline">${b.tagline}</span>
+                    </div>
+                    <div class="bracket-blurb"><strong>Who it's for:</strong> ${b.who}</div>
+                    <div class="bracket-blurb"><strong>How games go:</strong> ${b.games}</div>
+                    <div class="bk-rule-cols">
+                        <div><div class="bk-rule-head bk-yes">✅ Allowed</div><ul>${b.allowed.map(r => `<li>${r}</li>`).join('')}</ul></div>
+                        <div><div class="bk-rule-head bk-no">🚫 Not allowed</div><ul>${b.notAllowed.map(r => `<li>${r}</li>`).join('')}</ul></div>
+                    </div>
+                    <div class="bracket-example"><strong>Example:</strong> ${b.example}</div>
+                    <div class="bk-say"><strong>At the table:</strong> ${b.say}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('bracketsTimeline').innerHTML = BRACKET_HISTORY.map(h => `
+                <div class="bk-timeline-item">
+                    <a class="bk-timeline-date" href="${h.url}" target="_blank" rel="noopener">${h.date} →</a>
+                    <ul>${h.changes.map(c => `<li>${c}</li>`).join('')}</ul>
+                </div>
+            `).join('');
+
+            document.getElementById('bkCardInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter') checkBracketCard();
+            });
+
+            loadGameChangers();
         }
 
         // One-line "why this made the list" for each card currently on
@@ -7369,31 +7888,268 @@
             'Worldly Tutor': 'Tutor any creature to the top of your library for a single green mana - extremely efficient.'
         };
 
+        // Everything the card and deck checkers need, loaded once and
+        // shared: the live Game Changers and Commander banned lists, plus
+        // Scryfall's community tags for mass land denial and extra turns.
+        // The tags are a little broader than Wizards' wording (a planeswalker
+        // whose ultimate wipes lands can be tagged), so the checkers treat
+        // them as "look at this card", not a final verdict.
+        let bracketRefPromise = null;
+
+        async function fetchAllScryfallCards(query) {
+            const cards = [];
+            let url = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=name&unique=cards`;
+            while (url) {
+                const page = await fetchScryfallSearchPage(url);
+                cards.push(...(page.data || []));
+                url = page.has_more ? page.next_page : null;
+            }
+            return cards;
+        }
+
+        // Decklists usually name only the front face of a two-faced card.
+        function bracketNameKey(name) {
+            return name.toLowerCase().split(' // ')[0].trim();
+        }
+
+        function loadBracketReference() {
+            if (!bracketRefPromise) {
+                bracketRefPromise = (async () => {
+                    const [gameChangers, banned, mld, extraTurn] = await Promise.all([
+                        fetchAllScryfallCards('is:gamechanger'),
+                        fetchAllScryfallCards('banned:commander -set_type:funny'),
+                        fetchAllScryfallCards('otag:mass-land-denial'),
+                        fetchAllScryfallCards('otag:extra-turn')
+                    ]);
+                    const byName = cards => new Map(cards.map(c => [bracketNameKey(c.name), c]));
+                    return { gameChangers, gameChangerMap: byName(gameChangers), banned: byName(banned), mld: byName(mld), extraTurn: byName(extraTurn) };
+                })();
+                bracketRefPromise.catch(() => { bracketRefPromise = null; }); // let the next check retry
+            }
+            return bracketRefPromise;
+        }
+
+        function bracketCardLinkHTML(name) {
+            return `<span class="vv-card-link bk-card-link" onclick="openCardModalByName('${name.replace(/'/g, "\\'")}')">${name}</span>`;
+        }
+
+        function gameChangerItemHTML(c) {
+            cardTileDataById[c.id] = c;
+            const reason = GAME_CHANGER_REASONS[c.name];
+            return `
+                <div class="game-changer-item" onclick="openCardModal(cardTileDataById['${c.id}'])">
+                    <div class="game-changer-item-head">
+                        <span>${c.name}</span>
+                        ${c.mana_cost ? `<span>${renderManaCost(c.mana_cost)}</span>` : ''}
+                    </div>
+                    ${reason ? `<div class="game-changer-reason">${reason}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function showBracketsStaleWarning(added, removed) {
+            const el = document.getElementById('bracketsStale');
+            const parts = [];
+            if (added.length) parts.push(`added: ${added.join(', ')}`);
+            if (removed.length) parts.push(`removed: ${removed.join(', ')}`);
+            el.innerHTML = `⚠️ Scryfall's Game Changers list has changed since this page was written (${parts.join('; ')}). Wizards has probably posted a new bracket update, so the rules here may be out of date - check <a href="https://magic.wizards.com/en/news/announcements" target="_blank" rel="noopener" class="text-link">Wizards' announcements</a>.`;
+            el.hidden = false;
+        }
+
         async function loadGameChangers() {
             const listEl = document.getElementById('gameChangersList');
             listEl.innerHTML = `<div class="loading">Loading Game Changers list...</div>`;
             try {
                 await loadSymbology();
-                const res = await fetch(`${API_BASE}/cards/search?q=is%3Agamechanger&order=name&unique=cards`);
-                if (!res.ok) throw new Error(`Server error: ${res.status}`);
-                const data = await res.json();
-                const cards = data.data || [];
-                listEl.innerHTML = cards.map(c => {
-                    cardTileDataById[c.id] = c;
-                    const reason = GAME_CHANGER_REASONS[c.name];
-                    return `
-                        <div class="game-changer-item" onclick="openCardModal(cardTileDataById['${c.id}'])">
-                            <div class="game-changer-item-head">
-                                <span>${c.name}</span>
-                                ${c.mana_cost ? `<span>${renderManaCost(c.mana_cost)}</span>` : ''}
-                            </div>
-                            ${reason ? `<div class="game-changer-reason">${reason}</div>` : ''}
+                const { gameChangers } = await loadBracketReference();
+                const live = new Map(gameChangers.map(c => [c.name, c]));
+                const known = new Set(GAME_CHANGER_GROUPS.flatMap(g => g.cards));
+                const added = gameChangers.map(c => c.name).filter(n => !known.has(n));
+                const removed = [...known].filter(n => !live.has(n));
+
+                const groups = GAME_CHANGER_GROUPS.map(g => ({ ...g, cards: g.cards.filter(n => live.has(n)).map(n => live.get(n)) }));
+                if (added.length) {
+                    groups.push({ label: '🆕 New on the list', blurb: 'Added since this page was last updated - no write-up yet.', cards: added.map(n => live.get(n)) });
+                }
+                listEl.innerHTML = `<div class="bk-gc-count">${gameChangers.length} Game Changers right now</div>` +
+                    groups.filter(g => g.cards.length).map(g => `
+                        <div class="bk-gc-group">
+                            <div class="bk-gc-group-head">${g.label} <span class="text-secondary">(${g.cards.length})</span></div>
+                            <div class="bk-gc-group-blurb">${g.blurb}</div>
+                            <div class="bk-gc-items">${g.cards.map(gameChangerItemHTML).join('')}</div>
                         </div>
-                    `;
-                }).join('');
+                    `).join('');
+                if (added.length || removed.length) showBracketsStaleWarning(added, removed);
             } catch (err) {
                 console.error('Error loading Game Changers list:', err);
                 listEl.innerHTML = `<div class="error" style="padding:12px;">❌ Couldn't load the Game Changers list right now.</div>`;
+            }
+        }
+
+        // Lowest bracket a deck (or one card) can be, from the hard lines
+        // alone, with a plain-English reason for each step up.
+        function lowestBracketFor({ gameChangers, mld, extraTurns }) {
+            let bracket = 1;
+            const reasons = [];
+            if (extraTurns > 0) {
+                bracket = Math.max(bracket, 2);
+                reasons.push(`Extra-turn card${extraTurns === 1 ? '' : 's'} → Bracket 2+ (Bracket 1 allows none; 4+ if they're meant to chain)`);
+            }
+            if (gameChangers > 3) {
+                bracket = 4;
+                reasons.push(`${gameChangers} Game Changers → Bracket 4+ (Bracket 3 allows up to 3)`);
+            } else if (gameChangers > 0) {
+                bracket = Math.max(bracket, 3);
+                reasons.push(`${gameChangers} Game Changer${gameChangers === 1 ? '' : 's'} → Bracket 3+`);
+            }
+            if (mld > 0) {
+                bracket = 4;
+                reasons.push('Mass land denial → Bracket 4+');
+            }
+            return { bracket, reasons };
+        }
+
+        function bracketVerdictHTML(bracket) {
+            const info = BRACKET_INFO[bracket - 1];
+            return `<span class="bk-verdict bk-b${bracket}">Bracket ${bracket}+ · ${info.name}</span>`;
+        }
+
+        const BRACKET_TAG_NOTE = 'Mass land denial and extra-turn flags come from Scryfall\'s community tags, which run a little broad - give the card a quick read.';
+
+        async function checkBracketCard() {
+            const input = document.getElementById('bkCardInput');
+            const resultEl = document.getElementById('bkCardResult');
+            const name = input.value.trim();
+            if (!name) return;
+            resultEl.innerHTML = `<div class="loading">Checking...</div>`;
+            try {
+                const [res, ref] = await Promise.all([
+                    fetch(`${API_BASE}/cards/named?fuzzy=${encodeURIComponent(name)}`),
+                    loadBracketReference()
+                ]);
+                if (!res.ok) throw new Error(res.status === 404 ? 'Card not found - check the spelling' : `Server error: ${res.status}`);
+                const card = await res.json();
+                cardTileDataById[card.id] = card;
+                const key = bracketNameKey(card.name);
+                const legality = (card.legalities || {}).commander;
+                const flags = {
+                    gameChanger: card.game_changer === true || ref.gameChangerMap.has(key),
+                    mld: ref.mld.has(key),
+                    extraTurn: ref.extraTurn.has(key),
+                    banned: legality === 'banned'
+                };
+                const rows = [
+                    ['Game Changer', flags.gameChanger, 'Counts toward Bracket 3\'s limit of 3'],
+                    ['Mass land denial', flags.mld, 'Only allowed in Bracket 4+'],
+                    ['Extra turns', flags.extraTurn, 'None in Bracket 1; a few (not chained) in 2-3'],
+                    ['Banned in Commander', flags.banned, 'Not allowed in any bracket']
+                ];
+                let verdict;
+                if (legality !== 'legal') {
+                    verdict = `<span class="bk-verdict bk-banned">${flags.banned ? 'Banned in Commander' : 'Not legal in Commander'}</span>`;
+                } else {
+                    const { bracket } = lowestBracketFor({ gameChangers: flags.gameChanger ? 1 : 0, mld: flags.mld ? 1 : 0, extraTurns: flags.extraTurn ? 1 : 0 });
+                    verdict = `Fits in ${bracketVerdictHTML(bracket)}`;
+                }
+                const img = getCardImageSmall(card);
+                resultEl.innerHTML = `
+                    <div class="bk-card-result">
+                        ${img ? `<img src="${img}" alt="${card.name.replace(/"/g, '&quot;')}" onclick="openCardModal(cardTileDataById['${card.id}'])">` : ''}
+                        <div class="bk-card-result-body">
+                            <div class="bk-card-result-name" onclick="openCardModal(cardTileDataById['${card.id}'])">${card.name}</div>
+                            <div class="bk-card-verdict">${verdict}</div>
+                            <table class="bk-flags">${rows.map(([label, on, note]) => `
+                                <tr class="${on ? 'bk-flag-on' : ''}"><td>${label}</td><td>${on ? 'Yes' : 'No'}</td><td class="text-secondary">${on ? note : ''}</td></tr>
+                            `).join('')}</table>
+                            ${flags.gameChanger && GAME_CHANGER_REASONS[card.name] ? `<div class="bk-note">${GAME_CHANGER_REASONS[card.name]}</div>` : ''}
+                            ${flags.mld || flags.extraTurn ? `<div class="bk-note">${BRACKET_TAG_NOTE}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Bracket card check error:', err);
+                resultEl.innerHTML = `<div class="error" style="padding:12px;">❌ ${err.message}</div>`;
+            }
+        }
+
+        // "1 Sol Ring", "1x Sol Ring (CMM) 410 *F*", "Sol Ring [Ramp]" -> Sol Ring.
+        // Returns name -> copies. Section headers ("Commander", "Sideboard:") are skipped.
+        function parseDecklistNames(text) {
+            const counts = new Map();
+            text.split('\n').forEach(raw => {
+                let line = raw.trim();
+                if (!line || /^(\/\/|#)/.test(line)) return;
+                if (/^(commanders?|deck|main(board)?|sideboard|maybeboard|companion|considering)\s*:?\s*(\(\d+\))?$/i.test(line)) return;
+                let copies = 1;
+                const qty = line.match(/^(\d+)\s*x?\s+/i);
+                if (qty) {
+                    copies = Number(qty[1]);
+                    line = line.slice(qty[0].length);
+                }
+                line = line
+                    .replace(/\s*\[[^\]]*\]/g, '')          // Archidekt categories
+                    .replace(/\s*\*[A-Z]+\*/g, '')          // *F* foil markers
+                    .replace(/\s+\^[^^]*\^/g, '')           // ^tags^
+                    .replace(/\s+#\S+/g, '')                // #tags
+                    .replace(/\s*\([A-Za-z0-9]{2,6}\)\s*\S*\s*$/, ''); // (SET) 123
+                line = stripPrintingModifiers(line).trim();
+                if (line) counts.set(line, (counts.get(line) || 0) + copies);
+            });
+            return counts;
+        }
+
+        async function checkBracketDeck() {
+            const resultEl = document.getElementById('bkDeckResult');
+            const counts = parseDecklistNames(document.getElementById('bkDeckInput').value);
+            if (counts.size === 0) {
+                resultEl.innerHTML = `<div class="moonshot-status">Paste a decklist first.</div>`;
+                return;
+            }
+            resultEl.innerHTML = `<div class="loading">Checking ${counts.size} cards...</div>`;
+            try {
+                const ref = await loadBracketReference();
+                const found = { gameChangers: [], mld: [], extraTurns: [], banned: [] };
+                counts.forEach((copies, name) => {
+                    const key = bracketNameKey(name);
+                    if (ref.gameChangerMap.has(key)) found.gameChangers.push(ref.gameChangerMap.get(key).name);
+                    if (ref.mld.has(key)) found.mld.push(ref.mld.get(key).name);
+                    if (ref.extraTurn.has(key)) found.extraTurns.push(ref.extraTurn.get(key).name);
+                    if (ref.banned.has(key)) found.banned.push(ref.banned.get(key).name);
+                });
+                const totalCards = [...counts.values()].reduce((sum, n) => sum + n, 0);
+                const { bracket, reasons } = lowestBracketFor({
+                    gameChangers: found.gameChangers.length, mld: found.mld.length, extraTurns: found.extraTurns.length
+                });
+                const group = (label, names, note) => `
+                    <div class="bk-deck-group${names.length ? ' bk-flag-on' : ''}">
+                        <div class="bk-deck-group-head">${label}: <strong>${names.length}</strong></div>
+                        ${names.length ? `<div class="bk-deck-names">${names.map(bracketCardLinkHTML).join(', ')}</div>` : ''}
+                        ${names.length && note ? `<div class="bk-note">${note}</div>` : ''}
+                    </div>
+                `;
+                resultEl.innerHTML = `
+                    <div class="bk-deck-result">
+                        <div class="bk-note">Read ${totalCards} card${totalCards === 1 ? '' : 's'} (${counts.size} different).</div>
+                        ${found.banned.length ? `<div class="error" style="margin:8px 0;">🚫 Not Commander-legal - banned: ${found.banned.map(bracketCardLinkHTML).join(', ')}</div>` : ''}
+                        <div class="bk-card-verdict">Lowest bracket these cards allow: ${bracketVerdictHTML(bracket)}</div>
+                        <ul class="bk-reasons">${reasons.length
+                            ? reasons.map(r => `<li>${r}</li>`).join('')
+                            : '<li>No Game Changers, mass land denial or extra turns - Bracket 1 if it\'s built around a theme, Bracket 2 otherwise.</li>'}</ul>
+                        ${group('Game Changers', found.gameChangers, found.gameChangers.length > 3 ? 'Bracket 3 allows up to 3.' : '')}
+                        ${group('Mass land denial', found.mld, BRACKET_TAG_NOTE)}
+                        ${group('Extra-turn cards', found.extraTurns, 'Fine in small numbers from Bracket 2 up, as long as they aren\'t chained or looped.')}
+                        <div class="bk-still-check">
+                            <strong>Still check with the player:</strong>
+                            <ul>
+                                <li>Two-card infinite combos - these can't be checked here. Ask, or look the list up on <a href="https://commanderspellbook.com/" target="_blank" rel="noopener" class="text-link">Commander Spellbook</a>. An early combo means Bracket 4+; a late one (turn 6+) is fine in 3.</li>
+                                <li>How fast it wins - if it usually wins before its bracket's expected turn, it belongs a bracket higher.</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Bracket deck check error:', err);
+                resultEl.innerHTML = `<div class="error" style="padding:12px;">❌ Couldn't reach Scryfall to check the deck - try again in a moment.</div>`;
             }
         }
 
