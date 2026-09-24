@@ -4138,6 +4138,130 @@
         .bk-b4, .bk-col-4 { --bk-color: #ffa657; }
         .bk-b5, .bk-col-5 { --bk-color: #ff7b72; }
 
+        /* ---- EDHREC commander data (Card Lookup, card popup, Products, Brackets) ---- */
+        .edh-block {
+            background: var(--bg-inset);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--brand);
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .edh-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .edh-title {
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.85em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .edh-stat strong {
+            color: var(--text-heading);
+            font-size: 1.15em;
+        }
+
+        .edh-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .edh-pill-link {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .edh-pill-pct {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            margin-left: 4px;
+        }
+
+        .edh-subhead {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            font-weight: 600;
+            margin: 14px 0 6px;
+        }
+
+        .edh-list-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .edh-tiles {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .edh-tiles {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+        }
+
+        .edh-brackets { margin: 8px 0; }
+
+        .edh-bracket-bar {
+            display: flex;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--bg-panel-raised);
+            margin: 8px 0 6px;
+        }
+
+        .edh-bracket-bar span { background: var(--bk-color); }
+
+        .edh-bracket-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+            font-size: 0.82em;
+            color: var(--text-secondary);
+        }
+
+        .edh-bracket-legend i {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            background: var(--bk-color);
+            margin-right: 4px;
+        }
+
+        .edh-budget-group { margin-bottom: 10px; }
+
+        .edh-budget-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 2px 0;
+            font-size: 0.9em;
+        }
+
+        .edh-budget-row .price { color: var(--text-secondary); white-space: nowrap; }
+
+        .edh-source {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
         .bracket-header {
             display: flex;
             align-items: baseline;
@@ -8348,6 +8472,7 @@
                         <div class="printings-list" id="cardModalPrintingsList"></div>
                     </details>
 
+                    ${canBeCommander(card) ? `<button type="button" class="format-banlist-btn" onclick="openCommanderGuide('${safeName}')">🧭 Build around this commander →</button>` : ''}
                     <button type="button" class="format-banlist-btn" onclick="jumpToCardFromPrimer('${safeName}')">Full Lookup (pricing, printings, rulings) →</button>
                 </div>
             `;
@@ -9809,8 +9934,434 @@
                         ${section('Tokens included', d.tokens)}
                     </div>
                     ${d.missing ? `<div class="bk-note">${d.missing} card${d.missing === 1 ? '' : 's'} couldn't be matched to a name.</div>` : ''}
+                    ${productUpgradeHTML()}
                 </div>
             `;
+        }
+
+        // ============== EDHREC (how the Commander crowd plays a card) ==============
+        // Play data from EDHREC.com: the JSON its own pages load
+        // (json.edhrec.com), which browsers can read directly. EDHREC has no
+        // official API, so every EDHREC panel is optional: if a page is
+        // missing or the feed changes, the panel shows nothing (or
+        // "unavailable") and the rest of the app carries on. Only current
+        // play data is used. EDHREC's trend ("rising cards") data and its
+        // prices are left out on purpose; prices come from Scryfall like
+        // everywhere else in the app.
+        const EDHREC_JSON_BASE = 'https://json.edhrec.com/pages';
+        const EDHREC_SITE = 'https://edhrec.com';
+        const edhrecPageCache = new Map(); // page path -> Promise of its JSON, or null if missing
+
+        // "Atraxa, Praetors' Voice" -> atraxa-praetors-voice. Two-faced cards
+        // go by their front face, and accents are dropped (Lim-Dûl -> lim-dul).
+        function edhrecSlug(name) {
+            return name.split(' // ')[0].normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+                .replace(/['’"]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        }
+
+        // Missing pages come back as an error without CORS headers, so a
+        // missing page and a network failure look the same - both are null.
+        function fetchEdhrecPage(path) {
+            if (!edhrecPageCache.has(path)) {
+                edhrecPageCache.set(path, fetch(`${EDHREC_JSON_BASE}/${path}.json`)
+                    .then(res => (res.ok ? res.json() : null))
+                    .catch(() => null));
+            }
+            return edhrecPageCache.get(path);
+        }
+
+        function edhrecCardlists(data) {
+            return (data && data.container && data.container.json_dict && data.container.json_dict.cardlists) || [];
+        }
+
+        function edhrecPageCard(data) {
+            return (data && data.container && data.container.json_dict && data.container.json_dict.card) || null;
+        }
+
+        // Share of the decks that could play a card (right colors) that do.
+        function edhrecInclusion(cv) {
+            return cv && cv.potential_decks ? cv.num_decks / cv.potential_decks : 0;
+        }
+
+        function edhrecPct(fraction) {
+            const pct = fraction * 100;
+            return pct > 0 && pct < 1 ? '<1%' : `${Math.round(pct)}%`;
+        }
+
+        function edhrecSourceHTML(path) {
+            return `<div class="edh-source">From <a class="text-link" href="${EDHREC_SITE}/${path}" target="_blank" rel="noopener">EDHREC.com</a>, based on decklists players post online.</div>`;
+        }
+
+        function canBeCommander(card) {
+            const faces = card.card_faces && card.card_faces.length ? card.card_faces : [card];
+            const front = faces[0].type_line || card.type_line || '';
+            if (/Legendary/.test(front) && /Creature/.test(front)) return true;
+            return [card, ...faces].some(f => /can be your commander/i.test(f.oracle_text || ''));
+        }
+
+        // A partner pair has its own page (both slugs, alphabetical); fall
+        // back to the first commander alone if the pair has none.
+        async function loadEdhrecCommander(names) {
+            const slugs = names.map(edhrecSlug).filter(Boolean);
+            if (!slugs.length) return null;
+            const paths = slugs.length > 1 ? [`commanders/${[...slugs].sort().join('-')}`] : [];
+            paths.push(`commanders/${slugs[0]}`);
+            for (const path of paths) {
+                const data = await fetchEdhrecPage(path);
+                if (data) return { data, path, slug: path.slice('commanders/'.length), name: names.join(' + ') };
+            }
+            return null;
+        }
+
+        function edhrecNameKey(name) {
+            return bracketNameKey(name).normalize('NFD').replace(/[̀-ͯ]/g, '');
+        }
+
+        // Each card's cheapest paper printing, the same "cheapest copy"
+        // idea as the Land Finder, in a few combined Scryfall searches
+        // (prefer:usd-low picks the cheapest printing of each card).
+        // Returns name key -> Scryfall card, or null if it wasn't found.
+        const CHEAPEST_PRINTING_FILTER = ' prefer:usd-low game:paper -border:gold -is:oversized -st:memorabilia';
+        const cheapestPrintingCache = new Map();
+
+        async function cheapestPrintings(names) {
+            const wanted = [...new Set(names.map(n => n.split(' // ')[0].replace(/"/g, '').trim()))]
+                .filter(n => n && !cheapestPrintingCache.has(edhrecNameKey(n)));
+            const chunks = [];
+            let chunk = [];
+            wanted.forEach(n => {
+                if (chunk.length && landsNameQuery([...chunk, n]).length > LANDS_NAME_QUERY_MAX_CHARS) {
+                    chunks.push(chunk);
+                    chunk = [];
+                }
+                chunk.push(n);
+            });
+            if (chunk.length) chunks.push(chunk);
+
+            const tasks = chunks.map(list => async () => {
+                try {
+                    let url = `${API_BASE}/cards/search?q=${encodeURIComponent(landsNameQuery(list) + CHEAPEST_PRINTING_FILTER)}&unique=cards`;
+                    while (url) {
+                        const page = await fetchScryfallSearchPage(url);
+                        (page.data || []).forEach(c => cheapestPrintingCache.set(edhrecNameKey(c.name), c));
+                        url = page.has_more ? page.next_page : null;
+                    }
+                    list.forEach(n => {
+                        if (!cheapestPrintingCache.has(edhrecNameKey(n))) cheapestPrintingCache.set(edhrecNameKey(n), null);
+                    });
+                } catch (err) {
+                    console.error('Pricing error:', err); // left uncached so the next look retries
+                }
+            });
+            await runWithConcurrency(tasks, 2, 100, () => false);
+            return new Map(names.map(n => [edhrecNameKey(n), cheapestPrintingCache.get(edhrecNameKey(n)) || null]));
+        }
+
+        // entries: [{ name, label }] -> priced card tiles (cards Scryfall
+        // doesn't know are skipped).
+        async function edhrecTilesHTML(entries) {
+            const priced = await cheapestPrintings(entries.map(e => e.name));
+            return entries.map(e => {
+                const card = priced.get(edhrecNameKey(e.name));
+                return card ? buildCardTileHTML(card, e.label) : '';
+            }).join('');
+        }
+
+        // How a commander's decks on EDHREC split across the brackets.
+        function edhrecBracketSplitHTML(counts, name) {
+            const rows = [1, 2, 3, 4, 5].map(b => ({ b, n: Number((counts || {})[b]) || 0 }));
+            const total = rows.reduce((sum, r) => sum + r.n, 0);
+            if (!total) return '';
+            const top = rows.reduce((best, r) => (r.n > best.n ? r : best));
+            return `
+                <div class="edh-brackets">
+                    <div>Most <strong>${name}</strong> decks are built at ${bracketVerdictHTML(top.b).replace('+', '')} <span class="text-secondary">(${edhrecPct(top.n / total)})</span></div>
+                    <div class="edh-bracket-bar">${rows.filter(r => r.n).map(r => `<span class="bk-col-${r.b}" style="width:${(r.n / total) * 100}%" title="Bracket ${r.b}: ${edhrecPct(r.n / total)}"></span>`).join('')}</div>
+                    <div class="edh-bracket-legend">${rows.map(r => `<span class="bk-col-${r.b}"><i></i>Bracket ${r.b}: ${edhrecPct(r.n / total)}</span>`).join('')}</div>
+                    <div class="bk-note">Out of ${total.toLocaleString()} EDHREC decks that list a bracket.</div>
+                </div>
+            `;
+        }
+
+        function edhrecLookupPillHTML(name, extra) {
+            return `<span class="related-card-pill" onclick="performLookup('${name.replace(/'/g, "\\'")}')">${name}${extra ? `<span class="edh-pill-pct">${extra}</span>` : ''}</span>`;
+        }
+
+        // ---- Card Lookup: "Commander play" + commander guide ----
+        let edhrecGuide = null; // { key, commander, list } for the card on screen
+        let edhrecOpenGuideNext = false; // set by the popup's "Build around this" button
+
+        // From the card popup: open the full lookup with the guide expanded.
+        function openCommanderGuide(name) {
+            edhrecOpenGuideNext = true;
+            jumpToCardFromPrimer(name);
+        }
+
+        async function renderEdhrecPanel(card) {
+            const container = document.getElementById('edhrecContainer');
+            if (!container) return;
+            const openGuide = edhrecOpenGuideNext;
+            edhrecOpenGuideNext = false;
+            edhrecGuide = null;
+            if (/token|emblem|art_series|planar|scheme|vanguard/.test(card.layout || '')) return;
+
+            const key = card.oracle_id || card.name;
+            const cardPath = `cards/${edhrecSlug(card.name)}`;
+            const [cardPage, commander] = await Promise.all([
+                fetchEdhrecPage(cardPath),
+                canBeCommander(card) ? loadEdhrecCommander([card.name]) : null
+            ]);
+            const shown = currentDisplayedCard;
+            const box = document.getElementById('edhrecContainer');
+            if (!box || !shown || (shown.oracle_id || shown.name) !== key) return; // a newer lookup took over
+
+            const info = edhrecPageCard(cardPage);
+            if (!info && !commander) return;
+
+            let playHTML = '';
+            if (info && info.potential_decks) {
+                const topCommanders = ((edhrecCardlists(cardPage).find(l => l.tag === 'topcommanders') || {}).cardviews || []).slice(0, 6);
+                playHTML = `
+                    ${commander ? '<div class="edh-subhead" style="margin-top:0;">As one of the 99 in other decks</div>' : ''}
+                    <div class="edh-stat">In <strong>${edhrecPct(info.num_decks / info.potential_decks)}</strong> of the decks that could play it <span class="text-secondary">(${info.num_decks.toLocaleString()} of ${info.potential_decks.toLocaleString()} decks)</span></div>
+                    ${topCommanders.length ? `
+                        <div class="edh-subhead">Played most with</div>
+                        <div class="edh-pills">${topCommanders.map(cv => edhrecLookupPillHTML(cv.name, `${edhrecPct(edhrecInclusion(cv))} of its decks`)).join('')}</div>
+                    ` : ''}
+                `;
+            }
+
+            let guideHTML = '';
+            if (commander) {
+                edhrecGuide = { key, commander, list: 'highsynergycards' };
+                const decks = (edhrecPageCard(commander.data) || {}).num_decks;
+                guideHTML = `
+                    <details class="all-printings" id="edhrecGuideDetails" ontoggle="if (this.open) loadEdhrecGuideList()">
+                        <summary>🧭 Build around this commander${decks ? ` <span class="text-secondary">· ${decks.toLocaleString()} decks</span>` : ''}</summary>
+                        <div id="edhrecGuideBody">${edhrecGuideBodyHTML()}</div>
+                    </details>
+                `;
+            }
+
+            box.innerHTML = `
+                <div class="edh-block">
+                    <div class="edh-head">
+                        <span class="edh-title">🧭 Commander play</span>
+                        <a class="text-link" href="${EDHREC_SITE}/${commander ? commander.path : cardPath}" target="_blank" rel="noopener">See on EDHREC →</a>
+                    </div>
+                    ${playHTML}
+                    ${guideHTML}
+                    ${edhrecSourceHTML(info ? cardPath : commander.path)}
+                </div>
+            `;
+
+            if (openGuide && commander) {
+                const details = document.getElementById('edhrecGuideDetails');
+                details.open = true; // fires ontoggle, which loads the cards
+                details.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function edhrecGuideBodyHTML() {
+            const { commander, list } = edhrecGuide;
+            const data = commander.data;
+            const themes = ((data.panels && data.panels.taglinks) || []).slice(0, 10);
+            const lists = edhrecCardlists(data).filter(l => (l.cardviews || []).length);
+            const similar = (data.similar || []).map(s => (typeof s === 'string' ? s : s && s.name)).filter(Boolean).slice(0, 6);
+            return `
+                ${edhrecBracketSplitHTML(data.bracket_counts, commander.name)}
+                ${themes.length ? `
+                    <div class="edh-subhead">Popular themes <span class="text-secondary">(decks)</span></div>
+                    <div class="edh-pills">${themes.map(t => `<a class="related-card-pill edh-pill-link" href="${EDHREC_SITE}/${commander.path}/${encodeURIComponent(t.slug)}" target="_blank" rel="noopener">${t.value}<span class="edh-pill-pct">${Number(t.count).toLocaleString()}</span></a>`).join('')}</div>
+                ` : ''}
+                <div class="edh-subhead">Cards players run with it</div>
+                <div class="edh-list-btns">${lists.map(l => `<button type="button" class="staples-sort-btn${l.tag === list ? ' active' : ''}" onclick="setEdhrecGuideList('${l.tag}')">${l.header}</button>`).join('')}</div>
+                <div class="card-tile-grid edh-tiles" id="edhrecGuideTiles"></div>
+                <div class="edh-subhead">Budget build</div>
+                <div id="edhrecBudget"><button type="button" class="staples-sort-btn" onclick="loadEdhrecBudget()">💰 Show EDHREC's budget deck, priced</button></div>
+                ${similar.length ? `
+                    <div class="edh-subhead">Similar commanders</div>
+                    <div class="edh-pills">${similar.map(n => edhrecLookupPillHTML(n)).join('')}</div>
+                ` : ''}
+            `;
+        }
+
+        function setEdhrecGuideList(tag) {
+            if (!edhrecGuide) return;
+            edhrecGuide.list = tag;
+            document.querySelectorAll('#edhrecGuideBody .edh-list-btns .staples-sort-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('onclick') === `setEdhrecGuideList('${tag}')`);
+            });
+            loadEdhrecGuideList();
+        }
+
+        async function loadEdhrecGuideList() {
+            const guide = edhrecGuide;
+            const el = document.getElementById('edhrecGuideTiles');
+            if (!guide || !el) return;
+            const tag = guide.list;
+            const list = edhrecCardlists(guide.commander.data).find(l => l.tag === tag)
+                || edhrecCardlists(guide.commander.data)[0];
+            if (!list) return;
+            el.innerHTML = '<div class="loading">Pricing cards...</div>';
+            const html = await edhrecTilesHTML(list.cardviews.map(cv => ({ name: cv.name, label: `${edhrecPct(edhrecInclusion(cv))} of decks` })));
+            if (edhrecGuide !== guide || guide.list !== tag) return; // switched away meanwhile
+            el.innerHTML = html || '<div class="text-secondary">Couldn\'t price these cards right now.</div>';
+        }
+
+        // EDHREC's "average deck" for the commander, budget version, with
+        // every card at its cheapest printing.
+        async function loadEdhrecBudget() {
+            const guide = edhrecGuide;
+            const el = document.getElementById('edhrecBudget');
+            if (!guide || !el) return;
+            el.innerHTML = '<div class="loading">Loading the budget deck...</div>';
+            const path = `average-decks/${guide.commander.slug}/budget`;
+            const data = await fetchEdhrecPage(path);
+            const groups = data && data.deck && data.deck.cards;
+            if (!groups) {
+                if (edhrecGuide === guide) el.innerHTML = '<div class="text-secondary">EDHREC doesn\'t have a budget deck for this commander.</div>';
+                return;
+            }
+            const entries = Object.values(groups).flat();
+            const priced = await cheapestPrintings(entries.map(([name]) => name));
+            if (edhrecGuide !== guide) return;
+
+            let total = 0;
+            let unpriced = 0;
+            const rowHTML = ([name, count]) => {
+                const card = priced.get(edhrecNameKey(name));
+                const p = card && printingPrice(card);
+                if (p) total += p.price * count;
+                else unpriced += count;
+                return `
+                    <div class="edh-budget-row">
+                        <span>${count > 1 ? `${count} ` : ''}<span class="set-link" data-name="${escapeAttr(name)}" onclick="openCardModalByName(this.dataset.name)">${name}</span></span>
+                        <span class="price">${p ? `$${(p.price * count).toFixed(2)}${p.foilOnly ? ' (foil)' : ''}` : '—'}</span>
+                    </div>
+                `;
+            };
+            const order = [...DECK_TYPE_ORDER, ...Object.keys(groups).filter(t => !DECK_TYPE_ORDER.includes(t))];
+            const columns = order.filter(t => groups[t] && groups[t].length).map(t => `
+                <div class="deck-section edh-budget-group">
+                    <div class="deck-section-head">${DECK_TYPE_LABELS[t] || t} <span class="text-secondary">(${groups[t].reduce((n, e) => n + e[1], 0)})</span></div>
+                    ${groups[t].map(rowHTML).join('')}
+                </div>
+            `).join('');
+            const cardCount = entries.reduce((n, e) => n + e[1], 0);
+            el.innerHTML = `
+                <div class="edh-stat">${cardCount} cards plus the commander, about <strong>$${total.toFixed(2)}</strong> buying the cheapest copy of each${unpriced ? ` <span class="text-secondary">(${unpriced} without a price)</span>` : ''}</div>
+                <div class="bk-note">Today's market prices from Scryfall. Moonshot's own prices may differ.</div>
+                <div class="deck-columns" style="margin-top:10px;">${columns}</div>
+                ${edhrecSourceHTML(path)}
+            `;
+        }
+
+        // ---- Products: upgrade ideas for a precon ----
+        // Cards EDHREC players most often run with the deck's commander that
+        // aren't in the precon already.
+        function productUpgradeHTML() {
+            const d = productDeckCurrent;
+            if (!d || !d.commanders.length) return '';
+            const u = d.upgrade;
+            let body;
+            if (!u) body = `<button type="button" class="staples-sort-btn" onclick="loadProductUpgrades()">⬆️ Show upgrade ideas from EDHREC</button>`;
+            else if (u.state === 'loading') body = '<div class="loading">Finding upgrades...</div>';
+            else if (u.state === 'none') body = '<div class="text-secondary">EDHREC doesn\'t have data for this commander yet.</div>';
+            else body = `
+                <div class="bk-note">Cards players most often run with ${u.name} that aren't in this deck. Percentages are the share of ${u.name} decks on EDHREC that run the card; prices are the cheapest copy.</div>
+                ${u.popular ? `<div class="edh-subhead">Most played</div><div class="card-tile-grid edh-tiles">${u.popular}</div>` : ''}
+                ${u.synergy ? `<div class="edh-subhead">Best synergy with the commander</div><div class="card-tile-grid edh-tiles">${u.synergy}</div>` : ''}
+                ${edhrecSourceHTML(u.path)}
+            `;
+            return `
+                <div class="edh-block" id="prodUpgradePanel">
+                    <div class="edh-head"><span class="edh-title">⬆️ Upgrade this deck</span></div>
+                    ${body}
+                </div>
+            `;
+        }
+
+        function refreshProductUpgrades() {
+            const el = document.getElementById('prodUpgradePanel');
+            if (el) el.outerHTML = productUpgradeHTML();
+        }
+
+        const PRODUCT_UPGRADE_POPULAR = 12;
+        const PRODUCT_UPGRADE_SYNERGY = 8;
+
+        async function loadProductUpgrades() {
+            const d = productDeckCurrent;
+            if (!d || !d.commanders.length) return;
+            d.upgrade = { state: 'loading' };
+            refreshProductUpgrades();
+            const commander = await loadEdhrecCommander(d.commanders.map(e => e.card.name));
+            if (productDeckCurrent !== d) return;
+            if (!commander) {
+                d.upgrade = { state: 'none' };
+                refreshProductUpgrades();
+                return;
+            }
+            const inDeck = new Set([...d.commanders, ...Object.values(d.groups).flat()].map(e => edhrecNameKey(e.card.name)));
+            const seen = new Set();
+            const candidates = [];
+            edhrecCardlists(commander.data).forEach(l => (l.cardviews || []).forEach(cv => {
+                const k = edhrecNameKey(cv.name);
+                if (inDeck.has(k) || seen.has(k) || BASIC_LAND_NAMES.has(cv.name)) return;
+                seen.add(k);
+                candidates.push(cv);
+            }));
+            const popular = [...candidates].sort((a, b) => edhrecInclusion(b) - edhrecInclusion(a)).slice(0, PRODUCT_UPGRADE_POPULAR);
+            const shown = new Set(popular.map(cv => cv.name));
+            const synergy = candidates.filter(cv => !shown.has(cv.name) && typeof cv.synergy === 'number')
+                .sort((a, b) => b.synergy - a.synergy).slice(0, PRODUCT_UPGRADE_SYNERGY);
+            const label = cv => `${edhrecPct(edhrecInclusion(cv))} of decks`;
+            const [popularHTML, synergyHTML] = await Promise.all([
+                edhrecTilesHTML(popular.map(cv => ({ name: cv.name, label: label(cv) }))),
+                edhrecTilesHTML(synergy.map(cv => ({ name: cv.name, label: label(cv) })))
+            ]);
+            if (productDeckCurrent !== d) return;
+            d.upgrade = { state: 'done', name: commander.name, path: commander.path, popular: popularHTML, synergy: synergyHTML };
+            refreshProductUpgrades();
+        }
+
+        const BASIC_LAND_NAMES = new Set(['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes',
+            'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp', 'Snow-Covered Mountain', 'Snow-Covered Forest', 'Snow-Covered Wastes']);
+
+        // ---- Brackets tab: how other players build this commander ----
+        async function fillEdhrecBracketSplit(elId, names) {
+            const el = document.getElementById(elId);
+            if (!el || !names.length) return;
+            el.innerHTML = '<div class="loading">Checking EDHREC...</div>';
+            const commander = await loadEdhrecCommander(names);
+            const target = document.getElementById(elId);
+            if (!target || target !== el) return;
+            const split = commander && edhrecBracketSplitHTML(commander.data.bracket_counts, commander.name);
+            target.innerHTML = split ? `
+                <div class="edh-block">
+                    <div class="edh-head"><span class="edh-title">🧭 How other players build it</span></div>
+                    ${split}
+                    ${edhrecSourceHTML(commander.path)}
+                </div>
+            ` : '';
+        }
+
+        // The commander line(s) of a pasted list: lines under a "Commander"
+        // heading, or tagged [Commander] (Archidekt) / *CMDR*.
+        function findDecklistCommanders(text) {
+            const found = [];
+            let inSection = false;
+            text.split('\n').forEach(raw => {
+                const line = raw.trim();
+                if (!line) { inSection = false; return; }
+                if (/^commanders?\s*:?\s*(\(\d+\))?$/i.test(line)) { inSection = true; return; }
+                if (/^(deck|main(board)?|sideboard|maybeboard|companion|considering)\s*:?\s*(\(\d+\))?$/i.test(line)) { inSection = false; return; }
+                if (inSection || /\[[^\]]*commander[^\]]*\]/i.test(line) || /\*CMDR\*/i.test(line)) {
+                    const name = [...parseDecklistNames(line).keys()][0];
+                    if (name && !found.includes(name)) found.push(name);
+                }
+            });
+            return found.slice(0, 2);
         }
 
         // ============== COMMANDER BRACKETS ==============
@@ -10253,7 +10804,9 @@
                             ${flags.mld || flags.extraTurn ? `<div class="bk-note">${BRACKET_TAG_NOTE}</div>` : ''}
                         </div>
                     </div>
+                    <div id="bkCardEdhrec"></div>
                 `;
+                if (legality === 'legal' && canBeCommander(card)) fillEdhrecBracketSplit('bkCardEdhrec', [card.name]);
             } catch (err) {
                 console.error('Bracket card check error:', err);
                 resultEl.innerHTML = `<div class="error" style="padding:12px;">❌ ${err.message}</div>`;
@@ -10288,7 +10841,8 @@
 
         async function checkBracketDeck() {
             const resultEl = document.getElementById('bkDeckResult');
-            const counts = parseDecklistNames(document.getElementById('bkDeckInput').value);
+            const deckText = document.getElementById('bkDeckInput').value;
+            const counts = parseDecklistNames(deckText);
             if (counts.size === 0) {
                 resultEl.innerHTML = `<div class="moonshot-status">Paste a decklist first.</div>`;
                 return;
@@ -10296,6 +10850,7 @@
             resultEl.innerHTML = `<div class="loading">Checking ${counts.size} cards...</div>`;
             try {
                 const ref = await loadBracketReference();
+                const commanders = findDecklistCommanders(deckText);
                 const found = { gameChangers: [], mld: [], extraTurns: [], banned: [] };
                 counts.forEach((copies, name) => {
                     const key = bracketNameKey(name);
@@ -10326,6 +10881,7 @@
                         ${group('Game Changers', found.gameChangers, found.gameChangers.length > 3 ? 'Bracket 3 allows up to 3.' : '')}
                         ${group('Mass land denial', found.mld, BRACKET_TAG_NOTE)}
                         ${group('Extra-turn cards', found.extraTurns, 'Fine in small numbers from Bracket 2 up, as long as they aren\'t chained or looped.')}
+                        <div id="bkDeckEdhrec">${commanders.length ? '' : '<div class="bk-note">Tip: put the commander under a "Commander" heading to also see which bracket other players build it at.</div>'}</div>
                         <div class="bk-still-check">
                             <strong>Still check with the player:</strong>
                             <ul>
@@ -10335,6 +10891,7 @@
                         </div>
                     </div>
                 `;
+                if (commanders.length) fillEdhrecBracketSplit('bkDeckEdhrec', commanders);
             } catch (err) {
                 console.error('Bracket deck check error:', err);
                 resultEl.innerHTML = `<div class="error" style="padding:12px;">❌ Couldn't reach Scryfall to check the deck - try again in a moment.</div>`;
@@ -12924,6 +13481,8 @@
 
                         <div id="relatedCardsContainer"></div>
 
+                        <div id="edhrecContainer"></div>
+
                         <details class="all-printings" id="allPrintings">
                             <summary>All Printings (loading...)</summary>
                             <div class="printings-controls" id="printingsControls"></div>
@@ -12954,6 +13513,9 @@
 
             // Point the Moonshot store link at this card
             renderMoonshotBlock(card.name);
+
+            // Commander play data from EDHREC (loads on its own)
+            renderEdhrecPanel(card);
         }
 
         // Render the format legality grid for a card (data is already on the card object)
