@@ -4394,6 +4394,14 @@
             white-space: nowrap;
         }
 
+        .mkt-howto {
+            max-width: 900px;
+            margin: 0 auto 10px;
+            font-size: 0.88em;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
         .mkt-summary {
             text-align: center;
             margin: 0 0 8px;
@@ -6329,10 +6337,9 @@
 
             <div id="mktSpikesApp">
                 <div class="formats-intro">
-                    Cards whose price jumped recently, checked against Card Kingdom and
-                    Mana Pool, or that Card Kingdom just started paying more for. Check
-                    the case and our online listings and reprice before someone buys at
-                    last week's price. Updated every morning (prices via MTGJSON).
+                    Cards on the move, updated every morning. Use "Show" to switch
+                    between cards whose selling price jumped and cards Card Kingdom is
+                    now paying more for.
                 </div>
                 <div id="mktSpikeControls"></div>
                 <div id="mktSpikesResults"><div class="loading">Loading price spikes...</div></div>
@@ -6774,8 +6781,9 @@
                 Enter a market value per card and this totals up the cash and store-credit
                 offers automatically. Values are typed in by hand on purpose - use Moonshot's
                 own posted buy prices, not a card's general market price. Type a card's name
-                too and it shows the card's 30- and 90-day price trend, with a heads-up if
-                it's falling, rising, or about to be reprinted.
+                too and it shows a quick market check under it: the card's TCGplayer price and
+                its 30- and 90-day trend (for its cheapest printing), what Card Kingdom pays
+                for it, and a heads-up if it's falling, rising, or about to be reprinted.
             </div>
             <div class="guide-callout">
                 <strong>Why cash and credit are different numbers:</strong> a cash offer is money
@@ -9808,7 +9816,7 @@
                 if (month && month.pct <= -BUYLIST_TREND_ALERT) advice = `<span class="mkt-down">📉 Down ${Math.round(-month.pct * 100)}% this month - offer lower.</span>`;
                 else if (month && month.pct >= BUYLIST_TREND_ALERT) advice = `<span class="mkt-up">📈 Up ${Math.round(month.pct * 100)}% this month - don't offer too little.</span>`;
                 trendHTML = `
-                    <div>${marketCardLinkHTML(card.name, print.id)} · ${print.set.toUpperCase()} ${formatUsd(history.n[history.n.length - 1])}
+                    <div>${marketCardLinkHTML(card.name, print.id)} <span class="text-muted">(cheapest printing, ${print.set.toUpperCase()})</span> sells for ${formatUsd(history.n[history.n.length - 1])}
                         ${sparklineSVG(history.n)} ${trendChipHTML(month, '30d')} ${trendChipHTML(quarter, '90d')}</div>
                     ${advice ? `<div>${advice}</div>` : ''}
                     ${ckBuylistLineHTML(history)}
@@ -10260,7 +10268,7 @@
             el.innerHTML = `
                 <div class="edh-block">
                     <div class="edh-head"><span class="edh-title">📦 Box value: open it or sell it sealed?</span></div>
-                    <div class="bk-note">The average value of the cards in a box at today's prices, from the exact pack odds. "Sellable" leaves out cards under $${BOX_BULK_CUTOFF}, which rarely sell one at a time. Any single box can land well above or below the average.</div>
+                    <div class="bk-note">The average market value of the cards in one box at today's prices, worked out from the exact pack odds. "Sellable" leaves out cards under $${BOX_BULK_CUTOFF}, which rarely sell one at a time. It's what the cards are worth, not what you'd clear after sorting, listing and fees, and any single box can land well above or below the average.</div>
                     ${res.types.map(t => `
                         <div class="edh-subhead">${t.name} · ${t.packs} packs</div>
                         <div>Per pack <strong>${formatUsd(t.pack)}</strong> · per box <strong>${formatUsd(t.box)}</strong> (sellable ${formatUsd(t.boxSellable)})</div>
@@ -10271,7 +10279,7 @@
                         <div class="mkt-note" id="boxVerdict-${t.key}">${boxVerdictHTML(t, boxValuePrices[`${code}|${t.key}`])}</div>
                         ${t.chase.length ? `
                             <details class="all-printings">
-                                <summary>Chase cards in a ${t.name.toLowerCase()} box</summary>
+                                <summary>Chase cards (${t.name} box)</summary>
                                 <div class="buylist-table-wrap"><table class="lands-pkg-table mkt-table">
                                     <thead><tr><th>Card</th><th>Price</th><th>Per box</th></tr></thead>
                                     <tbody>${t.chase.map(c => `
@@ -11264,9 +11272,13 @@
             }
             const change = s => `<span class="mkt-trend mkt-up">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span>`;
             const confirmHTML = s => (s.confirms.length
-                ? `<div class="mkt-confirms">${s.confirms.map(c => `<span class="mkt-confirm" title="${c.label}: ${formatUsd(c.then)} → ${formatUsd(c.now)}">✓ ${c.label} ${formatUsd(c.now)}</span>`).join(' ')}</div>`
+                ? `<div class="mkt-confirms">${s.confirms.map(c => `<span class="mkt-confirm" title="${c.label} went from ${formatUsd(c.then)} to ${formatUsd(c.now)} over the same days">✓ ${c.label} also up (now ${formatUsd(c.now)})</span>`).join(' ')}</div>`
                 : '');
+            const howTo = buylistMode
+                ? '<strong>What this shows:</strong> cards Card Kingdom (a big online store) now pays more for than before - a sign players want them. <strong>What to do:</strong> make sure our buy prices keep up, and don\'t sell our copies cheap.'
+                : '<strong>What this shows:</strong> cards whose TCGplayer market price jumped. A ✓ means Card Kingdom or Mana Pool raised the same printing too, so it\'s likely a real move and not one odd sale. <strong>What to do:</strong> check the case and our online listings, and reprice before someone buys at the old price.';
             results.innerHTML = `
+                <div class="mkt-howto">${howTo}</div>
                 <div class="mkt-summary">${buylistMode
                     ? `Card Kingdom is paying more for <strong>${rows.length}</strong> card${rows.length === 1 ? '' : 's'} than ${o.window === 1 ? 'yesterday' : `${o.window} days ago`}`
                     : `<strong>${rows.length}</strong> card${rows.length === 1 ? '' : 's'} jumped in the last ${windowText}${o.confirmed ? ' <span class="text-secondary">(confirmed at another store)</span>' : ''}`}${rows.length > MKT_SPIKE_SHOW ? ` <span class="text-secondary">(showing the top ${MKT_SPIKE_SHOW})</span>` : ''}</div>
@@ -11289,8 +11301,8 @@
                     </table>
                 </div>
                 <div class="edh-source">${buylistMode
-                    ? 'Card Kingdom buylist (near mint) via MTGJSON. Only listed when they\'re paying more than a week ago and the move is 15%+ - their buylist often dips and comes back.'
-                    : 'Only moves of 15% or more are listed. ✓ marks Card Kingdom or Mana Pool raising the same printing 10%+ over the same window. Thinly traded cards can jump on a single sale, so check current listings before repricing.'}</div>
+                    ? 'Card Kingdom\'s near-mint buylist price. A card is only listed when the increase is 15% or more and they\'re paying more than a week ago - their buylist often dips and comes back. "TCGplayer" is what the card sells for.'
+                    : 'Only moves of 15% or more are listed. "Also up" means Card Kingdom or Mana Pool raised the same printing at least 10% over the same days. Thinly traded cards can jump on a single sale, so check current listings before repricing.'}</div>
                 ${marketSourceHTML(mktSpikeData.meta)}
             `;
         }
@@ -11335,7 +11347,7 @@
                 `}
                 <div class="bg-section-title">Current ban lists</div>
                 <div class="edh-pills">${counts}</div>
-                <div class="bg-section-sub" style="margin-top:6px;">Full lists are in <span class="set-link" onclick="navigateTo('formats')">Format Rules</span>.</div>
+                <div class="bg-section-sub" style="margin-top:6px;">Legacy and Vintage counts include ante, dexterity and Conspiracy-draft cards that are banned everywhere. Full lists are in <span class="set-link" onclick="navigateTo('formats')">Format Rules</span>.</div>
                 <div class="edh-source">Legality from MTGJSON, checked every morning (tracking since ${data.since}). Deck data from EDHREC.</div>
             `;
             log.slice(0, MKT_BAN_DETAIL_MAX).forEach((entry, i) => loadMarketBanDetail(entry, i));
@@ -11427,7 +11439,7 @@
                 <div class="edh-block">
                     <div class="edh-stat">${cards} card${cards === 1 ? '' : 's'} · about <strong>${formatUsd(total)}</strong> at the cheapest copy of each${rising.length ? ` · <span class="mkt-up">📈 ${rising.length} rising</span>` : ''}</div>
                     ${missing.length ? `<div class="bk-note">Couldn't find: ${missing.join(', ')}</div>` : ''}
-                    <div class="bk-note">Today's market prices from Scryfall; Moonshot's own prices may differ. Rising = up ${Math.round(DECK_RISING * 100)}%+ over 30 days.</div>
+                    <div class="bk-note">Prices are today's TCGplayer market price for the cheapest copy of each card (Moonshot's own prices may differ). "30 days" is that copy's price change; 📈 rising = up ${Math.round(DECK_RISING * 100)}% or more.</div>
                 </div>
                 <div class="buylist-table-wrap">
                     <table class="lands-pkg-table mkt-table">
@@ -11500,6 +11512,7 @@
                         <div id="mktCmdrCards-${i}"></div>
                     </div>
                 `).join('')}
+                <div class="edh-source">"New decks this week" = decks posted to EDHREC in the past 7 days. 🔥 Rising fast / ▲ Rising / – Steady / ▼ Cooling compare that with the commander's usual pace (EDHREC's trend score), so a newer commander can rank above a more popular one.</div>
                 ${edhrecSourceHTML('commanders/week')}
             `;
         }
@@ -11529,7 +11542,7 @@
             return `
                 <div class="buylist-table-wrap">
                     <table class="lands-pkg-table mkt-table">
-                        <thead><tr><th>Card</th><th>${noteHeader}</th><th>Cheapest</th><th>Moonshot</th></tr></thead>
+                        <thead><tr><th>Card</th><th>${noteHeader}</th><th>Cheapest copy</th><th>Moonshot</th></tr></thead>
                         <tbody>${entries.map(e => {
                             const card = priced.get(edhrecNameKey(e.name));
                             const p = card && printingPrice(card);
@@ -11600,8 +11613,8 @@
             const commanders = gather('Commanders (');
             const toEntries = list => list.map(cv => ({ name: cv.name, note: `${Number(cv.num_decks).toLocaleString()} decks` }));
             const [cardsHTML, commandersHTML] = await Promise.all([
-                cards.length ? marketPricedRowsHTML(toEntries(cards), 'Decks') : '',
-                commanders.length ? marketPricedRowsHTML(toEntries(commanders.slice(0, 20)), 'Decks') : ''
+                cards.length ? marketPricedRowsHTML(toEntries(cards), 'In decks') : '',
+                commanders.length ? marketPricedRowsHTML(toEntries(commanders.slice(0, 20)), 'Decks built') : ''
             ]);
             if (myToken !== mktNewSetToken) return;
             el.innerHTML = `
@@ -13213,7 +13226,7 @@
                 commander ? loadEdhrecCommander([commander.name]) : null
             ]);
             const edh = {
-                colorName: colorPage ? String(colorPage.header || '').replace(/ Lands$/, '') : '',
+                colorName: colorPage ? `${String(colorPage.header || '').replace(/ Lands$/, '')}${colorStr.length > 1 ? ` (${colorStr.toUpperCase().split('').join('/')})` : ''}` : '',
                 colorPath: colorSlug ? `lands/${colorSlug}` : '',
                 color: edhrecInclusionMap(colorPage),
                 commander: new Map()
@@ -13558,6 +13571,7 @@
             const sameAs = (a, b) => a.picks.length === b.picks.length && a.picks.every((l, i) => l === b.picks[i]);
 
             tiersDiv.innerHTML = `
+                <div class="bk-note" style="margin:0 0 6px;">Good spends about $2 a land. Better (about $8 a land) and Best (no limit) also skip lands that always enter tapped. <strong>Untapped</strong> = always enters untapped · <strong>Conditional</strong> = untapped if a condition is met (like paying 2 life or having a basic) · <strong>Tapped</strong> = always enters tapped.</div>
                 <div class="lands-tiers">${tiers.map((t, i) => `
                     <button type="button" class="lands-tier-card${t.key === landsPackageTier ? ' active' : ''}" onclick="selectLandsPackageTier('${t.key}')">
                         <div class="lands-tier-name">${t.label}</div>
@@ -14756,9 +14770,9 @@
                     ${priceItem('Foil', prices.usd_foil)}
                     ${prices.usd_etched ? priceItem('Etched', prices.usd_etched) : ''}
                     ${tcgLink ? `<a class="price-link" href="${tcgLink}" target="_blank" rel="noopener">View low/mid/high on TCGplayer →</a>` : ''}
+                    <div class="price-note">Today's TCGplayer market prices via Scryfall. TCGplayer's exact low/mid/high tiers require checking the listing directly.</div>
                     <div class="price-across" id="priceAcross">${renderPriceAcrossHTML()}</div>
                     <div class="price-history" id="priceHistory"></div>
-                    <div class="price-note">Current TCGplayer market prices via Scryfall. TCGplayer's exact low/mid/high tiers require checking the listing directly.</div>
                 </div>
             `;
         }
@@ -15329,12 +15343,12 @@
                         <div class="price-history-row">
                             <span class="price-history-label">${label}</span>
                             ${sparklineSVG(points, 150, 34)}
-                            <span class="price-history-range text-secondary">${vals.length ? `${formatUsd(Math.min(...vals))}–${formatUsd(Math.max(...vals))}` : ''}</span>
+                            <span class="price-history-range text-secondary">${vals.length ? `low ${formatUsd(Math.min(...vals))} · high ${formatUsd(Math.max(...vals))}` : ''}</span>
                             <span class="price-history-chips">${trendChipHTML(priceTrendDays(fh, 7), '7d')} ${trendChipHTML(priceTrendDays(fh, 30), '30d')} ${trendChipHTML(priceTrend(fh.weekly, 13), '90d')}</span>
                         </div>
                     `;
                 }).join('')}
-                <div class="price-note">${range === 30 ? 'Daily' : 'Weekly'} TCGplayer market prices via MTGJSON, as of ${meta.priceDate}.</div>
+                <div class="price-note">${range === 30 ? 'Daily' : 'Weekly'} TCGplayer market prices via MTGJSON, as of ${meta.priceDate} - they update each morning, so they can be a day behind the price above. Chips show the change over 7, 30 and 90 days.</div>
                 ${otherStoresHTML(history)}
             `;
         }
@@ -15368,7 +15382,7 @@
                         ${row('Card Kingdom pays', buylistCell, 'kb')}
                     </tbody>
                 </table>
-                <div class="price-note">Near-mint prices via MTGJSON, with the change over 30 days. "Pays" is Card Kingdom's buylist.</div>
+                <div class="price-note">Near-mint prices via MTGJSON, each with its change over 30 days. "Sells" is the store's selling price; "pays" is what Card Kingdom offers to buy it (its buylist). — means the store isn't listing it.</div>
             `;
         }
 
@@ -15446,6 +15460,7 @@
                     `;
                 }).join('')}
             `;
+            listEl.insertAdjacentHTML('beforeend', '<div class="price-note" style="margin-top:6px;">"30 days" is the change in the regular price (or the foil price for foil-only printings). Blank = no price history, usually because it\'s new or under $1.</div>');
             fillPrintingTrends(rows.map(r => r.p));
         }
 
