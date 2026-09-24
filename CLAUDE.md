@@ -18,6 +18,7 @@ Staff tools for Moonshot Games, used at work in both stores (Noblesville and Pla
 - Keep each tool a single self-contained HTML file. Don't add frameworks, build steps, or a backend.
 - In `MTG_Lookup_Tool.html`, tabs are driven by the `APP_VIEWS` table. The Buyer's Guide and Grading tabs use sub-tab tables (`BUYERS_GUIDE_SUBTABS`, `GUIDE_SUBTABS`). Reuse the existing helpers (card tiles, the card popup, Moonshot stock checks, `fetchScryfallSearchPage`) instead of writing new copies.
 - Scryfall search queries (otags especially) can't be guessed reliably. Mark anything not checked against live results as unverified or approximate, as the land-cycle data already does.
+- Claude's cloud environment can reach `api.scryfall.com`, so check new or changed Scryfall queries against live results before shipping them. The Land Finder's fixed cycles use exact card-name lists (`LAND_CYCLE_CARDS`), checked live on 2026-09-24.
 
 ## Seasonal themes (`MTG_Lookup_Tool.html`)
 

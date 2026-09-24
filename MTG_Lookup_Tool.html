@@ -7896,29 +7896,62 @@
               description: 'Enters untapped and taps for one of three colors, but you must return a land of specific types to hand (or sacrifice it) to keep it - real fixing with a real upkeep cost.' }
         ];
 
-        // Best-effort searches for the cycles that don't have a verified
-        // oracle tag, built from each cycle's distinctive type line, name,
-        // or rules text instead. Flagged "approximate" in the UI because
-        // they haven't been checked against live results the way the tagged
-        // ones were. Cycles with nothing distinctive enough to search on
-        // stay glossary-only.
-        const LAND_APPROX_QUERIES = {
-            truedual: 'is:reserved (t:plains or t:island or t:swamp or t:mountain or t:forest)',
-            bounceland: 'o:"return a land you control to its owner\'s hand"',
-            snowdual: 't:snow',
-            vividland: 'vivid o:"charge counter"',
-            gate: 't:gate',
-            scryland: 'temple o:"scry 1"',
-            pathway: 'pathway',
-            storageland: 'o:"storage counter"',
-            bondland: 'o:"two or more opponents"',
-            vergeland: 'verge',
-            taintedland: 'o:"only if you control a swamp"',
-            desertland: 't:desert',
-            panorama: 'panorama'
+        // Exact card lists for cycles that are a fixed set of cards. Checked
+        // against live Scryfall on 2026-09-24 - each list's search returns
+        // exactly these cards. A name list can't drift the way a tag or rules
+        // text search can (the old "painland" tag, for one, pulled in 52
+        // lands that merely deal damage). If Wizards adds a card to one of
+        // these cycles, add its name here.
+        const LAND_CYCLE_CARDS = {
+            painland: ['Adarkar Wastes', 'Battlefield Forge', 'Brushland', 'Caves of Koilos', 'Karplusan Forest', 'Llanowar Wastes', 'Shivan Reef', 'Sulfurous Springs', 'Underground River', 'Yavimaya Coast'],
+            filterland: ['Mystic Gate', 'Sunken Ruins', 'Graven Cairns', 'Fire-Lit Thicket', 'Wooded Bastion', 'Fetid Heath', 'Cascade Bluffs', 'Twilight Mire', 'Rugged Prairie', 'Flooded Grove'],
+            truedual: ['Tundra', 'Underground Sea', 'Badlands', 'Taiga', 'Savannah', 'Scrubland', 'Volcanic Island', 'Bayou', 'Plateau', 'Tropical Island'],
+            bounceland: ['Azorius Chancery', 'Dimir Aqueduct', 'Rakdos Carnarium', 'Gruul Turf', 'Selesnya Sanctuary', 'Orzhov Basilica', 'Izzet Boilerworks', 'Golgari Rot Farm', 'Boros Garrison', 'Simic Growth Chamber'],
+            snowdual: ['Arctic Treeline', 'Glacial Floodplain', 'Highland Forest', 'Ice Tunnel', 'Rimewood Falls', 'Snowfield Sinkhole', 'Sulfurous Mire', 'Volatile Fjord', 'Woodland Chasm', 'Alpine Meadow'],
+            vividland: ['Vivid Meadow', 'Vivid Creek', 'Vivid Marsh', 'Vivid Crag', 'Vivid Grove'],
+            scryland: ['Temple of Enlightenment', 'Temple of Deceit', 'Temple of Malice', 'Temple of Abandon', 'Temple of Plenty', 'Temple of Silence', 'Temple of Epiphany', 'Temple of Malady', 'Temple of Triumph', 'Temple of Mystery'],
+            triland: ['Zagoth Triome', 'Savai Triome', 'Raugrin Triome', 'Ketria Triome', 'Indatha Triome', "Ziatora's Proving Ground", "Xander's Lounge", "Spara's Headquarters", "Raffine's Tower", "Jetmir's Garden"],
+            pathway: ['Hengegate Pathway', 'Clearwater Pathway', 'Darkbore Pathway', 'Cragcrown Pathway', 'Branchloft Pathway', 'Brightclimb Pathway', 'Riverglide Pathway', 'Blightstep Pathway', 'Needleverge Pathway', 'Barkchannel Pathway'],
+            bondland: ['Sea of Clouds', 'Morphic Pool', 'Luxury Suite', 'Spire Garden', 'Bountiful Promenade', 'Vault of Champions', 'Training Center', 'Undergrowth Stadium', 'Spectator Seating', 'Rejuvenating Springs'],
+            vergeland: ['Floodfarm Verge', 'Gloomlake Verge', 'Blazemire Verge', 'Thornspire Verge', 'Hushwood Verge', 'Bleachbone Verge', 'Riverpyre Verge', 'Wastewood Verge', 'Sunbillow Verge', 'Willowrush Verge'],
+            oldfilterland: ['Skycloud Expanse', 'Darkwater Catacombs', 'Shadowblood Ridge', 'Mossfire Valley', 'Sungrass Prairie', 'Desolate Mire', 'Ferrous Lake', 'Viridescent Bog', 'Sunscorched Divide', 'Overflowing Basin'],
+            typedland: ['Idyllic Beachfront', 'Contaminated Aquifer', 'Geothermal Bog', 'Wooded Ridgeline', 'Radiant Grove', 'Sunlit Marsh', 'Molten Tributary', 'Haunted Mire', 'Sacred Peaks', 'Tangled Islet'],
+            temptpainland: ['Salt Flats', 'Caldera Lake', 'Pine Barrens', 'Scabland', 'Skyshroud Forest'],
+            spellland: ['Suppression Ray', 'Waterlogged Teachings', 'Bloodsoaked Insight', 'Stump Stomp', 'Strength of the Harvest', 'Glasswing Grace', 'Rush of Inspiration', 'Revitalizing Repast', 'Legion Leadership', 'Drowner of Truth'],
+            triballand: ['Wanderwine Hub', 'Secluded Glen', "Auntie's Hovel", 'Gilt-Leaf Palace', 'Ancient Amphitheater'],
+            hauntland: ['Abandoned Campground', 'Murky Sewer', 'Razortrap Gorge', 'Bleeding Woods', 'Etched Cornfield', 'Neglected Manor', 'Peculiar Lighthouse', 'Strangled Cemetery', 'Lakeside Shack', 'Raucous Carnival'],
+            bridgeland: ['Razortide Bridge', 'Mistvault Bridge', 'Drossforge Bridge', 'Slagwoods Bridge', 'Thornglint Bridge', 'Goldmire Bridge', 'Silverbluff Bridge', 'Darkmoss Bridge', 'Rustvale Bridge', 'Tanglepool Bridge'],
+            taintedland: ['Tainted Field', 'Tainted Isle', 'Tainted Peak', 'Tainted Wood'],
+            campusland: ['Silverquill Campus', 'Prismari Campus', 'Witherbloom Campus', 'Lorehold Campus', 'Quandrix Campus'],
+            clueland: ['Study', 'Secret Passage', 'Billiard Room', 'Dining Room', 'Conservatory', 'Ballroom', 'Library', 'Lounge', 'Hall', 'Kitchen'],
+            sacdrawland: ['North Pole Gates', 'Serpent\'s Pass', 'Boiling Rock Prison', 'Omashu City', 'Kyoshi Village', 'Misty Palms Oasis', 'Airship Engine Room', 'Foggy Bottom Swamp', 'Sun-Blessed Peak', 'Meditation Pools'],
+            taptriland: ['Arcane Sanctum', 'Crumbling Necropolis', 'Jungle Shrine', 'Savage Lands', 'Seaside Citadel', 'Frontier Bivouac', 'Mystic Monastery', 'Nomad Outpost', 'Opulent Palace', 'Sandsteppe Citadel'],
+            slowfetchland: ['Flood Plain', 'Bad River', 'Rocky Tar Pit', 'Mountain Valley', 'Grasslands'],
+            panorama: ['Bant Panorama', 'Esper Panorama', 'Grixis Panorama', 'Jund Panorama', 'Naya Panorama'],
+            lairland: ["Dromar's Cavern", "Crosis's Catacombs", "Darigaaz's Caldera", "Rith's Grove", "Treva's Ruins"]
         };
+
+        // Cycles defined by a card type rather than a fixed list - the type
+        // search is exact, it just grows as new Gates/Deserts are printed.
+        const LAND_TYPE_QUERIES = {
+            gate: 't:gate',
+            desertland: 't:desert'
+        };
+
+        // Best-effort search for the one cycle with no fixed list or type
+        // (storage lands vary too much in wording). Flagged "approximate".
+        const LAND_APPROX_QUERIES = {
+            storageland: 'o:"storage counter"'
+        };
+
         LAND_CATEGORIES.forEach(cat => {
-            if (!cat.query && LAND_APPROX_QUERIES[cat.key]) {
+            if (LAND_CYCLE_CARDS[cat.key]) {
+                cat.query = `(${LAND_CYCLE_CARDS[cat.key].map(n => `!"${n}"`).join(' or ')})`;
+                cat.verified = true;
+            } else if (LAND_TYPE_QUERIES[cat.key]) {
+                cat.query = LAND_TYPE_QUERIES[cat.key];
+                cat.verified = true;
+            } else if (!cat.query && LAND_APPROX_QUERIES[cat.key]) {
                 cat.query = LAND_APPROX_QUERIES[cat.key];
                 cat.approx = true;
             }
@@ -8078,10 +8111,12 @@
         }
 
         // Collector-only printings (gold-bordered World Championship decks,
-        // oversized cards, memorabilia sets) aren't what a customer means by
-        // "the cheapest copy", so they never set a land's price.
+        // oversized cards, memorabilia sets, Secret Lair's double-sided
+        // "reversible" copies) aren't what a customer means by "the cheapest
+        // copy", so they never set a land's price.
         function isPlayableLandPrinting(print) {
-            return !print.oversized && print.border_color !== 'gold' && print.set_type !== 'memorabilia';
+            return !print.oversized && print.border_color !== 'gold' && print.set_type !== 'memorabilia'
+                && print.layout !== 'reversible_card';
         }
 
         // Non-foil market price, falling back to foil for foil-only printings.
@@ -8144,7 +8179,7 @@
             const colorStr = landsColorString();
             const searchable = LAND_CATEGORIES.filter(c => c.query);
             const results = {};
-            const failed = [];
+            const failedCats = [];
             let done = 0;
             document.getElementById('landsResults').innerHTML =
                 `<div class="loading" id="landsProgress">Pricing ${searchable.length} land cycles...</div>`;
@@ -8156,7 +8191,7 @@
                         results[cat.key] = await fetchLandsCycle(cat, colorStr);
                     } catch (err) {
                         console.error(`Error loading ${cat.label}:`, err);
-                        failed.push(cat.label);
+                        failedCats.push(cat);
                         results[cat.key] = [];
                     }
                     done++;
@@ -8166,7 +8201,24 @@
                 if (progress) progress.textContent = `Pricing land cycles... ${done}/${searchable.length}`;
             }
 
-            landsLastResults = { results, failed, colorStr };
+            // One more go at anything that failed (a dropped connection or a
+            // brief rate limit), one cycle at a time after a short pause -
+            // a missing cycle would quietly leave its lands out of the package.
+            if (failedCats.length) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                for (const cat of [...failedCats]) {
+                    if (myToken !== landsRequestToken) return;
+                    try {
+                        results[cat.key] = await fetchLandsCycle(cat, colorStr);
+                        failedCats.splice(failedCats.indexOf(cat), 1);
+                    } catch (err) {
+                        console.error(`Retry failed for ${cat.label}:`, err);
+                    }
+                }
+                if (myToken !== landsRequestToken) return;
+            }
+
+            landsLastResults = { results, failed: failedCats.map(c => c.label), colorStr };
             renderLandFinder(landsLastResults);
         }
 
@@ -8350,10 +8402,14 @@
                 <div class="lands-pkg">
                     <div class="bg-section-title" style="margin-top:0;">🧰 ${colorsLabel} land package · ${budgetLabel}</div>
                     <div class="bg-section-sub">The ${landsCount} most-played lands that make at least two of the deck's colors, as long as they fit the budget. Prices are each land's cheapest paper printing - click a name to see it.</div>
+                    ${failed.length ? `
+                        <div class="error" style="margin:10px 0;">
+                            ⚠️ Couldn't load ${failed.join(', ')} - this package may be missing lands.
+                            <button type="button" class="staples-sort-btn" style="margin-left:8px;" onclick="runLandsSearch()">Try again</button>
+                        </div>` : ''}
                     ${packageNote ? `<div class="moonshot-status" style="margin:6px 0;">${packageNote}</div>` : ''}
                     ${packageHTML}
                     ${upgradesHTML}
-                    ${failed.length ? `<div class="error" style="margin:10px 0;">Couldn't load: ${failed.join(', ')} - change a color to retry.</div>` : ''}
 
                     <div class="bg-section-title">📋 Every ${colorsLabel} land by price (${pool.length})</div>
                     <div class="staples-controls" style="flex-wrap:wrap; justify-content:flex-start;">${bracketButtons}</div>
