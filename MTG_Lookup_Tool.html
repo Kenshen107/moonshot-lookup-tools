@@ -33,9 +33,57 @@
 
         .search-section {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
             margin-bottom: 30px;
+        }
+
+        .card-search {
+            position: relative;
+            max-width: 760px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .card-search-label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1em;
+            font-weight: 700;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-search-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .card-search-row input {
+            flex: 1;
+            min-width: 0;
+            font-size: 1.1em;
+        }
+
+        .card-search-row button {
+            width: auto;
+            margin: 0;
+            padding: 0 22px;
+        }
+
+        .card-search .autocomplete-list {
+            position: absolute;
+            left: 15px;
+            right: 15px;
+            z-index: 50;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-search-hint {
+            margin-top: 8px;
+            font-size: 0.78em;
+            color: var(--text-secondary);
         }
 
         .search-box {
@@ -226,6 +274,90 @@
             margin-top: 4px;
         }
 
+        .price-this {
+            width: 100%;
+            margin-bottom: -10px;
+            font-size: 0.75em;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .price-across {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-subtle);
+            font-size: 0.9em;
+        }
+
+        .price-across:empty {
+            display: none;
+        }
+
+        .price-across-label {
+            display: inline-block;
+            min-width: 110px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .price-across-value {
+            color: #7ee787;
+        }
+
+        .printings-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+
+        .printings-controls:empty {
+            display: none;
+        }
+
+        .printings-controls .staples-sort-btn {
+            margin: 0;
+        }
+
+        /* Printings table rows: symbol | set + code/number/year | regular | foil
+           (scoped to the list so it wins over .printing-item's flex layout) */
+        .printings-list .printing-row {
+            display: grid;
+            grid-template-columns: 20px 1fr 72px 72px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .printing-head {
+            padding: 0 10px;
+            font-size: 0.72em;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .printing-head span:nth-child(n+3),
+        .printing-price {
+            text-align: right;
+        }
+
+        .printing-price {
+            font-weight: 600;
+            color: #7ee787;
+        }
+
+        .printing-price .na {
+            color: #707070;
+            font-weight: 400;
+        }
+
         .set-symbol {
             width: 120px;
             height: 120px;
@@ -334,7 +466,7 @@
 
         .printings-list {
             margin-top: 10px;
-            max-height: 220px;
+            max-height: 360px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -403,19 +535,51 @@
 
         .history-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
         }
 
         .history-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            margin: 0;
             background: #1a1a1a;
             border: 1px solid #404040;
-            border-radius: 4px;
-            padding: 12px;
+            border-radius: 8px;
+            padding: 8px;
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
-            font-size: 0.9em;
+            font-size: 0.82em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .history-item img,
+        .history-noimg {
+            width: 100%;
+            aspect-ratio: 488 / 680;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+
+        .history-noimg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-inset);
+            font-size: 2em;
+        }
+
+        .history-name {
+            line-height: 1.25;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
         .history-item:hover {
@@ -4771,18 +4935,15 @@
         <!-- ============== MAGIC: THE GATHERING ============== -->
         <div id="mtgApp">
             <div class="search-section">
-                <!-- Live Search -->
-                <div class="search-box">
-                    <h2>Live Search</h2>
-                    <input type="text" id="liveSearch" aria-label="Live search by card name" placeholder="Type card name..." autocomplete="off">
-                    <div class="autocomplete-list" id="autocompleteList"></div>
-                </div>
-
-                <!-- Direct Lookup -->
-                <div class="search-box">
-                    <h2>Direct Lookup</h2>
-                    <input type="text" id="directLookup" aria-label="Direct lookup by exact card name" placeholder="Enter card name..." autocomplete="off">
-                    <button onclick="lookupCard()">Search</button>
+                <div class="search-box card-search">
+                    <label class="card-search-label" for="cardSearch">Look up a card</label>
+                    <div class="card-search-row">
+                        <input type="text" id="cardSearch" placeholder="Start typing a card name..." autocomplete="off"
+                               role="combobox" aria-autocomplete="list" aria-controls="autocompleteList" aria-expanded="false">
+                        <button type="button" onclick="submitCardSearch()">Search</button>
+                    </div>
+                    <div class="autocomplete-list" id="autocompleteList" role="listbox" hidden></div>
+                    <div class="card-search-hint">Pick a suggestion, or press Enter to search what you typed - partial and misspelled names work too.</div>
                 </div>
             </div>
 
@@ -7138,8 +7299,6 @@
         function jumpToCardFromPrimer(name) {
             closeCardModal();
             switchGame('mtg');
-            const input = document.getElementById('directLookup');
-            if (input) input.value = name;
             performLookup(name);
         }
 
@@ -10758,87 +10917,151 @@
             }
         }
 
-        // Load history from localStorage
+        // Recent lookups are saved as {name, img} so they can show as small
+        // card tiles; older saves were plain names and still load (no image).
+        function escapeAttr(text) {
+            return String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        }
+
+        function readHistory() {
+            try {
+                return JSON.parse(localStorage.getItem('mtgHistory') || '[]')
+                    .map(h => (typeof h === 'string' ? { name: h, img: null } : h));
+            } catch (err) {
+                return [];
+            }
+        }
+
         function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('mtgHistory') || '[]');
-            renderHistory(history);
+            renderHistory(readHistory());
         }
 
-        // Save to history
-        function addToHistory(cardName) {
-            let history = JSON.parse(localStorage.getItem('mtgHistory') || '[]');
-            history = history.filter(name => name !== cardName);
-            history.unshift(cardName);
+        function addToHistory(card) {
+            let history = readHistory().filter(h => h.name !== card.name);
+            history.unshift({ name: card.name, img: getCardImageSmall(card) || null });
             history = history.slice(0, 20);
-            localStorage.setItem('mtgHistory', JSON.stringify(history));
+            try {
+                localStorage.setItem('mtgHistory', JSON.stringify(history));
+            } catch (err) {
+                // storage full or blocked - the list just won't persist
+            }
             renderHistory(history);
         }
 
-        // Render history
         function renderHistory(history) {
             const historyList = document.getElementById('historyList');
             if (history.length === 0) {
                 historyList.innerHTML = '<p style="color: #606060; grid-column: 1/-1; text-align: center;">No recent lookups</p>';
                 return;
             }
-            historyList.innerHTML = history.map(card =>
-                `<div class="history-item" onclick="performLookup('${card.replace(/'/g, "\\'")}')">${card}</div>`
-            ).join('');
+            historyList.innerHTML = history.map(h => `
+                <button type="button" class="history-item" data-name="${escapeAttr(h.name)}" onclick="performLookup(this.dataset.name)" title="${escapeAttr(h.name)}">
+                    ${h.img ? `<img src="${escapeAttr(h.img)}" alt="" loading="lazy">` : '<span class="history-noimg">🃏</span>'}
+                    <span class="history-name">${h.name}</span>
+                </button>
+            `).join('');
         }
 
-        // Clear history
         function clearHistory() {
-            localStorage.removeItem('mtgHistory');
+            try {
+                localStorage.removeItem('mtgHistory');
+            } catch (err) {
+                // storage blocked - nothing saved to clear
+            }
             loadHistory();
         }
 
-        // Live search with autocomplete
-        document.getElementById('liveSearch').addEventListener('input', function(e) {
+        // ---- One search bar ----
+        // Suggestions appear as you type; arrow keys + Enter pick one. Enter
+        // with nothing picked looks up whatever was typed - Scryfall's fuzzy
+        // match handles partial and misspelled names.
+        let autocompleteIndex = -1;
+        let autocompleteToken = 0;
+
+        function hideAutocomplete() {
+            const list = document.getElementById('autocompleteList');
+            list.hidden = true;
+            list.innerHTML = '';
+            autocompleteIndex = -1;
+            document.getElementById('cardSearch').setAttribute('aria-expanded', 'false');
+        }
+
+        function showAutocomplete(html) {
+            const list = document.getElementById('autocompleteList');
+            list.innerHTML = html;
+            list.hidden = false;
+            document.getElementById('cardSearch').setAttribute('aria-expanded', 'true');
+        }
+
+        function highlightAutocomplete() {
+            document.querySelectorAll('#autocompleteList [data-name]').forEach((el, i) => {
+                el.classList.toggle('active', i === autocompleteIndex);
+                el.setAttribute('aria-selected', i === autocompleteIndex ? 'true' : 'false');
+                if (i === autocompleteIndex) el.scrollIntoView({ block: 'nearest' });
+            });
+        }
+
+        document.getElementById('cardSearch').addEventListener('input', function(e) {
             clearTimeout(searchTimeout);
             const query = e.target.value.trim();
-            const autocompleteList = document.getElementById('autocompleteList');
-
+            const myToken = ++autocompleteToken;
+            autocompleteIndex = -1;
             if (query.length < 2) {
-                autocompleteList.innerHTML = '';
+                hideAutocomplete();
                 return;
             }
-
-            autocompleteList.innerHTML = '<div class="loading">Searching...</div>';
-
-            searchTimeout = setTimeout(() => {
-                const url = `${API_BASE}/cards/autocomplete?q=${encodeURIComponent(query)}`;
-                fetch(url)
-                    .then(res => {
-                        if (!res.ok) throw new Error('API error');
-                        return res.json();
-                    })
-                    .then(data => {
-                        if (data.data && data.data.length > 0) {
-                            autocompleteList.innerHTML = data.data.slice(0, 10).map(card =>
-                                `<div class="autocomplete-item" onclick="selectCard('${card.replace(/'/g, "\\'")}')">${card}</div>`
-                            ).join('');
-                        } else {
-                            autocompleteList.innerHTML = '<div class="autocomplete-item">No matches found</div>';
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Search error:', err);
-                        autocompleteList.innerHTML = '<div class="autocomplete-item" style="color: #ff9999;">Error fetching results</div>';
-                    });
-            }, 300);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/cards/autocomplete?q=${encodeURIComponent(query)}`);
+                    if (!res.ok) throw new Error('API error');
+                    const data = await res.json();
+                    if (myToken !== autocompleteToken) return; // typing moved on
+                    const names = (data.data || []).slice(0, 10);
+                    showAutocomplete(names.length
+                        ? names.map(n => `<div class="autocomplete-item" role="option" data-name="${escapeAttr(n)}" onmousedown="event.preventDefault()" onclick="selectCard(this.dataset.name)">${n}</div>`).join('')
+                        : '<div class="autocomplete-item text-secondary">No exact matches - press Enter to search anyway</div>');
+                } catch (err) {
+                    if (myToken !== autocompleteToken) return;
+                    console.error('Search error:', err);
+                    showAutocomplete('<div class="autocomplete-item" style="color: #ff9999;">Couldn\'t load suggestions - press Enter to search anyway</div>');
+                }
+            }, 250);
         });
 
-        // Select from autocomplete
+        document.getElementById('cardSearch').addEventListener('keydown', function(e) {
+            const items = document.querySelectorAll('#autocompleteList [data-name]');
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                if (!items.length) return;
+                e.preventDefault();
+                autocompleteIndex = e.key === 'ArrowDown'
+                    ? Math.min(autocompleteIndex + 1, items.length - 1)
+                    : Math.max(autocompleteIndex - 1, -1);
+                highlightAutocomplete();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (autocompleteIndex >= 0 && items[autocompleteIndex]) selectCard(items[autocompleteIndex].dataset.name);
+                else submitCardSearch();
+            } else if (e.key === 'Escape') {
+                hideAutocomplete();
+            }
+        });
+
+        document.getElementById('cardSearch').addEventListener('blur', hideAutocomplete);
+
         function selectCard(cardName) {
-            document.getElementById('liveSearch').value = '';
-            document.getElementById('autocompleteList').innerHTML = '';
+            clearTimeout(searchTimeout);
+            autocompleteToken++;
+            document.getElementById('cardSearch').value = '';
+            hideAutocomplete();
             performLookup(cardName);
         }
 
-        // Direct lookup (button / Enter key)
-        function lookupCard() {
-            const cardName = document.getElementById('directLookup').value.trim();
+        function submitCardSearch() {
+            const cardName = document.getElementById('cardSearch').value.trim();
             if (!cardName) return;
+            clearTimeout(searchTimeout);
+            autocompleteToken++;
+            hideAutocomplete();
             performLookup(cardName);
         }
 
@@ -10889,8 +11112,8 @@
                 displayCard(card);
                 loadAllPrintings(card);
                 loadRulings(card);
-                addToHistory(card.name);
-                const inputEl = document.getElementById('directLookup');
+                addToHistory(card);
+                const inputEl = document.getElementById('cardSearch');
                 if (inputEl) inputEl.value = '';
             } catch (err) {
                 if (myToken !== lookupRequestToken) return;
@@ -10915,26 +11138,65 @@
         // listing so exact low/mid/high can be checked there in one click.
         function buildPriceHTML(card) {
             const prices = card.prices || {};
-            const usd = prices.usd;
-            const usdFoil = prices.usd_foil;
             const tcgLink = card.purchase_uris && card.purchase_uris.tcgplayer;
-
-            const fmt = v => v ? `$${v}` : null;
+            const priceItem = (label, v) => `
+                <div class="price-item">
+                    <div class="detail-label">${label}</div>
+                    <div class="price-value ${v ? '' : 'na'}">${v ? `$${v}` : 'N/A'}</div>
+                </div>
+            `;
 
             return `
                 <div class="price-block">
-                    <div class="price-item">
-                        <div class="detail-label">Market</div>
-                        <div class="price-value ${usd ? '' : 'na'}">${fmt(usd) || 'N/A'}</div>
-                    </div>
-                    <div class="price-item">
-                        <div class="detail-label">Foil</div>
-                        <div class="price-value ${usdFoil ? '' : 'na'}">${fmt(usdFoil) || 'N/A'}</div>
-                    </div>
+                    <div class="price-this">This printing</div>
+                    ${priceItem('Regular', prices.usd)}
+                    ${priceItem('Foil', prices.usd_foil)}
+                    ${prices.usd_etched ? priceItem('Etched', prices.usd_etched) : ''}
                     ${tcgLink ? `<a class="price-link" href="${tcgLink}" target="_blank" rel="noopener">View low/mid/high on TCGplayer →</a>` : ''}
-                    <div class="price-note">Market price via Scryfall. TCGplayer's exact low/mid/high tiers require checking the listing directly.</div>
+                    <div class="price-across" id="priceAcross">${renderPriceAcrossHTML()}</div>
+                    <div class="price-note">Current TCGplayer market prices via Scryfall. TCGplayer's exact low/mid/high tiers require checking the listing directly.</div>
                 </div>
             `;
+        }
+
+        // Paper printings a customer could actually buy: no MTGO/Arena-only
+        // printings, and none of the collector-only ones (gold borders,
+        // oversized, memorabilia) - see isTournamentPrinting.
+        function isBuyablePrinting(print) {
+            return (print.games || ['paper']).includes('paper') && isTournamentPrinting(print);
+        }
+
+        // Cheapest copy and price range across every printing, so there's a
+        // real number even when the printing on screen (often the newest)
+        // has no price yet. Filled in once the printings list has loaded.
+        function renderPriceAcrossHTML() {
+            const prints = currentPrints.filter(isBuyablePrinting);
+            if (!prints.length) return '<span class="text-secondary">Checking prices across all printings...</span>';
+            const regular = prints.map(p => ({ p, v: parseFloat(p.prices && p.prices.usd) })).filter(x => Number.isFinite(x.v));
+            const foil = prints.map(p => ({ p, v: parseFloat(p.prices && p.prices.usd_foil) })).filter(x => Number.isFinite(x.v));
+            if (!regular.length && !foil.length) return '<span class="text-secondary">No printing of this card has a current price.</span>';
+
+            const cheapest = list => list.reduce((a, b) => (b.v < a.v ? b : a));
+            const jump = x => `<span class="set-link" onclick="selectPrinting(${currentPrints.indexOf(x.p)})">${x.p.set_name}</span>`;
+            const lines = [];
+            if (regular.length) {
+                const lo = cheapest(regular);
+                const hi = regular.reduce((a, b) => (b.v > a.v ? b : a));
+                lines.push(`<div><span class="price-across-label">Cheapest copy</span> <strong class="price-across-value">${formatUsd(lo.v)}</strong> · ${jump(lo)}</div>`);
+                if (regular.length > 1 && hi.v !== lo.v) {
+                    lines.push(`<div><span class="price-across-label">Regular range</span> ${formatUsd(lo.v)} – ${formatUsd(hi.v)} <span class="text-secondary">across ${regular.length} printings</span></div>`);
+                }
+            }
+            if (foil.length) {
+                const f = cheapest(foil);
+                lines.push(`<div><span class="price-across-label">Cheapest foil</span> ${formatUsd(f.v)} · ${jump(f)}</div>`);
+            }
+            return lines.join('');
+        }
+
+        function refreshPriceAcross() {
+            const el = document.getElementById('priceAcross');
+            if (el) el.innerHTML = renderPriceAcrossHTML();
         }
 
         // Open/close the full-size image lightbox
@@ -10973,6 +11235,7 @@
 
             currentDisplayedCard = card;
             currentFaceIndex = 0;
+            currentPrints = []; // the previous card's printings - reloaded by loadAllPrintings
 
             // Get set info
             const setCode = card.set.toUpperCase();
@@ -11073,6 +11336,7 @@
 
                         <details class="all-printings" id="allPrintings">
                             <summary>All Printings (loading...)</summary>
+                            <div class="printings-controls" id="printingsControls"></div>
                             <div class="printings-list" id="printingsList"></div>
                         </details>
 
@@ -11796,6 +12060,7 @@
 
             const priceContainer = document.getElementById('priceContainer');
             if (priceContainer) priceContainer.innerHTML = buildPriceHTML(print);
+            printingsActiveId = print.id;
 
             // Update the rarity badge for this printing (rarity can differ between printings)
             const rarityBadge = document.getElementById('rarityBadge');
@@ -11823,54 +12088,100 @@
         }
 
         // Fetch and render every printing of this card across all sets
+        // Printings table: every paper printing with its current regular and
+        // foil price, sortable, click a row to switch the lookup to it.
+        let printingsSort = 'newest';
+        let printingsActiveId = null;
+
         async function loadAllPrintings(card) {
             const detailsEl = document.getElementById('allPrintings');
             const summaryEl = detailsEl ? detailsEl.querySelector('summary') : null;
             const listEl = document.getElementById('printingsList');
             if (!detailsEl || !listEl) return;
+            currentPrints = [];
+            printingsActiveId = card.id;
 
             try {
-                const printsUrl = card.prints_search_uri;
-                const res = await fetch(printsUrl);
-                if (!res.ok) throw new Error('Could not load printings');
-                const data = await res.json();
-                const prints = data.data || [];
-
-                // Sort oldest to newest
-                prints.sort((a, b) => new Date(a.released_at) - new Date(b.released_at));
-                currentPrints = prints;
-
-                summaryEl.textContent = `All Printings (${prints.length})`;
-
-                listEl.innerHTML = prints.map((p, idx) => {
-                    const pYear = p.released_at ? new Date(p.released_at).getFullYear() : '?';
-                    const pSetCode = p.set.toUpperCase();
-                    return `
-                        <div class="printing-item" id="printingItem-${idx}" onclick="selectPrinting(${idx})">
-                            <img src="https://svgs.scryfall.io/sets/${p.set.toLowerCase()}.svg" alt="${pSetCode}" onerror="this.style.visibility='hidden'">
-                            <div class="printing-set-name">${p.set_name}</div>
-                            <div class="printing-meta">${pSetCode} · ${pYear}</div>
-                        </div>
-                    `;
-                }).join('');
-
-                // Mark the originally-looked-up printing as active
-                const initialIdx = prints.findIndex(p => p.id === card.id);
-                if (initialIdx !== -1) {
-                    const el = document.getElementById(`printingItem-${initialIdx}`);
-                    if (el) el.classList.add('active');
+                // Popular cards can have more than one page (175) of printings.
+                const prints = [];
+                let url = card.prints_search_uri;
+                while (url) {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('Could not load printings');
+                    const data = await res.json();
+                    prints.push(...(data.data || []));
+                    url = data.has_more ? data.next_page : null;
                 }
+                if (currentDisplayedCard && currentDisplayedCard.oracle_id !== card.oracle_id) return; // a newer lookup took over
+                currentPrints = prints;
+                renderPrintingsTable();
+                refreshPriceAcross();
             } catch (err) {
                 console.error('Error loading printings:', err);
                 if (summaryEl) summaryEl.textContent = 'All Printings (unavailable)';
                 listEl.innerHTML = '<div class="printing-item text-error">Could not load printings list</div>';
+                const across = document.getElementById('priceAcross');
+                if (across) across.innerHTML = '';
             }
         }
 
-        // Allow Enter key in direct lookup
-        document.getElementById('directLookup').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') lookupCard();
-        });
+        function setPrintingsSort(mode) {
+            printingsSort = mode;
+            renderPrintingsTable();
+        }
+
+        function renderPrintingsTable() {
+            const summaryEl = document.querySelector('#allPrintings summary');
+            const listEl = document.getElementById('printingsList');
+            const controlsEl = document.getElementById('printingsControls');
+            if (!listEl) return;
+
+            const price = (p, key) => {
+                const v = parseFloat(p.prices && p.prices[key]);
+                return Number.isFinite(v) ? v : null;
+            };
+            // Cheapest sort goes by regular price, falling back to foil for
+            // foil-only printings; unpriced printings sink to the bottom.
+            const sortPrice = p => price(p, 'usd') ?? price(p, 'usd_foil');
+            const rows = currentPrints.map((p, idx) => ({ p, idx })).filter(r => isBuyablePrinting(r.p));
+            const byDate = (a, b) => new Date(a.p.released_at) - new Date(b.p.released_at);
+            if (printingsSort === 'oldest') rows.sort(byDate);
+            else if (printingsSort === 'newest') rows.sort((a, b) => byDate(b, a));
+            else rows.sort((a, b) => {
+                const pa = sortPrice(a.p), pb = sortPrice(b.p);
+                if (pa === null) return pb === null ? 0 : 1;
+                if (pb === null) return -1;
+                return pa - pb;
+            });
+
+            const priced = rows.map(r => sortPrice(r.p)).filter(v => v !== null);
+            if (summaryEl) {
+                summaryEl.textContent = `All Printings (${rows.length})${priced.length ? ` · from ${formatUsd(Math.min(...priced))}` : ''}`;
+            }
+            if (controlsEl) {
+                const sortBtn = (mode, label) => `<button type="button" class="staples-sort-btn${printingsSort === mode ? ' active' : ''}" onclick="setPrintingsSort('${mode}')">${label}</button>`;
+                controlsEl.innerHTML = `<span class="text-secondary">Sort:</span> ${sortBtn('newest', 'Newest')} ${sortBtn('oldest', 'Oldest')} ${sortBtn('cheapest', 'Cheapest')}`;
+            }
+
+            const cell = v => (v === null ? '<span class="na">—</span>' : formatUsd(v));
+            listEl.innerHTML = `
+                <div class="printing-row printing-head" aria-hidden="true"><span></span><span>Printing</span><span>Regular</span><span>Foil</span></div>
+                ${rows.map(({ p, idx }) => {
+                    const pYear = p.released_at ? new Date(p.released_at).getFullYear() : '?';
+                    return `
+                        <div class="printing-item printing-row${p.id === printingsActiveId ? ' active' : ''}" id="printingItem-${idx}" onclick="selectPrinting(${idx})">
+                            <img src="https://svgs.scryfall.io/sets/${p.set.toLowerCase()}.svg" alt="" onerror="this.style.visibility='hidden'">
+                            <div>
+                                <div class="printing-set-name">${p.set_name}</div>
+                                <div class="printing-meta">${p.set.toUpperCase()} #${p.collector_number} · ${pYear}${p.promo ? ' · promo' : ''}</div>
+                            </div>
+                            <div class="printing-price">${cell(price(p, 'usd'))}</div>
+                            <div class="printing-price">${cell(price(p, 'usd_foil') ?? price(p, 'usd_etched'))}</div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        }
 
         // Close the lightbox with Escape
         document.addEventListener('keydown', function(e) {
