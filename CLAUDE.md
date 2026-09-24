@@ -39,8 +39,8 @@ Commander play data comes live from EDHREC's JSON feed (`json.edhrec.com/pages/.
 
 Scryfall only has today's prices, so price history comes from a daily GitHub Action (`.github/workflows/market-data.yml`, 10:00 UTC). It runs `tools/build_market_data.py`, which downloads MTGJSON's 90-day price history (`AllPrices.json.gz`) and its card, ID and legality CSVs, then publishes small JSON files to the `market-data` branch. The branch is replaced each run, one commit with no history, so the repo doesn't grow. The site reads the files from `raw.githubusercontent.com/Kenshen107/moonshot-lookup-tools/market-data/` (`MARKET_DATA_BASE`). If they're missing, every panel that uses them says so, and the rest keeps working.
 
-- `meta.json` holds the price date and the weekly dates.
-- `history/<first 2 chars of Scryfall id>.json` holds weekly TCGplayer market prices for 14 weeks, per printing and finish (`n`, `f`, `e`), for printings that reached $1. Read it with `priceHistoryFor(id)` and `priceTrend(points, weeks)`.
+- `meta.json` holds the price date, the weekly dates and the daily dates.
+- `history/<first 2 chars of Scryfall id>.json` holds TCGplayer market prices per printing and finish, for printings that reached $1: 14 weekly points (`n`, `f`, `e`, about 90 days) and 31 daily points for the last 30 days (`dn`, `df`, `de`, added 2026-09-25). Read it with `priceHistoryFor(id)`, `finishHistory(history, key)`, `priceTrend(points, steps)` and `priceTrendDays(fh, days)`. The last one uses the daily points when they exist and falls back to weekly.
 - `spikes.json` lists printings of $2+ that rose at least $1 and 15% over 1, 3 or 7 days.
 - `bans.json` holds the current banned/restricted cards per format, plus a log of changes found by comparing against the previous run. The log starts empty; tracking began 2026-09-25.
 
@@ -51,6 +51,7 @@ Where the data is used:
   - Ban Watch (ban log, with EDHREC decks and commanders affected and price trend).
   - Trending Commanders (EDHREC `commanders/week`, with each commander's most-used cards priced).
   - New Set Tracker (EDHREC `sets/<code>`, the set's most-played new cards and commanders).
+- **Card Lookup:** "Price movement" in the price panel charts the printing on screen for each finish (a 30-day daily or 90-day weekly toggle), with its price range and 7/30/90-day changes. The All Printings table has a "30 days" column, filled in as each printing's history loads.
 - **Buylist:** typing a card name shows its 30- and 90-day trend at the cheapest printing. A move of 15% or more gets an "offer lower" or "don't offer too little" note. A printing in the last 45 days, or an upcoming one (Scryfall includes previewed cards), shows a reprint warning. Values are still typed by hand.
 - **Products:** "Box value: open it or sell it sealed?" computes each booster type's expected card value from MTGJSON's booster sheets and today's Scryfall prices. It shows the total, a "sellable" figure (cards $1+), chase cards, and a comparison against a sealed price staff type in. There's no free source for sealed prices or their history, so there's no sealed trend.
 - **Buyer's Guide → Price a Deck:** a pasted list is priced at the cheapest copies, with the total, a 30-day trend per card and a count of rising cards.

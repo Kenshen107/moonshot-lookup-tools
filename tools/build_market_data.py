@@ -12,8 +12,10 @@ Inputs (all free MTGJSON downloads):
 
 Outputs (in --out):
   meta.json            price date, build time, the weekly dates used below
-  history/<xx>.json    weekly TCGplayer market price points per printing,
-                       sharded by the first two characters of the Scryfall id
+  history/<xx>.json    TCGplayer market prices per printing: 14 weekly points
+                       (n/f/e = non-foil/foil/etched) and 31 daily points for
+                       the last 30 days (dn/df/de), sharded by the first two
+                       characters of the Scryfall id
   spikes.json          printings whose price jumped in the last 1-7 days
   bans.json            current banned/restricted cards per format, plus a
                        log of changes seen since the job started running
@@ -43,6 +45,7 @@ DOWNLOADS = {
 }
 
 WEEKS = 13            # weekly points kept per printing (about 90 days)
+DAYS = 30             # plus daily points for the last 30 days
 HISTORY_MIN_PRICE = 1.0   # skip printings that never reached $1 in the window
 SPIKE_MIN_PRICE = 2.0     # spike list: current price at least this
 SPIKE_MIN_JUMP = 1.0      # ...up at least this many dollars
@@ -98,6 +101,7 @@ def build(inputs, out, previous):
     price_date = prices["meta"]["date"]
     latest = dt.date.fromisoformat(price_date)
     week_dates = [iso(latest - dt.timedelta(days=7 * i)) for i in range(WEEKS, -1, -1)]  # oldest -> newest
+    day_dates = [iso(latest - dt.timedelta(days=i)) for i in range(DAYS, -1, -1)]
 
     history = {}  # scryfall id -> {"n": [...], "f": [...]}
     spikes = []
@@ -119,6 +123,8 @@ def build(inputs, out, previous):
                 points = [round(p, 2) if p is not None else None for p in points]
                 slot = history.setdefault(sid, {})
                 slot.setdefault(key, points)
+                daily = [price_on_or_before(series, days, d) for d in day_dates]
+                slot.setdefault("d" + key, [round(p, 2) if p is not None else None for p in daily])
 
             if now >= SPIKE_MIN_PRICE:
                 ago = {n: price_on_or_before(series, days, iso(latest - dt.timedelta(days=n))) for n in (1, 3, 7)}
@@ -191,7 +197,7 @@ def build(inputs, out, previous):
                    "current": current, "log": log}, f, separators=(",", ":"))
     with open(os.path.join(out, "meta.json"), "w", encoding="utf-8") as f:
         json.dump({"priceDate": price_date, "built": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
-                   "weeks": week_dates, "printings": len(history), "spikes": len(spikes),
+                   "weeks": week_dates, "days": day_dates, "printings": len(history), "spikes": len(spikes),
                    "source": "MTGJSON (TCGplayer market prices)"}, f, separators=(",", ":"))
     print(f"Done: {len(history)} printings with history, {len(spikes)} spikes, {len(log)} ban log entries", flush=True)
 
