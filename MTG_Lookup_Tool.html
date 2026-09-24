@@ -778,6 +778,74 @@
             --text-heading: #ffb870; --color-link: #ff9340;
         }
 
+        /* Winter / holidays */
+        html[data-theme="wonderland"] {
+            --brand: #2b6f9e; --brand-light: #9fd8ff;
+            --bg-canvas: #0d1520; --bg-panel: #16212e; --bg-panel-raised: #1e2c3c; --bg-inset: #0a1119;
+            --border: #2e4459; --border-subtle: #1e2c3c;
+            --text-heading: #e8f6ff; --color-link: #9fd8ff;
+        }
+        html[data-theme="evergreen"] {
+            --brand: #b3202a; --brand-light: #ff7b7b;
+            --bg-canvas: #0c1a12; --bg-panel: #14261b; --bg-panel-raised: #1c3325; --bg-inset: #09140e;
+            --border: #2c4a36; --border-subtle: #1c3325;
+            --text-heading: #fff3e0; --color-link: #ff9a8f;
+        }
+        html[data-theme="cocoa"] {
+            --brand: #8a4b24; --brand-light: #e0a370;
+            --bg-canvas: #1a120d; --bg-panel: #261a13; --bg-panel-raised: #31221a; --bg-inset: #140e0a;
+            --border: #4a3426; --border-subtle: #31221a;
+            --text-heading: #ffeedd; --color-link: #f0b27a;
+        }
+        html[data-theme="twinkle"] {
+            --brand: #8a5c00; --brand-light: #ffd166;
+            --bg-canvas: #0b0b14; --bg-panel: #161626; --bg-panel-raised: #1f1f33; --bg-inset: #08080f;
+            --border: #33334d; --border-subtle: #1f1f33;
+            --text-heading: #fff6d6; --color-link: #ffd166;
+        }
+        html[data-theme="festive"] {
+            --brand: #b3202a; --brand-light: #ff7a7a;
+            --bg-canvas: #140d0f; --bg-panel: #211418; --bg-panel-raised: #2c1b20; --bg-inset: #0f090b;
+            --border: #4a2a33; --border-subtle: #2c1b20;
+            --text-heading: #ffe6e6; --color-link: #7fe0a0;
+        }
+        html[data-theme="snowday"] {
+            --brand: #4a5fa8; --brand-light: #b8c6ff;
+            --bg-canvas: #10131d; --bg-panel: #1a1f2d; --bg-panel-raised: #232a3b; --bg-inset: #0c0f17;
+            --border: #36405a; --border-subtle: #232a3b;
+            --text-heading: #eef1ff; --color-link: #b8c6ff;
+        }
+        html[data-theme="christmaseve"] {
+            --brand: #b3202a; --brand-light: #ff6b6b;
+            --bg-canvas: #0a0f1f; --bg-panel: #141b30; --bg-panel-raised: #1c2540; --bg-inset: #070b17;
+            --border: #2c3a60; --border-subtle: #1c2540;
+            --text-heading: #fff1d6; --color-link: #ffd27a;
+        }
+        html[data-theme="christmas"] {
+            --brand: #b3202a; --brand-light: #f5c542;
+            --bg-canvas: #0f150f; --bg-panel: #1a2419; --bg-panel-raised: #233022; --bg-inset: #0b100b;
+            --border: #35482f; --border-subtle: #233022;
+            --text-heading: #fff4d6; --color-link: #f5c542;
+        }
+        html[data-theme="newyearseve"] {
+            --brand: #8a6510; --brand-light: #ffd76a;
+            --bg-canvas: #0a0a0a; --bg-panel: #171512; --bg-panel-raised: #211e18; --bg-inset: #070707;
+            --border: #3d3525; --border-subtle: #211e18;
+            --text-heading: #fff2c9; --color-link: #ffd76a;
+        }
+        html[data-theme="newyear"] {
+            --brand: #8a6510; --brand-light: #ffe08a;
+            --bg-canvas: #12100c; --bg-panel: #1e1b15; --bg-panel-raised: #29251c; --bg-inset: #0d0b08;
+            --border: #453c2a; --border-subtle: #29251c;
+            --text-heading: #fff6dc; --color-link: #ffe08a;
+        }
+        html[data-theme="blackfriday"] {
+            --brand: #c62828; --brand-light: #ffd400;
+            --bg-canvas: #0a0a0a; --bg-panel: #161616; --bg-panel-raised: #202020; --bg-inset: #060606;
+            --border: #383838; --border-subtle: #202020;
+            --text-heading: #ffffff; --color-link: #ffd400;
+        }
+
         /* A soft glow in each theme's colors behind everything. */
         html[data-theme] body { background-attachment: fixed; }
         html[data-theme="harvest"] body     { background-image: radial-gradient(ellipse at top, rgba(240, 145, 63, 0.16), transparent 60%); }
@@ -786,6 +854,17 @@
         html[data-theme="spooky"] body      { background-image: radial-gradient(ellipse at top, rgba(140, 80, 200, 0.2), transparent 60%); }
         html[data-theme="witching"] body    { background-image: radial-gradient(ellipse at bottom, rgba(111, 191, 59, 0.14), transparent 55%), radial-gradient(ellipse at top, rgba(120, 80, 180, 0.14), transparent 55%); }
         html[data-theme="halloween"] body   { background-image: radial-gradient(ellipse at bottom, rgba(255, 106, 0, 0.18), transparent 60%); }
+        html[data-theme="wonderland"] body  { background-image: radial-gradient(ellipse at top, rgba(159, 216, 255, 0.18), transparent 60%); }
+        html[data-theme="evergreen"] body   { background-image: radial-gradient(ellipse at bottom, rgba(46, 160, 90, 0.18), transparent 55%), radial-gradient(ellipse at top, rgba(179, 32, 42, 0.12), transparent 55%); }
+        html[data-theme="cocoa"] body       { background-image: radial-gradient(ellipse at bottom, rgba(224, 163, 112, 0.14), transparent 60%); }
+        html[data-theme="twinkle"] body     { background-image: radial-gradient(ellipse at top, rgba(255, 209, 102, 0.12), transparent 55%); }
+        html[data-theme="festive"] body     { background-image: radial-gradient(ellipse at top, rgba(179, 32, 42, 0.18), transparent 55%), radial-gradient(ellipse at bottom, rgba(46, 160, 90, 0.12), transparent 55%); }
+        html[data-theme="snowday"] body     { background-image: radial-gradient(ellipse at top, rgba(238, 241, 255, 0.16), transparent 60%); }
+        html[data-theme="christmaseve"] body { background-image: radial-gradient(circle at 85% 10%, rgba(255, 244, 214, 0.22), rgba(255, 244, 214, 0.05) 12%, transparent 38%); }
+        html[data-theme="christmas"] body   { background-image: radial-gradient(ellipse at top, rgba(245, 197, 66, 0.14), transparent 55%), radial-gradient(ellipse at bottom, rgba(179, 32, 42, 0.14), transparent 55%); }
+        html[data-theme="newyearseve"] body { background-image: radial-gradient(ellipse at top, rgba(255, 215, 106, 0.16), transparent 60%); }
+        html[data-theme="newyear"] body     { background-image: radial-gradient(ellipse at top, rgba(255, 224, 138, 0.16), transparent 60%); }
+        html[data-theme="blackfriday"] body { background-image: radial-gradient(ellipse at top, rgba(255, 212, 0, 0.12), transparent 55%); }
 
         /* Today's-theme label + the Classic toggle, under the page title. */
         .seasonal-badge {
@@ -5209,23 +5288,57 @@
             harvestmoon: { label: 'Harvest Moon',       icon: '🌕', fx: [['✨', 'twinkle'], ['⭐', 'twinkle']] },
             spooky:      { label: 'Spooky Friday',      icon: '🦇', fx: [['🦇', 'drift']] },
             witching:    { label: 'Witching Wednesday', icon: '🧹', fx: [['🧙‍♀️', 'drift'], ['🧹', 'drift'], ['✨', 'rise']] },
-            halloween:   { label: 'Halloween Night',    icon: '🎃', fx: [['🦇', 'drift'], ['👻', 'drift'], ['🎃', 'fall']] }
+            halloween:   { label: 'Halloween Night',    icon: '🎃', fx: [['🦇', 'drift'], ['👻', 'drift'], ['🎃', 'fall']] },
+            // Winter / holidays. fxCount (optional) overrides how many particles.
+            wonderland:  { label: 'Winter Wonderland',  icon: '❄️', fx: [['❄️', 'fall'], ['❄', 'fall'], ['✨', 'twinkle']] },
+            evergreen:   { label: 'Evergreen',          icon: '🎄', fx: [['❄️', 'fall'], ['🌲', 'fall'], ['❄', 'fall']] },
+            cocoa:       { label: 'Cookies & Cocoa',    icon: '🍪', fx: [['🍪', 'fall'], ['☕', 'fall'], ['❄', 'fall']] },
+            twinkle:     { label: 'Twinkle Lights',     icon: '✨', fx: [['🔴', 'twinkle'], ['🟢', 'twinkle'], ['🟡', 'twinkle'], ['🔵', 'twinkle'], ['✨', 'twinkle']], fxCount: 26 },
+            festive:     { label: 'Festive Friday',     icon: '🎁', fx: [['🎁', 'drift'], ['❄️', 'fall'], ['🎀', 'fall']] },
+            snowday:     { label: 'Snow Day Sunday',    icon: '☃️', fx: [['❄️', 'fall'], ['❄', 'fall'], ['☃️', 'drift']], fxCount: 34 },
+            christmaseve:{ label: 'Christmas Eve',      icon: '🎅', fx: [['🛷', 'drift'], ['🦌', 'drift'], ['⭐', 'twinkle'], ['❄️', 'fall']] },
+            christmas:   { label: 'Christmas Day',      icon: '🎄', fx: [['🎁', 'fall'], ['⭐', 'twinkle'], ['❄️', 'fall']] },
+            newyearseve: { label: "New Year's Eve",     icon: '🎆', fx: [['🎆', 'twinkle'], ['🎇', 'twinkle'], ['✨', 'twinkle'], ['🎊', 'fall']], fxCount: 24 },
+            newyear:     { label: "New Year's Day",     icon: '🥳', fx: [['🎉', 'fall'], ['🎊', 'fall'], ['✨', 'twinkle']] },
+            blackfriday: { label: 'Black Friday',       icon: '🛍️', fx: [['🛍️', 'drift'], ['🏷️', 'fall']] }
         };
 
-        // month/day are 1-based and inclusive. Fixed dates beat weekdays;
-        // weekdays (0 = Sunday) beat the random pool.
+        // Black Friday: the day after the fourth Thursday of November.
+        function isBlackFriday(date) {
+            if (date.getMonth() !== 10) return false;
+            const firstWeekday = new Date(date.getFullYear(), 10, 1).getDay();
+            const firstThursday = 1 + ((4 - firstWeekday + 7) % 7);
+            return date.getDate() === firstThursday + 22;
+        }
+
+        // month/day are 1-based and inclusive; a season can run past New
+        // Year's (start later in the year than end). Fixed dates beat
+        // weekdays; weekdays (0 = Sunday) beat the random pool. A schedule
+        // with match() + theme is a single day whose date moves each year.
         const SEASONAL_SCHEDULES = [
             {
                 key: 'fall', name: 'fall', start: [9, 22], end: [10, 31],
                 fixedDates: { '10-31': 'halloween' },
                 weekdays: { 3: 'witching', 5: 'spooky' },
                 randomPool: ['harvest', 'pumpkin', 'harvestmoon']
+            },
+            { key: 'blackfriday', name: 'Black Friday', match: isBlackFriday, theme: 'blackfriday' },
+            {
+                key: 'winter', name: 'holiday', start: [12, 1], end: [1, 1],
+                fixedDates: { '12-24': 'christmaseve', '12-25': 'christmas', '12-31': 'newyearseve', '1-1': 'newyear' },
+                weekdays: { 0: 'snowday', 5: 'festive' },
+                randomPool: ['wonderland', 'evergreen', 'cocoa', 'twinkle']
             }
         ];
 
         function seasonalScheduleFor(date) {
             const md = (date.getMonth() + 1) * 100 + date.getDate();
-            return SEASONAL_SCHEDULES.find(s => md >= s.start[0] * 100 + s.start[1] && md <= s.end[0] * 100 + s.end[1]) || null;
+            return SEASONAL_SCHEDULES.find(s => {
+                if (s.match) return s.match(date);
+                const start = s.start[0] * 100 + s.start[1];
+                const end = s.end[0] * 100 + s.end[1];
+                return start <= end ? md >= start && md <= end : md >= start || md <= end;
+            }) || null;
         }
 
         // Same pick for everyone all day (seeded by the date), and never the
@@ -5248,7 +5361,8 @@
             const schedule = seasonalScheduleFor(date);
             if (!schedule) return null;
             const md = `${date.getMonth() + 1}-${date.getDate()}`;
-            const key = (schedule.fixedDates && schedule.fixedDates[md])
+            const key = schedule.theme
+                || (schedule.fixedDates && schedule.fixedDates[md])
                 || (schedule.weekdays && schedule.weekdays[date.getDay()])
                 || seasonalRandomPick(schedule, date, depth);
             return { schedule, key };
@@ -5297,8 +5411,8 @@
             if (!layer) return;
             layer.innerHTML = '';
             if (!document.documentElement.hasAttribute('data-theme')) return;
-            const fx = SEASONAL_THEMES[SEASONAL_TODAY.key].fx;
-            const count = window.innerWidth < 700 ? 10 : 18;
+            const { fx, fxCount = 18 } = SEASONAL_THEMES[SEASONAL_TODAY.key];
+            const count = window.innerWidth < 700 ? Math.round(fxCount * 0.55) : fxCount;
             const rand = (min, max) => min + Math.random() * (max - min);
             for (let i = 0; i < count; i++) {
                 const [glyph, motion] = fx[i % fx.length];
