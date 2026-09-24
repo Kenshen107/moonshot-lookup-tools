@@ -1162,7 +1162,7 @@
             }
         }
 
-        /* ---- Quick Stock Check - a floating widget so "do you have X"
+        /* ---- Moonshot Search - a floating widget so "do you have X"
            can be answered from any tab, not just the main MTG lookup, since
            that's the actual counter workflow this is built for. Mirrors the
            "Our Values" recall button's floating-pill pattern on the
@@ -1853,7 +1853,7 @@
             font-size: 0.85em;
         }
 
-        /* ---- Moonshot stock check ---- */
+        /* ---- Moonshot store links ---- */
         .moonshot-block {
             background: #1a1a1a;
             border: 1px solid #404040;
@@ -1879,48 +1879,18 @@
         }
 
         .moonshot-check-btn {
-            width: auto;
-            padding: 6px 12px;
-            font-size: 0.8em;
-            margin-top: 0;
+            display: inline-block;
+            padding: 7px 14px;
+            font-size: 0.82em;
+            font-weight: 600;
+            background: var(--brand);
+            color: var(--text-heading);
+            border-radius: var(--radius-sm);
+            text-decoration: none;
         }
 
-        .moonshot-btn-group {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        /* "Check All Locations" - visually secondary since it's the slower,
-           opt-in deep scan, not the default action */
-        .moonshot-check-btn-secondary {
-            background: #333;
-            border: 1px solid #505050;
-        }
-
-        .moonshot-check-btn-secondary:hover {
-            background: #404040;
-        }
-
-        /* The deep scan can return several listings' worth of per-condition,
-           per-location breakdowns - bound its height and let it scroll rather
-           than pushing the rest of the page down by a huge amount. */
-        .moonshot-results-scroll {
-            max-height: 340px;
-            overflow-y: auto;
-        }
-
-        .moonshot-result-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid #2a2a2a;
-            font-size: 0.9em;
-        }
-
-        .moonshot-result-item:last-child {
-            border-bottom: none;
+        .moonshot-check-btn:hover {
+            background: var(--brand-light);
         }
 
         .moonshot-link {
@@ -2403,12 +2373,7 @@
 
         .lands-row-stock {
             width: 1%;
-            min-width: 90px;
-        }
-
-        .lands-row-stock .card-tile-stock-result {
-            min-width: 160px;
-            font-size: 0.85em;
+            white-space: nowrap;
         }
 
         .lands-pkg-total td {
@@ -3414,13 +3379,18 @@
             font-weight: 400;
         }
 
+        /* "Find at Moonshot" link on card tiles and Land Finder rows */
         .card-tile-stock-btn {
+            display: block;
+            box-sizing: border-box;
             width: 100%;
-            margin-top: 0;
             padding: 5px 8px;
             font-size: 0.72em;
+            text-align: center;
+            text-decoration: none;
             background: #1e2c3d;
             border: 1px solid var(--brand);
+            border-radius: var(--radius-sm);
             color: #6cb2ff;
         }
 
@@ -3428,38 +3398,10 @@
             background: #26364a;
         }
 
-        /* The "Check Stock for All" button reuses this class for its color
-           scheme but is a standalone button, not a tile-filling one - this
-           combined selector (higher specificity than either class alone)
-           overrides the width/padding regardless of source order. */
         .card-tile-stock-btn.btn-compact {
+            display: inline-block;
             width: auto;
-            padding: 8px 16px;
-        }
-
-        .card-tile-stock-result {
-            font-size: 0.72em;
-            color: #909090;
-            line-height: 1.4;
-            max-height: 160px;
-            overflow-y: auto;
-        }
-
-        .card-tile-stock-result .moonshot-result-item {
-            font-size: 1em;
-            padding: 3px 0;
-        }
-
-        .card-tile-stock-result .moonshot-link {
-            font-size: 0.95em;
-        }
-
-        .card-tile-stock-result .in-stock {
-            color: #7ee787;
-        }
-
-        .card-tile-stock-result .out-stock {
-            color: #707070;
+            padding: 6px 12px;
         }
 
         /* ---- Commander brackets ---- */
@@ -5216,8 +5158,8 @@
                     Every full-art printing of a basic land, which set it's from,
                     and what it's going for nonfoil and foil. Prices are TCGplayer
                     market prices via Scryfall, refreshed daily - click any land
-                    for the full card view or to check Moonshot's stock of that
-                    exact printing.
+                    for the full card view, or use Find at Moonshot to search the
+                    store for it.
                 </div>
                 <div class="staples-controls" style="flex-wrap:wrap;" id="basicsTypePicker">
                     <button type="button" class="staples-sort-btn active" data-basic="plains" onclick="selectBasicType('plains')">⚪ Plains</button>
@@ -5959,17 +5901,17 @@
         </div>
     </div>
 
-    <!-- Quick Stock Check - answers "do you have X" from any tab, without
-         switching to the main MTG lookup first. -->
-    <button type="button" class="quick-stock-btn" id="quickStockBtn" onclick="toggleQuickStock()" title="Quick stock check" aria-label="Quick stock check">📦 <span class="quick-stock-label">Quick Stock</span></button>
-    <div class="quick-stock-panel" id="quickStockPanel" role="dialog" aria-label="Quick stock check">
+    <!-- Moonshot Search - "do we have X?" from any tab: opens Moonshot's own
+         store search for that name in a new tab. -->
+    <button type="button" class="quick-stock-btn" id="quickStockBtn" onclick="toggleQuickStock()" title="Search Moonshot's store" aria-label="Search Moonshot's store">📦 <span class="quick-stock-label">Moonshot Search</span></button>
+    <div class="quick-stock-panel" id="quickStockPanel" role="dialog" aria-label="Search Moonshot's store">
         <div class="quick-stock-panel-header">
-            <span>Quick Stock Check</span>
-            <button type="button" class="quick-stock-close" onclick="toggleQuickStock()" aria-label="Close quick stock check">✕</button>
+            <span>Search Moonshot's store</span>
+            <button type="button" class="quick-stock-close" onclick="toggleQuickStock()" aria-label="Close Moonshot search">✕</button>
         </div>
-        <input type="text" id="quickStockInput" class="text-input" placeholder="Card name..." autocomplete="off" aria-label="Card name to check stock for" onkeydown="if(event.key==='Enter'){runQuickStockCheck();}">
-        <button type="button" class="quick-stock-submit" onclick="runQuickStockCheck()">Check Stock</button>
-        <div id="quickStockContainer"></div>
+        <input type="text" id="quickStockInput" class="text-input" placeholder="Card name..." autocomplete="off" aria-label="Card name to search on moonshotgamestore.com" onkeydown="if(event.key==='Enter'){runQuickStockCheck();}">
+        <button type="button" class="quick-stock-submit" onclick="runQuickStockCheck()">Search Moonshot →</button>
+        <div class="moonshot-status" style="margin-top:8px;">Opens moonshotgamestore.com in a new tab with live stock and prices.</div>
     </div>
 
     <script>
@@ -6002,7 +5944,7 @@
         // another tool later is just one more entry here, not another set of
         // element lookups and display-toggle lines to keep in sync.
         const APP_VIEWS = {
-            mtg:          { appId: 'mtgApp',          icon: '🃏', navLabel: 'Card Lookup',     title: '🃏 MTG Card Lookup', desc: 'Prices, printings, legality and Moonshot stock for any card', keywords: 'search price stock card lookup' },
+            mtg:          { appId: 'mtgApp',          icon: '🃏', navLabel: 'Card Lookup',     title: '🃏 MTG Card Lookup', desc: 'Prices, rules text, printings and legality for any card', keywords: 'search price stock card lookup' },
             buyersguide:  { appId: 'buyersGuideApp',  icon: '🛒', navLabel: "Buyer's Guide",   title: "🛒 Buyer's Guide", desc: 'Find cards to sell by color, theme and budget, plus land packages', keywords: 'sell customer theme lands basics finder', onShow: showBuyersGuideTab },
             buylist:      { appId: 'buylistApp',      icon: '💰', navLabel: 'Buylist',         title: '💰 Buylist / Store Credit Calculator', desc: 'Work out cash and store-credit offers for a stack of cards', keywords: 'buy trade in credit cash offer', onShow: showBuylistTab },
             pulllist:     { appId: 'pullListApp',     icon: '📋', navLabel: 'Pull List',       title: '📋 Pull List', desc: 'Paste online orders and pull them set by set', keywords: 'orders online shopify pick pull' },
@@ -7271,7 +7213,7 @@
 
             if (setPrimerGroupMode === 'price') {
                 // Flat list, priciest first - the shared tile (price, rank,
-                // Buylist, Check Stock) earns its keep here since price is
+                // Moonshot link) earns its keep here since price is
                 // the whole point of this view, unlike the Rarity/Color
                 // browsing modes which stay on the lighter image-only tile.
                 const priced = [...displayCards].sort((a, b) =>
@@ -7369,7 +7311,7 @@
             resultsDiv.innerHTML = html;
         }
 
-        // Full card lookup (pricing/rulings/Moonshot stock) still lives one
+        // Full card lookup (pricing/printings/rulings) still lives one
         // click away inside the popup, but the primer itself and the popup it
         // opens stay self-contained - no extra fetch needed since Scryfall's
         // set search already returned the whole card object.
@@ -7383,8 +7325,8 @@
         // The one shared "small window" for looking at a card without leaving
         // whatever tab/list you were browsing - used by Set Primer, ban lists
         // (Format Rules + Value Vintage), and the Buyer's Guide
-        // tiles. Shows image, oracle text, legality, printings, and Moonshot
-        // stock right in the popup; "Full Lookup" is still one click away for
+        // tiles. Shows image, oracle text, legality, printings, and a link to
+        // Moonshot's store right in the popup; "Full Lookup" is still one click away for
         // pricing/rulings if that's ever needed.
         // Prev/Next state for the modal - set whenever openCardModal is given
         // a navList (the on-screen order of whatever grid it was opened
@@ -7449,32 +7391,25 @@
                     <div class="detail-label" style="margin-top:4px;">Format Legality</div>
                     <div class="legality-grid">${renderLegalityGridHTML(card.legalities || {})}</div>
 
-                    <div class="moonshot-block" style="margin-top:0;">
-                        <div class="moonshot-header">
-                            <span class="moonshot-title">Moonshot Games</span>
-                            <button class="moonshot-check-btn moonshot-check-btn-secondary" onclick="checkMoonshotStockInto('cardModalMoonshot', '${safeName}', '${setCode}', '${setName.replace(/'/g, "\\'")}')">Check All Locations</button>
-                        </div>
-                        <div id="cardModalMoonshot" class="moonshot-results-scroll"><div class="moonshot-status">Checking...</div></div>
-                    </div>
+                    ${moonshotBlockHTML(card.name)}
 
                     <details class="all-printings" id="cardModalPrintingsDetails">
                         <summary>All Printings (loading...)</summary>
                         <div class="printings-list" id="cardModalPrintingsList"></div>
                     </details>
 
-                    <button type="button" class="format-banlist-btn" onclick="jumpToCardFromPrimer('${safeName}')">Full Lookup (pricing, rulings, stock) →</button>
+                    <button type="button" class="format-banlist-btn" onclick="jumpToCardFromPrimer('${safeName}')">Full Lookup (pricing, printings, rulings) →</button>
                 </div>
             `;
             overlay.classList.add('open');
             updateCardModalNavButtons();
 
-            quickCheckMoonshotStockInto('cardModalMoonshot', card.name, setCode, setName);
             loadCardModalPrintings(card);
         }
 
         // Read-only printings list for the card popup - clicking a printing
-        // reopens the popup on that exact printing (its own legality/stock
-        // are refreshed too), rather than swapping just the image like the
+        // reopens the popup on that exact printing (its own legality is
+        // refreshed too), rather than swapping just the image like the
         // main tab's printings list does.
         let cardModalPrintsCache = [];
         async function loadCardModalPrintings(card) {
@@ -8268,44 +8203,34 @@
                     <div class="card-tile-meta-row">
                         ${priceHTML}
                     </div>
-                    <button type="button" class="card-tile-stock-btn" onclick="checkTileMoonshotStock('${tileId}', '${safeName}')">Find at Moonshot →</button>
-                    <div class="card-tile-stock-result" id="${tileId}-stock"></div>
+                    ${moonshotLinkHTML(card.name)}
                 </div>
             `;
         }
 
-        // Per-tile stock check - uses the fast single-listing check, not the
-        // full "Check All Locations" scan. This runs across every visible
-        // tile when someone hits "Check Stock for All" (100+ cards in the
-        // Land Finder), so it needs to stay cheap per card - the deep
-        // scan is ~8x the requests and was making that bulk pass far slower
-        // than it needs to be for "is this roughly in stock" at a glance.
-        async function checkTileMoonshotStock(tileId, cardName) {
-            return quickCheckMoonshotStockInto(`${tileId}-stock`, cardName);
+        // "Find at Moonshot" - a plain link to Moonshot's own store search.
+        // The tool used to check stock live, but Shopify doesn't let other
+        // sites read the store, so that ran through free public relay
+        // services (allorigins.win, cors.sh) that were slow and often down.
+        // The store's own search page always has the real stock and prices.
+        function moonshotSearchUrl(cardName) {
+            return `${MOONSHOT_BASE}/search?q=${encodeURIComponent(cardName)}`;
         }
 
-        // "Check Stock for All" - works through every visible tile in small
-        // concurrent batches (not all at once, not one at a time). A fixed
-        // stagger alone doesn't bound how many requests are ACTUALLY in
-        // flight together - each check can take several seconds through the
-        // CORS proxy chain, so firing one every 300ms on a 100-card list
-        // still piles up close to 100 simultaneous requests within a few
-        // seconds, which is exactly the kind of burst that gets a shared
-        // public proxy rate-limited for everyone. Waiting for each small
-        // batch to finish before starting the next one keeps a hard cap on
-        // concurrency regardless of how long any individual check takes.
-        const MOONSHOT_BULK_CHECK_BATCH_SIZE = 4;
+        function moonshotLinkHTML(cardName, label = 'Find at Moonshot →', extraClass = '') {
+            return `<a class="card-tile-stock-btn${extraClass ? ' ' + extraClass : ''}" href="${moonshotSearchUrl(cardName)}" target="_blank" rel="noopener">${label}</a>`;
+        }
 
-        async function checkAllVisibleStock(containerId) {
-            // Card tiles, or the Land Finder's compact rows.
-            const tiles = [...document.querySelectorAll(`#${containerId} .card-tile, #${containerId} .lands-row`)];
-            for (let i = 0; i < tiles.length; i += MOONSHOT_BULK_CHECK_BATCH_SIZE) {
-                const batch = tiles.slice(i, i + MOONSHOT_BULK_CHECK_BATCH_SIZE);
-                await Promise.all(batch.map(tile => {
-                    const nameEl = tile.querySelector('.card-tile-name, .lands-row-name');
-                    return nameEl ? checkTileMoonshotStock(tile.id, nameEl.textContent) : Promise.resolve();
-                }));
-            }
+        function moonshotBlockHTML(cardName) {
+            return `
+                <div class="moonshot-block">
+                    <div class="moonshot-header">
+                        <span class="moonshot-title">Moonshot Games</span>
+                        <a class="moonshot-check-btn" href="${moonshotSearchUrl(cardName)}" target="_blank" rel="noopener">Check stock at Moonshot →</a>
+                    </div>
+                    <div class="moonshot-status">Opens moonshotgamestore.com's search for "${cardName}" in a new tab, with live stock and prices for both stores.</div>
+                </div>
+            `;
         }
 
         // ============== COMMANDER BRACKETS ==============
@@ -9223,9 +9148,6 @@
                     ${totalCards.toLocaleString()} matching card${totalCards === 1 ? '' : 's'}
                     · <a href="${scryfallLink}" target="_blank" rel="noopener">open this exact search on Scryfall ↗</a>
                 </div>
-                <div class="staples-bulk-actions">
-                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('bgResults')">Check Stock for All Shown</button>
-                </div>
                 ${keyHTML}
                 ${matches.length > 0 ? `<div class="bg-section-title">${keyPieces.length > 0 ? 'More matches' : 'Matches'}</div>` : ''}
                 <div class="card-tile-grid" id="bgMatchGrid">
@@ -9970,7 +9892,7 @@
         }
 
         // One compact row: name opens the card popup (at the cheapest
-        // printing), with cycle + set underneath and a quick stock check.
+        // printing), with cycle + set underneath and a link to Moonshot's store.
         // prefix keeps row ids unique when a land is in more than one table.
         function landRowHTML(land, prefix) {
             const { card, cat } = land;
@@ -9991,8 +9913,7 @@
                     </td>
                     <td>${landPriceChipHTML(land)}</td>
                     <td class="lands-row-stock">
-                        <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkTileMoonshotStock('${rowId}', '${safeName}')">Stock</button>
-                        <div class="card-tile-stock-result" id="${rowId}-stock"></div>
+                        ${moonshotLinkHTML(card.name, 'Find →', 'btn-compact')}
                     </td>
                 </tr>
             `;
@@ -10057,9 +9978,7 @@
                 ${landsTableHTML('landsPackageTable', picks, 'pkg', `
                     <tfoot><tr class="lands-pkg-total"><td>${picks.length} land${picks.length === 1 ? '' : 's'}</td><td>${formatUsd(total)}</td><td></td></tr></tfoot>
                 `)}
-                <div class="staples-bulk-actions" style="margin-top:8px;">
-                    <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('landsPackageTable')">Check Stock for the Package</button>
-                </div>
+
             ` : '';
 
             const upgradesHTML = upgrades.length ? `
@@ -10102,10 +10021,7 @@
                         ${sortButton('premium', '💎 Priciest first')}
                     </div>
                     ${listed.length
-                        ? `${landsTableHTML('landsAllTable', listed, 'all')}
-                           <div class="staples-bulk-actions" style="margin-top:8px;">
-                               <button type="button" class="card-tile-stock-btn btn-compact" onclick="checkAllVisibleStock('landsAllTable')">Check Stock for These ${listed.length}</button>
-                           </div>`
+                        ? landsTableHTML('landsAllTable', listed, 'all')
                         : `<div class="moonshot-status">No ${colorsLabel} lands in this price bracket.</div>`}
                     ${noSearchCount ? `<div class="bg-section-sub" style="margin-top:12px;">${noSearchCount} more cycles are described in the glossary below but don't have a card search yet.</div>` : ''}
                 </div>
@@ -10183,11 +10099,6 @@
             return v === null ? '<span class="basic-price-na">—</span>' : formatUsd(v);
         }
 
-        // For values dropped into a single-quoted string inside an onclick="..." attribute.
-        function jsAttrString(str) {
-            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        }
-
         function basicsPriceRange(list, field) {
             const prices = list.map(c => basicPrice(c, field)).filter(p => p !== null);
             if (prices.length === 0) return '—';
@@ -10245,8 +10156,7 @@
                             <span>Foil <strong>${basicPriceHTML(basicPrice(c, 'usd_foil'))}</strong></span>
                             ${etched !== null ? `<span>Etched <strong>${formatUsd(etched)}</strong></span>` : ''}
                         </div>
-                        <button type="button" class="card-tile-stock-btn" onclick="quickCheckMoonshotStockInto('${tileId}-stock', '${jsAttrString(c.name)}', '${c.set.toUpperCase()}', '${jsAttrString(c.set_name || '')}')">Find at Moonshot →</button>
-                        <div class="card-tile-stock-result" id="${tileId}-stock"></div>
+                        ${moonshotLinkHTML(c.name)}
                     </div>
                 `;
             }).join('');
@@ -11462,8 +11372,8 @@
             renderLegality(card);
             renderRelatedCards(card);
 
-            // Reset the Moonshot stock-check block for this new card
-            renderMoonshotBlock(card.name, setCode, setName);
+            // Point the Moonshot store link at this card
+            renderMoonshotBlock(card.name);
         }
 
         // Render the format legality grid for a card (data is already on the card object)
@@ -11565,458 +11475,11 @@
             refreshCardText();
         }
 
-        // Render the Moonshot Games stock-check block. This is EXPERIMENTAL - it
-        // tries Shopify's public predictive-search endpoint, which usually works
-        // for a locally-opened file but isn't guaranteed for every store config.
-        // If the live check fails (network/CORS/store settings), it falls back to
-        // a guaranteed-to-work "search on Moonshot" link instead.
-        //
-        // setCode/setName identify which PRINTING is currently on screen, so
-        // Check Stock can prefer a listing for that exact printing instead of
-        // just whatever a plain name search ranks first (see checkMoonshotStockInto).
-        // containerId/resultsId default to the singleton main-lookup block's
-        // ids so the two existing call sites (main card view, printings
-        // list) don't need to change - the Quick Stock Check floating
-        // widget passes its own ids to get an independent instance.
-        function renderMoonshotBlock(cardName, setCode, setName, containerId, resultsId) {
-            containerId = containerId || 'moonshotContainer';
-            resultsId = resultsId || 'moonshotResults';
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            const safeName = cardName.replace(/'/g, "\\'");
-            const safeSetCode = (setCode || '').replace(/'/g, "\\'");
-            const safeSetName = (setName || '').replace(/'/g, "\\'");
-            const searchUrl = `${MOONSHOT_BASE}/search?q=${encodeURIComponent(cardName)}`;
-
-            container.innerHTML = `
-                <div class="moonshot-block">
-                    <div class="moonshot-header">
-                        <span class="moonshot-title">Moonshot Games</span>
-                        <div class="moonshot-btn-group">
-                            <button class="moonshot-check-btn" onclick="quickCheckMoonshotStock('${safeName}', '${safeSetCode}', '${safeSetName}', '${resultsId}')">Quick Check</button>
-                            <button class="moonshot-check-btn moonshot-check-btn-secondary" onclick="checkMoonshotStock('${safeName}', '${safeSetCode}', '${safeSetName}', '${resultsId}')">Check All Locations</button>
-                        </div>
-                    </div>
-                    <div id="${resultsId}" class="moonshot-results-scroll">
-                        <a class="moonshot-link" href="${searchUrl}" target="_blank" rel="noopener">Search "${cardName}" on moonshotgamestore.com →</a>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Attempt a live stock check against Moonshot's Shopify storefront.
-        // The suggest.json endpoint is public, but a locally-opened file is often
-        // blocked from reading the response by the browser's CORS policy (Shopify
-        // doesn't always allow file:// origins). We try direct first, then fall
-        // back to a chain of public CORS proxies, then finally to the guaranteed
-        // search link. Each attempt is time-boxed so a stalled/slow proxy can't
-        // hang the whole check, and each is retried once (transient network
-        // hiccups and proxy rate-limiting are common) before moving on.
-        const MOONSHOT_FETCH_TIMEOUT_MS = 6000;
-        // corsproxy.io now requires a paid API key (returns 401 without one) and
-        // api.codetabs.com is unreachable from a lot of networks - both verified
-        // dead as of 2026-09, so they're left out rather than wasting a timeout
-        // cycle on every lookup. allorigins.win and proxy.cors.sh both verified
-        // working; keeping two means one being down/rate-limited doesn't take
-        // stock checks down entirely.
-        const MOONSHOT_PROXIES = [
-            url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-            url => `https://proxy.cors.sh/${url}`
-        ];
-        // Remembers which method (direct, or one of the proxies) most recently
-        // succeeded, so subsequent lookups in the same session try that one
-        // first instead of always re-walking the whole chain from the top.
-        let moonshotLastWorkingMethod = null; // null = direct, otherwise an index into MOONSHOT_PROXIES
-
-        // A stock check fires off dozens of fetchMoonshotJSON calls at once
-        // (one per candidate product, then one per available variant) via
-        // Promise.all. If the assumed-good method above stops working
-        // mid-session, every one of those calls would otherwise discover
-        // that independently and in parallel - a thundering herd all
-        // re-walking direct + both proxies (each retried, each time-boxed)
-        // at the same moment, which is exactly the kind of burst that gets
-        // a free CORS proxy to rate-limit or slow down further. This holds
-        // the one in-flight rediscovery so concurrent callers wait on it and
-        // reuse its answer instead of each re-walking the chain themselves.
-        let moonshotDiscoveryPromise = null;
-
-        async function fetchWithTimeout(url, timeoutMs) {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-                return await fetch(url, { signal: controller.signal });
-            } finally {
-                clearTimeout(timer);
-            }
-        }
-
-        async function tryFetchJSON(url) {
-            try {
-                const res = await fetchWithTimeout(url, MOONSHOT_FETCH_TIMEOUT_MS);
-                if (res.ok) return await res.json();
-            } catch (err) {
-                // fall through to caller's retry/fallback logic
-            }
-            return undefined; // sentinel: distinct from a legitimate null JSON response
-        }
-
-        // Try one method (direct fetch, or a specific proxy), with a single retry.
-        async function tryMethodWithRetry(targetUrl, methodIndex) {
-            const buildUrl = methodIndex === null ? (u => u) : MOONSHOT_PROXIES[methodIndex];
-            for (let attempt = 0; attempt < 2; attempt++) {
-                const result = await tryFetchJSON(buildUrl(targetUrl));
-                if (result !== undefined) return result;
-            }
-            return undefined;
-        }
-
-        async function fetchMoonshotJSON(url) {
-            // Fast path: try whatever method worked last time - most sessions
-            // keep using the same network path, so this avoids re-paying the
-            // cost of a full walk on every single lookup.
-            const fastResult = await tryMethodWithRetry(url, moonshotLastWorkingMethod);
-            if (fastResult !== undefined) return fastResult;
-
-            // The assumed-good method just failed - rediscover which method
-            // (if any) currently works. Concurrent callers share this one
-            // walk instead of each independently re-walking direct + both
-            // proxies (see the comment on moonshotDiscoveryPromise above).
-            if (!moonshotDiscoveryPromise) {
-                moonshotDiscoveryPromise = discoverMoonshotMethod(url).finally(() => {
-                    moonshotDiscoveryPromise = null;
-                });
-                const { methodIndex, result } = await moonshotDiscoveryPromise;
-                if (methodIndex === undefined) {
-                    console.warn('All Moonshot fetch attempts (direct + proxies) failed for', url);
-                    return null;
-                }
-                return result; // this call's own URL is what discovery just fetched - reuse it
-            }
-
-            const { methodIndex } = await moonshotDiscoveryPromise;
-            if (methodIndex === undefined) {
-                console.warn('All Moonshot fetch attempts (direct + proxies) failed for', url);
-                return null;
-            }
-            const result = await tryMethodWithRetry(url, methodIndex);
-            return result === undefined ? null : result;
-        }
-
-        // Proxy indices are derived from MOONSHOT_PROXIES itself (not
-        // hardcoded) so this never drifts out of sync if a proxy is
-        // added/removed - it previously hardcoded a 3rd proxy index that no
-        // longer existed, throwing "buildUrl is not a function" on every
-        // check that fell through to it.
-        async function discoverMoonshotMethod(url) {
-            const order = [null, ...MOONSHOT_PROXIES.map((_, i) => i)];
-            for (const methodIndex of order) {
-                const result = await tryMethodWithRetry(url, methodIndex);
-                if (result !== undefined) {
-                    moonshotLastWorkingMethod = methodIndex;
-                    return { methodIndex, result };
-                }
-            }
-            return { methodIndex: undefined, result: undefined };
-        }
-
-        // Pull condition-level availability (NM/LP/MP/HP/D/etc.) for one product
-        // via Shopify's public {handle}.js endpoint. This DOES tell us which
-        // conditions are in stock, but it does NOT expose an exact quantity or
-        // which physical location (Noblesville vs Plainfield) holds it - Shopify's
-        // public storefront simply doesn't publish that level of detail without
-        // logging in, so we're upfront about that limit rather than guessing.
-        async function fetchProductVariants(productUrl) {
-            // productUrl looks like "/products/handle-name?tracking=params" - strip to the handle
-            const path = productUrl.split('?')[0];
-            const jsUrl = `${MOONSHOT_BASE}${path}.js`;
-            return await fetchMoonshotJSON(jsUrl);
-        }
-
-        // Thin wrapper defaulting to the MTG section's fixed element id -
-        // the Quick Stock Check widget passes its own resultsElId instead.
-        async function checkMoonshotStock(cardName, setCode, setName, resultsElId) {
-            return checkMoonshotStockInto(resultsElId || 'moonshotResults', cardName, setCode, setName);
-        }
-
-        // Moonshot's own product titles follow "{SET CODE}: {Card Name}" (e.g.
-        // "A25: Lightning Bolt", "CLU: Lightning Bolt"). Use that to prefer
-        // listings for the EXACT printing currently on screen, rather
-        // than just whatever a plain name search ranks first - a name search for
-        // "Lightning Bolt" alone returns a dozen different printings, and without
-        // this the app would show stock for an arbitrary one of them regardless
-        // of which version the user actually has open.
-        function filterMoonshotProductsForPrinting(products, setCode, setName) {
-            if (!setCode && !setName) return products;
-            const codePrefix = setCode ? `${setCode.toLowerCase()}:` : null;
-            const nameLower = setName ? setName.toLowerCase() : null;
-            return products.filter(p => {
-                const title = (p.title || '').toLowerCase();
-                if (codePrefix && title.startsWith(codePrefix)) return true;
-                if (nameLower && title.includes(nameLower)) return true;
-                return false;
-            });
-        }
-
-        // Thin wrapper defaulting to the MTG section's fixed element id -
-        // the Quick Stock Check widget passes its own resultsElId instead.
-        async function quickCheckMoonshotStock(cardName, setCode, setName, resultsElId) {
-            return quickCheckMoonshotStockInto(resultsElId || 'moonshotResults', cardName, setCode, setName);
-        }
-
-        // Fast, single-listing stock check - just the best-matching printing's
-        // price and whether it's in stock at all (not broken out by condition
-        // or store location). One suggest.json call plus one variant-detail
-        // call, versus the ~8-candidates-deep scan below, so this is the
-        // right default for anywhere stock gets checked automatically or in
-        // bulk (card popups on open, every tile in a "Check Stock for All"
-        // pass) - "Check All Locations" is there as an explicit, opt-in,
-        // slower request for whoever actually needs the full breakdown.
-        async function quickCheckMoonshotStockInto(resultsElId, cardName, setCode, setName) {
-            const resultsEl = document.getElementById(resultsElId);
-            if (!resultsEl) return;
-            const searchUrl = `${MOONSHOT_BASE}/search?q=${encodeURIComponent(cardName)}`;
-            resultsEl.innerHTML = `<div class="moonshot-status">Checking...</div>`;
-
-            const suggestUrl = `${MOONSHOT_BASE}/search/suggest.json?q=${encodeURIComponent(cardName)}&resources[type]=product&resources[limit]=5`;
-            const data = await fetchMoonshotJSON(suggestUrl);
-
-            if (!data) {
-                resultsEl.innerHTML = `
-                    <div class="moonshot-status">Live stock check unavailable right now.</div>
-                    <a class="moonshot-link" href="${searchUrl}" target="_blank" rel="noopener">Search "${cardName}" on moonshotgamestore.com →</a>
-                `;
-                return;
-            }
-
-            const allProducts = (data.resources && data.resources.results && data.resources.results.products) || [];
-            if (allProducts.length === 0) {
-                resultsEl.innerHTML = `
-                    <div class="moonshot-status">No matching listings found.</div>
-                    <a class="moonshot-link" href="${searchUrl}" target="_blank" rel="noopener">Search "${cardName}" on moonshotgamestore.com →</a>
-                `;
-                return;
-            }
-
-            const matchedProducts = filterMoonshotProductsForPrinting(allProducts, setCode, setName);
-            const usedExactPrinting = matchedProducts.length > 0;
-            const top = (usedExactPrinting ? matchedProducts : allProducts)[0];
-            const printingNote = (setName && !usedExactPrinting)
-                ? `<div class="moonshot-status" style="margin-bottom:6px; color:#ffcc80;">No listing found specifically for ${setName} - showing another printing.</div>`
-                : '';
-
-            const detail = await fetchProductVariants(top.url);
-            const productLink = `${MOONSHOT_BASE}${top.url.split('?')[0]}`;
-
-            if (!detail || !detail.variants) {
-                const price = top.price ? `$${top.price}` : '';
-                const availability = top.available === false ? 'Out of stock' : 'In stock';
-                resultsEl.innerHTML = `
-                    ${printingNote}
-                    <div class="moonshot-result-item">
-                        <span>${top.title}</span>
-                        <span>${availability} · ${price} &nbsp; <a class="moonshot-link" href="${productLink}" target="_blank" rel="noopener">View →</a></span>
-                    </div>
-                `;
-                return;
-            }
-
-            const available = detail.variants.filter(v => v.available);
-            const cheapest = available.length > 0
-                ? available.reduce((a, b) => (a.price <= b.price ? a : b))
-                : null;
-
-            resultsEl.innerHTML = `
-                ${printingNote}
-                <div class="moonshot-result-item" style="border-bottom:none; font-weight:600;">
-                    <span>${detail.title || top.title}</span>
-                    <a class="moonshot-link" href="${productLink}" target="_blank" rel="noopener">View →</a>
-                </div>
-                ${cheapest
-                    ? `<div class="moonshot-result-item" style="padding-left:12px;">
-                           <span>${cheapest.public_title || cheapest.title || 'Standard'}</span>
-                           <span style="color:#7ee787;">In stock</span>
-                           <span>$${(cheapest.price / 100).toFixed(2)}</span>
-                       </div>`
-                    : `<div class="moonshot-result-item" style="padding-left:12px;"><span class="text-muted">Out of stock</span></div>`}
-            `;
-        }
-
-        // Generic version - takes the results container id so any element on
-        // the page can reuse the exact same stock-check logic. This is the
-        // deep "Check All Locations" scan (8 candidate listings, full
-        // per-condition/per-location breakdown) - see quickCheckMoonshotStockInto
-        // above for the fast single-listing version used everywhere by default.
-        // setCode/setName (optional) identify the specific printing being viewed.
-        async function checkMoonshotStockInto(resultsElId, cardName, setCode, setName) {
-            const resultsEl = document.getElementById(resultsElId);
-            if (!resultsEl) return;
-            const searchUrl = `${MOONSHOT_BASE}/search?q=${encodeURIComponent(cardName)}`;
-            resultsEl.innerHTML = `<div class="moonshot-status">Checking...</div>`;
-
-            // Ask for more than the 3 we'll display - the printing we want might
-            // not be Shopify's top-ranked result for a bare name search, so we
-            // need extra candidates to filter down to the right one.
-            const suggestUrl = `${MOONSHOT_BASE}/search/suggest.json?q=${encodeURIComponent(cardName)}&resources[type]=product&resources[limit]=10`;
-            const data = await fetchMoonshotJSON(suggestUrl);
-
-            if (!data) {
-                resultsEl.innerHTML = `
-                    <div class="moonshot-status">Live stock check unavailable right now.</div>
-                    <a class="moonshot-link" href="${searchUrl}" target="_blank" rel="noopener">Search "${cardName}" on moonshotgamestore.com →</a>
-                `;
-                return;
-            }
-
-            const allProducts = (data.resources && data.resources.results && data.resources.results.products) || [];
-
-            if (allProducts.length === 0) {
-                resultsEl.innerHTML = `
-                    <div class="moonshot-status">No matching listings found.</div>
-                    <a class="moonshot-link" href="${searchUrl}" target="_blank" rel="noopener">Search "${cardName}" on moonshotgamestore.com →</a>
-                `;
-                return;
-            }
-
-            const matchedProducts = filterMoonshotProductsForPrinting(allProducts, setCode, setName);
-            const usedExactPrinting = matchedProducts.length > 0;
-            const products = usedExactPrinting ? matchedProducts : allProducts;
-
-            let matchNoteHTML = '';
-            if (setName) {
-                matchNoteHTML = usedExactPrinting
-                    ? `<div class="moonshot-status" style="margin-bottom:8px; color:#7ee787;">Showing listings for this printing (${setName}).</div>`
-                    : `<div class="moonshot-status" style="margin-bottom:8px; color:#ffcc80;">No listing found specifically for ${setName} - showing other printings instead.</div>`;
-            }
-
-            // Look up condition-level stock for more candidates than we'd
-            // normally show (was just the top 3) - Shopify's own search
-            // ranks by general relevance, not by which store location has it,
-            // so a copy that's only sitting at Plainfield can easily rank
-            // outside the top 3 and get silently cut before its stock is ever
-            // checked. Checking 8 instead costs more requests per lookup, but
-            // that's the actual fix for "make sure Plainfield stock always
-            // shows up" - a bigger candidate pool, not just a display change.
-            const candidateProducts = products.slice(0, 8);
-            const detailResults = await Promise.all(
-                candidateProducts.map(p => fetchProductVariants(p.url))
-            );
-
-            // For every variant that shows as available, pull its exact
-            // per-location breakdown from Moonshot's own stock widget API
-            // (moonshotgamestore.com/apps/moonshot/stock?variant=<id>) - this is
-            // a custom endpoint Moonshot built themselves and it explicitly
-            // allows cross-origin requests, so it works directly from this file.
-            const stockLookups = [];
-            candidateProducts.forEach((p, i) => {
-                const detail = detailResults[i];
-                if (detail && detail.variants) {
-                    detail.variants.forEach(v => {
-                        if (v.available) stockLookups.push(v.id);
-                    });
-                }
-            });
-            const uniqueIds = [...new Set(stockLookups)];
-            const stockResults = await Promise.all(uniqueIds.map(id => fetchVariantStock(id)));
-            const stockById = {};
-            uniqueIds.forEach((id, i) => { stockById[id] = stockResults[i]; });
-
-            // Does this product have an available variant with quantity
-            // specifically at Plainfield? Location names come from Moonshot's
-            // own stock widget data (byGroupMeta.publicName), matched loosely
-            // in case they ever rename/reformat it slightly.
-            function hasPlainfieldStock(detail) {
-                if (!detail || !detail.variants) return false;
-                return detail.variants.some(v => {
-                    if (!v.available) return false;
-                    const stock = stockById[v.id];
-                    if (!stock || !stock.byGroup || !stock.byGroupMeta) return false;
-                    return Object.entries(stock.byGroup).some(([key, qty]) => {
-                        const locationName = (stock.byGroupMeta[key] && stock.byGroupMeta[key].publicName) || key;
-                        return qty > 0 && /plainfield/i.test(locationName);
-                    });
-                });
-            }
-
-            // What actually gets shown: the top 3 by search relevance, PLUS
-            // any of the remaining candidates that have real Plainfield
-            // quantity - "extending out" the listing so that stock doesn't
-            // just get dropped because Shopify ranked it 4th or 5th.
-            const shown = candidateProducts
-                .map((p, i) => ({ p, detail: detailResults[i], isExtra: i >= 3 }))
-                .filter(item => !item.isExtra || hasPlainfieldStock(item.detail));
-
-            const productBlocks = shown.map(({ p, detail, isExtra }) => {
-                const productLink = `${MOONSHOT_BASE}${p.url.split('?')[0]}`;
-                const extraBadge = isExtra
-                    ? `<span style="color:#7ee787; font-size:0.78em; font-weight:600; margin-left:8px;">📍 Also in stock at Plainfield</span>`
-                    : '';
-
-                if (!detail || !detail.variants) {
-                    // Fall back to the basic available/unavailable flag we already have
-                    const price = p.price ? `$${p.price}` : '';
-                    const availability = p.available === false ? 'Out of stock' : 'In stock';
-                    return `
-                        <div class="moonshot-result-item">
-                            <span>${p.title}${extraBadge}</span>
-                            <span>${availability} · ${price} &nbsp; <a class="moonshot-link" href="${productLink}" target="_blank" rel="noopener">View →</a></span>
-                        </div>
-                    `;
-                }
-
-                const variantRows = detail.variants.map(v => {
-                    const condition = v.public_title || v.title || 'Standard';
-                    const price = v.price ? `$${(v.price / 100).toFixed(2)}` : '';
-
-                    if (!v.available) {
-                        return `
-                            <div class="moonshot-result-item" style="padding-left:12px;">
-                                <span>${condition}</span>
-                                <span class="text-muted">Out of stock</span>
-                                <span>${price}</span>
-                            </div>
-                        `;
-                    }
-
-                    const stock = stockById[v.id];
-                    let locationBreakdown = 'In stock';
-                    if (stock && stock.byGroup && stock.byGroupMeta) {
-                        locationBreakdown = Object.entries(stock.byGroup)
-                            .map(([key, qty]) => `${(stock.byGroupMeta[key] && stock.byGroupMeta[key].publicName) || key}: ${qty}`)
-                            .join(' &nbsp;·&nbsp; ');
-                    }
-
-                    return `
-                        <div class="moonshot-result-item" style="padding-left:12px;">
-                            <span>${condition}</span>
-                            <span style="color:#7ee787;">${locationBreakdown}</span>
-                            <span>${price}</span>
-                        </div>
-                    `;
-                }).join('');
-
-                return `
-                    <div style="margin-bottom:10px;">
-                        <div class="moonshot-result-item" style="border-bottom:none; font-weight:600;">
-                            <span>${detail.title || p.title}${extraBadge}</span>
-                            <a class="moonshot-link" href="${productLink}" target="_blank" rel="noopener">View →</a>
-                        </div>
-                        ${variantRows}
-                    </div>
-                `;
-            }).join('');
-
-            resultsEl.innerHTML = `
-                ${matchNoteHTML}
-                ${productBlocks}
-                <div class="price-note" style="margin-top:6px;">Quantities are pulled live from Moonshot's own stock widget, per store location.</div>
-            `;
-        }
-
-        // Exact per-location quantity for one variant, via Moonshot's own
-        // stock-widget API (confirmed to send access-control-allow-origin: *,
-        // so it works directly without needing the CORS-proxy fallback).
-        async function fetchVariantStock(variantId) {
-            return await fetchMoonshotJSON(`${MOONSHOT_BASE}/apps/moonshot/stock?variant=${variantId}`);
+        // The Moonshot box on the main lookup - a link to the store's own
+        // search for the card on screen (see moonshotBlockHTML).
+        function renderMoonshotBlock(cardName) {
+            const container = document.getElementById('moonshotContainer');
+            if (container) container.innerHTML = moonshotBlockHTML(cardName);
         }
 
         // Update the Before/After block in place, for whatever set is passed in.
@@ -12136,9 +11599,7 @@
             renderLegality(print);
             renderRelatedCards(print);
 
-            // Reset the Moonshot block to match THIS printing specifically, so
-            // Check Stock can prefer a listing for this exact set (see setCode above)
-            renderMoonshotBlock(print.printed_name || print.name, setCode, print.set_name);
+            renderMoonshotBlock(print.printed_name || print.name);
 
             // Highlight the selected printing in the list
             document.querySelectorAll('.printing-item.active').forEach(el => el.classList.remove('active'));
@@ -12316,11 +11777,9 @@
             }
         }
 
-        // Quick Stock Check - the floating widget for "do you have X" from
-        // any tab. No Scryfall lookup first on purpose: staff just need a
-        // fast yes/no on a name, not to resolve the exact printing, so this
-        // goes straight to the Moonshot stock check same as typing a name
-        // with no set context anywhere else in the app already does.
+        // Moonshot Search - the floating widget for "do we have X?" from any
+        // tab. Opens Moonshot's own store search, which always has the real
+        // stock and prices.
         function toggleQuickStock() {
             const panel = document.getElementById('quickStockPanel');
             const willOpen = !panel.classList.contains('open');
@@ -12335,8 +11794,7 @@
             const input = document.getElementById('quickStockInput');
             const name = input.value.trim();
             if (!name) return;
-            renderMoonshotBlock(name, '', '', 'quickStockContainer', 'quickStockResults');
-            quickCheckMoonshotStock(name, '', '', 'quickStockResults');
+            window.open(moonshotSearchUrl(name), '_blank', 'noopener');
         }
 
         // ============== PULL LIST ==============
