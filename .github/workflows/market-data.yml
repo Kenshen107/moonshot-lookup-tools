@@ -1,0 +1,49 @@
+# Builds the Market Watch data (price history, spikes, ban log) every
+# morning and publishes it to the `market-data` branch, which
+# MTG_Lookup_Tool.html reads from raw.githubusercontent.com.
+# The branch is replaced each run (one commit, no history), so the repo
+# doesn't grow. See tools/build_market_data.py for what's in the files.
+name: Market data
+
+on:
+  schedule:
+    - cron: '0 10 * * *' # 10:00 UTC = 6am Eastern (5am in winter)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-data
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # Last run's output, for the ban/unban log. Missing on the first run.
+      - uses: actions/checkout@v4
+        with:
+          ref: market-data
+          path: previous
+        continue-on-error: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build data
+        run: python tools/build_market_data.py --out out --previous previous
+
+      - name: Publish to the market-data branch
+        run: |
+          cd out
+          git init -q -b market-data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Market data for $(python -c 'import json; print(json.load(open("meta.json"))["priceDate"])')"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" market-data

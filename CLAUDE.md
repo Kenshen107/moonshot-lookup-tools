@@ -4,7 +4,7 @@ Staff tools for Moonshot Games, used at work in both stores (Noblesville and Pla
 
 ## Rules
 
-- **No price speculation, ever.** Don't add features that predict, rank, or suggest which cards will go up in value, or anything that frames cards as investments. Showing current market prices is fine. Guessing at future prices is not. This applies to the whole repo.
+- **Price and market tools are allowed** (the owner lifted the old no-speculation rule on 2026-09-25). Spike alerts, price trends, reprint warnings and trending cards are all fine. Always show where the numbers come from and how current they are, so staff know what they're looking at.
 - **No new tabs, tools, or features without the owner's approval.** Build what was asked. If something extra seems useful, suggest it and wait for a yes before building it.
 - **Don't remove or rework existing features without asking first.**
 - **End every reply with these links**, so the owner always has them:
@@ -15,7 +15,7 @@ Staff tools for Moonshot Games, used at work in both stores (Noblesville and Pla
 
 ## Working in this repo
 
-- Keep each tool a single self-contained HTML file. Don't add frameworks, build steps, or a backend.
+- Keep each tool a single self-contained HTML file. Don't add frameworks, build steps, or a backend. The one exception is the daily market data job (see below), which the owner approved on 2026-09-25: it only produces data files, and the HTML stays a single file.
 - In `MTG_Lookup_Tool.html`, tabs are driven by the `APP_VIEWS` table (each entry has an icon, a menu label and a one-line description). `NAV_GROUPS` puts every tool except Card Lookup into one of three groups (At the counter, Rules & events, Learn & train); the desktop menu bar, the phone bottom bar and the quick-jump search (`/` or Ctrl+K) are all built from these two tables. `QUICK_JUMP_EXTRAS` adds sub-tabs and sections to quick jump. The Buyer's Guide and Grading tabs use sub-tab tables (`BUYERS_GUIDE_SUBTABS`, `GUIDE_SUBTABS`). Reuse the existing helpers (card tiles, the card popup, the Moonshot store links `moonshotLinkHTML` / `moonshotBlockHTML`, `fetchScryfallSearchPage`) instead of writing new copies.
 - Moonshot stock isn't checked live. Shopify doesn't let other sites read the store, and the free CORS relays that worked around that were unreliable, so the tool links to moonshotgamestore.com's own search instead. Don't bring back third-party relays. A live check would need a Shopify Storefront API token from the store admin.
 - Scryfall search queries (otags especially) can't be guessed reliably. Mark anything not checked against live results as unverified or approximate, as the land-cycle data already does.
@@ -27,13 +27,33 @@ Sealed product data (what's in each box, bundle, deck and kit) comes live from M
 
 ## EDHREC data (`MTG_Lookup_Tool.html`)
 
-Commander play data comes live from EDHREC's JSON feed (`json.edhrec.com/pages/...`, which browsers can read directly). EDHREC has no official API, so every EDHREC panel is optional. If a page is missing or the feed changes, the panel shows nothing and the rest of the app keeps working. Always credit EDHREC with a link, as the panels already do. Use only current play data. Never use EDHREC's trend or "rising cards" data (that's price speculation territory) or its prices. Prices come from Scryfall at the cheapest paper printing (`cheapestPrintings`, which uses `prefer:usd-low`).
+Commander play data comes live from EDHREC's JSON feed (`json.edhrec.com/pages/...`, which browsers can read directly). EDHREC has no official API, so every EDHREC panel is optional. If a page is missing or the feed changes, the panel shows nothing and the rest of the app keeps working. Always credit EDHREC with a link, as the panels already do. EDHREC's trend data (such as its weekly top commanders) may be used. Don't use EDHREC's prices. Prices come from Scryfall at the cheapest paper printing (`cheapestPrintings`, which uses `prefer:usd-low`).
 
 - **Card Lookup:** "Commander play" shows how often the card is played and the commanders that play it most. For commanders, "Build around this commander" shows the bracket split, themes, card lists, similar commanders, and EDHREC's budget deck priced at the cheapest copies.
 - **Card popup:** "Build around this commander" opens Card Lookup with that guide expanded.
 - **Products:** "Upgrade this deck" on precon decklists shows the most-played and best-synergy cards for the deck's commander that aren't in the precon.
 - **Brackets tab:** the card checker, and the deck checker when the list has a Commander heading or tag, show which bracket EDHREC players build that commander at.
 - **Land Finder (Buyer's Guide):** a three-step guide. (1) Start from a commander or pick colors, (2) choose how many nonbasic lands to buy, (3) pick a Good / Better / Best package (`LAND_TIERS`), or type a custom budget. For Commander, lands are ranked by EDHREC's land page for the color identity (`EDHREC_LAND_PAGES`, all 32 checked 2026-09-25). With a commander, its own decks' land lists count first, and step 2 suggests its average nonbasic land count. Better and Best skip lands that always enter tapped unless nothing else fits. Popular EDHREC lands that no cycle search finds are added as "Other popular land". Other formats keep Scryfall's popularity order and show no EDHREC numbers.
+
+## Market data and Market Watch (`MTG_Lookup_Tool.html`)
+
+Scryfall only has today's prices, so price history comes from a daily GitHub Action (`.github/workflows/market-data.yml`, 10:00 UTC). It runs `tools/build_market_data.py`, which downloads MTGJSON's 90-day price history (`AllPrices.json.gz`) and its card, ID and legality CSVs, then publishes small JSON files to the `market-data` branch. The branch is replaced each run, one commit with no history, so the repo doesn't grow. The site reads the files from `raw.githubusercontent.com/Kenshen107/moonshot-lookup-tools/market-data/` (`MARKET_DATA_BASE`). If they're missing, every panel that uses them says so, and the rest keeps working.
+
+- `meta.json` holds the price date and the weekly dates.
+- `history/<first 2 chars of Scryfall id>.json` holds weekly TCGplayer market prices for 14 weeks, per printing and finish (`n`, `f`, `e`), for printings that reached $1. Read it with `priceHistoryFor(id)` and `priceTrend(points, weeks)`.
+- `spikes.json` lists printings of $2+ that rose at least $1 and 15% over 1, 3 or 7 days.
+- `bans.json` holds the current banned/restricted cards per format, plus a log of changes found by comparing against the previous run. The log starts empty; tracking began 2026-09-25.
+
+Where the data is used:
+
+- **Market Watch tab** (`MARKET_SUBTABS`, under At the counter):
+  - Price Spikes (filters for window, jump size, finish, promos).
+  - Ban Watch (ban log, with EDHREC decks and commanders affected and price trend).
+  - Trending Commanders (EDHREC `commanders/week`, with each commander's most-used cards priced).
+  - New Set Tracker (EDHREC `sets/<code>`, the set's most-played new cards and commanders).
+- **Buylist:** typing a card name shows its 30- and 90-day trend at the cheapest printing. A move of 15% or more gets an "offer lower" or "don't offer too little" note. A printing in the last 45 days, or an upcoming one (Scryfall includes previewed cards), shows a reprint warning. Values are still typed by hand.
+- **Products:** "Box value: open it or sell it sealed?" computes each booster type's expected card value from MTGJSON's booster sheets and today's Scryfall prices. It shows the total, a "sellable" figure (cards $1+), chase cards, and a comparison against a sealed price staff type in. There's no free source for sealed prices or their history, so there's no sealed trend.
+- **Buyer's Guide → Price a Deck:** a pasted list is priced at the cheapest copies, with the total, a 30-day trend per card and a count of rising cards.
 
 ## Commander Brackets tab (`MTG_Lookup_Tool.html`)
 

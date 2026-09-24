@@ -3244,9 +3244,15 @@
         /* ---- Grading / Fakes guide sub-tabs ---- */
         .guide-tabs {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .guide-tabs { gap: 6px; }
+            .guide-tab { padding: 7px 10px; font-size: 0.88em; }
         }
 
         .guide-tab {
@@ -4231,6 +4237,36 @@
         .bk-b3, .bk-col-3 { --bk-color: #d2a8ff; }
         .bk-b4, .bk-col-4 { --bk-color: #ffa657; }
         .bk-b5, .bk-col-5 { --bk-color: #ff7b72; }
+
+        /* ---- Market Watch, Buylist trends, box value, deck pricer ---- */
+        .mkt-trend {
+            display: inline-block;
+            font-size: 0.82em;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 10px;
+            border: 1px solid currentColor;
+            white-space: nowrap;
+        }
+
+        .mkt-up { color: #7ee787; }
+        .mkt-down { color: #ff9b94; }
+        .mkt-flat { color: var(--text-secondary); }
+
+        .mkt-spark {
+            vertical-align: middle;
+            color: var(--brand-light);
+        }
+
+        .mkt-table td { vertical-align: top; }
+
+        .mkt-note {
+            margin-top: 4px;
+            font-size: 0.82em;
+            line-height: 1.4;
+        }
+
+        .mkt-note .mkt-warn { color: #ffcc80; }
 
         /* ---- EDHREC commander data (Card Lookup, card popup, Products, Brackets) ---- */
         .edh-block {
@@ -6133,12 +6169,63 @@
             <div id="productsResults"><div class="loading">Loading product data...</div></div>
         </div>
 
+        <!-- ============== MARKET WATCH ============== -->
+        <div id="marketApp" style="display:none;">
+            <div class="guide-tabs" id="marketTabs">
+                <button type="button" class="guide-tab active" id="mktTabSpikes" onclick="switchMarketTab('spikes')">🚀 Price Spikes</button>
+                <button type="button" class="guide-tab" id="mktTabBans" onclick="switchMarketTab('bans')">🔨 Ban Watch</button>
+                <button type="button" class="guide-tab" id="mktTabTrending" onclick="switchMarketTab('trending')">🔥 Trending Commanders</button>
+                <button type="button" class="guide-tab" id="mktTabNewset" onclick="switchMarketTab('newset')">🆕 New Set Tracker</button>
+            </div>
+
+            <div id="mktSpikesApp">
+                <div class="formats-intro">
+                    Cards whose price jumped recently. Check the case and our online
+                    listings and reprice before someone buys at last week's price.
+                    Updated every morning from TCGplayer market prices (via MTGJSON).
+                </div>
+                <div id="mktSpikeControls"></div>
+                <div id="mktSpikesResults"><div class="loading">Loading price spikes...</div></div>
+            </div>
+
+            <div id="mktBansApp" style="display:none;">
+                <div class="formats-intro">
+                    Ban and unban changes in the major formats, spotted the morning
+                    after they take effect, with the cards and commanders they hit.
+                    Prices move within hours of an announcement.
+                </div>
+                <div id="mktBansResults"><div class="loading">Loading ban changes...</div></div>
+            </div>
+
+            <div id="mktTrendingApp" style="display:none;">
+                <div class="formats-intro">
+                    The commanders players are building right now, from EDHREC's
+                    past-week numbers, and the cards their decks use most. Use it to
+                    decide which singles to keep on hand and which precons will sell.
+                </div>
+                <div id="mktTrendingControls"></div>
+                <div id="mktTrendingResults"><div class="loading">Loading trending commanders...</div></div>
+            </div>
+
+            <div id="mktNewsetApp" style="display:none;">
+                <div class="formats-intro">
+                    For a new set: which of its cards are showing up in the most
+                    Commander decks on EDHREC. That's the restock list for singles.
+                </div>
+                <div class="prod-picker">
+                    <select id="mktSetSelect" aria-label="Set" onchange="loadMarketNewSet(this.value)"></select>
+                </div>
+                <div id="mktNewsetResults"><div class="loading">Loading sets...</div></div>
+            </div>
+        </div>
+
         <!-- ============== BUYER'S GUIDE ============== -->
         <div id="buyersGuideApp" style="display:none;">
             <div class="guide-tabs" id="bgTabs">
                 <button type="button" class="guide-tab active" id="bgTabFinder" onclick="switchBuyersGuideTab('finder')">🔎 Card Finder</button>
                 <button type="button" class="guide-tab" id="bgTabLands" onclick="switchBuyersGuideTab('lands')">🗺️ Land Finder</button>
                 <button type="button" class="guide-tab" id="bgTabBasics" onclick="switchBuyersGuideTab('basics')">🏔️ Full-Art Basics</button>
+                <button type="button" class="guide-tab" id="bgTabDeck" onclick="switchBuyersGuideTab('deck')">🧾 Price a Deck</button>
             </div>
 
             <div id="bgFinderApp">
@@ -6251,6 +6338,20 @@
             </div>
 
             <div id="bgResults"></div>
+            </div>
+
+            <!-- ---- Price a Deck ---- -->
+            <div id="bgDeckApp" style="display:none;">
+                <div class="formats-intro">
+                    Paste a customer's decklist (or a wishlist) to price every card
+                    at its cheapest paper copy, with the total and a link to find each
+                    one at Moonshot. Cards whose price is climbing are flagged.
+                </div>
+                <div class="search-box" style="max-width:700px; margin:0 auto 16px;">
+                    <textarea id="deckPricerInput" class="text-input" rows="8" aria-label="Decklist to price" placeholder="1 Sol Ring&#10;1 Rhystic Study (TMT) 42&#10;1x Cyclonic Rift [Removal]"></textarea>
+                    <button type="button" onclick="runDeckPricer()">Price it</button>
+                </div>
+                <div id="deckPricerResults"></div>
             </div>
 
             <!-- ---- Land Finder ---- -->
@@ -6522,7 +6623,9 @@
             <div class="formats-intro">
                 Enter a market value per card and this totals up the cash and store-credit
                 offers automatically. Values are typed in by hand on purpose - use Moonshot's
-                own posted buy prices, not a card's general market price.
+                own posted buy prices, not a card's general market price. Type a card's name
+                too and it shows the card's 30- and 90-day price trend, with a heads-up if
+                it's falling, rising, or about to be reprinted.
             </div>
             <div class="guide-callout">
                 <strong>Why cash and credit are different numbers:</strong> a cash offer is money
@@ -7125,6 +7228,7 @@
             buyersguide:  { appId: 'buyersGuideApp',  icon: '🛒', navLabel: "Buyer's Guide",   title: "🛒 Buyer's Guide", desc: 'Find cards to sell by color, theme and budget, plus land packages', keywords: 'sell customer theme lands basics finder', onShow: showBuyersGuideTab },
             products:     { appId: 'productsApp',     icon: '🛍️', navLabel: 'Products',        title: '🛍️ Sealed Products', desc: "Every sealed product in a set and what's inside: packs, promos, spindowns", keywords: 'sealed box bundle booster collector commander deck prerelease spindown promo preorder', onShow: showProductsTab },
             buylist:      { appId: 'buylistApp',      icon: '💰', navLabel: 'Buylist',         title: '💰 Buylist / Store Credit Calculator', desc: 'Work out cash and store-credit offers for a stack of cards', keywords: 'buy trade in credit cash offer', onShow: showBuylistTab },
+            market:       { appId: 'marketApp',       icon: '📈', navLabel: 'Market Watch',    title: '📈 Market Watch', desc: 'Price spikes, ban changes, trending commanders and new-set demand', keywords: 'price spike jump reprice trend market ban unban trending restock new set demand', onShow: showMarketTab },
             pulllist:     { appId: 'pullListApp',     icon: '📋', navLabel: 'Pull List',       title: '📋 Pull List', desc: 'Paste online orders and pull them set by set', keywords: 'orders online shopify pick pull' },
             casemap:      { appId: 'caseMapApp',      icon: '🗂️', navLabel: 'Case Map',        title: '🗂️ Hotlist Case Map', desc: 'Where every card sits in the hotlist case', keywords: 'hotlist case where location find' , onShow: showCaseMapTab },
             formats:      { appId: 'formatsApp',      icon: '📖', navLabel: 'Format Rules',    title: '📖 Format Rules', desc: 'Deck rules and live ban lists for every format', keywords: 'standard modern pioneer legacy vintage pauper banned legal', onShow: renderFormatsGrid },
@@ -7161,12 +7265,14 @@
         let currentGameMode = 'mtg';
         let currentBuyersGuideSubtab = 'finder';
         let currentGuideSubtab = 'gradingGuide';
+        let currentMarketSubtab = 'spikes';
         let isRestoringRoute = false;
 
         function currentRouteHash() {
             let route = currentGameMode;
             if (route === 'buyersguide') route += '/' + currentBuyersGuideSubtab;
             if (route === 'grading') route += '/' + currentGuideSubtab;
+            if (route === 'market') route += '/' + currentMarketSubtab;
             return route;
         }
 
@@ -7202,6 +7308,7 @@
                 switchGame(mode);
                 if (mode === 'buyersguide' && sub) switchBuyersGuideTab(sub);
                 if (mode === 'grading' && sub) switchGuideTab(sub);
+                if (mode === 'market' && sub) switchMarketTab(sub);
             } finally {
                 isRestoringRoute = false;
             }
@@ -7287,7 +7394,7 @@
         // quick-jump search, are built from NAV_GROUPS + APP_VIEWS, so a new
         // tool only needs adding in those two places.
         const NAV_GROUPS = [
-            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'pulllist', 'casemap'] },
+            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap'] },
             { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'valuevintage', 'judge'] },
             { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'grading', 'quiz'] }
         ];
@@ -7384,12 +7491,17 @@
             { label: 'Card Finder', icon: '🔎', parent: 'buyersguide', keywords: 'search filter theme sell staples', go: () => navigateTo('buyersguide', () => switchBuyersGuideTab('finder')) },
             { label: 'Land Finder', icon: '🗺️', parent: 'buyersguide', keywords: 'lands mana base package duals fetch shock budget', go: () => navigateTo('buyersguide', () => switchBuyersGuideTab('lands')) },
             { label: 'Full-Art Basics', icon: '🏔️', parent: 'buyersguide', keywords: 'basic lands plains island swamp mountain forest', go: () => navigateTo('buyersguide', () => switchBuyersGuideTab('basics')) },
+            { label: 'Price a deck', icon: '🧾', parent: 'buyersguide', keywords: 'decklist price total buy this deck wishlist', go: () => navigateTo('buyersguide', () => switchBuyersGuideTab('deck')) },
             { label: 'Grading guide', icon: '💎', parent: 'grading', keywords: 'psa bgs cgc condition grade slab', go: () => navigateTo('grading', () => switchGuideTab('gradingGuide')) },
             { label: 'Spotting fakes', icon: '🕵️', parent: 'grading', keywords: 'counterfeit fake proxy real light test', go: () => navigateTo('grading', () => switchGuideTab('fakesGuide')) },
             { label: 'Check a card\'s bracket', icon: '🃏', parent: 'brackets', keywords: 'game changer bracket card commander', go: () => navigateTo('brackets', () => scrollToBracketSection('bkCardCheck')) },
             { label: 'Check a deck\'s bracket', icon: '📝', parent: 'brackets', keywords: 'decklist bracket commander game changers', go: () => navigateTo('brackets', () => scrollToBracketSection('bkDeckCheck')) },
             { label: 'Game Changers list', icon: '⚡', parent: 'brackets', keywords: 'game changers commander bracket', go: () => navigateTo('brackets', () => scrollToBracketSection('bkGameChangers')) },
             { label: 'Commander banned list', icon: '🚫', parent: 'brackets', keywords: 'banned commander edh', go: () => navigateTo('brackets', () => scrollToBracketSection('bkBanned')) },
+            { label: 'Price spikes', icon: '🚀', parent: 'market', keywords: 'spike jump reprice price up alert', go: () => navigateTo('market', () => switchMarketTab('spikes')) },
+            { label: 'Ban watch', icon: '🔨', parent: 'market', keywords: 'ban unban banned announcement', go: () => navigateTo('market', () => switchMarketTab('bans')) },
+            { label: 'Trending commanders', icon: '🔥', parent: 'market', keywords: 'trending rising popular commanders edhrec stock', go: () => navigateTo('market', () => switchMarketTab('trending')) },
+            { label: 'New set tracker', icon: '🆕', parent: 'market', keywords: 'new set restock singles demand', go: () => navigateTo('market', () => switchMarketTab('newset')) },
             { label: 'Price Check drill', icon: '💵', parent: 'quiz', keywords: 'price quiz practice value', go: () => navigateTo('quiz', () => setQuizMode('price')) },
             { label: 'Case Map quiz', icon: '🗂️', parent: 'quiz', keywords: 'case map quiz practice hotlist', go: () => navigateTo('quiz', () => setQuizMode('casemap')) }
         ];
@@ -9322,7 +9434,8 @@
             const safeName = (row.name || '').replace(/"/g, '&quot;');
             return `
                 <tr>
-                    <td><input type="text" value="${safeName}" placeholder="Card name (optional)" oninput="updateBuylistRow(${idx}, 'name', this.value)" onkeydown="handleBuylistNameKeydown(event, ${idx})"></td>
+                    <td><input type="text" value="${safeName}" placeholder="Card name (optional)" oninput="updateBuylistRow(${idx}, 'name', this.value)" onkeydown="handleBuylistNameKeydown(event, ${idx})">
+                        <div class="mkt-note" id="buylistMarket-${idx}"></div></td>
                     <td>$<input type="number" step="0.01" min="0" value="${row.value !== null && row.value !== undefined ? row.value : ''}" placeholder="0.00" oninput="updateBuylistRow(${idx}, 'value', this.value)" onkeydown="handleBuylistValueKeydown(event, ${idx})"></td>
                     <td class="buylist-cash-val" id="buylistCash-${idx}">$${cash.toFixed(2)}</td>
                     <td class="buylist-credit-val" id="buylistCredit-${idx}">$${credit.toFixed(2)}</td>
@@ -9379,6 +9492,7 @@
                 buylistRows[idx][field] = val;
             }
             saveBuylistRows();
+            if (field === 'name') scheduleBuylistMarketCheck(idx);
 
             if (field === 'value') {
                 const row = buylistRows[idx];
@@ -9448,6 +9562,103 @@
             ensureTrailingBlankRow();
             tbody.innerHTML = buylistRows.map((_, idx) => buylistRowHTML(idx)).join('');
             renderBuylistTotals();
+            buylistRows.forEach((row, idx) => { if (row.name) checkBuylistMarket(idx); });
+        }
+
+        // ---- Market check under each card name ----
+        // Once a name is typed: the card's price trend (30 and 90 days, at
+        // its cheapest printing) with a nudge on the offer, and a warning if
+        // it's just been reprinted or is about to be. Values are still typed
+        // by hand - this only informs the offer.
+        const BUYLIST_TREND_ALERT = 0.15; // a 15% move over 30 days gets a nudge
+        const REPRINT_RECENT_DAYS = 45;
+        const buylistMarketCache = new Map(); // lowercased name -> Promise of HTML
+        const buylistMarketTimers = {};
+
+        function scheduleBuylistMarketCheck(idx) {
+            clearTimeout(buylistMarketTimers[idx]);
+            const el = document.getElementById(`buylistMarket-${idx}`);
+            if (el) el.innerHTML = '';
+            buylistMarketTimers[idx] = setTimeout(() => checkBuylistMarket(idx), 700);
+        }
+
+        async function checkBuylistMarket(idx) {
+            const row = buylistRows[idx];
+            const name = row && (row.name || '').trim();
+            if (!name || name.length < 3) return;
+            const key = name.toLowerCase();
+            if (!buylistMarketCache.has(key)) {
+                const promise = buylistMarketHTML(name);
+                buylistMarketCache.set(key, promise);
+                promise.catch(() => buylistMarketCache.delete(key));
+            }
+            const html = await buylistMarketCache.get(key).catch(() => '');
+            const el = document.getElementById(`buylistMarket-${idx}`);
+            if (el && buylistRows[idx] && (buylistRows[idx].name || '').trim().toLowerCase() === key) el.innerHTML = html;
+        }
+
+        // A card's paper printings, oldest first.
+        async function fetchPaperPrintings(card) {
+            const prints = [];
+            let url = `${API_BASE}/cards/search?q=${encodeURIComponent(`oracleid:${card.oracle_id} game:paper`)}&unique=prints&order=released&dir=asc`;
+            while (url && prints.length < 700) {
+                const page = await fetchScryfallSearchPage(url);
+                prints.push(...(page.data || []));
+                url = page.has_more ? page.next_page : null;
+            }
+            return prints;
+        }
+
+        // "Just reprinted" / "reprint coming": a printing from the last few
+        // weeks or not out yet, for a card that also has older printings.
+        // Scryfall lists previewed cards from upcoming sets too.
+        function reprintWarningHTML(prints) {
+            const today = todayISO();
+            const recentCut = new Date(Date.now() - REPRINT_RECENT_DAYS * 86400000).toISOString().slice(0, 10);
+            const tournament = prints.filter(isTournamentPrinting);
+            const older = tournament.filter(p => p.released_at < recentCut);
+            const newer = tournament.filter(p => p.released_at >= recentCut && !['memorabilia', 'token'].includes(p.set_type));
+            if (!older.length || !newer.length) return '';
+            const upcoming = newer.filter(p => p.released_at > today);
+            const shown = (upcoming.length ? upcoming : newer).sort((a, b) => a.released_at.localeCompare(b.released_at));
+            const sets = [...new Set(shown.map(p => `${p.set_name} (${p.released_at})`))].slice(0, 2).join(', ');
+            return upcoming.length
+                ? `<div class="mkt-warn">⚠️ Reprint coming: ${sets}. Reprints usually push the price down - careful buying heavy.</div>`
+                : `<div class="mkt-warn">⚠️ Just reprinted: ${sets}. The price may still be settling.</div>`;
+        }
+
+        async function buylistMarketHTML(name) {
+            const res = await fetch(`${API_BASE}/cards/named?fuzzy=${encodeURIComponent(name)}`);
+            if (res.status === 404) return '<span class="text-muted">No card by that name.</span>';
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const card = await res.json();
+            const [prints, meta] = await Promise.all([fetchPaperPrintings(card), loadMarketMeta()]);
+
+            // The trend follows the cheapest regular printing - the price a
+            // customer would compare against.
+            const priced = prints.filter(p => isTournamentPrinting(p) && parseFloat(p.prices && p.prices.usd) > 0)
+                .sort((a, b) => parseFloat(a.prices.usd) - parseFloat(b.prices.usd));
+            let trendHTML = '';
+            for (const print of priced.slice(0, 5)) {
+                const history = await priceHistoryFor(print.id);
+                if (!history || !history.n) continue;
+                const month = priceTrend(history.n, 4);
+                const quarter = priceTrend(history.n, 13);
+                let advice = '';
+                if (month && month.pct <= -BUYLIST_TREND_ALERT) advice = `<span class="mkt-down">📉 Down ${Math.round(-month.pct * 100)}% this month - offer lower.</span>`;
+                else if (month && month.pct >= BUYLIST_TREND_ALERT) advice = `<span class="mkt-up">📈 Up ${Math.round(month.pct * 100)}% this month - don't offer too little.</span>`;
+                trendHTML = `
+                    <div>${marketCardLinkHTML(card.name, print.id)} · ${print.set.toUpperCase()} ${formatUsd(history.n[history.n.length - 1])}
+                        ${sparklineSVG(history.n)} ${trendChipHTML(month, '30d')} ${trendChipHTML(quarter, '90d')}</div>
+                    ${advice ? `<div>${advice}</div>` : ''}
+                `;
+                break;
+            }
+            if (!trendHTML) {
+                const cheapest = priced[0];
+                trendHTML = `<div>${marketCardLinkHTML(card.name, cheapest ? cheapest.id : card.id)}${cheapest ? ` · cheapest ${formatUsd(parseFloat(cheapest.prices.usd))}` : ''}${meta ? ' <span class="text-muted">(no price history - under $1 or new)</span>' : ''}</div>`;
+            }
+            return trendHTML + reprintWarningHTML(prints);
         }
 
         // Focuses the trailing blank row's value field so opening the Buylist
@@ -9743,8 +9954,179 @@
                     <div class="text-secondary">${upcoming ? 'Releases' : 'Released'} ${entry.set.releaseDate} · ${products.length} products${entry.children.length ? ` (including ${entry.children.map(c => c.name).join(', ')})` : ''}</div>
                     <div class="prod-set-promos" id="prodSetPromos"></div>
                 </div>
+                <div id="prodBoxValue">${productBoxValueButtonHTML(entry.set.code)}</div>
                 <div class="staples-controls" style="flex-wrap:wrap;">${chips}</div>
                 <div class="prod-grid">${shown.map(productTileHTML).join('')}</div>
+            `;
+        }
+
+        // ---- Box value: open it or sell it sealed? ----
+        // Expected value of the cards in a box, from MTGJSON's booster
+        // sheets (exactly which cards each pack slot can hold, and how
+        // often) and each card's current price from Scryfall. Staff type
+        // the box's sealed price to compare. It's an average - any one box
+        // can land well above or below it.
+        const BOX_VALUE_SKIP = /sample|arena|prerelease|tournament|box-topper|jumpstart/;
+        const BOX_PACKS_DEFAULT = { play: 30, draft: 36, set: 30, collector: 12 };
+        const BOX_BULK_CUTOFF = 1; // "sellable" value only counts cards worth this much
+        const boxValueCache = {}; // set code -> Promise of computed results
+        const boxValuePrices = {}; // "code|type" -> sealed price typed in
+
+        function productBoxValueButtonHTML(code) {
+            return `<button type="button" class="staples-sort-btn" style="margin:8px 0;" onclick="loadProductBoxValue('${code}')">📦 Box value: open it or sell it sealed?</button>`;
+        }
+
+        function boxCardPrice(card, foil) {
+            const pr = card.prices || {};
+            const pick = foil ? [pr.usd_foil, pr.usd_etched, pr.usd] : [pr.usd, pr.usd_foil, pr.usd_etched];
+            const v = pick.map(parseFloat).find(Number.isFinite);
+            return v === undefined ? 0 : v;
+        }
+
+        async function computeBoxValue(code) {
+            const setData = await loadMtgjsonSetFile(code);
+            const boosters = Object.entries(setData.booster || {}).filter(([key]) => !BOX_VALUE_SKIP.test(key));
+            if (!boosters.length) return { types: [] };
+
+            // Every set a pack can pull from (bonus sheets, special guests).
+            const sourceCodes = [...new Set(boosters.flatMap(([, b]) => b.sourceSetCodes || [code]))];
+            const sources = await Promise.all(sourceCodes.map(c => loadMtgjsonSetFile(c).catch(() => null)));
+            const byUuid = new Map();
+            sources.filter(Boolean).forEach(src => [...(src.cards || []), ...(src.tokens || [])].forEach(c => byUuid.set(c.uuid, c)));
+
+            const scryfallById = new Map();
+            let url = `${API_BASE}/cards/search?q=${encodeURIComponent(`(${sourceCodes.map(c => `e:${c.toLowerCase()}`).join(' or ')})`)}&unique=prints&include_extras=true&include_variations=true`;
+            while (url) {
+                const page = await fetchScryfallSearchPage(url);
+                (page.data || []).forEach(c => scryfallById.set(c.id, c));
+                url = page.has_more ? page.next_page : null;
+                if (url) await new Promise(r => setTimeout(r, SCRYFALL_REQUEST_SPACING_MS));
+            }
+
+            const packCount = key => {
+                const box = (setData.sealedProduct || []).find(p => p.subtype === key && /box/i.test(p.name) && !/case|bundle/i.test(p.name)
+                    && p.contents && p.contents.sealed && p.contents.sealed.length === 1);
+                return box ? box.contents.sealed[0].count : (BOX_PACKS_DEFAULT[key] || 36);
+            };
+
+            const types = boosters.map(([key, booster]) => {
+                const perCard = new Map(); // scryfall id -> { card, foil, copies per pack, price }
+                let unpriced = 0;
+                const sheetEV = {};
+                Object.entries(booster.sheets).forEach(([sheetName, sheet]) => {
+                    let ev = 0, evSellable = 0;
+                    Object.entries(sheet.cards).forEach(([uuid, weight]) => {
+                        const mj = byUuid.get(uuid);
+                        const sc = mj && scryfallById.get(mj.identifiers && mj.identifiers.scryfallId);
+                        if (!sc) { unpriced++; return; }
+                        const price = boxCardPrice(sc, sheet.foil);
+                        const share = weight / sheet.totalWeight;
+                        ev += share * price;
+                        if (price >= BOX_BULK_CUTOFF) evSellable += share * price;
+                        sheetEV[sheetName] = { ev, evSellable };
+                        const k = `${sc.id}|${sheet.foil ? 'f' : 'n'}`;
+                        const entry = perCard.get(k) || { card: sc, foil: !!sheet.foil, price, share: 0, sheets: [] };
+                        entry.sheets.push({ sheetName, share });
+                        perCard.set(k, entry);
+                    });
+                    if (!sheetEV[sheetName]) sheetEV[sheetName] = { ev: 0, evSellable: 0 };
+                });
+                let pack = 0, packSellable = 0;
+                const slotWeight = {}; // sheet -> average copies per pack
+                booster.boosters.forEach(b => {
+                    const w = b.weight / booster.boostersTotalWeight;
+                    Object.entries(b.contents).forEach(([sheetName, count]) => {
+                        const s = sheetEV[sheetName] || { ev: 0, evSellable: 0 };
+                        pack += w * count * s.ev;
+                        packSellable += w * count * s.evSellable;
+                        slotWeight[sheetName] = (slotWeight[sheetName] || 0) + w * count;
+                    });
+                });
+                const packs = packCount(key);
+                // Expected copies of each card per box, for the chase list.
+                const chase = [...perCard.values()].map(e => {
+                    const copies = packs * e.sheets.reduce((sum, s) => sum + (slotWeight[s.sheetName] || 0) * s.share, 0);
+                    return { ...e, copies, value: copies * e.price };
+                }).filter(e => e.price >= 5).sort((a, b) => b.price - a.price).slice(0, 10);
+                return { key, name: booster.name || key, packs, pack, packSellable, box: pack * packs, boxSellable: packSellable * packs, chase, unpriced };
+            });
+            return { types, setName: setData.name };
+        }
+
+        async function loadProductBoxValue(code) {
+            const el = document.getElementById('prodBoxValue');
+            if (!el) return;
+            el.innerHTML = '<div class="loading">Working out box value from the booster odds...</div>';
+            if (!boxValueCache[code]) {
+                boxValueCache[code] = computeBoxValue(code);
+                boxValueCache[code].catch(() => { delete boxValueCache[code]; });
+            }
+            try {
+                await boxValueCache[code];
+                renderProductBoxValue(code);
+            } catch (err) {
+                console.error('Box value error:', err);
+                el.innerHTML = `<div class="error">Couldn't work out box value right now. ${productBoxValueButtonHTML(code)}</div>`;
+            }
+        }
+
+        function setBoxSealedPrice(code, key, value) {
+            const v = parseFloat(value);
+            boxValuePrices[`${code}|${key}`] = Number.isFinite(v) && v > 0 ? v : null;
+            const verdict = document.getElementById(`boxVerdict-${key}`);
+            boxValueCache[code].then(res => {
+                const t = res.types.find(x => x.key === key);
+                if (verdict && t) verdict.innerHTML = boxVerdictHTML(t, boxValuePrices[`${code}|${key}`]);
+            });
+        }
+
+        function boxVerdictHTML(t, sealed) {
+            if (!sealed) return '<span class="text-secondary">Type the sealed price to compare.</span>';
+            const diff = t.boxSellable - sealed;
+            return diff > 0
+                ? `<span class="mkt-up">Opening averages about ${formatUsd(diff)} more in cards worth $${BOX_BULK_CUTOFF}+ than selling it sealed - before the time to sort and list them.</span>`
+                : `<span class="mkt-down">Selling it sealed is worth about ${formatUsd(-diff)} more than the average box's cards worth $${BOX_BULK_CUTOFF}+.</span>`;
+        }
+
+        async function renderProductBoxValue(code) {
+            const el = document.getElementById('prodBoxValue');
+            const res = await boxValueCache[code];
+            if (!el) return;
+            if (!res.types.length) {
+                el.innerHTML = '<div class="moonshot-status">MTGJSON doesn\'t list pack contents for this set, so box value can\'t be worked out.</div>';
+                return;
+            }
+            el.innerHTML = `
+                <div class="edh-block">
+                    <div class="edh-head"><span class="edh-title">📦 Box value: open it or sell it sealed?</span></div>
+                    <div class="bk-note">The average value of the cards in a box at today's prices, from the exact pack odds. "Sellable" leaves out cards under $${BOX_BULK_CUTOFF}, which rarely sell one at a time. Any single box can land well above or below the average.</div>
+                    ${res.types.map(t => `
+                        <div class="edh-subhead">${t.name} · ${t.packs} packs</div>
+                        <div>Per pack <strong>${formatUsd(t.pack)}</strong> · per box <strong>${formatUsd(t.box)}</strong> (sellable ${formatUsd(t.boxSellable)})</div>
+                        <div class="staples-controls" style="justify-content:flex-start; margin:6px 0;">
+                            <span class="text-secondary" style="font-size:0.85em;">Sealed box price:</span>
+                            <span class="bg-range" style="width:120px;">$<input type="number" min="0" step="1" placeholder="e.g. 140" value="${boxValuePrices[`${code}|${t.key}`] || ''}" aria-label="Sealed price for a ${t.name} box" oninput="setBoxSealedPrice('${code}', '${t.key}', this.value)"></span>
+                        </div>
+                        <div class="mkt-note" id="boxVerdict-${t.key}">${boxVerdictHTML(t, boxValuePrices[`${code}|${t.key}`])}</div>
+                        ${t.chase.length ? `
+                            <details class="all-printings">
+                                <summary>Chase cards in a ${t.name.toLowerCase()} box</summary>
+                                <div class="buylist-table-wrap"><table class="lands-pkg-table mkt-table">
+                                    <thead><tr><th>Card</th><th>Price</th><th>Per box</th></tr></thead>
+                                    <tbody>${t.chase.map(c => `
+                                        <tr>
+                                            <td>${marketCardLinkHTML(c.card.name, c.card.id)}<div class="lands-row-meta text-secondary">${c.card.set.toUpperCase()} #${c.card.collector_number}${c.foil ? ' · foil' : ''}</div></td>
+                                            <td>${formatUsd(c.price)}</td>
+                                            <td class="text-secondary">${c.copies >= 1 ? `about ${c.copies.toFixed(1)}` : `1 in ${Math.max(1, Math.round(1 / c.copies))} boxes`}</td>
+                                        </tr>
+                                    `).join('')}</tbody>
+                                </table></div>
+                            </details>
+                        ` : ''}
+                        ${t.unpriced ? `<div class="bk-note">${t.unpriced} possible card${t.unpriced === 1 ? '' : 's'} couldn't be priced and count as $0.</div>` : ''}
+                    `).join('')}
+                    <div class="edh-source">Pack odds from MTGJSON; prices from Scryfall (TCGplayer market), today.</div>
+                </div>
             `;
         }
 
@@ -10468,6 +10850,500 @@
             return found.slice(0, 2);
         }
 
+        // ============== MARKET DATA (price history, spikes, ban log) ==============
+        // Built every morning by .github/workflows/market-data.yml from
+        // MTGJSON's 90-day price history (TCGplayer market prices) and
+        // published to this repo's market-data branch. Read straight from
+        // raw.githubusercontent.com, which browsers can load. If the files
+        // aren't there (the job hasn't run yet, or failed), every panel that
+        // uses them says so and the rest of the app carries on.
+        const MARKET_DATA_BASE = 'https://raw.githubusercontent.com/Kenshen107/moonshot-lookup-tools/market-data';
+        const marketFileCache = new Map();
+
+        function fetchMarketFile(path) {
+            if (!marketFileCache.has(path)) {
+                marketFileCache.set(path, fetch(`${MARKET_DATA_BASE}/${path}`)
+                    .then(res => (res.ok ? res.json() : null))
+                    .catch(() => null));
+            }
+            return marketFileCache.get(path);
+        }
+
+        function loadMarketMeta() {
+            return fetchMarketFile('meta.json');
+        }
+
+        // { n, f, e }: weekly prices (oldest -> newest) for the non-foil,
+        // foil and etched versions of one printing, or null if it has no
+        // history (never reached $1 in the last 90 days).
+        async function priceHistoryFor(scryfallId) {
+            if (!scryfallId) return null;
+            const shard = await fetchMarketFile(`history/${scryfallId.slice(0, 2)}.json`);
+            return (shard && shard[scryfallId]) || null;
+        }
+
+        // Change over the last `weeks` weeks of a weekly series.
+        function priceTrend(points, weeks) {
+            if (!points || !points.length) return null;
+            const now = points[points.length - 1];
+            let i = points.length - 1 - weeks;
+            if (i < 0) i = 0;
+            while (i < points.length - 1 && points[i] === null) i++; // newer printings start part-way
+            const then = points[i];
+            if (now === null || then === null || i === points.length - 1 || !then) return null;
+            return { now, then, diff: now - then, pct: (now - then) / then, weeks: points.length - 1 - i };
+        }
+
+        function trendChipHTML(trend, label) {
+            if (!trend) return '';
+            const cls = trend.pct >= 0.05 ? 'up' : trend.pct <= -0.05 ? 'down' : 'flat';
+            const arrow = cls === 'up' ? '▲' : cls === 'down' ? '▼' : '–';
+            return `<span class="mkt-trend mkt-${cls}" title="${formatUsd(trend.then)} → ${formatUsd(trend.now)}">${arrow} ${Math.abs(Math.round(trend.pct * 100))}% ${label}</span>`;
+        }
+
+        function sparklineSVG(points) {
+            const vals = (points || []).filter(p => p !== null);
+            if (vals.length < 2) return '';
+            const min = Math.min(...vals), max = Math.max(...vals);
+            const span = max - min || 1;
+            const step = 80 / (points.length - 1);
+            const coords = points.map((p, i) => (p === null ? null : `${(i * step).toFixed(1)},${(18 - ((p - min) / span) * 16).toFixed(1)}`)).filter(Boolean);
+            return `<svg class="mkt-spark" viewBox="0 0 80 20" width="80" height="20" aria-hidden="true"><polyline points="${coords.join(' ')}" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
+        }
+
+        function marketSourceHTML(meta) {
+            return meta
+                ? `<div class="edh-source">TCGplayer market prices via MTGJSON, as of ${meta.priceDate}. Updated every morning.</div>`
+                : '';
+        }
+
+        const MARKET_UNAVAILABLE_HTML = '<div class="moonshot-status">Market data isn\'t available right now. It\'s rebuilt every morning; if this keeps happening, the daily data job may need a look.</div>';
+
+        // ============== MARKET WATCH TAB ==============
+        const MARKET_SUBTABS = {
+            spikes:   { appId: 'mktSpikesApp',   tabId: 'mktTabSpikes',   onShow: showMarketSpikes },
+            bans:     { appId: 'mktBansApp',     tabId: 'mktTabBans',     onShow: showMarketBans },
+            trending: { appId: 'mktTrendingApp', tabId: 'mktTabTrending', onShow: showMarketTrending },
+            newset:   { appId: 'mktNewsetApp',   tabId: 'mktTabNewset',   onShow: showMarketNewSets }
+        };
+
+        function switchMarketTab(which) {
+            const target = MARKET_SUBTABS[which] ? which : 'spikes';
+            Object.keys(MARKET_SUBTABS).forEach(key => {
+                const sub = MARKET_SUBTABS[key];
+                document.getElementById(sub.appId).style.display = key === target ? '' : 'none';
+                setTabActive(document.getElementById(sub.tabId), key === target);
+            });
+            currentMarketSubtab = target;
+            MARKET_SUBTABS[target].onShow();
+            pushRoute();
+        }
+
+        function showMarketTab() {
+            switchMarketTab(currentMarketSubtab);
+        }
+
+        function marketCardLinkHTML(name, scryfallId) {
+            const click = scryfallId ? `openCardByScryfallId('${scryfallId}', this.dataset.name)` : 'openCardModalByName(this.dataset.name)';
+            return `<span class="set-link" data-name="${escapeAttr(name)}" onclick="${click}">${name}</span>`;
+        }
+
+        // ---- Price spikes ----
+        const mktSpikeOptions = { window: 3, minJump: 2, finish: 'all', hidePromos: true, sort: 'dollars' };
+        let mktSpikeData = null;
+        const MKT_SPIKE_SHOW = 150;
+
+        async function showMarketSpikes() {
+            if (mktSpikeData) return;
+            const [data, meta] = await Promise.all([fetchMarketFile('spikes.json'), loadMarketMeta()]);
+            mktSpikeData = data ? { spikes: data.spikes || [], meta } : { spikes: null, meta };
+            renderMarketSpikes();
+        }
+
+        function setMarketSpikeOption(key, value) {
+            mktSpikeOptions[key] = value;
+            renderMarketSpikes();
+        }
+
+        function renderMarketSpikes() {
+            const controls = document.getElementById('mktSpikeControls');
+            const results = document.getElementById('mktSpikesResults');
+            if (!mktSpikeData) return;
+            if (!mktSpikeData.spikes) {
+                controls.innerHTML = '';
+                results.innerHTML = MARKET_UNAVAILABLE_HTML;
+                return;
+            }
+            const o = mktSpikeOptions;
+            const btn = (key, value, label) => `<button type="button" class="staples-sort-btn${o[key] === value ? ' active' : ''}" onclick="setMarketSpikeOption('${key}', ${JSON.stringify(value).replace(/"/g, '&quot;')})">${label}</button>`;
+            controls.innerHTML = `
+                <div class="staples-controls" style="flex-wrap:wrap;">
+                    <span class="text-secondary" style="font-size:0.85em;">Over the last:</span>
+                    ${btn('window', 1, '1 day')} ${btn('window', 3, '3 days')} ${btn('window', 7, '7 days')}
+                </div>
+                <div class="staples-controls" style="flex-wrap:wrap;">
+                    <span class="text-secondary" style="font-size:0.85em;">Up at least:</span>
+                    ${btn('minJump', 1, '$1')} ${btn('minJump', 2, '$2')} ${btn('minJump', 5, '$5')} ${btn('minJump', 10, '$10')} ${btn('minJump', 25, '$25')}
+                </div>
+                <div class="staples-controls" style="flex-wrap:wrap;">
+                    ${btn('finish', 'all', 'All')} ${btn('finish', 'normal', 'Non-foil')} ${btn('finish', 'foil', 'Foil')}
+                    <span class="text-secondary" style="font-size:0.85em; margin-left:8px;">Sort:</span>
+                    ${btn('sort', 'dollars', 'Biggest $ jump')} ${btn('sort', 'percent', 'Biggest % jump')}
+                    <label class="text-secondary" style="font-size:0.85em; margin-left:8px;"><input type="checkbox" ${o.hidePromos ? 'checked' : ''} onchange="setMarketSpikeOption('hidePromos', this.checked)"> Hide promos</label>
+                </div>
+            `;
+
+            const key = `d${o.window}`;
+            const rows = mktSpikeData.spikes
+                .filter(s => s[key] && s.now - s[key] >= o.minJump && (s.now - s[key]) / s[key] >= 0.15)
+                .filter(s => o.finish === 'all' || (o.finish === 'foil' ? s.finish !== 'normal' : s.finish === 'normal'))
+                .filter(s => !(o.hidePromos && s.promo))
+                .map(s => ({ ...s, then: s[key], diff: s.now - s[key], pct: (s.now - s[key]) / s[key] }))
+                .sort((a, b) => (o.sort === 'percent' ? b.pct - a.pct : b.diff - a.diff));
+
+            if (!rows.length) {
+                results.innerHTML = `<div class="moonshot-status">No cards jumped that much over the last ${o.window === 1 ? 'day' : `${o.window} days`}. Try a smaller jump or a longer window.</div>${marketSourceHTML(mktSpikeData.meta)}`;
+                return;
+            }
+            results.innerHTML = `
+                <div class="bg-section-sub">${rows.length} printing${rows.length === 1 ? '' : 's'} up at least ${formatUsd(o.minJump)} (and 15%) over the last ${o.window === 1 ? 'day' : `${o.window} days`}${rows.length > MKT_SPIKE_SHOW ? ` - showing the top ${MKT_SPIKE_SHOW}` : ''}. Thinly traded cards can jump on a single sale, so check current listings before repricing.</div>
+                <div class="buylist-table-wrap">
+                    <table class="lands-pkg-table mkt-table">
+                        <thead><tr><th>Card</th><th>Was</th><th>Now</th><th>Change</th><th>Moonshot</th></tr></thead>
+                        <tbody>${rows.slice(0, MKT_SPIKE_SHOW).map(s => `
+                            <tr>
+                                <td>
+                                    ${marketCardLinkHTML(s.name, s.id)}
+                                    <div class="lands-row-meta text-secondary">${s.set} #${s.number}${s.finish !== 'normal' ? ` · ${s.finish}` : ''}${s.promo ? ' · promo' : ''}</div>
+                                </td>
+                                <td>${formatUsd(s.then)}</td>
+                                <td><strong>${formatUsd(s.now)}</strong></td>
+                                <td><span class="mkt-trend mkt-up">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span></td>
+                                <td>${moonshotLinkHTML(s.name, 'Find →', 'btn-compact')}</td>
+                            </tr>
+                        `).join('')}</tbody>
+                    </table>
+                </div>
+                ${marketSourceHTML(mktSpikeData.meta)}
+            `;
+        }
+
+        // ---- Ban watch ----
+        const BAN_FORMAT_LABELS = { standard: 'Standard', pioneer: 'Pioneer', modern: 'Modern', legacy: 'Legacy', vintage: 'Vintage', commander: 'Commander', pauper: 'Pauper' };
+        const BAN_CHANGE_LABELS = { banned: '🚫 Banned', unbanned: '✅ Unbanned', restricted: '⚠️ Restricted', unrestricted: '✅ Unrestricted' };
+        const MKT_BAN_DETAIL_MAX = 12;
+        let mktBansLoaded = false;
+
+        async function showMarketBans() {
+            if (mktBansLoaded) return;
+            mktBansLoaded = true;
+            const el = document.getElementById('mktBansResults');
+            const data = await fetchMarketFile('bans.json');
+            if (!data) {
+                mktBansLoaded = false;
+                el.innerHTML = MARKET_UNAVAILABLE_HTML;
+                return;
+            }
+            const log = [...(data.log || [])].reverse(); // newest first
+            const counts = Object.keys(BAN_FORMAT_LABELS).map(f => {
+                const list = Object.values((data.current || {})[f] || {});
+                const banned = list.filter(v => v === 'Banned').length;
+                const restricted = list.filter(v => v === 'Restricted').length;
+                return `<span class="related-card-pill" style="cursor:default;">${BAN_FORMAT_LABELS[f]}<span class="edh-pill-pct">${banned} banned${restricted ? `, ${restricted} restricted` : ''}</span></span>`;
+            }).join('');
+            el.innerHTML = `
+                ${log.length ? `
+                    <div class="bg-section-title" style="margin-top:0;">Recent changes</div>
+                    <div id="mktBanLog">${log.map((entry, i) => `
+                        <div class="edh-block mkt-ban-entry">
+                            <div class="edh-head">
+                                <span><strong>${BAN_CHANGE_LABELS[entry.change] || entry.change}</strong> in ${BAN_FORMAT_LABELS[entry.format] || entry.format}: ${marketCardLinkHTML(entry.card)}</span>
+                                <span class="text-secondary" style="font-size:0.85em;">Spotted ${entry.date}</span>
+                            </div>
+                            <div id="mktBanDetail-${i}">${i < MKT_BAN_DETAIL_MAX ? '<div class="loading" style="padding:0;">Checking what it affects...</div>' : ''}</div>
+                        </div>
+                    `).join('')}</div>
+                ` : `
+                    <div class="moonshot-status">No ban list changes since tracking started on ${data.since}. When Wizards bans or unbans a card, it shows up here the next morning with the cards and commanders it affects.</div>
+                `}
+                <div class="bg-section-title">Current ban lists</div>
+                <div class="edh-pills">${counts}</div>
+                <div class="bg-section-sub" style="margin-top:6px;">Full lists are in <span class="set-link" onclick="navigateTo('formats')">Format Rules</span>.</div>
+                <div class="edh-source">Legality from MTGJSON, checked every morning (tracking since ${data.since}). Deck data from EDHREC.</div>
+            `;
+            log.slice(0, MKT_BAN_DETAIL_MAX).forEach((entry, i) => loadMarketBanDetail(entry, i));
+        }
+
+        // What a ban touches: the card's price trend, and from EDHREC the
+        // commanders whose decks run it (or, for a commander, its own decks
+        // and the cards built around it).
+        async function loadMarketBanDetail(entry, i) {
+            const el = () => document.getElementById(`mktBanDetail-${i}`);
+            try {
+                const res = await fetch(`${API_BASE}/cards/named?exact=${encodeURIComponent(entry.card)}`);
+                const card = res.ok ? await res.json() : null;
+                const [history, cardPage, commander] = await Promise.all([
+                    card ? priceHistoryFor(card.id) : null,
+                    fetchEdhrecPage(`cards/${edhrecSlug(entry.card)}`),
+                    card && canBeCommander(card) ? loadEdhrecCommander([card.name]) : null
+                ]);
+                const series = history && (history.n || history.f);
+                const parts = [];
+                if (series) {
+                    parts.push(`<div>${formatUsd(series[series.length - 1])} ${sparklineSVG(series)} ${trendChipHTML(priceTrend(series, 1), '7 days')} ${trendChipHTML(priceTrend(series, 4), '30 days')}</div>`);
+                }
+                if (commander) {
+                    const decks = (edhrecPageCard(commander.data) || {}).num_decks;
+                    const synergy = ((edhrecCardlists(commander.data).find(l => l.tag === 'highsynergycards') || {}).cardviews || []).slice(0, 8);
+                    parts.push(`<div class="edh-subhead">As a commander: ${decks ? `${decks.toLocaleString()} decks on EDHREC` : 'on EDHREC'}. Cards built around it:</div>
+                        <div class="edh-pills">${synergy.map(cv => edhrecLookupPillHTML(cv.name)).join('')}</div>`);
+                }
+                const info = edhrecPageCard(cardPage);
+                const topCommanders = ((edhrecCardlists(cardPage).find(l => l.tag === 'topcommanders') || {}).cardviews || []).slice(0, 8);
+                if (info && info.num_decks) {
+                    parts.push(`<div class="edh-subhead">In ${info.num_decks.toLocaleString()} Commander decks. Played most with:</div>
+                        <div class="edh-pills">${topCommanders.map(cv => edhrecLookupPillHTML(cv.name, `${edhrecPct(edhrecInclusion(cv))}`)).join('')}</div>`);
+                }
+                if (el()) el().innerHTML = parts.join('') || '<div class="text-secondary">No price or deck data for this card.</div>';
+            } catch (err) {
+                console.error('Ban detail error:', err);
+                if (el()) el().innerHTML = '';
+            }
+        }
+
+        // ---- Buyer's Guide: price a deck ----
+        // Every card at its cheapest paper copy, plus a 30-day trend from
+        // the market data so rising cards stand out (quote those soon).
+        const DECK_RISING = 0.15;
+        let deckPricerToken = 0;
+
+        async function runDeckPricer() {
+            const myToken = ++deckPricerToken;
+            const el = document.getElementById('deckPricerResults');
+            const counts = parseDecklistNames(document.getElementById('deckPricerInput').value);
+            if (!counts.size) {
+                el.innerHTML = '<div class="moonshot-status">Paste a decklist first.</div>';
+                return;
+            }
+            el.innerHTML = `<div class="loading">Pricing ${counts.size} cards...</div>`;
+            const names = [...counts.keys()];
+            const priced = await cheapestPrintings(names);
+            // Trends load a small slice of the history file per card, a few at a time.
+            const trends = new Map();
+            const tasks = names.map(name => async () => {
+                const card = priced.get(edhrecNameKey(name));
+                if (!card) return;
+                const history = await priceHistoryFor(card.id);
+                const series = history && (history.n || history.f || history.e);
+                if (series) trends.set(name, { series, month: priceTrend(series, 4) });
+            });
+            await runWithConcurrency(tasks, 6, 0, () => myToken !== deckPricerToken);
+            const meta = await loadMarketMeta();
+            if (myToken !== deckPricerToken) return;
+
+            let total = 0, cards = 0;
+            const missing = [];
+            const rows = names.map(name => {
+                const copies = counts.get(name);
+                const card = priced.get(edhrecNameKey(name));
+                if (!card) { missing.push(name); return null; }
+                const p = printingPrice(card);
+                const each = p ? p.price : null;
+                if (each !== null) total += each * copies;
+                cards += copies;
+                const trend = trends.get(name);
+                return { name: card.name, card, copies, each, foilOnly: p && p.foilOnly, trend };
+            }).filter(Boolean).sort((a, b) => (b.each || 0) * b.copies - (a.each || 0) * a.copies);
+            const rising = rows.filter(r => r.trend && r.trend.month && r.trend.month.pct >= DECK_RISING);
+
+            el.innerHTML = `
+                <div class="edh-block">
+                    <div class="edh-stat">${cards} card${cards === 1 ? '' : 's'} · about <strong>${formatUsd(total)}</strong> at the cheapest copy of each${rising.length ? ` · <span class="mkt-up">📈 ${rising.length} rising</span>` : ''}</div>
+                    ${missing.length ? `<div class="bk-note">Couldn't find: ${missing.join(', ')}</div>` : ''}
+                    <div class="bk-note">Today's market prices from Scryfall; Moonshot's own prices may differ. Rising = up ${Math.round(DECK_RISING * 100)}%+ over 30 days.</div>
+                </div>
+                <div class="buylist-table-wrap">
+                    <table class="lands-pkg-table mkt-table">
+                        <thead><tr><th>Card</th><th>Each</th><th>Total</th><th>30 days</th><th>Moonshot</th></tr></thead>
+                        <tbody>${rows.map(r => `
+                            <tr>
+                                <td>${r.copies > 1 ? `${r.copies} ` : ''}${marketCardLinkHTML(r.name, r.card.id)}<div class="lands-row-meta text-secondary">${r.card.set.toUpperCase()} · cheapest copy</div></td>
+                                <td>${r.each !== null ? `${formatUsd(r.each)}${r.foilOnly ? ' foil' : ''}` : '—'}</td>
+                                <td>${r.each !== null ? formatUsd(r.each * r.copies) : '—'}</td>
+                                <td>${r.trend ? `${sparklineSVG(r.trend.series)} ${trendChipHTML(r.trend.month, '')}` : ''}</td>
+                                <td>${moonshotLinkHTML(r.name, 'Find →', 'btn-compact')}</td>
+                            </tr>
+                        `).join('')}</tbody>
+                    </table>
+                </div>
+                ${marketSourceHTML(meta)}
+            `;
+        }
+
+        // ---- Trending commanders ----
+        let mktTrendingData = null;
+        let mktTrendingSort = 'rising'; // or 'decks'
+        const MKT_TRENDING_SHOW = 30;
+
+        async function showMarketTrending() {
+            if (mktTrendingData) return;
+            const data = await fetchEdhrecPage('commanders/week');
+            const list = (edhrecCardlists(data)[0] || {}).cardviews || [];
+            mktTrendingData = list;
+            renderMarketTrending();
+        }
+
+        function setMarketTrendingSort(sort) {
+            mktTrendingSort = sort;
+            renderMarketTrending();
+        }
+
+        function trendingLabel(z) {
+            if (typeof z !== 'number') return '';
+            if (z >= 2) return '<span class="mkt-trend mkt-up">🔥 Rising fast</span>';
+            if (z >= 0.5) return '<span class="mkt-trend mkt-up">▲ Rising</span>';
+            if (z <= -0.5) return '<span class="mkt-trend mkt-down">▼ Cooling</span>';
+            return '<span class="mkt-trend mkt-flat">– Steady</span>';
+        }
+
+        function renderMarketTrending() {
+            const controls = document.getElementById('mktTrendingControls');
+            const el = document.getElementById('mktTrendingResults');
+            if (!mktTrendingData || !mktTrendingData.length) {
+                controls.innerHTML = '';
+                el.innerHTML = '<div class="moonshot-status">EDHREC\'s trending list isn\'t available right now.</div>';
+                return;
+            }
+            const btn = (v, label) => `<button type="button" class="staples-sort-btn${mktTrendingSort === v ? ' active' : ''}" onclick="setMarketTrendingSort('${v}')">${label}</button>`;
+            controls.innerHTML = `<div class="staples-controls">${btn('rising', '🔥 Rising fastest')} ${btn('decks', '🏗️ Most built this week')}</div>`;
+            const rows = [...mktTrendingData]
+                .sort((a, b) => (mktTrendingSort === 'rising' ? (b.trend_zscore || 0) - (a.trend_zscore || 0) : b.num_decks - a.num_decks))
+                .slice(0, MKT_TRENDING_SHOW);
+            el.innerHTML = `
+                ${rows.map((cv, i) => `
+                    <div class="edh-block mkt-trending-row">
+                        <div class="edh-head">
+                            <span><strong>${i + 1}.</strong> ${marketCardLinkHTML(cv.name)} ${trendingLabel(cv.trend_zscore)}</span>
+                            <span class="text-secondary" style="font-size:0.85em;">${Number(cv.num_decks).toLocaleString()} new decks this week</span>
+                        </div>
+                        <div class="edh-pills">
+                            <button type="button" class="staples-sort-btn" onclick="loadMarketCommanderCards(${i}, this.dataset.name)" data-name="${escapeAttr(cv.name)}">🃏 Cards their decks use most</button>
+                            <button type="button" class="staples-sort-btn" data-name="${escapeAttr(cv.name)}" onclick="openCommanderGuide(this.dataset.name)">🧭 Full guide</button>
+                        </div>
+                        <div id="mktCmdrCards-${i}"></div>
+                    </div>
+                `).join('')}
+                ${edhrecSourceHTML('commanders/week')}
+            `;
+        }
+
+        // A compact priced list: the commander's top and high-synergy cards.
+        async function loadMarketCommanderCards(i, name) {
+            const el = document.getElementById(`mktCmdrCards-${i}`);
+            if (!el) return;
+            if (el.dataset.loaded) { el.innerHTML = ''; delete el.dataset.loaded; return; } // toggle closed
+            el.dataset.loaded = '1';
+            el.innerHTML = '<div class="loading" style="padding:0;">Pricing cards...</div>';
+            const commander = await loadEdhrecCommander([name]);
+            if (!commander) {
+                el.innerHTML = '<div class="text-secondary">EDHREC doesn\'t have this commander\'s card lists.</div>';
+                return;
+            }
+            const seen = new Set();
+            const cards = ['topcards', 'highsynergycards'].flatMap(tag => (edhrecCardlists(commander.data).find(l => l.tag === tag) || {}).cardviews || [])
+                .filter(cv => !seen.has(cv.name) && seen.add(cv.name))
+                .sort((a, b) => edhrecInclusion(b) - edhrecInclusion(a));
+            el.innerHTML = await marketPricedRowsHTML(cards.map(cv => ({ name: cv.name, note: `${edhrecPct(edhrecInclusion(cv))} of decks` })));
+        }
+
+        // Table of cards at their cheapest copy, with a note column.
+        async function marketPricedRowsHTML(entries, noteHeader = 'Played in') {
+            const priced = await cheapestPrintings(entries.map(e => e.name));
+            return `
+                <div class="buylist-table-wrap">
+                    <table class="lands-pkg-table mkt-table">
+                        <thead><tr><th>Card</th><th>${noteHeader}</th><th>Cheapest</th><th>Moonshot</th></tr></thead>
+                        <tbody>${entries.map(e => {
+                            const card = priced.get(edhrecNameKey(e.name));
+                            const p = card && printingPrice(card);
+                            return `
+                                <tr>
+                                    <td>${marketCardLinkHTML(e.name, card && card.id)}</td>
+                                    <td class="text-secondary">${e.note}</td>
+                                    <td>${p ? `${formatUsd(p.price)}${p.foilOnly ? ' foil' : ''}` : '—'}</td>
+                                    <td>${moonshotLinkHTML(e.name, 'Find →', 'btn-compact')}</td>
+                                </tr>
+                            `;
+                        }).join('')}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // ---- New set tracker ----
+        const MKT_NEWSET_TYPES = ['expansion', 'core', 'masters', 'draft_innovation', 'commander'];
+        const MKT_NEWSET_DAYS = 240;
+        const MKT_NEWSET_SHOW = 40;
+        let mktNewSetsLoaded = false;
+
+        async function showMarketNewSets() {
+            if (mktNewSetsLoaded) return;
+            mktNewSetsLoaded = true;
+            const select = document.getElementById('mktSetSelect');
+            try {
+                const sets = await fetchRawSets();
+                const cutoff = new Date(Date.now() - MKT_NEWSET_DAYS * 86400000).toISOString().slice(0, 10);
+                const today = todayISO();
+                const recent = sets
+                    .filter(s => MKT_NEWSET_TYPES.includes(s.set_type) && !s.digital && !s.parent_set_code && s.released_at >= cutoff && s.released_at <= today)
+                    .sort((a, b) => b.released_at.localeCompare(a.released_at));
+                select.innerHTML = recent.map(s => `<option value="${s.code}">${s.name} (${s.code.toUpperCase()}) · ${s.released_at}</option>`).join('');
+                if (recent.length) loadMarketNewSet(recent[0].code);
+                else document.getElementById('mktNewsetResults').innerHTML = '<div class="moonshot-status">No sets released recently.</div>';
+            } catch (err) {
+                mktNewSetsLoaded = false;
+                document.getElementById('mktNewsetResults').innerHTML = '<div class="error">Couldn\'t load the set list - try again in a moment.</div>';
+            }
+        }
+
+        let mktNewSetToken = 0;
+        async function loadMarketNewSet(code) {
+            const myToken = ++mktNewSetToken;
+            const el = document.getElementById('mktNewsetResults');
+            el.innerHTML = '<div class="loading">Loading EDHREC data for this set...</div>';
+            const path = `sets/${code}`;
+            const data = await fetchEdhrecPage(path);
+            if (myToken !== mktNewSetToken) return;
+            const lists = edhrecCardlists(data);
+            if (!lists.length) {
+                el.innerHTML = '<div class="moonshot-status">EDHREC doesn\'t have data for this set yet.</div>';
+                return;
+            }
+            // "Cards (FIN)", "Cards (FIC)" = the set's new cards in the 99;
+            // "Commanders (FIN)" etc. = its new legends built as commanders.
+            const gather = prefix => {
+                const seen = new Set();
+                return lists.filter(l => (l.header || '').startsWith(prefix) && !/Reprints/.test(l.header))
+                    .flatMap(l => l.cardviews || [])
+                    .filter(cv => cv.num_decks && !seen.has(cv.name) && seen.add(cv.name))
+                    .sort((a, b) => b.num_decks - a.num_decks)
+                    .slice(0, MKT_NEWSET_SHOW);
+            };
+            const cards = gather('Cards (');
+            const commanders = gather('Commanders (');
+            const toEntries = list => list.map(cv => ({ name: cv.name, note: `${Number(cv.num_decks).toLocaleString()} decks` }));
+            const [cardsHTML, commandersHTML] = await Promise.all([
+                cards.length ? marketPricedRowsHTML(toEntries(cards), 'Decks') : '',
+                commanders.length ? marketPricedRowsHTML(toEntries(commanders.slice(0, 20)), 'Decks') : ''
+            ]);
+            if (myToken !== mktNewSetToken) return;
+            el.innerHTML = `
+                ${cards.length ? `<div class="bg-section-title" style="margin-top:0;">Most-played new cards</div><div class="bg-section-sub">The set's cards in the most Commander decks on EDHREC. Your restock list for singles.</div>${cardsHTML}` : ''}
+                ${commanders.length ? `<div class="bg-section-title">Most-built new commanders</div><div class="bg-section-sub">Decks built with each as the commander. Their precons and staples will move too.</div>${commandersHTML}` : ''}
+                ${edhrecSourceHTML(path)}
+            `;
+        }
+
         // ============== COMMANDER BRACKETS ==============
         // The bracket rules themselves can't be fetched (Wizards publishes
         // them as articles, not data), so they're written out here and
@@ -11164,7 +12040,8 @@
         const BUYERS_GUIDE_SUBTABS = {
             finder: { appId: 'bgFinderApp', tabId: 'bgTabFinder', onShow: showCardFinder },
             lands:  { appId: 'landsApp',    tabId: 'bgTabLands',  onShow: showLandFinder },
-            basics: { appId: 'basicsApp',   tabId: 'bgTabBasics', onShow: showBasicsGuide }
+            basics: { appId: 'basicsApp',   tabId: 'bgTabBasics', onShow: showBasicsGuide },
+            deck:   { appId: 'bgDeckApp',   tabId: 'bgTabDeck',   onShow: () => {} }
         };
 
         function switchBuyersGuideTab(which) {
@@ -14847,6 +15724,7 @@
         renderAppNav();
         initTablist('bgTabs', BUYERS_GUIDE_SUBTABS, 'finder');
         initTablist('guideTabs', GUIDE_SUBTABS, 'gradingGuide');
+        initTablist('marketTabs', MARKET_SUBTABS, 'spikes');
         // A bookmarked/shared link (e.g. #buyersguide/lands) opens straight to
         // that tab instead of always landing on MTG Card Lookup.
         if (location.hash) applyRouteFromHash();
