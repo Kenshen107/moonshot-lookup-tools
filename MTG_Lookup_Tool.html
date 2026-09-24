@@ -3593,21 +3593,174 @@
             font-size: 0.8em;
         }
 
-        .prod-decklist {
-            margin-top: 6px;
-            max-height: 320px;
-            overflow-y: auto;
-            font-size: 0.86em;
-            line-height: 1.6;
+        .prod-photo-link {
+            margin-left: 6px;
+            font-size: 0.82em;
+            color: var(--color-link);
+            text-decoration: none;
+            white-space: nowrap;
         }
 
-        .prod-deck-section {
-            margin-top: 6px;
+        .prod-photo-link:hover {
+            text-decoration: underline;
+        }
+
+        /* ---- Product decklists ---- */
+        .deck-panel {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 2px solid var(--border);
+        }
+
+        .deck-panel-head {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .deck-panel-head .staples-sort-btn {
+            margin: 0;
+        }
+
+        .deck-commanders {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .deck-commander {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            flex: 1 1 300px;
+            padding: 10px;
+            background: var(--bg-inset);
+            border: 1px solid var(--brand);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .deck-commander img {
+            width: 130px;
+            border-radius: 7px;
+            flex-shrink: 0;
+        }
+
+        .deck-commander-label {
+            font-size: 0.75em;
             font-weight: 700;
-            color: var(--text-secondary);
+            color: var(--brand-light);
             text-transform: uppercase;
-            font-size: 0.85em;
             letter-spacing: 0.5px;
+        }
+
+        .deck-commander-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--text-heading);
+        }
+
+        .deck-columns {
+            columns: 2 260px;
+            column-gap: 24px;
+        }
+
+        .deck-section {
+            break-inside: avoid;
+            margin-bottom: 14px;
+        }
+
+        .deck-section-head {
+            margin-bottom: 4px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid var(--border-subtle);
+            font-weight: 700;
+            color: var(--text-heading);
+        }
+
+        .deck-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 2px 0;
+            font-size: 0.88em;
+        }
+
+        .deck-row-count {
+            width: 1.4em;
+            text-align: right;
+            color: var(--text-secondary);
+        }
+
+        .deck-row-cost {
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        .deck-row-cost .mana-symbol {
+            width: 14px;
+            height: 14px;
+        }
+
+        .deck-foil {
+            font-size: 0.75em;
+            color: #d2a8ff;
+        }
+
+        .deck-pic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+            gap: 8px;
+        }
+
+        .deck-pic {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .deck-pic img,
+        .deck-pic-noimg {
+            width: 100%;
+            aspect-ratio: 488 / 680;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+
+        .deck-pic-noimg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            box-sizing: border-box;
+            background: var(--bg-inset);
+            font-size: 0.72em;
+            text-align: center;
+        }
+
+        .deck-pic-count,
+        .deck-pic-foil {
+            position: absolute;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            font-size: 0.72em;
+            font-weight: 700;
+        }
+
+        .deck-pic-count {
+            top: 4px;
+            right: 4px;
+            color: #fff;
+        }
+
+        .deck-pic-foil {
+            bottom: 4px;
+            left: 4px;
+            color: #d2a8ff;
         }
 
         .prod-links {
@@ -8787,8 +8940,9 @@
             (c.card || []).forEach(x => items.push(item('✨',
                 `Promo card: <span class="set-link" onclick="openPromoCard('${x.set}', '${x.number}')">${x.name}</span>${x.foil ? ' (foil)' : ''} <span class="text-secondary">#${x.number}</span>`)));
             (c.deck || []).forEach(x => items.push(item('🃏',
-                `Deck: <strong>${x.name}</strong> <button type="button" class="staples-sort-btn prod-deck-btn" data-set="${x.set}" data-deck="${escapeAttr(x.name)}" onclick="showProductDecklist(this)">Show decklist</button><div class="prod-decklist"></div>`)));
-            (c.other || []).forEach(x => items.push(item(isSpindown(x.name) ? '🎲' : '➕', x.name)));
+                `Deck: <strong>${x.name}</strong> <button type="button" class="staples-sort-btn prod-deck-btn" data-set="${x.set}" data-deck="${escapeAttr(x.name)}" onclick="showProductDecklist(this)">Show decklist</button>`)));
+            (c.other || []).forEach(x => items.push(item(isSpindown(x.name) ? '🎲' : '➕',
+                `${x.name}${isSpecialtyItem(x.name) ? ` <a class="prod-photo-link" href="${specialtyPhotoSearchUrl(p, x.name)}" target="_blank" rel="noopener">📷 See photos</a>` : ''}`)));
             if (c.variable) items.push(item('🔀', 'Contents vary - comes with one of several possible configurations'));
 
             const tcg = p.purchaseUrls && p.purchaseUrls.tcgplayer;
@@ -8806,6 +8960,7 @@
                         </div>
                     </div>
                 </div>
+                <div id="prodDecklistPanel"></div>
             `;
             document.getElementById('productModal').classList.add('open');
         }
@@ -8832,43 +8987,181 @@
             return mtgjsonSetFileCache[code];
         }
 
+        // Extras worth a picture: spindowns and other dice/life counters,
+        // posters, playmats. No data source has photos of these
+        // (MTGJSON lists them by name only), so the link searches the web
+        // for that exact item.
+        function isSpecialtyItem(name) {
+            return /spindown|life counter|life tracker|life wheel|dice|die\b|poster|playmat/i.test(name);
+        }
+
+        function specialtyPhotoSearchUrl(product, itemName) {
+            const setName = (productsData.sets.find(s => s.code === product.setCode) || {}).name || '';
+            const query = itemName.toLowerCase().includes(setName.split(':')[0].toLowerCase()) ? itemName : `${setName} ${itemName}`;
+            return `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(`Magic the Gathering ${query}`)}`;
+        }
+
+        // Scryfall's image CDN, from the card's Scryfall id (MTGJSON has it).
+        function scryfallImageById(id, size = 'normal') {
+            return id ? `https://cards.scryfall.io/${size}/front/${id[0]}/${id[1]}/${id}.jpg` : null;
+        }
+
+        // Grouped like deckbuilding sites do: a land that's also a creature
+        // counts as a creature, an artifact creature as a creature, and so on.
+        const DECK_TYPE_ORDER = ['Creature', 'Planeswalker', 'Battle', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Land'];
+        const DECK_TYPE_LABELS = { Creature: 'Creatures', Planeswalker: 'Planeswalkers', Battle: 'Battles', Instant: 'Instants', Sorcery: 'Sorceries', Artifact: 'Artifacts', Enchantment: 'Enchantments', Land: 'Lands', Other: 'Other' };
+
+        function deckCardGroup(card) {
+            const types = card.types || [];
+            return DECK_TYPE_ORDER.find(t => types.includes(t)) || 'Other';
+        }
+
+        let productDeckView = 'list'; // 'list' or 'pictures'
+        let productDeckCurrent = null; // { title, commanders, groups, tokens } for re-rendering on toggle
+
+        async function openCardByScryfallId(id, fallbackName) {
+            try {
+                const res = await fetch(`${API_BASE}/cards/${id}`);
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+                openCardModal(await res.json());
+            } catch (err) {
+                if (fallbackName) openCardModalByName(fallbackName);
+            }
+        }
+
+        function deckCardClick(card) {
+            const id = card.identifiers && card.identifiers.scryfallId;
+            return id
+                ? `openCardByScryfallId('${id}', this.dataset.name)`
+                : 'openCardModalByName(this.dataset.name)';
+        }
+
         // Decklists list MTGJSON card ids, some from the main set (basics,
         // reprints) - so every set the deck draws from is loaded to name them.
         async function showProductDecklist(btn) {
-            const listEl = btn.nextElementSibling;
-            if (listEl.innerHTML) {
-                listEl.innerHTML = '';
-                btn.textContent = 'Show decklist';
-                return;
-            }
-            listEl.innerHTML = '<div class="loading">Loading decklist...</div>';
+            const panel = document.getElementById('prodDecklistPanel');
+            panel.innerHTML = '<div class="loading">Loading decklist...</div>';
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             try {
                 const setData = await loadMtgjsonSetFile(btn.dataset.set);
                 const deck = (setData.decks || []).find(d => d.name === btn.dataset.deck);
                 if (!deck) throw new Error('Deck not found');
                 const sources = await Promise.all((deck.sourceSetCodes || [setData.code]).map(loadMtgjsonSetFile));
-                const cardsByUuid = new Map();
-                sources.forEach(s => (s.cards || []).forEach(card => cardsByUuid.set(card.uuid, card)));
-                const section = (title, list) => {
-                    if (!list || !list.length) return '';
-                    const rows = list.map(e => ({ e, card: cardsByUuid.get(e.uuid) }))
-                        .sort((a, b) => (a.card ? a.card.name : '~').localeCompare(b.card ? b.card.name : '~'));
-                    const total = list.reduce((n, e) => n + (e.count || 1), 0);
-                    return `
-                        <div class="prod-deck-section">${title} (${total})</div>
-                        ${rows.map(({ e, card }) => `
-                            <div>${e.count || 1}× ${card
-                                ? `<span class="set-link" data-name="${escapeAttr(card.name)}" onclick="openCardModalByName(this.dataset.name)">${card.name}</span>${e.isFoil ? ' <span class="text-secondary">(foil)</span>' : ''}`
-                                : '<span class="text-secondary">(card not found)</span>'}</div>
-                        `).join('')}
-                    `;
+                const byUuid = new Map();
+                sources.forEach(s => [...(s.cards || []), ...(s.tokens || [])].forEach(card => byUuid.set(card.uuid, card)));
+                // Same card in several printings (e.g. two Forest arts) is shown
+                // once with the copies added up.
+                const resolve = list => {
+                    const merged = new Map();
+                    (list || []).forEach(e => {
+                        const card = byUuid.get(e.uuid);
+                        if (!card) return;
+                        const key = `${card.name}|${!!e.isFoil}`;
+                        if (merged.has(key)) merged.get(key).count += e.count || 1;
+                        else merged.set(key, { count: e.count || 1, foil: !!e.isFoil, card });
+                    });
+                    return [...merged.values()];
                 };
-                listEl.innerHTML = section('Commander', deck.commander) + section('Deck', deck.mainBoard) + section('Sideboard', deck.sideBoard);
-                btn.textContent = 'Hide decklist';
+
+                const groups = {};
+                resolve(deck.mainBoard).forEach(e => {
+                    const g = deckCardGroup(e.card);
+                    (groups[g] = groups[g] || []).push(e);
+                });
+                Object.values(groups).forEach(list => list.sort((a, b) => (a.card.manaValue || 0) - (b.card.manaValue || 0) || a.card.name.localeCompare(b.card.name)));
+
+                const missing = [...(deck.commander || []), ...(deck.mainBoard || [])].filter(e => !byUuid.has(e.uuid)).length;
+                productDeckCurrent = {
+                    title: deck.name,
+                    commanders: resolve(deck.commander),
+                    groups,
+                    sideboard: resolve(deck.sideBoard),
+                    tokens: resolve(deck.tokens),
+                    missing
+                };
+                renderProductDecklist();
             } catch (err) {
                 console.error('Decklist error:', err);
-                listEl.innerHTML = '<div class="text-error">Couldn\'t load this decklist right now.</div>';
+                panel.innerHTML = '<div class="text-error">Couldn\'t load this decklist right now.</div>';
             }
+        }
+
+        function setProductDeckView(view) {
+            productDeckView = view;
+            renderProductDecklist();
+        }
+
+        function deckEntryHTML(e) {
+            const c = e.card;
+            if (productDeckView === 'pictures') {
+                const img = scryfallImageById(c.identifiers && c.identifiers.scryfallId, 'small');
+                return `
+                    <div class="deck-pic" data-name="${escapeAttr(c.name)}" onclick="${deckCardClick(c)}" title="${escapeAttr(c.name)}">
+                        ${img ? `<img src="${img}" alt="${escapeAttr(c.name)}" loading="lazy">` : `<div class="deck-pic-noimg">${c.name}</div>`}
+                        ${e.count > 1 ? `<span class="deck-pic-count">×${e.count}</span>` : ''}
+                        ${e.foil ? '<span class="deck-pic-foil">foil</span>' : ''}
+                    </div>
+                `;
+            }
+            return `
+                <div class="deck-row">
+                    <span class="deck-row-count">${e.count}</span>
+                    <span class="set-link" data-name="${escapeAttr(c.name)}" onclick="${deckCardClick(c)}">${c.name}</span>
+                    ${e.foil ? '<span class="deck-foil">foil</span>' : ''}
+                    <span class="deck-row-cost">${c.manaCost ? renderManaCost(c.manaCost) : ''}</span>
+                </div>
+            `;
+        }
+
+        function renderProductDecklist() {
+            const panel = document.getElementById('prodDecklistPanel');
+            const d = productDeckCurrent;
+            if (!panel || !d) return;
+            const total = list => list.reduce((n, e) => n + e.count, 0);
+            const mainCount = Object.values(d.groups).reduce((n, list) => n + total(list), 0) + total(d.commanders);
+            const section = (label, list) => (list && list.length ? `
+                <div class="deck-section">
+                    <div class="deck-section-head">${label} <span class="text-secondary">(${total(list)})</span></div>
+                    <div class="${productDeckView === 'pictures' ? 'deck-pic-grid' : 'deck-rows'}">${list.map(deckEntryHTML).join('')}</div>
+                </div>
+            ` : '');
+
+            const commanderHTML = d.commanders.length ? `
+                <div class="deck-commanders">
+                    ${d.commanders.map(e => {
+                        const c = e.card;
+                        const img = scryfallImageById(c.identifiers && c.identifiers.scryfallId, 'normal');
+                        return `
+                            <div class="deck-commander" data-name="${escapeAttr(c.name)}" onclick="${deckCardClick(c)}">
+                                ${img ? `<img src="${img}" alt="${escapeAttr(c.name)}" loading="lazy">` : ''}
+                                <div>
+                                    <div class="deck-commander-label">Commander${e.foil ? ' · foil' : ''}</div>
+                                    <div class="deck-commander-name">${c.name}</div>
+                                    <div class="text-secondary">${c.type || ''}</div>
+                                    ${c.manaCost ? `<div style="margin-top:4px;">${renderManaCost(c.manaCost)}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            ` : '';
+
+            const viewBtn = (v, label) => `<button type="button" class="staples-sort-btn${productDeckView === v ? ' active' : ''}" onclick="setProductDeckView('${v}')">${label}</button>`;
+            panel.innerHTML = `
+                <div class="deck-panel">
+                    <div class="deck-panel-head">
+                        <div><strong>${d.title}</strong> <span class="text-secondary">· ${mainCount} cards</span></div>
+                        <div>${viewBtn('list', '☰ List')} ${viewBtn('pictures', '🖼️ Pictures')}</div>
+                    </div>
+                    ${commanderHTML}
+                    <div class="${productDeckView === 'pictures' ? '' : 'deck-columns'}">
+                        ${[...DECK_TYPE_ORDER, 'Other'].map(t => section(DECK_TYPE_LABELS[t], d.groups[t])).join('')}
+                        ${section('Sideboard', d.sideboard)}
+                        ${section('Tokens included', d.tokens)}
+                    </div>
+                    ${d.missing ? `<div class="bk-note">${d.missing} card${d.missing === 1 ? '' : 's'} couldn't be matched to a name.</div>` : ''}
+                </div>
+            `;
         }
 
         // ============== COMMANDER BRACKETS ==============
