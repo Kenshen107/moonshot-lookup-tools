@@ -3404,6 +3404,234 @@
             padding: 6px 12px;
         }
 
+        /* ---- Sealed products ---- */
+        .prod-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-width: 900px;
+            margin: 0 auto 16px;
+        }
+
+        .prod-picker input {
+            flex: 1 1 220px;
+            width: auto;
+        }
+
+        .prod-picker select {
+            flex: 2 1 320px;
+            min-width: 0;
+            padding: 10px;
+            background: var(--bg-inset);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95em;
+        }
+
+        .prod-set-head {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .prod-set-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--text-heading);
+        }
+
+        .prod-upcoming {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 8px;
+            border: 1px solid #ffcc80;
+            border-radius: 10px;
+            color: #ffcc80;
+            font-size: 0.6em;
+            vertical-align: middle;
+        }
+
+        .prod-set-promos {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px 16px;
+            margin-top: 6px;
+            font-size: 0.88em;
+        }
+
+        .prod-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 14px;
+            margin-top: 12px;
+        }
+
+        .prod-tile {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            margin: 0;
+            padding: 10px;
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            text-align: left;
+            font-weight: 400;
+        }
+
+        .prod-tile:hover {
+            border-color: var(--brand-light);
+            background: var(--bg-panel-raised);
+        }
+
+        .prod-img,
+        .prod-modal-img {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .prod-img img,
+        .prod-modal-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .prod-img.noimg,
+        .prod-modal-img.noimg {
+            background: var(--bg-inset);
+        }
+
+        .prod-img.noimg::after,
+        .prod-modal-img.noimg::after {
+            content: "📦";
+            font-size: 2.5em;
+            opacity: 0.6;
+        }
+
+        .prod-name {
+            font-weight: 700;
+            color: var(--text-heading);
+            line-height: 1.25;
+        }
+
+        .prod-cat {
+            font-size: 0.78em;
+            color: var(--text-secondary);
+        }
+
+        .prod-summary {
+            font-size: 0.8em;
+            color: #c0c0c0;
+            line-height: 1.4;
+        }
+
+        .prod-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .prod-badges span {
+            padding: 1px 7px;
+            border-radius: 10px;
+            background: var(--bg-inset);
+            font-size: 0.72em;
+            color: #ffcc80;
+        }
+
+        .product-modal-overlay {
+            z-index: 990; /* under the card popup, which can open on top */
+        }
+
+        .product-modal {
+            max-width: 820px;
+        }
+
+        .prod-modal {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 20px;
+        }
+
+        .prod-contents {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .prod-contents li {
+            display: flex;
+            gap: 10px;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            line-height: 1.45;
+        }
+
+        .prod-contents li > span:last-child {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .prod-item-icon {
+            flex-shrink: 0;
+            width: 1.4em;
+            text-align: center;
+        }
+
+        .prod-deck-btn {
+            margin: 0 0 0 6px;
+            padding: 3px 10px;
+            font-size: 0.8em;
+        }
+
+        .prod-decklist {
+            margin-top: 6px;
+            max-height: 320px;
+            overflow-y: auto;
+            font-size: 0.86em;
+            line-height: 1.6;
+        }
+
+        .prod-deck-section {
+            margin-top: 6px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        .prod-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .prod-modal {
+                grid-template-columns: 1fr;
+            }
+
+            .prod-modal-img {
+                max-width: 240px;
+                margin: 0 auto;
+            }
+
+            .prod-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
         /* ---- Commander brackets ---- */
         .brackets-list {
             display: flex;
@@ -4977,6 +5205,22 @@
             </div>
         </div>
 
+        <!-- ============== SEALED PRODUCTS ============== -->
+        <div id="productsApp" style="display:none;">
+            <div class="formats-intro">
+                Every sealed product for a set - booster boxes, bundles, Commander
+                decks, prerelease kits and more - and what's inside each one:
+                packs, promo cards, spindowns and extras. Click a product for the
+                full breakdown. Product data from MTGJSON (updated daily);
+                photos from TCGplayer.
+            </div>
+            <div class="prod-picker">
+                <input type="text" id="prodSetFilter" placeholder="Filter sets - name, code or year" aria-label="Filter sets" autocomplete="off" oninput="filterProductSets()">
+                <select id="prodSetSelect" aria-label="Set" onchange="selectProductSet(this.value)"></select>
+            </div>
+            <div id="productsResults"><div class="loading">Loading product data...</div></div>
+        </div>
+
         <!-- ============== BUYER'S GUIDE ============== -->
         <div id="buyersGuideApp" style="display:none;">
             <div class="guide-tabs" id="bgTabs">
@@ -5837,6 +6081,14 @@
         <button type="button" class="card-modal-nav card-modal-nav-next" id="cardModalNext" aria-label="Next card" onclick="navigateCardModal(1)">›</button>
     </div>
 
+    <!-- Sealed product details (Products tool) -->
+    <div class="card-modal-overlay product-modal-overlay" id="productModal" onclick="if (event.target === this) closeProductModal()">
+        <div class="card-modal product-modal">
+            <button type="button" class="card-modal-close" aria-label="Close product details" onclick="closeProductModal()">✕</button>
+            <div id="productModalBody"></div>
+        </div>
+    </div>
+
     <!-- Toast notification -->
     <div class="toast" id="toast"></div>
 
@@ -5946,6 +6198,7 @@
         const APP_VIEWS = {
             mtg:          { appId: 'mtgApp',          icon: '🃏', navLabel: 'Card Lookup',     title: '🃏 MTG Card Lookup', desc: 'Prices, rules text, printings and legality for any card', keywords: 'search price stock card lookup' },
             buyersguide:  { appId: 'buyersGuideApp',  icon: '🛒', navLabel: "Buyer's Guide",   title: "🛒 Buyer's Guide", desc: 'Find cards to sell by color, theme and budget, plus land packages', keywords: 'sell customer theme lands basics finder', onShow: showBuyersGuideTab },
+            products:     { appId: 'productsApp',     icon: '🛍️', navLabel: 'Products',        title: '🛍️ Sealed Products', desc: "Every sealed product in a set and what's inside: packs, promos, spindowns", keywords: 'sealed box bundle booster collector commander deck prerelease spindown promo preorder', onShow: showProductsTab },
             buylist:      { appId: 'buylistApp',      icon: '💰', navLabel: 'Buylist',         title: '💰 Buylist / Store Credit Calculator', desc: 'Work out cash and store-credit offers for a stack of cards', keywords: 'buy trade in credit cash offer', onShow: showBuylistTab },
             pulllist:     { appId: 'pullListApp',     icon: '📋', navLabel: 'Pull List',       title: '📋 Pull List', desc: 'Paste online orders and pull them set by set', keywords: 'orders online shopify pick pull' },
             casemap:      { appId: 'caseMapApp',      icon: '🗂️', navLabel: 'Case Map',        title: '🗂️ Hotlist Case Map', desc: 'Where every card sits in the hotlist case', keywords: 'hotlist case where location find' , onShow: showCaseMapTab },
@@ -6109,7 +6362,7 @@
         // quick-jump search, are built from NAV_GROUPS + APP_VIEWS, so a new
         // tool only needs adding in those two places.
         const NAV_GROUPS = [
-            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'buylist', 'pulllist', 'casemap'] },
+            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'pulllist', 'casemap'] },
             { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'valuevintage', 'judge'] },
             { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'grading', 'quiz'] }
         ];
@@ -7489,7 +7742,14 @@
         }
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') { closeCardModal(); return; }
+            if (e.key === 'Escape') {
+                // Noted on the event so a product popup underneath (Products
+                // tool) stays open - Esc closes only the card on top.
+                const overlay = document.getElementById('cardModalOverlay');
+                if (overlay && overlay.classList.contains('open')) e.closedCardModal = true;
+                closeCardModal();
+                return;
+            }
 
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                 // Only hijack the arrow keys for card-to-card navigation
@@ -8231,6 +8491,384 @@
                     <div class="moonshot-status">Opens moonshotgamestore.com's search for "${cardName}" in a new tab, with live stock and prices for both stores.</div>
                 </div>
             `;
+        }
+
+        // ============== SEALED PRODUCTS ==============
+        // Every sealed product for a set and what's inside it, from MTGJSON's
+        // SetList - free public data, updated daily, readable straight from
+        // the browser (checked 2026-09-24). It's ~2.5MB gzipped, fetched once
+        // per visit the first time this tab opens. Commander decklists come
+        // from the per-set files, loaded only when a decklist is opened.
+        // Product photos are TCGplayer's, by each product's TCGplayer id.
+        const MTGJSON_BASE = 'https://mtgjson.com/api/v5';
+
+        function tcgplayerProductImage(product, size) {
+            const id = product.identifiers && product.identifiers.tcgplayerProductId;
+            return id ? `https://tcgplayer-cdn.tcgplayer.com/product/${id}_${size}w.jpg` : null;
+        }
+
+        // Display groups, in the order they're listed. Cases are left out of
+        // "All" - they're just several of another product.
+        const PRODUCT_GROUPS = [
+            { key: 'box',    label: 'Booster boxes',         cats: ['booster_box'] },
+            { key: 'bundle', label: 'Bundles',               cats: ['bundle'] },
+            { key: 'deck',   label: 'Decks',                 cats: ['deck', 'multiple_decks', 'deck_box'] },
+            { key: 'kit',    label: 'Prerelease & kits',     cats: ['limited_aid_tool', 'kit'] },
+            { key: 'pack',   label: 'Packs',                 cats: ['booster_pack'] },
+            { key: 'boxset', label: 'Box sets & gift items', cats: ['box_set', 'subset'] },
+            { key: 'other',  label: 'Other',                 cats: [] },
+            { key: 'case',   label: 'Cases',                 cats: ['booster_case', 'bundle_case', 'limited_aid_case'] }
+        ];
+
+        function productGroup(p) {
+            return PRODUCT_GROUPS.find(g => g.cats.includes(p.category)) || PRODUCT_GROUPS.find(g => g.key === 'other');
+        }
+
+        let productsDataPromise = null;
+        let productsData = null; // { sets, byUuid, entries }
+        let productsSetCode = null;
+        let productsGroupFilter = '';
+        let productsInitialized = false;
+        const mtgjsonSetFileCache = {}; // code -> promise of the full set file
+
+        async function fetchMtgjsonGz(path) {
+            const res = await fetch(`${MTGJSON_BASE}/${path}`);
+            if (!res.ok) throw new Error(`Couldn't load product data (${res.status})`);
+            return JSON.parse(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).text());
+        }
+
+        function loadProductsData() {
+            if (!productsDataPromise) {
+                productsDataPromise = fetchMtgjsonGz('SetList.json.gz').then(json => {
+                    const sets = json.data.filter(s => (s.sealedProduct || []).length);
+                    const byUuid = new Map();
+                    sets.forEach(s => s.sealedProduct.forEach(p => byUuid.set(p.uuid, p)));
+                    return { sets, byUuid };
+                });
+                productsDataPromise.catch(() => { productsDataPromise = null; }); // let a revisit retry
+            }
+            return productsDataPromise;
+        }
+
+        // A set's companion sets (its Commander decks, for one) are listed
+        // under the main set, using Scryfall's parent-set links. scryfallSets
+        // is Scryfall's full, unfiltered set list (setsCache drops Commander
+        // sets, which are exactly the ones needed here).
+        function buildProductSetEntries(sets, scryfallSets) {
+            const byCode = new Map(sets.map(s => [s.code.toLowerCase(), s]));
+            const parentOf = code => {
+                const scry = (scryfallSets || []).find(x => x.code === code);
+                const parent = scry && scry.parent_set_code;
+                return parent && byCode.has(parent) && parent !== code ? parent : null;
+            };
+            const entries = new Map();
+            sets.forEach(s => {
+                const code = s.code.toLowerCase();
+                if (!parentOf(code)) entries.set(code, { set: s, children: [] });
+            });
+            sets.forEach(s => {
+                const parent = parentOf(s.code.toLowerCase());
+                if (parent && entries.has(parent)) entries.get(parent).children.push(s);
+                else if (parent) entries.set(s.code.toLowerCase(), { set: s, children: [] });
+            });
+            return [...entries.values()].sort((a, b) => b.set.releaseDate.localeCompare(a.set.releaseDate));
+        }
+
+        function todayISO() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function productSetLabel(entry) {
+            const extra = entry.children.length
+                ? ` (+ ${entry.children.map(c => (c.type === 'commander' ? 'Commander' : c.name)).join(', ')})`
+                : '';
+            const upcoming = entry.set.releaseDate > todayISO() ? ' · upcoming' : '';
+            return `${entry.set.name}${extra} · ${entry.set.releaseDate}${upcoming}`;
+        }
+
+        async function showProductsTab() {
+            if (productsInitialized) return;
+            productsInitialized = true;
+            const resultsEl = document.getElementById('productsResults');
+            resultsEl.innerHTML = `<div class="loading">Loading product data...</div>`;
+            try {
+                const [data, scryfallSets] = await Promise.all([loadProductsData(), fetchRawSets().catch(() => [])]);
+                productsData = { ...data, entries: buildProductSetEntries(data.sets, scryfallSets) };
+                // Open on the newest regular set that's already out.
+                const today = todayISO();
+                const firstReleased = productsData.entries.find(e => e.set.releaseDate <= today && PRODUCT_MAIN_SET_TYPES.includes(e.set.type))
+                    || productsData.entries[0];
+                renderProductSetOptions('');
+                selectProductSet(firstReleased.set.code.toLowerCase());
+            } catch (err) {
+                console.error('Products load error:', err);
+                productsInitialized = false;
+                resultsEl.innerHTML = `<div class="error">❌ Couldn't load product data right now - switch tabs and back to retry.</div>`;
+            }
+        }
+
+        function renderProductSetOptions(filterText) {
+            const select = document.getElementById('prodSetSelect');
+            const words = filterText.toLowerCase().split(/\s+/).filter(Boolean);
+            const matches = productsData.entries.filter(e => {
+                const hay = `${productSetLabel(e)} ${e.set.code} ${e.children.map(c => c.code).join(' ')}`.toLowerCase();
+                return words.every(w => hay.includes(w));
+            });
+            select.innerHTML = matches.length
+                ? matches.map(e => `<option value="${e.set.code.toLowerCase()}">${productSetLabel(e)}</option>`).join('')
+                : '<option value="">No sets match</option>';
+            if (productsSetCode && matches.some(e => e.set.code.toLowerCase() === productsSetCode)) select.value = productsSetCode;
+            return matches;
+        }
+
+        function filterProductSets() {
+            const matches = renderProductSetOptions(document.getElementById('prodSetFilter').value);
+            // Jump to the best match as you type, so the grid follows along.
+            if (matches.length && !matches.some(e => e.set.code.toLowerCase() === productsSetCode)) {
+                selectProductSet(matches[0].set.code.toLowerCase());
+            }
+        }
+
+        function productEntry(code) {
+            return productsData.entries.find(e => e.set.code.toLowerCase() === code);
+        }
+
+        function selectProductSet(code) {
+            if (!code || !productsData) return;
+            productsSetCode = code;
+            productsGroupFilter = '';
+            document.getElementById('prodSetSelect').value = code;
+            renderProductSet();
+            loadProductSetPromos(code);
+        }
+
+        function setProductsGroup(key) {
+            productsGroupFilter = key;
+            renderProductSet();
+        }
+
+        // "Duskmourn House of Horror Bundle" -> "Bundle": drop the set name
+        // (MTGJSON leaves out its punctuation) from the front of product names.
+        function shortProductName(name, setNames) {
+            const norm = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const words = name.split(' ');
+            for (const setName of setNames) {
+                const target = norm(setName);
+                for (let i = 1; i < words.length; i++) {
+                    if (norm(words.slice(0, i).join(' ')) === target) return words.slice(i).join(' ');
+                }
+            }
+            return name;
+        }
+
+        function productSetNames(p) {
+            const entry = productEntry(productsSetCode);
+            const own = productsData.sets.find(s => s.code === p.setCode);
+            return [entry && entry.set.name, own && own.name].filter(Boolean);
+        }
+
+        function packLabel(code) {
+            if (code === 'prerelease') return 'Prerelease promo (a date-stamped foil rare or mythic)';
+            return `${code.charAt(0).toUpperCase()}${code.slice(1)} pack`;
+        }
+
+        // Plain-text parts for the one-line summary on each tile.
+        function productContentParts(p) {
+            const c = p.contents || {};
+            const names = productSetNames(p);
+            const parts = [];
+            (c.sealed || []).forEach(x => parts.push(`${x.count || 1}× ${shortProductName(x.name, names)}`));
+            (c.pack || []).forEach(x => parts.push(packLabel(x.code)));
+            (c.card || []).forEach(x => parts.push(`Promo: ${x.name}${x.foil ? ' (foil)' : ''}`));
+            (c.deck || []).forEach(x => parts.push(`Deck: ${x.name}`));
+            (c.other || []).forEach(x => parts.push(x.name));
+            if (c.variable) parts.push('Contents vary');
+            return parts;
+        }
+
+        const isSpindown = text => /spindown/i.test(text || '');
+
+        function renderProductSet() {
+            const entry = productEntry(productsSetCode);
+            const resultsEl = document.getElementById('productsResults');
+            if (!entry) return;
+            const products = [entry.set, ...entry.children].flatMap(s => s.sealedProduct);
+            const counts = new Map();
+            products.forEach(p => counts.set(productGroup(p).key, (counts.get(productGroup(p).key) || 0) + 1));
+            const shown = products
+                .filter(p => (productsGroupFilter ? productGroup(p).key === productsGroupFilter : productGroup(p).key !== 'case'))
+                .sort((a, b) => PRODUCT_GROUPS.indexOf(productGroup(a)) - PRODUCT_GROUPS.indexOf(productGroup(b)) || a.name.localeCompare(b.name));
+
+            const chip = (key, label, n) => `<button type="button" class="staples-sort-btn${productsGroupFilter === key ? ' active' : ''}" onclick="setProductsGroup('${key}')">${label} · ${n}</button>`;
+            const chips = [chip('', 'All', products.length - (counts.get('case') || 0))]
+                .concat(PRODUCT_GROUPS.filter(g => counts.get(g.key)).map(g => chip(g.key, g.label, counts.get(g.key))))
+                .join('');
+            const upcoming = entry.set.releaseDate > todayISO();
+
+            resultsEl.innerHTML = `
+                <div class="prod-set-head">
+                    <div class="prod-set-name">${entry.set.name}${upcoming ? ' <span class="prod-upcoming">Upcoming</span>' : ''}</div>
+                    <div class="text-secondary">${upcoming ? 'Releases' : 'Released'} ${entry.set.releaseDate} · ${products.length} products${entry.children.length ? ` (including ${entry.children.map(c => c.name).join(', ')})` : ''}</div>
+                    <div class="prod-set-promos" id="prodSetPromos"></div>
+                </div>
+                <div class="staples-controls" style="flex-wrap:wrap;">${chips}</div>
+                <div class="prod-grid">${shown.map(productTileHTML).join('')}</div>
+            `;
+        }
+
+        function productImageHTML(p, size) {
+            const img = tcgplayerProductImage(p, size);
+            return img
+                ? `<img src="${img}" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg'); this.remove();">`
+                : '';
+        }
+
+        function productTileHTML(p) {
+            const c = p.contents || {};
+            const parts = productContentParts(p);
+            const badges = [];
+            if ((c.other || []).some(o => isSpindown(o.name))) badges.push('🎲 Spindown');
+            if ((c.card || []).length) badges.push('✨ Promo card');
+            if ((c.deck || []).length) badges.push('🃏 Decklist');
+            return `
+                <button type="button" class="prod-tile" onclick="openProductModal('${p.uuid}')">
+                    <div class="prod-img${tcgplayerProductImage(p, 200) ? '' : ' noimg'}">${productImageHTML(p, 200)}</div>
+                    <div class="prod-name">${shortProductName(p.name, productSetNames(p))}</div>
+                    <div class="prod-cat">${productGroup(p).label}${p.cardCount ? ` · ${p.cardCount} cards` : ''}</div>
+                    ${parts.length ? `<div class="prod-summary">${parts.slice(0, 3).join(' · ')}${parts.length > 3 ? ' …' : ''}</div>` : ''}
+                    ${badges.length ? `<div class="prod-badges">${badges.map(b => `<span>${b}</span>`).join('')}</div>` : ''}
+                </button>
+            `;
+        }
+
+        // Buy-a-Box and Bundle promos, from Scryfall - the Buy-a-Box promo
+        // isn't inside any product (stores hand it out with a box), so it's
+        // shown for the whole set. Only regular sets have them; Commander
+        // and special sets use "bundle" for other things on Scryfall.
+        const PRODUCT_MAIN_SET_TYPES = ['expansion', 'core', 'draft_innovation', 'masters'];
+
+        async function loadProductSetPromos(code) {
+            const entry = productEntry(code);
+            if (!entry || !PRODUCT_MAIN_SET_TYPES.includes(entry.set.type)) return;
+            try {
+                const page = await fetchScryfallSearchPage(`${API_BASE}/cards/search?q=${encodeURIComponent(`(e:${code} or e:p${code}) (is:buyabox or is:bundle)`)}&unique=prints`);
+                if (code !== productsSetCode) return;
+                const el = document.getElementById('prodSetPromos');
+                if (!el) return;
+                const cards = page.data || [];
+                const line = (type, label) => {
+                    const found = cards.filter(c => (c.promo_types || []).includes(type));
+                    found.forEach(c => { cardTileDataById[c.id] = c; });
+                    return found.length
+                        ? `<span><strong>${label}:</strong> ${found.map(c => `<span class="set-link" onclick="openCardModal(cardTileDataById['${c.id}'])">${c.name}</span>`).join(', ')}</span>`
+                        : '';
+                };
+                el.innerHTML = [line('buyabox', 'Buy-a-Box promo'), line('bundle', 'Bundle promo')].filter(Boolean).join('');
+            } catch (err) {
+                // promos are a nice-to-have; the product list stands on its own
+            }
+        }
+
+        function openProductModal(uuid) {
+            const p = productsData && productsData.byUuid.get(uuid);
+            if (!p) return;
+            const c = p.contents || {};
+            const names = productSetNames(p);
+            const img = tcgplayerProductImage(p, 400);
+            const item = (icon, html) => `<li><span class="prod-item-icon">${icon}</span><span>${html}</span></li>`;
+            const items = [];
+            (c.sealed || []).forEach(x => {
+                const label = `${x.count || 1}× ${shortProductName(x.name, names)}`;
+                items.push(item('📦', productsData.byUuid.has(x.uuid)
+                    ? `<span class="set-link" onclick="openProductModal('${x.uuid}')">${label}</span>` : label));
+            });
+            (c.pack || []).forEach(x => items.push(item('🎴', packLabel(x.code))));
+            (c.card || []).forEach(x => items.push(item('✨',
+                `Promo card: <span class="set-link" onclick="openPromoCard('${x.set}', '${x.number}')">${x.name}</span>${x.foil ? ' (foil)' : ''} <span class="text-secondary">#${x.number}</span>`)));
+            (c.deck || []).forEach(x => items.push(item('🃏',
+                `Deck: <strong>${x.name}</strong> <button type="button" class="staples-sort-btn prod-deck-btn" data-set="${x.set}" data-deck="${escapeAttr(x.name)}" onclick="showProductDecklist(this)">Show decklist</button><div class="prod-decklist"></div>`)));
+            (c.other || []).forEach(x => items.push(item(isSpindown(x.name) ? '🎲' : '➕', x.name)));
+            if (c.variable) items.push(item('🔀', 'Contents vary - comes with one of several possible configurations'));
+
+            const tcg = p.purchaseUrls && p.purchaseUrls.tcgplayer;
+            document.getElementById('productModalBody').innerHTML = `
+                <div class="prod-modal">
+                    <div class="prod-modal-img${img ? '' : ' noimg'}">${productImageHTML(p, 400)}</div>
+                    <div class="prod-modal-info">
+                        <div class="card-name" style="font-size:1.3em; border-bottom:none; padding-bottom:0;">${p.name}</div>
+                        <div class="text-secondary">${productGroup(p).label}${p.cardCount ? ` · ${p.cardCount} cards` : ''} · ${p.releaseDate > todayISO() ? 'releases' : 'released'} ${p.releaseDate || '?'}</div>
+                        <div class="bg-section-title" style="margin:14px 0 6px;">What's inside</div>
+                        ${items.length ? `<ul class="prod-contents">${items.join('')}</ul>` : '<div class="text-secondary">No contents listed for this product.</div>'}
+                        <div class="prod-links">
+                            ${tcg ? `<a class="moonshot-check-btn" href="${tcg}" target="_blank" rel="noopener">View on TCGplayer →</a>` : ''}
+                            ${moonshotLinkHTML(p.name, 'Find at Moonshot →', 'btn-compact')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('productModal').classList.add('open');
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('open');
+        }
+
+        async function openPromoCard(set, number) {
+            try {
+                const res = await fetch(`${API_BASE}/cards/${encodeURIComponent(set.toLowerCase())}/${encodeURIComponent(number)}`);
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+                openCardModal(await res.json());
+            } catch (err) {
+                showToast("Couldn't load that card");
+            }
+        }
+
+        function loadMtgjsonSetFile(code) {
+            if (!mtgjsonSetFileCache[code]) {
+                mtgjsonSetFileCache[code] = fetchMtgjsonGz(`${code.toUpperCase()}.json.gz`).then(j => j.data);
+                mtgjsonSetFileCache[code].catch(() => { delete mtgjsonSetFileCache[code]; });
+            }
+            return mtgjsonSetFileCache[code];
+        }
+
+        // Decklists list MTGJSON card ids, some from the main set (basics,
+        // reprints) - so every set the deck draws from is loaded to name them.
+        async function showProductDecklist(btn) {
+            const listEl = btn.nextElementSibling;
+            if (listEl.innerHTML) {
+                listEl.innerHTML = '';
+                btn.textContent = 'Show decklist';
+                return;
+            }
+            listEl.innerHTML = '<div class="loading">Loading decklist...</div>';
+            try {
+                const setData = await loadMtgjsonSetFile(btn.dataset.set);
+                const deck = (setData.decks || []).find(d => d.name === btn.dataset.deck);
+                if (!deck) throw new Error('Deck not found');
+                const sources = await Promise.all((deck.sourceSetCodes || [setData.code]).map(loadMtgjsonSetFile));
+                const cardsByUuid = new Map();
+                sources.forEach(s => (s.cards || []).forEach(card => cardsByUuid.set(card.uuid, card)));
+                const section = (title, list) => {
+                    if (!list || !list.length) return '';
+                    const rows = list.map(e => ({ e, card: cardsByUuid.get(e.uuid) }))
+                        .sort((a, b) => (a.card ? a.card.name : '~').localeCompare(b.card ? b.card.name : '~'));
+                    const total = list.reduce((n, e) => n + (e.count || 1), 0);
+                    return `
+                        <div class="prod-deck-section">${title} (${total})</div>
+                        ${rows.map(({ e, card }) => `
+                            <div>${e.count || 1}× ${card
+                                ? `<span class="set-link" data-name="${escapeAttr(card.name)}" onclick="openCardModalByName(this.dataset.name)">${card.name}</span>${e.isFoil ? ' <span class="text-secondary">(foil)</span>' : ''}`
+                                : '<span class="text-secondary">(card not found)</span>'}</div>
+                        `).join('')}
+                    `;
+                };
+                listEl.innerHTML = section('Commander', deck.commander) + section('Deck', deck.mainBoard) + section('Sideboard', deck.sideBoard);
+                btn.textContent = 'Hide decklist';
+            } catch (err) {
+                console.error('Decklist error:', err);
+                listEl.innerHTML = '<div class="text-error">Couldn\'t load this decklist right now.</div>';
+            }
         }
 
         // ============== COMMANDER BRACKETS ==============
@@ -11708,7 +12346,11 @@
 
         // Close the lightbox with Escape
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') { closeLightbox(); closeValues(); }
+            if (e.key === 'Escape') {
+                closeLightbox();
+                closeValues();
+                if (!e.closedCardModal) closeProductModal();
+            }
         });
 
         // ---- Click effect: a little 5-color mana burst on every click,
