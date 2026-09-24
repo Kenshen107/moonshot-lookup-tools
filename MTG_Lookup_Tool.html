@@ -3404,6 +3404,42 @@
             padding: 6px 12px;
         }
 
+        /* ---- Card hover preview ---- */
+        .card-hover-preview {
+            position: fixed;
+            z-index: 2500;
+            width: 240px;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.97);
+            transition: opacity 0.12s, transform 0.12s;
+        }
+
+        .card-hover-preview.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .card-hover-preview img {
+            display: block;
+            width: 100%;
+            min-height: 60px;
+            border-radius: 12px;
+            background: var(--bg-panel);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .card-hover-preview.is-product img {
+            background: #fff;
+            border-radius: 8px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .card-hover-preview {
+                transition: none;
+            }
+        }
+
         /* ---- Sealed products ---- */
         .prod-picker {
             display: flex;
@@ -6242,6 +6278,9 @@
         </div>
     </div>
 
+    <!-- Card hover preview - see "Hover preview" in the script -->
+    <div class="card-hover-preview" id="cardHoverPreview" aria-hidden="true"><img alt=""></div>
+
     <!-- Toast notification -->
     <div class="toast" id="toast"></div>
 
@@ -7892,6 +7931,111 @@
         // see the actual card instead of taking the name on faith.
         function cardNameLink(name) {
             return `<span class="inline-card-link" onclick="openCardModalByName('${name.replace(/'/g, "\\'")}')">${name}</span>`;
+        }
+
+        // ---- Hover preview ----
+        // Rest the mouse on any card name (or product link) anywhere in the
+        // app and its picture pops up by the cursor. Works off the same
+        // click handlers the links already use, so every existing card link
+        // gets it for free. Desktop only (needs a real mouse), and never in
+        // the Card Quiz, where a picture would give answers away.
+        const HOVER_PREVIEW_DELAY_MS = 250;
+        const HOVER_SOURCE_SELECTOR = [
+            '[data-name]', '[onclick*="cardTileDataById["]', '[onclick*="formatBanlistCache["]',
+            '[onclick*="cardModalPrintsCache["]', '[onclick*="layerViz"]', '[onclick*="openCardByScryfallId("]',
+            '[onclick*="selectPrinting("]', '[onclick*="openPromoCard("]', '[onclick*="openProductModal("]',
+            '[onclick*="openCardModalByName("]', '[onclick*="performLookup("]'
+        ].join(', ');
+        // Places that already show the picture, or shouldn't reveal it.
+        const HOVER_SKIP_SELECTOR = '#quizApp, .card-tile, .primer-card-tile, .deck-pic, .deck-commander, .history-item, .prod-tile, .bk-card-result, #cardModalOverlay .card-modal-body > img';
+
+        let hoverPreviewTimer = null;
+        let hoverPreviewSource = null;
+
+        function unescapeJsString(s) {
+            return s.replace(/\\(.)/g, '$1');
+        }
+
+        // Works out which picture a hovered link stands for. Returns
+        // { src, product } or null.
+        function hoverPreviewImage(el) {
+            const click = el.getAttribute('onclick') || '';
+            let m;
+            const cardImg = card => (card ? { src: getCardImageUrl(card) } : null);
+            if ((m = click.match(/cardTileDataById\['([^']+)'\]/))) return cardImg(cardTileDataById[m[1]]);
+            if ((m = click.match(/formatBanlistCache\['(\w+)'\]\.(banned|restricted)\[(\d+)\]/))) {
+                return cardImg(formatBanlistCache[m[1]] && formatBanlistCache[m[1]][m[2]][Number(m[3])]);
+            }
+            if ((m = click.match(/cardModalPrintsCache\[(\d+)\]/))) return cardImg(cardModalPrintsCache[Number(m[1])]);
+            if ((m = click.match(/layerVizModifiers\[(\d+)\]\.card/))) return cardImg(layerVizModifiers[Number(m[1])] && layerVizModifiers[Number(m[1])].card);
+            if (/openCardModal\(layerVizBase\)/.test(click)) return cardImg(layerVizBase);
+            if ((m = click.match(/openCardByScryfallId\('([^']+)'/))) return { src: scryfallImageById(m[1]) };
+            if ((m = click.match(/selectPrinting\((\d+)\)/))) return cardImg(currentPrints[Number(m[1])]);
+            if ((m = click.match(/openPromoCard\('([^']+)', '([^']+)'\)/))) {
+                return { src: `${API_BASE}/cards/${encodeURIComponent(m[1])}/${encodeURIComponent(m[2])}?format=image&version=normal` };
+            }
+            if ((m = click.match(/openProductModal\('([^']+)'\)/))) {
+                const product = productsData && productsData.byUuid.get(m[1]);
+                const src = product && tcgplayerProductImage(product, 400);
+                return src ? { src, product: true } : null;
+            }
+            let name = el.dataset.name;
+            if (!name && (m = click.match(/(?:openCardModalByName|performLookup)\('((?:[^'\\]|\\.)*)'\)/))) name = unescapeJsString(m[1]);
+            return name ? { src: `${API_BASE}/cards/named?fuzzy=${encodeURIComponent(name)}&format=image&version=normal` } : null;
+        }
+
+        function positionHoverPreview(x, y) {
+            const box = document.getElementById('cardHoverPreview');
+            const w = box.offsetWidth || 240;
+            const h = box.offsetHeight || 335;
+            const left = x + 18 + w > window.innerWidth ? x - 18 - w : x + 18;
+            const top = Math.min(Math.max(8, y - h / 3), window.innerHeight - h - 8);
+            box.style.left = `${Math.max(8, left)}px`;
+            box.style.top = `${top}px`;
+        }
+
+        function hideHoverPreview() {
+            clearTimeout(hoverPreviewTimer);
+            hoverPreviewSource = null;
+            const box = document.getElementById('cardHoverPreview');
+            if (box) box.classList.remove('show');
+        }
+
+        if (window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+            document.addEventListener('mouseover', e => {
+                const source = e.target.closest && e.target.closest(HOVER_SOURCE_SELECTOR);
+                if (source === hoverPreviewSource) return;
+                hideHoverPreview();
+                // A card picture needs no preview; mana symbols are images too, so those still count.
+                const onPicture = e.target.tagName === 'IMG' && !e.target.classList.contains('mana-symbol');
+                if (!source || onPicture || source.closest(HOVER_SKIP_SELECTOR)) return;
+                hoverPreviewSource = source;
+                const { clientX, clientY } = e;
+                hoverPreviewTimer = setTimeout(() => {
+                    const found = hoverPreviewImage(source);
+                    if (!found || !found.src || hoverPreviewSource !== source || !source.matches(':hover')) return;
+                    const box = document.getElementById('cardHoverPreview');
+                    const img = box.querySelector('img');
+                    box.classList.toggle('is-product', !!found.product);
+                    img.onerror = hideHoverPreview;
+                    img.onload = () => { if (hoverPreviewSource === source) positionHoverPreview(clientX, clientY); };
+                    img.src = found.src;
+                    box.classList.add('show');
+                    positionHoverPreview(clientX, clientY);
+                }, HOVER_PREVIEW_DELAY_MS);
+            });
+            document.addEventListener('mousemove', e => {
+                if (hoverPreviewSource && document.getElementById('cardHoverPreview').classList.contains('show')) {
+                    positionHoverPreview(e.clientX, e.clientY);
+                }
+            });
+            ['mousedown', 'keydown'].forEach(type => document.addEventListener(type, hideHoverPreview, true));
+            // Scrolling moves the card away from the cursor - hide what's
+            // showing, but leave a pending preview to check :hover itself.
+            document.addEventListener('scroll', () => {
+                const box = document.getElementById('cardHoverPreview');
+                if (box.classList.contains('show')) hideHoverPreview();
+            }, true);
         }
 
         document.addEventListener('keydown', function(e) {
