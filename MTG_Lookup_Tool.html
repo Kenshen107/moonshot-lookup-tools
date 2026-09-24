@@ -695,7 +695,7 @@
         a, button, .set-link, [onclick], .card-tile, .primer-card-tile,
         .related-card-pill, .printing-item, .history-item, .card-image,
         .card-tile img, .primer-card-tile img, .autocomplete-item,
-        .staples-category-btn, .game-tab, summary, .card-modal-close {
+        .staples-category-btn, .app-nav-btn, .app-nav-item, summary, .card-modal-close {
             cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='rotate(-20 16 16)'%3E%3Crect x='8' y='4' width='16' height='22' rx='2.4' fill='%231777a1' stroke='%237ee787' stroke-width='1.6'/%3E%3Ccircle cx='16' cy='11' r='3.2' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E") 8 6, pointer;
         }
 
@@ -837,50 +837,6 @@
             }
             .store-bar-shop-link {
                 margin-left: 0;
-            }
-        }
-
-        .game-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        /* Hidden by default (desktop/tablet use the button row above) - the
-           768px breakpoint below swaps the two so a phone only ever shows
-           one or the other, never both. */
-        .mobile-tab-select {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .game-tabs {
-                display: none;
-            }
-
-            .mobile-tab-select {
-                display: block;
-                width: 100%;
-                max-width: 500px;
-                margin: 0 auto 24px;
-                padding: 14px 16px;
-                font-size: 1.05em;
-                font-weight: 600;
-                background: #2a2a2a;
-                border: 2px solid #404040;
-                border-radius: 8px;
-                color: #e0e0e0;
-                /* Native select styling varies a lot by browser - this keeps
-                   it looking intentional rather than like unstyled default
-                   browser chrome sitting in the middle of a dark-themed page. */
-                -webkit-appearance: none;
-                appearance: none;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23909090' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: right 14px center;
-                background-size: 20px;
             }
         }
 
@@ -1133,23 +1089,309 @@
             letter-spacing: 0.5px;
         }
 
-        .game-tab {
+        /* ---- Tool navigation: desktop menu bar ---- */
+        .app-nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .app-nav-group {
+            position: relative;
+        }
+
+        .app-nav-btn {
             width: auto;
             margin-top: 0;
-            padding: 10px 20px;
+            padding: 10px 18px;
             background: var(--bg-panel);
             border: 2px solid var(--border);
             color: var(--text-secondary);
+            white-space: nowrap;
         }
 
-        .game-tab:hover {
+        .app-nav-btn:hover {
             background: var(--bg-panel-raised);
+            color: var(--text-primary);
         }
 
-        .game-tab.active {
+        .app-nav-btn.active {
             background: var(--brand);
             border-color: var(--brand);
             color: var(--text-heading);
+        }
+
+        .app-nav-current {
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .app-nav-caret {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .app-nav-jump kbd {
+            margin-left: 4px;
+            padding: 0 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-family: inherit;
+        }
+
+        .app-nav-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            z-index: 800;
+            width: 340px;
+            padding: 6px;
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .app-nav-group:last-of-type .app-nav-menu {
+            left: auto;
+            right: 0;
+        }
+
+        /* One tool in a menu, the phone sheet, or quick-jump results */
+        .app-nav-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            width: 100%;
+            margin: 0;
+            padding: 9px 10px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-align: left;
+        }
+
+        .app-nav-item:hover,
+        .app-nav-item.active {
+            background: var(--bg-panel-raised);
+        }
+
+        .app-nav-item.active {
+            box-shadow: inset 3px 0 0 var(--brand-light);
+        }
+
+        .app-nav-item-icon {
+            font-size: 1.3em;
+            line-height: 1.2;
+        }
+
+        .app-nav-item-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .app-nav-item-text strong {
+            font-size: 0.95em;
+            color: var(--text-heading);
+        }
+
+        .app-nav-item-text span {
+            font-size: 0.8em;
+            font-weight: 400;
+            color: var(--text-secondary);
+            line-height: 1.35;
+        }
+
+        /* ---- Tool navigation: phone bottom bar + sheet ---- */
+        .app-bottom-bar,
+        .app-sheet,
+        .app-sheet-backdrop {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .app-nav {
+                display: none;
+            }
+
+            body {
+                padding-bottom: 80px;
+            }
+
+            .app-bottom-bar {
+                display: flex;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 900;
+                padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+                background: var(--bg-panel);
+                border-top: 2px solid var(--border);
+                box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+            }
+
+            .app-bottom-bar button {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                width: auto;
+                margin: 0;
+                padding: 6px 2px;
+                background: transparent;
+                border: none;
+                border-radius: 8px;
+                color: var(--text-secondary);
+                font-size: 0.72em;
+                font-weight: 600;
+            }
+
+            .app-bottom-bar button span {
+                font-size: 1.6em;
+                line-height: 1.1;
+            }
+
+            .app-bottom-bar button.active {
+                color: var(--brand-light);
+                background: var(--bg-panel-raised);
+            }
+
+            .app-sheet-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                z-index: 940;
+                background: rgba(0, 0, 0, 0.55);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s;
+            }
+
+            .app-sheet-backdrop.open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .app-sheet {
+                display: block;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 950;
+                max-height: 75vh;
+                overflow-y: auto;
+                padding: 14px 12px calc(20px + env(safe-area-inset-bottom));
+                background: var(--bg-panel);
+                border-top: 2px solid var(--border);
+                border-radius: 16px 16px 0 0;
+                transform: translateY(100%);
+                transition: transform 0.22s ease-out;
+            }
+
+            .app-sheet.open {
+                transform: translateY(0);
+            }
+
+            .app-sheet-title {
+                margin: 0 4px 8px;
+                font-weight: 700;
+                color: var(--text-heading);
+            }
+
+            .app-sheet .app-nav-item {
+                padding: 12px 10px;
+            }
+
+            /* Lift the floating buttons clear of the bottom bar (:root so
+               these win over the base rules, some of which come later) */
+            :root .quick-stock-btn {
+                bottom: 84px;
+            }
+
+            :root .quick-stock-panel {
+                bottom: 138px;
+            }
+
+            :root .toast {
+                bottom: 96px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            :root .values-recall-btn {
+                bottom: 84px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .app-sheet,
+            .app-sheet-backdrop {
+                transition: none;
+            }
+        }
+
+        /* ---- Quick jump ---- */
+        .quick-jump-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            padding: 12vh 16px 16px;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .quick-jump-overlay.open {
+            display: block;
+        }
+
+        .quick-jump-panel {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 10px;
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .quick-jump-panel input {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 6px;
+            font-size: 1.05em;
+        }
+
+        #quickJumpResults {
+            max-height: 55vh;
+            overflow-y: auto;
+        }
+
+        .quick-jump-empty,
+        .quick-jump-hint {
+            padding: 8px 10px;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .quick-jump-hint {
+            border-top: 1px solid var(--border-subtle);
+            margin-top: 4px;
+        }
+
+        @media (hover: none) {
+            .quick-jump-hint,
+            .app-nav-jump kbd {
+                display: none;
+            }
         }
 
         .card-name {
@@ -4521,28 +4763,10 @@
         <h1 id="pageTitle">🃏 MTG Card Lookup</h1>
         <div class="seasonal-badge" id="seasonalBadge" hidden></div>
 
-        <!-- Game tabs -->
-        <div class="game-tabs" id="gameTabs">
-            <button type="button" class="game-tab active" id="tabMtg" onclick="switchGame('mtg')">🔮 Magic: The Gathering</button>
-            <button type="button" class="game-tab" id="tabBuyersGuide" onclick="switchGame('buyersguide')">🛒 Buyer's Guide</button>
-            <button type="button" class="game-tab" id="tabFormats" onclick="switchGame('formats')">📖 Format Rules</button>
-            <button type="button" class="game-tab" id="tabValueVintage" onclick="switchGame('valuevintage')">🏆 Value Vintage</button>
-            <button type="button" class="game-tab" id="tabSetPrimer" onclick="switchGame('setprimer')">🎁 Set Primer</button>
-            <button type="button" class="game-tab" id="tabJudge" onclick="switchGame('judge')">⚖️ Judge Ref</button>
-            <button type="button" class="game-tab" id="tabBuylist" onclick="switchGame('buylist')">💰 Buylist</button>
-            <button type="button" class="game-tab" id="tabBrackets" onclick="switchGame('brackets')">🪜 Brackets</button>
-            <button type="button" class="game-tab" id="tabGrading" onclick="switchGame('grading')">🔍 Grading & Fakes</button>
-            <button type="button" class="game-tab" id="tabPullList" onclick="switchGame('pulllist')">📋 Pull List</button>
-            <button type="button" class="game-tab" id="tabCaseMap" onclick="switchGame('casemap')">🗂️ Case Map</button>
-            <button type="button" class="game-tab" id="tabQuiz" onclick="switchGame('quiz')">🧠 Card Quiz</button>
-        </div>
-
-        <!-- Mobile-only tab switcher - a native <select> instead of trying to
-             cram/wrap 14 buttons into a phone-width screen. Options are built
-             from APP_VIEWS/the button labels above at page load, see
-             populateMobileTabSelect(), so this never needs updating by hand
-             when a tab is added. -->
-        <select id="mobileTabSelect" class="mobile-tab-select" onchange="switchGame(this.value)"></select>
+        <!-- Tool navigation - built by renderAppNav() from NAV_GROUPS/APP_VIEWS.
+             Desktop: this menu bar. Phones: the bottom bar near the end of
+             the page instead. -->
+        <nav class="app-nav" id="appNav" aria-label="Tools"></nav>
 
         <!-- ============== MAGIC: THE GATHERING ============== -->
         <div id="mtgApp">
@@ -5480,6 +5704,23 @@
     <!-- Always-visible button to pull the values back up on demand -->
     <button type="button" class="values-recall-btn" id="valuesRecallBtn" onclick="openValues()" title="Show our values" aria-label="Show our values">💛 <span class="values-recall-label">Our Values</span></button>
 
+    <!-- Phone navigation: bottom bar + a sheet per tool group -->
+    <nav class="app-bottom-bar" id="appBottomBar" aria-label="Tools"></nav>
+    <div class="app-sheet-backdrop" id="appSheetBackdrop" onclick="closeNavSheet()"></div>
+    <div class="app-sheet" id="appSheet" role="dialog" aria-labelledby="appSheetTitle">
+        <div class="app-sheet-title" id="appSheetTitle"></div>
+        <div id="appSheetItems"></div>
+    </div>
+
+    <!-- Quick jump - "/" or Ctrl/Cmd+K from anywhere -->
+    <div class="quick-jump-overlay" id="quickJump" onclick="if (event.target === this) closeQuickJump()">
+        <div class="quick-jump-panel" role="dialog" aria-label="Jump to a tool">
+            <input type="text" id="quickJumpInput" placeholder="Jump to... (try lands, fakes, buylist)" autocomplete="off" aria-label="Search tools">
+            <div id="quickJumpResults" role="listbox"></div>
+            <div class="quick-jump-hint">↑ ↓ to move · Enter to open · Esc to close</div>
+        </div>
+    </div>
+
     <!-- Quick Stock Check - answers "do you have X" from any tab, without
          switching to the main MTG lookup first. -->
     <button type="button" class="quick-stock-btn" id="quickStockBtn" onclick="toggleQuickStock()" title="Quick stock check" aria-label="Quick stock check">📦 <span class="quick-stock-label">Quick Stock</span></button>
@@ -5523,18 +5764,18 @@
         // another tool later is just one more entry here, not another set of
         // element lookups and display-toggle lines to keep in sync.
         const APP_VIEWS = {
-            mtg:       { appId: 'mtgApp',       tabId: 'tabMtg',       title: '🃏 MTG Card Lookup' },
-            buyersguide: { appId: 'buyersGuideApp', tabId: 'tabBuyersGuide', title: "🛒 Buyer's Guide", onShow: showBuyersGuideTab },
-            formats:   { appId: 'formatsApp',   tabId: 'tabFormats',   title: '📖 Format Rules', onShow: renderFormatsGrid },
-            valuevintage: { appId: 'valueVintageApp', tabId: 'tabValueVintage', title: '🏆 Value Vintage (V30)', onShow: renderValueVintagePanel },
-            setprimer: { appId: 'setPrimerApp', tabId: 'tabSetPrimer', title: '🎁 Set Primer' },
-            judge:     { appId: 'judgeApp',     tabId: 'tabJudge',     title: '⚖️ Judge Quick-Reference', onShow: showJudgeTab },
-            buylist:   { appId: 'buylistApp',   tabId: 'tabBuylist',   title: '💰 Buylist / Store Credit Calculator', onShow: showBuylistTab },
-            brackets:  { appId: 'bracketsApp',  tabId: 'tabBrackets',  title: '🪜 Commander Brackets', onShow: renderBracketsGuide },
-            grading:   { appId: 'gradingApp',   tabId: 'tabGrading',   title: '🔍 Grading & Spotting Fakes' },
-            pulllist:  { appId: 'pullListApp',  tabId: 'tabPullList',  title: '📋 Pull List' },
-            casemap:   { appId: 'caseMapApp',   tabId: 'tabCaseMap',   title: '🗂️ Hotlist Case Map', onShow: showCaseMapTab },
-            quiz:      { appId: 'quizApp',      tabId: 'tabQuiz',      title: '🧠 Card Quiz', onShow: showQuizTab }
+            mtg:          { appId: 'mtgApp',          icon: '🃏', navLabel: 'Card Lookup',     title: '🃏 MTG Card Lookup', desc: 'Prices, printings, legality and Moonshot stock for any card', keywords: 'search price stock card lookup' },
+            buyersguide:  { appId: 'buyersGuideApp',  icon: '🛒', navLabel: "Buyer's Guide",   title: "🛒 Buyer's Guide", desc: 'Find cards to sell by color, theme and budget, plus land packages', keywords: 'sell customer theme lands basics finder', onShow: showBuyersGuideTab },
+            buylist:      { appId: 'buylistApp',      icon: '💰', navLabel: 'Buylist',         title: '💰 Buylist / Store Credit Calculator', desc: 'Work out cash and store-credit offers for a stack of cards', keywords: 'buy trade in credit cash offer', onShow: showBuylistTab },
+            pulllist:     { appId: 'pullListApp',     icon: '📋', navLabel: 'Pull List',       title: '📋 Pull List', desc: 'Paste online orders and pull them set by set', keywords: 'orders online shopify pick pull' },
+            casemap:      { appId: 'caseMapApp',      icon: '🗂️', navLabel: 'Case Map',        title: '🗂️ Hotlist Case Map', desc: 'Where every card sits in the hotlist case', keywords: 'hotlist case where location find' , onShow: showCaseMapTab },
+            formats:      { appId: 'formatsApp',      icon: '📖', navLabel: 'Format Rules',    title: '📖 Format Rules', desc: 'Deck rules and live ban lists for every format', keywords: 'standard modern pioneer legacy vintage pauper banned legal', onShow: renderFormatsGrid },
+            brackets:     { appId: 'bracketsApp',     icon: '🪜', navLabel: 'Brackets',        title: '🪜 Commander Brackets', desc: 'Commander brackets, Game Changers, and card and deck checkers', keywords: 'commander edh bracket game changers power level', onShow: renderBracketsGuide },
+            valuevintage: { appId: 'valueVintageApp', icon: '🏆', navLabel: 'Value Vintage',   title: '🏆 Value Vintage (V30)', desc: 'Rules and the restricted list for $30 Vintage nights', keywords: 'v30 vintage budget restricted wednesday', onShow: renderValueVintagePanel },
+            judge:        { appId: 'judgeApp',        icon: '⚖️', navLabel: 'Judge Ref',       title: '⚖️ Judge Quick-Reference', desc: 'Quick rules answers, common myths and the layer system', keywords: 'rules ruling judge layers stack myths', onShow: showJudgeTab },
+            setprimer:    { appId: 'setPrimerApp',    icon: '🎁', navLabel: 'Set Primer',      title: '🎁 Set Primer', desc: 'A set at a glance: its cards by rarity, top picks and bonus sheets', keywords: 'set new release cards primer' },
+            grading:      { appId: 'gradingApp',      icon: '🔍', navLabel: 'Grading & Fakes', title: '🔍 Grading & Spotting Fakes', desc: 'Card grading basics and how to spot counterfeits', keywords: 'grade psa bgs fake counterfeit condition' },
+            quiz:         { appId: 'quizApp',         icon: '🧠', navLabel: 'Card Quiz',       title: '🧠 Card Quiz', desc: 'Practice card knowledge, prices and the case map', keywords: 'quiz practice train learn test', onShow: showQuizTab }
         };
 
         // Keeps a tab button's visual "active" state and its ARIA tab
@@ -5657,20 +5898,11 @@
 
             Object.values(APP_VIEWS).forEach(v => {
                 document.getElementById(v.appId).style.display = 'none';
-                setTabActive(document.getElementById(v.tabId), false);
             });
 
             const active = APP_VIEWS[view];
             document.getElementById(active.appId).style.display = '';
-            setTabActive(document.getElementById(active.tabId), true);
             title.textContent = active.title;
-
-            // Keep the mobile dropdown in sync even when switchGame is called
-            // from somewhere other than the dropdown itself (a tab button, or
-            // a "Full Lookup" jump from a card popup) - otherwise it'd show
-            // whatever was selected last instead of the tab actually on screen.
-            const mobileSelect = document.getElementById('mobileTabSelect');
-            if (mobileSelect) mobileSelect.value = view;
 
             // Set before onShow runs, not after - the Buyer's Guide's onShow
             // calls switchBuyersGuideTab(), which reads currentGameMode to build the
@@ -5679,24 +5911,239 @@
             // entry before immediately correcting itself.
             currentGameMode = view;
 
+            // Re-rendered on every switch (not just nav clicks) so the menus
+            // stay right when a tool is opened from elsewhere, like a card
+            // popup's "Full Lookup" or the browser's back button.
+            renderAppNav();
+
             if (active.onShow) active.onShow();
 
             pushRoute();
         }
 
-        // Builds the mobile <select>'s options from the same tab buttons
-        // already in the page, so adding a new tab to APP_VIEWS/the button
-        // row is the only place that ever needs updating - this never drifts
-        // out of sync with the desktop tab bar by hand.
-        function populateMobileTabSelect() {
-            const select = document.getElementById('mobileTabSelect');
-            if (!select) return;
-            select.innerHTML = Object.entries(APP_VIEWS).map(([key, v]) => {
-                const btn = document.getElementById(v.tabId);
-                const label = btn ? btn.textContent.trim() : key;
-                return `<option value="${key}">${label}</option>`;
-            }).join('');
+        // ---- Tool navigation ----
+        // Tools are grouped by the job they're for rather than listed flat:
+        // Card Lookup on its own (it's the everyday tool), then three groups.
+        // Desktop gets a menu bar with a dropdown per group; phones get an
+        // app-style bottom bar whose groups open a sheet. Both, plus the
+        // quick-jump search, are built from NAV_GROUPS + APP_VIEWS, so a new
+        // tool only needs adding in those two places.
+        const NAV_GROUPS = [
+            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'buylist', 'pulllist', 'casemap'] },
+            { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'valuevintage', 'judge'] },
+            { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'grading', 'quiz'] }
+        ];
+
+        function navGroupForView(view) {
+            return NAV_GROUPS.find(g => g.views.includes(view)) || null;
         }
+
+        function navItemHTML(view) {
+            const v = APP_VIEWS[view];
+            const active = view === currentGameMode;
+            return `
+                <button type="button" class="app-nav-item${active ? ' active' : ''}" data-view="${view}" ${active ? 'aria-current="page"' : ''} onclick="navigateTo('${view}')">
+                    <span class="app-nav-item-icon">${v.icon}</span>
+                    <span class="app-nav-item-text"><strong>${v.navLabel}</strong><span>${v.desc}</span></span>
+                </button>
+            `;
+        }
+
+        function renderAppNav() {
+            const group = navGroupForView(currentGameMode);
+            const lookup = APP_VIEWS.mtg;
+            document.getElementById('appNav').innerHTML = `
+                <button type="button" class="app-nav-btn${currentGameMode === 'mtg' ? ' active' : ''}" onclick="navigateTo('mtg')">${lookup.icon} ${lookup.navLabel}</button>
+                ${NAV_GROUPS.map(g => `
+                    <div class="app-nav-group" data-group="${g.key}">
+                        <button type="button" class="app-nav-btn${group === g ? ' active' : ''}" aria-expanded="false" aria-haspopup="true" onclick="toggleNavMenu('${g.key}')">
+                            ${g.icon} ${g.label}${group === g ? ` <span class="app-nav-current">· ${APP_VIEWS[currentGameMode].navLabel}</span>` : ''} <span class="app-nav-caret">▾</span>
+                        </button>
+                        <div class="app-nav-menu" hidden>${g.views.map(navItemHTML).join('')}</div>
+                    </div>
+                `).join('')}
+                <button type="button" class="app-nav-btn app-nav-jump" onclick="openQuickJump()" title="Jump to any tool (press /)">🔎 Jump to… <kbd>/</kbd></button>
+            `;
+            document.getElementById('appBottomBar').innerHTML = `
+                <button type="button" class="${currentGameMode === 'mtg' ? 'active' : ''}" onclick="navigateTo('mtg')"><span>${lookup.icon}</span>Lookup</button>
+                ${NAV_GROUPS.map(g => `
+                    <button type="button" class="${group === g ? 'active' : ''}" onclick="openNavSheet('${g.key}')"><span>${g.icon}</span>${g.short}</button>
+                `).join('')}
+                <button type="button" onclick="openQuickJump()"><span>🔎</span>Jump</button>
+            `;
+        }
+
+        function closeNavMenus() {
+            document.querySelectorAll('#appNav .app-nav-group').forEach(el => {
+                el.querySelector('.app-nav-menu').hidden = true;
+                el.querySelector('.app-nav-btn').setAttribute('aria-expanded', 'false');
+            });
+        }
+
+        function toggleNavMenu(key) {
+            const groupEl = document.querySelector(`#appNav [data-group="${key}"]`);
+            const menu = groupEl.querySelector('.app-nav-menu');
+            const opening = menu.hidden;
+            closeNavMenus();
+            if (opening) {
+                menu.hidden = false;
+                groupEl.querySelector('.app-nav-btn').setAttribute('aria-expanded', 'true');
+            }
+        }
+
+        function openNavSheet(key) {
+            const g = NAV_GROUPS.find(gr => gr.key === key);
+            document.getElementById('appSheetTitle').textContent = `${g.icon} ${g.label}`;
+            document.getElementById('appSheetItems').innerHTML = g.views.map(navItemHTML).join('');
+            document.getElementById('appSheet').classList.add('open');
+            document.getElementById('appSheetBackdrop').classList.add('open');
+        }
+
+        function closeNavSheet() {
+            document.getElementById('appSheet').classList.remove('open');
+            document.getElementById('appSheetBackdrop').classList.remove('open');
+        }
+
+        // Every way of picking a tool ends here: close whatever menu was
+        // open, switch, and bring the top of the tool into view.
+        function navigateTo(view, after) {
+            closeNavMenus();
+            closeNavSheet();
+            closeQuickJump();
+            switchGame(view);
+            if (after) after();
+            else window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#appNav .app-nav-group')) closeNavMenus();
+        });
+
+        // ---- Quick jump ----
+        // Type to jump straight to a tool, or a part of one ("lands",
+        // "fakes", "check a deck"). Opens with "/" or Ctrl/Cmd+K.
+        const QUICK_JUMP_EXTRAS = [
+            { label: 'Card Finder', icon: '🔎', parent: 'buyersguide', keywords: 'search filter theme sell staples', go: () => navigateTo('buyersguide', () => switchBuyersGuideTab('finder')) },
+            { label: 'Land Finder', icon: '🗺️', parent: 'buyersguide', keywords: 'lands mana base package duals fetch shock budget', go: () => navigateTo('buyersguide', () => switchBuyersGuideTab('lands')) },
+            { label: 'Full-Art Basics', icon: '🏔️', parent: 'buyersguide', keywords: 'basic lands plains island swamp mountain forest', go: () => navigateTo('buyersguide', () => switchBuyersGuideTab('basics')) },
+            { label: 'Grading guide', icon: '💎', parent: 'grading', keywords: 'psa bgs cgc condition grade slab', go: () => navigateTo('grading', () => switchGuideTab('gradingGuide')) },
+            { label: 'Spotting fakes', icon: '🕵️', parent: 'grading', keywords: 'counterfeit fake proxy real light test', go: () => navigateTo('grading', () => switchGuideTab('fakesGuide')) },
+            { label: 'Check a card\'s bracket', icon: '🃏', parent: 'brackets', keywords: 'game changer bracket card commander', go: () => navigateTo('brackets', () => scrollToBracketSection('bkCardCheck')) },
+            { label: 'Check a deck\'s bracket', icon: '📝', parent: 'brackets', keywords: 'decklist bracket commander game changers', go: () => navigateTo('brackets', () => scrollToBracketSection('bkDeckCheck')) },
+            { label: 'Game Changers list', icon: '⚡', parent: 'brackets', keywords: 'game changers commander bracket', go: () => navigateTo('brackets', () => scrollToBracketSection('bkGameChangers')) },
+            { label: 'Commander banned list', icon: '🚫', parent: 'brackets', keywords: 'banned commander edh', go: () => navigateTo('brackets', () => scrollToBracketSection('bkBanned')) },
+            { label: 'Price Check drill', icon: '💵', parent: 'quiz', keywords: 'price quiz practice value', go: () => navigateTo('quiz', () => setQuizMode('price')) },
+            { label: 'Case Map quiz', icon: '🗂️', parent: 'quiz', keywords: 'case map quiz practice hotlist', go: () => navigateTo('quiz', () => setQuizMode('casemap')) }
+        ];
+
+        let quickJumpResults = [];
+        let quickJumpIndex = 0;
+
+        function quickJumpEntries() {
+            const views = Object.keys(APP_VIEWS).map(key => ({
+                label: APP_VIEWS[key].navLabel, icon: APP_VIEWS[key].icon, desc: APP_VIEWS[key].desc,
+                keywords: APP_VIEWS[key].keywords || '', go: () => navigateTo(key)
+            }));
+            const extras = QUICK_JUMP_EXTRAS.map(x => ({ ...x, desc: `in ${APP_VIEWS[x.parent].navLabel}` }));
+            return [...views, ...extras];
+        }
+
+        // Every word typed has to appear somewhere in the entry. Best matches
+        // first: the name starts with the query, then every typed word starts
+        // a word of the name ("lands" finds Land Finder, "check deck" finds
+        // Check a deck's bracket), then the name contains it, then the rest.
+        function searchQuickJump(query) {
+            const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+            const entries = quickJumpEntries();
+            if (!words.length) return entries.slice(0, Object.keys(APP_VIEWS).length);
+            const singular = w => (w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w);
+            const scored = entries.map(e => {
+                const name = e.label.toLowerCase();
+                const haystack = `${name} ${e.desc} ${e.keywords}`.toLowerCase();
+                if (!words.every(w => haystack.includes(singular(w)))) return null;
+                const q = words.join(' ');
+                const nameWords = name.split(/[^a-z0-9]+/);
+                const wordStarts = words.every(w => nameWords.some(nw => nw.startsWith(singular(w))));
+                return { e, score: name.startsWith(q) ? 0 : wordStarts ? 1 : name.includes(q) ? 2 : 3 };
+            }).filter(Boolean);
+            return scored.sort((a, b) => a.score - b.score).map(s => s.e).slice(0, 8);
+        }
+
+        function renderQuickJump() {
+            const list = document.getElementById('quickJumpResults');
+            quickJumpResults = searchQuickJump(document.getElementById('quickJumpInput').value);
+            quickJumpIndex = Math.min(quickJumpIndex, Math.max(quickJumpResults.length - 1, 0));
+            list.innerHTML = quickJumpResults.length
+                ? quickJumpResults.map((r, i) => `
+                    <button type="button" class="app-nav-item${i === quickJumpIndex ? ' active' : ''}" role="option" aria-selected="${i === quickJumpIndex}" onclick="runQuickJump(${i})" onmousemove="setQuickJumpIndex(${i})">
+                        <span class="app-nav-item-icon">${r.icon}</span>
+                        <span class="app-nav-item-text"><strong>${r.label}</strong><span>${r.desc}</span></span>
+                    </button>
+                `).join('')
+                : `<div class="quick-jump-empty">Nothing matches - try a tool name like "buylist" or "brackets".</div>`;
+        }
+
+        function setQuickJumpIndex(i) {
+            if (i === quickJumpIndex) return;
+            quickJumpIndex = i;
+            renderQuickJump();
+        }
+
+        function runQuickJump(i) {
+            const r = quickJumpResults[i];
+            if (r) r.go();
+        }
+
+        function openQuickJump() {
+            closeNavMenus();
+            closeNavSheet();
+            const overlay = document.getElementById('quickJump');
+            const input = document.getElementById('quickJumpInput');
+            input.value = '';
+            quickJumpIndex = 0;
+            overlay.classList.add('open');
+            renderQuickJump();
+            input.focus();
+        }
+
+        function closeQuickJump() {
+            document.getElementById('quickJump').classList.remove('open');
+            // Otherwise the hidden search box keeps focus and swallows the next "/".
+            const input = document.getElementById('quickJumpInput');
+            if (document.activeElement === input) input.blur();
+        }
+
+        document.getElementById('quickJumpInput').addEventListener('input', () => {
+            quickJumpIndex = 0;
+            renderQuickJump();
+        });
+
+        document.getElementById('quickJumpInput').addEventListener('keydown', e => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const n = quickJumpResults.length;
+                if (!n) return;
+                quickJumpIndex = (quickJumpIndex + (e.key === 'ArrowDown' ? 1 : -1) + n) % n;
+                renderQuickJump();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                runQuickJump(quickJumpIndex);
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeNavMenus();
+                closeNavSheet();
+                closeQuickJump();
+                return;
+            }
+            const typing = e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]');
+            if ((e.key === '/' && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) || (e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey))) {
+                e.preventDefault();
+                openQuickJump();
+            }
+        });
 
         // ============== FORMAT RULES ==============
         // Deck-building rules are static (they don't change store-to-store), so
@@ -12085,11 +12532,9 @@
         // Initialize
         loadHistory();
         loadPullListState();
-        populateMobileTabSelect();
-        initTablist('gameTabs', APP_VIEWS, 'mtg');
+        renderAppNav();
         initTablist('bgTabs', BUYERS_GUIDE_SUBTABS, 'finder');
         initTablist('guideTabs', GUIDE_SUBTABS, 'gradingGuide');
-        document.getElementById('mobileTabSelect').value = 'mtg';
         // A bookmarked/shared link (e.g. #buyersguide/lands) opens straight to
         // that tab instead of always landing on MTG Card Lookup.
         if (location.hash) applyRouteFromHash();
