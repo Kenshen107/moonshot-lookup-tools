@@ -1949,6 +1949,22 @@
         .lands-bracket-premium { color: #d2a8ff; }
         .lands-bracket-high { color: #ffa657; }
 
+        /* How a land enters: untapped / conditional / tapped */
+        .lands-entry {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 0 6px;
+            border-radius: 4px;
+            font-size: 0.72em;
+            font-weight: 700;
+            vertical-align: middle;
+            cursor: help;
+        }
+
+        .lands-entry-untapped { background: rgba(126, 231, 135, 0.15); color: #7ee787; }
+        .lands-entry-conditional { background: rgba(255, 204, 128, 0.15); color: #ffcc80; }
+        .lands-entry-tapped { background: rgba(160, 160, 160, 0.15); color: #a0a0a0; }
+
         /* ---- Full-art basics ---- */
         .basic-meta {
             font-size: 0.72em;
@@ -2288,6 +2304,13 @@
 
         .vv-restricted-list .vv-card-link:hover {
             text-decoration: underline;
+        }
+
+        .vv-restricted-price {
+            margin-left: 8px;
+            font-size: 0.78em;
+            font-weight: 700;
+            color: #7ee787;
         }
 
         .vv-restricted-reason {
@@ -4329,11 +4352,11 @@
             <!-- ---- Land Finder ---- -->
             <div id="landsApp" style="display:none;">
                 <div class="formats-intro">
-                    Pick the deck's colors and what the customer wants to spend on
-                    lands in total. The package is the most-played lands that fix
-                    those colors and fit the budget, priced at the cheapest paper
-                    printing. Everything else in those colors is listed below it,
-                    sorted into price brackets.
+                    Pick the deck's colors, its format, and what the customer wants
+                    to spend on lands in total. The package is the most-played legal
+                    lands that fix those colors and fit the budget, priced at the
+                    cheapest paper printing. Everything else in those colors is listed
+                    below it, sorted into price brackets, with how each land enters.
                 </div>
 
                 <div class="recs-color-picker">
@@ -4346,6 +4369,14 @@
                     <button type="button" class="staples-sort-btn" id="landsColorless" onclick="toggleLandsColorless()">Colorless / utility only</button>
                 </div>
 
+                <div class="staples-controls" style="flex-wrap:wrap;">
+                    <span class="text-secondary" style="font-size:0.85em;">Format:</span>
+                    <button type="button" class="staples-sort-btn active" data-format="commander" onclick="setLandsFormat('commander')">Commander</button>
+                    <button type="button" class="staples-sort-btn" data-format="modern" onclick="setLandsFormat('modern')">Modern</button>
+                    <button type="button" class="staples-sort-btn" data-format="pioneer" onclick="setLandsFormat('pioneer')">Pioneer</button>
+                    <button type="button" class="staples-sort-btn" data-format="standard" onclick="setLandsFormat('standard')">Standard</button>
+                    <button type="button" class="staples-sort-btn" data-format="pauper" onclick="setLandsFormat('pauper')">Pauper</button>
+                </div>
                 <div class="staples-controls" style="flex-wrap:wrap;">
                     <span class="text-secondary" style="font-size:0.85em;">Total land budget:</span>
                     <button type="button" class="staples-sort-btn" data-budget="10" onclick="setLandsBudget('10')">$10</button>
@@ -5569,15 +5600,14 @@
             'Nadu, Winged Wisdom', 'Chaos Orb', 'Falling Star', 'Shahrazad'
         ];
 
-        // Restricted-to-one cards that are actually obtainable under the $30
-        // cap (Vintage's full restricted list also includes cards like the
-        // Power 9 that are moot here since they're nowhere near $30 anyway).
-        // Why each one is restricted rather than just banned outright - the
-        // theme across this whole list is "powerful enough to warrant
-        // Vintage's restricted list AND cheap enough to actually show up in
-        // a $30 deck," unlike the Power 9 etc., which are restricted too
-        // but priced way out of budget anyway.
-        const VV_RESTRICTED_UNDER_30 = [
+        // Why each Vintage-restricted card is restricted, for the ones cheap
+        // enough to matter under the $30 cap. The list itself is built live
+        // (loadVvRestrictedList) from Scryfall's current restricted list and
+        // cheapest prices, so it can't go stale as prices move or Wizards
+        // restricts something new - these are just the write-ups shown
+        // beside each card. A newly restricted card with no entry here still
+        // shows up, marked as having no write-up yet.
+        const VV_RESTRICTED_REASONS = [
             { name: 'Balance', reason: 'Looks symmetric, plays devastatingly asymmetric - blows out whichever player has more lands/hand/creatures.' },
             { name: 'Brainstorm', reason: 'Incredible card selection for 1 mana, especially brutal alongside any shuffle effect.' },
             { name: 'Chalice of the Void', reason: 'Can lock an opposing deck out of casting its own cheap spells entirely.' },
@@ -5600,6 +5630,7 @@
             { name: 'Necropotence', reason: 'Trades life for a massive burst of card advantage.' },
             { name: 'Sol Ring', reason: 'Doubles your available mana starting turn 1 for a single generic mana.' },
             { name: 'Strip Mine', reason: 'Free, repeatable land destruction that can cripple an opposing manabase.' },
+            { name: 'The Fantasticar', reason: 'A 3-mana flyer that animates off every noncreature spell, and on your fourth one each turn turns into four 4/4 flying, hasty Constructs.' },
             { name: 'Thorn of Amethyst', reason: 'Taxes every noncreature spell by 1, slowing down anything spell-heavy.' },
             { name: 'Tinker', reason: 'Cheats any artifact straight from library to battlefield for 2 mana plus a sacrifice.' },
             { name: 'Treasure Cruise', reason: 'Delve card draw that can cost as little as 1 mana once the graveyard fills up.' },
@@ -5621,6 +5652,55 @@
             { name: 'Affinity', blurb: 'Classic artifact aggro - cheap/free artifacts into fast, resilient damage.', url: 'https://vvmtg.com/category/content/' }
         ];
 
+        function vvCardLinkHTML(name) {
+            return `<span class="vv-card-link" onclick="openCardModalByName('${name.replace(/'/g, "\\'")}')">${name}</span>`;
+        }
+
+        function vvRestrictedItemHTML(name, reason, price) {
+            return `
+                <div class="vv-restricted-item">
+                    ${vvCardLinkHTML(name)}
+                    ${price === undefined ? '' : `<span class="vv-restricted-price">${price === null ? 'no price' : formatUsd(price)}</span>`}
+                    <span class="vv-restricted-reason">${reason || 'Newly restricted - no write-up here yet.'}</span>
+                </div>
+            `;
+        }
+
+        // Every Vintage-restricted card whose cheapest tournament-legal
+        // printing is at or under the cap right now - the same "cheapest
+        // printing at TCGplayer market" rule the format prices decks by.
+        const VV_PRICE_CAP = 30;
+
+        async function loadVvRestrictedList() {
+            const listEl = document.getElementById('vvRestrictedList');
+            const noteEl = document.getElementById('vvRestrictedNote');
+            if (!listEl) return;
+            const reasons = Object.fromEntries(VV_RESTRICTED_REASONS.map(r => [r.name, r.reason]));
+            try {
+                const cheapest = new Map();
+                let url = `${API_BASE}/cards/search?q=${encodeURIComponent(`restricted:vintage game:paper usd<=${VV_PRICE_CAP}`)}&unique=prints&order=name`;
+                while (url) {
+                    const page = await fetchScryfallSearchPage(url);
+                    (page.data || []).forEach(print => addCheapestPrinting(cheapest, print));
+                    url = page.has_more ? page.next_page : null;
+                }
+                const cards = [...cheapest.values()]
+                    .filter(c => c._price !== null && c._price <= VV_PRICE_CAP)
+                    .sort((a, b) => a.name.localeCompare(b.name));
+                if (cards.length === 0) throw new Error('No restricted cards came back');
+                listEl.innerHTML = cards.map(c => vvRestrictedItemHTML(c.name, reasons[c.name], c._price)).join('');
+                const listed = new Set(cards.map(c => c.name));
+                const overCap = VV_RESTRICTED_REASONS.map(r => r.name).filter(n => !listed.has(n));
+                if (noteEl && overCap.length) {
+                    noteEl.innerHTML = `Over ${formatUsd(VV_PRICE_CAP)} right now, so left off above: ${overCap.map(vvCardLinkHTML).join(', ')}.`;
+                }
+            } catch (err) {
+                console.error('Value Vintage restricted list error:', err);
+                listEl.innerHTML = VV_RESTRICTED_REASONS.map(r => vvRestrictedItemHTML(r.name, r.reason)).join('');
+                if (noteEl) noteEl.textContent = "Couldn't check live prices, so this is the saved list - some cards may have moved over $30.";
+            }
+        }
+
         let vvPanelRendered = false;
         function renderValueVintagePanel() {
             if (vvPanelRendered) return; // static content - build once
@@ -5628,7 +5708,7 @@
             const panel = document.getElementById('vvPanel');
             if (!panel) return;
 
-            const cardLink = name => `<span class="vv-card-link" onclick="openCardModalByName('${name.replace(/'/g, "\\'")}')">${name}</span>`;
+            const cardLink = vvCardLinkHTML;
 
             panel.innerHTML = `
                 <div class="vv-section">
@@ -5654,15 +5734,9 @@
                         ${VV_EXTRA_BANS.map(n => cardLink(n)).join('')}
                     </div>
                     <p style="margin-top:10px;">Also always banned (inherited straight from Vintage): every card with type <em>Conspiracy</em>, every card that references "Playing for Ante," every card that brings a Sticker or Attraction into the game, and any card whose art/text/name is racially or culturally offensive.</p>
-                    <div class="format-banlist-group-label">Restricted to 1 copy (main + sideboard combined) - the ones actually obtainable under $30</div>
-                    <div class="vv-restricted-list">
-                        ${VV_RESTRICTED_UNDER_30.map(r => `
-                            <div class="vv-restricted-item">
-                                ${cardLink(r.name)}
-                                <span class="vv-restricted-reason">${r.reason}</span>
-                            </div>
-                        `).join('')}
-                    </div>
+                    <div class="format-banlist-group-label">Restricted to 1 copy (main + sideboard combined) - the ones $30 or less right now, at their cheapest printing</div>
+                    <div class="vv-restricted-list" id="vvRestrictedList"><div class="loading">Checking current prices...</div></div>
+                    <p id="vvRestrictedNote" style="margin-top:8px; font-size:0.82em;"></p>
                     <p style="margin-top:10px; font-size:0.82em;">The rest of Vintage's restricted list (Power 9, etc.) is technically restricted here too, it's just nowhere near $30 in the first place. Full official rules text: <a href="https://vvmtg.com/deckbuilding-rules/" target="_blank" rel="noopener" class="text-link">vvmtg.com/deckbuilding-rules</a>.</p>
                     <div id="vvVintageBanlist" class="format-banlist-container" style="margin-top:12px;"></div>
                 </div>
@@ -5692,6 +5766,7 @@
                     </div>
                 </div>
             `;
+            loadVvRestrictedList();
         }
 
         // Toggles between the Grading Guide and Spotting Fakes sub-panels
@@ -7986,6 +8061,7 @@
         let landsColorlessOnly = false;
         let landsBudget = '50'; // total for the whole package; '' = no limit
         let landsCount = 10; // lands in the package
+        let landsFormat = 'commander'; // Scryfall legalities key - only legal lands are shown
         let landsTierMode = 'normal'; // sort for the "every land" list
         let landsBracketFilter = ''; // '' = every bracket
         let landsRequestToken = 0;
@@ -8042,6 +8118,20 @@
             return landsColorlessOnly ? 'c' : canonicalColorString(landsSelectedColors);
         }
 
+        // Picking three colors is three clicks - wait for a short pause so
+        // only the final combination gets searched.
+        let landsSearchTimeout;
+        function scheduleLandsSearch() {
+            clearTimeout(landsSearchTimeout);
+            landsRequestToken++; // anything already running is now stale
+            if (!landsColorlessOnly && landsSelectedColors.length === 0) {
+                runLandsSearch();
+                return;
+            }
+            document.getElementById('landsResults').innerHTML = `<div class="loading" id="landsProgress">Pricing land cycles...</div>`;
+            landsSearchTimeout = setTimeout(runLandsSearch, 400);
+        }
+
         function toggleLandsColor(color) {
             const idx = landsSelectedColors.indexOf(color);
             if (idx === -1) landsSelectedColors.push(color); else landsSelectedColors.splice(idx, 1);
@@ -8050,7 +8140,7 @@
                 landsColorlessOnly = false;
                 document.getElementById('landsColorless').classList.remove('active');
             }
-            runLandsSearch();
+            scheduleLandsSearch();
         }
 
         function toggleLandsColorless() {
@@ -8060,7 +8150,7 @@
                 landsSelectedColors = [];
                 document.querySelectorAll('#landsApp .recs-color-btn').forEach(el => el.classList.remove('active'));
             }
-            runLandsSearch();
+            scheduleLandsSearch();
         }
 
         // Budget, package size, sort and bracket all work on the lands
@@ -8100,6 +8190,16 @@
             rerenderLands();
         }
 
+        const LAND_FORMAT_LABELS = { commander: 'Commander', modern: 'Modern', pioneer: 'Pioneer', standard: 'Standard', pauper: 'Pauper' };
+
+        function setLandsFormat(format) {
+            landsFormat = format;
+            document.querySelectorAll('#landsApp [data-format]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.format === format);
+            });
+            rerenderLands();
+        }
+
         function setLandsTier(mode) {
             landsTierMode = mode;
             rerenderLands();
@@ -8110,29 +8210,29 @@
             rerenderLands();
         }
 
-        // Collector-only printings (gold-bordered World Championship decks,
-        // oversized cards, memorabilia sets, Secret Lair's double-sided
-        // "reversible" copies) aren't what a customer means by "the cheapest
-        // copy", so they never set a land's price.
-        function isPlayableLandPrinting(print) {
+        // Tournament-legal printings only. Gold-bordered World Championship
+        // decks, oversized cards, memorabilia sets and Secret Lair's
+        // double-sided "reversible" copies aren't what a customer (or Value
+        // Vintage's pricing rule) means by "the cheapest copy".
+        function isTournamentPrinting(print) {
             return !print.oversized && print.border_color !== 'gold' && print.set_type !== 'memorabilia'
                 && print.layout !== 'reversible_card';
         }
 
         // Non-foil market price, falling back to foil for foil-only printings.
-        function landPrintingPrice(print) {
+        function printingPrice(print) {
             const usd = parseFloat(print.prices && print.prices.usd);
             if (Number.isFinite(usd)) return { price: usd, foilOnly: false };
             const foil = parseFloat(print.prices && print.prices.usd_foil);
             return Number.isFinite(foil) ? { price: foil, foilOnly: true } : null;
         }
 
-        // Keeps one entry per land (in the order first seen, i.e. most
+        // Keeps one entry per card (in the order first seen, i.e. most
         // played first): its cheapest printing, tagged with that price.
-        function addLandPrinting(byLand, print) {
-            if (!isPlayableLandPrinting(print)) return;
+        function addCheapestPrinting(byLand, print) {
+            if (!isTournamentPrinting(print)) return;
             const key = print.oracle_id || print.name;
-            const p = landPrintingPrice(print);
+            const p = printingPrice(print);
             const current = byLand.get(key);
             const printings = current ? current._printings + 1 : 1;
             if (!current || (p && (current._price === null || p.price < current._price))) {
@@ -8142,30 +8242,133 @@
             }
         }
 
+        // Bare id: is Scryfall's subset match - lands a deck of these colors
+        // can actually play, including colorless utility lands.
+        function landsSearchSuffix(colorStr) {
+            return ` id:${colorStr} t:land -t:basic game:paper -set_type:funny`;
+        }
+
+        // Fetches, slow fetches and Panoramas only count if they can find one
+        // of the deck's basic land types (see LAND_FETCHER_KEYS).
+        function landFindsDeckBasic(print, colorStr) {
+            const text = (print.oracle_text || '').toLowerCase();
+            return colorStr.split('').some(c => text.includes(BASIC_TYPE_FOR_COLOR[c]));
+        }
+
+        // unique=prints, not unique=cards: unique=cards returns Scryfall's
+        // default printing (often the newest and priciest), and the package
+        // needs the cheapest copy a customer could buy.
+        function landsPrintsUrl(query) {
+            return `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&unique=prints`;
+        }
+
         async function fetchLandsCycle(cat, colorStr) {
             const cacheKey = `${cat.key}|${colorStr}`;
             if (landsCache[cacheKey]) return landsCache[cacheKey];
 
-            // Bare id: is Scryfall's subset match - lands a deck of these
-            // colors can actually play, including colorless utility lands.
-            let query = `${cat.query} id:${colorStr} t:land -t:basic game:paper -set_type:funny`;
+            let query = cat.query + landsSearchSuffix(colorStr);
             if (LAND_FETCHER_KEYS.has(cat.key) && colorStr !== 'c') {
                 query += ` (${colorStr.split('').map(c => `o:${BASIC_TYPE_FOR_COLOR[c]}`).join(' or ')})`;
             }
 
-            // unique=prints, not unique=cards: unique=cards returns Scryfall's
-            // default printing (often the newest and priciest), and the
-            // package needs the cheapest copy a customer could buy.
             const byLand = new Map();
-            let url = `${API_BASE}/cards/search?q=${encodeURIComponent(query)}&order=edhrec&unique=prints`;
+            let url = landsPrintsUrl(query);
             for (let pages = 0; url && pages < LANDS_MAX_PRINT_PAGES; pages++) {
                 const page = await fetchScryfallSearchPage(url);
-                (page.data || []).forEach(print => addLandPrinting(byLand, print));
+                (page.data || []).forEach(print => addCheapestPrinting(byLand, print));
                 url = page.has_more ? page.next_page : null;
             }
             const cards = [...byLand.values()].slice(0, LANDS_PER_CYCLE_LIMIT);
             landsCache[cacheKey] = cards;
             return cards;
+        }
+
+        // Scryfall rejects queries much past ~1,100 characters (checked
+        // 2026-09-24), so the exact-list cycles go out as a few chunks of
+        // names under this length rather than one request per cycle.
+        const LANDS_NAME_QUERY_MAX_CHARS = 900;
+
+        function landsNameQuery(names) {
+            return `(${names.map(n => `!"${n}"`).join(' or ')})`;
+        }
+
+        // Every name-list cycle not already cached, as chunked combined
+        // searches. Returns one task per chunk (for the shared request
+        // queue) plus a finish() that files each printing under its cycle
+        // and caches every cycle whose names all came back.
+        function buildLandsNameListTasks(cats, colorStr) {
+            const todo = cats.filter(cat => !landsCache[`${cat.key}|${colorStr}`]);
+            const cycleByName = {};
+            todo.forEach(cat => LAND_CYCLE_CARDS[cat.key].forEach(name => {
+                if (!cycleByName[name]) cycleByName[name] = cat;
+            }));
+
+            const chunks = [];
+            let current = [];
+            Object.keys(cycleByName).forEach(name => {
+                if (current.length && landsNameQuery([...current, name]).length > LANDS_NAME_QUERY_MAX_CHARS) {
+                    chunks.push(current);
+                    current = [];
+                }
+                current.push(name);
+            });
+            if (current.length) chunks.push(current);
+
+            const printsByChunk = chunks.map(() => null); // null = failed
+            const tasks = chunks.map((names, i) => async () => {
+                const prints = [];
+                let url = landsPrintsUrl(landsNameQuery(names) + landsSearchSuffix(colorStr));
+                while (url) {
+                    const page = await fetchScryfallSearchPage(url);
+                    prints.push(...(page.data || []));
+                    url = page.has_more ? page.next_page : null;
+                }
+                printsByChunk[i] = prints;
+            });
+
+            const finish = () => {
+                const failedKeys = new Set();
+                chunks.forEach((names, i) => {
+                    if (printsByChunk[i] === null) names.forEach(n => failedKeys.add(cycleByName[n].key));
+                });
+                const byCycle = {};
+                todo.forEach(cat => { byCycle[cat.key] = new Map(); });
+                printsByChunk.forEach(prints => (prints || []).forEach(print => {
+                    const cat = cycleByName[print.name.split(' // ')[0]];
+                    if (!cat || failedKeys.has(cat.key)) return;
+                    if (LAND_FETCHER_KEYS.has(cat.key) && colorStr !== 'c' && !landFindsDeckBasic(print, colorStr)) return;
+                    addCheapestPrinting(byCycle[cat.key], print);
+                }));
+                todo.forEach(cat => {
+                    if (!failedKeys.has(cat.key)) landsCache[`${cat.key}|${colorStr}`] = [...byCycle[cat.key].values()];
+                });
+                return todo.filter(cat => failedKeys.has(cat.key));
+            };
+            return { tasks, finish };
+        }
+
+        // Scryfall asks for 50-100ms between requests; going faster gets
+        // 429 "too many requests" errors, which showed up as failed cycles
+        // on 5-color searches.
+        const SCRYFALL_REQUEST_SPACING_MS = 100;
+
+        // Runs async tasks with at most `limit` in flight and starts spaced
+        // at least spacingMs apart. Stops handing out tasks as soon as
+        // isStale() says the search was replaced (colors changed).
+        async function runWithConcurrency(tasks, limit, spacingMs, isStale) {
+            let next = 0;
+            let nextStartAt = 0;
+            const worker = async () => {
+                while (next < tasks.length && !isStale()) {
+                    const task = tasks[next++];
+                    const wait = nextStartAt - Date.now();
+                    nextStartAt = Math.max(Date.now(), nextStartAt) + spacingMs;
+                    if (wait > 0) await new Promise(resolve => setTimeout(resolve, wait));
+                    if (isStale()) return;
+                    await task();
+                }
+            };
+            await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker));
         }
 
         async function runLandsSearch() {
@@ -8178,28 +8381,39 @@
 
             const colorStr = landsColorString();
             const searchable = LAND_CATEGORIES.filter(c => c.query);
-            const results = {};
+            const listCats = searchable.filter(c => LAND_CYCLE_CARDS[c.key]);
+            const queryCats = searchable.filter(c => !LAND_CYCLE_CARDS[c.key]);
             const failedCats = [];
-            let done = 0;
             document.getElementById('landsResults').innerHTML =
                 `<div class="loading" id="landsProgress">Pricing ${searchable.length} land cycles...</div>`;
 
-            await loadSymbology();
-            for (let i = 0; i < searchable.length; i += LANDS_FETCH_BATCH_SIZE) {
-                await Promise.all(searchable.slice(i, i + LANDS_FETCH_BATCH_SIZE).map(async cat => {
+            const nameLists = buildLandsNameListTasks(listCats, colorStr);
+            const tasks = [
+                ...nameLists.tasks.map(task => async () => {
+                    try { await task(); } catch (err) { console.error('Error loading a batch of land cycles:', err); }
+                }),
+                ...queryCats.map(cat => async () => {
                     try {
-                        results[cat.key] = await fetchLandsCycle(cat, colorStr);
+                        await fetchLandsCycle(cat, colorStr);
                     } catch (err) {
                         console.error(`Error loading ${cat.label}:`, err);
                         failedCats.push(cat);
-                        results[cat.key] = [];
                     }
-                    done++;
-                }));
-                if (myToken !== landsRequestToken) return; // colors changed mid-search
+                })
+            ];
+            let done = 0;
+            const tracked = tasks.map(task => async () => {
+                await task();
+                done++;
                 const progress = document.getElementById('landsProgress');
-                if (progress) progress.textContent = `Pricing land cycles... ${done}/${searchable.length}`;
-            }
+                if (progress && myToken === landsRequestToken) progress.textContent = `Pricing land cycles... ${Math.round(100 * done / tasks.length)}%`;
+            });
+
+            await loadSymbology();
+            await runWithConcurrency(tracked, LANDS_FETCH_BATCH_SIZE, SCRYFALL_REQUEST_SPACING_MS,
+                () => myToken !== landsRequestToken);
+            if (myToken !== landsRequestToken) return; // colors changed mid-search
+            failedCats.push(...nameLists.finish());
 
             // One more go at anything that failed (a dropped connection or a
             // brief rate limit), one cycle at a time after a short pause -
@@ -8209,7 +8423,7 @@
                 for (const cat of [...failedCats]) {
                     if (myToken !== landsRequestToken) return;
                     try {
-                        results[cat.key] = await fetchLandsCycle(cat, colorStr);
+                        await fetchLandsCycle(cat, colorStr);
                         failedCats.splice(failedCats.indexOf(cat), 1);
                     } catch (err) {
                         console.error(`Retry failed for ${cat.label}:`, err);
@@ -8218,6 +8432,8 @@
                 if (myToken !== landsRequestToken) return;
             }
 
+            const results = {};
+            searchable.forEach(cat => { results[cat.key] = landsCache[`${cat.key}|${colorStr}`] || []; });
             landsLastResults = { results, failed: failedCats.map(c => c.label), colorStr };
             renderLandFinder(landsLastResults);
         }
@@ -8290,6 +8506,30 @@
             return `<span class="lands-bracket lands-bracket-${b.key}" title="${b.label}">${formatUsd(price)}${foilOnly ? ' foil' : ''}</span>`;
         }
 
+        // How a land comes into play, read from its own rules text (the land
+        // face, for a spell // land card). "Conditional" covers every
+        // "enters tapped unless..." and "pay life or it enters tapped" land.
+        const LAND_ENTRY_TYPES = {
+            untapped:    { label: 'Untapped',    title: 'Always enters untapped' },
+            conditional: { label: 'Conditional', title: 'Enters untapped only under a condition (or by paying life)' },
+            tapped:      { label: 'Tapped',      title: 'Always enters tapped' }
+        };
+
+        function landEntryType(card) {
+            let text = card.oracle_text;
+            if (text === undefined && card.card_faces) {
+                const landFace = card.card_faces.find(f => /\bLand\b/.test(f.type_line || '')) || card.card_faces[0];
+                text = landFace.oracle_text;
+            }
+            text = (text || '').toLowerCase();
+            if (!/enters (the battlefield )?tapped/.test(text)) return 'untapped';
+            // "...tapped unless you control...", "If you don't [pay 2 life], it
+            // enters tapped", "If you control two or more other lands, this
+            // land enters tapped" - all depend on the game state.
+            if (/tapped unless|if [^.]*, (it|this land) enters (the battlefield )?tapped/.test(text)) return 'conditional';
+            return 'tapped';
+        }
+
         // One compact row: name opens the card popup (at the cheapest
         // printing), with cycle + set underneath and a quick stock check.
         // prefix keeps row ids unique when a land is in more than one table.
@@ -8304,6 +8544,7 @@
                 <tr class="lands-row" id="${rowId}">
                     <td>
                         <span class="lands-row-name" onclick="openCardModal(cardTileDataById['${card.id}'], landsDisplayOrder, ${navIndex})">${card.name}</span>
+                        <span class="lands-entry lands-entry-${land.entry}" title="${LAND_ENTRY_TYPES[land.entry].title}">${LAND_ENTRY_TYPES[land.entry].label}</span>
                         <div class="lands-row-meta text-secondary">
                             <span title="${cat.description.replace(/"/g, '&quot;')}">${cat.label}</span>${cat.approx ? ' <span class="lands-approx-dot" title="approximate search">≈</span>' : ''}
                             · ${card.set_name}${printings}
@@ -8333,6 +8574,7 @@
         function renderLandFinder({ results, failed, colorStr }) {
             const resultsDiv = document.getElementById('landsResults');
             const colorsLabel = colorStr === 'c' ? 'colorless' : colorStr.toUpperCase().split('').join('/');
+            const formatLabel = LAND_FORMAT_LABELS[landsFormat];
 
             // A land can match more than one cycle's search (an approximate
             // one especially) - count it once, under the first cycle it hits.
@@ -8343,7 +8585,8 @@
                     const key = card.oracle_id || card.name;
                     if (seen.has(key)) return;
                     seen.add(key);
-                    pool.push({ card, cat, price: card._price, foilOnly: card._foilOnly, fixes: landFixesColors(card, cat, colorStr) });
+                    if ((card.legalities || {})[landsFormat] !== 'legal') return;
+                    pool.push({ card, cat, price: card._price, foilOnly: card._foilOnly, entry: landEntryType(card), fixes: landFixesColors(card, cat, colorStr) });
                 });
             });
             const rank = l => l.card.edhrec_rank || Infinity;
@@ -8351,7 +8594,7 @@
 
             landsDisplayOrder = [];
             if (pool.length === 0) {
-                resultsDiv.innerHTML = `<div class="error">No lands found for a ${colorsLabel} deck.</div>`;
+                resultsDiv.innerHTML = `<div class="error">No ${colorsLabel} lands are legal in ${formatLabel}.</div>`;
                 return;
             }
 
@@ -8382,7 +8625,7 @@
 
             const upgradesHTML = upgrades.length ? `
                 <div class="bg-section-title">⬆️ ${budget === Infinity ? 'Next most played' : 'If they can spend more'}</div>
-                <div class="bg-section-sub">The most-played ${colorsLabel} lands that didn't make the package.</div>
+                <div class="bg-section-sub">The most-played ${colorsLabel} ${formatLabel}-legal lands that didn't make the package.</div>
                 ${landsTableHTML('landsUpgradeTable', upgrades, 'up')}
             ` : '';
 
@@ -8400,7 +8643,7 @@
 
             resultsDiv.innerHTML = `
                 <div class="lands-pkg">
-                    <div class="bg-section-title" style="margin-top:0;">🧰 ${colorsLabel} land package · ${budgetLabel}</div>
+                    <div class="bg-section-title" style="margin-top:0;">🧰 ${colorsLabel} ${formatLabel} land package · ${budgetLabel}</div>
                     <div class="bg-section-sub">The ${landsCount} most-played lands that make at least two of the deck's colors, as long as they fit the budget. Prices are each land's cheapest paper printing - click a name to see it.</div>
                     ${failed.length ? `
                         <div class="error" style="margin:10px 0;">
@@ -8411,7 +8654,7 @@
                     ${packageHTML}
                     ${upgradesHTML}
 
-                    <div class="bg-section-title">📋 Every ${colorsLabel} land by price (${pool.length})</div>
+                    <div class="bg-section-title">📋 Every ${formatLabel}-legal ${colorsLabel} land by price (${pool.length})</div>
                     <div class="staples-controls" style="flex-wrap:wrap; justify-content:flex-start;">${bracketButtons}</div>
                     <div class="staples-controls" style="justify-content:flex-start;">
                         <span class="text-secondary" style="font-size:0.85em;">Sort:</span>
