@@ -54,4 +54,19 @@ The site's colors all come from the design tokens in the `:root` CSS block. A se
 | Season | Dates (every year) | Themes |
 |---|---|---|
 | Fall / Halloween | Sept 22 – Oct 31 | Wednesdays: 🧹 Witching Wednesday (`witching`). Fridays: 🦇 Spooky Friday (`spooky`). Oct 31: 🎃 Halloween Night (`halloween`). Other days are picked at random from 🍂 Autumn Harvest (`harvest`), 🎃 Pumpkin Patch (`pumpkin`) and 🌕 Harvest Moon (`harvestmoon`). The pick is seeded by the date, so everyone sees the same theme all day, and the same theme never shows two days in a row. |
-| Christmas | _not built yet — next up_ | |
+| Black Friday | Day after Thanksgiving (4th Thursday of November + 1) | 🛍️ Black Friday (`blackfriday`), a one-day theme. The date is worked out each year. |
+| Winter / Christmas | Dec 1 – Jan 1 | Dec 24: 🎅 Christmas Eve (`christmaseve`). Dec 25: 🎄 Christmas Day (`christmas`). Dec 31: 🎆 New Year's Eve (`newyearseve`). Jan 1: 🥳 New Year's Day (`newyear`). Fridays: 🎁 Festive Friday (`festive`). Sundays: ☃️ Snow Day Sunday (`snowday`). Other days are picked at random from ❄️ Winter Wonderland (`wonderland`), 🎄 Evergreen (`evergreen`), 🍪 Cookies & Cocoa (`cocoa`) and ✨ Twinkle Lights (`twinkle`), with the same rules as fall. |
+
+### Holidays and observances
+
+Holiday themes (`HOLIDAYS` in the `<head>` script) take priority over the fall and winter rotation on their day. The only exceptions are a season's own special days (Christmas Eve/Day, New Year's Eve/Day), which win. Each holiday shows a one-line note under the page title saying what the day is, even in the classic look. Days of remembrance (Memorial Day, Veterans Day) use muted colors and no decorations. If two holidays land on the same day, the one listed first in `HOLIDAYS` wins.
+
+| Group | Days |
+|---|---|
+| US federal | MLK Jr. Day (3rd Mon Jan), Presidents' Day (3rd Mon Feb), Memorial Day (last Mon May), Juneteenth (Jun 19), Independence Day (Jul 4), Labor Day (1st Mon Sep), Indigenous Peoples' Day (2nd Mon Oct), Veterans Day (Nov 11), Thanksgiving (4th Thu Nov) |
+| World cultural & religious | Lunar New Year, Holi, Nowruz (Mar 21, the UN's International Day of Nowruz), Passover (first full day), Eid al-Fitr, Eid al-Adha, Diwali, Hanukkah (all 8 days) |
+| Popular US days | Valentine's Day, Pi Day, St. Patrick's Day, Easter (calculated), Earth Day, Mother's Day (2nd Sun May), Father's Day (3rd Sun Jun) |
+| UN observances | International Women's Day (Mar 8), International Day of Peace (Sep 21), World Kindness Day (Nov 13), Human Rights Day (Dec 10) |
+| Store | Magic's Birthday (Aug 5 - Alpha released 1993) |
+
+Holidays on lunar or lunisolar calendars use `HOLIDAY_DATE_TABLES`, which covers 2026-2030 (checked 2026-09-24). **Extend it before 2031.** Recheck Diwali 2030 nearer the time, because sources were a day apart.
