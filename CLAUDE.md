@@ -33,6 +33,7 @@ Commander play data comes live from EDHREC's JSON feed (`json.edhrec.com/pages/.
 - **Card popup:** "Build around this commander" opens Card Lookup with that guide expanded.
 - **Products:** "Upgrade this deck" on precon decklists shows the most-played and best-synergy cards for the deck's commander that aren't in the precon.
 - **Brackets tab:** the card checker, and the deck checker when the list has a Commander heading or tag, show which bracket EDHREC players build that commander at.
+- **Land Finder (Buyer's Guide):** a three-step guide. (1) Start from a commander or pick colors, (2) choose how many nonbasic lands to buy, (3) pick a Good / Better / Best package (`LAND_TIERS`), or type a custom budget. For Commander, lands are ranked by EDHREC's land page for the color identity (`EDHREC_LAND_PAGES`, all 32 checked 2026-09-25). With a commander, its own decks' land lists count first, and step 2 suggests its average nonbasic land count. Better and Best skip lands that always enter tapped unless nothing else fits. Popular EDHREC lands that no cycle search finds are added as "Other popular land". Other formats keep Scryfall's popularity order and show no EDHREC numbers.
 
 ## Commander Brackets tab (`MTG_Lookup_Tool.html`)
 
