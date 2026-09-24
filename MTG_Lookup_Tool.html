@@ -4260,6 +4260,73 @@
 
         .mkt-table td { vertical-align: top; }
 
+        .mkt-price { white-space: nowrap; }
+
+        .mkt-phone-only { display: none; margin-top: 4px; }
+
+        .mkt-filterbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 10px 14px;
+            max-width: 900px;
+            margin: 0 auto 14px;
+            padding: 12px 14px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+        }
+
+        .mkt-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--text-secondary);
+        }
+
+        .mkt-filter select {
+            padding: 7px 8px;
+            background: var(--bg-inset);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1.2em;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .mkt-checks {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .mkt-check { cursor: pointer; white-space: nowrap; }
+
+        .mkt-reset { align-self: center; }
+
+        .mkt-summary {
+            text-align: center;
+            margin: 0 0 8px;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 600px) {
+            .mkt-filterbar { justify-content: flex-start; }
+            .mkt-filter { flex: 1 1 40%; }
+            .mkt-checks { flex-basis: 100%; }
+            .mkt-col-change { display: none; }
+            .mkt-phone-only { display: block; }
+            .mkt-table th, .mkt-table td { padding: 7px 6px; }
+        }
+
         .mkt-note {
             margin-top: 4px;
             font-size: 0.82em;
@@ -10949,7 +11016,8 @@
         }
 
         // ---- Price spikes ----
-        const mktSpikeOptions = { window: 3, jump: 'any', price: 'any', finish: 'all', hidePromos: true, hideOld: true, sort: 'dollars' };
+        const MKT_SPIKE_DEFAULTS = { window: 3, jump: 'any', price: 'any', finish: 'all', hidePromos: true, hideOld: true, sort: 'dollars' };
+        const mktSpikeOptions = { ...MKT_SPIKE_DEFAULTS };
         // "Hide cards from before 2003": printings from sets released before
         // this year, the oldest and most thinly traded, whose prices swing
         // the most. Set dates come from Scryfall's set list; a set it doesn't
@@ -10985,7 +11053,12 @@
         }
 
         function setMarketSpikeOption(key, value) {
-            mktSpikeOptions[key] = value;
+            mktSpikeOptions[key] = key === 'window' ? Number(value) : value;
+            renderMarketSpikes();
+        }
+
+        function resetMarketSpikeOptions() {
+            Object.assign(mktSpikeOptions, MKT_SPIKE_DEFAULTS);
             renderMarketSpikes();
         }
 
@@ -10999,26 +11072,29 @@
                 return;
             }
             const o = mktSpikeOptions;
-            const btn = (key, value, label) => `<button type="button" class="staples-sort-btn${o[key] === value ? ' active' : ''}" onclick="setMarketSpikeOption('${key}', ${JSON.stringify(value).replace(/"/g, '&quot;')})">${label}</button>`;
+            // One compact bar of dropdowns instead of rows of buttons.
+            const select = (key, label, options) => `
+                <label class="mkt-filter">
+                    <span>${label}</span>
+                    <select onchange="setMarketSpikeOption('${key}', this.value)">
+                        ${options.map(([value, text]) => `<option value="${value}"${String(o[key]) === String(value) ? ' selected' : ''}>${text}</option>`).join('')}
+                    </select>
+                </label>
+            `;
+            const check = (key, label) => `<label class="mkt-check"><input type="checkbox" ${o[key] ? 'checked' : ''} onchange="setMarketSpikeOption('${key}', this.checked)"> ${label}</label>`;
+            const changed = Object.keys(MKT_SPIKE_DEFAULTS).some(k => o[k] !== MKT_SPIKE_DEFAULTS[k]);
             controls.innerHTML = `
-                <div class="staples-controls" style="flex-wrap:wrap;">
-                    <span class="text-secondary" style="font-size:0.85em;">Over the last:</span>
-                    ${btn('window', 1, '1 day')} ${btn('window', 3, '3 days')} ${btn('window', 7, '7 days')}
-                </div>
-                <div class="staples-controls" style="flex-wrap:wrap;">
-                    <span class="text-secondary" style="font-size:0.85em;">Jumped by:</span>
-                    ${MKT_JUMP_RANGES.map(r => btn('jump', r.key, r.label)).join(' ')}
-                </div>
-                <div class="staples-controls" style="flex-wrap:wrap;">
-                    <span class="text-secondary" style="font-size:0.85em;">Price now:</span>
-                    ${MKT_PRICE_RANGES.map(r => btn('price', r.key, r.label)).join(' ')}
-                </div>
-                <div class="staples-controls" style="flex-wrap:wrap;">
-                    ${btn('finish', 'all', 'All')} ${btn('finish', 'normal', 'Non-foil')} ${btn('finish', 'foil', 'Foil')}
-                    <span class="text-secondary" style="font-size:0.85em; margin-left:8px;">Sort:</span>
-                    ${btn('sort', 'dollars', 'Biggest $ jump')} ${btn('sort', 'percent', 'Biggest % jump')}
-                    <label class="text-secondary" style="font-size:0.85em; margin-left:8px;"><input type="checkbox" ${o.hidePromos ? 'checked' : ''} onchange="setMarketSpikeOption('hidePromos', this.checked)"> Hide promos</label>
-                    <label class="text-secondary" style="font-size:0.85em; margin-left:8px;"><input type="checkbox" ${o.hideOld ? 'checked' : ''} onchange="setMarketSpikeOption('hideOld', this.checked)"> Hide cards from before ${MKT_OLD_CARD_YEAR}</label>
+                <div class="mkt-filterbar">
+                    ${select('window', 'Over the last', [[1, '1 day'], [3, '3 days'], [7, '7 days']])}
+                    ${select('jump', 'Jumped by', MKT_JUMP_RANGES.map(r => [r.key, r.label]))}
+                    ${select('price', 'Price now', MKT_PRICE_RANGES.map(r => [r.key, r.label]))}
+                    ${select('finish', 'Finish', [['all', 'All'], ['normal', 'Non-foil'], ['foil', 'Foil']])}
+                    ${select('sort', 'Sort by', [['dollars', 'Biggest $ jump'], ['percent', 'Biggest % jump']])}
+                    <div class="mkt-checks">
+                        ${check('hideOld', `Hide cards from before ${MKT_OLD_CARD_YEAR}`)}
+                        ${check('hidePromos', 'Hide promos')}
+                    </div>
+                    ${changed ? '<button type="button" class="staples-sort-btn mkt-reset" onclick="resetMarketSpikeOptions()">↺ Reset</button>' : ''}
                 </div>
             `;
 
@@ -11044,24 +11120,25 @@
                 return;
             }
             results.innerHTML = `
-                <div class="bg-section-sub">${rows.length} printing${rows.length === 1 ? '' : 's'} up ${jump.key === 'any' ? '$1 or more' : jump.label} (and 15%+)${price.key === 'any' ? '' : `, now ${price.label}`}, over the last ${o.window === 1 ? 'day' : `${o.window} days`}${rows.length > MKT_SPIKE_SHOW ? ` - showing the top ${MKT_SPIKE_SHOW}` : ''}. Thinly traded cards can jump on a single sale, so check current listings before repricing.</div>
+                <div class="mkt-summary"><strong>${rows.length}</strong> card${rows.length === 1 ? '' : 's'} jumped in the last ${o.window === 1 ? 'day' : `${o.window} days`}${rows.length > MKT_SPIKE_SHOW ? ` <span class="text-secondary">(showing the top ${MKT_SPIKE_SHOW})</span>` : ''}</div>
                 <div class="buylist-table-wrap">
                     <table class="lands-pkg-table mkt-table">
-                        <thead><tr><th>Card</th><th>Was</th><th>Now</th><th>Change</th><th>Moonshot</th></tr></thead>
+                        <thead><tr><th>Card</th><th>Price</th><th class="mkt-col-change">Change</th><th>Moonshot</th></tr></thead>
                         <tbody>${rows.slice(0, MKT_SPIKE_SHOW).map(s => `
                             <tr>
                                 <td>
                                     ${marketCardLinkHTML(s.name, s.id)}
                                     <div class="lands-row-meta text-secondary">${s.set} #${s.number}${s.finish !== 'normal' ? ` · ${s.finish}` : ''}${s.promo ? ' · promo' : ''}</div>
                                 </td>
-                                <td>${formatUsd(s.then)}</td>
-                                <td><strong>${formatUsd(s.now)}</strong></td>
-                                <td><span class="mkt-trend mkt-up">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span></td>
+                                <td class="mkt-price"><span class="text-secondary">${formatUsd(s.then)} →</span> <strong>${formatUsd(s.now)}</strong>
+                                    <div class="mkt-phone-only"><span class="mkt-trend mkt-up">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span></div></td>
+                                <td class="mkt-col-change"><span class="mkt-trend mkt-up">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span></td>
                                 <td>${moonshotLinkHTML(s.name, 'Find →', 'btn-compact')}</td>
                             </tr>
                         `).join('')}</tbody>
                     </table>
                 </div>
+                <div class="edh-source">Only moves of 15% or more are listed. Thinly traded cards can jump on a single sale, so check current listings before repricing.</div>
                 ${marketSourceHTML(mktSpikeData.meta)}
             `;
         }
