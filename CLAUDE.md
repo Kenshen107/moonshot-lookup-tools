@@ -47,7 +47,7 @@ Scryfall only has today's prices, so price history comes from a daily GitHub Act
 Where the data is used:
 
 - **Market Watch tab** (`MARKET_SUBTABS`, under At the counter):
-  - Price Spikes (filters for window, jump size, finish, promos).
+  - Price Spikes (filters for window, jump range, current price range, finish and promos). It uses ranges rather than "at least" because old, thinly traded cards swing by big dollar amounts and would fill an "at least" list.
   - Ban Watch (ban log, with EDHREC decks and commanders affected and price trend).
   - Trending Commanders (EDHREC `commanders/week`, with each commander's most-used cards priced).
   - New Set Tracker (EDHREC `sets/<code>`, the set's most-played new cards and commanders).

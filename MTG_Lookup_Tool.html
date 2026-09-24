@@ -10949,7 +10949,24 @@
         }
 
         // ---- Price spikes ----
-        const mktSpikeOptions = { window: 3, minJump: 2, finish: 'all', hidePromos: true, sort: 'dollars' };
+        const mktSpikeOptions = { window: 3, jump: 'any', price: 'any', finish: 'all', hidePromos: true, sort: 'dollars' };
+        // Ranges rather than "at least": old, thinly traded cards swing by
+        // big dollar amounts, so a "$5+" filter fills up with them. A range
+        // keeps the list to the cards staff actually reprice.
+        const MKT_JUMP_RANGES = [
+            { key: 'any', label: 'Any', min: 1, max: Infinity },
+            { key: '1-5', label: '$1–$5', min: 1, max: 5 },
+            { key: '5-15', label: '$5–$15', min: 5, max: 15 },
+            { key: '15-50', label: '$15–$50', min: 15, max: 50 },
+            { key: '50+', label: '$50+', min: 50, max: Infinity }
+        ];
+        const MKT_PRICE_RANGES = [
+            { key: 'any', label: 'Any', min: 0, max: Infinity },
+            { key: '2-10', label: '$2–$10', min: 2, max: 10 },
+            { key: '10-30', label: '$10–$30', min: 10, max: 30 },
+            { key: '30-100', label: '$30–$100', min: 30, max: 100 },
+            { key: '100+', label: '$100+', min: 100, max: Infinity }
+        ];
         let mktSpikeData = null;
         const MKT_SPIKE_SHOW = 150;
 
@@ -10982,8 +10999,12 @@
                     ${btn('window', 1, '1 day')} ${btn('window', 3, '3 days')} ${btn('window', 7, '7 days')}
                 </div>
                 <div class="staples-controls" style="flex-wrap:wrap;">
-                    <span class="text-secondary" style="font-size:0.85em;">Up at least:</span>
-                    ${btn('minJump', 1, '$1')} ${btn('minJump', 2, '$2')} ${btn('minJump', 5, '$5')} ${btn('minJump', 10, '$10')} ${btn('minJump', 25, '$25')}
+                    <span class="text-secondary" style="font-size:0.85em;">Jumped by:</span>
+                    ${MKT_JUMP_RANGES.map(r => btn('jump', r.key, r.label)).join(' ')}
+                </div>
+                <div class="staples-controls" style="flex-wrap:wrap;">
+                    <span class="text-secondary" style="font-size:0.85em;">Price now:</span>
+                    ${MKT_PRICE_RANGES.map(r => btn('price', r.key, r.label)).join(' ')}
                 </div>
                 <div class="staples-controls" style="flex-wrap:wrap;">
                     ${btn('finish', 'all', 'All')} ${btn('finish', 'normal', 'Non-foil')} ${btn('finish', 'foil', 'Foil')}
@@ -10994,19 +11015,23 @@
             `;
 
             const key = `d${o.window}`;
+            const jump = MKT_JUMP_RANGES.find(r => r.key === o.jump) || MKT_JUMP_RANGES[0];
+            const price = MKT_PRICE_RANGES.find(r => r.key === o.price) || MKT_PRICE_RANGES[0];
             const rows = mktSpikeData.spikes
-                .filter(s => s[key] && s.now - s[key] >= o.minJump && (s.now - s[key]) / s[key] >= 0.15)
+                .filter(s => s[key] && (s.now - s[key]) / s[key] >= 0.15)
+                .filter(s => s.now - s[key] >= jump.min && s.now - s[key] < jump.max)
+                .filter(s => s.now >= price.min && s.now < price.max)
                 .filter(s => o.finish === 'all' || (o.finish === 'foil' ? s.finish !== 'normal' : s.finish === 'normal'))
                 .filter(s => !(o.hidePromos && s.promo))
                 .map(s => ({ ...s, then: s[key], diff: s.now - s[key], pct: (s.now - s[key]) / s[key] }))
                 .sort((a, b) => (o.sort === 'percent' ? b.pct - a.pct : b.diff - a.diff));
 
             if (!rows.length) {
-                results.innerHTML = `<div class="moonshot-status">No cards jumped that much over the last ${o.window === 1 ? 'day' : `${o.window} days`}. Try a smaller jump or a longer window.</div>${marketSourceHTML(mktSpikeData.meta)}`;
+                results.innerHTML = `<div class="moonshot-status">No cards in these ranges jumped over the last ${o.window === 1 ? 'day' : `${o.window} days`}. Try a wider range or a longer window.</div>${marketSourceHTML(mktSpikeData.meta)}`;
                 return;
             }
             results.innerHTML = `
-                <div class="bg-section-sub">${rows.length} printing${rows.length === 1 ? '' : 's'} up at least ${formatUsd(o.minJump)} (and 15%) over the last ${o.window === 1 ? 'day' : `${o.window} days`}${rows.length > MKT_SPIKE_SHOW ? ` - showing the top ${MKT_SPIKE_SHOW}` : ''}. Thinly traded cards can jump on a single sale, so check current listings before repricing.</div>
+                <div class="bg-section-sub">${rows.length} printing${rows.length === 1 ? '' : 's'} up ${jump.key === 'any' ? '$1 or more' : jump.label} (and 15%+)${price.key === 'any' ? '' : `, now ${price.label}`}, over the last ${o.window === 1 ? 'day' : `${o.window} days`}${rows.length > MKT_SPIKE_SHOW ? ` - showing the top ${MKT_SPIKE_SHOW}` : ''}. Thinly traded cards can jump on a single sale, so check current listings before repricing.</div>
                 <div class="buylist-table-wrap">
                     <table class="lands-pkg-table mkt-table">
                         <thead><tr><th>Card</th><th>Was</th><th>Now</th><th>Change</th><th>Moonshot</th></tr></thead>
