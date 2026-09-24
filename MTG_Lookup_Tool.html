@@ -4297,6 +4297,33 @@
 
         .printing-trend { text-align: right; }
 
+        .other-stores {
+            border-collapse: collapse;
+            font-size: 0.88em;
+            width: 100%;
+        }
+
+        .other-stores th,
+        .other-stores td {
+            padding: 4px 8px 4px 0;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .other-stores th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .other-stores td:first-child { color: var(--text-secondary); }
+
+        @media (max-width: 600px) {
+            .other-stores { font-size: 0.8em; }
+            .other-stores th, .other-stores td { white-space: normal; padding-right: 4px; }
+            .other-stores .mkt-trend { display: inline-block; margin-top: 2px; }
+        }
+
         @media (max-width: 600px) {
             .printings-list .printing-row {
                 grid-template-columns: 16px 1fr 54px 54px 56px;
@@ -4355,6 +4382,17 @@
         .mkt-check { cursor: pointer; white-space: nowrap; }
 
         .mkt-reset { align-self: center; }
+
+        .mkt-confirms { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; }
+
+        .mkt-confirm {
+            font-size: 0.75em;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background: rgba(126, 231, 135, 0.12);
+            color: #7ee787;
+            white-space: nowrap;
+        }
 
         .mkt-summary {
             text-align: center;
@@ -6291,9 +6329,10 @@
 
             <div id="mktSpikesApp">
                 <div class="formats-intro">
-                    Cards whose price jumped recently. Check the case and our online
-                    listings and reprice before someone buys at last week's price.
-                    Updated every morning from TCGplayer market prices (via MTGJSON).
+                    Cards whose price jumped recently, checked against Card Kingdom and
+                    Mana Pool, or that Card Kingdom just started paying more for. Check
+                    the case and our online listings and reprice before someone buys at
+                    last week's price. Updated every morning (prices via MTGJSON).
                 </div>
                 <div id="mktSpikeControls"></div>
                 <div id="mktSpikesResults"><div class="loading">Loading price spikes...</div></div>
@@ -9738,6 +9777,16 @@
                 : `<div class="mkt-warn">⚠️ Just reprinted: ${sets}. The price may still be settling.</div>`;
         }
 
+        // What Card Kingdom pays for the same printing, as a benchmark for
+        // the offer (their near-mint buylist, via MTGJSON).
+        function ckBuylistLineHTML(history) {
+            if (!history || !('n' in history)) return '';
+            const points = history.kbn;
+            const now = points && points[points.length - 1];
+            if (!now) return '<div class="text-muted">Card Kingdom isn\'t buying this printing right now.</div>';
+            return `<div>Card Kingdom pays <strong>${formatUsd(now)}</strong> ${sparklineSVG(points)} ${trendChipHTML(priceTrend(points, 4), '30d')}</div>`;
+        }
+
         async function buylistMarketHTML(name) {
             const res = await fetch(`${API_BASE}/cards/named?fuzzy=${encodeURIComponent(name)}`);
             if (res.status === 404) return '<span class="text-muted">No card by that name.</span>';
@@ -9762,6 +9811,7 @@
                     <div>${marketCardLinkHTML(card.name, print.id)} · ${print.set.toUpperCase()} ${formatUsd(history.n[history.n.length - 1])}
                         ${sparklineSVG(history.n)} ${trendChipHTML(month, '30d')} ${trendChipHTML(quarter, '90d')}</div>
                     ${advice ? `<div>${advice}</div>` : ''}
+                    ${ckBuylistLineHTML(history)}
                 `;
                 break;
             }
@@ -11078,7 +11128,10 @@
         }
 
         // ---- Price spikes ----
-        const MKT_SPIKE_DEFAULTS = { window: 3, jump: 'any', price: 'any', finish: 'all', hidePromos: true, hideOld: true, sort: 'dollars' };
+        // Two lists share one filter bar: retail price jumps (TCGplayer, with
+        // Card Kingdom and Mana Pool as a cross-check) and Card Kingdom
+        // buylist increases - what a big store just started paying more for.
+        const MKT_SPIKE_DEFAULTS = { list: 'retail', window: 3, jump: 'any', price: 'any', finish: 'all', hidePromos: true, hideOld: true, confirmed: true, sort: 'dollars' };
         const mktSpikeOptions = { ...MKT_SPIKE_DEFAULTS };
         // "Hide cards from before 2003": printings from sets released before
         // this year, the oldest and most thinly traded, whose prices swing
@@ -11090,7 +11143,7 @@
         // big dollar amounts, so a "$5+" filter fills up with them. A range
         // keeps the list to the cards staff actually reprice.
         const MKT_JUMP_RANGES = [
-            { key: 'any', label: 'Any', min: 1, max: Infinity },
+            { key: 'any', label: 'Any', min: 0, max: Infinity },
             { key: '1-5', label: '$1–$5', min: 1, max: 5 },
             { key: '5-15', label: '$5–$15', min: 5, max: 15 },
             { key: '15-50', label: '$15–$50', min: 15, max: 50 },
@@ -11103,19 +11156,30 @@
             { key: '30-100', label: '$30–$100', min: 30, max: 100 },
             { key: '100+', label: '$100+', min: 100, max: Infinity }
         ];
-        let mktSpikeData = null;
+        // A retail jump counts as "confirmed" when Card Kingdom or Mana Pool
+        // also raised that printing's price at least this much over the
+        // same window - a one-store jump is often a single odd sale.
+        const MKT_CONFIRM_MIN = 0.10;
+        const MKT_OTHER_STORES = [['ck', 'Card Kingdom'], ['mp', 'Mana Pool']];
+        const MKT_WINDOW_INDEX = { 1: 1, 3: 2, 7: 3 }; // position in the stores' [now, 1, 3, 7 days ago]
+        let mktSpikeData = null; // { spikes, buylist, meta }
         const MKT_SPIKE_SHOW = 150;
 
         async function showMarketSpikes() {
             if (mktSpikeData) return;
             const [data, meta, sets] = await Promise.all([fetchMarketFile('spikes.json'), loadMarketMeta(), fetchRawSets().catch(() => [])]);
             mktSetReleaseYear = new Map(sets.map(set => [set.code, Number((set.released_at || '').slice(0, 4)) || null]));
-            mktSpikeData = data ? { spikes: data.spikes || [], meta } : { spikes: null, meta };
+            mktSpikeData = { spikes: data ? data.spikes || [] : null, buylist: undefined, meta };
             renderMarketSpikes();
         }
 
-        function setMarketSpikeOption(key, value) {
+        async function setMarketSpikeOption(key, value) {
             mktSpikeOptions[key] = key === 'window' ? Number(value) : value;
+            if (key === 'list' && value === 'ckbuy' && mktSpikeData && mktSpikeData.buylist === undefined) {
+                document.getElementById('mktSpikesResults').innerHTML = '<div class="loading">Loading Card Kingdom buylist changes...</div>';
+                const data = await fetchMarketFile('buylist-spikes.json');
+                mktSpikeData.buylist = data ? data.spikes || [] : null;
+            }
             renderMarketSpikes();
         }
 
@@ -11124,16 +11188,24 @@
             renderMarketSpikes();
         }
 
+        // Which other stores also raised this printing's price over the window.
+        function spikeConfirmations(s, windowDays) {
+            const i = MKT_WINDOW_INDEX[windowDays];
+            return MKT_OTHER_STORES.filter(([key]) => {
+                const pts = s[key];
+                // A store price far from TCGplayer's is usually a different
+                // version or a stray listing - don't count it.
+                const comparable = pts && pts[0] && pts[0] <= s.now * 2 && pts[0] >= s.now / 2;
+                return comparable && pts[i] && (pts[0] - pts[i]) / pts[i] >= MKT_CONFIRM_MIN;
+            }).map(([key, label]) => ({ key, label, then: s[key][i], now: s[key][0] }));
+        }
+
         function renderMarketSpikes() {
             const controls = document.getElementById('mktSpikeControls');
             const results = document.getElementById('mktSpikesResults');
             if (!mktSpikeData) return;
-            if (!mktSpikeData.spikes) {
-                controls.innerHTML = '';
-                results.innerHTML = MARKET_UNAVAILABLE_HTML;
-                return;
-            }
             const o = mktSpikeOptions;
+            const buylistMode = o.list === 'ckbuy';
             // One compact bar of dropdowns instead of rows of buttons.
             const select = (key, label, options) => `
                 <label class="mkt-filter">
@@ -11147,12 +11219,14 @@
             const changed = Object.keys(MKT_SPIKE_DEFAULTS).some(k => o[k] !== MKT_SPIKE_DEFAULTS[k]);
             controls.innerHTML = `
                 <div class="mkt-filterbar">
+                    ${select('list', 'Show', [['retail', 'Retail price jumps'], ['ckbuy', 'Card Kingdom buylist increases']])}
                     ${select('window', 'Over the last', [[1, '1 day'], [3, '3 days'], [7, '7 days']])}
-                    ${select('jump', 'Jumped by', MKT_JUMP_RANGES.map(r => [r.key, r.label]))}
-                    ${select('price', 'Price now', MKT_PRICE_RANGES.map(r => [r.key, r.label]))}
+                    ${select('jump', buylistMode ? 'Buylist up by' : 'Jumped by', MKT_JUMP_RANGES.map(r => [r.key, r.label]))}
+                    ${select('price', buylistMode ? 'CK pays now' : 'Price now', MKT_PRICE_RANGES.map(r => [r.key, r.label]))}
                     ${select('finish', 'Finish', [['all', 'All'], ['normal', 'Non-foil'], ['foil', 'Foil']])}
                     ${select('sort', 'Sort by', [['dollars', 'Biggest $ jump'], ['percent', 'Biggest % jump']])}
                     <div class="mkt-checks">
+                        ${buylistMode ? '' : check('confirmed', 'Only if another store is up too')}
                         ${check('hideOld', `Hide cards from before ${MKT_OLD_CARD_YEAR}`)}
                         ${check('hidePromos', 'Hide promos')}
                     </div>
@@ -11160,10 +11234,15 @@
                 </div>
             `;
 
+            const source = buylistMode ? mktSpikeData.buylist : mktSpikeData.spikes;
+            if (!source) {
+                results.innerHTML = MARKET_UNAVAILABLE_HTML;
+                return;
+            }
             const key = `d${o.window}`;
             const jump = MKT_JUMP_RANGES.find(r => r.key === o.jump) || MKT_JUMP_RANGES[0];
             const price = MKT_PRICE_RANGES.find(r => r.key === o.price) || MKT_PRICE_RANGES[0];
-            const rows = mktSpikeData.spikes
+            const rows = source
                 .filter(s => s[key] && (s.now - s[key]) / s[key] >= 0.15)
                 .filter(s => s.now - s[key] >= jump.min && s.now - s[key] < jump.max)
                 .filter(s => s.now >= price.min && s.now < price.max)
@@ -11174,33 +11253,44 @@
                     const year = mktSetReleaseYear.get((s.set || '').toLowerCase());
                     return !year || year >= MKT_OLD_CARD_YEAR;
                 })
-                .map(s => ({ ...s, then: s[key], diff: s.now - s[key], pct: (s.now - s[key]) / s[key] }))
+                .map(s => ({ ...s, then: s[key], diff: s.now - s[key], pct: (s.now - s[key]) / s[key], confirms: buylistMode ? [] : spikeConfirmations(s, o.window) }))
+                .filter(s => buylistMode || !o.confirmed || s.confirms.length)
                 .sort((a, b) => (o.sort === 'percent' ? b.pct - a.pct : b.diff - a.diff));
 
+            const windowText = o.window === 1 ? 'day' : `${o.window} days`;
             if (!rows.length) {
-                results.innerHTML = `<div class="moonshot-status">No cards in these ranges jumped over the last ${o.window === 1 ? 'day' : `${o.window} days`}. Try a wider range or a longer window.</div>${marketSourceHTML(mktSpikeData.meta)}`;
+                results.innerHTML = `<div class="moonshot-status">Nothing in these ranges over the last ${windowText}. Try a wider range, a longer window${buylistMode ? '' : ', or untick "Only if another store is up too"'}.</div>${marketSourceHTML(mktSpikeData.meta)}`;
                 return;
             }
+            const change = s => `<span class="mkt-trend mkt-up">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span>`;
+            const confirmHTML = s => (s.confirms.length
+                ? `<div class="mkt-confirms">${s.confirms.map(c => `<span class="mkt-confirm" title="${c.label}: ${formatUsd(c.then)} → ${formatUsd(c.now)}">✓ ${c.label} ${formatUsd(c.now)}</span>`).join(' ')}</div>`
+                : '');
             results.innerHTML = `
-                <div class="mkt-summary"><strong>${rows.length}</strong> card${rows.length === 1 ? '' : 's'} jumped in the last ${o.window === 1 ? 'day' : `${o.window} days`}${rows.length > MKT_SPIKE_SHOW ? ` <span class="text-secondary">(showing the top ${MKT_SPIKE_SHOW})</span>` : ''}</div>
+                <div class="mkt-summary">${buylistMode
+                    ? `Card Kingdom is paying more for <strong>${rows.length}</strong> card${rows.length === 1 ? '' : 's'} than ${o.window === 1 ? 'yesterday' : `${o.window} days ago`}`
+                    : `<strong>${rows.length}</strong> card${rows.length === 1 ? '' : 's'} jumped in the last ${windowText}${o.confirmed ? ' <span class="text-secondary">(confirmed at another store)</span>' : ''}`}${rows.length > MKT_SPIKE_SHOW ? ` <span class="text-secondary">(showing the top ${MKT_SPIKE_SHOW})</span>` : ''}</div>
                 <div class="buylist-table-wrap">
                     <table class="lands-pkg-table mkt-table">
-                        <thead><tr><th>Card</th><th>Price</th><th class="mkt-col-change">Change</th><th>Moonshot</th></tr></thead>
+                        <thead><tr><th>Card</th><th>${buylistMode ? 'Card Kingdom pays' : 'Price'}</th><th class="mkt-col-change">Change</th><th>Moonshot</th></tr></thead>
                         <tbody>${rows.slice(0, MKT_SPIKE_SHOW).map(s => `
                             <tr>
                                 <td>
                                     ${marketCardLinkHTML(s.name, s.id)}
-                                    <div class="lands-row-meta text-secondary">${s.set} #${s.number}${s.finish !== 'normal' ? ` · ${s.finish}` : ''}${s.promo ? ' · promo' : ''}</div>
+                                    <div class="lands-row-meta text-secondary">${s.set} #${s.number}${s.finish !== 'normal' ? ` · ${s.finish}` : ''}${s.promo ? ' · promo' : ''}${buylistMode && s.retail ? ` · TCGplayer ${formatUsd(s.retail)}` : ''}</div>
+                                    ${confirmHTML(s)}
                                 </td>
                                 <td class="mkt-price"><span class="text-secondary">${formatUsd(s.then)} →</span> <strong>${formatUsd(s.now)}</strong>
-                                    <div class="mkt-phone-only"><span class="mkt-trend mkt-up">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span></div></td>
-                                <td class="mkt-col-change"><span class="mkt-trend mkt-up">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span></td>
+                                    <div class="mkt-phone-only">${change(s)}</div></td>
+                                <td class="mkt-col-change">${change(s)}</td>
                                 <td>${moonshotLinkHTML(s.name, 'Find →', 'btn-compact')}</td>
                             </tr>
                         `).join('')}</tbody>
                     </table>
                 </div>
-                <div class="edh-source">Only moves of 15% or more are listed. Thinly traded cards can jump on a single sale, so check current listings before repricing.</div>
+                <div class="edh-source">${buylistMode
+                    ? 'Card Kingdom buylist (near mint) via MTGJSON. Only listed when they\'re paying more than a week ago and the move is 15%+ - their buylist often dips and comes back.'
+                    : 'Only moves of 15% or more are listed. ✓ marks Card Kingdom or Mana Pool raising the same printing 10%+ over the same window. Thinly traded cards can jump on a single sale, so check current listings before repricing.'}</div>
                 ${marketSourceHTML(mktSpikeData.meta)}
             `;
         }
@@ -15245,6 +15335,40 @@
                     `;
                 }).join('')}
                 <div class="price-note">${range === 30 ? 'Daily' : 'Weekly'} TCGplayer market prices via MTGJSON, as of ${meta.priceDate}.</div>
+                ${otherStoresHTML(history)}
+            `;
+        }
+
+        // Card Kingdom and Mana Pool for the same printing: what they sell
+        // it for, and what Card Kingdom pays (its buylist), with 30-day moves.
+        function otherStoresHTML(history) {
+            if (!history) return '';
+            const finishes = PRICE_FINISHES.filter(([key]) => ['ck', 'mp', 'kb'].some(store => history[store + key]));
+            if (!finishes.length) return '';
+            // ck/mp are [now, 7 days ago, 30 days ago]; kb is weekly points.
+            const retailCell = pts => {
+                if (!pts || !pts[0]) return '<span class="na">—</span>';
+                const t = pts[2] ? { now: pts[0], then: pts[2], diff: pts[0] - pts[2], pct: (pts[0] - pts[2]) / pts[2] } : null;
+                return `${formatUsd(pts[0])} ${trendChipHTML(t, '')}`;
+            };
+            const buylistCell = pts => {
+                const now = pts && pts[pts.length - 1];
+                return now ? `${formatUsd(now)} ${trendChipHTML(priceTrend(pts, 4), '')}` : '<span class="na">—</span>';
+            };
+            const row = (label, cell, store) => `
+                <tr><td>${label}</td>${finishes.map(([key]) => `<td>${cell(history[store + key])}</td>`).join('')}</tr>
+            `;
+            return `
+                <div class="price-history-head" style="margin-top:10px;"><span class="price-across-label">Other stores</span></div>
+                <table class="other-stores">
+                    <thead><tr><th></th>${finishes.map(([, label]) => `<th>${label}</th>`).join('')}</tr></thead>
+                    <tbody>
+                        ${row('Card Kingdom sells', retailCell, 'ck')}
+                        ${row('Mana Pool sells', retailCell, 'mp')}
+                        ${row('Card Kingdom pays', buylistCell, 'kb')}
+                    </tbody>
+                </table>
+                <div class="price-note">Near-mint prices via MTGJSON, with the change over 30 days. "Pays" is Card Kingdom's buylist.</div>
             `;
         }
 

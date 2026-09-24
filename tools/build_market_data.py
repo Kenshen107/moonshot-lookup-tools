@@ -16,7 +16,13 @@ Outputs (in --out):
                        (n/f/e = non-foil/foil/etched) and 31 daily points for
                        the last 30 days (dn/df/de), sharded by the first two
                        characters of the Scryfall id
-  spikes.json          printings whose price jumped in the last 1-7 days
+                       Also per finish: ck<f>/mp<f> = Card Kingdom / Mana Pool
+                       retail [now, 7 days ago, 30 days ago], and kb<f> = Card
+                       Kingdom buylist, weekly like the TCGplayer points.
+  spikes.json          printings whose price jumped in the last 1-7 days,
+                       with Card Kingdom / Mana Pool retail [now, 1, 3, 7 days
+                       ago] for the same printing (ck, mp)
+  buylist-spikes.json  printings Card Kingdom started paying more for
   bans.json            current banned/restricted cards per format, plus a
                        log of changes seen since the job started running
 
@@ -51,6 +57,10 @@ SPIKE_MIN_PRICE = 2.0     # spike list: current price at least this
 SPIKE_MIN_JUMP = 1.0      # ...up at least this many dollars
 SPIKE_MIN_PCT = 0.15      # ...and at least this much, over 1, 3 or 7 days
 SPIKE_MAX = 1500
+BUYLIST_SPIKE_MAX = 3000
+BUYLIST_SPIKE_MIN_PRICE = 1.0   # Card Kingdom buylist increases: paying at least this now
+BUYLIST_SPIKE_MIN_JUMP = 0.5    # ...up at least this much (and SPIKE_MIN_PCT)
+STORE_MAX_AGE_DAYS = 2          # a store price older than this counts as "not listed"
 BAN_FORMATS = ["standard", "pioneer", "modern", "legacy", "vintage", "commander", "pauper"]
 
 
@@ -81,6 +91,31 @@ def price_on_or_before(series, days, day):
     return series[days[i - 1]] if i else None
 
 
+def recent_price(series, days, day, max_age=STORE_MAX_AGE_DAYS):
+    """Like price_on_or_before, but None if the latest price is more than
+    max_age days old - Card Kingdom and Mana Pool drop cards they aren't
+    buying or selling, and a stale price shouldn't count as current."""
+    i = bisect.bisect_right(days, day)
+    if not i:
+        return None
+    found = days[i - 1]
+    if (dt.date.fromisoformat(day) - dt.date.fromisoformat(found)).days > max_age:
+        return None
+    return series[found]
+
+
+def store_points(series, latest, offsets):
+    """[price now, price N days ago, ...] for one store, rounded, or None
+    if the store has no current price."""
+    if not series:
+        return None
+    days = sorted(series)
+    pts = [recent_price(series, days, iso(latest - dt.timedelta(days=n))) for n in offsets]
+    if pts[0] is None:
+        return None
+    return [round(p, 2) if p is not None else None for p in pts]
+
+
 def iso(d):
     return d.isoformat()
 
@@ -103,49 +138,96 @@ def build(inputs, out, previous):
     week_dates = [iso(latest - dt.timedelta(days=7 * i)) for i in range(WEEKS, -1, -1)]  # oldest -> newest
     day_dates = [iso(latest - dt.timedelta(days=i)) for i in range(DAYS, -1, -1)]
 
-    history = {}  # scryfall id -> {"n": [...], "f": [...]}
+    history = {}  # scryfall id -> {"n": [...], "f": [...], ...} (see the file docstring)
     spikes = []
+    buylist_spikes = []
+    finishes = (("normal", "n"), ("foil", "f"), ("etched", "e"))
     for uuid, entry in prices["data"].items():
         sid = scryfall_id.get(uuid)
         if not sid:
             continue
-        retail = entry.get("paper", {}).get("tcgplayer", {}).get("retail", {})
-        for finish, key in (("normal", "n"), ("foil", "f"), ("etched", "e")):
+        paper = entry.get("paper", {})
+        retail = paper.get("tcgplayer", {}).get("retail", {})
+        ck_retail = paper.get("cardkingdom", {}).get("retail", {})
+        ck_buylist = paper.get("cardkingdom", {}).get("buylist", {})
+        mp_retail = paper.get("manapool", {}).get("retail", {})
+        name, set_code, number = info.get(uuid, ("", "", ""))
+        for finish, key in finishes:
             series = retail.get(finish)
-            if not series:
-                continue
-            now = series.get(price_date)
-            if now is None:
-                continue
-            days = sorted(series)
-            if max(series.values()) >= HISTORY_MIN_PRICE:
-                points = [price_on_or_before(series, days, d) for d in week_dates]
-                points = [round(p, 2) if p is not None else None for p in points]
-                slot = history.setdefault(sid, {})
-                slot.setdefault(key, points)
-                daily = [price_on_or_before(series, days, d) for d in day_dates]
-                slot.setdefault("d" + key, [round(p, 2) if p is not None else None for p in daily])
+            now = series.get(price_date) if series else None
+            if now is not None:
+                days = sorted(series)
+                if max(series.values()) >= HISTORY_MIN_PRICE:
+                    points = [price_on_or_before(series, days, d) for d in week_dates]
+                    points = [round(p, 2) if p is not None else None for p in points]
+                    slot = history.setdefault(sid, {})
+                    slot.setdefault(key, points)
+                    daily = [price_on_or_before(series, days, d) for d in day_dates]
+                    slot.setdefault("d" + key, [round(p, 2) if p is not None else None for p in daily])
+                    # Other stores: Card Kingdom and Mana Pool retail as
+                    # [now, 7 days ago, 30 days ago]; Card Kingdom's buylist
+                    # as weekly points like the TCGplayer ones.
+                    for store, store_series in (("ck", ck_retail.get(finish)), ("mp", mp_retail.get(finish))):
+                        pts = store_points(store_series, latest, (0, 7, 30))
+                        if pts:
+                            slot.setdefault(store + key, pts)
+                    buy = ck_buylist.get(finish)
+                    if buy:
+                        buy_days = sorted(buy)
+                        weekly = [recent_price(buy, buy_days, d) for d in week_dates]
+                        if any(v is not None for v in weekly):
+                            slot.setdefault("kb" + key, [round(v, 2) if v is not None else None for v in weekly])
 
-            if now >= SPIKE_MIN_PRICE:
-                ago = {n: price_on_or_before(series, days, iso(latest - dt.timedelta(days=n))) for n in (1, 3, 7)}
-                best = None
-                for n, then in ago.items():
-                    if then and now - then >= SPIKE_MIN_JUMP and (now - then) / then >= SPIKE_MIN_PCT:
-                        best = max(best or 0, now - then)
-                if best is not None:
-                    name, set_code, number = info.get(uuid, ("", "", ""))
-                    spikes.append({
-                        "id": sid, "name": name, "set": set_code, "number": number, "finish": finish,
-                        "promo": uuid in promo,
-                        "now": round(now, 2),
-                        **{f"d{n}": (round(p, 2) if p is not None else None) for n, p in ago.items()},
-                    })
+                if now >= SPIKE_MIN_PRICE:
+                    ago = {n: price_on_or_before(series, days, iso(latest - dt.timedelta(days=n))) for n in (1, 3, 7)}
+                    best = None
+                    for n, then in ago.items():
+                        if then and now - then >= SPIKE_MIN_JUMP and (now - then) / then >= SPIKE_MIN_PCT:
+                            best = max(best or 0, now - then)
+                    if best is not None:
+                        spike = {
+                            "id": sid, "name": name, "set": set_code, "number": number, "finish": finish,
+                            "promo": uuid in promo,
+                            "now": round(now, 2),
+                            **{f"d{n}": (round(p, 2) if p is not None else None) for n, p in ago.items()},
+                        }
+                        # The same printing at the other stores, [now, 1, 3,
+                        # 7 days ago], so the page can tell a real move from
+                        # one odd sale at one store.
+                        for store, store_series in (("ck", ck_retail.get(finish)), ("mp", mp_retail.get(finish))):
+                            pts = store_points(store_series, latest, (0, 1, 3, 7))
+                            if pts:
+                                spike[store] = pts
+                        spikes.append(spike)
+
+            # Card Kingdom paying more for a card is a strong demand signal.
+            buy = ck_buylist.get(finish)
+            if buy:
+                buy_days = sorted(buy)
+                buy_now = recent_price(buy, buy_days, price_date)
+                if buy_now is not None and buy_now >= BUYLIST_SPIKE_MIN_PRICE:
+                    ago = {n: recent_price(buy, buy_days, iso(latest - dt.timedelta(days=n))) for n in (1, 3, 7)}
+                    rose = any(then and buy_now - then >= BUYLIST_SPIKE_MIN_JUMP and (buy_now - then) / then >= SPIKE_MIN_PCT for then in ago.values())
+                    # Card Kingdom's buylist often dips and comes back; only
+                    # count it if they're paying more than a week ago.
+                    week_ago = ago[7] if ago[7] is not None else ago[3]
+                    if rose and (week_ago is None or buy_now > week_ago):
+                        buylist_spikes.append({
+                            "id": sid, "name": name, "set": set_code, "number": number, "finish": finish,
+                            "promo": uuid in promo,
+                            "now": round(buy_now, 2),
+                            **{f"d{n}": (round(p, 2) if p is not None else None) for n, p in ago.items()},
+                            "retail": round(now, 2) if now is not None else None,
+                        })
     # MTGJSON sometimes has separate foil and non-foil uuids for one
     # Scryfall printing - keep one entry per printing and finish.
-    seen = set()
-    spikes = [sp for sp in spikes if not ((sp["id"], sp["finish"]) in seen or seen.add((sp["id"], sp["finish"])))]
-    spikes.sort(key=lambda s: -max((s["now"] - (s[k] or s["now"])) for k in ("d1", "d3", "d7")))
-    spikes = spikes[:SPIKE_MAX]
+    def dedupe_and_sort(rows, cap=SPIKE_MAX):
+        seen = set()
+        rows = [r for r in rows if not ((r["id"], r["finish"]) in seen or seen.add((r["id"], r["finish"])))]
+        rows.sort(key=lambda r: -max((r["now"] - (r[k] or r["now"])) for k in ("d1", "d3", "d7")))
+        return rows[:cap]
+    spikes = dedupe_and_sort(spikes)
+    buylist_spikes = dedupe_and_sort(buylist_spikes, BUYLIST_SPIKE_MAX)
 
     print("Reading legalities", flush=True)
     status = {f: {} for f in BAN_FORMATS}  # format -> name -> Banned/Restricted/Legal
@@ -192,14 +274,16 @@ def build(inputs, out, previous):
             json.dump(shard, f, separators=(",", ":"))
     with open(os.path.join(out, "spikes.json"), "w", encoding="utf-8") as f:
         json.dump({"date": price_date, "spikes": spikes}, f, separators=(",", ":"))
+    with open(os.path.join(out, "buylist-spikes.json"), "w", encoding="utf-8") as f:
+        json.dump({"date": price_date, "spikes": buylist_spikes}, f, separators=(",", ":"))
     with open(os.path.join(out, "bans.json"), "w", encoding="utf-8") as f:
         json.dump({"date": price_date, "since": prev.get("since") or price_date,
                    "current": current, "log": log}, f, separators=(",", ":"))
     with open(os.path.join(out, "meta.json"), "w", encoding="utf-8") as f:
         json.dump({"priceDate": price_date, "built": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
-                   "weeks": week_dates, "days": day_dates, "printings": len(history), "spikes": len(spikes),
+                   "weeks": week_dates, "days": day_dates, "printings": len(history), "spikes": len(spikes), "buylistSpikes": len(buylist_spikes),
                    "source": "MTGJSON (TCGplayer market prices)"}, f, separators=(",", ":"))
-    print(f"Done: {len(history)} printings with history, {len(spikes)} spikes, {len(log)} ban log entries", flush=True)
+    print(f"Done: {len(history)} printings with history, {len(spikes)} spikes, {len(buylist_spikes)} buylist increases, {len(log)} ban log entries", flush=True)
 
 
 def main():
