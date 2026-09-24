@@ -10949,7 +10949,13 @@
         }
 
         // ---- Price spikes ----
-        const mktSpikeOptions = { window: 3, jump: 'any', price: 'any', finish: 'all', hidePromos: true, sort: 'dollars' };
+        const mktSpikeOptions = { window: 3, jump: 'any', price: 'any', finish: 'all', hidePromos: true, hideOld: true, sort: 'dollars' };
+        // "Hide cards from before 2003": printings from sets released before
+        // this year, the oldest and most thinly traded, whose prices swing
+        // the most. Set dates come from Scryfall's set list; a set it doesn't
+        // know is kept rather than hidden.
+        const MKT_OLD_CARD_YEAR = 2003;
+        let mktSetReleaseYear = null; // set code (lowercase) -> release year
         // Ranges rather than "at least": old, thinly traded cards swing by
         // big dollar amounts, so a "$5+" filter fills up with them. A range
         // keeps the list to the cards staff actually reprice.
@@ -10972,7 +10978,8 @@
 
         async function showMarketSpikes() {
             if (mktSpikeData) return;
-            const [data, meta] = await Promise.all([fetchMarketFile('spikes.json'), loadMarketMeta()]);
+            const [data, meta, sets] = await Promise.all([fetchMarketFile('spikes.json'), loadMarketMeta(), fetchRawSets().catch(() => [])]);
+            mktSetReleaseYear = new Map(sets.map(set => [set.code, Number((set.released_at || '').slice(0, 4)) || null]));
             mktSpikeData = data ? { spikes: data.spikes || [], meta } : { spikes: null, meta };
             renderMarketSpikes();
         }
@@ -11011,6 +11018,7 @@
                     <span class="text-secondary" style="font-size:0.85em; margin-left:8px;">Sort:</span>
                     ${btn('sort', 'dollars', 'Biggest $ jump')} ${btn('sort', 'percent', 'Biggest % jump')}
                     <label class="text-secondary" style="font-size:0.85em; margin-left:8px;"><input type="checkbox" ${o.hidePromos ? 'checked' : ''} onchange="setMarketSpikeOption('hidePromos', this.checked)"> Hide promos</label>
+                    <label class="text-secondary" style="font-size:0.85em; margin-left:8px;"><input type="checkbox" ${o.hideOld ? 'checked' : ''} onchange="setMarketSpikeOption('hideOld', this.checked)"> Hide cards from before ${MKT_OLD_CARD_YEAR}</label>
                 </div>
             `;
 
@@ -11023,6 +11031,11 @@
                 .filter(s => s.now >= price.min && s.now < price.max)
                 .filter(s => o.finish === 'all' || (o.finish === 'foil' ? s.finish !== 'normal' : s.finish === 'normal'))
                 .filter(s => !(o.hidePromos && s.promo))
+                .filter(s => {
+                    if (!o.hideOld || !mktSetReleaseYear) return true;
+                    const year = mktSetReleaseYear.get((s.set || '').toLowerCase());
+                    return !year || year >= MKT_OLD_CARD_YEAR;
+                })
                 .map(s => ({ ...s, then: s[key], diff: s.now - s[key], pct: (s.now - s[key]) / s[key] }))
                 .sort((a, b) => (o.sort === 'percent' ? b.pct - a.pct : b.diff - a.diff));
 
