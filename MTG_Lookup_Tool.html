@@ -414,10 +414,87 @@
             font-size: 1em;
         }
 
-        .pronunciation {
-            color: #b0b0b0;
-            font-size: 0.95em;
+        .card-set-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: -4px 0 14px;
+            font-size: 0.92em;
+            color: var(--text-secondary);
+        }
+
+        .card-set-line strong {
+            color: var(--text-primary);
+        }
+
+        /* Rules text box - styled like the text box on a card */
+        .card-text-box {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            background: var(--bg-inset);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .card-text-face + .card-text-face {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .card-text-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .card-text-type {
+            font-weight: 600;
+            color: var(--text-heading);
+        }
+
+        .card-text-cost {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .card-rules-text {
+            line-height: 1.55;
+            color: var(--text-primary);
+        }
+
+        .card-rules-text .mana-symbol,
+        .card-flavor-text .mana-symbol {
+            width: 15px;
+            height: 15px;
+            vertical-align: -2px;
+        }
+
+        .reminder-text {
+            color: var(--text-secondary);
+        }
+
+        .card-flavor-text {
+            margin-top: 8px;
             font-style: italic;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .card-text-stats {
+            margin-top: 8px;
+            text-align: right;
+            font-weight: 700;
+            font-size: 1.05em;
+            color: var(--text-heading);
+        }
+
+        .card-text-artist {
+            margin-top: 10px;
+            font-size: 0.78em;
+            color: var(--text-muted);
         }
 
         .adjacent-sets {
@@ -11229,6 +11306,54 @@
                 card.card_faces[0].image_uris && card.card_faces[1].image_uris);
         }
 
+        // Rules text with mana symbols, line breaks kept, and reminder text
+        // (the parenthesized bits) in italics like on the card.
+        function renderRulesTextHTML(text) {
+            if (!text) return '';
+            const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return escaped
+                .replace(/\([^()]*\)/g, m => `<em class="reminder-text">${m}</em>`)
+                .replace(/\{[^}]+\}/g, sym => renderManaCost(sym))
+                .replace(/\n/g, '<br>');
+        }
+
+        // Which faces to describe: both halves of a split/adventure/flip card
+        // (one image, two sets of text), or just the side showing for a card
+        // with two separate faces (transform, modal DFC).
+        function cardTextFaces(card) {
+            if (!card.card_faces || !card.card_faces.length) return [card];
+            return isDoubleFaced(card) ? [card.card_faces[currentFaceIndex]] : card.card_faces;
+        }
+
+        // Cost, type, rules text, P/T / loyalty / defense, flavor text and
+        // artist - flavor and artist can change from printing to printing.
+        function renderCardTextHTML(card) {
+            const faces = cardTextFaces(card);
+            const blocks = faces.map(f => {
+                const stats = f.power !== undefined ? `${f.power}/${f.toughness}`
+                    : f.loyalty !== undefined ? `Loyalty ${f.loyalty}`
+                    : f.defense !== undefined ? `Defense ${f.defense}` : '';
+                return `
+                    <div class="card-text-face">
+                        <div class="card-text-head">
+                            <span class="card-text-type">${faces.length > 1 ? `<strong>${f.name}</strong> — ` : ''}${f.type_line || ''}</span>
+                            ${f.mana_cost ? `<span class="card-text-cost">${renderManaCost(f.mana_cost)}</span>` : ''}
+                        </div>
+                        ${f.oracle_text ? `<div class="card-rules-text">${renderRulesTextHTML(f.oracle_text)}</div>` : ''}
+                        ${f.flavor_text ? `<div class="card-flavor-text">${renderRulesTextHTML(f.flavor_text)}</div>` : ''}
+                        ${stats ? `<div class="card-text-stats">${stats}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            const artist = (faces[0] && faces[0].artist) || card.artist;
+            return blocks + (artist ? `<div class="card-text-artist">Illustrated by ${artist}</div>` : '');
+        }
+
+        function refreshCardText() {
+            const box = document.getElementById('cardTextBox');
+            if (box && currentDisplayedCard) box.innerHTML = renderCardTextHTML(currentDisplayedCard);
+        }
+
         // Display card info
         function displayCard(card) {
             const resultsDiv = document.getElementById('results');
@@ -11242,9 +11367,6 @@
             const setName = card.set_name;
             const releaseDate = card.released_at;
             const year = releaseDate ? new Date(releaseDate).getFullYear() : 'Unknown';
-
-            // Get pronunciation (from flavor name or just clean the name)
-            const pronunciation = card.printed_name || card.name;
 
             // Remember this card's own set so the "reset" link can get back to it
             currentCardSetCode = setCode;
@@ -11294,41 +11416,19 @@
                             <span class="copy-icon" title="Copy card name" onclick="copyToClipboard(document.getElementById('cardNameValue').textContent, 'card name')">📋</span>
                             ${rarityHTML}
                         </div>
-
-                        <div class="card-detail">
-                            <div class="detail-label">Set Code:</div>
-                            <div class="detail-value" id="setCodeValue">${setCode}</div>
+                        <div class="card-set-line">
+                            <strong id="setCodeValue">${setCode}</strong>
+                            <span>·</span> <span id="setNameValue">${setName}</span>
+                            <span>·</span> <span id="yearValue">${year}</span>
+                            <span>·</span> <span id="collectorValue">#${card.collector_number || '?'}</span>
                         </div>
 
-                        <div class="card-detail">
-                            <div class="detail-label">Set:</div>
-                            <div class="detail-value" id="setNameValue">${setName}</div>
-                        </div>
-
-                        <div class="card-detail">
-                            <div class="detail-label">Year:</div>
-                            <div class="detail-value" id="yearValue">${year}</div>
-                        </div>
+                        <div class="card-text-box" id="cardTextBox">${renderCardTextHTML(card)}</div>
 
                         <div id="priceContainer">${priceHTML}</div>
 
                         <div id="moonshotContainer"></div>
 
-                        <div id="adjacentSetsContainer"></div>
-
-                        <div class="card-detail" id="typeContainer" style="${card.type_line ? '' : 'display:none;'}">
-                            <div class="detail-label">Type:</div>
-                            <div class="detail-value" id="typeValue">${card.type_line || ''}</div>
-                        </div>
-
-                        <div class="card-detail" id="costContainer" style="${card.mana_cost ? '' : 'display:none;'}">
-                            <div class="detail-label">Cost:</div>
-                            <div class="detail-value" id="costValue">${renderManaCost(card.mana_cost)}</div>
-                        </div>
-
-                        <div class="pronunciation">
-                            <strong>Pronunciation:</strong> <span id="pronunciationValue">${pronunciation}</span>
-                        </div>
 
                         <div id="legalityContainer"></div>
 
@@ -11338,6 +11438,11 @@
                             <summary>All Printings (loading...)</summary>
                             <div class="printings-controls" id="printingsControls"></div>
                             <div class="printings-list" id="printingsList"></div>
+                        </details>
+
+                        <details class="all-printings" id="setContextDetails">
+                            <summary>Sets released around this one</summary>
+                            <div id="adjacentSetsContainer"></div>
                         </details>
 
                         <details class="all-printings" id="rulingsDetails">
@@ -11457,30 +11562,7 @@
             const nameEl = document.getElementById('cardNameValue');
             if (nameEl) nameEl.textContent = face.name;
 
-            const typeContainer = document.getElementById('typeContainer');
-            const typeValue = document.getElementById('typeValue');
-            if (typeContainer && typeValue) {
-                if (face.type_line) {
-                    typeValue.textContent = face.type_line;
-                    typeContainer.style.display = '';
-                } else {
-                    typeContainer.style.display = 'none';
-                }
-            }
-
-            const costContainer = document.getElementById('costContainer');
-            const costValue = document.getElementById('costValue');
-            if (costContainer && costValue) {
-                if (face.mana_cost) {
-                    costValue.innerHTML = renderManaCost(face.mana_cost);
-                    costContainer.style.display = '';
-                } else {
-                    costContainer.style.display = 'none';
-                }
-            }
-
-            const pronunciationEl = document.getElementById('pronunciationValue');
-            if (pronunciationEl) pronunciationEl.textContent = face.printed_name || face.name;
+            refreshCardText();
         }
 
         // Render the Moonshot Games stock-check block. This is EXPERIMENTAL - it
@@ -12033,30 +12115,10 @@
             const yearEl = document.getElementById('yearValue');
             if (yearEl) yearEl.textContent = print.released_at ? new Date(print.released_at).getFullYear() : 'Unknown';
 
-            const typeContainer = document.getElementById('typeContainer');
-            const typeValue = document.getElementById('typeValue');
-            if (typeContainer && typeValue) {
-                if (print.type_line) {
-                    typeValue.textContent = print.type_line;
-                    typeContainer.style.display = '';
-                } else {
-                    typeContainer.style.display = 'none';
-                }
-            }
+            const collectorEl = document.getElementById('collectorValue');
+            if (collectorEl) collectorEl.textContent = `#${print.collector_number || '?'}`;
 
-            const costContainer = document.getElementById('costContainer');
-            const costValue = document.getElementById('costValue');
-            if (costContainer && costValue) {
-                if (print.mana_cost) {
-                    costValue.innerHTML = renderManaCost(print.mana_cost);
-                    costContainer.style.display = '';
-                } else {
-                    costContainer.style.display = 'none';
-                }
-            }
-
-            const pronunciationEl = document.getElementById('pronunciationValue');
-            if (pronunciationEl) pronunciationEl.textContent = print.printed_name || print.name;
+            refreshCardText();
 
             const priceContainer = document.getElementById('priceContainer');
             if (priceContainer) priceContainer.innerHTML = buildPriceHTML(print);
