@@ -78,7 +78,7 @@ The 🎟️ Prerelease tab (under Rules & events, `PRERELEASE_SUBTABS`) works on
   - **One universal card for every set** (owner's choice, 2026-09-25). Only the set name in the header and the QR link change. `defaultPrereleaseCardHTML` holds:
     - the 40/17/23 recipe, the 4 build steps and the splash tip
     - "Playing your games" (5 play tips)
-    - "Good to know" (shuffle and offer a cut; call a judge), next to a small QR code to the set's Mechanics & Rulings page (`?set=<code>#prerelease/mechanics`, from api.qrserver.com)
+    - "Good to know" (shuffle and offer a cut; call a judge), next to a small QR code (image from api.qrserver.com). `prereleaseQrTarget()` picks where it goes: Wizards' official Prerelease Guide for the set, else its Release Notes (both from `PRERELEASE_OFFICIAL_LINKS`), else this tool's own Mechanics & Rulings page (`?set=<code>#prerelease/mechanics`).
     - the "just tips" line
     - the footer: "Use while building - put it away during games." plus the store line
     - Wizards' full Fan Content Policy notice (`PR_FAN_CONTENT_NOTICE`, titled "Moonshot Prerelease Guide")
@@ -88,7 +88,12 @@ The 🎟️ Prerelease tab (under Rules & events, `PRERELEASE_SUBTABS`) works on
   - **Editing:** the preview can be edited by clicking. Edits are saved in the browser (`prDeckCardV2:<code>`; the v2 key drops edits made to the old set-specific card), and "Reset to default" undoes them.
   - **Sizing:** `fitPrereleaseCard()` sets the text to the largest size that fits (the card's styles are in em), so the card always fills its quarter page, even after edits.
   - **Printing:** the print sheets use a named `@page prsheet` with no margin, so printing other pages keeps normal margins.
-- **Table QR:** a sign, 2 per page (each half the page), linking to `?set=<code>#prerelease/mechanics`. The QR image comes from api.qrserver.com (goqr.me).
+- **Table QR:** a sign, 2 per page (each half the page), linking to the same place as the card's QR (`prereleaseQrTarget()`). The QR image comes from api.qrserver.com (goqr.me). Under both previews, a note tells staff where the QR goes, with the link to check it.
+
+**Official links (`PRERELEASE_OFFICIAL_LINKS`):** each set's Wizards Prerelease Guide (or the older "Prerelease Primer") and Release Notes, as paths under `PR_WIZARDS_ARTICLE_BASE` (magic.wizards.com/en/news/feature/). They were found in Wizards' sitemap (`magic.wizards.com/en/sitemap.xml`), which lists them all. Each one was opened on 2026-09-25 to check its page title names the set.
+- **Coverage:** every prerelease set from Return to Ravnica to Reality Fracture has at least one link. Star Trek has none yet.
+- **Gaps:** sets with only Release Notes (no guide in the sitemap) are FRF, THB, SNC, CLB, DMU, BRO, ONE, MOM, LTR, WOE, LCI, MKM, DSK and DFT. RTR, GTC and DGM have only a primer.
+- **Access:** this environment can reach magic.wizards.com, so check new links with curl (a missing page returns 404).
 - Printing goes through `printPrereleaseSheet()`, which builds `#prPrintArea`, hides everything else with print CSS, and removes it afterward.
 
 **Theme table (`PRERELEASE_PAIR_THEMES`):** the color-pair themes for every set from Zendikar Rising (2020) on, plus Khans of Tarkir. They were written from the archetype sections of Draftsim's draft and sealed guides on 2026-09-25. Keys are color pairs (`WU`); three-color sets list their clans or families (`WBG`). Sets with only five archetypes (Strixhaven, Spider-Man, The Hobbit…) list five. The Sealed Helper's "This pair's plan" reads it (the printed card is universal and doesn't), and `PRERELEASE_SET_NOTES` themes take priority when a set has both. Sets from before 2020 (other than KTK), plus IKO, M21, CLB and Star Trek, aren't in it yet. **Add every new set** from Draftsim's `mtg-<code>-draft-archetypes` article (usually out before the prerelease) or its sealed guide. A monthly Claude routine (the 2nd of each month, 8:48am Indiana time) does this automatically. It finds upcoming and recent sets missing from the table, adds their themes (and glossary entries for new mechanics whose reminder text is card-specific), and opens a PR for the owner to approve. If Draftsim hasn't posted yet, it just reports which sets are still waiting.
