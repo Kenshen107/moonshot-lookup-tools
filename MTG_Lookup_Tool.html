@@ -12146,6 +12146,51 @@
         const EVERGREEN_KEYWORDS = new Set(['Flying', 'Trample', 'Vigilance', 'Menace', 'Haste', 'Reach', 'Deathtouch', 'Lifelink',
             'First strike', 'Double strike', 'Defender', 'Flash', 'Hexproof', 'Indestructible', 'Ward', 'Enchant', 'Equip', 'Fight',
             'Mill', 'Scry', 'Treasure', 'Food', 'Clue', 'Protection', 'Transform', 'Regenerate']);
+        // Color-pair (or clan/family) themes per set, for the printed card
+        // and the Sealed Helper's "This pair's plan". Written from each set's
+        // archetype section in Draftsim's draft/sealed guides (draftsim.com,
+        // checked 2026-09-25); PRERELEASE_SET_NOTES themes win when a set
+        // has both. Three-color sets list their clans or families. Sets
+        // before 2020 aren't covered yet (no archetype guide to work from).
+        // Add each new set from Draftsim's "draft archetypes" article, which
+        // usually comes out before the prerelease.
+        const PRERELEASE_PAIR_THEMES = {
+            znr: { WU: 'Party (Cleric, Rogue, Warrior, Wizard)', UB: 'Rogues & milling them', BR: 'Party aggro', RG: 'Landfall & lands', GW: 'Landfall', WB: 'Clerics', UR: 'Wizards & spells', BG: '+1/+1 counters', RW: 'Warriors aggro', GU: 'Kicker' },
+            thb: { WU: 'Fliers & auras', UB: 'Control', BR: 'Attrition', RG: 'Big creatures, beatdown', GW: 'Auras', WB: 'Midrange, some auras', UR: 'Spells & fliers', BG: 'Escape from the graveyard', RW: 'Heroic (target your creatures)', GU: 'Constellation (enchantments)' },
+            khm: { WU: 'Foretell', UB: 'Snow control', BR: 'Berserkers aggro', RG: 'Big monsters', GW: 'Go wide & lifegain', WB: 'Cast two spells a turn', UR: 'Giants & spells', BG: 'Elves', RW: 'Aggro', GU: 'Snow & changelings' },
+            stx: { WB: 'Silverquill: magecraft aggro', UR: 'Prismari: big spells', BG: 'Witherbloom: lifegain & drain', RW: 'Lorehold: spells from the graveyard', GU: 'Quandrix: counters & X spells' },
+            afr: { WU: 'Venture into dungeons, control', UB: 'Rogues, tempo', BR: 'Treasure midrange', RG: 'Pack tactics aggro', GW: 'Lifegain', WB: 'Venture into dungeons', UR: 'Dice rolls & spells', BG: 'Creatures dying (morbid)', RW: 'Equipment aggro', GU: 'Ramp into big creatures' },
+            mid: { WU: 'Spirits & fliers', UB: 'Zombies & self-mill', BR: 'Vampires', RG: 'Werewolves (day/night)', GW: 'Humans & coven', WB: 'Sacrifice', UR: 'Spells', BG: 'Creatures dying (morbid)', RW: 'Day/night aggro', GU: 'Flashback' },
+            vow: { WU: 'Disturb & Spirits', UB: 'Exploit & Zombies', BR: 'Blood tokens & Vampires', RG: 'Werewolves (daybound)', GW: 'Training & Humans', WB: 'Lifegain', UR: 'Spells', BG: 'Big creatures midrange', RW: 'Aggro', GU: 'Self-mill' },
+            neo: { WU: 'Vehicles', UB: 'Ninjas & ninjutsu', BR: 'Sacrifice', RG: 'Modified creatures', GW: 'Enchantments', WB: 'Artifacts & enchantments', UR: 'Artifacts', BG: 'Graveyard', RW: 'Samurai (attack alone)', GU: 'Ramp' },
+            snc: { GWU: 'Brokers: shield & +1/+1 counters', WUB: 'Obscura: connive, control', UBR: 'Maestros: casualty & removal', BRG: 'Riveteers: blitz & Treasure', RGW: 'Cabaretti: go wide (alliance)' },
+            dmu: { WU: 'Tokens', UB: 'Control', BR: 'Sacrifice', RG: 'Domain', GW: 'Go-wide tokens', WB: 'Sacrifice', UR: 'Spells & prowess', BG: 'Self-mill', RW: 'Aggro', GU: 'Domain & kicker' },
+            bro: { WU: 'Soldiers', UB: 'Draw your second card', BR: 'Sacrifice', RG: 'Big creatures midrange', GW: 'Artifacts', WB: 'Small creatures aggro', UR: 'Spells', BG: 'Graveyard', RW: 'Aggro', GU: 'Artifact creatures (Robots)' },
+            one: { WU: 'Artifacts', UB: 'Proliferate control', BR: 'Sacrifice', RG: 'Oil counters', GW: 'Toxic, go wide', WB: 'Toxic & corrupted', UR: 'Spells', BG: 'Toxic, go tall', RW: 'Equipment', GU: 'Proliferate, tempo' },
+            mom: { WU: 'Knights aggro', UB: 'Graveyard control', BR: 'Sacrifice', RG: 'Battles', GW: '+1/+1 counters', WB: 'Phyrexians aggro', UR: 'Convoke', BG: 'Incubate', RW: 'Backup aggro', GU: 'Transforming cards' },
+            ltr: { WU: 'Fliers & draw two', UB: 'Control & amass', BR: 'Orcs, amass & sacrifice', RG: 'Big creatures aggro', GW: 'Hobbits & Food', WB: 'Legends & tokens', UR: 'Instants & sorceries', BG: 'Sacrifice & Food', RW: 'Go-wide Humans & equipment', GU: 'Elves & scry' },
+            woe: { WU: 'Tapping creatures down', UB: 'Faeries & flash', BR: 'Rats', RG: 'Big monsters', GW: 'Roles', WB: 'Sacrifice midrange', UR: 'Spells', BG: 'Food', RW: 'Aggro & celebration', GU: 'Ramp' },
+            lci: { WU: 'Artifacts', UB: 'Descend (graveyard)', BR: 'Descend aggro', RG: 'Dinosaurs', GW: 'Go-wide aggro', WB: 'Sacrifice', UR: 'Pirates', BG: 'Descend midrange', RW: 'Midrange', GU: 'Explore' },
+            mkm: { WU: 'Detectives', UB: 'Clues & control', BR: 'Suspect aggro', RG: 'Big disguise creatures', GW: 'Go-wide disguise', WB: 'Small disguise creatures', UR: 'Artifacts & sacrifice', BG: 'Graveyard', RW: 'Battalion (attack with three)', GU: 'Collect evidence' },
+            otj: { WU: 'Flash & plot', UB: 'Crimes, control', BR: 'Outlaws aggro', RG: 'Ferocious (power 4+)', GW: 'Mounts', WB: 'Attrition midrange', UR: 'Two spells a turn & plot', BG: 'Graveyard recursion', RW: 'Mercenaries aggro', GU: 'Ramp & plot' },
+            mh3: { WU: 'Energy', UB: 'Card draw', BR: 'Artifacts', RG: 'Eldrazi', GW: 'Aggro', WB: 'Modified & sacrifice', UR: 'Energy & Eldrazi', BG: 'Modified creatures', RW: 'Aggro', GU: 'Eldrazi ramp' },
+            mh2: { WU: 'Affinity (artifacts)', UB: 'Discarding matters', BR: 'Madness', RG: 'Storm (many spells)', GW: '+1/+1 counters', WB: 'Reanimator', UR: 'Delirium', BG: 'Sacrifice & Squirrels', RW: 'Modular (artifacts)', GU: 'Ramp & value' },
+            blb: { WU: 'Birds: fliers', UB: 'Rats: threshold', BR: 'Lizards: opponents lose life', RG: 'Raccoons: expend', GW: 'Rabbits: go wide', WB: 'Bats: gain & lose life', UR: 'Otters: noncreature spells', BG: 'Squirrels: forage & Food', RW: 'Mice: valiant aggro', GU: 'Frogs: bounce & re-use' },
+            dsk: { WU: 'Eerie (enchantments)', UB: 'Eerie & control', BR: 'Sacrifice', RG: 'Delirium', GW: 'Survival', WB: 'Reanimator', UR: 'Rooms', BG: 'Delirium', RW: 'Aggro', GU: 'Manifest dread' },
+            fdn: { WU: 'Fliers', UB: 'Threshold', BR: 'Raid', RG: 'Big creatures', GW: '+1/+1 counters', WB: 'Lifegain', UR: 'Spells', BG: 'Creatures dying (morbid)', RW: 'Aggro', GU: 'Ramp' },
+            dft: { WU: 'Artifacts', UB: 'Artifacts', BR: 'Speed (Start your engines!)', RG: 'Exhaust', GW: 'Mounts', WB: 'Speed & drain', UR: 'Cycling', BG: 'Graveyard midrange', RW: 'Vehicles', GU: 'Exhaust & ramp' },
+            tdm: { WBG: 'Abzan: endure & counters', URW: 'Jeskai: flurry (two spells)', BGU: 'Sultai: renew (graveyard)', RWB: 'Mardu: mobilize aggro', GUR: 'Temur: harmonize, big creatures', WB: 'Sacrifice', UR: 'Two spells a turn', BG: '+1/+1 counters', RW: 'Go-wide tokens', GU: 'Cards leaving the graveyard' },
+            fin: { WU: 'Artifacts & fliers', UB: 'Control', BR: 'Wizards & drain', RG: 'Landfall', GW: 'Go wide', WB: 'Sacrifice', UR: 'Big spells', BG: 'Graveyard', RW: 'Equipment aggro', GU: 'Towns & ramp' },
+            eoe: { WU: 'Second spell each turn', UB: 'Artifacts', BR: 'Void', RG: 'Landfall', GW: '+1/+1 counters', WB: 'Go wide', UR: 'Artifacts', BG: 'Graveyard midrange', RW: 'Spacecraft', GU: 'Ramp' },
+            spm: { WU: 'Modified creatures', UB: 'Villains & connive', BR: 'Mayhem', RG: 'Big spells', GW: 'Web-slinging' },
+            tla: { WU: 'Fliers', UB: 'Draw two', BR: 'Raid', RG: 'Big creatures', GW: 'Allies', WB: 'Sacrifice', UR: 'Lessons', BG: '+1/+1 counters', RW: 'Allies aggro', GU: 'Lessons' },
+            ecl: { WU: 'Merfolk', UB: 'Faeries & flash', BR: 'Goblins', RG: 'Vivid midrange', GW: 'Kithkin', WB: 'Midrange', UR: 'Elementals', BG: 'Elves', RW: 'Aggro', GU: 'Vivid ramp' },
+            tmt: { WB: 'Sneaky Ninjas', UR: 'Machines', BG: 'Disappear', RW: 'Alliance', GU: 'Mutagen' },
+            sos: { WB: 'Silverquill: repartee', UR: 'Prismari: opus', BG: 'Witherbloom: infusion', RW: 'Lorehold: flashback', GU: 'Quandrix: increment' },
+            msh: { WU: 'Teamwork', UB: 'Draw two', BR: 'Villains', RG: 'Power-up stompy', GW: 'Heroes', WB: 'Attack alone', UR: 'Artifacts', BG: 'Graveyard', RW: 'Noncreature spells', GU: '+1/+1 counters' },
+            hob: { WU: 'Draw two', BR: 'Amass Goblins', BG: 'Ferocious (power 4+)', RW: 'Storied', GU: 'Landfall' },
+            ktk: { WBG: 'Abzan: outlast & +1/+1 counters', URW: 'Jeskai: prowess & spells', BGU: 'Sultai: delve & graveyard', RWB: 'Mardu: raid aggro', GUR: 'Temur: ferocious, big creatures' }
+        };
         const PRERELEASE_MIN_KEYWORD_CARDS = 3;
         // Scryfall lists keyword actions like "double" as keywords; skip them.
         // (One-off flavor words, e.g. "Bad Breath", drop out by card count.)
@@ -12887,7 +12932,8 @@
             const first = Math.max(6, Math.min(11, Math.round(17 * pips[best.pair[0]] / pipTotal)));
             const lands = { [best.pair[0]]: first, [best.pair[1]]: 17 - first };
             const notes = PRERELEASE_SET_NOTES[prSetCode];
-            const themeFor = pair => (notes && notes.themes && (notes.themes[pair] || notes.themes[pair[1] + pair[0]])) || '';
+            const setThemes = (notes && notes.themes) || PRERELEASE_PAIR_THEMES[prSetCode] || {};
+            const themeFor = pair => setThemes[pair] || setThemes[pair[1] + pair[0]] || '';
             const pairLabel = pair => pair.split('').map(col => `<i class="pip-dot pip-${col}"></i>`).join('');
             const warn = [];
             if (best.count < 22) warn.push(`Only ${best.count} playable cards in these colors - you may need a light splash or a few weaker cards.`);
@@ -12938,8 +12984,10 @@
             } else {
                 const cards = await loadPrereleaseSetCards(prSetCode);
                 mechanics = (await prereleaseMechanics(cards)).filter(m => m.hasText).slice(0, 4).map(m => ({ name: m.name, text: m.text }));
-                // Without notes, point at each pair's two-color uncommon.
-                PRERELEASE_PAIRS.forEach(pair => {
+                // Themes from PRERELEASE_PAIR_THEMES, or else point at each
+                // pair's two-color uncommon.
+                if (PRERELEASE_PAIR_THEMES[prSetCode]) themes = PRERELEASE_PAIR_THEMES[prSetCode];
+                else PRERELEASE_PAIRS.forEach(pair => {
                     const sign = cards.find(c => c.rarity === 'uncommon' && prCardColors(c).length === 2 && pair.split('').every(col => prCardColors(c).includes(col)));
                     themes[pair] = sign ? `See ${sign.name.split(' // ')[0]}` : '';
                 });
@@ -12959,8 +13007,8 @@
                 <div class="pr-dc-tip">Splash a 3rd color only for a bomb or removal, with 3+ lands that make it. Between games you can swap in any card from your pool.</div>
                 <h4>Mechanics to know</h4>
                 <ul>${mechanics.map(m => `<li><b>${m.name}</b> - ${short(m.text)}</li>`).join('')}</ul>
-                <h4>What each color pair wants</h4>
-                <div class="pr-dc-themes">${PRERELEASE_PAIRS.map(pair => `<div>${pairDots(pair)} <span>${themes[pair] || ''}</span></div>`).join('')}</div>
+                <h4>What each color ${Object.keys(themes).some(k => k.length > 2) ? 'combo' : 'pair'} wants</h4>
+                <div class="pr-dc-themes">${Object.keys(themes).filter(pair => themes[pair]).map(pair => `<div>${pairDots(pair)} <span>${themes[pair] || ''}</span></div>`).join('')}</div>
                 <div class="pr-dc-fun">These are just tips, not rules. Build the deck you're excited to play - that's the fun of sealed!</div>
                 <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Unofficial; not endorsed by Wizards of the Coast.</span></div>
             `;
