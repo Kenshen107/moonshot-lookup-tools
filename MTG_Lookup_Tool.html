@@ -5902,6 +5902,224 @@
                 font-size: 1.5em;
             }
         }
+
+        /* ============== PRERELEASE TOOLKIT ============== */
+        .pr-setbar { align-items: center; }
+        .pr-setnote { font-size: 0.88em; }
+
+        .pr-lookup { max-width: 900px; margin: 0 auto 14px; }
+        .pr-lookup input {
+            width: 100%;
+            padding: 9px 10px;
+            background: var(--bg-inset);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        .pr-lookup #prCardRuling { margin-top: 8px; }
+
+        .pr-mech { max-width: 900px; margin-left: auto; margin-right: auto; }
+        .pr-mech-name { font-weight: 700; font-size: 1.1em; color: var(--text-heading); }
+        .pr-badge {
+            font-size: 0.7em;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 8px;
+            background: var(--brand);
+            color: #fff;
+            vertical-align: 2px;
+        }
+        .pr-badge-old { background: var(--bg-panel-raised); color: var(--text-secondary); border: 1px solid var(--border); }
+        .pr-mech-text { margin: 6px 0; line-height: 1.45; }
+        .pr-rulings { margin: 4px 0 6px; padding-left: 20px; line-height: 1.45; }
+        .pr-rulings li { margin-bottom: 3px; }
+
+        .pip-dot {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            border: 1px solid #555;
+            vertical-align: -1px;
+        }
+        .pip-W { background: #f8f3d6; }
+        .pip-U { background: #4a8fd0; }
+        .pip-B { background: #3a3a3a; }
+        .pip-R { background: #d9483b; }
+        .pip-G { background: #3f9a52; }
+
+        .pr-sealed {
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+            gap: 14px;
+            align-items: start;
+        }
+        .pr-sealed-search {
+            width: 100%;
+            box-sizing: border-box;
+            margin: 8px 0;
+            padding: 8px 10px;
+            background: var(--bg-inset);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1em;
+        }
+        .pr-sealed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 5px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .pr-sealed-card {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            background: var(--bg-panel);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.88em;
+            min-width: 0;
+        }
+        .pr-sealed-card:hover { border-color: var(--brand-light); }
+        .pr-sealed-card.in-pool { border-color: var(--brand); background: var(--bg-panel-raised); }
+        .pr-rarity { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; }
+        .pr-r-common { background: #999; }
+        .pr-r-uncommon { background: #b7c6d1; }
+        .pr-r-rare { background: #d6b75a; }
+        .pr-r-mythic { background: #e0632e; }
+        .pr-r-special, .pr-r-bonus { background: #a07ad6; }
+        .pr-sealed-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pr-sealed-cost { flex: 0 0 auto; white-space: nowrap; }
+        .pr-sealed-count { flex: 0 0 auto; font-weight: 700; color: var(--brand-light); }
+        .pr-sealed-pool { position: sticky; top: 10px; }
+        .pr-sealed-pool .edh-block { margin-top: 0; }
+        .pr-color-table { width: 100%; margin-top: 8px; }
+        .pr-best { font-size: 1.05em; margin: 4px 0; }
+        .pr-lands { margin: 6px 0; }
+        .pr-pool-list { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; font-size: 0.92em; }
+
+        @media (max-width: 760px) {
+            .pr-sealed { grid-template-columns: 1fr; }
+            .pr-sealed-pool { position: static; }
+            .pr-sealed-grid { max-height: 50vh; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+        }
+        @media (max-width: 480px) {
+            .pr-sealed-grid { grid-template-columns: 1fr; }
+        }
+
+        /* The deck-building card: a quarter of a letter page (4in x 5.25in). */
+        .pr-dc {
+            box-sizing: border-box;
+            width: 4in;
+            height: 5.25in;
+            padding: 0.16in 0.2in;
+            background: #fff;
+            color: #111;
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 7.1pt;
+            line-height: 1.25;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+            text-align: left;
+        }
+        .pr-dc:focus { outline: 2px solid var(--brand-light); }
+        .pr-dc h4 {
+            margin: 1px 0 0;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #1777a1;
+        }
+        .pr-dc ol, .pr-dc ul { margin: 0; padding-left: 13px; }
+        .pr-dc li { margin: 0 0 1px; }
+        .pr-dc b { color: #000; }
+        .pr-dc-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 2px solid #1777a1;
+            padding-bottom: 3px;
+        }
+        .pr-dc-store { font-weight: 800; font-size: 10pt; color: #1777a1; }
+        .pr-dc-set { font-weight: 700; font-size: 8.5pt; }
+        .pr-dc-recipe { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; text-align: center; }
+        .pr-dc-recipe div { border: 1px solid #ccc; border-radius: 4px; padding: 1px 2px; }
+        .pr-dc-recipe b { display: block; font-size: 10.5pt; line-height: 1.1; }
+        .pr-dc-tip { font-size: 7pt; color: #333; border-left: 2px solid #1777a1; padding-left: 5px; }
+        .pr-dc-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 8px; }
+        .pr-dc-themes .pip-dot { width: 9px; height: 9px; }
+        .pr-dc-fun { margin-top: auto; text-align: center; font-style: italic; font-size: 7.2pt; color: #1777a1; }
+        .pr-dc-foot {
+            border-top: 1px solid #ccc;
+            padding-top: 3px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 6.5pt;
+            color: #444;
+        }
+        .pr-dc-preview-wrap {
+            display: flex;
+            justify-content: center;
+            margin: 10px auto;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .pr-dc-preview-wrap .pr-dc { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4); border-radius: 3px; flex: 0 0 auto; }
+
+        /* Table QR sign: half of a letter page. */
+        .pr-qr-preview { display: flex; justify-content: center; margin: 10px auto; }
+        .pr-qr-sign {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 5.5in;
+            padding: 0.3in;
+            background: #fff;
+            color: #111;
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            text-align: center;
+            border-radius: 3px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+        }
+        .pr-qr-title { font-size: 18pt; font-weight: 800; margin: 4px 0 2px; }
+        .pr-qr-sub { font-size: 12pt; color: #1777a1; margin-bottom: 10px; }
+        .pr-qr-sign img { display: block; margin: 0 auto; width: 190px; height: 190px; }
+        .pr-qr-note { font-size: 10pt; margin-top: 10px; color: #333; }
+        .pr-qr-url { font-size: 7.5pt; color: #666; margin-top: 6px; word-break: break-all; }
+
+        /* Printing: only the sheet built by printPrereleaseSheet(). */
+        #prPrintArea { display: none; }
+        @media print {
+            @page { size: letter; margin: 0.25in; }
+            body.pr-printing { background: #fff !important; margin: 0; padding: 0; }
+            body.pr-printing > *:not(#prPrintArea) { display: none !important; }
+            body.pr-printing #prPrintArea { display: block; }
+            .pr-print-sheet { width: 8in; height: 10.5in; margin: 0 auto; }
+            .pr-print-cards { display: grid; grid-template-columns: 4in 4in; grid-template-rows: 5.25in 5.25in; }
+            .pr-print-cards .pr-dc { border: 1px dashed #999; }
+            .pr-print-qr { display: grid; grid-template-rows: 5.25in 5.25in; }
+            .pr-print-qr .pr-qr-sign {
+                max-width: none;
+                height: 5.25in;
+                box-shadow: none;
+                border-radius: 0;
+                border-bottom: 1px dashed #999;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .pr-print-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
     </style>
     <script>
         // ============== SEASONAL THEMES ==============
@@ -6327,6 +6545,29 @@
                 <select id="prodSetSelect" aria-label="Set" onchange="selectProductSet(this.value)"></select>
             </div>
             <div id="productsResults"><div class="loading">Loading product data...</div></div>
+        </div>
+
+        <!-- ============== PRERELEASE ============== -->
+        <div id="prereleaseApp" style="display:none;">
+            <div class="mkt-filterbar pr-setbar">
+                <label class="mkt-filter">
+                    <span>Set</span>
+                    <select id="prSetSelect" aria-label="Prerelease set" onchange="selectPrereleaseSet(this.value)"></select>
+                </label>
+                <div class="text-secondary pr-setnote" id="prSetNote"></div>
+            </div>
+            <div class="guide-tabs" id="prTabs">
+                <button type="button" class="guide-tab active" id="prTabMechanics" onclick="switchPrereleaseTab('mechanics')">📜 Mechanics &amp; Rulings</button>
+                <button type="button" class="guide-tab" id="prTabHot" onclick="switchPrereleaseTab('hot')">🔥 Hot Cards</button>
+                <button type="button" class="guide-tab" id="prTabSealed" onclick="switchPrereleaseTab('sealed')">🧩 Sealed Helper</button>
+                <button type="button" class="guide-tab" id="prTabCard" onclick="switchPrereleaseTab('card')">🖨️ Deck-Building Card</button>
+                <button type="button" class="guide-tab" id="prTabQr" onclick="switchPrereleaseTab('qr')">📱 Table QR</button>
+            </div>
+            <div id="prMechanicsApp"><div class="loading">Loading the set...</div></div>
+            <div id="prHotApp" style="display:none;"></div>
+            <div id="prSealedApp" style="display:none;"></div>
+            <div id="prCardApp" style="display:none;"></div>
+            <div id="prQrApp" style="display:none;"></div>
         </div>
 
         <!-- ============== MARKET WATCH ============== -->
@@ -7405,6 +7646,7 @@
             casemap:      { appId: 'caseMapApp',      icon: '🗂️', navLabel: 'Case Map',        title: '🗂️ Hotlist Case Map', desc: 'Where every card sits in the hotlist case', keywords: 'hotlist case where location find' , onShow: showCaseMapTab },
             formats:      { appId: 'formatsApp',      icon: '📖', navLabel: 'Format Rules',    title: '📖 Format Rules', desc: 'Deck rules and live ban lists for every format', keywords: 'standard modern pioneer legacy vintage pauper banned legal', onShow: renderFormatsGrid },
             brackets:     { appId: 'bracketsApp',     icon: '🪜', navLabel: 'Brackets',        title: '🪜 Commander Brackets', desc: 'Commander brackets, Game Changers, and card and deck checkers', keywords: 'commander edh bracket game changers power level', onShow: renderBracketsGuide },
+            prerelease:   { appId: 'prereleaseApp',   icon: '🎟️', navLabel: 'Prerelease',      title: '🎟️ Prerelease Toolkit', desc: 'New mechanics and rulings, hot cards, a sealed helper and printable handouts', keywords: 'prerelease sealed mechanics rulings judge new set handout print qr deck building event', onShow: showPrereleaseTab },
             valuevintage: { appId: 'valueVintageApp', icon: '🏆', navLabel: 'Value Vintage',   title: '🏆 Value Vintage (V30)', desc: 'Rules and the restricted list for $30 Vintage nights', keywords: 'v30 vintage budget restricted wednesday', onShow: renderValueVintagePanel },
             judge:        { appId: 'judgeApp',        icon: '⚖️', navLabel: 'Judge Ref',       title: '⚖️ Judge Quick-Reference', desc: 'Quick rules answers, common myths and the layer system', keywords: 'rules ruling judge layers stack myths', onShow: showJudgeTab },
             setprimer:    { appId: 'setPrimerApp',    icon: '🎁', navLabel: 'Set Primer',      title: '🎁 Set Primer', desc: 'A set at a glance: its cards by rarity, top picks and bonus sheets', keywords: 'set new release cards primer' },
@@ -7438,6 +7680,7 @@
         let currentBuyersGuideSubtab = 'finder';
         let currentGuideSubtab = 'gradingGuide';
         let currentMarketSubtab = 'spikes';
+        let currentPrereleaseSubtab = 'mechanics';
         let isRestoringRoute = false;
 
         function currentRouteHash() {
@@ -7445,6 +7688,7 @@
             if (route === 'buyersguide') route += '/' + currentBuyersGuideSubtab;
             if (route === 'grading') route += '/' + currentGuideSubtab;
             if (route === 'market') route += '/' + currentMarketSubtab;
+            if (route === 'prerelease') route += '/' + currentPrereleaseSubtab;
             return route;
         }
 
@@ -7481,6 +7725,7 @@
                 if (mode === 'buyersguide' && sub) switchBuyersGuideTab(sub);
                 if (mode === 'grading' && sub) switchGuideTab(sub);
                 if (mode === 'market' && sub) switchMarketTab(sub);
+                if (mode === 'prerelease' && sub) switchPrereleaseTab(sub);
             } finally {
                 isRestoringRoute = false;
             }
@@ -7567,7 +7812,7 @@
         // tool only needs adding in those two places.
         const NAV_GROUPS = [
             { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap'] },
-            { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'valuevintage', 'judge'] },
+            { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'prerelease', 'valuevintage', 'judge'] },
             { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'grading', 'quiz'] }
         ];
 
@@ -7670,6 +7915,11 @@
             { label: 'Check a deck\'s bracket', icon: '📝', parent: 'brackets', keywords: 'decklist bracket commander game changers', go: () => navigateTo('brackets', () => scrollToBracketSection('bkDeckCheck')) },
             { label: 'Game Changers list', icon: '⚡', parent: 'brackets', keywords: 'game changers commander bracket', go: () => navigateTo('brackets', () => scrollToBracketSection('bkGameChangers')) },
             { label: 'Commander banned list', icon: '🚫', parent: 'brackets', keywords: 'banned commander edh', go: () => navigateTo('brackets', () => scrollToBracketSection('bkBanned')) },
+            { label: 'New set mechanics & rulings', icon: '📜', parent: 'prerelease', keywords: 'mechanics rulings judge new keyword prerelease', go: () => navigateTo('prerelease', () => switchPrereleaseTab('mechanics')) },
+            { label: 'Prerelease hot cards', icon: '🔥', parent: 'prerelease', keywords: 'hot cards prerelease singles restock', go: () => navigateTo('prerelease', () => switchPrereleaseTab('hot')) },
+            { label: 'Sealed deck helper', icon: '🧩', parent: 'prerelease', keywords: 'sealed pool build deck colors helper prerelease', go: () => navigateTo('prerelease', () => switchPrereleaseTab('sealed')) },
+            { label: 'Print deck-building cards', icon: '🖨️', parent: 'prerelease', keywords: 'print handout deck building card prerelease', go: () => navigateTo('prerelease', () => switchPrereleaseTab('card')) },
+            { label: 'Table QR sign', icon: '📱', parent: 'prerelease', keywords: 'qr code table sign print players', go: () => navigateTo('prerelease', () => switchPrereleaseTab('qr')) },
             { label: 'Price spikes', icon: '🚀', parent: 'market', keywords: 'spike jump reprice price up alert', go: () => navigateTo('market', () => switchMarketTab('spikes')) },
             { label: 'Ban watch', icon: '🔨', parent: 'market', keywords: 'ban unban banned announcement', go: () => navigateTo('market', () => switchMarketTab('bans')) },
             { label: 'Trending commanders', icon: '🔥', parent: 'market', keywords: 'trending rising popular commanders edhrec stock', go: () => navigateTo('market', () => switchMarketTab('trending')) },
@@ -11822,6 +12072,645 @@
             });
             runWithConcurrency(tasks, 6, 0, () => myToken !== mktPulledToken);
         }
+
+        // ============== PRERELEASE TOOLKIT ==============
+        // Everything for running a prerelease, for one set at a time: the
+        // set's mechanics and rulings (for quick judge calls), the hot cards
+        // to have ready at the counter, a sealed helper for players, a
+        // printable deck-building card (4 per page) and a table QR sign.
+        // Card data is live from Scryfall; hand-written notes for a set
+        // (PRERELEASE_SET_NOTES) fill in what data can't: plain-English
+        // mechanic explanations, key rulings before Scryfall has them (it
+        // adds rulings at release), and the color-pair themes.
+        const PRERELEASE_SET_TYPES = ['expansion', 'core', 'draft_innovation', 'masters'];
+        const PRERELEASE_PAST_DAYS = 120;
+        const PRERELEASE_FUTURE_DAYS = 120;
+        const PRERELEASE_PAIRS = ['WU', 'UB', 'BR', 'RG', 'GW', 'WB', 'UR', 'BG', 'RW', 'GU'];
+        // Keywords every set has - not worth a spot on the mechanics page.
+        const EVERGREEN_KEYWORDS = new Set(['Flying', 'Trample', 'Vigilance', 'Menace', 'Haste', 'Reach', 'Deathtouch', 'Lifelink',
+            'First strike', 'Double strike', 'Defender', 'Flash', 'Hexproof', 'Indestructible', 'Ward', 'Enchant', 'Equip', 'Fight',
+            'Mill', 'Scry', 'Treasure', 'Food', 'Clue', 'Protection', 'Transform']);
+        const PRERELEASE_MIN_KEYWORD_CARDS = 3;
+
+        // Hand-written notes per set (Scryfall set code). Written from the
+        // set's release notes and Wizards' archetype descriptions; staff can
+        // still edit the printed card before printing.
+        const PRERELEASE_SET_NOTES = {
+            fra: {
+                checked: '2026-09-25',
+                mechanics: [
+                    {
+                        name: 'Prepared', match: /\bprepared\b/i, isNew: false,
+                        cardName: 'Prepared', card: 'The creature carries a spell. While prepared, you may cast a copy of it (pay its cost); that unprepares it. If the creature leaves, the copy is gone.',
+                        text: 'Some creatures carry a spell (shown on the card). While the creature is prepared, you may cast a copy of that spell from exile - you still pay its cost. Casting it unprepares the creature.',
+                        rulings: [
+                            'When the creature becomes prepared, a copy of its spell appears in exile. Cast it like any other spell: choose targets and pay its costs.',
+                            'The copy stays until you cast it, the creature leaves the battlefield, or the creature becomes unprepared - then the copy stops existing.',
+                            'A creature that is already prepared can\'t become prepared again, so it never gives you two copies at once.',
+                            'If another player gains control of a prepared creature, they are the one who can cast the copy.'
+                        ]
+                    },
+                    {
+                        name: 'Empower Jace', match: /empower jace/i, isNew: true,
+                        cardName: 'Empower Jace N', card: 'Put N loyalty on your Jace token. No Jace? Make one first: [−1]: Surveil 1 · [−3]: Draw a card. Jace is a planeswalker - attack your opponent\'s!',
+                        text: 'Put N loyalty counters on a Jace token you control. If you don\'t control one, first create a blue Jace planeswalker token with "[−1]: Surveil 1" and "[−3]: Draw a card."',
+                        rulings: [
+                            'If you already control a Jace token, empowering adds counters to it - you don\'t make a second one.',
+                            'The Jace token is a planeswalker: it can be attacked, and damage to it removes loyalty counters. Its loyalty abilities work like any planeswalker\'s (once per turn, at sorcery speed).',
+                            'Several small empowers add up - e.g. two "Empower Jace 2" effects give a Jace with 4 loyalty.'
+                        ]
+                    },
+                    {
+                        name: 'Surveil', match: /\bsurveil\b/i, isNew: false,
+                        cardName: 'Surveil N', card: 'Look at the top N cards. Put any in your graveyard, the rest back on top in any order.',
+                        text: 'Look at the top N cards of your library. Put any number of them into your graveyard and the rest back on top in any order.',
+                        rulings: []
+                    },
+                    {
+                        name: 'Heartwood token', match: /heartwood/i, isNew: true,
+                        cardName: 'Heartwood', card: 'A red-green artifact token: {T}: Add {R} or {G}.',
+                        text: 'A red and green artifact token with "{T}: Add {R} or {G}." The red-green Konstrari school makes these to ramp.',
+                        rulings: ['It\'s an artifact, so it counts for anything that cares about artifacts.']
+                    },
+                    {
+                        name: 'Threshold', match: /\bthreshold\b/i, isNew: false,
+                        cardName: 'Threshold', card: '7+ cards in your graveyard.',
+                        text: 'The ability works only while you have seven or more cards in your graveyard.',
+                        rulings: []
+                    }
+                ],
+                themes: {
+                    WU: 'Scry & surveil, then attack',
+                    UB: 'Mill yourself, reach threshold',
+                    BR: 'Burn their face, keep attacking',
+                    RG: 'Artifacts & ramp with Heartwoods',
+                    GW: 'Gain life, +1/+1 counters',
+                    WB: 'Small creatures, sacrifice, recursion',
+                    UR: 'Noncreature spells & prowess',
+                    BG: 'Big creatures, deathtouch & trample',
+                    RW: 'Aggro with +1/+1 counters',
+                    GU: 'Empower Jace, planeswalker power'
+                },
+                kit: '6 Play Boosters, a foil promo, a deck box and a spindown'
+            }
+        };
+
+        const PRERELEASE_SUBTABS = {
+            mechanics: { appId: 'prMechanicsApp', tabId: 'prTabMechanics', onShow: renderPrereleaseMechanics },
+            hot:       { appId: 'prHotApp',       tabId: 'prTabHot',       onShow: renderPrereleaseHot },
+            sealed:    { appId: 'prSealedApp',    tabId: 'prTabSealed',    onShow: renderPrereleaseSealed },
+            card:      { appId: 'prCardApp',      tabId: 'prTabCard',      onShow: renderPrereleaseCard },
+            qr:        { appId: 'prQrApp',        tabId: 'prTabQr',        onShow: renderPrereleaseQr }
+        };
+
+        let prSets = null; // [{ code, name, released_at, upcoming }]
+        let prSetCode = null;
+        const prSetCardsCache = {}; // set code -> Promise of Scryfall cards (one per name)
+
+        function switchPrereleaseTab(which) {
+            const target = PRERELEASE_SUBTABS[which] ? which : 'mechanics';
+            Object.keys(PRERELEASE_SUBTABS).forEach(key => {
+                const sub = PRERELEASE_SUBTABS[key];
+                document.getElementById(sub.appId).style.display = key === target ? '' : 'none';
+                setTabActive(document.getElementById(sub.tabId), key === target);
+            });
+            currentPrereleaseSubtab = target;
+            pushRoute();
+            if (prSetCode) PRERELEASE_SUBTABS[target].onShow();
+        }
+
+        async function showPrereleaseTab() {
+            if (!prSets) {
+                try {
+                    const sets = await fetchRawSets();
+                    const now = Date.now();
+                    const from = new Date(now - PRERELEASE_PAST_DAYS * 86400000).toISOString().slice(0, 10);
+                    const to = new Date(now + PRERELEASE_FUTURE_DAYS * 86400000).toISOString().slice(0, 10);
+                    const today = todayISO();
+                    prSets = sets
+                        .filter(set => PRERELEASE_SET_TYPES.includes(set.set_type) && !set.digital && !set.parent_set_code
+                            && set.released_at >= from && set.released_at <= to && set.card_count > 0)
+                        .map(set => ({ code: set.code, name: set.name, released_at: set.released_at, upcoming: set.released_at > today }))
+                        .sort((a, b) => a.released_at.localeCompare(b.released_at));
+                } catch (err) {
+                    document.getElementById('prMechanicsApp').innerHTML = '<div class="error">Couldn\'t load the set list - try again in a moment.</div>';
+                    return;
+                }
+                // A link can pick the set (?set=fra, used by the table QR).
+                const wanted = new URLSearchParams(location.search).get('set');
+                const next = prSets.find(set => set.upcoming);
+                const fallback = next || prSets[prSets.length - 1];
+                prSetCode = (wanted && prSets.some(set => set.code === wanted)) ? wanted : (fallback && fallback.code);
+                document.getElementById('prSetSelect').innerHTML = prSets.map(set =>
+                    `<option value="${set.code}"${set.code === prSetCode ? ' selected' : ''}>${set.name} (${set.upcoming ? 'out' : 'released'} ${set.released_at})</option>`).join('');
+                updatePrereleaseSetNote();
+            }
+            switchPrereleaseTab(currentPrereleaseSubtab);
+        }
+
+        function selectPrereleaseSet(code) {
+            prSetCode = code;
+            updatePrereleaseSetNote();
+            PRERELEASE_SUBTABS[currentPrereleaseSubtab].onShow();
+        }
+
+        function prereleaseSetInfo() {
+            return (prSets || []).find(set => set.code === prSetCode) || null;
+        }
+
+        function updatePrereleaseSetNote() {
+            const set = prereleaseSetInfo();
+            const notes = PRERELEASE_SET_NOTES[prSetCode];
+            document.getElementById('prSetNote').textContent = set
+                ? `${set.upcoming ? `Releases ${set.released_at}` : `Released ${set.released_at}`}${notes && notes.kit ? ` · Prerelease kit: ${notes.kit}` : ''}`
+                : '';
+        }
+
+        // Every card in the set, one per name (showcase versions collapsed).
+        function loadPrereleaseSetCards(code) {
+            if (!prSetCardsCache[code]) {
+                prSetCardsCache[code] = (async () => {
+                    const cards = [];
+                    let url = `${API_BASE}/cards/search?q=${encodeURIComponent(`e:${code} game:paper -t:basic`)}&unique=cards&order=set`;
+                    while (url) {
+                        const page = await fetchScryfallSearchPage(url);
+                        cards.push(...(page.data || []));
+                        url = page.has_more ? page.next_page : null;
+                        if (url) await new Promise(r => setTimeout(r, SCRYFALL_REQUEST_SPACING_MS));
+                    }
+                    cards.forEach(c => { cardTileDataById[c.id] = c; });
+                    return cards;
+                })();
+                prSetCardsCache[code].catch(() => { delete prSetCardsCache[code]; });
+            }
+            return prSetCardsCache[code];
+        }
+
+        function cardOracleText(card) {
+            return card.oracle_text !== undefined
+                ? card.oracle_text
+                : (card.card_faces || []).map(f => f.oracle_text || '').join('\n');
+        }
+
+        function prCardLinkHTML(card) {
+            return `<span class="set-link" onclick="openCardModal(cardTileDataById['${card.id}'])">${card.name.split(' // ')[0]}</span>`;
+        }
+
+        // The set's mechanics: hand-written notes first, then any other
+        // non-evergreen keyword on at least a few cards (with reminder text
+        // taken from a card that has it).
+        function prereleaseMechanics(cards) {
+            const notes = PRERELEASE_SET_NOTES[prSetCode];
+            const list = [];
+            const covered = new Set();
+            if (notes) {
+                notes.mechanics.forEach(m => {
+                    list.push({ ...m, cards: cards.filter(c => m.match.test(cardOracleText(c)) || (c.keywords || []).some(k => m.match.test(k))) });
+                    covered.add(m.name.toLowerCase().split(' ')[0]);
+                });
+            }
+            const counts = new Map();
+            cards.forEach(c => (c.keywords || []).forEach(k => {
+                const key = /cycling$/i.test(k) ? 'Cycling' : k;
+                if (EVERGREEN_KEYWORDS.has(key) || covered.has(key.toLowerCase().split(' ')[0])) return;
+                if (!counts.has(key)) counts.set(key, []);
+                counts.get(key).push(c);
+            }));
+            [...counts.entries()].filter(([, cs]) => cs.length >= PRERELEASE_MIN_KEYWORD_CARDS)
+                .sort((a, b) => b[1].length - a[1].length)
+                .forEach(([name, cs]) => {
+                    const re = new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^(\\n]*\\(([^)]+)\\)`, 'i');
+                    let text = '';
+                    for (const c of cs) {
+                        const m = cardOracleText(c).match(re);
+                        if (m) { text = m[1]; break; }
+                    }
+                    list.push({ name, text: text || 'See the cards below for how it works.', rulings: [], cards: cs, auto: true });
+                });
+            return list;
+        }
+
+        // ---- Mechanics & rulings ----
+        let prMechToken = 0;
+        async function renderPrereleaseMechanics() {
+            const myToken = ++prMechToken;
+            const el = document.getElementById('prMechanicsApp');
+            el.innerHTML = '<div class="loading">Loading the set\'s cards...</div>';
+            let cards;
+            try {
+                cards = await loadPrereleaseSetCards(prSetCode);
+            } catch (err) {
+                if (myToken === prMechToken) el.innerHTML = '<div class="error">Couldn\'t load this set from Scryfall - try again in a moment.</div>';
+                return;
+            }
+            if (myToken !== prMechToken) return;
+            const set = prereleaseSetInfo();
+            const mechanics = prereleaseMechanics(cards);
+            const notes = PRERELEASE_SET_NOTES[prSetCode];
+            el.innerHTML = `
+                <div class="formats-intro">For quick judge calls: what each of ${set ? set.name : 'this set'}'s mechanics does, the key rulings, and every card that uses it. Look up any card from the set below for its exact text and official rulings.</div>
+                <div class="pr-lookup">
+                    <input type="text" id="prCardSearch" list="prCardNames" placeholder="Look up a card from ${set ? set.name : 'this set'}..." aria-label="Card name" autocomplete="off" onchange="showPrereleaseCardRuling(this.value)">
+                    <datalist id="prCardNames">${cards.map(c => `<option value="${escapeAttr(c.name)}">`).join('')}</datalist>
+                    <div id="prCardRuling"></div>
+                </div>
+                ${mechanics.length ? mechanics.map((m, i) => `
+                    <div class="edh-block pr-mech">
+                        <div class="edh-head">
+                            <span class="pr-mech-name">${m.name}${m.isNew === true ? ' <span class="pr-badge">New</span>' : m.isNew === false ? ' <span class="pr-badge pr-badge-old">Returning</span>' : ''}</span>
+                            <span class="text-secondary" style="font-size:0.85em;">${m.cards.length} card${m.cards.length === 1 ? '' : 's'}</span>
+                        </div>
+                        <div class="pr-mech-text">${m.text}</div>
+                        ${m.rulings && m.rulings.length ? `<div class="edh-subhead">Key rulings</div><ul class="pr-rulings">${m.rulings.map(r => `<li>${r}</li>`).join('')}</ul>` : ''}
+                        <div class="pr-official" id="prOfficial-${i}"></div>
+                        ${m.cards.length ? `<details class="all-printings"><summary>Cards with ${m.name} (${m.cards.length})</summary><div class="edh-pills">${m.cards.map(c => `<span class="related-card-pill">${prCardLinkHTML(c)}</span>`).join('')}</div></details>` : ''}
+                    </div>
+                `).join('') : '<div class="moonshot-status">No set-specific mechanics found for this set.</div>'}
+                <div class="edh-source">Card text from Scryfall.${notes ? ` Explanations and key rulings written from the set's release notes (checked ${notes.checked}).` : ' Explanations are taken from the cards\' reminder text.'} Official rulings from Scryfall appear once the set is out. During games, players should ask a judge rather than check notes.</div>
+            `;
+            // Official rulings (Scryfall has them from release day): the ones
+            // that mention the mechanic, from a few of its cards.
+            mechanics.forEach((m, i) => loadPrereleaseOfficialRulings(m, i, myToken));
+        }
+
+        const prRulingsCache = new Map(); // card id -> Promise of rulings
+        function fetchCardRulings(card) {
+            if (!prRulingsCache.has(card.id)) {
+                prRulingsCache.set(card.id, fetch(card.rulings_uri || `${API_BASE}/cards/${card.id}/rulings`)
+                    .then(res => (res.ok ? res.json() : { data: [] }))
+                    .then(d => d.data || [])
+                    .catch(() => []));
+            }
+            return prRulingsCache.get(card.id);
+        }
+
+        async function loadPrereleaseOfficialRulings(m, i, token) {
+            const word = m.name.split(' ')[0].toLowerCase();
+            const seen = new Set();
+            const found = [];
+            for (const card of m.cards.slice(0, 4)) {
+                const rulings = await fetchCardRulings(card);
+                rulings.filter(r => r.comment.toLowerCase().includes(word) && !seen.has(r.comment) && seen.add(r.comment))
+                    .forEach(r => found.push(r));
+                await new Promise(r => setTimeout(r, SCRYFALL_REQUEST_SPACING_MS));
+            }
+            const el = document.getElementById(`prOfficial-${i}`);
+            if (!el || token !== prMechToken || !found.length) return;
+            el.innerHTML = `<div class="edh-subhead">Official rulings (Scryfall)</div><ul class="pr-rulings">${found.slice(0, 6).map(r => `<li>${r.comment} <span class="text-muted">(${r.published_at})</span></li>`).join('')}</ul>`;
+        }
+
+        async function showPrereleaseCardRuling(name) {
+            const el = document.getElementById('prCardRuling');
+            const cards = await loadPrereleaseSetCards(prSetCode);
+            const card = cards.find(c => c.name.toLowerCase() === (name || '').trim().toLowerCase());
+            if (!card) { el.innerHTML = ''; return; }
+            el.innerHTML = '<div class="loading" style="padding:0;">Loading rulings...</div>';
+            const rulings = await fetchCardRulings(card);
+            el.innerHTML = `
+                <div class="edh-block">
+                    <div class="edh-head"><span>${prCardLinkHTML(card)} <span class="text-secondary">${card.mana_cost ? renderManaCost(card.mana_cost) : ''}</span></span><span class="text-secondary" style="font-size:0.85em;">${card.type_line || ''}</span></div>
+                    <div class="judge-oracle-text">${renderRulesTextHTML(cardOracleText(card))}</div>
+                    ${rulings.length ? `<div class="edh-subhead">Official rulings</div><ul class="pr-rulings">${rulings.map(r => `<li>${r.comment} <span class="text-muted">(${r.published_at})</span></li>`).join('')}</ul>` : '<div class="text-secondary" style="margin-top:6px;">No official rulings yet - Scryfall adds them when the set is released. Check the mechanic notes below.</div>'}
+                </div>
+            `;
+        }
+
+        // ---- Hot cards ----
+        let prHotToken = 0;
+        async function renderPrereleaseHot() {
+            const myToken = ++prHotToken;
+            const el = document.getElementById('prHotApp');
+            const set = prereleaseSetInfo();
+            el.innerHTML = '<div class="loading">Checking what players are building...</div>';
+            const path = `sets/${prSetCode}`;
+            const [setPage, pulled] = await Promise.all([fetchEdhrecPage(path), computePulledCards(prSetCode).catch(() => null)]);
+            if (myToken !== prHotToken) return;
+            const lists = edhrecCardlists(setPage);
+            const seen = new Set();
+            const newCards = lists.filter(l => (l.header || '').startsWith('Cards (') && !/Reprints/.test(l.header))
+                .flatMap(l => l.cardviews || [])
+                .filter(cv => cv.num_decks && !seen.has(cv.name) && seen.add(cv.name))
+                .sort((a, b) => b.num_decks - a.num_decks).slice(0, 20);
+            const pulledRows = pulled && pulled.rows.length
+                ? [...pulled.rows].sort((a, b) => b.decks * b.bestSynergy - a.decks * a.bestSynergy).slice(0, 20)
+                : [];
+            const [newHTML, pulledHTML] = await Promise.all([
+                newCards.length ? marketPricedRowsHTML(newCards.map(cv => ({ name: cv.name, note: `${Number(cv.num_decks).toLocaleString()} decks` })), 'In decks') : '',
+                pulledRows.length ? marketPricedRowsHTML(pulledRows.map(r => ({ name: r.name, note: `via ${r.via[0].name}` })), 'Pulled in by') : ''
+            ]);
+            if (myToken !== prHotToken) return;
+            el.innerHTML = `
+                <div class="formats-intro">What to have ready at the counter while players are excited: ${set ? set.name : 'the set'}'s most-played new cards, and the older cards its new commanders pull into decks. Commander play data from EDHREC, so it grows as more players post decks.</div>
+                ${newCards.length ? `<div class="bg-section-title" style="margin-top:0;">Most-played new cards</div>${newHTML}` : '<div class="moonshot-status">EDHREC doesn\'t have deck data for this set\'s cards yet.</div>'}
+                ${pulledRows.length ? `<div class="bg-section-title">Older cards being pulled in</div><div class="bg-section-sub">Singles already in the case that the new commanders' decks run far more than usual. Full list in Market Watch → Pulled by New Sets.</div>${pulledHTML}` : ''}
+                ${edhrecSourceHTML(path)}
+            `;
+        }
+
+        // ---- Sealed helper ----
+        // Players tap the cards they opened; it counts each color's
+        // playables, removal and rares, suggests the best two colors and
+        // splits 17 basic lands by the colored mana symbols.
+        let prSealedFilter = { color: 'all', text: '' };
+        const PR_SEALED_COLORS = [['all', 'All'], ['W', 'White'], ['U', 'Blue'], ['B', 'Black'], ['R', 'Red'], ['G', 'Green'], ['M', 'Multicolor'], ['C', 'Colorless']];
+        const PR_REMOVAL_RE = /(destroy|exile) target (creature|permanent|nonland|artifact or creature|creature or planeswalker)|deals? \d+ damage to (any target|target creature|target creature or planeswalker)|target creature gets -\d+\/-\d+|fights? (target|up to one)|damage equal to [^.]*to target creature/i;
+        const BASIC_FOR_COLOR = { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' };
+
+        function prPoolKey() { return `prSealedPool:${prSetCode}`; }
+        function readPrPool() {
+            try { return JSON.parse(localStorage.getItem(prPoolKey()) || '{}'); } catch (err) { return {}; }
+        }
+        function writePrPool(pool) {
+            try { localStorage.setItem(prPoolKey(), JSON.stringify(pool)); } catch (err) { /* private mode */ }
+        }
+
+        function prCardColors(card) {
+            return (card.colors || (card.card_faces && card.card_faces[0].colors) || []);
+        }
+        function prColorGroup(card) {
+            if (/\bLand\b/.test((card.type_line || '').split(' // ')[0])) return 'L';
+            const colors = prCardColors(card);
+            return colors.length === 0 ? 'C' : colors.length > 1 ? 'M' : colors[0];
+        }
+        function prIsRemoval(card) { return PR_REMOVAL_RE.test(cardOracleText(card)); }
+        function prIsCreature(card) { return /\bCreature\b/.test((card.type_line || '').split(' // ')[0]); }
+
+        async function renderPrereleaseSealed() {
+            const el = document.getElementById('prSealedApp');
+            el.innerHTML = '<div class="loading">Loading the set\'s cards...</div>';
+            let cards;
+            try { cards = await loadPrereleaseSetCards(prSetCode); } catch (err) {
+                el.innerHTML = '<div class="error">Couldn\'t load this set from Scryfall - try again in a moment.</div>';
+                return;
+            }
+            const f = prSealedFilter;
+            el.innerHTML = `
+                <div class="formats-intro">Tap each card you opened to add it to your pool (tap again for another copy). It counts what each color gives you and suggests your best two colors and a land split. Just tips - build what you enjoy!</div>
+                <div class="pr-sealed">
+                    <div class="pr-sealed-picker">
+                        <div class="staples-controls" style="flex-wrap:wrap; justify-content:flex-start;">
+                            ${PR_SEALED_COLORS.map(([k, label]) => `<button type="button" class="staples-sort-btn${f.color === k ? ' active' : ''}" onclick="setPrSealedFilter('color', '${k}')">${label}</button>`).join('')}
+                        </div>
+                        <input type="text" class="pr-sealed-search" placeholder="Filter by name..." value="${escapeAttr(f.text)}" oninput="setPrSealedFilter('text', this.value)" aria-label="Filter cards">
+                        <div class="pr-sealed-grid" id="prSealedGrid"></div>
+                    </div>
+                    <div class="pr-sealed-pool" id="prSealedPool"></div>
+                </div>
+            `;
+            renderPrSealedGrid(cards);
+            renderPrSealedPool(cards);
+        }
+
+        function setPrSealedFilter(key, value) {
+            prSealedFilter[key] = value;
+            if (key === 'color') renderPrereleaseSealed();
+            else loadPrereleaseSetCards(prSetCode).then(renderPrSealedGrid);
+        }
+
+        function renderPrSealedGrid(cards) {
+            const grid = document.getElementById('prSealedGrid');
+            if (!grid) return;
+            const f = prSealedFilter;
+            const pool = readPrPool();
+            const shown = cards.filter(c => (f.color === 'all' || prColorGroup(c) === f.color || (f.color === 'C' && prColorGroup(c) === 'L'))
+                && (!f.text || c.name.toLowerCase().includes(f.text.toLowerCase())));
+            grid.innerHTML = shown.map(c => `
+                <button type="button" class="pr-sealed-card${pool[c.id] ? ' in-pool' : ''}" onclick="addPrSealedCard('${c.id}')" title="${escapeAttr(c.type_line || '')}">
+                    <span class="pr-rarity pr-r-${c.rarity}"></span>
+                    <span class="pr-sealed-name">${c.name.split(' // ')[0]}</span>
+                    <span class="pr-sealed-cost">${c.mana_cost ? renderManaCost(c.mana_cost) : ''}</span>
+                    ${pool[c.id] ? `<span class="pr-sealed-count">×${pool[c.id]}</span>` : ''}
+                </button>
+            `).join('') || '<div class="text-secondary">No cards match.</div>';
+        }
+
+        function addPrSealedCard(id) {
+            const pool = readPrPool();
+            pool[id] = (pool[id] || 0) + 1;
+            writePrPool(pool);
+            loadPrereleaseSetCards(prSetCode).then(cards => { renderPrSealedGrid(cards); renderPrSealedPool(cards); });
+        }
+
+        function removePrSealedCard(id) {
+            const pool = readPrPool();
+            if (pool[id] > 1) pool[id]--; else delete pool[id];
+            writePrPool(pool);
+            loadPrereleaseSetCards(prSetCode).then(cards => { renderPrSealedGrid(cards); renderPrSealedPool(cards); });
+        }
+
+        function clearPrSealedPool() {
+            if (!confirm('Clear the whole pool?')) return;
+            writePrPool({});
+            loadPrereleaseSetCards(prSetCode).then(cards => { renderPrSealedGrid(cards); renderPrSealedPool(cards); });
+        }
+
+        function renderPrSealedPool(cards) {
+            const el = document.getElementById('prSealedPool');
+            if (!el) return;
+            const pool = readPrPool();
+            const byId = new Map(cards.map(c => [c.id, c]));
+            const entries = Object.entries(pool).map(([id, n]) => ({ card: byId.get(id), n })).filter(e => e.card);
+            const total = entries.reduce((sum, e) => sum + e.n, 0);
+            if (!total) {
+                el.innerHTML = '<div class="edh-block"><div class="edh-title">Your pool</div><div class="text-secondary" style="margin-top:6px;">Tap cards on the left to add them. A prerelease kit has 6 packs - about 84 cards.</div></div>';
+                return;
+            }
+            // Per color: playable cards, creatures, removal, rares.
+            const stats = {};
+            'WUBRG'.split('').forEach(c => { stats[c] = { cards: 0, creatures: 0, removal: 0, rares: 0 }; });
+            entries.forEach(({ card, n }) => {
+                const colors = prCardColors(card);
+                if (colors.length !== 1) return;
+                const s = stats[colors[0]];
+                s.cards += n;
+                if (prIsCreature(card)) s.creatures += n;
+                if (prIsRemoval(card)) s.removal += n;
+                if (['rare', 'mythic'].includes(card.rarity)) s.rares += n;
+            });
+            // Pairs: every nonland card castable with those two colors
+            // (colorless included), weighted toward removal and rares.
+            const castable = (card, pair) => prCardColors(card).every(col => pair.includes(col));
+            const pairScores = PRERELEASE_PAIRS.map(pair => {
+                let score = 0, count = 0, creatures = 0, removal = 0;
+                entries.forEach(({ card, n }) => {
+                    if (prColorGroup(card) === 'L' || !castable(card, pair)) return;
+                    const w = 1 + (prIsRemoval(card) ? 1.5 : 0) + (['rare', 'mythic'].includes(card.rarity) ? 1.5 : 0);
+                    score += w * n; count += n;
+                    if (prIsCreature(card)) creatures += n;
+                    if (prIsRemoval(card)) removal += n;
+                });
+                return { pair, score, count, creatures, removal };
+            }).sort((a, b) => b.score - a.score);
+            const best = pairScores[0];
+            // Land split by colored mana symbols among that pair's cards.
+            const pips = { [best.pair[0]]: 0, [best.pair[1]]: 0 };
+            entries.forEach(({ card, n }) => {
+                if (prColorGroup(card) === 'L' || !castable(card, best.pair)) return;
+                const cost = card.mana_cost || (card.card_faces || []).map(fc => fc.mana_cost || '').join('');
+                best.pair.split('').forEach(col => { pips[col] += ((cost.match(new RegExp(`\\{${col}(\\/[A-Z])?\\}`, 'g')) || []).length) * n; });
+            });
+            const pipTotal = pips[best.pair[0]] + pips[best.pair[1]] || 2;
+            const first = Math.max(6, Math.min(11, Math.round(17 * pips[best.pair[0]] / pipTotal)));
+            const lands = { [best.pair[0]]: first, [best.pair[1]]: 17 - first };
+            const notes = PRERELEASE_SET_NOTES[prSetCode];
+            const themeFor = pair => (notes && notes.themes && (notes.themes[pair] || notes.themes[pair[1] + pair[0]])) || '';
+            const pairLabel = pair => pair.split('').map(col => `<i class="pip-dot pip-${col}"></i>`).join('');
+            const warn = [];
+            if (best.count < 22) warn.push(`Only ${best.count} playable cards in these colors - you may need a light splash or a few weaker cards.`);
+            if (best.creatures < 13) warn.push(`Only ${best.creatures} creatures - most decks want 15-17.`);
+            el.innerHTML = `
+                <div class="edh-block">
+                    <div class="edh-head"><span class="edh-title">Your pool · ${total} cards</span><button type="button" class="staples-sort-btn" onclick="clearPrSealedPool()">Clear</button></div>
+                    <table class="other-stores pr-color-table">
+                        <thead><tr><th>Color</th><th>Cards</th><th>Creatures</th><th>Removal</th><th>Rares</th></tr></thead>
+                        <tbody>${'WUBRG'.split('').map(col => `<tr><td><i class="pip-dot pip-${col}"></i> ${BASIC_FOR_COLOR[col].replace('Plains', 'White').replace('Island', 'Blue').replace('Swamp', 'Black').replace('Mountain', 'Red').replace('Forest', 'Green')}</td><td>${stats[col].cards}</td><td>${stats[col].creatures}</td><td>${stats[col].removal}</td><td>${stats[col].rares}</td></tr>`).join('')}</tbody>
+                    </table>
+                    <div class="edh-subhead">Suggested colors</div>
+                    <div class="pr-best">${pairLabel(best.pair)} <strong>${best.count} playables</strong> · ${best.creatures} creatures · ${best.removal} removal${themeFor(best.pair) ? `<div class="text-secondary">This pair's plan: ${themeFor(best.pair)}</div>` : ''}</div>
+                    <div class="pr-lands">Lands: <strong>${lands[best.pair[0]]} ${BASIC_FOR_COLOR[best.pair[0]]} + ${lands[best.pair[1]]} ${BASIC_FOR_COLOR[best.pair[1]]}</strong> (17), split by your mana symbols.</div>
+                    ${warn.length ? `<ul class="pr-rulings">${warn.map(w => `<li>${w}</li>`).join('')}</ul>` : ''}
+                    <div class="edh-subhead">Next best</div>
+                    <div>${pairScores.slice(1, 3).map(p => `${pairLabel(p.pair)} ${p.count} playables, ${p.removal} removal`).join(' · ')}</div>
+                    <details class="all-printings"><summary>Cards in your pool (${total})</summary>
+                        <div class="pr-pool-list">${entries.sort((a, b) => a.card.name.localeCompare(b.card.name)).map(({ card, n }) => `<div>${n > 1 ? `${n}× ` : ''}${prCardLinkHTML(card)} <button type="button" class="buylist-remove-btn" onclick="removePrSealedCard('${card.id}')" aria-label="Remove one">−</button></div>`).join('')}</div>
+                    </details>
+                    <div class="edh-source">Removal is spotted from the card text, so it's approximate. Rares and mythics count extra, since they're usually your strongest cards.</div>
+                </div>
+            `;
+        }
+
+        // ---- Printable deck-building card ----
+        // The card is built from the set's notes (or its card data when
+        // there are none), shown as an editable preview - staff can click
+        // any text to change it - and printed 4 to a letter page.
+        function prCardKey() { return `prDeckCard:${prSetCode}`; }
+
+        async function defaultPrereleaseCardHTML() {
+            const set = prereleaseSetInfo();
+            const notes = PRERELEASE_SET_NOTES[prSetCode];
+            let mechanics = [];
+            let themes = {};
+            if (notes) {
+                mechanics = notes.mechanics.map(m => ({ name: m.cardName || m.name, text: m.card || m.text }));
+                themes = notes.themes;
+            } else {
+                const cards = await loadPrereleaseSetCards(prSetCode);
+                mechanics = prereleaseMechanics(cards).slice(0, 4).map(m => ({ name: m.name, text: m.text }));
+                // Without notes, point at each pair's two-color uncommon.
+                PRERELEASE_PAIRS.forEach(pair => {
+                    const sign = cards.find(c => c.rarity === 'uncommon' && prCardColors(c).length === 2 && pair.split('').every(col => prCardColors(c).includes(col)));
+                    themes[pair] = sign ? `See ${sign.name.split(' // ')[0]}` : '';
+                });
+            }
+            const short = t => (t.length > 150 ? `${t.slice(0, 147)}...` : t);
+            const pairDots = pair => pair.split('').map(col => `<i class="pip-dot pip-${col}"></i>`).join('');
+            return `
+                <div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">${set ? set.name : ''} Prerelease</span></div>
+                <h4>Build your deck</h4>
+                <div class="pr-dc-recipe"><div><b>40</b>cards minimum</div><div><b>17</b>lands</div><div><b>23</b>spells</div></div>
+                <ol>
+                    <li><b>Sort</b> all 6 packs into piles by color, plus multicolor, artifacts and lands.</li>
+                    <li><b>Pick your 2 best colors</b> - your strongest cards and most removal.</li>
+                    <li><b>Play 15-17 creatures</b> plus your removal. Most cards should cost 2-4; only a few cost 5+.</li>
+                    <li><b>Add 17 basic lands</b> (free at the land station), split by color - like 9 + 8.</li>
+                </ol>
+                <div class="pr-dc-tip">Splash a 3rd color only for a bomb or removal, with 3+ lands that make it. Between games you can swap in any card from your pool.</div>
+                <h4>New in ${set ? set.name : 'this set'}</h4>
+                <ul>${mechanics.map(m => `<li><b>${m.name}</b> - ${short(m.text)}</li>`).join('')}</ul>
+                <h4>What each color pair wants</h4>
+                <div class="pr-dc-themes">${PRERELEASE_PAIRS.map(pair => `<div>${pairDots(pair)} <span>${themes[pair] || ''}</span></div>`).join('')}</div>
+                <div class="pr-dc-fun">These are just tips, not rules. Build the deck you're excited to play - that's the fun of sealed!</div>
+                <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Unofficial; not endorsed by Wizards of the Coast.</span></div>
+            `;
+        }
+
+        async function renderPrereleaseCard() {
+            const el = document.getElementById('prCardApp');
+            let saved = null;
+            try { saved = localStorage.getItem(prCardKey()); } catch (err) { /* private mode */ }
+            const html = saved || await defaultPrereleaseCardHTML();
+            el.innerHTML = `
+                <div class="formats-intro">A handout for players, printed 4 to a letter page - cut on the dashed lines. Click any text on the card to change it before printing; your edits are saved on this computer.</div>
+                <div class="staples-controls">
+                    <button type="button" class="staples-sort-btn" onclick="printPrereleaseSheet('card')">🖨️ Print (4 per page)</button>
+                    <button type="button" class="staples-sort-btn" onclick="resetPrereleaseCard()">↺ Reset to default</button>
+                </div>
+                <div class="pr-dc-preview-wrap"><div class="pr-dc" id="prDeckCardEdit" contenteditable="true" spellcheck="true" oninput="savePrereleaseCard()">${html}</div></div>
+                ${PRERELEASE_SET_NOTES[prSetCode] ? '' : '<div class="bk-note" style="text-align:center;">No hand-written notes for this set yet, so the mechanics come from the cards\' reminder text and each color pair points at its two-color uncommon. Edit the lines to taste before printing.</div>'}
+            `;
+        }
+
+        function savePrereleaseCard() {
+            const el = document.getElementById('prDeckCardEdit');
+            try { localStorage.setItem(prCardKey(), el.innerHTML); } catch (err) { /* private mode */ }
+        }
+
+        async function resetPrereleaseCard() {
+            try { localStorage.removeItem(prCardKey()); } catch (err) { /* private mode */ }
+            renderPrereleaseCard();
+        }
+
+        // ---- Table QR sign ----
+        function prereleasePlayerUrl() {
+            const base = location.href.split('#')[0].split('?')[0];
+            return `${base}?set=${prSetCode}#prerelease/mechanics`;
+        }
+
+        function qrImageUrl(text, size = 300) {
+            return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=8&data=${encodeURIComponent(text)}`;
+        }
+
+        function prereleaseQrSignHTML() {
+            const set = prereleaseSetInfo();
+            const url = prereleasePlayerUrl();
+            return `
+                <div class="pr-qr-sign">
+                    <div class="pr-dc-store">Moonshot Games</div>
+                    <div class="pr-qr-title">${set ? set.name : ''} Prerelease</div>
+                    <div class="pr-qr-sub">Scan for the new mechanics &amp; rulings</div>
+                    <img src="${qrImageUrl(url)}" alt="QR code" width="190" height="190">
+                    <div class="pr-qr-note">Great for deck building and between games. During a game, raise your hand for a judge.</div>
+                    <div class="pr-qr-url">${url}</div>
+                </div>
+            `;
+        }
+
+        function renderPrereleaseQr() {
+            const el = document.getElementById('prQrApp');
+            el.innerHTML = `
+                <div class="formats-intro">A sign for each table. Players scan it to open this set's mechanics and rulings on their phone. Prints 2 per letter page.</div>
+                <div class="staples-controls"><button type="button" class="staples-sort-btn" onclick="printPrereleaseSheet('qr')">🖨️ Print (2 per page)</button></div>
+                <div class="pr-qr-preview">${prereleaseQrSignHTML()}</div>
+                <div class="bk-note" style="text-align:center;">The QR image is made by the free goqr.me service (api.qrserver.com) from the link shown.</div>
+            `;
+        }
+
+        // ---- Printing ----
+        // Builds a print-only sheet, prints it, then removes it.
+        function printPrereleaseSheet(kind) {
+            let area = document.getElementById('prPrintArea');
+            if (area) area.remove();
+            area = document.createElement('div');
+            area.id = 'prPrintArea';
+            if (kind === 'card') {
+                const html = document.getElementById('prDeckCardEdit').innerHTML;
+                area.innerHTML = `<div class="pr-print-sheet pr-print-cards">${`<div class="pr-dc">${html}</div>`.repeat(4)}</div>`;
+            } else {
+                area.innerHTML = `<div class="pr-print-sheet pr-print-qr">${prereleaseQrSignHTML().repeat(2)}</div>`;
+            }
+            document.body.appendChild(area);
+            document.body.classList.add('pr-printing');
+            const done = () => {
+                document.body.classList.remove('pr-printing');
+                area.remove();
+                window.removeEventListener('afterprint', done);
+            };
+            window.addEventListener('afterprint', done);
+            // Let the QR images load before the print dialog opens.
+            const imgs = [...area.querySelectorAll('img')];
+            Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => window.print());
+        }
+
 
         // ============== COMMANDER BRACKETS ==============
         // The bracket rules themselves can't be fetched (Wizards publishes
@@ -16328,6 +17217,7 @@
         initTablist('bgTabs', BUYERS_GUIDE_SUBTABS, 'finder');
         initTablist('guideTabs', GUIDE_SUBTABS, 'gradingGuide');
         initTablist('marketTabs', MARKET_SUBTABS, 'spikes');
+        initTablist('prTabs', PRERELEASE_SUBTABS, 'mechanics');
         // A bookmarked/shared link (e.g. #buyersguide/lands) opens straight to
         // that tab instead of always landing on MTG Card Lookup.
         if (location.hash) applyRouteFromHash();
