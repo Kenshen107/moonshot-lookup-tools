@@ -58,6 +58,25 @@ Where the data is used:
 - **Products:** "Box value: open it or sell it sealed?" computes each booster type's expected card value from MTGJSON's booster sheets and today's Scryfall prices. It shows the total, a "sellable" figure (cards $1+), chase cards, and a comparison against a sealed price staff type in. There's no free source for sealed prices or their history, so there's no sealed trend.
 - **Buyer's Guide → Price a Deck:** a pasted list is priced at the cheapest copies, with the total, a 30-day trend per card and a count of rising cards.
 
+## Prerelease tab (`MTG_Lookup_Tool.html`)
+
+The 🎟️ Prerelease tab (under Rules & events, `PRERELEASE_SUBTABS`) works on one set at a time. The set picker lists paper expansion, core, draft and masters sets from 120 days back to 120 days ahead, and defaults to the next upcoming one. A link can choose the set with `?set=<code>`.
+
+- **Mechanics & Rulings:** for quick judge calls. It shows each mechanic with a plain-English explanation, key rulings and every card that uses it, plus a lookup for any card in the set. Card text comes live from Scryfall. Scryfall only adds official rulings at release, so they appear automatically from release day on. Before that, the hand-written notes in `PRERELEASE_SET_NOTES` cover them. Any other non-evergreen keyword that appears on 3+ cards is added automatically, using the cards' reminder text.
+- **Hot Cards:** the set's most-played new cards (EDHREC `sets/<code>`), plus the older cards its commanders pull in (the same data as Market Watch → Pulled by New Sets), priced at the cheapest copies.
+- **Sealed Helper:** players tap the cards they opened. It counts each color's cards, creatures, removal and rares, suggests the best two colors (removal and rares count extra), and splits 17 lands by mana symbols. Removal is spotted from the card text, so it's approximate. The pool is saved in the browser (`prSealedPool:<code>`).
+- **Deck-Building Card:** a handout printed 4 per letter page (each card a quarter sheet, 4in × 5.25in, with dashed cut lines). The preview can be edited by clicking; edits are saved in the browser (`prDeckCard:<code>`), and "Reset to default" undoes them. The default card is built from `PRERELEASE_SET_NOTES` (each mechanic's short `cardName` / `card` line, and the 10 color-pair `themes`). Without notes, it uses the cards' reminder text and each pair's two-color uncommon. Keep the card to one quarter page: check that the preview doesn't overflow. Always keep the two footer lines: "Use while building - put it away during games." (players can't use outside notes during games) and "Unofficial; not endorsed by Wizards of the Coast." (Wizards' Fan Content Policy). Hand the card out free; don't sell it.
+- **Table QR:** a sign, 2 per page, linking to `?set=<code>#prerelease/mechanics`. The QR image comes from api.qrserver.com (goqr.me).
+- Printing goes through `printPrereleaseSheet()`, which builds `#prPrintArea`, hides everything else with print CSS, and removes it afterward.
+
+**For each new set,** add an entry to `PRERELEASE_SET_NOTES`:
+- mechanics: `match`, `text`, `rulings`, `isNew`, plus a short `cardName` / `card` line for the handout
+- `themes` for the 10 color pairs
+- `kit`
+- `checked`: today's date
+
+Sources: the set's release notes and Wizards' archetype descriptions (draftsim.com quotes them; the environment can reach draftsim.com but not www.draftsim.com). Check the mechanics against live Scryfall cards.
+
 ## Commander Brackets tab (`MTG_Lookup_Tool.html`)
 
 The bracket rules are written out by hand, because Wizards publishes them as articles, not data. Everything else on the tab comes live from Scryfall: the Game Changers list, the Commander banned list, and the mass-land-denial / extra-turn tags used by the checkers. When Wizards posts a bracket or banned-list update:
