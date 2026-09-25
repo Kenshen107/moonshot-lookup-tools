@@ -5976,18 +5976,48 @@
         }
         .pr-sealed-card {
             display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 8px;
+            align-items: stretch;
             background: var(--bg-panel);
-            color: var(--text-primary);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-sm);
-            cursor: pointer;
-            text-align: left;
             font-size: 0.88em;
             min-width: 0;
         }
+        .pr-sealed-add {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            width: auto;
+            margin: 0;
+            padding: 6px 8px;
+            background: none;
+            border: none;
+            border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+            color: var(--text-primary);
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .pr-sealed-add:hover { background: var(--bg-panel-raised); }
+        .pr-sealed-minus {
+            flex: 0 0 auto;
+            width: auto;
+            margin: 0;
+            min-width: 30px;
+            padding: 0 8px;
+            background: var(--bg-inset);
+            color: var(--text-primary);
+            border: none;
+            border-left: 1px solid var(--border);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 1.15em;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .pr-sealed-minus:hover { background: #7a2a2a; }
+        .pr-pool-list .pr-sealed-minus { min-width: 26px; padding: 0 6px; margin-left: 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
         .pr-sealed-card:hover { border-color: var(--brand-light); }
         .pr-sealed-card.in-pool { border-color: var(--brand); background: var(--bg-panel-raised); }
         .pr-rarity { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; }
@@ -6001,18 +6031,23 @@
         .pr-sealed-count { flex: 0 0 auto; font-weight: 700; color: var(--brand-light); }
         .pr-sealed-pool { position: sticky; top: 10px; }
         .pr-sealed-pool .edh-block { margin-top: 0; }
-        .pr-color-table { width: 100%; margin-top: 8px; }
+        .pr-table-wrap { overflow-x: auto; margin-top: 8px; }
+        .pr-color-table { width: 100%; font-size: 0.88em; }
+        .pr-color-table th, .pr-color-table td { padding: 5px 4px; }
         .pr-best { font-size: 1.05em; margin: 4px 0; }
         .pr-lands { margin: 6px 0; }
         .pr-pool-list { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; font-size: 0.92em; }
 
         @media (max-width: 760px) {
-            .pr-sealed { grid-template-columns: 1fr; }
+            .pr-sealed { grid-template-columns: minmax(0, 1fr); }
             .pr-sealed-pool { position: static; }
             .pr-sealed-grid { max-height: 50vh; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
         }
         @media (max-width: 480px) {
             .pr-sealed-grid { grid-template-columns: 1fr; }
+            .pr-color-name { display: none; }
+            .pr-color-table { font-size: 0.74em; }
+            .pr-color-table th, .pr-color-table td { padding: 5px 2px; letter-spacing: 0; }
         }
 
         /* The deck-building card: exactly a quarter of a letter page
@@ -12097,7 +12132,13 @@
         // (PRERELEASE_SET_NOTES) fill in what data can't: plain-English
         // mechanic explanations, key rulings before Scryfall has them (it
         // adds rulings at release), and the color-pair themes.
-        const PRERELEASE_SET_TYPES = ['expansion', 'core', 'draft_innovation', 'masters'];
+        // Which sets had (or will have) a prerelease: the ones MTGJSON lists
+        // a prerelease kit for (Return to Ravnica, 2012, onward - so Masters
+        // sets and Mystery Booster Commander, which have none, stay out).
+        // Scryfall expansions and core sets within PRERELEASE_PAST_DAYS /
+        // PRERELEASE_FUTURE_DAYS are also listed in case MTGJSON hasn't
+        // added a new set's kit yet, or can't be reached.
+        const PRERELEASE_FALLBACK_TYPES = ['expansion', 'core'];
         const PRERELEASE_PAST_DAYS = 120;
         const PRERELEASE_FUTURE_DAYS = 120;
         const PRERELEASE_PAIRS = ['WU', 'UB', 'BR', 'RG', 'GW', 'WB', 'UR', 'BG', 'RW', 'GU'];
@@ -12196,15 +12237,18 @@
         async function showPrereleaseTab() {
             if (!prSets) {
                 try {
-                    const sets = await fetchRawSets();
+                    const [sets, products] = await Promise.all([fetchRawSets(), loadProductsData().catch(() => null)]);
+                    const kitCodes = new Set(products
+                        ? products.sets.filter(set => set.sealedProduct.some(pr => pr.subtype === 'prerelease_kit')).map(set => set.code.toLowerCase())
+                        : []);
                     const now = Date.now();
                     const from = new Date(now - PRERELEASE_PAST_DAYS * 86400000).toISOString().slice(0, 10);
                     const to = new Date(now + PRERELEASE_FUTURE_DAYS * 86400000).toISOString().slice(0, 10);
                     const today = todayISO();
                     prSets = sets
-                        .filter(set => PRERELEASE_SET_TYPES.includes(set.set_type) && !set.digital && !set.parent_set_code
-                            && set.released_at >= from && set.released_at <= to && set.card_count > 0)
-                        .map(set => ({ code: set.code, name: set.name, released_at: set.released_at, upcoming: set.released_at > today }))
+                        .filter(set => !set.digital && !set.parent_set_code && set.card_count > 0 && set.released_at <= to
+                            && (kitCodes.has(set.code) || (PRERELEASE_FALLBACK_TYPES.includes(set.set_type) && set.released_at >= from)))
+                        .map(set => ({ code: set.code, name: set.name, released_at: set.released_at, upcoming: set.released_at > today, older: set.released_at < from }))
                         .sort((a, b) => a.released_at.localeCompare(b.released_at));
                 } catch (err) {
                     document.getElementById('prMechanicsApp').innerHTML = '<div class="error">Couldn\'t load the set list - try again in a moment.</div>';
@@ -12215,8 +12259,14 @@
                 const next = prSets.find(set => set.upcoming);
                 const fallback = next || prSets[prSets.length - 1];
                 prSetCode = (wanted && prSets.some(set => set.code === wanted)) ? wanted : (fallback && fallback.code);
-                document.getElementById('prSetSelect').innerHTML = prSets.map(set =>
-                    `<option value="${set.code}"${set.code === prSetCode ? ' selected' : ''}>${set.name} (${set.upcoming ? 'out' : 'released'} ${set.released_at})</option>`).join('');
+                // Coming up and recent sets first (soonest first), then older
+                // sets, newest first, for running a prerelease with leftover kits.
+                const option = set => `<option value="${set.code}"${set.code === prSetCode ? ' selected' : ''}>${set.name} (${set.upcoming ? 'out' : 'released'} ${set.released_at})</option>`;
+                const group = (label, list) => (list.length ? `<optgroup label="${label}">${list.map(option).join('')}</optgroup>` : '');
+                document.getElementById('prSetSelect').innerHTML =
+                    group('Coming up', prSets.filter(set => set.upcoming))
+                    + group(`Out now (last ${PRERELEASE_PAST_DAYS} days)`, prSets.filter(set => !set.upcoming && !set.older).reverse())
+                    + group('Older sets (leftover kits)', prSets.filter(set => set.older).reverse());
                 updatePrereleaseSetNote();
             }
             switchPrereleaseTab(currentPrereleaseSubtab);
@@ -12427,7 +12477,45 @@
         // splits 17 basic lands by the colored mana symbols.
         let prSealedFilter = { color: 'all', text: '' };
         const PR_SEALED_COLORS = [['all', 'All'], ['W', 'White'], ['U', 'Blue'], ['B', 'Black'], ['R', 'Red'], ['G', 'Green'], ['M', 'Multicolor'], ['C', 'Colorless']];
-        const PR_REMOVAL_RE = /(destroy|exile) target (creature|permanent|nonland|artifact or creature|creature or planeswalker)|deals? \d+ damage to (any target|target creature|target creature or planeswalker)|target creature gets -\d+\/-\d+|fights? (target|up to one)|damage equal to [^.]*to target creature/i;
+        // What each card does comes from Scryfall's community card tags
+        // (PR_ROLE_TAGS), which are hand-checked and cover new mechanics a
+        // text pattern can't know. The patterns below are the fallback for
+        // a set that isn't tagged yet, and also catch removal, interaction
+        // and draw the tags miss. All were checked against the tags for
+        // ten sets (Wilds of Eldraine to Reality Fracture) on 2026-09-25:
+        // removal matched 98% of the time and found 78% of tagged removal;
+        // draw 98% / 66%; interaction 88% / 72%; ramp 87% / 65%;
+        // protection 82% / 62%. Patterns run on the text without reminder
+        // text or quoted abilities (so a Jace token's "[−3]: Draw a card"
+        // isn't draw).
+        const PR_ROLE_TAGS = {
+            removal: 'otag:creature-removal -otag:bounce',
+            interaction: '(otag:counterspell or otag:bounce or otag:tapper or otag:discard)',
+            protection: '(otag:protection or otag:protects-creature)',
+            draw: 'otag:card-advantage -otag:loot -otag:rummage',
+            ramp: 'otag:ramp'
+        };
+        const PR_REMOVAL_RE = /(destroy|exile) (up to one )?(another |other )?target (?![^.]*you (control|own))(?![^.]*\bcard\b)[^.]*?\b(creature|permanent|planeswalker)|deals? (\d+|X|that much) damage to (any target|each creature|(up to one )?(another |other )?target [^.]*?creature)|deals? damage equal to [^.]*? to (any target|(up to one )?(another |other )?target [^.]*?creature)|target creature (an opponent controls |you don't control )?gets -(\d+|X)\/-([1-9]\d*|X)|\bfights? |(target|each) (player|opponent) sacrifices (a|an|two) [^.]*?creature|enchanted creature can't attack or block|puts? (it|that creature|target creature)[^.]*? on (the )?(top or bottom|bottom) of (its owner'?s|their) library|destroy all creatures/i;
+        // Interaction: answers other than removal - counterspells, bounce,
+        // tapping down, "can't block", discard, stealing. Protection: saving
+        // your own things - granting hexproof, indestructible, protection
+        // or ward, phasing out, or bouncing your own permanent.
+        const PR_INTERACTION_RE = /counter target|return (up to (one|two) )?target (?![^.]*you control)[^.]*?to (its|their) owner'?s'? hands?|tap (up to (one|two) )?(another )?target (creature|permanent|artifact)|doesn't untap during its controller'?s untap step|target creature can't (block|attack)|(target|each) opponent[^.]*discards?|you choose a [^.]*card from it|gain control of target/i;
+        const PR_PROTECTION_RE = /(gains?|have)\b[^."]*\b(hexproof|indestructible|protection from|shroud|ward)\b|phases? out|return (another )?target (creature|permanent|nonland permanent) you control to its owner'?s hand/i;
+        // Card draw (not "draw, then discard" looting or rummaging) and ramp
+        // (mana abilities, lands onto the battlefield, Treasure tokens).
+        const PR_DRAW_RE = /(?<!discard (a|this) card(: |, then |\. if you do, ))(?<!controller )\bdraws? (a|one|two|three|four|five|X) cards?\b(?!,? then discard)|\bdraws? (a card for each|cards equal)/i;
+        const PR_RAMP_RE = /\badd (\{[WUBRGC]\}|one mana|two mana|three mana|an amount)|search your library for [^.]*land cards?[^.]*onto the battlefield|put [^.]*land cards?[^.]*onto the battlefield|(?<!(they|opponent|player) )\bcreates? [^.]*\btreasure\b/i;
+        // Evasion (the E in BREAD): creatures that are hard to block.
+        const PR_EVASION_KEYWORDS = new Set(['Flying', 'Menace', 'Shadow', 'Fear', 'Intimidate', 'Skulk', 'Horsemanship']);
+        const PR_EVASION_RE = /\b(this creature|~) can't be blocked/i;
+        // How much each kind of card adds to a color pair's score (every
+        // playable card counts 1; a card can count for several). The order
+        // follows the usual sealed priorities - bombs and removal first,
+        // then evasion (BREAD), mana/fixing and card advantage, then tricks
+        // and interaction (Draftsim's sealed guide). Rares and mythics
+        // stand in for bombs.
+        const PR_PAIR_WEIGHTS = { rare: 1.5, removal: 1.5, evasive: 0.5, ramp: 0.5, draw: 0.5, interaction: 0.25, protection: 0.25 };
         const BASIC_FOR_COLOR = { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' };
 
         function prPoolKey() { return `prSealedPool:${prSetCode}`; }
@@ -12446,20 +12534,95 @@
             const colors = prCardColors(card);
             return colors.length === 0 ? 'C' : colors.length > 1 ? 'M' : colors[0];
         }
-        function prIsRemoval(card) { return PR_REMOVAL_RE.test(cardOracleText(card)); }
+        function prPlainText(card) { return cardOracleText(card).replace(/\([^)]*\)/g, '').replace(/"[^"]*"/g, ''); }
+
+        // Scryfall tag membership per set: { role: Set of oracle ids }, or
+        // null for a role the set has no tags for yet.
+        const prRoleTagCache = {};
+        function loadPrereleaseRoleTags(code) {
+            if (!prRoleTagCache[code]) {
+                prRoleTagCache[code] = (async () => {
+                    const tags = {};
+                    for (const [role, query] of Object.entries(PR_ROLE_TAGS)) {
+                        const ids = new Set();
+                        try {
+                            let url = `${API_BASE}/cards/search?q=${encodeURIComponent(`e:${code} game:paper ${query}`)}&unique=cards`;
+                            while (url) {
+                                const page = await fetchScryfallSearchPage(url);
+                                (page.data || []).forEach(c => ids.add(c.oracle_id));
+                                url = page.has_more ? page.next_page : null;
+                                await new Promise(r => setTimeout(r, SCRYFALL_REQUEST_SPACING_MS));
+                            }
+                        } catch (err) { /* treat as untagged: the text patterns take over */ }
+                        tags[role] = ids.size ? ids : null;
+                    }
+                    return tags;
+                })();
+            }
+            return prRoleTagCache[code];
+        }
+        let prRoleTags = {}; // tags for the set on screen, filled by renderPrereleaseSealed
+
+        // A role counts when Scryfall tags the card, or - for removal,
+        // interaction and draw, whose patterns rarely misfire - when its
+        // text matches. Untagged sets use the patterns alone.
+        function prHasRole(card, role, re, text, alsoPattern) {
+            const tagged = prRoleTags[role];
+            if (!tagged) return re.test(text);
+            return tagged.has(card.oracle_id) || (alsoPattern && re.test(text));
+        }
+        function prIsCycler(card) { return (card.keywords || []).some(k => /cycling$/i.test(k)); }
+        // Which kinds of card this is, for the pool stats and pair scores.
+        function prCardRoles(card) {
+            const text = prPlainText(card);
+            const creature = prIsCreature(card);
+            let draw = prHasRole(card, 'draw', PR_DRAW_RE, text, true);
+            // Cycling only swaps a card for a new one - not extra cards.
+            if (draw && prIsCycler(card) && !PR_DRAW_RE.test(text)) draw = false;
+            return {
+                creature,
+                removal: prHasRole(card, 'removal', PR_REMOVAL_RE, text, true),
+                interaction: prHasRole(card, 'interaction', PR_INTERACTION_RE, text, true),
+                protection: prHasRole(card, 'protection', PR_PROTECTION_RE, text, false),
+                draw,
+                ramp: prColorGroup(card) !== 'L' && prHasRole(card, 'ramp', PR_RAMP_RE, text, false),
+                evasive: creature && ((card.keywords || []).some(k => PR_EVASION_KEYWORDS.has(k)) || PR_EVASION_RE.test(text.replace(new RegExp(card.name.split(' // ')[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '~'))),
+                rare: ['rare', 'mythic'].includes(card.rarity)
+            };
+        }
+        const PR_STAT_KEYS = ['creatures', 'removal', 'interaction', 'protection', 'draw', 'ramp', 'evasive', 'rares'];
+        function prAddRoles(stats, roles, n) {
+            if (roles.creature) stats.creatures += n;
+            if (roles.removal) stats.removal += n;
+            if (roles.interaction) stats.interaction += n;
+            if (roles.protection) stats.protection += n;
+            if (roles.draw) stats.draw += n;
+            if (roles.ramp) stats.ramp += n;
+            if (roles.evasive) stats.evasive += n;
+            if (roles.rare) stats.rares += n;
+        }
+        function prEmptyStats() {
+            const stats = { cards: 0 };
+            PR_STAT_KEYS.forEach(k => { stats[k] = 0; });
+            return stats;
+        }
         function prIsCreature(card) { return /\bCreature\b/.test((card.type_line || '').split(' // ')[0]); }
 
         async function renderPrereleaseSealed() {
             const el = document.getElementById('prSealedApp');
             el.innerHTML = '<div class="loading">Loading the set\'s cards...</div>';
             let cards;
-            try { cards = await loadPrereleaseSetCards(prSetCode); } catch (err) {
+            const code = prSetCode;
+            try {
+                [cards, prRoleTags] = await Promise.all([loadPrereleaseSetCards(code), loadPrereleaseRoleTags(code)]);
+            } catch (err) {
                 el.innerHTML = '<div class="error">Couldn\'t load this set from Scryfall - try again in a moment.</div>';
                 return;
             }
+            if (code !== prSetCode) return;
             const f = prSealedFilter;
             el.innerHTML = `
-                <div class="formats-intro">Tap each card you opened to add it to your pool (tap again for another copy). It counts what each color gives you and suggests your best two colors and a land split. Just tips - build what you enjoy!</div>
+                <div class="formats-intro">Tap each card you opened to add it to your pool (tap again for another copy, or − to take one out). It counts what each color gives you and suggests your best two colors and a land split. Just tips - build what you enjoy!</div>
                 <div class="pr-sealed">
                     <div class="pr-sealed-picker">
                         <div class="staples-controls" style="flex-wrap:wrap; justify-content:flex-start;">
@@ -12489,12 +12652,15 @@
             const shown = cards.filter(c => (f.color === 'all' || prColorGroup(c) === f.color || (f.color === 'C' && prColorGroup(c) === 'L'))
                 && (!f.text || c.name.toLowerCase().includes(f.text.toLowerCase())));
             grid.innerHTML = shown.map(c => `
-                <button type="button" class="pr-sealed-card${pool[c.id] ? ' in-pool' : ''}" onclick="addPrSealedCard('${c.id}')" title="${escapeAttr(c.type_line || '')}">
-                    <span class="pr-rarity pr-r-${c.rarity}"></span>
-                    <span class="pr-sealed-name">${c.name.split(' // ')[0]}</span>
-                    <span class="pr-sealed-cost">${c.mana_cost ? renderManaCost(c.mana_cost) : ''}</span>
-                    ${pool[c.id] ? `<span class="pr-sealed-count">×${pool[c.id]}</span>` : ''}
-                </button>
+                <div class="pr-sealed-card${pool[c.id] ? ' in-pool' : ''}">
+                    <button type="button" class="pr-sealed-add" onclick="addPrSealedCard('${c.id}')" title="Add ${escapeAttr(c.name)} (${escapeAttr(c.type_line || '')})">
+                        <span class="pr-rarity pr-r-${c.rarity}"></span>
+                        <span class="pr-sealed-name">${c.name.split(' // ')[0]}</span>
+                        <span class="pr-sealed-cost">${c.mana_cost ? renderManaCost(c.mana_cost) : ''}</span>
+                        ${pool[c.id] ? `<span class="pr-sealed-count">×${pool[c.id]}</span>` : ''}
+                    </button>
+                    ${pool[c.id] ? `<button type="button" class="pr-sealed-minus" onclick="removePrSealedCard('${c.id}')" title="Remove one" aria-label="Remove one ${escapeAttr(c.name)}">−</button>` : ''}
+                </div>
             `).join('') || '<div class="text-secondary">No cards match.</div>';
         }
 
@@ -12531,29 +12697,28 @@
             }
             // Per color: playable cards, creatures, removal, rares.
             const stats = {};
-            'WUBRG'.split('').forEach(c => { stats[c] = { cards: 0, creatures: 0, removal: 0, rares: 0 }; });
-            entries.forEach(({ card, n }) => {
+            'WUBRG'.split('').forEach(c => { stats[c] = prEmptyStats(); });
+            entries.forEach(e => { e.roles = prCardRoles(e.card); });
+            entries.forEach(({ card, n, roles }) => {
                 const colors = prCardColors(card);
                 if (colors.length !== 1) return;
-                const s = stats[colors[0]];
-                s.cards += n;
-                if (prIsCreature(card)) s.creatures += n;
-                if (prIsRemoval(card)) s.removal += n;
-                if (['rare', 'mythic'].includes(card.rarity)) s.rares += n;
+                stats[colors[0]].cards += n;
+                prAddRoles(stats[colors[0]], roles, n);
             });
             // Pairs: every nonland card castable with those two colors
-            // (colorless included), weighted toward removal and rares.
+            // (colorless included), weighted by PR_PAIR_WEIGHTS.
             const castable = (card, pair) => prCardColors(card).every(col => pair.includes(col));
             const pairScores = PRERELEASE_PAIRS.map(pair => {
-                let score = 0, count = 0, creatures = 0, removal = 0;
-                entries.forEach(({ card, n }) => {
+                const totals = prEmptyStats();
+                let score = 0;
+                entries.forEach(({ card, n, roles }) => {
                     if (prColorGroup(card) === 'L' || !castable(card, pair)) return;
-                    const w = 1 + (prIsRemoval(card) ? 1.5 : 0) + (['rare', 'mythic'].includes(card.rarity) ? 1.5 : 0);
-                    score += w * n; count += n;
-                    if (prIsCreature(card)) creatures += n;
-                    if (prIsRemoval(card)) removal += n;
+                    const w = 1 + Object.keys(PR_PAIR_WEIGHTS).reduce((sum, k) => sum + (roles[k] ? PR_PAIR_WEIGHTS[k] : 0), 0);
+                    score += w * n;
+                    totals.cards += n;
+                    prAddRoles(totals, roles, n);
                 });
-                return { pair, score, count, creatures, removal };
+                return { pair, score, ...totals, count: totals.cards };
             }).sort((a, b) => b.score - a.score);
             const best = pairScores[0];
             // Land split by colored mana symbols among that pair's cards.
@@ -12572,23 +12737,29 @@
             const warn = [];
             if (best.count < 22) warn.push(`Only ${best.count} playable cards in these colors - you may need a light splash or a few weaker cards.`);
             if (best.creatures < 13) warn.push(`Only ${best.creatures} creatures - most decks want 15-17.`);
+            // Curve (Frank Karsten's sealed template: about four 2-drops,
+            // five 3s, three 4s and three 5+). The pool is bigger than the
+            // deck, so only a shortage of cheap plays is certain.
+            const cheap = entries.reduce((sum, { card, n }) => sum + (prColorGroup(card) !== 'L' && castable(card, best.pair) && (card.cmc || 0) <= 2 ? n : 0), 0);
+            if (cheap < 4) warn.push(`Only ${cheap} card${cheap === 1 ? '' : 's'} costing 2 or less - you may fall behind early. Keep your top end to your best 3-4 expensive cards.`);
+            const tagged = Object.values(prRoleTags).some(Boolean);
             el.innerHTML = `
                 <div class="edh-block">
                     <div class="edh-head"><span class="edh-title">Your pool · ${total} cards</span><button type="button" class="staples-sort-btn" onclick="clearPrSealedPool()">Clear</button></div>
-                    <table class="other-stores pr-color-table">
-                        <thead><tr><th>Color</th><th>Cards</th><th>Creatures</th><th>Removal</th><th>Rares</th></tr></thead>
-                        <tbody>${'WUBRG'.split('').map(col => `<tr><td><i class="pip-dot pip-${col}"></i> ${BASIC_FOR_COLOR[col].replace('Plains', 'White').replace('Island', 'Blue').replace('Swamp', 'Black').replace('Mountain', 'Red').replace('Forest', 'Green')}</td><td>${stats[col].cards}</td><td>${stats[col].creatures}</td><td>${stats[col].removal}</td><td>${stats[col].rares}</td></tr>`).join('')}</tbody>
-                    </table>
+                    <div class="pr-table-wrap"><table class="other-stores pr-color-table">
+                        <thead><tr><th>Color</th><th>Cards</th><th title="Creatures">Creat<span class="pr-color-name">ures</span></th><th>Removal</th><th title="Counterspells, bounce, tapping down, discard">Interact</th><th title="Hexproof, indestructible, protection and ward effects, saving your own permanents">Protect</th><th title="Draws extra cards (not draw-then-discard)">Draw</th><th title="Extra mana or fixing: mana creatures and rocks, extra lands, Treasure-style tokens">Ramp</th><th>Rares</th></tr></thead>
+                        <tbody>${'WUBRG'.split('').map(col => `<tr><td><i class="pip-dot pip-${col}"></i> <span class="pr-color-name">${BASIC_FOR_COLOR[col].replace('Plains', 'White').replace('Island', 'Blue').replace('Swamp', 'Black').replace('Mountain', 'Red').replace('Forest', 'Green')}</span></td><td>${stats[col].cards}</td><td>${stats[col].creatures}</td><td>${stats[col].removal}</td><td>${stats[col].interaction}</td><td>${stats[col].protection}</td><td>${stats[col].draw}</td><td>${stats[col].ramp}</td><td>${stats[col].rares}</td></tr>`).join('')}</tbody>
+                    </table></div>
                     <div class="edh-subhead">Suggested colors</div>
-                    <div class="pr-best">${pairLabel(best.pair)} <strong>${best.count} playables</strong> · ${best.creatures} creatures · ${best.removal} removal${themeFor(best.pair) ? `<div class="text-secondary">This pair's plan: ${themeFor(best.pair)}</div>` : ''}</div>
-                    <div class="pr-lands">Lands: <strong>${lands[best.pair[0]]} ${BASIC_FOR_COLOR[best.pair[0]]} + ${lands[best.pair[1]]} ${BASIC_FOR_COLOR[best.pair[1]]}</strong> (17), split by your mana symbols.</div>
+                    <div class="pr-best">${pairLabel(best.pair)} <strong>${best.count} playables</strong> · ${best.creatures} creatures · ${best.removal} removal · ${best.interaction} interaction · ${best.protection} protection · ${best.draw} draw · ${best.ramp} ramp · ${best.evasive} evasive creatures${themeFor(best.pair) ? `<div class="text-secondary">This pair's plan: ${themeFor(best.pair)}</div>` : ''}</div>
+                    <div class="pr-lands">Lands: <strong>${lands[best.pair[0]]} ${BASIC_FOR_COLOR[best.pair[0]]} + ${lands[best.pair[1]]} ${BASIC_FOR_COLOR[best.pair[1]]}</strong> (17), split by your mana symbols. Aim for about four 2-drops, five 3-drops, three 4-drops and three 5+.</div>
                     ${warn.length ? `<ul class="pr-rulings">${warn.map(w => `<li>${w}</li>`).join('')}</ul>` : ''}
                     <div class="edh-subhead">Next best</div>
                     <div>${pairScores.slice(1, 3).map(p => `${pairLabel(p.pair)} ${p.count} playables, ${p.removal} removal`).join(' · ')}</div>
-                    <details class="all-printings"><summary>Cards in your pool (${total})</summary>
-                        <div class="pr-pool-list">${entries.sort((a, b) => a.card.name.localeCompare(b.card.name)).map(({ card, n }) => `<div>${n > 1 ? `${n}× ` : ''}${prCardLinkHTML(card)} <button type="button" class="buylist-remove-btn" onclick="removePrSealedCard('${card.id}')" aria-label="Remove one">−</button></div>`).join('')}</div>
+                    <details class="all-printings" open><summary>Cards in your pool (${total})</summary>
+                        <div class="pr-pool-list">${entries.sort((a, b) => a.card.name.localeCompare(b.card.name)).map(({ card, n }) => `<div>${n > 1 ? `${n}× ` : ''}${prCardLinkHTML(card)} <button type="button" class="pr-sealed-minus" onclick="removePrSealedCard('${card.id}')" title="Remove one" aria-label="Remove one ${escapeAttr(card.name)}">−</button></div>`).join('')}</div>
                     </details>
-                    <div class="edh-source">Removal is spotted from the card text, so it's approximate. Rares and mythics count extra, since they're usually your strongest cards.</div>
+                    <div class="edh-source">${tagged ? 'What each card does comes from <a href="https://tagger.scryfall.com/" target="_blank" rel="noopener">Scryfall\'s community card tags</a>, plus a card-text check for anything untagged.' : 'This set isn\'t tagged on Scryfall yet, so what each card does is spotted from its text.'} Either way it's approximate. Interaction = counterspells, bounce, tapping down, discard; protection = hexproof, indestructible and similar, or saving your own permanent; draw doesn't count looting or cycling; evasive = flying, menace or can't be blocked.<br>Suggested colors follow the usual sealed priorities (bombs and removal first, then evasion, mana and card advantage, then tricks): every playable card counts 1, plus ${PR_PAIR_WEIGHTS.rare} for a rare or mythic (the likeliest bombs), ${PR_PAIR_WEIGHTS.removal} for removal, ${PR_PAIR_WEIGHTS.evasive} each for evasion, ramp and draw, and ${PR_PAIR_WEIGHTS.interaction} each for interaction and protection. Curve and land advice from Frank Karsten's sealed template.</div>
                 </div>
             `;
         }
