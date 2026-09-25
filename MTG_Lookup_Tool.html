@@ -12132,7 +12132,13 @@
         // (PRERELEASE_SET_NOTES) fill in what data can't: plain-English
         // mechanic explanations, key rulings before Scryfall has them (it
         // adds rulings at release), and the color-pair themes.
-        const PRERELEASE_SET_TYPES = ['expansion', 'core', 'draft_innovation', 'masters'];
+        // Which sets had (or will have) a prerelease: the ones MTGJSON lists
+        // a prerelease kit for (Return to Ravnica, 2012, onward - so Masters
+        // sets and Mystery Booster Commander, which have none, stay out).
+        // Scryfall expansions and core sets within PRERELEASE_PAST_DAYS /
+        // PRERELEASE_FUTURE_DAYS are also listed in case MTGJSON hasn't
+        // added a new set's kit yet, or can't be reached.
+        const PRERELEASE_FALLBACK_TYPES = ['expansion', 'core'];
         const PRERELEASE_PAST_DAYS = 120;
         const PRERELEASE_FUTURE_DAYS = 120;
         const PRERELEASE_PAIRS = ['WU', 'UB', 'BR', 'RG', 'GW', 'WB', 'UR', 'BG', 'RW', 'GU'];
@@ -12231,15 +12237,18 @@
         async function showPrereleaseTab() {
             if (!prSets) {
                 try {
-                    const sets = await fetchRawSets();
+                    const [sets, products] = await Promise.all([fetchRawSets(), loadProductsData().catch(() => null)]);
+                    const kitCodes = new Set(products
+                        ? products.sets.filter(set => set.sealedProduct.some(pr => pr.subtype === 'prerelease_kit')).map(set => set.code.toLowerCase())
+                        : []);
                     const now = Date.now();
                     const from = new Date(now - PRERELEASE_PAST_DAYS * 86400000).toISOString().slice(0, 10);
                     const to = new Date(now + PRERELEASE_FUTURE_DAYS * 86400000).toISOString().slice(0, 10);
                     const today = todayISO();
                     prSets = sets
-                        .filter(set => PRERELEASE_SET_TYPES.includes(set.set_type) && !set.digital && !set.parent_set_code
-                            && set.released_at >= from && set.released_at <= to && set.card_count > 0)
-                        .map(set => ({ code: set.code, name: set.name, released_at: set.released_at, upcoming: set.released_at > today }))
+                        .filter(set => !set.digital && !set.parent_set_code && set.card_count > 0 && set.released_at <= to
+                            && (kitCodes.has(set.code) || (PRERELEASE_FALLBACK_TYPES.includes(set.set_type) && set.released_at >= from)))
+                        .map(set => ({ code: set.code, name: set.name, released_at: set.released_at, upcoming: set.released_at > today, older: set.released_at < from }))
                         .sort((a, b) => a.released_at.localeCompare(b.released_at));
                 } catch (err) {
                     document.getElementById('prMechanicsApp').innerHTML = '<div class="error">Couldn\'t load the set list - try again in a moment.</div>';
@@ -12250,8 +12259,14 @@
                 const next = prSets.find(set => set.upcoming);
                 const fallback = next || prSets[prSets.length - 1];
                 prSetCode = (wanted && prSets.some(set => set.code === wanted)) ? wanted : (fallback && fallback.code);
-                document.getElementById('prSetSelect').innerHTML = prSets.map(set =>
-                    `<option value="${set.code}"${set.code === prSetCode ? ' selected' : ''}>${set.name} (${set.upcoming ? 'out' : 'released'} ${set.released_at})</option>`).join('');
+                // Coming up and recent sets first (soonest first), then older
+                // sets, newest first, for running a prerelease with leftover kits.
+                const option = set => `<option value="${set.code}"${set.code === prSetCode ? ' selected' : ''}>${set.name} (${set.upcoming ? 'out' : 'released'} ${set.released_at})</option>`;
+                const group = (label, list) => (list.length ? `<optgroup label="${label}">${list.map(option).join('')}</optgroup>` : '');
+                document.getElementById('prSetSelect').innerHTML =
+                    group('Coming up', prSets.filter(set => set.upcoming))
+                    + group(`Out now (last ${PRERELEASE_PAST_DAYS} days)`, prSets.filter(set => !set.upcoming && !set.older).reverse())
+                    + group('Older sets (leftover kits)', prSets.filter(set => set.older).reverse());
                 updatePrereleaseSetNote();
             }
             switchPrereleaseTab(currentPrereleaseSubtab);
