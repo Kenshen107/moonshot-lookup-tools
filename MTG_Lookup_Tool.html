@@ -6098,6 +6098,11 @@
         .pr-dc-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.12em 1em; }
         .pr-dc-themes .pip-dot { width: 0.95em; height: 0.95em; }
         .pr-dc-fun { margin-top: auto; text-align: center; font-style: italic; font-size: 1.01em; color: #1777a1; }
+        .pr-dc-know { display: flex; gap: 0.8em; align-items: center; }
+        .pr-dc-know > div { flex: 1 1 auto; }
+        .pr-dc-scan { margin-top: 0.3em; font-weight: 700; color: #1777a1; }
+        .pr-dc-qr { flex: 0 0 auto; width: 0.85in; height: 0.85in; }
+        .pr-dc-legal { font-size: 0.72em; line-height: 1.2; color: #666; text-align: center; }
         .pr-dc-foot {
             border-top: 1px solid #ccc;
             padding-top: 0.3em;
@@ -12966,34 +12971,18 @@
         }
 
         // ---- Printable deck-building card ----
-        // The card is built from the set's notes (or its card data when
-        // there are none), shown as an editable preview - staff can click
-        // any text to change it - and printed 4 to a letter page.
-        function prCardKey() { return `prDeckCard:${prSetCode}`; }
+        // One universal card for every set (only the set name and the QR
+        // link change): building steps, play tips, a QR code to the set's
+        // Mechanics & Rulings page, and Wizards' Fan Content Policy notice.
+        // Shown as an editable preview - staff can click any text to change
+        // it - and printed 4 to a letter page.
+        // v2 key: edits saved for the older, set-specific card are ignored.
+        function prCardKey() { return `prDeckCardV2:${prSetCode}`; }
+        const PR_CARD_TITLE = 'Moonshot Prerelease Guide';
+        const PR_FAN_CONTENT_NOTICE = `${PR_CARD_TITLE} is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.`;
 
         async function defaultPrereleaseCardHTML() {
             const set = prereleaseSetInfo();
-            const notes = PRERELEASE_SET_NOTES[prSetCode];
-            let mechanics = [];
-            let themes = {};
-            if (notes) {
-                // Only mechanics with a handout line (`card`): the ones a newer
-                // player could trip on, whether new or returning.
-                mechanics = notes.mechanics.filter(m => m.card).map(m => ({ name: m.cardName || m.name, text: m.card }));
-                themes = notes.themes;
-            } else {
-                const cards = await loadPrereleaseSetCards(prSetCode);
-                mechanics = (await prereleaseMechanics(cards)).filter(m => m.hasText).slice(0, 4).map(m => ({ name: m.name, text: m.text }));
-                // Themes from PRERELEASE_PAIR_THEMES, or else point at each
-                // pair's two-color uncommon.
-                if (PRERELEASE_PAIR_THEMES[prSetCode]) themes = PRERELEASE_PAIR_THEMES[prSetCode];
-                else PRERELEASE_PAIRS.forEach(pair => {
-                    const sign = cards.find(c => c.rarity === 'uncommon' && prCardColors(c).length === 2 && pair.split('').every(col => prCardColors(c).includes(col)));
-                    themes[pair] = sign ? `See ${sign.name.split(' // ')[0]}` : '';
-                });
-            }
-            const short = t => (t.length > 150 ? `${t.slice(0, 147)}...` : t);
-            const pairDots = pair => pair.split('').map(col => `<i class="pip-dot pip-${col}"></i>`).join('');
             return `
                 <div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">${set ? set.name : ''} Prerelease</span></div>
                 <h4>Build your deck</h4>
@@ -13005,12 +12994,25 @@
                     <li><b>Add 17 basic lands</b> (free at the land station), split by color - like 9 + 8.</li>
                 </ol>
                 <div class="pr-dc-tip">Splash a 3rd color only for a bomb or removal, with 3+ lands that make it. Between games you can swap in any card from your pool.</div>
-                <h4>Mechanics to know</h4>
-                <ul>${mechanics.map(m => `<li><b>${m.name}</b> - ${short(m.text)}</li>`).join('')}</ul>
-                <h4>What each color ${Object.keys(themes).some(k => k.length > 2) ? 'combo' : 'pair'} wants</h4>
-                <div class="pr-dc-themes">${Object.keys(themes).filter(pair => themes[pair]).map(pair => `<div>${pairDots(pair)} <span>${themes[pair] || ''}</span></div>`).join('')}</div>
+                <h4>Playing your games</h4>
+                <ul>
+                    <li><b>Mulligan</b> hands with 0-1 or 6-7 lands.</li>
+                    <li><b>Save your removal</b> for their best threats, not their first creature.</li>
+                    <li><b>Watch their untapped mana</b> - open mana when you attack often means a trick.</li>
+                    <li><b>Sealed games run long.</b> Cards that get you two-for-one win them.</li>
+                    <li><b>Flyers and menace close games out</b> - evasive creatures win races.</li>
+                </ul>
+                <div class="pr-dc-know">
+                    <div>
+                        <h4>Good to know</h4>
+                        <div>Shuffle well and offer your deck to be cut. Not sure how something works? Call a judge - don't guess.</div>
+                        <div class="pr-dc-scan">Scan for this set's mechanics &amp; rulings &rarr;</div>
+                    </div>
+                    <img class="pr-dc-qr" src="${qrImageUrl(prereleasePlayerUrl(), 240)}" alt="QR code: this set's mechanics and rulings">
+                </div>
                 <div class="pr-dc-fun">These are just tips, not rules. Build the deck you're excited to play - that's the fun of sealed!</div>
-                <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Unofficial; not endorsed by Wizards of the Coast.</span></div>
+                <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Moonshot Games · Noblesville &amp; Plainfield · moonshotgamestore.com</span></div>
+                <div class="pr-dc-legal">${PR_FAN_CONTENT_NOTICE}</div>
             `;
         }
 
