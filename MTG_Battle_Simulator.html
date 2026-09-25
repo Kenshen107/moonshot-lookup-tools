@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTG Battle Simulator</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+        --brand: #1777a1;
+        --brand-light: #3aa3d1;
+        --bg-canvas: #1a1a1a;
+        --bg-panel: #2a2a2a;
+        --bg-panel-raised: #333333;
+        --bg-inset: #1a1a1a;
+        --text-primary: #e0e0e0;
+        --text-secondary: #909090;
+        --text-muted: #707070;
+        --text-heading: #ffffff;
+        --border: #404040;
+        --border-subtle: #333333;
+        --color-error: #ff9999;
+        --color-success: #7ee787;
+        --color-link: #6cb2ff;
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --shadow-md: 0 6px 14px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.6);
+        --transition-fast: 0.15s ease;
+
+        --c-W: #e8d9a0;
+        --c-U: #5aa9e6;
+        --c-B: #b48ee0;
+        --c-R: #e0685a;
+        --c-G: #7fc97f;
+        --c-C: #9a9a9a;
+    }
+
+    body {
+        background: var(--bg-canvas);
+        color: var(--text-primary);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 16px;
+        min-height: 100vh;
+    }
+
+    .container { max-width: 1300px; margin: 0 auto; }
+
+    h1 { text-align: center; margin-bottom: 4px; color: var(--text-heading); font-size: 1.8em; }
+    .subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9em; }
+
+    .panel {
+        background: var(--bg-panel);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    button {
+        padding: 10px 16px;
+        background: var(--brand);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.95em;
+        cursor: pointer;
+        transition: background var(--transition-fast);
+    }
+    button:hover { background: var(--brand-light); }
+    button:disabled { background: var(--bg-panel-raised); color: var(--text-muted); cursor: not-allowed; }
+    button.secondary { background: var(--bg-panel-raised); }
+    button.secondary:hover { background: #444; }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .life-totals { display: flex; gap: 20px; font-size: 1.1em; }
+    .life-totals b { font-size: 1.3em; }
+    .life-player { color: var(--color-success); }
+    .life-npc { color: var(--color-error); }
+    .turn-indicator { color: var(--text-secondary); font-size: 0.9em; }
+
+    .board-row { margin-bottom: 10px; }
+    .board-label { font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px; }
+    .board-cards { display: flex; flex-wrap: wrap; gap: 8px; min-height: 96px; }
+
+    .mtg-card {
+        width: 92px;
+        min-height: 92px;
+        background: var(--bg-inset);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--c-C);
+        border-radius: var(--radius-sm);
+        padding: 6px;
+        font-size: 0.72em;
+        line-height: 1.25;
+        cursor: default;
+        position: relative;
+        transition: transform var(--transition-fast), opacity var(--transition-fast);
+    }
+    .mtg-card.color-W { border-left-color: var(--c-W); }
+    .mtg-card.color-U { border-left-color: var(--c-U); }
+    .mtg-card.color-B { border-left-color: var(--c-B); }
+    .mtg-card.color-R { border-left-color: var(--c-R); }
+    .mtg-card.color-G { border-left-color: var(--c-G); }
+    .mtg-card.color-C { border-left-color: var(--c-C); }
+    .mtg-card .card-name { font-weight: bold; color: var(--text-heading); margin-bottom: 2px; }
+    .mtg-card .card-cost { color: var(--text-secondary); margin-bottom: 3px; }
+    .mtg-card .card-keywords { color: var(--text-muted); font-style: italic; margin-bottom: 3px; }
+    .mtg-card .card-pt { position: absolute; bottom: 4px; right: 6px; font-weight: bold; color: var(--text-heading); }
+    .mtg-card.tapped { opacity: 0.5; transform: rotate(6deg); }
+    .mtg-card.sick::after {
+        content: 'Z';
+        position: absolute; top: 4px; right: 6px;
+        font-size: 0.9em; color: var(--text-muted);
+    }
+    .mtg-card.land { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 60px; }
+    .mtg-card.clickable { cursor: pointer; }
+    .mtg-card.clickable:hover { border-color: var(--brand-light); }
+    .mtg-card.selected { outline: 2px solid var(--color-success); }
+    .mtg-card.attacking { outline: 2px solid var(--color-error); }
+    .mtg-card.blocked-by { outline: 2px dashed var(--color-link); }
+    .mtg-card.damaged .card-pt { color: var(--color-error); }
+
+    .hand-row .mtg-card { width: 108px; min-height: 108px; font-size: 0.78em; }
+
+    .action-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin: 12px 0;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-subtle);
+    }
+    .action-hint { color: var(--text-secondary); font-size: 0.85em; }
+
+    .log-panel {
+        max-height: 160px;
+        overflow-y: auto;
+        background: var(--bg-inset);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 8px 12px;
+        font-size: 0.82em;
+        color: var(--text-secondary);
+        display: flex;
+        flex-direction: column-reverse;
+    }
+    .log-panel div { padding: 2px 0; border-bottom: 1px solid var(--border-subtle); }
+
+    .game-over-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.85);
+        z-index: 999;
+        align-items: center;
+        justify-content: center;
+    }
+    .game-over-overlay.open { display: flex; }
+    .game-over-box {
+        background: var(--bg-panel);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 40px;
+        text-align: center;
+        box-shadow: var(--shadow-lg);
+    }
+    .game-over-box h2 { font-size: 2em; margin-bottom: 12px; }
+    .game-over-box.win h2 { color: var(--color-success); }
+    .game-over-box.lose h2 { color: var(--color-error); }
+
+    .empty-note { color: var(--text-muted); font-style: italic; font-size: 0.85em; }
+    .back-link { display: block; text-align: center; margin-top: 16px; color: var(--color-link); }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>MTG Battle Simulator</h1>
+    <p class="subtitle">40-card decks, simplified rules, a curated pool of original creatures. Combat prototype - deckbuilding, loot boxes, and in-game currency come later.</p>
+
+    <div class="panel">
+        <div class="top-bar">
+            <div class="life-totals">
+                <div>You: <b class="life-player" id="playerLife">20</b></div>
+                <div>Opponent: <b class="life-npc" id="npcLife">20</b></div>
+            </div>
+            <div class="turn-indicator" id="turnIndicator">-</div>
+            <button class="secondary" onclick="newMatch()">New Match</button>
+        </div>
+
+        <div class="board-row">
+            <div class="board-label">Opponent's Board</div>
+            <div class="board-cards" id="npcBoard"></div>
+        </div>
+
+        <div class="board-row">
+            <div class="board-label">Your Board</div>
+            <div class="board-cards" id="playerBoard"></div>
+        </div>
+
+        <div class="action-bar" id="actionBar"></div>
+
+        <div class="board-row">
+            <div class="board-label">Your Hand</div>
+            <div class="board-cards hand-row" id="playerHand"></div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="board-label">Game Log</div>
+        <div class="log-panel" id="logPanel"></div>
+    </div>
+
+    <a class="back-link" href="MTG_Lookup_Tool.html">&larr; Back to MTG Lookup Tool</a>
+</div>
+
+<div class="game-over-overlay" id="gameOverOverlay">
+    <div class="game-over-box" id="gameOverBox">
+        <h2 id="gameOverTitle">Game Over</h2>
+        <p class="empty-note" id="gameOverSubtitle" style="margin-bottom:20px;"></p>
+        <button onclick="newMatch()">Play Again</button>
+    </div>
+</div>
+
+<script>
+    // ---------------------------------------------------------------
+    // Card pool: a curated set of simple original creatures. No mana
+    // costs beyond generic + one color's pips, no instants/tricks yet,
+    // no triggered abilities beyond static keywords - keeps the combat
+    // engine's first milestone tractable.
+    // ---------------------------------------------------------------
+    const CARD_POOL = [
+        { id:'w1', name:'Wispy Acolyte',   color:'W', cost:{generic:0,W:1}, power:1, toughness:1, keywords:['flying'] },
+        { id:'w2', name:'Shield Squire',   color:'W', cost:{generic:1,W:1}, power:2, toughness:2, keywords:['vigilance'] },
+        { id:'w3', name:'Temple Guardian', color:'W', cost:{generic:2,W:1}, power:3, toughness:3, keywords:[] },
+        { id:'w4', name:'Radiant Cleric',  color:'W', cost:{generic:1,W:1}, power:2, toughness:1, keywords:['lifelink'] },
+        { id:'w5', name:'Skyward Paladin', color:'W', cost:{generic:3,W:1}, power:3, toughness:4, keywords:['flying','vigilance'] },
+        { id:'w6', name:'Dawnbreak Seraph',color:'W', cost:{generic:4,W:2}, power:5, toughness:5, keywords:['flying','lifelink'] },
+
+        { id:'u1', name:'Tide Sprite',     color:'U', cost:{generic:0,U:1}, power:1, toughness:1, keywords:['flying'] },
+        { id:'u2', name:'Mist Scholar',    color:'U', cost:{generic:1,U:1}, power:1, toughness:3, keywords:[] },
+        { id:'u3', name:'Wavecaller',      color:'U', cost:{generic:2,U:1}, power:2, toughness:3, keywords:['flying'] },
+        { id:'u4', name:'Skyfin Drake',    color:'U', cost:{generic:3,U:1}, power:3, toughness:3, keywords:['flying'] },
+        { id:'u5', name:'Tidal Colossus',  color:'U', cost:{generic:4,U:1}, power:4, toughness:6, keywords:[] },
+        { id:'u6', name:'Stormwing Leviathan', color:'U', cost:{generic:5,U:2}, power:6, toughness:6, keywords:['flying'] },
+
+        { id:'b1', name:'Grave Rat',       color:'B', cost:{generic:0,B:1}, power:1, toughness:1, keywords:['deathtouch'] },
+        { id:'b2', name:'Bone Stalker',    color:'B', cost:{generic:1,B:1}, power:2, toughness:2, keywords:['menace'] },
+        { id:'b3', name:'Plague Bat',      color:'B', cost:{generic:1,B:1}, power:1, toughness:1, keywords:['flying','deathtouch'] },
+        { id:'b4', name:'Shadow Reaper',   color:'B', cost:{generic:2,B:1}, power:3, toughness:2, keywords:['deathtouch'] },
+        { id:'b5', name:'Nightgorger',     color:'B', cost:{generic:3,B:1}, power:4, toughness:3, keywords:['menace'] },
+        { id:'b6', name:'Doom Wurm',       color:'B', cost:{generic:5,B:1}, power:6, toughness:6, keywords:['deathtouch'] },
+
+        { id:'r1', name:'Ember Whelp',     color:'R', cost:{generic:0,R:1}, power:1, toughness:2, keywords:['haste'] },
+        { id:'r2', name:'Reckless Bandit', color:'R', cost:{generic:1,R:1}, power:2, toughness:1, keywords:['haste'] },
+        { id:'r3', name:'Flame Lancer',    color:'R', cost:{generic:1,R:1}, power:2, toughness:2, keywords:['firststrike'] },
+        { id:'r4', name:'Cinder Brute',    color:'R', cost:{generic:2,R:1}, power:3, toughness:3, keywords:['haste'] },
+        { id:'r5', name:'Molten Champion', color:'R', cost:{generic:3,R:1}, power:4, toughness:3, keywords:['firststrike','haste'] },
+        { id:'r6', name:'Inferno Behemoth',color:'R', cost:{generic:5,R:1}, power:6, toughness:5, keywords:['trample','haste'] },
+
+        { id:'g1', name:'Bramble Sprite',  color:'G', cost:{generic:0,G:1}, power:1, toughness:1, keywords:['reach'] },
+        { id:'g2', name:'Thornback Boar',  color:'G', cost:{generic:1,G:1}, power:2, toughness:2, keywords:['trample'] },
+        { id:'g3', name:'Woodland Strider',color:'G', cost:{generic:2,G:1}, power:3, toughness:3, keywords:['reach'] },
+        { id:'g4', name:'Grovekeeper',     color:'G', cost:{generic:2,G:1}, power:2, toughness:4, keywords:[] },
+        { id:'g5', name:'Rampaging Auroch',color:'G', cost:{generic:3,G:1}, power:4, toughness:4, keywords:['trample'] },
+        { id:'g6', name:'Elder Treant',    color:'G', cost:{generic:5,G:1}, power:7, toughness:7, keywords:['trample'] },
+
+        { id:'c1', name:'Iron Golem',      color:'C', cost:{generic:2}, power:2, toughness:2, keywords:[] },
+        { id:'c2', name:'Stone Sentinel',  color:'C', cost:{generic:3}, power:2, toughness:5, keywords:['defender'] },
+        { id:'c3', name:'Clockwork Automaton', color:'C', cost:{generic:4}, power:4, toughness:4, keywords:[] },
+        { id:'c4', name:'Watcher Drone',   color:'C', cost:{generic:3}, power:3, toughness:3, keywords:['reach'] },
+        { id:'c5', name:'Titan Construct', color:'C', cost:{generic:6}, power:6, toughness:6, keywords:[] },
+        { id:'c6', name:'Scrap Colossus',  color:'C', cost:{generic:7}, power:8, toughness:8, keywords:['trample'] }
+    ];
+
+    const LAND_NAMES = { W:'Plains', U:'Island', B:'Swamp', R:'Mountain', G:'Forest' };
+    const COLORS = ['W','U','B','R','G'];
+
+    let instanceCounter = 0;
+    function nextInstanceId() { return ++instanceCounter; }
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function cmc(cost) {
+        return (cost.generic || 0) + COLORS.reduce((s, c) => s + (cost[c] || 0), 0);
+    }
+
+    function costString(cost) {
+        if (!cost) return '';
+        let s = '';
+        if (cost.generic) s += `{${cost.generic}}`;
+        for (const c of COLORS) if (cost[c]) s += `{${c}}`.repeat(cost[c]);
+        return s || '{0}';
+    }
+
+    function makeLand(color) {
+        return { id: 'land-' + color, name: LAND_NAMES[color], color, isLand: true, cost: null, power: null, toughness: null, keywords: [] };
+    }
+
+    function buildDeck(colorA, colorB) {
+        const creaturePool = CARD_POOL.filter(c => c.color === colorA || c.color === colorB || c.color === 'C');
+        const spells = [];
+        const copies = {};
+        let guard = 0;
+        while (spells.length < 23 && guard < 2000) {
+            guard++;
+            const card = creaturePool[Math.floor(Math.random() * creaturePool.length)];
+            const count = copies[card.id] || 0;
+            if (count >= 4) continue;
+            copies[card.id] = count + 1;
+            spells.push(card);
+        }
+        const colorACount = spells.filter(c => c.color === colorA).length;
+        const colorBCount = spells.filter(c => c.color === colorB).length;
+        const totalColored = colorACount + colorBCount;
+        let landsA, landsB;
+        if (totalColored === 0) { landsA = 9; landsB = 8; }
+        else if (colorBCount === 0) { landsA = 17; landsB = 0; }
+        else if (colorACount === 0) { landsA = 0; landsB = 17; }
+        else {
+            landsA = Math.max(1, Math.round(17 * (colorACount / totalColored)));
+            landsB = 17 - landsA;
+        }
+        const lands = [];
+        for (let i = 0; i < landsA; i++) lands.push(makeLand(colorA));
+        for (let i = 0; i < landsB; i++) lands.push(makeLand(colorB));
+        const deckCards = [...spells, ...lands].map(c => ({ ...c, instanceId: nextInstanceId() }));
+        return shuffle(deckCards);
+    }
+
+    // ---------------------------------------------------------------
+    // Game state
+    // ---------------------------------------------------------------
+    let state = null;
+    let uiSelectedAttacker = null;
+
+    function freshPlayerState(colors) {
+        return { life: 20, hand: [], deck: buildDeck(colors[0], colors[1]), graveyard: [], battlefield: [], landsPlayedThisTurn: 0, colors };
+    }
+
+    function newMatch() {
+        const shuffledA = shuffle([...COLORS]);
+        const playerColors = [shuffledA[0], shuffledA[1]];
+        const shuffledB = shuffle([...COLORS]);
+        const npcColors = [shuffledB[0], shuffledB[1]];
+
+        state = {
+            player: freshPlayerState(playerColors),
+            npc: freshPlayerState(npcColors),
+            turnNumber: 0,
+            activePlayer: 'player',
+            phase: 'main1',
+            selectedAttackers: [],
+            pendingAttackerIds: [],
+            blockAssignments: {},
+            log: [],
+            result: null
+        };
+        uiSelectedAttacker = null;
+
+        for (let i = 0; i < 7; i++) { drawCard('player'); drawCard('npc'); }
+        log(`New match! You are ${playerColors.join('/')}. Opponent is ${npcColors.join('/')}.`);
+        document.getElementById('gameOverOverlay').classList.remove('open');
+        beginTurn('player');
+    }
+
+    function log(msg) {
+        state.log.push(msg);
+        render();
+    }
+
+    function drawCard(side) {
+        const st = state[side];
+        if (st.deck.length === 0) {
+            log(`${side === 'player' ? 'You attempt' : 'Opponent attempts'} to draw from an empty deck!`);
+            st.life = -999;
+            return;
+        }
+        st.hand.push(st.deck.pop());
+    }
+
+    // ---------------------------------------------------------------
+    // Mana payment
+    // ---------------------------------------------------------------
+    function tryPay(side, cost) {
+        const untappedLands = state[side].battlefield.filter(p => p.isLand && !p.tapped);
+        const used = [];
+        for (const c of COLORS) {
+            let need = cost[c] || 0;
+            while (need > 0) {
+                const land = untappedLands.find(l => l.color === c && !used.includes(l));
+                if (!land) return null;
+                used.push(land);
+                need--;
+            }
+        }
+        const genericNeed = cost.generic || 0;
+        const remaining = untappedLands.filter(l => !used.includes(l));
+        if (remaining.length < genericNeed) return null;
+        for (let i = 0; i < genericNeed; i++) used.push(remaining[i]);
+        return used;
+    }
+
+    function castCard(side, handCard) {
+        const payment = tryPay(side, handCard.cost);
+        if (!payment) { log(`${side === 'player' ? "You can't" : "Opponent can't"} afford ${handCard.name}.`); return false; }
+        payment.forEach(l => l.tapped = true);
+        state[side].hand = state[side].hand.filter(c => c.instanceId !== handCard.instanceId);
+        state[side].battlefield.push({ ...handCard, tapped: false, sick: true, damage: 0, controller: side });
+        log(`${side === 'player' ? 'You cast' : 'Opponent casts'} ${handCard.name}.`);
+        return true;
+    }
+
+    function playLand(side, handCard) {
+        if (state[side].landsPlayedThisTurn >= 1) { log('Already played a land this turn.'); return false; }
+        state[side].hand = state[side].hand.filter(c => c.instanceId !== handCard.instanceId);
+        state[side].battlefield.push({ ...handCard, tapped: false, controller: side });
+        state[side].landsPlayedThisTurn++;
+        log(`${side === 'player' ? 'You play' : 'Opponent plays'} ${handCard.name}.`);
+        return true;
+    }
+
+    // ---------------------------------------------------------------
+    // Turn structure
+    // ---------------------------------------------------------------
+    function beginTurn(side) {
+        state.turnNumber++;
+        // Damage marked on creatures (and the deathtouch flag) is removed
+        // during the cleanup step at the end of every turn, for both
+        // players' creatures - equivalent to clearing it here, right
+        // before the next turn begins.
+        state.player.battlefield.forEach(p => { if (!p.isLand) { p.damage = 0; p.deathtouched = false; } });
+        state.npc.battlefield.forEach(p => { if (!p.isLand) { p.damage = 0; p.deathtouched = false; } });
+        const st = state[side];
+        st.battlefield.forEach(p => { p.tapped = false; if (!p.isLand) p.sick = false; });
+        st.landsPlayedThisTurn = 0;
+        state.activePlayer = side;
+        state.phase = 'main1';
+        if (state.turnNumber !== 1) drawCard(side);
+        log(`--- Turn ${state.turnNumber}: ${side === 'player' ? 'Your' : "Opponent's"} turn ---`);
+        if (side === 'npc') runNpcTurn();
+        else render();
+    }
+
+    function npcMainPhase() {
+        const npc = state.npc;
+        const landInHand = npc.hand.find(c => c.isLand);
+        if (landInHand && npc.landsPlayedThisTurn < 1) playLand('npc', landInHand);
+        let castSomething = true;
+        let guard = 0;
+        while (castSomething && guard < 50) {
+            guard++;
+            castSomething = false;
+            const castable = npc.hand.filter(c => !c.isLand).sort((a, b) => cmc(b.cost) - cmc(a.cost));
+            for (const c of castable) {
+                if (tryPay('npc', c.cost)) { castCard('npc', c); castSomething = true; break; }
+            }
+        }
+    }
+
+    function npcCombat() {
+        const attackerObjs = state.npc.battlefield.filter(p => !p.isLand && !p.tapped && !p.sick && !p.keywords.includes('defender'));
+        if (attackerObjs.length === 0) { log('Opponent does not attack.'); return; }
+        attackerObjs.forEach(c => { if (!c.keywords.includes('vigilance')) c.tapped = true; });
+        log(`Opponent attacks with ${attackerObjs.map(c => c.name).join(', ')}.`);
+        state.pendingAttackerIds = attackerObjs.map(c => c.instanceId);
+        state.blockAssignments = {};
+        state.phase = 'combat-blockers';
+        render();
+    }
+
+    function runNpcTurn() {
+        npcMainPhase();
+        npcCombat();
+        if (state.phase !== 'combat-blockers') {
+            npcMainPhase();
+            beginTurn('player');
+        } else {
+            render();
+        }
+    }
+
+    function npcMainPhase2AndEnd() {
+        npcMainPhase();
+        beginTurn('player');
+    }
+
+    function endPlayerTurn() {
+        if (state.phase !== 'main2') return;
+        beginTurn('npc');
+    }
+
+    // ---------------------------------------------------------------
+    // Combat resolution (shared by both attack directions)
+    // ---------------------------------------------------------------
+    function applyDamageToPlayer(side, amount) { state[side].life -= amount; }
+    function gainLife(side, amount) { state[side].life += amount; }
+
+    function resolveCombat(attackerSide, defenderSide, attackerIds, blocksMap) {
+        const atkBf = state[attackerSide].battlefield;
+        const defBf = state[defenderSide].battlefield;
+        const pairs = attackerIds
+            .map(id => atkBf.find(p => p.instanceId === id))
+            .filter(Boolean)
+            .map(a => ({ attacker: a, blocker: blocksMap[a.instanceId] ? defBf.find(p => p.instanceId === blocksMap[a.instanceId]) : null }));
+
+        function dealAttackerDamage(pair, firstStrikePass) {
+            const { attacker, blocker } = pair;
+            if (attacker.damage >= attacker.toughness) return;
+            const hasFS = attacker.keywords.includes('firststrike');
+            if (hasFS !== firstStrikePass) return;
+            if (!blocker) {
+                applyDamageToPlayer(defenderSide, attacker.power);
+                if (attacker.keywords.includes('lifelink')) gainLife(attackerSide, attacker.power);
+                log(`${attacker.name} hits ${defenderSide === 'player' ? 'you' : 'the opponent'} for ${attacker.power}.`);
+                return;
+            }
+            if (blocker.damage >= blocker.toughness) {
+                if (attacker.keywords.includes('trample')) {
+                    applyDamageToPlayer(defenderSide, attacker.power);
+                    if (attacker.keywords.includes('lifelink')) gainLife(attackerSide, attacker.power);
+                }
+                return;
+            }
+            const hasDeathtouch = attacker.keywords.includes('deathtouch');
+            const remainingToughness = Math.max(0, blocker.toughness - blocker.damage);
+            const lethalNeeded = hasDeathtouch ? Math.min(1, remainingToughness) : remainingToughness;
+            const hasTrample = attacker.keywords.includes('trample');
+            const toBlocker = hasTrample ? Math.min(attacker.power, lethalNeeded) : attacker.power;
+            const overflow = hasTrample ? Math.max(0, attacker.power - toBlocker) : 0;
+            blocker.damage += toBlocker;
+            if (hasDeathtouch && toBlocker > 0) blocker.deathtouched = true;
+            if (attacker.keywords.includes('lifelink')) gainLife(attackerSide, toBlocker + overflow);
+            if (overflow > 0) applyDamageToPlayer(defenderSide, overflow);
+            log(`${attacker.name} deals ${toBlocker} damage to ${blocker.name}${overflow > 0 ? ` and tramples ${overflow} over` : ''}.`);
+        }
+
+        function dealBlockerDamage(pair, firstStrikePass) {
+            const { attacker, blocker } = pair;
+            if (!blocker) return;
+            if (blocker.damage >= blocker.toughness) return;
+            const hasFS = blocker.keywords.includes('firststrike');
+            if (hasFS !== firstStrikePass) return;
+            if (attacker.damage >= attacker.toughness) return;
+            attacker.damage += blocker.power;
+            if (blocker.keywords.includes('deathtouch') && blocker.power > 0) attacker.deathtouched = true;
+            if (blocker.keywords.includes('lifelink')) gainLife(defenderSide, blocker.power);
+            log(`${blocker.name} deals ${blocker.power} damage to ${attacker.name}.`);
+        }
+
+        pairs.forEach(p => dealAttackerDamage(p, true));
+        pairs.forEach(p => dealBlockerDamage(p, true));
+        checkStateBasedActions();
+        pairs.forEach(p => dealAttackerDamage(p, false));
+        pairs.forEach(p => dealBlockerDamage(p, false));
+        checkStateBasedActions();
+    }
+
+    function checkStateBasedActions() {
+        ['player', 'npc'].forEach(side => {
+            const bf = state[side].battlefield;
+            for (let i = bf.length - 1; i >= 0; i--) {
+                const p = bf[i];
+                if (!p.isLand && (p.damage >= p.toughness || p.deathtouched)) {
+                    log(`${p.name} dies.`);
+                    state[side].graveyard.push(p);
+                    bf.splice(i, 1);
+                }
+            }
+        });
+    }
+
+    function checkGameOverRender() {
+        if (state.player.life <= 0 || state.npc.life <= 0) {
+            state.phase = 'gameover';
+            if (state.player.life <= 0 && state.npc.life <= 0) state.result = 'draw';
+            else if (state.player.life <= 0) state.result = 'lose';
+            else state.result = 'win';
+        }
+        render();
+    }
+
+    // ---------------------------------------------------------------
+    // Player actions
+    // ---------------------------------------------------------------
+    function onHandCardClick(instanceId) {
+        if (state.activePlayer !== 'player' || !['main1', 'main2'].includes(state.phase)) return;
+        const card = state.player.hand.find(c => c.instanceId === instanceId);
+        if (!card) return;
+        if (card.isLand) playLand('player', card); else castCard('player', card);
+        render();
+    }
+
+    function goToCombatPlayer() {
+        if (state.phase !== 'main1' || state.activePlayer !== 'player') return;
+        state.phase = 'combat-attackers';
+        state.selectedAttackers = [];
+        render();
+    }
+
+    function toggleAttackerSelection(instanceId) {
+        if (state.phase !== 'combat-attackers') return;
+        const creature = state.player.battlefield.find(p => p.instanceId === instanceId);
+        if (!creature || creature.isLand) return;
+        if (creature.tapped) return;
+        if (creature.sick && !creature.keywords.includes('haste')) return;
+        if (creature.keywords.includes('defender')) return;
+        const idx = state.selectedAttackers.indexOf(instanceId);
+        if (idx >= 0) state.selectedAttackers.splice(idx, 1); else state.selectedAttackers.push(instanceId);
+        render();
+    }
+
+    function npcDeclareBlockers(attackerObjs) {
+        const availableBlockers = state.npc.battlefield.filter(p => !p.isLand && !p.tapped);
+        const blocks = {};
+        const usedBlockers = new Set();
+        const sortedAttackers = [...attackerObjs].sort((a, b) => b.power - a.power);
+        for (const att of sortedAttackers) {
+            const needsFlyingBlock = att.keywords.includes('flying');
+            const candidates = availableBlockers.filter(b => !usedBlockers.has(b.instanceId) && (!needsFlyingBlock || b.keywords.includes('flying') || b.keywords.includes('reach')));
+            if (candidates.length === 0) continue;
+            const goodTrade = candidates.find(b => b.power >= att.toughness && b.toughness > att.power);
+            const evenTrade = candidates.find(b => b.power >= att.toughness);
+            const choice = goodTrade || evenTrade;
+            if (choice) { blocks[att.instanceId] = choice.instanceId; usedBlockers.add(choice.instanceId); }
+        }
+        const unblocked = attackerObjs.filter(a => !blocks[a.instanceId]);
+        const incoming = unblocked.reduce((s, a) => s + a.power, 0);
+        if (incoming >= state.npc.life) {
+            const remaining = availableBlockers.filter(b => !usedBlockers.has(b.instanceId)).sort((a, b) => a.power - b.power);
+            const unblockedSorted = [...unblocked].sort((a, b) => b.power - a.power);
+            for (const att of unblockedSorted) {
+                if (remaining.length === 0) break;
+                const needsFlyingBlock = att.keywords.includes('flying');
+                const idx = remaining.findIndex(b => !needsFlyingBlock || b.keywords.includes('flying') || b.keywords.includes('reach'));
+                if (idx === -1) continue;
+                const [b] = remaining.splice(idx, 1);
+                blocks[att.instanceId] = b.instanceId;
+            }
+        }
+        return blocks;
+    }
+
+    function confirmPlayerAttack() {
+        const attackerIds = [...state.selectedAttackers];
+        attackerIds.forEach(id => {
+            const c = state.player.battlefield.find(p => p.instanceId === id);
+            if (!c.keywords.includes('vigilance')) c.tapped = true;
+        });
+        if (attackerIds.length === 0) {
+            log('You do not attack this turn.');
+        } else {
+            const attackerObjs = attackerIds.map(id => state.player.battlefield.find(p => p.instanceId === id));
+            log(`You attack with ${attackerObjs.map(c => c.name).join(', ')}.`);
+            const blocks = npcDeclareBlockers(attackerObjs);
+            resolveCombat('player', 'npc', attackerIds, blocks);
+        }
+        state.phase = 'main2';
+        state.selectedAttackers = [];
+        checkGameOverRender();
+    }
+
+    function selectAttackerToBlock(attackerId) {
+        if (state.phase !== 'combat-blockers') return;
+        uiSelectedAttacker = (uiSelectedAttacker === attackerId) ? null : attackerId;
+        render();
+    }
+
+    function clickOwnCreatureForBlocking(blockerId) {
+        if (state.phase !== 'combat-blockers' || !uiSelectedAttacker) return;
+        const blocker = state.player.battlefield.find(p => p.instanceId === blockerId);
+        if (!blocker || blocker.isLand || blocker.tapped) return;
+        const attacker = state.npc.battlefield.find(p => p.instanceId === uiSelectedAttacker);
+        if (attacker.keywords.includes('flying') && !(blocker.keywords.includes('flying') || blocker.keywords.includes('reach'))) {
+            log(`${blocker.name} can't block a flyer.`);
+            return;
+        }
+        for (const aid in state.blockAssignments) {
+            if (state.blockAssignments[aid] === blockerId) delete state.blockAssignments[aid];
+        }
+        if (state.blockAssignments[uiSelectedAttacker] === blockerId) delete state.blockAssignments[uiSelectedAttacker];
+        else state.blockAssignments[uiSelectedAttacker] = blockerId;
+        render();
+    }
+
+    function confirmPlayerBlocks() {
+        resolveCombat('npc', 'player', state.pendingAttackerIds, state.blockAssignments);
+        state.pendingAttackerIds = [];
+        state.blockAssignments = {};
+        uiSelectedAttacker = null;
+        checkGameOverRender();
+        if (state.phase !== 'gameover') npcMainPhase2AndEnd();
+    }
+
+    // ---------------------------------------------------------------
+    // Rendering
+    // ---------------------------------------------------------------
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+    }
+
+    function cardHtml(card, opts) {
+        opts = opts || {};
+        const classes = ['mtg-card', 'color-' + card.color];
+        if (card.isLand) classes.push('land');
+        if (card.tapped) classes.push('tapped');
+        if (!card.isLand && card.sick) classes.push('sick');
+        if (opts.clickable) classes.push('clickable');
+        if (opts.selected) classes.push('selected');
+        if (opts.attacking) classes.push('attacking');
+        if (opts.blockedBy) classes.push('blocked-by');
+        if (!card.isLand && card.damage > 0) classes.push('damaged');
+        const clickAttr = opts.onclick ? `onclick="${opts.onclick}"` : '';
+        if (card.isLand) {
+            return `<div class="${classes.join(' ')}" ${clickAttr}><div class="card-name">${escapeHtml(card.name)}</div></div>`;
+        }
+        const kw = card.keywords && card.keywords.length ? `<div class="card-keywords">${card.keywords.map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(', ')}</div>` : '';
+        const pt = `<div class="card-pt">${card.power}/${card.toughness}</div>`;
+        return `<div class="${classes.join(' ')}" ${clickAttr}>
+            <div class="card-name">${escapeHtml(card.name)}</div>
+            <div class="card-cost">${costString(card.cost)}</div>
+            ${kw}
+            ${pt}
+        </div>`;
+    }
+
+    function render() {
+        if (!state) return;
+
+        document.getElementById('playerLife').textContent = state.player.life;
+        document.getElementById('npcLife').textContent = state.npc.life;
+
+        const phaseLabels = {
+            main1: 'Main Phase 1', 'combat-attackers': 'Declare Attackers', 'combat-blockers': 'Declare Blockers',
+            main2: 'Main Phase 2', gameover: 'Game Over'
+        };
+        document.getElementById('turnIndicator').textContent =
+            `Turn ${state.turnNumber} - ${state.activePlayer === 'player' ? 'Your' : "Opponent's"} turn - ${phaseLabels[state.phase] || state.phase}`;
+
+        document.getElementById('npcBoard').innerHTML = state.npc.battlefield.length
+            ? state.npc.battlefield.map(c => cardHtml(c, {
+                attacking: state.phase === 'combat-blockers' && state.pendingAttackerIds.includes(c.instanceId),
+                selected: uiSelectedAttacker === c.instanceId,
+                clickable: state.phase === 'combat-blockers' && state.pendingAttackerIds.includes(c.instanceId),
+                onclick: state.phase === 'combat-blockers' && state.pendingAttackerIds.includes(c.instanceId) ? `selectAttackerToBlock(${c.instanceId})` : null
+            })).join('')
+            : '<p class="empty-note">Empty.</p>';
+
+        const blockedInstanceIds = new Set(Object.values(state.blockAssignments));
+        document.getElementById('playerBoard').innerHTML = state.player.battlefield.length
+            ? state.player.battlefield.map(c => cardHtml(c, {
+                selected: state.phase === 'combat-attackers' && state.selectedAttackers.includes(c.instanceId),
+                blockedBy: blockedInstanceIds.has(c.instanceId),
+                clickable: (state.phase === 'combat-attackers') || (state.phase === 'combat-blockers' && uiSelectedAttacker),
+                onclick: state.phase === 'combat-attackers'
+                    ? `toggleAttackerSelection(${c.instanceId})`
+                    : (state.phase === 'combat-blockers' ? `clickOwnCreatureForBlocking(${c.instanceId})` : null)
+            })).join('')
+            : '<p class="empty-note">Empty.</p>';
+
+        document.getElementById('playerHand').innerHTML = state.player.hand.length
+            ? state.player.hand.map(c => cardHtml(c, {
+                clickable: state.activePlayer === 'player' && ['main1', 'main2'].includes(state.phase),
+                onclick: state.activePlayer === 'player' && ['main1', 'main2'].includes(state.phase) ? `onHandCardClick(${c.instanceId})` : null
+            })).join('')
+            : '<p class="empty-note">Empty hand.</p>';
+
+        renderActionBar();
+
+        const logPanel = document.getElementById('logPanel');
+        logPanel.innerHTML = state.log.slice(-60).map(m => `<div>${escapeHtml(m)}</div>`).reverse().join('');
+
+        if (state.phase === 'gameover') {
+            const box = document.getElementById('gameOverBox');
+            box.className = 'game-over-box ' + (state.result === 'win' ? 'win' : state.result === 'lose' ? 'lose' : '');
+            document.getElementById('gameOverTitle').textContent = state.result === 'win' ? 'You Win!' : state.result === 'lose' ? 'You Lose' : 'Draw';
+            document.getElementById('gameOverSubtitle').textContent = `Final life: You ${state.player.life}, Opponent ${state.npc.life}.`;
+            document.getElementById('gameOverOverlay').classList.add('open');
+        }
+    }
+
+    function renderActionBar() {
+        const bar = document.getElementById('actionBar');
+        if (state.phase === 'gameover') { bar.innerHTML = ''; return; }
+        if (state.activePlayer !== 'player') {
+            if (state.phase === 'combat-blockers') {
+                bar.innerHTML = `<span class="action-hint">Opponent is attacking. Click an attacker, then click one of your creatures to block it.</span>
+                    <button onclick="confirmPlayerBlocks()">Declare Blocks (${Object.keys(state.blockAssignments).length})</button>`;
+            } else {
+                bar.innerHTML = `<span class="action-hint">Opponent's turn...</span>`;
+            }
+            return;
+        }
+        if (state.phase === 'main1') {
+            bar.innerHTML = `<span class="action-hint">Play a land or cast creatures from your hand, then proceed to combat.</span>
+                <button onclick="goToCombatPlayer()">Proceed to Combat</button>`;
+        } else if (state.phase === 'combat-attackers') {
+            bar.innerHTML = `<span class="action-hint">Click your untapped, non-sick creatures to select attackers.</span>
+                <button onclick="confirmPlayerAttack()">Declare Attackers (${state.selectedAttackers.length})</button>`;
+        } else if (state.phase === 'main2') {
+            bar.innerHTML = `<span class="action-hint">Cast any remaining spells, then end your turn.</span>
+                <button onclick="endPlayerTurn()">End Turn</button>`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', newMatch);
+</script>
+</body>
+</html>
