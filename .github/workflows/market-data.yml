@@ -1,13 +1,18 @@
-# Builds the Market Watch data (price history, spikes, ban log) every
-# morning and publishes it to the `market-data` branch, which
+# Builds the Market Watch data (price history, spikes, ban log) twice a
+# day and publishes it to the `market-data` branch, which
 # MTG_Lookup_Tool.html reads from raw.githubusercontent.com.
 # The branch is replaced each run (one commit, no history), so the repo
 # doesn't grow. See tools/build_market_data.py for what's in the files.
 name: Market data
 
 on:
+  # Twice a day, at odd minutes: GitHub drops or delays scheduled runs
+  # when lots of jobs start on the hour, and MTGJSON's daily prices land at
+  # varying times, so the afternoon run picks up anything the morning one
+  # missed. Running on the same prices twice is harmless.
   schedule:
-    - cron: '0 10 * * *' # 10:00 UTC = 6am Eastern (5am in winter)
+    - cron: '23 13 * * *' # 13:23 UTC = 9:23am Eastern (8:23am in winter)
+    - cron: '47 20 * * *' # 20:47 UTC = 4:47pm Eastern (3:47pm in winter)
   workflow_dispatch: {}
 
 permissions:
