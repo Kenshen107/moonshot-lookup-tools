@@ -12134,7 +12134,6 @@
                     },
                     {
                         name: 'Threshold', match: /\bthreshold\b/i, isNew: false,
-                        cardName: 'Threshold', card: '7+ cards in your graveyard.',
                         text: 'The ability works only while you have seven or more cards in your graveyard.',
                         rulings: []
                     }
@@ -12591,7 +12590,9 @@
             let mechanics = [];
             let themes = {};
             if (notes) {
-                mechanics = notes.mechanics.map(m => ({ name: m.cardName || m.name, text: m.card || m.text }));
+                // Only mechanics with a handout line (`card`): the ones a newer
+                // player could trip on, whether new or returning.
+                mechanics = notes.mechanics.filter(m => m.card).map(m => ({ name: m.cardName || m.name, text: m.card }));
                 themes = notes.themes;
             } else {
                 const cards = await loadPrereleaseSetCards(prSetCode);
@@ -12615,7 +12616,7 @@
                     <li><b>Add 17 basic lands</b> (free at the land station), split by color - like 9 + 8.</li>
                 </ol>
                 <div class="pr-dc-tip">Splash a 3rd color only for a bomb or removal, with 3+ lands that make it. Between games you can swap in any card from your pool.</div>
-                <h4>New in ${set ? set.name : 'this set'}</h4>
+                <h4>Mechanics to know</h4>
                 <ul>${mechanics.map(m => `<li><b>${m.name}</b> - ${short(m.text)}</li>`).join('')}</ul>
                 <h4>What each color pair wants</h4>
                 <div class="pr-dc-themes">${PRERELEASE_PAIRS.map(pair => `<div>${pairDots(pair)} <span>${themes[pair] || ''}</span></div>`).join('')}</div>
