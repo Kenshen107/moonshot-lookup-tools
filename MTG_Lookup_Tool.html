@@ -5976,18 +5976,48 @@
         }
         .pr-sealed-card {
             display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 8px;
+            align-items: stretch;
             background: var(--bg-panel);
-            color: var(--text-primary);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-sm);
-            cursor: pointer;
-            text-align: left;
             font-size: 0.88em;
             min-width: 0;
         }
+        .pr-sealed-add {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            width: auto;
+            margin: 0;
+            padding: 6px 8px;
+            background: none;
+            border: none;
+            border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+            color: var(--text-primary);
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .pr-sealed-add:hover { background: var(--bg-panel-raised); }
+        .pr-sealed-minus {
+            flex: 0 0 auto;
+            width: auto;
+            margin: 0;
+            min-width: 30px;
+            padding: 0 8px;
+            background: var(--bg-inset);
+            color: var(--text-primary);
+            border: none;
+            border-left: 1px solid var(--border);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 1.15em;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .pr-sealed-minus:hover { background: #7a2a2a; }
+        .pr-pool-list .pr-sealed-minus { min-width: 26px; padding: 0 6px; margin-left: 4px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
         .pr-sealed-card:hover { border-color: var(--brand-light); }
         .pr-sealed-card.in-pool { border-color: var(--brand); background: var(--bg-panel-raised); }
         .pr-rarity { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; }
@@ -6001,18 +6031,22 @@
         .pr-sealed-count { flex: 0 0 auto; font-weight: 700; color: var(--brand-light); }
         .pr-sealed-pool { position: sticky; top: 10px; }
         .pr-sealed-pool .edh-block { margin-top: 0; }
-        .pr-color-table { width: 100%; margin-top: 8px; }
+        .pr-color-table { width: 100%; margin-top: 8px; font-size: 0.9em; }
+        .pr-color-table th, .pr-color-table td { padding: 5px 4px; }
         .pr-best { font-size: 1.05em; margin: 4px 0; }
         .pr-lands { margin: 6px 0; }
         .pr-pool-list { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; font-size: 0.92em; }
 
         @media (max-width: 760px) {
-            .pr-sealed { grid-template-columns: 1fr; }
+            .pr-sealed { grid-template-columns: minmax(0, 1fr); }
             .pr-sealed-pool { position: static; }
             .pr-sealed-grid { max-height: 50vh; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
         }
         @media (max-width: 480px) {
             .pr-sealed-grid { grid-template-columns: 1fr; }
+            .pr-color-name { display: none; }
+            .pr-color-table { font-size: 0.82em; }
+            .pr-color-table th, .pr-color-table td { padding: 5px 3px; }
         }
 
         /* The deck-building card: exactly a quarter of a letter page
@@ -12428,6 +12462,13 @@
         let prSealedFilter = { color: 'all', text: '' };
         const PR_SEALED_COLORS = [['all', 'All'], ['W', 'White'], ['U', 'Blue'], ['B', 'Black'], ['R', 'Red'], ['G', 'Green'], ['M', 'Multicolor'], ['C', 'Colorless']];
         const PR_REMOVAL_RE = /(destroy|exile) target (creature|permanent|nonland|artifact or creature|creature or planeswalker)|deals? \d+ damage to (any target|target creature|target creature or planeswalker)|target creature gets -\d+\/-\d+|fights? (target|up to one)|damage equal to [^.]*to target creature/i;
+        // Interaction: answers other than removal - counterspells, bounce,
+        // tapping down, "can't block", discard, stealing. Protection: saving
+        // your own things - granting hexproof, indestructible, protection
+        // or ward, phasing out, or bouncing your own permanent. Both were
+        // checked against Reality Fracture's cards on 2026-09-25.
+        const PR_INTERACTION_RE = /counter target|return (up to (one|two) )?target (?![^.]*you control)[^.]*?to (its|their) owner'?s'? hands?|tap (up to (one|two) )?(another )?target (creature|permanent|artifact)|doesn't untap during its controller'?s untap step|target creature can't (block|attack)|(target|each) opponent[^.]*discards?|you choose a [^.]*card from it|gain control of target/i;
+        const PR_PROTECTION_RE = /(gains?|have)\b[^."]*\b(hexproof|indestructible|protection from|shroud|ward)\b|phases? out|return (another )?target (creature|permanent|nonland permanent) you control to its owner'?s hand/i;
         const BASIC_FOR_COLOR = { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' };
 
         function prPoolKey() { return `prSealedPool:${prSetCode}`; }
@@ -12447,6 +12488,8 @@
             return colors.length === 0 ? 'C' : colors.length > 1 ? 'M' : colors[0];
         }
         function prIsRemoval(card) { return PR_REMOVAL_RE.test(cardOracleText(card)); }
+        function prIsInteraction(card) { return PR_INTERACTION_RE.test(cardOracleText(card)); }
+        function prIsProtection(card) { return PR_PROTECTION_RE.test(cardOracleText(card)); }
         function prIsCreature(card) { return /\bCreature\b/.test((card.type_line || '').split(' // ')[0]); }
 
         async function renderPrereleaseSealed() {
@@ -12459,7 +12502,7 @@
             }
             const f = prSealedFilter;
             el.innerHTML = `
-                <div class="formats-intro">Tap each card you opened to add it to your pool (tap again for another copy). It counts what each color gives you and suggests your best two colors and a land split. Just tips - build what you enjoy!</div>
+                <div class="formats-intro">Tap each card you opened to add it to your pool (tap again for another copy, or − to take one out). It counts what each color gives you and suggests your best two colors and a land split. Just tips - build what you enjoy!</div>
                 <div class="pr-sealed">
                     <div class="pr-sealed-picker">
                         <div class="staples-controls" style="flex-wrap:wrap; justify-content:flex-start;">
@@ -12489,12 +12532,15 @@
             const shown = cards.filter(c => (f.color === 'all' || prColorGroup(c) === f.color || (f.color === 'C' && prColorGroup(c) === 'L'))
                 && (!f.text || c.name.toLowerCase().includes(f.text.toLowerCase())));
             grid.innerHTML = shown.map(c => `
-                <button type="button" class="pr-sealed-card${pool[c.id] ? ' in-pool' : ''}" onclick="addPrSealedCard('${c.id}')" title="${escapeAttr(c.type_line || '')}">
-                    <span class="pr-rarity pr-r-${c.rarity}"></span>
-                    <span class="pr-sealed-name">${c.name.split(' // ')[0]}</span>
-                    <span class="pr-sealed-cost">${c.mana_cost ? renderManaCost(c.mana_cost) : ''}</span>
-                    ${pool[c.id] ? `<span class="pr-sealed-count">×${pool[c.id]}</span>` : ''}
-                </button>
+                <div class="pr-sealed-card${pool[c.id] ? ' in-pool' : ''}">
+                    <button type="button" class="pr-sealed-add" onclick="addPrSealedCard('${c.id}')" title="Add ${escapeAttr(c.name)} (${escapeAttr(c.type_line || '')})">
+                        <span class="pr-rarity pr-r-${c.rarity}"></span>
+                        <span class="pr-sealed-name">${c.name.split(' // ')[0]}</span>
+                        <span class="pr-sealed-cost">${c.mana_cost ? renderManaCost(c.mana_cost) : ''}</span>
+                        ${pool[c.id] ? `<span class="pr-sealed-count">×${pool[c.id]}</span>` : ''}
+                    </button>
+                    ${pool[c.id] ? `<button type="button" class="pr-sealed-minus" onclick="removePrSealedCard('${c.id}')" title="Remove one" aria-label="Remove one ${escapeAttr(c.name)}">−</button>` : ''}
+                </div>
             `).join('') || '<div class="text-secondary">No cards match.</div>';
         }
 
@@ -12531,7 +12577,7 @@
             }
             // Per color: playable cards, creatures, removal, rares.
             const stats = {};
-            'WUBRG'.split('').forEach(c => { stats[c] = { cards: 0, creatures: 0, removal: 0, rares: 0 }; });
+            'WUBRG'.split('').forEach(c => { stats[c] = { cards: 0, creatures: 0, removal: 0, interaction: 0, protection: 0, rares: 0 }; });
             entries.forEach(({ card, n }) => {
                 const colors = prCardColors(card);
                 if (colors.length !== 1) return;
@@ -12539,21 +12585,25 @@
                 s.cards += n;
                 if (prIsCreature(card)) s.creatures += n;
                 if (prIsRemoval(card)) s.removal += n;
+                if (prIsInteraction(card)) s.interaction += n;
+                if (prIsProtection(card)) s.protection += n;
                 if (['rare', 'mythic'].includes(card.rarity)) s.rares += n;
             });
             // Pairs: every nonland card castable with those two colors
             // (colorless included), weighted toward removal and rares.
             const castable = (card, pair) => prCardColors(card).every(col => pair.includes(col));
             const pairScores = PRERELEASE_PAIRS.map(pair => {
-                let score = 0, count = 0, creatures = 0, removal = 0;
+                let score = 0, count = 0, creatures = 0, removal = 0, interaction = 0, protection = 0;
                 entries.forEach(({ card, n }) => {
                     if (prColorGroup(card) === 'L' || !castable(card, pair)) return;
                     const w = 1 + (prIsRemoval(card) ? 1.5 : 0) + (['rare', 'mythic'].includes(card.rarity) ? 1.5 : 0);
                     score += w * n; count += n;
                     if (prIsCreature(card)) creatures += n;
                     if (prIsRemoval(card)) removal += n;
+                    if (prIsInteraction(card)) interaction += n;
+                    if (prIsProtection(card)) protection += n;
                 });
-                return { pair, score, count, creatures, removal };
+                return { pair, score, count, creatures, removal, interaction, protection };
             }).sort((a, b) => b.score - a.score);
             const best = pairScores[0];
             // Land split by colored mana symbols among that pair's cards.
@@ -12576,19 +12626,19 @@
                 <div class="edh-block">
                     <div class="edh-head"><span class="edh-title">Your pool · ${total} cards</span><button type="button" class="staples-sort-btn" onclick="clearPrSealedPool()">Clear</button></div>
                     <table class="other-stores pr-color-table">
-                        <thead><tr><th>Color</th><th>Cards</th><th>Creatures</th><th>Removal</th><th>Rares</th></tr></thead>
-                        <tbody>${'WUBRG'.split('').map(col => `<tr><td><i class="pip-dot pip-${col}"></i> ${BASIC_FOR_COLOR[col].replace('Plains', 'White').replace('Island', 'Blue').replace('Swamp', 'Black').replace('Mountain', 'Red').replace('Forest', 'Green')}</td><td>${stats[col].cards}</td><td>${stats[col].creatures}</td><td>${stats[col].removal}</td><td>${stats[col].rares}</td></tr>`).join('')}</tbody>
+                        <thead><tr><th>Color</th><th>Cards</th><th>Creatures</th><th>Removal</th><th title="Counterspells, bounce, tapping down, discard">Interact</th><th title="Hexproof, indestructible, protection and ward effects, saving your own permanents">Protect</th><th>Rares</th></tr></thead>
+                        <tbody>${'WUBRG'.split('').map(col => `<tr><td><i class="pip-dot pip-${col}"></i> <span class="pr-color-name">${BASIC_FOR_COLOR[col].replace('Plains', 'White').replace('Island', 'Blue').replace('Swamp', 'Black').replace('Mountain', 'Red').replace('Forest', 'Green')}</span></td><td>${stats[col].cards}</td><td>${stats[col].creatures}</td><td>${stats[col].removal}</td><td>${stats[col].interaction}</td><td>${stats[col].protection}</td><td>${stats[col].rares}</td></tr>`).join('')}</tbody>
                     </table>
                     <div class="edh-subhead">Suggested colors</div>
-                    <div class="pr-best">${pairLabel(best.pair)} <strong>${best.count} playables</strong> · ${best.creatures} creatures · ${best.removal} removal${themeFor(best.pair) ? `<div class="text-secondary">This pair's plan: ${themeFor(best.pair)}</div>` : ''}</div>
+                    <div class="pr-best">${pairLabel(best.pair)} <strong>${best.count} playables</strong> · ${best.creatures} creatures · ${best.removal} removal · ${best.interaction} interaction · ${best.protection} protection${themeFor(best.pair) ? `<div class="text-secondary">This pair's plan: ${themeFor(best.pair)}</div>` : ''}</div>
                     <div class="pr-lands">Lands: <strong>${lands[best.pair[0]]} ${BASIC_FOR_COLOR[best.pair[0]]} + ${lands[best.pair[1]]} ${BASIC_FOR_COLOR[best.pair[1]]}</strong> (17), split by your mana symbols.</div>
                     ${warn.length ? `<ul class="pr-rulings">${warn.map(w => `<li>${w}</li>`).join('')}</ul>` : ''}
                     <div class="edh-subhead">Next best</div>
                     <div>${pairScores.slice(1, 3).map(p => `${pairLabel(p.pair)} ${p.count} playables, ${p.removal} removal`).join(' · ')}</div>
-                    <details class="all-printings"><summary>Cards in your pool (${total})</summary>
-                        <div class="pr-pool-list">${entries.sort((a, b) => a.card.name.localeCompare(b.card.name)).map(({ card, n }) => `<div>${n > 1 ? `${n}× ` : ''}${prCardLinkHTML(card)} <button type="button" class="buylist-remove-btn" onclick="removePrSealedCard('${card.id}')" aria-label="Remove one">−</button></div>`).join('')}</div>
+                    <details class="all-printings" open><summary>Cards in your pool (${total})</summary>
+                        <div class="pr-pool-list">${entries.sort((a, b) => a.card.name.localeCompare(b.card.name)).map(({ card, n }) => `<div>${n > 1 ? `${n}× ` : ''}${prCardLinkHTML(card)} <button type="button" class="pr-sealed-minus" onclick="removePrSealedCard('${card.id}')" title="Remove one" aria-label="Remove one ${escapeAttr(card.name)}">−</button></div>`).join('')}</div>
                     </details>
-                    <div class="edh-source">Removal is spotted from the card text, so it's approximate. Rares and mythics count extra, since they're usually your strongest cards.</div>
+                    <div class="edh-source">Removal, interaction (counterspells, bounce, tapping down, discard) and protection (hexproof, indestructible and similar, or saving your own permanent) are spotted from the card text, so they're approximate. Rares and mythics count extra, since they're usually your strongest cards.</div>
                 </div>
             `;
         }
