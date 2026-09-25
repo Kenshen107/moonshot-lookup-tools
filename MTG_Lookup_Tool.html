@@ -12145,8 +12145,132 @@
         // Keywords every set has - not worth a spot on the mechanics page.
         const EVERGREEN_KEYWORDS = new Set(['Flying', 'Trample', 'Vigilance', 'Menace', 'Haste', 'Reach', 'Deathtouch', 'Lifelink',
             'First strike', 'Double strike', 'Defender', 'Flash', 'Hexproof', 'Indestructible', 'Ward', 'Enchant', 'Equip', 'Fight',
-            'Mill', 'Scry', 'Treasure', 'Food', 'Clue', 'Protection', 'Transform']);
+            'Mill', 'Scry', 'Treasure', 'Food', 'Clue', 'Protection', 'Transform', 'Regenerate']);
+        // Color-pair (or clan/family) themes per set, for the printed card
+        // and the Sealed Helper's "This pair's plan". Written from each set's
+        // archetype section in Draftsim's draft/sealed guides (draftsim.com,
+        // checked 2026-09-25); PRERELEASE_SET_NOTES themes win when a set
+        // has both. Three-color sets list their clans or families. Sets
+        // before 2020 aren't covered yet (no archetype guide to work from).
+        // Add each new set from Draftsim's "draft archetypes" article, which
+        // usually comes out before the prerelease.
+        const PRERELEASE_PAIR_THEMES = {
+            znr: { WU: 'Party (Cleric, Rogue, Warrior, Wizard)', UB: 'Rogues & milling them', BR: 'Party aggro', RG: 'Landfall & lands', GW: 'Landfall', WB: 'Clerics', UR: 'Wizards & spells', BG: '+1/+1 counters', RW: 'Warriors aggro', GU: 'Kicker' },
+            thb: { WU: 'Fliers & auras', UB: 'Control', BR: 'Attrition', RG: 'Big creatures, beatdown', GW: 'Auras', WB: 'Midrange, some auras', UR: 'Spells & fliers', BG: 'Escape from the graveyard', RW: 'Heroic (target your creatures)', GU: 'Constellation (enchantments)' },
+            khm: { WU: 'Foretell', UB: 'Snow control', BR: 'Berserkers aggro', RG: 'Big monsters', GW: 'Go wide & lifegain', WB: 'Cast two spells a turn', UR: 'Giants & spells', BG: 'Elves', RW: 'Aggro', GU: 'Snow & changelings' },
+            stx: { WB: 'Silverquill: magecraft aggro', UR: 'Prismari: big spells', BG: 'Witherbloom: lifegain & drain', RW: 'Lorehold: spells from the graveyard', GU: 'Quandrix: counters & X spells' },
+            afr: { WU: 'Venture into dungeons, control', UB: 'Rogues, tempo', BR: 'Treasure midrange', RG: 'Pack tactics aggro', GW: 'Lifegain', WB: 'Venture into dungeons', UR: 'Dice rolls & spells', BG: 'Creatures dying (morbid)', RW: 'Equipment aggro', GU: 'Ramp into big creatures' },
+            mid: { WU: 'Spirits & fliers', UB: 'Zombies & self-mill', BR: 'Vampires', RG: 'Werewolves (day/night)', GW: 'Humans & coven', WB: 'Sacrifice', UR: 'Spells', BG: 'Creatures dying (morbid)', RW: 'Day/night aggro', GU: 'Flashback' },
+            vow: { WU: 'Disturb & Spirits', UB: 'Exploit & Zombies', BR: 'Blood tokens & Vampires', RG: 'Werewolves (daybound)', GW: 'Training & Humans', WB: 'Lifegain', UR: 'Spells', BG: 'Big creatures midrange', RW: 'Aggro', GU: 'Self-mill' },
+            neo: { WU: 'Vehicles', UB: 'Ninjas & ninjutsu', BR: 'Sacrifice', RG: 'Modified creatures', GW: 'Enchantments', WB: 'Artifacts & enchantments', UR: 'Artifacts', BG: 'Graveyard', RW: 'Samurai (attack alone)', GU: 'Ramp' },
+            snc: { GWU: 'Brokers: shield & +1/+1 counters', WUB: 'Obscura: connive, control', UBR: 'Maestros: casualty & removal', BRG: 'Riveteers: blitz & Treasure', RGW: 'Cabaretti: go wide (alliance)' },
+            dmu: { WU: 'Tokens', UB: 'Control', BR: 'Sacrifice', RG: 'Domain', GW: 'Go-wide tokens', WB: 'Sacrifice', UR: 'Spells & prowess', BG: 'Self-mill', RW: 'Aggro', GU: 'Domain & kicker' },
+            bro: { WU: 'Soldiers', UB: 'Draw your second card', BR: 'Sacrifice', RG: 'Big creatures midrange', GW: 'Artifacts', WB: 'Small creatures aggro', UR: 'Spells', BG: 'Graveyard', RW: 'Aggro', GU: 'Artifact creatures (Robots)' },
+            one: { WU: 'Artifacts', UB: 'Proliferate control', BR: 'Sacrifice', RG: 'Oil counters', GW: 'Toxic, go wide', WB: 'Toxic & corrupted', UR: 'Spells', BG: 'Toxic, go tall', RW: 'Equipment', GU: 'Proliferate, tempo' },
+            mom: { WU: 'Knights aggro', UB: 'Graveyard control', BR: 'Sacrifice', RG: 'Battles', GW: '+1/+1 counters', WB: 'Phyrexians aggro', UR: 'Convoke', BG: 'Incubate', RW: 'Backup aggro', GU: 'Transforming cards' },
+            ltr: { WU: 'Fliers & draw two', UB: 'Control & amass', BR: 'Orcs, amass & sacrifice', RG: 'Big creatures aggro', GW: 'Hobbits & Food', WB: 'Legends & tokens', UR: 'Instants & sorceries', BG: 'Sacrifice & Food', RW: 'Go-wide Humans & equipment', GU: 'Elves & scry' },
+            woe: { WU: 'Tapping creatures down', UB: 'Faeries & flash', BR: 'Rats', RG: 'Big monsters', GW: 'Roles', WB: 'Sacrifice midrange', UR: 'Spells', BG: 'Food', RW: 'Aggro & celebration', GU: 'Ramp' },
+            lci: { WU: 'Artifacts', UB: 'Descend (graveyard)', BR: 'Descend aggro', RG: 'Dinosaurs', GW: 'Go-wide aggro', WB: 'Sacrifice', UR: 'Pirates', BG: 'Descend midrange', RW: 'Midrange', GU: 'Explore' },
+            mkm: { WU: 'Detectives', UB: 'Clues & control', BR: 'Suspect aggro', RG: 'Big disguise creatures', GW: 'Go-wide disguise', WB: 'Small disguise creatures', UR: 'Artifacts & sacrifice', BG: 'Graveyard', RW: 'Battalion (attack with three)', GU: 'Collect evidence' },
+            otj: { WU: 'Flash & plot', UB: 'Crimes, control', BR: 'Outlaws aggro', RG: 'Ferocious (power 4+)', GW: 'Mounts', WB: 'Attrition midrange', UR: 'Two spells a turn & plot', BG: 'Graveyard recursion', RW: 'Mercenaries aggro', GU: 'Ramp & plot' },
+            mh3: { WU: 'Energy', UB: 'Card draw', BR: 'Artifacts', RG: 'Eldrazi', GW: 'Aggro', WB: 'Modified & sacrifice', UR: 'Energy & Eldrazi', BG: 'Modified creatures', RW: 'Aggro', GU: 'Eldrazi ramp' },
+            mh2: { WU: 'Affinity (artifacts)', UB: 'Discarding matters', BR: 'Madness', RG: 'Storm (many spells)', GW: '+1/+1 counters', WB: 'Reanimator', UR: 'Delirium', BG: 'Sacrifice & Squirrels', RW: 'Modular (artifacts)', GU: 'Ramp & value' },
+            blb: { WU: 'Birds: fliers', UB: 'Rats: threshold', BR: 'Lizards: opponents lose life', RG: 'Raccoons: expend', GW: 'Rabbits: go wide', WB: 'Bats: gain & lose life', UR: 'Otters: noncreature spells', BG: 'Squirrels: forage & Food', RW: 'Mice: valiant aggro', GU: 'Frogs: bounce & re-use' },
+            dsk: { WU: 'Eerie (enchantments)', UB: 'Eerie & control', BR: 'Sacrifice', RG: 'Delirium', GW: 'Survival', WB: 'Reanimator', UR: 'Rooms', BG: 'Delirium', RW: 'Aggro', GU: 'Manifest dread' },
+            fdn: { WU: 'Fliers', UB: 'Threshold', BR: 'Raid', RG: 'Big creatures', GW: '+1/+1 counters', WB: 'Lifegain', UR: 'Spells', BG: 'Creatures dying (morbid)', RW: 'Aggro', GU: 'Ramp' },
+            dft: { WU: 'Artifacts', UB: 'Artifacts', BR: 'Speed (Start your engines!)', RG: 'Exhaust', GW: 'Mounts', WB: 'Speed & drain', UR: 'Cycling', BG: 'Graveyard midrange', RW: 'Vehicles', GU: 'Exhaust & ramp' },
+            tdm: { WBG: 'Abzan: endure & counters', URW: 'Jeskai: flurry (two spells)', BGU: 'Sultai: renew (graveyard)', RWB: 'Mardu: mobilize aggro', GUR: 'Temur: harmonize, big creatures', WB: 'Sacrifice', UR: 'Two spells a turn', BG: '+1/+1 counters', RW: 'Go-wide tokens', GU: 'Cards leaving the graveyard' },
+            fin: { WU: 'Artifacts & fliers', UB: 'Control', BR: 'Wizards & drain', RG: 'Landfall', GW: 'Go wide', WB: 'Sacrifice', UR: 'Big spells', BG: 'Graveyard', RW: 'Equipment aggro', GU: 'Towns & ramp' },
+            eoe: { WU: 'Second spell each turn', UB: 'Artifacts', BR: 'Void', RG: 'Landfall', GW: '+1/+1 counters', WB: 'Go wide', UR: 'Artifacts', BG: 'Graveyard midrange', RW: 'Spacecraft', GU: 'Ramp' },
+            spm: { WU: 'Modified creatures', UB: 'Villains & connive', BR: 'Mayhem', RG: 'Big spells', GW: 'Web-slinging' },
+            tla: { WU: 'Fliers', UB: 'Draw two', BR: 'Raid', RG: 'Big creatures', GW: 'Allies', WB: 'Sacrifice', UR: 'Lessons', BG: '+1/+1 counters', RW: 'Allies aggro', GU: 'Lessons' },
+            ecl: { WU: 'Merfolk', UB: 'Faeries & flash', BR: 'Goblins', RG: 'Vivid midrange', GW: 'Kithkin', WB: 'Midrange', UR: 'Elementals', BG: 'Elves', RW: 'Aggro', GU: 'Vivid ramp' },
+            tmt: { WB: 'Sneaky Ninjas', UR: 'Machines', BG: 'Disappear', RW: 'Alliance', GU: 'Mutagen' },
+            sos: { WB: 'Silverquill: repartee', UR: 'Prismari: opus', BG: 'Witherbloom: infusion', RW: 'Lorehold: flashback', GU: 'Quandrix: increment' },
+            msh: { WU: 'Teamwork', UB: 'Draw two', BR: 'Villains', RG: 'Power-up stompy', GW: 'Heroes', WB: 'Attack alone', UR: 'Artifacts', BG: 'Graveyard', RW: 'Noncreature spells', GU: '+1/+1 counters' },
+            hob: { WU: 'Draw two', BR: 'Amass Goblins', BG: 'Ferocious (power 4+)', RW: 'Storied', GU: 'Landfall' },
+            ktk: { WBG: 'Abzan: outlast & +1/+1 counters', URW: 'Jeskai: prowess & spells', BGU: 'Sultai: delve & graveyard', RWB: 'Mardu: raid aggro', GUR: 'Temur: ferocious, big creatures' }
+        };
         const PRERELEASE_MIN_KEYWORD_CARDS = 3;
+        // Scryfall lists keyword actions like "double" as keywords; skip them.
+        // (One-off flavor words, e.g. "Bad Breath", drop out by card count.)
+        const PR_KEYWORD_SKIP = new Set(['Double', 'Triple', 'Exchange']);
+        // A mechanic with this many earlier paper cards or fewer counts as
+        // New (previews and promos sometimes print a card or two early).
+        const PR_NEW_MECHANIC_MAX_PRIOR = 3;
+        // Card types and layouts that work like mechanics.
+        const PR_MECHANIC_TYPES = [
+            { name: 'Adventure', query: 'is:adventure', test: c => c.layout === 'adventure' },
+            { name: 'Saga', query: 't:saga', test: c => /\bSaga\b/.test(c.type_line || '') },
+            { name: 'Class', query: 't:class', test: c => /\bClass\b/.test(c.type_line || '') },
+            { name: 'Case', query: 't:case', test: c => /\bCase\b/.test(c.type_line || '') },
+            { name: 'Room', query: 't:room', test: c => /\bRoom\b/.test(c.type_line || '') },
+            { name: 'Battle', query: 't:battle', test: c => /\bBattle\b/.test(c.type_line || '') },
+            { name: 'Spacecraft', query: 't:spacecraft', test: c => /\bSpacecraft\b/.test(c.type_line || '') }
+        ];
+        // Plain-English explanations for mechanics that come back often, or
+        // whose reminder text differs card to card (costs, N). Anything not
+        // listed uses the set's own reminder text.
+        const PR_MECHANIC_GLOSSARY = {
+            'Cycling': 'Pay the cycling cost and discard this card: draw a card.',
+            'Landcycling': 'Pay the cost and discard this card: search your library for a land of the named type (or any basic land, for basic landcycling), put it in your hand, then shuffle.',
+            'Typecycling': 'Pay the cost and discard this card: search your library for a card of the named type, put it in your hand, then shuffle.',
+            'Flashback': 'You may cast this card from your graveyard by paying its flashback cost. Then it\'s exiled.',
+            'Surveil': 'Surveil N: look at the top N cards of your library. Put any of them into your graveyard and the rest back on top in any order.',
+            'Kicker': 'You may pay the extra kicker cost as you cast the spell. If you do, it gets the kicked bonus.',
+            'Convoke': 'Your creatures can help cast this spell: each creature you tap pays for {1} or one mana of that creature\'s color.',
+            'Delve': 'Each card you exile from your graveyard while casting this spell pays for {1}.',
+            'Crew': 'Crew N: tap any of your untapped creatures with total power N or more - this Vehicle becomes an artifact creature until end of turn.',
+            'Landfall': 'Triggers whenever a land enters the battlefield under your control.',
+            'Prowess': 'Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.',
+            'Morph': 'You may cast this face down as a 2/2 creature for {3}. Turn it face up any time you could pay its morph cost.',
+            'Disguise': 'You may cast this face down as a 2/2 creature with ward {2} for {3}. Turn it face up any time you could pay its disguise cost.',
+            'Raid': 'A bonus if you attacked this turn.',
+            'Ferocious': 'A bonus if you control a creature with power 4 or greater.',
+            'Delirium': 'A bonus if there are four or more card types among cards in your graveyard.',
+            'Threshold': 'A bonus while there are seven or more cards in your graveyard.',
+            'Domain': 'Counts the basic land types (Plains, Island, Swamp, Mountain, Forest) among lands you control.',
+            'Explore': 'Reveal the top card of your library. A land goes into your hand; otherwise put a +1/+1 counter on the creature, and you may put the card into your graveyard.',
+            'Proliferate': 'Choose any number of permanents and/or players, then give each one more counter of each kind it already has.',
+            'Connive': 'Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.',
+            'Investigate': 'Create a Clue token: an artifact with "{2}, Sacrifice this: Draw a card."',
+            'Channel': 'Pay the channel cost and discard this card from your hand to get its channel effect.',
+            'Ninjutsu': 'Pay the ninjutsu cost and return one of your unblocked attackers to your hand: put this card onto the battlefield tapped and attacking.',
+            'Reconfigure': 'Pay the reconfigure cost (only as a sorcery) to attach this creature to another creature you control as Equipment, or to unattach it. While attached, it isn\'t a creature.',
+            'Craft': 'Pay the craft cost and exile this plus the listed materials (from your battlefield or graveyard) to return it transformed. Only as a sorcery.',
+            'Discover': 'Discover N: exile cards from the top of your library until you hit a nonland card with mana value N or less. Cast it free or put it into your hand; the rest go on the bottom.',
+            'Descend': 'Descend N: a bonus if there are N or more permanent cards in your graveyard.',
+            'Fathomless descent': 'Counts the permanent cards in your graveyard.',
+            'Offspring': 'You may pay the extra offspring cost as you cast it. If you do, when it enters, create a 1/1 token copy of it.',
+            'Valiant': 'Triggers the first time each turn this creature becomes the target of a spell or ability you control.',
+            'Forage': 'Exile three cards from your graveyard or sacrifice a Food.',
+            'Plot': 'Pay the plot cost and exile this card from your hand (only as a sorcery). On a later turn, you may cast it for free as a sorcery.',
+            'Saddle': 'Saddle N: tap other creatures you control with total power N or more (only as a sorcery) - this Mount is saddled until end of turn.',
+            'Spree': 'Choose one or more modes, paying the extra cost shown for each one.',
+            'Celebration': 'A bonus if two or more nonland permanents entered the battlefield under your control this turn.',
+            'Eerie': 'Triggers whenever an enchantment you control enters and whenever you fully unlock a Room.',
+            'Survival': 'Triggers at the beginning of your second main phase if this creature is tapped.',
+            'Impending': 'You may cast it for its impending cost: it enters with time counters and isn\'t a creature until they\'re gone. Remove one at the end of each of your turns.',
+            'Manifest dread': 'Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and the other into your graveyard. If it\'s a creature card, turn it face up any time for its mana cost.',
+            'Incubate': 'Incubate N: create an Incubator artifact token with N +1/+1 counters. Pay {2} to turn it into an artifact creature.',
+            'Backup': 'Backup N: when this enters, put N +1/+1 counters on target creature. If that\'s another creature, it also gets this creature\'s listed abilities until end of turn.',
+            'Toxic': 'Toxic N: players dealt combat damage by this creature also get N poison counters. Ten poison counters and they lose.',
+            'Corrupted': 'A bonus if an opponent has three or more poison counters.',
+            'Enlist': 'As this creature attacks, you may tap one of your non-attacking creatures (not summoning sick) to add its power to this one until end of turn.',
+            'Read ahead': 'As this Saga enters, choose which chapter it starts on. Earlier chapters don\'t trigger.',
+            'Blitz': 'You may cast it for its blitz cost. It gains haste and "When this dies, draw a card," and it\'s sacrificed at the next end step.',
+            'Casualty': 'Casualty N: as you cast this spell, you may sacrifice a creature with power N or more. If you do, copy the spell.',
+            'Alliance': 'Triggers whenever another creature enters the battlefield under your control.',
+            'Mobilize': 'Mobilize N: whenever this creature attacks, create N tapped and attacking 1/1 red Warrior tokens. Sacrifice them at the next end step.',
+            'Endure': 'Endure N: put N +1/+1 counters on this permanent, or create an N/N white Spirit creature token.',
+            'Role token': 'An Aura token that attaches to a creature and gives it a bonus (for example, a Cursed Role makes it 1/1). A creature can have only one of your Roles at a time.',
+            'Adventure': 'Two cards in one: cast the Adventure spell first, and the card goes to exile. Later you may cast the creature from exile.',
+            'Saga': 'Gets a lore counter when it enters and after your draw step each turn. Each chapter happens in order, then the Saga is sacrificed.',
+            'Class': 'Starts at level 1. Pay a level-up cost (any time you could cast a sorcery) to add the next level\'s ability - you keep the earlier ones.',
+            'Case': 'An enchantment with a goal: once you meet its "To solve" condition at your end step, it\'s solved and its "Solved" ability turns on.',
+            'Room': 'An enchantment with two doors. Cast one door; you can unlock the other later by paying its cost.',
+            'Battle': 'Your opponent protects it. Attack it to remove its defense counters; when the last one is gone, you cast its back face for free.'
+        };
 
         // Hand-written notes per set (Scryfall set code). Written from the
         // set's release notes and Wizards' archetype descriptions; staff can
@@ -12320,11 +12444,15 @@
             return `<span class="set-link" onclick="openCardModal(cardTileDataById['${card.id}'])">${card.name.split(' // ')[0]}</span>`;
         }
 
-        // The set's mechanics: hand-written notes first, then any other
-        // non-evergreen keyword on at least a few cards (with reminder text
-        // taken from a card that has it).
-        function prereleaseMechanics(cards) {
+        // The set's mechanics: hand-written notes first, then the set's own
+        // keywords and mechanic card types, found automatically for any set.
+        // Each keyword's history on Scryfall (cards with it printed before
+        // the set came out) decides New vs Returning; new mechanics come
+        // first, then the rest by how many cards use them. Explanations come
+        // from PR_MECHANIC_GLOSSARY, else the cards' own reminder text.
+        async function prereleaseMechanics(cards) {
             const notes = PRERELEASE_SET_NOTES[prSetCode];
+            const set = prereleaseSetInfo();
             const list = [];
             const covered = new Set();
             if (notes) {
@@ -12333,25 +12461,96 @@
                     covered.add(m.name.toLowerCase().split(' ')[0]);
                 });
             }
-            const counts = new Map();
-            cards.forEach(c => (c.keywords || []).forEach(k => {
-                const key = /cycling$/i.test(k) ? 'Cycling' : k;
-                if (EVERGREEN_KEYWORDS.has(key) || covered.has(key.toLowerCase().split(' ')[0])) return;
-                if (!counts.has(key)) counts.set(key, []);
-                counts.get(key).push(c);
-            }));
-            [...counts.entries()].filter(([, cs]) => cs.length >= PRERELEASE_MIN_KEYWORD_CARDS)
-                .sort((a, b) => b[1].length - a[1].length)
-                .forEach(([name, cs]) => {
-                    const re = new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^(\\n]*\\(([^)]+)\\)`, 'i');
-                    let text = '';
-                    for (const c of cs) {
-                        const m = cardOracleText(c).match(re);
-                        if (m) { text = m[1]; break; }
-                    }
-                    list.push({ name, text: text || 'See the cards below for how it works.', rulings: [], cards: cs, auto: true });
-                });
+            const groups = new Map(); // name -> { cards, query }
+            const add = (name, card, query) => {
+                if (EVERGREEN_KEYWORDS.has(name) || PR_KEYWORD_SKIP.has(name) || covered.has(name.toLowerCase().split(' ')[0])) return;
+                if (!groups.has(name)) groups.set(name, { cards: [], query });
+                const g = groups.get(name);
+                if (!g.cards.includes(card)) g.cards.push(card);
+            };
+            cards.forEach(c => {
+                prCardMechanicKeywords(c).forEach(k => add(k, c, `keyword:"${k}"`));
+                PR_MECHANIC_TYPES.forEach(t => { if (t.test(c)) add(t.name, c, t.query); });
+            });
+            const found = [...groups.entries()]
+                .map(([name, g]) => ({ name, cards: g.cards, query: g.query }))
+                .filter(m => m.cards.length >= PRERELEASE_MIN_KEYWORD_CARDS);
+            const prior = await prMechanicPriorCounts(set, found);
+            found.forEach(m => {
+                const n = prior[m.name];
+                m.isNew = n === null || n === undefined ? undefined : n <= PR_NEW_MECHANIC_MAX_PRIOR;
+                m.text = PR_MECHANIC_GLOSSARY[m.name] || prReminderText(m.name, m.cards);
+                m.rulings = [];
+                m.auto = true;
+            });
+            found
+                .sort((a, b) => (b.isNew === true) - (a.isNew === true) || b.cards.length - a.cards.length)
+                .forEach(m => list.push({ ...m, text: m.text || 'See the cards below for how it works.', hasText: !!m.text }));
             return list;
+        }
+
+        // A card's mechanic keywords, with the cycling family sorted out:
+        // Scryfall tags a Forestcycling card with Landcycling, Typecycling
+        // and Cycling too, so each card counts once, under the right name.
+        function prCardMechanicKeywords(card) {
+            const kws = card.keywords || [];
+            const cyclers = kws.filter(k => /.cycling$/i.test(k) && !/^(land|type)cycling$/i.test(k));
+            const out = kws.filter(k => !/cycling$/i.test(k));
+            if (cyclers.some(k => /^(plains|island|swamp|mountain|forest|basic land|land)cycling$/i.test(k))) out.push('Landcycling');
+            else if (cyclers.length) out.push('Typecycling');
+            else if (kws.includes('Cycling')) out.push('Cycling');
+            return out;
+        }
+
+        // The most common reminder text for a keyword among the set's cards:
+        // the parenthesis right after the keyword (and its cost or number).
+        // Ability words (Celebration, Eerie...) have no reminder text, so
+        // for "Word — condition, effect" it uses the condition part.
+        function prReminderText(name, cards) {
+            const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const reminder = new RegExp(`\\b${esc}(?!\\w)(?:[ \\t][^(\\n.—]{0,30})?\\s*\\(([^)]+)\\)`, 'i');
+            const abilityWord = new RegExp(`(?:^|\\n)${esc} — ([^\\n]+)`, 'i');
+            const pickMostCommon = texts => {
+                const seen = new Map();
+                texts.filter(Boolean).forEach(t => seen.set(t, (seen.get(t) || 0) + 1));
+                return [...seen.entries()].sort((a, b) => b[1] - a[1] || a[0].length - b[0].length).map(e => e[0])[0] || '';
+            };
+            const fromReminder = pickMostCommon(cards.map(c => (cardOracleText(c).match(reminder) || [])[1]));
+            if (fromReminder) return fromReminder;
+            const condition = line => {
+                // Cut at the first comma that isn't followed by "if" - that's
+                // where the condition ends and the card's own effect starts.
+                const parts = line.split(', ');
+                let out = parts[0];
+                for (let i = 1; i < parts.length && /^if\b/i.test(parts[i]); i++) out += `, ${parts[i]}`;
+                return out;
+            };
+            const clause = pickMostCommon(cards.map(c => {
+                const m = cardOracleText(c).match(abilityWord);
+                return m ? condition(m[1]) : '';
+            }));
+            if (/^\{/.test(clause)) return ''; // a cost, not a condition: the card explains itself
+            return clause ? `Cards with "${name}" do something extra: ${clause.charAt(0).toLowerCase()}${clause.slice(1)}...` : '';
+        }
+
+        // How many paper cards had each mechanic before the set's release.
+        const prPriorCountCache = {};
+        async function prMechanicPriorCounts(set, mechanics) {
+            const out = {};
+            if (!set) return out;
+            for (const m of mechanics) {
+                const key = `${set.released_at}|${m.query}`;
+                if (!(key in prPriorCountCache)) {
+                    try {
+                        const page = await fetchScryfallSearchPage(`${API_BASE}/cards/search?q=${encodeURIComponent(`${m.query} game:paper date<${set.released_at}`)}`);
+                        // A huge count means Scryfall didn't recognize the keyword.
+                        prPriorCountCache[key] = page.total_cards > 5000 ? null : (page.total_cards || 0);
+                    } catch (err) { prPriorCountCache[key] = null; }
+                    await new Promise(r => setTimeout(r, SCRYFALL_REQUEST_SPACING_MS));
+                }
+                out[m.name] = prPriorCountCache[key];
+            }
+            return out;
         }
 
         // ---- Mechanics & rulings ----
@@ -12369,7 +12568,8 @@
             }
             if (myToken !== prMechToken) return;
             const set = prereleaseSetInfo();
-            const mechanics = prereleaseMechanics(cards);
+            const mechanics = await prereleaseMechanics(cards);
+            if (myToken !== prMechToken) return;
             const notes = PRERELEASE_SET_NOTES[prSetCode];
             el.innerHTML = `
                 <div class="formats-intro">For quick judge calls: what each of ${set ? set.name : 'this set'}'s mechanics does, the key rulings, and every card that uses it. Look up any card from the set below for its exact text and official rulings.</div>
@@ -12732,7 +12932,8 @@
             const first = Math.max(6, Math.min(11, Math.round(17 * pips[best.pair[0]] / pipTotal)));
             const lands = { [best.pair[0]]: first, [best.pair[1]]: 17 - first };
             const notes = PRERELEASE_SET_NOTES[prSetCode];
-            const themeFor = pair => (notes && notes.themes && (notes.themes[pair] || notes.themes[pair[1] + pair[0]])) || '';
+            const setThemes = (notes && notes.themes) || PRERELEASE_PAIR_THEMES[prSetCode] || {};
+            const themeFor = pair => setThemes[pair] || setThemes[pair[1] + pair[0]] || '';
             const pairLabel = pair => pair.split('').map(col => `<i class="pip-dot pip-${col}"></i>`).join('');
             const warn = [];
             if (best.count < 22) warn.push(`Only ${best.count} playable cards in these colors - you may need a light splash or a few weaker cards.`);
@@ -12782,9 +12983,11 @@
                 themes = notes.themes;
             } else {
                 const cards = await loadPrereleaseSetCards(prSetCode);
-                mechanics = prereleaseMechanics(cards).slice(0, 4).map(m => ({ name: m.name, text: m.text }));
-                // Without notes, point at each pair's two-color uncommon.
-                PRERELEASE_PAIRS.forEach(pair => {
+                mechanics = (await prereleaseMechanics(cards)).filter(m => m.hasText).slice(0, 4).map(m => ({ name: m.name, text: m.text }));
+                // Themes from PRERELEASE_PAIR_THEMES, or else point at each
+                // pair's two-color uncommon.
+                if (PRERELEASE_PAIR_THEMES[prSetCode]) themes = PRERELEASE_PAIR_THEMES[prSetCode];
+                else PRERELEASE_PAIRS.forEach(pair => {
                     const sign = cards.find(c => c.rarity === 'uncommon' && prCardColors(c).length === 2 && pair.split('').every(col => prCardColors(c).includes(col)));
                     themes[pair] = sign ? `See ${sign.name.split(' // ')[0]}` : '';
                 });
@@ -12804,8 +13007,8 @@
                 <div class="pr-dc-tip">Splash a 3rd color only for a bomb or removal, with 3+ lands that make it. Between games you can swap in any card from your pool.</div>
                 <h4>Mechanics to know</h4>
                 <ul>${mechanics.map(m => `<li><b>${m.name}</b> - ${short(m.text)}</li>`).join('')}</ul>
-                <h4>What each color pair wants</h4>
-                <div class="pr-dc-themes">${PRERELEASE_PAIRS.map(pair => `<div>${pairDots(pair)} <span>${themes[pair] || ''}</span></div>`).join('')}</div>
+                <h4>What each color ${Object.keys(themes).some(k => k.length > 2) ? 'combo' : 'pair'} wants</h4>
+                <div class="pr-dc-themes">${Object.keys(themes).filter(pair => themes[pair]).map(pair => `<div>${pairDots(pair)} <span>${themes[pair] || ''}</span></div>`).join('')}</div>
                 <div class="pr-dc-fun">These are just tips, not rules. Build the deck you're excited to play - that's the fun of sealed!</div>
                 <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Unofficial; not endorsed by Wizards of the Coast.</span></div>
             `;
