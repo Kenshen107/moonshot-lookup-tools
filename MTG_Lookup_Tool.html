@@ -6031,7 +6031,8 @@
         .pr-sealed-count { flex: 0 0 auto; font-weight: 700; color: var(--brand-light); }
         .pr-sealed-pool { position: sticky; top: 10px; }
         .pr-sealed-pool .edh-block { margin-top: 0; }
-        .pr-color-table { width: 100%; margin-top: 8px; font-size: 0.9em; }
+        .pr-table-wrap { overflow-x: auto; margin-top: 8px; }
+        .pr-color-table { width: 100%; font-size: 0.88em; }
         .pr-color-table th, .pr-color-table td { padding: 5px 4px; }
         .pr-best { font-size: 1.05em; margin: 4px 0; }
         .pr-lands { margin: 6px 0; }
@@ -6045,8 +6046,8 @@
         @media (max-width: 480px) {
             .pr-sealed-grid { grid-template-columns: 1fr; }
             .pr-color-name { display: none; }
-            .pr-color-table { font-size: 0.82em; }
-            .pr-color-table th, .pr-color-table td { padding: 5px 3px; }
+            .pr-color-table { font-size: 0.74em; }
+            .pr-color-table th, .pr-color-table td { padding: 5px 2px; letter-spacing: 0; }
         }
 
         /* The deck-building card: exactly a quarter of a letter page
@@ -12469,6 +12470,16 @@
         // checked against Reality Fracture's cards on 2026-09-25.
         const PR_INTERACTION_RE = /counter target|return (up to (one|two) )?target (?![^.]*you control)[^.]*?to (its|their) owner'?s'? hands?|tap (up to (one|two) )?(another )?target (creature|permanent|artifact)|doesn't untap during its controller'?s untap step|target creature can't (block|attack)|(target|each) opponent[^.]*discards?|you choose a [^.]*card from it|gain control of target/i;
         const PR_PROTECTION_RE = /(gains?|have)\b[^."]*\b(hexproof|indestructible|protection from|shroud|ward)\b|phases? out|return (another )?target (creature|permanent|nonland permanent) you control to its owner'?s hand/i;
+        // Card draw (not "draw, then discard" looting or rummaging) and ramp
+        // (mana abilities, lands onto the battlefield, Treasure / Heartwood
+        // tokens). Matched against the card text without reminder text and
+        // quoted abilities, so a Jace token's "[−3]: Draw a card" doesn't
+        // count. Checked against Reality Fracture's cards on 2026-09-25.
+        const PR_DRAW_RE = /(?<!discard (a|this) card(: |, then |\. if you do, ))(?<!controller )\bdraws? (a|one|two|three|four|five|X) cards?\b(?!,? then discard)|\bdraws? (a card for each|cards equal)/i;
+        const PR_RAMP_RE = /\badd (\{[WUBRGC]\}|one mana|two mana|three mana|an amount)|search your library for [^.]*land cards?[^.]*onto the battlefield|put [^.]*land cards?[^.]*onto the battlefield|(?<!(they|opponent|player) )\bcreates? [^.]*\b(treasure|heartwood)\b/i;
+        // How much each kind of card adds to a color pair's score (every
+        // playable card counts 1). A card can count for several.
+        const PR_PAIR_WEIGHTS = { removal: 1.5, rare: 1.5, interaction: 0.75, draw: 0.5, ramp: 0.5, protection: 0.5 };
         const BASIC_FOR_COLOR = { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' };
 
         function prPoolKey() { return `prSealedPool:${prSetCode}`; }
@@ -12490,6 +12501,32 @@
         function prIsRemoval(card) { return PR_REMOVAL_RE.test(cardOracleText(card)); }
         function prIsInteraction(card) { return PR_INTERACTION_RE.test(cardOracleText(card)); }
         function prIsProtection(card) { return PR_PROTECTION_RE.test(cardOracleText(card)); }
+        function prPlainText(card) { return cardOracleText(card).replace(/\([^)]*\)/g, '').replace(/"[^"]*"/g, ''); }
+        function prIsDraw(card) { return PR_DRAW_RE.test(prPlainText(card)); }
+        function prIsRamp(card) { return prColorGroup(card) !== 'L' && PR_RAMP_RE.test(prPlainText(card)); }
+        // Which kinds of card this is, for the pool stats and pair scores.
+        function prCardRoles(card) {
+            return {
+                creature: prIsCreature(card), removal: prIsRemoval(card), interaction: prIsInteraction(card),
+                protection: prIsProtection(card), draw: prIsDraw(card), ramp: prIsRamp(card),
+                rare: ['rare', 'mythic'].includes(card.rarity)
+            };
+        }
+        const PR_STAT_KEYS = ['creatures', 'removal', 'interaction', 'protection', 'draw', 'ramp', 'rares'];
+        function prAddRoles(stats, roles, n) {
+            if (roles.creature) stats.creatures += n;
+            if (roles.removal) stats.removal += n;
+            if (roles.interaction) stats.interaction += n;
+            if (roles.protection) stats.protection += n;
+            if (roles.draw) stats.draw += n;
+            if (roles.ramp) stats.ramp += n;
+            if (roles.rare) stats.rares += n;
+        }
+        function prEmptyStats() {
+            const stats = { cards: 0 };
+            PR_STAT_KEYS.forEach(k => { stats[k] = 0; });
+            return stats;
+        }
         function prIsCreature(card) { return /\bCreature\b/.test((card.type_line || '').split(' // ')[0]); }
 
         async function renderPrereleaseSealed() {
@@ -12577,33 +12614,28 @@
             }
             // Per color: playable cards, creatures, removal, rares.
             const stats = {};
-            'WUBRG'.split('').forEach(c => { stats[c] = { cards: 0, creatures: 0, removal: 0, interaction: 0, protection: 0, rares: 0 }; });
-            entries.forEach(({ card, n }) => {
+            'WUBRG'.split('').forEach(c => { stats[c] = prEmptyStats(); });
+            entries.forEach(e => { e.roles = prCardRoles(e.card); });
+            entries.forEach(({ card, n, roles }) => {
                 const colors = prCardColors(card);
                 if (colors.length !== 1) return;
-                const s = stats[colors[0]];
-                s.cards += n;
-                if (prIsCreature(card)) s.creatures += n;
-                if (prIsRemoval(card)) s.removal += n;
-                if (prIsInteraction(card)) s.interaction += n;
-                if (prIsProtection(card)) s.protection += n;
-                if (['rare', 'mythic'].includes(card.rarity)) s.rares += n;
+                stats[colors[0]].cards += n;
+                prAddRoles(stats[colors[0]], roles, n);
             });
             // Pairs: every nonland card castable with those two colors
-            // (colorless included), weighted toward removal and rares.
+            // (colorless included), weighted by PR_PAIR_WEIGHTS.
             const castable = (card, pair) => prCardColors(card).every(col => pair.includes(col));
             const pairScores = PRERELEASE_PAIRS.map(pair => {
-                let score = 0, count = 0, creatures = 0, removal = 0, interaction = 0, protection = 0;
-                entries.forEach(({ card, n }) => {
+                const totals = prEmptyStats();
+                let score = 0;
+                entries.forEach(({ card, n, roles }) => {
                     if (prColorGroup(card) === 'L' || !castable(card, pair)) return;
-                    const w = 1 + (prIsRemoval(card) ? 1.5 : 0) + (['rare', 'mythic'].includes(card.rarity) ? 1.5 : 0);
-                    score += w * n; count += n;
-                    if (prIsCreature(card)) creatures += n;
-                    if (prIsRemoval(card)) removal += n;
-                    if (prIsInteraction(card)) interaction += n;
-                    if (prIsProtection(card)) protection += n;
+                    const w = 1 + Object.keys(PR_PAIR_WEIGHTS).reduce((sum, k) => sum + (roles[k] ? PR_PAIR_WEIGHTS[k] : 0), 0);
+                    score += w * n;
+                    totals.cards += n;
+                    prAddRoles(totals, roles, n);
                 });
-                return { pair, score, count, creatures, removal, interaction, protection };
+                return { pair, score, ...totals, count: totals.cards };
             }).sort((a, b) => b.score - a.score);
             const best = pairScores[0];
             // Land split by colored mana symbols among that pair's cards.
@@ -12625,12 +12657,12 @@
             el.innerHTML = `
                 <div class="edh-block">
                     <div class="edh-head"><span class="edh-title">Your pool · ${total} cards</span><button type="button" class="staples-sort-btn" onclick="clearPrSealedPool()">Clear</button></div>
-                    <table class="other-stores pr-color-table">
-                        <thead><tr><th>Color</th><th>Cards</th><th>Creatures</th><th>Removal</th><th title="Counterspells, bounce, tapping down, discard">Interact</th><th title="Hexproof, indestructible, protection and ward effects, saving your own permanents">Protect</th><th>Rares</th></tr></thead>
-                        <tbody>${'WUBRG'.split('').map(col => `<tr><td><i class="pip-dot pip-${col}"></i> <span class="pr-color-name">${BASIC_FOR_COLOR[col].replace('Plains', 'White').replace('Island', 'Blue').replace('Swamp', 'Black').replace('Mountain', 'Red').replace('Forest', 'Green')}</span></td><td>${stats[col].cards}</td><td>${stats[col].creatures}</td><td>${stats[col].removal}</td><td>${stats[col].interaction}</td><td>${stats[col].protection}</td><td>${stats[col].rares}</td></tr>`).join('')}</tbody>
-                    </table>
+                    <div class="pr-table-wrap"><table class="other-stores pr-color-table">
+                        <thead><tr><th>Color</th><th>Cards</th><th title="Creatures">Creat<span class="pr-color-name">ures</span></th><th>Removal</th><th title="Counterspells, bounce, tapping down, discard">Interact</th><th title="Hexproof, indestructible, protection and ward effects, saving your own permanents">Protect</th><th title="Draws extra cards (not draw-then-discard)">Draw</th><th title="Extra mana: mana abilities, extra lands, Treasure and Heartwood tokens">Ramp</th><th>Rares</th></tr></thead>
+                        <tbody>${'WUBRG'.split('').map(col => `<tr><td><i class="pip-dot pip-${col}"></i> <span class="pr-color-name">${BASIC_FOR_COLOR[col].replace('Plains', 'White').replace('Island', 'Blue').replace('Swamp', 'Black').replace('Mountain', 'Red').replace('Forest', 'Green')}</span></td><td>${stats[col].cards}</td><td>${stats[col].creatures}</td><td>${stats[col].removal}</td><td>${stats[col].interaction}</td><td>${stats[col].protection}</td><td>${stats[col].draw}</td><td>${stats[col].ramp}</td><td>${stats[col].rares}</td></tr>`).join('')}</tbody>
+                    </table></div>
                     <div class="edh-subhead">Suggested colors</div>
-                    <div class="pr-best">${pairLabel(best.pair)} <strong>${best.count} playables</strong> · ${best.creatures} creatures · ${best.removal} removal · ${best.interaction} interaction · ${best.protection} protection${themeFor(best.pair) ? `<div class="text-secondary">This pair's plan: ${themeFor(best.pair)}</div>` : ''}</div>
+                    <div class="pr-best">${pairLabel(best.pair)} <strong>${best.count} playables</strong> · ${best.creatures} creatures · ${best.removal} removal · ${best.interaction} interaction · ${best.protection} protection · ${best.draw} draw · ${best.ramp} ramp${themeFor(best.pair) ? `<div class="text-secondary">This pair's plan: ${themeFor(best.pair)}</div>` : ''}</div>
                     <div class="pr-lands">Lands: <strong>${lands[best.pair[0]]} ${BASIC_FOR_COLOR[best.pair[0]]} + ${lands[best.pair[1]]} ${BASIC_FOR_COLOR[best.pair[1]]}</strong> (17), split by your mana symbols.</div>
                     ${warn.length ? `<ul class="pr-rulings">${warn.map(w => `<li>${w}</li>`).join('')}</ul>` : ''}
                     <div class="edh-subhead">Next best</div>
@@ -12638,7 +12670,7 @@
                     <details class="all-printings" open><summary>Cards in your pool (${total})</summary>
                         <div class="pr-pool-list">${entries.sort((a, b) => a.card.name.localeCompare(b.card.name)).map(({ card, n }) => `<div>${n > 1 ? `${n}× ` : ''}${prCardLinkHTML(card)} <button type="button" class="pr-sealed-minus" onclick="removePrSealedCard('${card.id}')" title="Remove one" aria-label="Remove one ${escapeAttr(card.name)}">−</button></div>`).join('')}</div>
                     </details>
-                    <div class="edh-source">Removal, interaction (counterspells, bounce, tapping down, discard) and protection (hexproof, indestructible and similar, or saving your own permanent) are spotted from the card text, so they're approximate. Rares and mythics count extra, since they're usually your strongest cards.</div>
+                    <div class="edh-source">Removal, interaction (counterspells, bounce, tapping down, discard), protection (hexproof, indestructible and similar, or saving your own permanent), draw and ramp are spotted from the card text, so they're approximate. Suggested colors: every playable card counts 1, plus ${PR_PAIR_WEIGHTS.removal} for removal, ${PR_PAIR_WEIGHTS.rare} for a rare or mythic, ${PR_PAIR_WEIGHTS.interaction} for interaction and ${PR_PAIR_WEIGHTS.draw} each for draw, ramp and protection.</div>
                 </div>
             `;
         }
