@@ -4360,7 +4360,10 @@
             color: var(--text-secondary);
         }
 
+        .mkt-filter { min-width: 0; }
+
         .mkt-filter select {
+            max-width: 100%;
             padding: 7px 8px;
             background: var(--bg-inset);
             color: var(--text-primary);
@@ -6333,6 +6336,7 @@
                 <button type="button" class="guide-tab" id="mktTabBans" onclick="switchMarketTab('bans')">🔨 Ban Watch</button>
                 <button type="button" class="guide-tab" id="mktTabTrending" onclick="switchMarketTab('trending')">🔥 Trending Commanders</button>
                 <button type="button" class="guide-tab" id="mktTabNewset" onclick="switchMarketTab('newset')">🆕 New Set Tracker</button>
+                <button type="button" class="guide-tab" id="mktTabPulled" onclick="switchMarketTab('pulled')">🔗 Pulled by New Sets</button>
             </div>
 
             <div id="mktSpikesApp">
@@ -6373,6 +6377,16 @@
                     <select id="mktSetSelect" aria-label="Set" onchange="loadMarketNewSet(this.value)"></select>
                 </div>
                 <div id="mktNewsetResults"><div class="loading">Loading sets...</div></div>
+            </div>
+
+            <div id="mktPulledApp" style="display:none;">
+                <div class="formats-intro">
+                    The older cards that a new set's commanders are pulling into decks.
+                    When players build the new commanders, these are the singles they
+                    go looking for - and they're already in our case.
+                </div>
+                <div id="mktPulledControls"></div>
+                <div id="mktPulledResults"><div class="loading">Loading sets...</div></div>
             </div>
         </div>
 
@@ -7659,6 +7673,7 @@
             { label: 'Price spikes', icon: '🚀', parent: 'market', keywords: 'spike jump reprice price up alert', go: () => navigateTo('market', () => switchMarketTab('spikes')) },
             { label: 'Ban watch', icon: '🔨', parent: 'market', keywords: 'ban unban banned announcement', go: () => navigateTo('market', () => switchMarketTab('bans')) },
             { label: 'Trending commanders', icon: '🔥', parent: 'market', keywords: 'trending rising popular commanders edhrec stock', go: () => navigateTo('market', () => switchMarketTab('trending')) },
+            { label: 'Pulled by new sets', icon: '🔗', parent: 'market', keywords: 'older cards new commanders demand restock synergy pulled preview upcoming', go: () => navigateTo('market', () => switchMarketTab('pulled')) },
             { label: 'New set tracker', icon: '🆕', parent: 'market', keywords: 'new set restock singles demand', go: () => navigateTo('market', () => switchMarketTab('newset')) },
             { label: 'Price Check drill', icon: '💵', parent: 'quiz', keywords: 'price quiz practice value', go: () => navigateTo('quiz', () => setQuizMode('price')) },
             { label: 'Case Map quiz', icon: '🗂️', parent: 'quiz', keywords: 'case map quiz practice hotlist', go: () => navigateTo('quiz', () => setQuizMode('casemap')) }
@@ -11111,7 +11126,8 @@
             spikes:   { appId: 'mktSpikesApp',   tabId: 'mktTabSpikes',   onShow: showMarketSpikes },
             bans:     { appId: 'mktBansApp',     tabId: 'mktTabBans',     onShow: showMarketBans },
             trending: { appId: 'mktTrendingApp', tabId: 'mktTabTrending', onShow: showMarketTrending },
-            newset:   { appId: 'mktNewsetApp',   tabId: 'mktTabNewset',   onShow: showMarketNewSets }
+            newset:   { appId: 'mktNewsetApp',   tabId: 'mktTabNewset',   onShow: showMarketNewSets },
+            pulled:   { appId: 'mktPulledApp',   tabId: 'mktTabPulled',   onShow: showMarketPulled }
         };
 
         function switchMarketTab(which) {
@@ -11622,6 +11638,189 @@
                 ${commanders.length ? `<div class="bg-section-title">Most-built new commanders</div><div class="bg-section-sub">Decks built with each as the commander. Their precons and staples will move too.</div>${commandersHTML}` : ''}
                 ${edhrecSourceHTML(path)}
             `;
+        }
+
+
+        // ---- Pulled by new sets ----
+        // The older cards a new set's commanders pull into decks. For the
+        // set's most-built new commanders (EDHREC, including previewed sets
+        // before release), every card their decks run noticeably more than
+        // normal - leaving out the set's own cards, basics and the staples
+        // every deck plays. "New decks" estimates how many of the new
+        // commanders' decks run the card (its share of each commander's
+        // decks x that commander's deck count, added up).
+        const MKT_PULLED_COMMANDERS = 15;   // most-built new commanders checked per set
+        const MKT_PULLED_MIN_SYNERGY = 0.15; // played at least 15 points more than in other decks
+        const MKT_PULLED_SHOW = 60;
+        const MKT_PULLED_RECENT_DAYS = 90;   // released sets stay listed this long
+        const MKT_PULLED_DEFAULTS = { set: '', price: 'any', sort: 'tied', hideLands: false };
+        const mktPulledOptions = { ...MKT_PULLED_DEFAULTS };
+        const mktPulledCache = {}; // set code -> Promise of { rows, commanders, path } (unpriced)
+        let mktPulledSets = null; // [{ code, name, released_at, upcoming }]
+        let mktPulledToken = 0;
+
+        async function showMarketPulled() {
+            if (mktPulledSets) return;
+            try {
+                const sets = await fetchRawSets();
+                const cutoff = new Date(Date.now() - MKT_PULLED_RECENT_DAYS * 86400000).toISOString().slice(0, 10);
+                const today = todayISO();
+                mktPulledSets = sets
+                    .filter(set => MKT_NEWSET_TYPES.includes(set.set_type) && !set.digital && !set.parent_set_code && set.released_at >= cutoff)
+                    .map(set => ({ code: set.code, name: set.name, released_at: set.released_at, upcoming: set.released_at > today }))
+                    // Upcoming sets first (soonest release first), then the newest released ones.
+                    .sort((a, b) => (a.upcoming !== b.upcoming ? (a.upcoming ? -1 : 1)
+                        : a.upcoming ? a.released_at.localeCompare(b.released_at) : b.released_at.localeCompare(a.released_at)));
+                if (!mktPulledSets.length) {
+                    document.getElementById('mktPulledResults').innerHTML = '<div class="moonshot-status">No new or upcoming sets right now.</div>';
+                    return;
+                }
+                mktPulledOptions.set = mktPulledSets[0].code;
+                renderMarketPulled();
+            } catch (err) {
+                mktPulledSets = null;
+                document.getElementById('mktPulledResults').innerHTML = '<div class="error">Couldn\'t load the set list - try again in a moment.</div>';
+            }
+        }
+
+        function setMarketPulledOption(key, value) {
+            mktPulledOptions[key] = value;
+            renderMarketPulled();
+        }
+
+        function computePulledCards(code) {
+            if (!mktPulledCache[code]) {
+                mktPulledCache[code] = (async () => {
+                    const path = `sets/${code}`;
+                    const [setPage, topPage] = await Promise.all([fetchEdhrecPage(path), fetchEdhrecPage('top/year')]);
+                    const lists = edhrecCardlists(setPage);
+                    if (!lists.length) return null;
+                    const isReprintList = l => /Reprints/.test(l.header || '');
+                    const newCards = new Set(lists.filter(l => !isReprintList(l)).flatMap(l => (l.cardviews || []).map(cv => edhrecNameKey(cv.name))));
+                    const staples = new Set(edhrecCardlists(topPage).flatMap(l => (l.cardviews || []).map(cv => edhrecNameKey(cv.name))));
+                    const seen = new Set();
+                    const commanders = lists.filter(l => (l.header || '').startsWith('Commanders (') && !isReprintList(l))
+                        .flatMap(l => l.cardviews || [])
+                        .filter(cv => cv.num_decks && !seen.has(cv.name) && seen.add(cv.name))
+                        .sort((a, b) => b.num_decks - a.num_decks)
+                        .slice(0, MKT_PULLED_COMMANDERS);
+                    const pages = await Promise.all(commanders.map(cv => loadEdhrecCommander([cv.name])));
+                    const byCard = new Map();
+                    commanders.forEach((cmdr, i) => {
+                        const page = pages[i];
+                        if (!page) return;
+                        const counted = new Set();
+                        edhrecCardlists(page.data).forEach(l => (l.cardviews || []).forEach(cv => {
+                            const key = edhrecNameKey(cv.name);
+                            const synergy = typeof cv.synergy === 'number' ? cv.synergy : 0;
+                            if (counted.has(key) || newCards.has(key) || staples.has(key) || BASIC_LAND_NAMES.has(cv.name)) return;
+                            if (!cv.potential_decks || synergy < MKT_PULLED_MIN_SYNERGY) return;
+                            counted.add(key);
+                            const share = cv.num_decks / cv.potential_decks;
+                            const row = byCard.get(key) || { name: cv.name, decks: 0, bestSynergy: 0, via: [] };
+                            row.decks += share * cmdr.num_decks;
+                            row.bestSynergy = Math.max(row.bestSynergy, synergy);
+                            row.via.push({ name: cmdr.name, share });
+                            byCard.set(key, row);
+                        }));
+                    });
+                    const rows = [...byCard.values()];
+                    rows.forEach(r => r.via.sort((a, b) => b.share - a.share));
+                    return { rows, commanders, path };
+                })();
+                mktPulledCache[code].catch(() => { delete mktPulledCache[code]; });
+            }
+            return mktPulledCache[code];
+        }
+
+        async function renderMarketPulled() {
+            const myToken = ++mktPulledToken;
+            const controls = document.getElementById('mktPulledControls');
+            const el = document.getElementById('mktPulledResults');
+            if (!mktPulledSets) return;
+            const o = mktPulledOptions;
+            const select = (key, label, options) => `
+                <label class="mkt-filter">
+                    <span>${label}</span>
+                    <select onchange="setMarketPulledOption('${key}', this.value)">
+                        ${options.map(([value, text]) => `<option value="${value}"${String(o[key]) === String(value) ? ' selected' : ''}>${text}</option>`).join('')}
+                    </select>
+                </label>
+            `;
+            controls.innerHTML = `
+                <div class="mkt-filterbar">
+                    ${select('set', 'New set', mktPulledSets.map(set => [set.code, `${set.name} (${set.upcoming ? `out ${set.released_at}` : `released ${set.released_at}`})`]))}
+                    ${select('price', 'Price now', MKT_PRICE_RANGES.map(r => [r.key, r.label]))}
+                    ${select('sort', 'Sort by', [['tied', 'Most tied to the new set'], ['decks', 'Most new decks']])}
+                    <div class="mkt-checks">
+                        <label class="mkt-check"><input type="checkbox" ${o.hideLands ? 'checked' : ''} onchange="setMarketPulledOption('hideLands', this.checked)"> Hide lands</label>
+                    </div>
+                </div>
+            `;
+            el.innerHTML = '<div class="loading">Checking what the new commanders\' decks are running...</div>';
+            let result;
+            try {
+                result = await computePulledCards(o.set);
+            } catch (err) {
+                result = null;
+            }
+            if (myToken !== mktPulledToken) return;
+            if (!result || !result.rows.length) {
+                el.innerHTML = '<div class="moonshot-status">EDHREC doesn\'t have enough decks for this set\'s commanders yet. Check back as previews come out.</div>';
+                return;
+            }
+            // Rank before pricing so only the likely top cards get priced.
+            const score = r => (o.sort === 'tied' ? r.decks * r.bestSynergy : r.decks);
+            const ranked = [...result.rows].sort((a, b) => score(b) - score(a)).slice(0, 250);
+            const priced = await cheapestPrintings(ranked.map(r => r.name));
+            if (myToken !== mktPulledToken) return;
+            const price = MKT_PRICE_RANGES.find(r => r.key === o.price) || MKT_PRICE_RANGES[0];
+            const rows = ranked.map(r => {
+                const card = priced.get(edhrecNameKey(r.name));
+                const p = card && printingPrice(card);
+                return { ...r, card, price: p ? p.price : null, foilOnly: p && p.foilOnly };
+            })
+                .filter(r => r.card)
+                .filter(r => !o.hideLands || !/\bLand\b/.test((r.card.type_line || '').split(' // ')[0]))
+                .filter(r => price.key === 'any' || (r.price !== null && r.price >= price.min && r.price < price.max))
+                .slice(0, MKT_PULLED_SHOW);
+            const setInfo = mktPulledSets.find(set => set.code === o.set);
+            const topCommanders = result.commanders.slice(0, 4).map(c => `${c.name} (${Number(c.num_decks).toLocaleString()})`).join(', ');
+            el.innerHTML = `
+                <div class="mkt-howto"><strong>What this shows:</strong> older cards that ${setInfo ? setInfo.name : 'this set'}'s new commanders are pulling into decks - cards those decks play much more than other decks do. <strong>What to do:</strong> keep these stocked and check they aren't priced low${setInfo && setInfo.upcoming ? ', before release day brings the rush' : ''}.</div>
+                <div class="mkt-summary">Built from the ${result.commanders.length} most-built new commanders: <span class="text-secondary">${topCommanders}${result.commanders.length > 4 ? ', ...' : ''}</span></div>
+                ${rows.length ? `
+                <div class="buylist-table-wrap">
+                    <table class="lands-pkg-table mkt-table">
+                        <thead><tr><th>Card</th><th>New decks</th><th>Cheapest copy</th><th class="mkt-col-change">30 days</th><th>Moonshot</th></tr></thead>
+                        <tbody>${rows.map(r => `
+                            <tr>
+                                <td>
+                                    ${marketCardLinkHTML(r.card.name, r.card.id)}
+                                    <div class="lands-row-meta text-secondary">via ${r.via.slice(0, 2).map(v => `${v.name} (${edhrecPct(v.share)} of its decks)`).join(' · ')}${r.via.length > 2 ? ` · +${r.via.length - 2} more` : ''}</div>
+                                </td>
+                                <td>~${Math.round(r.decks).toLocaleString()}</td>
+                                <td>${r.price !== null ? `${formatUsd(r.price)}${r.foilOnly ? ' foil' : ''}` : '—'}<div class="mkt-phone-only" id="mktPulledTrendPhone-${r.card.id}"></div></td>
+                                <td class="mkt-col-change" id="mktPulledTrend-${r.card.id}"></td>
+                                <td>${moonshotLinkHTML(r.card.name, 'Find →', 'btn-compact')}</td>
+                            </tr>
+                        `).join('')}</tbody>
+                    </table>
+                </div>` : '<div class="moonshot-status">No cards in this price range. Try "Any".</div>'}
+                <div class="edh-source">"New decks" estimates how many of the new commanders' EDHREC decks run the card. Only cards their decks play at least ${Math.round(MKT_PULLED_MIN_SYNERGY * 100)} points more often than other decks are listed; the set's own cards, basic lands and the 100 most-played staples are left out. "Most tied to the new set" (the default) favors cards specific to these decks over generally good ones like shock lands; "Most new decks" is the raw count. Prices are today's cheapest copy (Scryfall); "30 days" is that copy's price change.</div>
+                ${edhrecSourceHTML(result.path)}
+            `;
+            // Price trend for each row, a few at a time.
+            const tasks = rows.map(r => async () => {
+                const history = await priceHistoryFor(r.card.id);
+                const fh = finishHistory(history, 'n') || finishHistory(history, 'f') || finishHistory(history, 'e');
+                const chip = fh ? trendChipHTML(priceTrendDays(fh, 30), '30d') : '';
+                const cell = document.getElementById(`mktPulledTrend-${r.card.id}`);
+                const phone = document.getElementById(`mktPulledTrendPhone-${r.card.id}`);
+                if (cell) cell.innerHTML = chip;
+                if (phone) phone.innerHTML = chip;
+            });
+            runWithConcurrency(tasks, 6, 0, () => myToken !== mktPulledToken);
         }
 
         // ============== COMMANDER BRACKETS ==============
