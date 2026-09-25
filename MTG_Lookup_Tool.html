@@ -6098,6 +6098,11 @@
         .pr-dc-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.12em 1em; }
         .pr-dc-themes .pip-dot { width: 0.95em; height: 0.95em; }
         .pr-dc-fun { margin-top: auto; text-align: center; font-style: italic; font-size: 1.01em; color: #1777a1; }
+        .pr-dc-know { display: flex; gap: 0.8em; align-items: center; }
+        .pr-dc-know > div { flex: 1 1 auto; }
+        .pr-dc-scan { margin-top: 0.3em; font-weight: 700; color: #1777a1; }
+        .pr-dc-qr { flex: 0 0 auto; width: 0.85in; height: 0.85in; }
+        .pr-dc-legal { font-size: 0.72em; line-height: 1.2; color: #666; text-align: center; }
         .pr-dc-foot {
             border-top: 1px solid #ccc;
             padding-top: 0.3em;
@@ -12191,6 +12196,83 @@
             hob: { WU: 'Draw two', BR: 'Amass Goblins', BG: 'Ferocious (power 4+)', RW: 'Storied', GU: 'Landfall' },
             ktk: { WBG: 'Abzan: outlast & +1/+1 counters', URW: 'Jeskai: prowess & spells', BGU: 'Sultai: delve & graveyard', RWB: 'Mardu: raid aggro', GUR: 'Temur: ferocious, big creatures' }
         };
+        // Wizards' official pages for each set, for the printed card's QR
+        // code: the Prerelease Guide (or older "Prerelease Primer"), which
+        // is written for players, else the Release Notes (the detailed
+        // rulings). Paths under PR_WIZARDS_ARTICLE_BASE. Found in Wizards'
+        // sitemap (magic.wizards.com/en/sitemap.xml) and each one opened to
+        // check its title names the set, on 2026-09-25. A set with neither
+        // (e.g. Star Trek before Wizards posts them) falls back to this
+        // tool's own Mechanics & Rulings page.
+        const PR_WIZARDS_ARTICLE_BASE = 'https://magic.wizards.com/en/news/feature/';
+        const PRERELEASE_OFFICIAL_LINKS = {
+            rtr: { guide: 'return-to-ravnica-prerelease-primer' },
+            gtc: { guide: 'gatecrash-prerelease-primer' },
+            dgm: { guide: 'dragons-maze-prerelease-primer' },
+            ths: { guide: 'theros-prerelease-primer', notes: 'release-notes-2013-09-16' },
+            bng: { guide: 'born-of-the-gods-prerelease-primer', notes: 'release-notes-2014-01-22' },
+            jou: { guide: 'journey-into-nyx-prerelease-primer', notes: 'release-notes-2014-04-23' },
+            m15: { guide: 'magic-2015-prerelease-primer', notes: 'magic-2015-core-set-release-notes-2014-07-07' },
+            ktk: { guide: 'khans-of-tarkir-prerelease-primer', notes: 'release-notes-2014-09-18' },
+            frf: { notes: 'fate-reforged-release-notes-2015-01-14' },
+            dtk: { guide: 'dragons-of-tarkir-prerelease-primer', notes: 'dragons-tarkir-release-notes-2015-03-18' },
+            ori: { guide: 'magic-origins-prerelease-primer', notes: 'magic-origins-release-notes-2015-07-08' },
+            bfz: { guide: 'battle-for-zendikar-prerelease-primer', notes: 'battle-zendikar-release-notes-2015-09-23' },
+            ogw: { guide: 'oath-of-the-gatewatch-prerelease-primer', notes: 'oath-gatewatch-release-notes-2016-01-13' },
+            soi: { guide: 'shadows-over-innistrad-prerelease-primer', notes: 'shadows-over-innistrad-release-notes-2016-03-30' },
+            emn: { guide: 'eldritch-moon-prerelease-primer', notes: 'eldritch-moon-release-notes-2016-07-08' },
+            kld: { guide: 'kaladesh-prerelease-primer', notes: 'kaladesh-release-notes-2016-09-16' },
+            aer: { guide: 'aether-revolt-prerelease-primer', notes: 'aether-revolt-release-notes-2017-01-06' },
+            akh: { guide: 'amonkhet-prerelease-primer', notes: 'amonkhet-release-notes-2017-04-14' },
+            hou: { guide: 'hour-of-devastation-prerelease-primer', notes: 'hour-devastation-release-notes-2017-06-30' },
+            xln: { guide: 'ixalan-prerelease-primer', notes: 'ixalan-release-notes' },
+            rix: { guide: 'rivals-of-ixalan-prerelease-primer', notes: 'rivals-ixalan-release-notes-2018-01-05' },
+            dom: { guide: 'dominaria-prerelease-primer', notes: 'dominaria-release-notes' },
+            m19: { guide: 'core-set-2019-prerelease-primer', notes: 'core-set-2019-release-notes-2018-06-22' },
+            grn: { guide: 'guilds-of-ravnica-prerelease-primer', notes: 'guilds-ravnica-release-notes-2018-09-20' },
+            rna: { guide: 'ravnica-allegiance-prerelease-primer', notes: 'ravnica-allegiance-release-notes-2019-01-16' },
+            war: { guide: 'war-of-the-spark-prerelease-primer', notes: 'war-spark-release-notes-2019-04-19' },
+            m20: { guide: 'core-set-2020-prerelease-primer', notes: 'core-set-2020-release-notes-2019-06-25' },
+            eld: { guide: 'throne-of-eldraine-prerelease-primer', notes: 'throne-eldraine-release-notes-2019-09-20' },
+            thb: { notes: 'theros-beyond-death-release-notes-2020-01-10' },
+            iko: { guide: 'ikoria-lair-behemoths-prerelease-primer-2020-04-14', notes: 'ikoria-lair-behemoths-and-commander-2020-edition-release-notes-2020-04-10' },
+            m21: { guide: 'core-set-2021-prerelease-primer-2020-06-22', notes: 'core-set-2021-and-jumpstart-release-notes-2020-06-20' },
+            znr: { guide: 'zendikar-rising-prerelease-primer-2020-09-15', notes: 'zendikar-rising-release-notes-2020-09-10' },
+            khm: { guide: 'kaldheim-prerelease-primer-2021-01-26', notes: 'kaldheim-release-notes-2021-01-22' },
+            stx: { guide: 'strixhaven-school-mages-prerelease-primer-2021-04-12', notes: 'strixhaven-school-mages-and-commander-2021-edition-release-notes-2021-04-16' },
+            mh2: { guide: 'modern-horizons-2-prerelease-primer-2021-06-04', notes: 'modern-horizons-2-release-notes-2021-06-04' },
+            afr: { guide: 'adventures-forgotten-realms-prerelease-primer-2021-07-12', notes: 'adventures-forgotten-realms-release-notes-2021-07-09' },
+            mid: { guide: 'innistrad-midnight-hunt-prerelease-primer', notes: 'innistrad-midnight-hunt-release-notes' },
+            vow: { guide: 'innistrad-crimson-vow-prerelease-primer-2021-11-10', notes: 'innistrad-crimson-vow-release-notes-2021-11-10' },
+            neo: { guide: 'kamigawa-neon-dynasty-prerelease-primer-2022-02-09', notes: 'kamigawa-neon-dynasty-release-notes-2022-02-09' },
+            snc: { notes: 'streets-new-capenna-release-notes-2022-04-20' },
+            clb: { notes: 'commander-legends-battle-baldurs-gate-release-notes-2022-06-01' },
+            dmu: { notes: 'dominaria-united-release-notes-2022-08-26' },
+            bro: { notes: 'the-brothers-war-release-notes' },
+            one: { notes: 'phyrexia-all-will-be-one-release-notes' },
+            mom: { notes: 'march-of-the-machine-release-notes' },
+            ltr: { notes: 'the-lord-of-the-rings-tales-of-middle-earth-release-notes' },
+            woe: { notes: 'wilds-of-eldraine-release-notes' },
+            lci: { notes: 'the-lost-caverns-of-ixalan-release-notes' },
+            mkm: { notes: 'murders-at-karlov-manor-release-notes' },
+            otj: { guide: 'outlaws-of-thunder-junction-prerelease-primer', notes: 'outlaws-of-thunder-junction-release-notes' },
+            mh3: { guide: 'modern-horizons-3-prerelease-primer', notes: 'modern-horizons-3-release-notes' },
+            blb: { guide: 'bloomburrow-prerelease-guide', notes: 'bloomburrow-release-notes' },
+            dsk: { notes: 'duskmourn-house-of-horror-release-notes' },
+            fdn: { guide: 'foundations-prerelease-guide', notes: 'foundations-release-notes' },
+            dft: { notes: 'aetherdrift-release-notes' },
+            tdm: { guide: 'tarkir-dragonstorm-prerelease-guide', notes: 'tarkir-dragonstorm-release-notes' },
+            fin: { guide: 'final-fantasy-prerelease-guide', notes: 'final-fantasy-release-notes' },
+            eoe: { guide: 'edge-of-eternities-prerelease-guide', notes: 'edge-of-eternities-release-notes' },
+            spm: { guide: 'spider-man-prerelease-guide', notes: 'spider-man-release-notes' },
+            tla: { guide: 'avatar-the-last-airbender-prerelease-guide', notes: 'avatar-the-last-airbender-release-notes' },
+            ecl: { guide: 'lorwyn-eclipsed-prerelease-guide', notes: 'lorwyn-eclipsed-release-notes' },
+            tmt: { guide: 'teenage-mutant-ninja-turtles-prerelease-guide', notes: 'teenage-mutant-ninja-turtles-release-notes' },
+            sos: { guide: 'secrets-of-strixhaven-prerelease-guide', notes: 'secrets-of-strixhaven-release-notes' },
+            msh: { guide: 'marvel-super-heroes-prerelease-guide', notes: 'marvel-super-heroes-release-notes' },
+            hob: { guide: 'the-hobbit-prerelease-guide', notes: 'the-hobbit-release-notes' },
+            fra: { guide: 'reality-fracture-prerelease-guide', notes: 'reality-fracture-release-notes' }
+        };
         const PRERELEASE_MIN_KEYWORD_CARDS = 3;
         // Scryfall lists keyword actions like "double" as keywords; skip them.
         // (One-off flavor words, e.g. "Bad Breath", drop out by card count.)
@@ -12966,34 +13048,19 @@
         }
 
         // ---- Printable deck-building card ----
-        // The card is built from the set's notes (or its card data when
-        // there are none), shown as an editable preview - staff can click
-        // any text to change it - and printed 4 to a letter page.
-        function prCardKey() { return `prDeckCard:${prSetCode}`; }
+        // One universal card for every set (only the set name and the QR
+        // link change): building steps, play tips, a QR code to the set's
+        // Mechanics & Rulings page, and Wizards' Fan Content Policy notice.
+        // Shown as an editable preview - staff can click any text to change
+        // it - and printed 4 to a letter page.
+        // v2 key: edits saved for the older, set-specific card are ignored.
+        function prCardKey() { return `prDeckCardV2:${prSetCode}`; }
+        const PR_CARD_TITLE = 'Moonshot Prerelease Guide';
+        const PR_FAN_CONTENT_NOTICE = `${PR_CARD_TITLE} is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.`;
 
         async function defaultPrereleaseCardHTML() {
             const set = prereleaseSetInfo();
-            const notes = PRERELEASE_SET_NOTES[prSetCode];
-            let mechanics = [];
-            let themes = {};
-            if (notes) {
-                // Only mechanics with a handout line (`card`): the ones a newer
-                // player could trip on, whether new or returning.
-                mechanics = notes.mechanics.filter(m => m.card).map(m => ({ name: m.cardName || m.name, text: m.card }));
-                themes = notes.themes;
-            } else {
-                const cards = await loadPrereleaseSetCards(prSetCode);
-                mechanics = (await prereleaseMechanics(cards)).filter(m => m.hasText).slice(0, 4).map(m => ({ name: m.name, text: m.text }));
-                // Themes from PRERELEASE_PAIR_THEMES, or else point at each
-                // pair's two-color uncommon.
-                if (PRERELEASE_PAIR_THEMES[prSetCode]) themes = PRERELEASE_PAIR_THEMES[prSetCode];
-                else PRERELEASE_PAIRS.forEach(pair => {
-                    const sign = cards.find(c => c.rarity === 'uncommon' && prCardColors(c).length === 2 && pair.split('').every(col => prCardColors(c).includes(col)));
-                    themes[pair] = sign ? `See ${sign.name.split(' // ')[0]}` : '';
-                });
-            }
-            const short = t => (t.length > 150 ? `${t.slice(0, 147)}...` : t);
-            const pairDots = pair => pair.split('').map(col => `<i class="pip-dot pip-${col}"></i>`).join('');
+            const qr = prereleaseQrTarget();
             return `
                 <div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">${set ? set.name : ''} Prerelease</span></div>
                 <h4>Build your deck</h4>
@@ -13005,12 +13072,25 @@
                     <li><b>Add 17 basic lands</b> (free at the land station), split by color - like 9 + 8.</li>
                 </ol>
                 <div class="pr-dc-tip">Splash a 3rd color only for a bomb or removal, with 3+ lands that make it. Between games you can swap in any card from your pool.</div>
-                <h4>Mechanics to know</h4>
-                <ul>${mechanics.map(m => `<li><b>${m.name}</b> - ${short(m.text)}</li>`).join('')}</ul>
-                <h4>What each color ${Object.keys(themes).some(k => k.length > 2) ? 'combo' : 'pair'} wants</h4>
-                <div class="pr-dc-themes">${Object.keys(themes).filter(pair => themes[pair]).map(pair => `<div>${pairDots(pair)} <span>${themes[pair] || ''}</span></div>`).join('')}</div>
+                <h4>Playing your games</h4>
+                <ul>
+                    <li><b>Mulligan</b> hands with 0-1 or 6-7 lands.</li>
+                    <li><b>Save your removal</b> for their best threats, not their first creature.</li>
+                    <li><b>Watch their untapped mana</b> - open mana when you attack often means a trick.</li>
+                    <li><b>Sealed games run long.</b> Cards that get you two-for-one win them.</li>
+                    <li><b>Flyers and menace close games out</b> - evasive creatures win races.</li>
+                </ul>
+                <div class="pr-dc-know">
+                    <div>
+                        <h4>Good to know</h4>
+                        <div>Shuffle well and offer your deck to be cut. Not sure how something works? Call a judge - don't guess.</div>
+                        <div class="pr-dc-scan">Scan for ${qr.official ? 'Wizards\' official guide to this set' : 'this set\'s mechanics &amp; rulings'} &rarr;</div>
+                    </div>
+                    <img class="pr-dc-qr" src="${qrImageUrl(qr.url, 240)}" alt="QR code: ${escapeAttr(qr.label)}">
+                </div>
                 <div class="pr-dc-fun">These are just tips, not rules. Build the deck you're excited to play - that's the fun of sealed!</div>
-                <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Unofficial; not endorsed by Wizards of the Coast.</span></div>
+                <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Moonshot Games · Noblesville &amp; Plainfield · moonshotgamestore.com</span></div>
+                <div class="pr-dc-legal">${PR_FAN_CONTENT_NOTICE}</div>
             `;
         }
 
@@ -13026,7 +13106,7 @@
                     <button type="button" class="staples-sort-btn" onclick="resetPrereleaseCard()">↺ Reset to default</button>
                 </div>
                 <div class="pr-dc-preview-wrap"><div class="pr-dc" id="prDeckCardEdit" contenteditable="true" spellcheck="true" oninput="savePrereleaseCard()" onblur="fitPrereleaseCard()">${html}</div></div>
-                ${PRERELEASE_SET_NOTES[prSetCode] ? '' : '<div class="bk-note" style="text-align:center;">No hand-written notes for this set yet, so the mechanics come from the cards\' reminder text and each color pair points at its two-color uncommon. Edit the lines to taste before printing.</div>'}
+                ${prereleaseQrNoteHTML()}
             `;
             fitPrereleaseCard();
         }
@@ -13065,31 +13145,49 @@
             return `${base}?set=${prSetCode}#prerelease/mechanics`;
         }
 
+        // Where a printed QR code sends players: Wizards' Prerelease Guide
+        // for the set, else its Release Notes, else our own mechanics page.
+        function prereleaseQrTarget() {
+            const links = PRERELEASE_OFFICIAL_LINKS[prSetCode];
+            const path = links && (links.guide || links.notes);
+            return path
+                ? { url: PR_WIZARDS_ARTICLE_BASE + path, official: true, label: links.guide ? 'Wizards\' official Prerelease Guide' : 'Wizards\' official Release Notes' }
+                : { url: prereleasePlayerUrl(), official: false, label: 'this set\'s mechanics & rulings' };
+        }
+
         function qrImageUrl(text, size = 300) {
             return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=8&data=${encodeURIComponent(text)}`;
         }
 
         function prereleaseQrSignHTML() {
             const set = prereleaseSetInfo();
-            const url = prereleasePlayerUrl();
+            const qr = prereleaseQrTarget();
+            const url = qr.url;
             return `
                 <div class="pr-qr-sign">
                     <div class="pr-dc-store">Moonshot Games</div>
                     <div class="pr-qr-title">${set ? set.name : ''} Prerelease</div>
-                    <div class="pr-qr-sub">Scan for the new mechanics &amp; rulings</div>
-                    <img src="${qrImageUrl(url)}" alt="QR code" width="190" height="190">
+                    <div class="pr-qr-sub">Scan for ${qr.official ? 'Wizards\' official guide to this set' : 'the new mechanics &amp; rulings'}</div>
+                    <img src="${qrImageUrl(url)}" alt="QR code: ${escapeAttr(qr.label)}" width="190" height="190">
                     <div class="pr-qr-note">Great for deck building and between games. During a game, raise your hand for a judge.</div>
                     <div class="pr-qr-url">${url}</div>
                 </div>
             `;
         }
 
+        // Tells staff where the printed QR codes go, with the link to check.
+        function prereleaseQrNoteHTML() {
+            const qr = prereleaseQrTarget();
+            return `<div class="bk-note" style="text-align:center;">The QR code opens <a href="${escapeAttr(qr.url)}" target="_blank" rel="noopener">${qr.label}</a>${qr.official ? '' : ' - Wizards hasn\'t posted a Prerelease Guide or Release Notes for this set yet (or it isn\'t in PRERELEASE_OFFICIAL_LINKS)'}.</div>`;
+        }
+
         function renderPrereleaseQr() {
             const el = document.getElementById('prQrApp');
             el.innerHTML = `
-                <div class="formats-intro">A sign for each table. Players scan it to open this set's mechanics and rulings on their phone. Prints 2 per letter page.</div>
+                <div class="formats-intro">A sign for each table. Players scan it to open ${prereleaseQrTarget().label} on their phone. Prints 2 per letter page.</div>
                 <div class="staples-controls"><button type="button" class="staples-sort-btn" onclick="printPrereleaseSheet('qr')">🖨️ Print (2 per page)</button></div>
                 <div class="pr-qr-preview">${prereleaseQrSignHTML()}</div>
+                ${prereleaseQrNoteHTML()}
                 <div class="bk-note" style="text-align:center;">The QR image is made by the free goqr.me service (api.qrserver.com) from the link shown.</div>
             `;
         }
