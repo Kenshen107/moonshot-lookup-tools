@@ -4135,6 +4135,51 @@
             height: 14px;
         }
 
+        .deck-row-price {
+            min-width: 3.6em;
+            text-align: right;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        .deck-row-price.hot { color: #f2cc60; font-weight: 700; }
+        .deck-row.deck-reprint-hot { background: rgba(242, 204, 96, 0.08); border-radius: 4px; }
+        .deck-reprint-badge {
+            font-size: 0.72em;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background: rgba(242, 204, 96, 0.16);
+            color: #f2cc60;
+            white-space: nowrap;
+        }
+        .deck-value {
+            margin: 0 0 14px;
+            padding: 10px 12px;
+            border: 1px solid rgba(242, 204, 96, 0.35);
+            border-radius: var(--radius-md);
+            background: rgba(242, 204, 96, 0.05);
+        }
+        .deck-value-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-bottom: 6px; }
+        .deck-value-title { font-weight: 700; color: var(--text-heading); }
+        .deck-value-list { columns: 2 220px; column-gap: 24px; }
+        .deck-value-row { display: flex; gap: 6px; align-items: baseline; padding: 1px 0; break-inside: avoid; font-size: 0.92em; }
+        .deck-value-row .deck-row-price { margin-left: auto; }
+        .deck-commander-price { margin-top: 4px; color: #f2cc60; font-weight: 700; }
+        .deck-pic.deck-reprint-hot img { outline: 2px solid #f2cc60; outline-offset: 1px; }
+        .deck-pic-reprint,
+        .deck-pic-price {
+            position: absolute;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            font-size: 0.72em;
+            font-weight: 700;
+        }
+        .deck-pic-reprint { top: 4px; left: 4px; color: #f2cc60; }
+        .deck-pic-price { bottom: 4px; right: 4px; color: #fff; }
+        .deck-pic-price.hot { color: #f2cc60; }
+
         .deck-foil {
             font-size: 0.75em;
             color: #d2a8ff;
@@ -10768,6 +10813,50 @@
         let productDeckView = 'list'; // 'list' or 'pictures'
         let productDeckCurrent = null; // { title, commanders, groups, tokens } for re-rendering on toggle
 
+        // Prices for the exact printings in a precon (Scryfall's daily
+        // TCGplayer market price), plus whether each is a reprint. Loaded
+        // after the list shows, 75 printings per request.
+        const REPRINT_VALUE_MIN = 5; // reprints at or above this get the 💰 flag
+        const deckPrintingCache = new Map(); // Scryfall id -> Scryfall card, or null if not found
+        let productDeckPriceToken = 0;
+
+        async function loadDeckPrintings(ids) {
+            const wanted = [...new Set(ids.filter(id => id && !deckPrintingCache.has(id)))];
+            for (let i = 0; i < wanted.length; i += 75) {
+                const batch = wanted.slice(i, i + 75);
+                try {
+                    const res = await fetch(`${API_BASE}/cards/collection`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identifiers: batch.map(id => ({ id })) })
+                    });
+                    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+                    const data = await res.json();
+                    (data.data || []).forEach(c => deckPrintingCache.set(c.id, c));
+                    batch.forEach(id => { if (!deckPrintingCache.has(id)) deckPrintingCache.set(id, null); });
+                } catch (err) {
+                    console.error('Deck price error:', err); // left uncached so a reopen retries
+                }
+                if (i + 75 < wanted.length) await new Promise(r => setTimeout(r, SCRYFALL_REQUEST_SPACING_MS));
+            }
+        }
+
+        // An entry's price (one copy) in its own finish, and reprint status.
+        function deckEntryPrice(e) {
+            const id = e.card.identifiers && e.card.identifiers.scryfallId;
+            const sc = id ? deckPrintingCache.get(id) : undefined;
+            if (sc === undefined) return { loading: true };
+            if (!sc) return { price: null, reprint: false };
+            const p = sc.prices || {};
+            const raw = e.foil ? (p.usd_foil || p.usd_etched || p.usd) : (p.usd || p.usd_foil || p.usd_etched);
+            const price = raw ? parseFloat(raw) : null;
+            return { price, reprint: !!sc.reprint, flag: !!sc.reprint && price !== null && price >= REPRINT_VALUE_MIN };
+        }
+
+        function deckAllEntries(d) {
+            return [...d.commanders, ...Object.values(d.groups).flat(), ...(d.sideboard || [])];
+        }
+
         async function openCardByScryfallId(id, fallbackName) {
             try {
                 const res = await fetch(`${API_BASE}/cards/${id}`);
@@ -10829,6 +10918,10 @@
                     missing
                 };
                 renderProductDecklist();
+                const myToken = ++productDeckPriceToken;
+                const deckRef = productDeckCurrent;
+                await loadDeckPrintings([...deckAllEntries(deckRef), ...deckRef.tokens].map(e => e.card.identifiers && e.card.identifiers.scryfallId));
+                if (myToken === productDeckPriceToken && productDeckCurrent === deckRef) renderProductDecklist();
             } catch (err) {
                 console.error('Decklist error:', err);
                 panel.innerHTML = '<div class="text-error">Couldn\'t load this decklist right now.</div>';
@@ -10842,22 +10935,29 @@
 
         function deckEntryHTML(e) {
             const c = e.card;
+            const pr = deckEntryPrice(e);
+            const priceText = pr.loading ? '…' : pr.price === null ? '—' : formatUsd(pr.price);
+            const flagTitle = pr.flag ? `Reprint worth ${formatUsd(REPRINT_VALUE_MIN)}+` : '';
             if (productDeckView === 'pictures') {
                 const img = scryfallImageById(c.identifiers && c.identifiers.scryfallId, 'small');
                 return `
-                    <div class="deck-pic" data-name="${escapeAttr(c.name)}" onclick="${deckCardClick(c)}" title="${escapeAttr(c.name)}">
+                    <div class="deck-pic${pr.flag ? ' deck-reprint-hot' : ''}" data-name="${escapeAttr(c.name)}" onclick="${deckCardClick(c)}" title="${escapeAttr(c.name)}${flagTitle ? ` - ${flagTitle}` : ''}">
                         ${img ? `<img src="${img}" alt="${escapeAttr(c.name)}" loading="lazy">` : `<div class="deck-pic-noimg">${c.name}</div>`}
                         ${e.count > 1 ? `<span class="deck-pic-count">×${e.count}</span>` : ''}
                         ${e.foil ? '<span class="deck-pic-foil">foil</span>' : ''}
+                        ${pr.flag ? '<span class="deck-pic-reprint">💰 Reprint</span>' : ''}
+                        <span class="deck-pic-price${pr.flag ? ' hot' : ''}">${priceText}</span>
                     </div>
                 `;
             }
             return `
-                <div class="deck-row">
+                <div class="deck-row${pr.flag ? ' deck-reprint-hot' : ''}">
                     <span class="deck-row-count">${e.count}</span>
                     <span class="set-link" data-name="${escapeAttr(c.name)}" onclick="${deckCardClick(c)}">${c.name}</span>
                     ${e.foil ? '<span class="deck-foil">foil</span>' : ''}
+                    ${pr.flag ? `<span class="deck-reprint-badge" title="${flagTitle}">💰 Reprint</span>` : ''}
                     <span class="deck-row-cost">${c.manaCost ? renderManaCost(c.manaCost) : ''}</span>
+                    <span class="deck-row-price${pr.flag ? ' hot' : ''}">${priceText}</span>
                 </div>
             `;
         }
@@ -10886,6 +10986,7 @@
                                 <div>
                                     <div class="deck-commander-label">Commander${e.foil ? ' · foil' : ''}</div>
                                     <div class="deck-commander-name">${c.name}</div>
+                                    ${(pr => (pr.loading ? '' : `<div class="deck-commander-price">${pr.price === null ? 'No price yet' : formatUsd(pr.price)}${pr.flag ? ' · 💰 Reprint' : ''}</div>`))(deckEntryPrice(e))}
                                     <div class="text-secondary">${c.type || ''}</div>
                                     ${c.manaCost ? `<div style="margin-top:4px;">${renderManaCost(c.manaCost)}</div>` : ''}
                                 </div>
@@ -10896,6 +10997,27 @@
             ` : '';
 
             const viewBtn = (v, label) => `<button type="button" class="staples-sort-btn${productDeckView === v ? ' active' : ''}" onclick="setProductDeckView('${v}')">${label}</button>`;
+            // Reprint value: every reprint worth REPRINT_VALUE_MIN or more,
+            // most valuable first, plus the whole deck's value.
+            const priced = deckAllEntries(d).map(e => ({ e, pr: deckEntryPrice(e) }));
+            const pricesLoading = priced.some(x => x.pr.loading);
+            const hot = priced.filter(x => x.pr.flag).sort((a, b) => b.pr.price - a.pr.price);
+            const sum = list => list.reduce((t, x) => t + (x.pr.price || 0) * x.e.count, 0);
+            const reprintSum = sum(priced.filter(x => x.pr.reprint));
+            const valueHTML = pricesLoading ? '<div class="deck-value"><div class="loading" style="padding:0;">Pricing the cards...</div></div>' : `
+                <div class="deck-value">
+                    <div class="deck-value-head">
+                        <span class="deck-value-title">💰 Reprints worth ${formatUsd(REPRINT_VALUE_MIN)}+ <span class="text-secondary">(${hot.length})</span></span>
+                        <span class="text-secondary">Deck: <strong>${formatUsd(sum(priced))}</strong> · reprints ${formatUsd(reprintSum)} · new cards ${formatUsd(sum(priced) - reprintSum)}</span>
+                    </div>
+                    ${hot.length ? `<div class="deck-value-list">${hot.map(({ e, pr }) => `
+                        <div class="deck-value-row">
+                            <span class="set-link" data-name="${escapeAttr(e.card.name)}" onclick="${deckCardClick(e.card)}">${e.card.name}</span>${e.count > 1 ? ` <span class="text-secondary">×${e.count}</span>` : ''}${e.foil ? ' <span class="deck-foil">foil</span>' : ''}
+                            <span class="deck-row-price hot">${formatUsd(pr.price)}</span>
+                        </div>`).join('')}</div>` : `<div class="text-secondary">No reprints in this deck are worth ${formatUsd(REPRINT_VALUE_MIN)} or more right now.</div>`}
+                    <div class="edh-source">Prices are for the exact printing in this deck (foil where it's foil), from Scryfall's daily TCGplayer market prices. "Reprint" = the card was printed before this product.</div>
+                </div>
+            `;
             panel.innerHTML = `
                 <div class="deck-panel">
                     <div class="deck-panel-head">
@@ -10903,6 +11025,7 @@
                         <div>${viewBtn('list', '☰ List')} ${viewBtn('pictures', '🖼️ Pictures')}</div>
                     </div>
                     ${commanderHTML}
+                    ${valueHTML}
                     <div class="${productDeckView === 'pictures' ? '' : 'deck-columns'}">
                         ${[...DECK_TYPE_ORDER, 'Other'].map(t => section(DECK_TYPE_LABELS[t], d.groups[t])).join('')}
                         ${section('Sideboard', d.sideboard)}
