@@ -4144,6 +4144,14 @@
         }
         .deck-row-price.hot { color: #f2cc60; font-weight: 700; }
         .deck-row.deck-reprint-hot { background: rgba(242, 204, 96, 0.08); border-radius: 4px; }
+        .deck-row.deck-new-hot { background: rgba(88, 196, 220, 0.08); border-radius: 4px; }
+        .deck-row-price.newhot { color: #58c4dc; font-weight: 700; }
+        .deck-reprint-badge.new { background: rgba(88, 196, 220, 0.16); color: #58c4dc; }
+        .deck-pic.deck-new-hot img { outline: 2px solid #58c4dc; outline-offset: 1px; }
+        .deck-pic-reprint.new { color: #58c4dc; }
+        .deck-pic-price.newhot { color: #58c4dc; }
+        .deck-value-sub { margin: 8px 0 2px; font-weight: 700; color: var(--text-heading); }
+        .deck-panel-controls { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
         .deck-reprint-badge {
             font-size: 0.72em;
             font-weight: 700;
@@ -10811,12 +10819,13 @@
         }
 
         let productDeckView = 'list'; // 'list' or 'pictures'
+        let productDeckSort = 'type'; // 'type' (grouped like deck sites) or 'price' (most valuable first)
         let productDeckCurrent = null; // { title, commanders, groups, tokens } for re-rendering on toggle
 
         // Prices for the exact printings in a precon (Scryfall's daily
         // TCGplayer market price), plus whether each is a reprint. Loaded
         // after the list shows, 75 printings per request.
-        const REPRINT_VALUE_MIN = 5; // reprints at or above this get the 💰 flag
+        const REPRINT_VALUE_MIN = 5; // cards at or above this get flagged: 💰 reprints, 💎 new cards
         const deckPrintingCache = new Map(); // Scryfall id -> Scryfall card, or null if not found
         let productDeckPriceToken = 0;
 
@@ -10850,7 +10859,8 @@
             const p = sc.prices || {};
             const raw = e.foil ? (p.usd_foil || p.usd_etched || p.usd) : (p.usd || p.usd_foil || p.usd_etched);
             const price = raw ? parseFloat(raw) : null;
-            return { price, reprint: !!sc.reprint, flag: !!sc.reprint && price !== null && price >= REPRINT_VALUE_MIN };
+            const valuable = price !== null && price >= REPRINT_VALUE_MIN;
+            return { price, reprint: !!sc.reprint, flag: !!sc.reprint && valuable, newFlag: !sc.reprint && valuable };
         }
 
         function deckAllEntries(d) {
@@ -10928,6 +10938,11 @@
             }
         }
 
+        function setProductDeckSort(sort) {
+            productDeckSort = sort;
+            renderProductDecklist();
+        }
+
         function setProductDeckView(view) {
             productDeckView = view;
             renderProductDecklist();
@@ -10937,27 +10952,29 @@
             const c = e.card;
             const pr = deckEntryPrice(e);
             const priceText = pr.loading ? '…' : pr.price === null ? '—' : formatUsd(pr.price);
-            const flagTitle = pr.flag ? `Reprint worth ${formatUsd(REPRINT_VALUE_MIN)}+` : '';
+            const flagTitle = pr.flag ? `Reprint worth ${formatUsd(REPRINT_VALUE_MIN)}+` : pr.newFlag ? `New card worth ${formatUsd(REPRINT_VALUE_MIN)}+` : '';
+            const hotClass = pr.flag ? ' deck-reprint-hot' : pr.newFlag ? ' deck-new-hot' : '';
+            const priceClass = pr.flag ? ' hot' : pr.newFlag ? ' newhot' : '';
             if (productDeckView === 'pictures') {
                 const img = scryfallImageById(c.identifiers && c.identifiers.scryfallId, 'small');
                 return `
-                    <div class="deck-pic${pr.flag ? ' deck-reprint-hot' : ''}" data-name="${escapeAttr(c.name)}" onclick="${deckCardClick(c)}" title="${escapeAttr(c.name)}${flagTitle ? ` - ${flagTitle}` : ''}">
+                    <div class="deck-pic${hotClass}" data-name="${escapeAttr(c.name)}" onclick="${deckCardClick(c)}" title="${escapeAttr(c.name)}${flagTitle ? ` - ${flagTitle}` : ''}">
                         ${img ? `<img src="${img}" alt="${escapeAttr(c.name)}" loading="lazy">` : `<div class="deck-pic-noimg">${c.name}</div>`}
                         ${e.count > 1 ? `<span class="deck-pic-count">×${e.count}</span>` : ''}
                         ${e.foil ? '<span class="deck-pic-foil">foil</span>' : ''}
-                        ${pr.flag ? '<span class="deck-pic-reprint">💰 Reprint</span>' : ''}
-                        <span class="deck-pic-price${pr.flag ? ' hot' : ''}">${priceText}</span>
+                        ${pr.flag ? '<span class="deck-pic-reprint">💰 Reprint</span>' : pr.newFlag ? '<span class="deck-pic-reprint new">💎 New</span>' : ''}
+                        <span class="deck-pic-price${priceClass}">${priceText}</span>
                     </div>
                 `;
             }
             return `
-                <div class="deck-row${pr.flag ? ' deck-reprint-hot' : ''}">
+                <div class="deck-row${hotClass}">
                     <span class="deck-row-count">${e.count}</span>
                     <span class="set-link" data-name="${escapeAttr(c.name)}" onclick="${deckCardClick(c)}">${c.name}</span>
                     ${e.foil ? '<span class="deck-foil">foil</span>' : ''}
-                    ${pr.flag ? `<span class="deck-reprint-badge" title="${flagTitle}">💰 Reprint</span>` : ''}
+                    ${pr.flag ? `<span class="deck-reprint-badge" title="${flagTitle}">💰 Reprint</span>` : pr.newFlag ? `<span class="deck-reprint-badge new" title="${flagTitle}">💎 New</span>` : ''}
                     <span class="deck-row-cost">${c.manaCost ? renderManaCost(c.manaCost) : ''}</span>
-                    <span class="deck-row-price${pr.flag ? ' hot' : ''}">${priceText}</span>
+                    <span class="deck-row-price${priceClass}">${priceText}</span>
                 </div>
             `;
         }
@@ -10986,7 +11003,7 @@
                                 <div>
                                     <div class="deck-commander-label">Commander${e.foil ? ' · foil' : ''}</div>
                                     <div class="deck-commander-name">${c.name}</div>
-                                    ${(pr => (pr.loading ? '' : `<div class="deck-commander-price">${pr.price === null ? 'No price yet' : formatUsd(pr.price)}${pr.flag ? ' · 💰 Reprint' : ''}</div>`))(deckEntryPrice(e))}
+                                    ${(pr => (pr.loading ? '' : `<div class="deck-commander-price">${pr.price === null ? 'No price yet' : formatUsd(pr.price)}${pr.flag ? ' · 💰 Reprint' : pr.newFlag ? ' · 💎 New' : ''}</div>`))(deckEntryPrice(e))}
                                     <div class="text-secondary">${c.type || ''}</div>
                                     ${c.manaCost ? `<div style="margin-top:4px;">${renderManaCost(c.manaCost)}</div>` : ''}
                                 </div>
@@ -10996,12 +11013,19 @@
                 </div>
             ` : '';
 
+            const sortBtn = (v, label) => `<button type="button" class="staples-sort-btn${productDeckSort === v ? ' active' : ''}" onclick="setProductDeckSort('${v}')">${label}</button>`;
             const viewBtn = (v, label) => `<button type="button" class="staples-sort-btn${productDeckView === v ? ' active' : ''}" onclick="setProductDeckView('${v}')">${label}</button>`;
             // Reprint value: every reprint worth REPRINT_VALUE_MIN or more,
             // most valuable first, plus the whole deck's value.
             const priced = deckAllEntries(d).map(e => ({ e, pr: deckEntryPrice(e) }));
             const pricesLoading = priced.some(x => x.pr.loading);
             const hot = priced.filter(x => x.pr.flag).sort((a, b) => b.pr.price - a.pr.price);
+            const hotNew = priced.filter(x => x.pr.newFlag).sort((a, b) => b.pr.price - a.pr.price);
+            const valueRows = (list, cls) => `<div class="deck-value-list">${list.map(({ e, pr }) => `
+                        <div class="deck-value-row">
+                            <span class="set-link" data-name="${escapeAttr(e.card.name)}" onclick="${deckCardClick(e.card)}">${e.card.name}</span>${e.count > 1 ? ` <span class="text-secondary">×${e.count}</span>` : ''}${e.foil ? ' <span class="deck-foil">foil</span>' : ''}
+                            <span class="deck-row-price ${cls}">${formatUsd(pr.price)}</span>
+                        </div>`).join('')}</div>`;
             const sum = list => list.reduce((t, x) => t + (x.pr.price || 0) * x.e.count, 0);
             const reprintSum = sum(priced.filter(x => x.pr.reprint));
             const valueHTML = pricesLoading ? '<div class="deck-value"><div class="loading" style="padding:0;">Pricing the cards...</div></div>' : `
@@ -11010,24 +11034,23 @@
                         <span class="deck-value-title">💰 Reprints worth ${formatUsd(REPRINT_VALUE_MIN)}+ <span class="text-secondary">(${hot.length})</span></span>
                         <span class="text-secondary">Deck: <strong>${formatUsd(sum(priced))}</strong> · reprints ${formatUsd(reprintSum)} · new cards ${formatUsd(sum(priced) - reprintSum)}</span>
                     </div>
-                    ${hot.length ? `<div class="deck-value-list">${hot.map(({ e, pr }) => `
-                        <div class="deck-value-row">
-                            <span class="set-link" data-name="${escapeAttr(e.card.name)}" onclick="${deckCardClick(e.card)}">${e.card.name}</span>${e.count > 1 ? ` <span class="text-secondary">×${e.count}</span>` : ''}${e.foil ? ' <span class="deck-foil">foil</span>' : ''}
-                            <span class="deck-row-price hot">${formatUsd(pr.price)}</span>
-                        </div>`).join('')}</div>` : `<div class="text-secondary">No reprints in this deck are worth ${formatUsd(REPRINT_VALUE_MIN)} or more right now.</div>`}
-                    <div class="edh-source">Prices are for the exact printing in this deck (foil where it's foil), from Scryfall's daily TCGplayer market prices. "Reprint" = the card was printed before this product.</div>
+                    ${hot.length ? valueRows(hot, 'hot') : `<div class="text-secondary">No reprints in this deck are worth ${formatUsd(REPRINT_VALUE_MIN)} or more right now.</div>`}
+                    ${hotNew.length ? `<div class="deck-value-sub">💎 New cards worth ${formatUsd(REPRINT_VALUE_MIN)}+ <span class="text-secondary">(${hotNew.length})</span></div>${valueRows(hotNew, 'newhot')}` : ''}
+                    <div class="edh-source">Prices are for the exact printing in this deck (foil where it's foil), from Scryfall's daily TCGplayer market prices. "Reprint" = the card was printed before this product; "New" = first printed here.</div>
                 </div>
             `;
             panel.innerHTML = `
                 <div class="deck-panel">
                     <div class="deck-panel-head">
                         <div><strong>${d.title}</strong> <span class="text-secondary">· ${mainCount} cards</span></div>
-                        <div>${viewBtn('list', '☰ List')} ${viewBtn('pictures', '🖼️ Pictures')}</div>
+                        <div class="deck-panel-controls">${viewBtn('list', '☰ List')} ${viewBtn('pictures', '🖼️ Pictures')} ${sortBtn('type', 'By type')} ${sortBtn('price', '💲 By price')}</div>
                     </div>
                     ${commanderHTML}
                     ${valueHTML}
                     <div class="${productDeckView === 'pictures' ? '' : 'deck-columns'}">
-                        ${[...DECK_TYPE_ORDER, 'Other'].map(t => section(DECK_TYPE_LABELS[t], d.groups[t])).join('')}
+                        ${productDeckSort === 'price'
+                            ? section('All cards, most valuable first', Object.values(d.groups).flat().sort((a, b) => ((deckEntryPrice(b).price || 0) - (deckEntryPrice(a).price || 0)) || a.card.name.localeCompare(b.card.name)))
+                            : [...DECK_TYPE_ORDER, 'Other'].map(t => section(DECK_TYPE_LABELS[t], d.groups[t])).join('')}
                         ${section('Sideboard', d.sideboard)}
                         ${section('Tokens included', d.tokens)}
                     </div>
