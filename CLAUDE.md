@@ -108,6 +108,23 @@ The 🎟️ Prerelease tab (under Rules & events, `PRERELEASE_SUBTABS`) works on
 
 Sources: the set's release notes and Wizards' archetype descriptions (draftsim.com quotes them; the environment can reach draftsim.com but not www.draftsim.com). Check the mechanics against live Scryfall cards.
 
+## Format Rules tab (`MTG_Lookup_Tool.html`)
+
+Explains every way to play, for staff talking to customers. The facts follow Wizards' own format pages (`magic.wizards.com/en/formats/<slug>`), rephrased, and were checked on 2026-09-27 (`FORMATS_AS_OF`).
+
+- **Status strip:** Standard's legal sets (`STANDARD_SETS`; `rotates: true` marks the six oldest), the next rotation (`STANDARD_ROTATION`: February 2027, when Wilds of Eldraine through Duskmourn leave; Foundations stays until at least 2029), the last and next banned & restricted announcements (`BANNED_RESTRICTED_DATES`), and a link to the Brackets tab. **Update these by hand** when a set releases, Standard rotates or a B&R announcement posts (the next one is October 12, 2026), and bump `FORMATS_AS_OF`. Wizards' Standard page lists the legal sets, and B&R articles are under `/en/news/announcements/banned-and-restricted-<date>`.
+- **Which format should I play?** (`FORMAT_PICKER`): tap a customer type (new player, casual group, two players, budget, competitive, older collection, wants to open packs, plays online) to get 3-4 formats with a one-line reason. Each links to that format's card.
+- **Format cards** (`FORMAT_INFO`), in four groups (`FORMAT_GROUPS`) with filter chips:
+  - Competitive 1v1: Standard, Pioneer, Modern, Legacy, Vintage, Pauper
+  - Commander & multiplayer: Commander, Commander 1v1, Oathbreaker, Two-Headed Giant, Archenemy, Planechase
+  - Limited: Booster Draft, Sealed, Pick-Two Draft, Team Draft / Team Sealed, Commander Draft & Box League
+  - MTG Arena only: Brawl, Historic, Timeless, Alchemy
+  - Each card has players, game length, deck, card limit and card pool, a short explanation, "why play it" bullets, a "Key rules" dropdown, an example card, a live ban list, Wizards' page and other links, and "try it here" links to this tool's tabs (Brackets, Products, Prerelease, Value Vintage) or the Archenemy / Planechase simulators.
+- **Ban lists** come live from Scryfall (`loadFormatBanlist(key, containerId, btn, withRestricted)`, which uses `banKey`; restricted lists for Vintage and Timeless). Oathbreaker's official list is on oathbreakermtg.org, which the card links to. Wizards' B&R page has no separate Commander 1v1 list, so that card uses the Commander list.
+- **Quick check** covers the card panels' formats (`LEGALITY_FORMATS`) plus Oathbreaker and the Arena formats (`QUICK_CHECK_FORMATS`).
+- **Glossary** (`FORMAT_GLOSSARY`): plain-English terms (rotation, banned vs restricted, singleton, color identity, mulligan...).
+- Community formats (Pauper Commander, Premodern...) aren't included, because their sites can't be reached from Claude's environment to check the rules.
+
 ## Commander Brackets tab (`MTG_Lookup_Tool.html`)
 
 The bracket rules are written out by hand, because Wizards publishes them as articles, not data. Everything else on the tab comes live from Scryfall: the Game Changers list, the Commander banned list, and the mass-land-denial / extra-turn tags used by the checkers. When Wizards posts a bracket or banned-list update:
