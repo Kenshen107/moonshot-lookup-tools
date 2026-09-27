@@ -2393,6 +2393,287 @@
             color: #7ee787;
         }
 
+        .format-ban-note {
+            font-size: 0.78em;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        /* Status strip: Standard sets, B&R dates, Commander brackets */
+        .format-status {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            align-items: start;
+            margin: 0 auto 24px;
+        }
+
+        .format-status-item {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--brand);
+            border-radius: 8px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .format-status-label {
+            font-size: 0.72em;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .format-status-main {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: var(--text-heading);
+        }
+
+        .format-status-sub {
+            font-size: 0.84em;
+            color: #c0c0c0;
+            line-height: 1.45;
+        }
+
+        .format-status-details summary {
+            cursor: pointer;
+            font-size: 0.84em;
+            color: var(--color-link);
+        }
+
+        .format-set-list {
+            margin: 8px 0 8px 20px;
+            font-size: 0.84em;
+            line-height: 1.6;
+        }
+
+        .format-set-list li.rotating {
+            color: #ffcc80;
+        }
+
+        .format-set-note {
+            color: var(--text-secondary);
+        }
+
+        .format-set-leaving {
+            font-size: 0.78em;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background: #4a3a1a;
+            color: #ffcc80;
+            white-space: nowrap;
+        }
+
+        .format-status-asof {
+            grid-column: 1 / -1;
+            font-size: 0.76em;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* "Which format should I play?" */
+        .format-picker {
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto 24px;
+        }
+
+        .format-picker h2 {
+            font-size: 1em;
+            margin: 0 0 4px;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .format-picker p {
+            margin: 0 0 12px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .format-picker-chips,
+        .format-group-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .format-group-chips {
+            justify-content: center;
+            margin: 0 0 18px;
+        }
+
+        .format-picker-chip,
+        .format-group-chip,
+        .format-try-btn {
+            width: auto;
+            margin: 0;
+            padding: 7px 12px;
+            font-size: 0.84em;
+            background: var(--bg-panel-raised);
+            border: 1px solid #505050;
+            border-radius: 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .format-picker-chip:hover,
+        .format-group-chip:hover,
+        .format-try-btn:hover {
+            border-color: var(--brand-light);
+            background: #3a3a3a;
+        }
+
+        .format-picker-chip.active,
+        .format-group-chip.active {
+            background: var(--brand);
+            border-color: var(--brand-light);
+            color: #fff;
+        }
+
+        .format-picker-list {
+            margin: 14px 0 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.9em;
+            line-height: 1.45;
+        }
+
+        .format-picker-name {
+            font-weight: 700;
+            color: var(--color-link);
+        }
+
+        .format-picker-list span {
+            color: #c0c0c0;
+        }
+
+        /* Format groups and card extras */
+        .format-group {
+            margin-bottom: 28px;
+        }
+
+        .format-group-title {
+            font-size: 1.15em;
+            color: var(--text-heading);
+            margin: 0 0 2px;
+        }
+
+        .format-group-desc {
+            font-size: 0.86em;
+            color: var(--text-secondary);
+            margin: 0 0 12px;
+        }
+
+        .format-why {
+            margin: 0 0 0 18px;
+            font-size: 0.85em;
+            color: #c0c0c0;
+            line-height: 1.5;
+        }
+
+        .format-rules {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 0.85em;
+        }
+
+        .format-rules summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--brand-light);
+        }
+
+        .format-rules ul {
+            margin: 8px 0 2px 18px;
+            line-height: 1.5;
+            color: #d0d0d0;
+        }
+
+        .format-rules li + li {
+            margin-top: 4px;
+        }
+
+        .format-try-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .format-card {
+            scroll-margin-top: 80px;
+        }
+
+        .format-card-flash {
+            animation: formatCardFlash 1.6s ease-out;
+        }
+
+        @keyframes formatCardFlash {
+            0%, 40% { border-color: var(--brand-light); box-shadow: 0 0 0 3px rgba(58, 163, 209, 0.35); }
+            100% { border-color: var(--border); box-shadow: none; }
+        }
+
+        /* Glossary */
+        .format-glossary-wrap {
+            background: var(--bg-panel);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin: 8px 0 24px;
+        }
+
+        .format-glossary-wrap summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--text-heading);
+        }
+
+        .format-glossary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px 20px;
+            margin: 14px 0 0;
+        }
+
+        .format-glossary dt {
+            font-weight: 700;
+            color: var(--brand-light);
+            font-size: 0.9em;
+        }
+
+        .format-glossary dd {
+            margin: 2px 0 0;
+            font-size: 0.85em;
+            color: #c0c0c0;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 900px) {
+            .format-status { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .formats-grid { grid-template-columns: 1fr; }
+            .format-meta-row { grid-template-columns: 92px 1fr; }
+            .format-picker { padding: 14px; }
+        }
+
         /* ---- Quick ban check (Format Rules panel) ---- */
         .quick-ban-check {
             background: #2a2a2a;
@@ -6975,10 +7256,19 @@
         <!-- ============== FORMAT RULES ============== -->
         <div id="formatsApp" style="display:none;">
             <div class="formats-intro">
-                Deck construction rules and current ban lists for every constructed
-                format, plus how Draft and Sealed actually work. Ban lists are
-                pulled live from Scryfall, so they stay current without anyone
-                having to update this page by hand.
+                Every way to play Magic, explained for the counter: who it's for,
+                how the deck is built, the key rules, and where to learn more.
+                Rules follow Wizards' own format pages. Ban lists are pulled live
+                from Scryfall, so they stay current on their own.
+            </div>
+
+            <div class="format-status" id="formatStatus"></div>
+
+            <div class="format-picker" id="formatPicker">
+                <h2>Which format should I play?</h2>
+                <p>Tap what sounds most like the customer.</p>
+                <div class="format-picker-chips" id="formatPickerChips"></div>
+                <div id="formatPickerResult"></div>
             </div>
 
             <div class="quick-ban-check">
@@ -6990,12 +7280,19 @@
                 <div id="banCheckResult"></div>
             </div>
 
-            <div class="formats-grid" id="formatsGrid"></div>
+            <div class="format-group-chips" id="formatGroupChips"></div>
+            <div id="formatsGrid"></div>
+
+            <details class="format-glossary-wrap" id="formatGlossaryWrap">
+                <summary>📘 Words you'll hear (glossary)</summary>
+                <dl class="format-glossary" id="formatGlossary"></dl>
+            </details>
 
             <div class="resource-section">
                 <h2>Resources</h2>
                 <p>Official rules and ban list sources - straight from Wizards, no middleman.</p>
                 <div class="resource-links">
+                    <a href="https://magic.wizards.com/en/formats" target="_blank" rel="noopener">Every format (Wizards' Formats Hub)</a>
                     <a href="https://magic.wizards.com/en/rules" target="_blank" rel="noopener">Comprehensive Rules (official)</a>
                     <a href="https://magic.wizards.com/en/banned-restricted-list" target="_blank" rel="noopener">Banned & Restricted List (official)</a>
                     <a href="https://gatherer.wizards.com/" target="_blank" rel="noopener">Gatherer - official card database</a>
@@ -7752,7 +8049,7 @@
             market:       { appId: 'marketApp',       icon: '📈', navLabel: 'Market Watch',    title: '📈 Market Watch', desc: 'Price spikes, ban changes, trending commanders and new-set demand', keywords: 'price spike jump reprice trend market ban unban trending restock new set demand', onShow: showMarketTab },
             pulllist:     { appId: 'pullListApp',     icon: '📋', navLabel: 'Pull List',       title: '📋 Pull List', desc: 'Paste online orders and pull them set by set', keywords: 'orders online shopify pick pull' },
             casemap:      { appId: 'caseMapApp',      icon: '🗂️', navLabel: 'Case Map',        title: '🗂️ Hotlist Case Map', desc: 'Where every card sits in the hotlist case', keywords: 'hotlist case where location find' , onShow: showCaseMapTab },
-            formats:      { appId: 'formatsApp',      icon: '📖', navLabel: 'Format Rules',    title: '📖 Format Rules', desc: 'Deck rules and live ban lists for every format', keywords: 'standard modern pioneer legacy vintage pauper banned legal', onShow: renderFormatsGrid },
+            formats:      { appId: 'formatsApp',      icon: '📖', navLabel: 'Format Rules',    title: '📖 Format Rules', desc: 'Every way to play, deck rules, rotation and live ban lists', keywords: 'standard modern pioneer legacy vintage pauper banned legal rotation commander oathbreaker two-headed giant archenemy planechase draft sealed pick-two brawl historic timeless alchemy arena which format', onShow: renderFormatsGrid },
             brackets:     { appId: 'bracketsApp',     icon: '🪜', navLabel: 'Brackets',        title: '🪜 Commander Brackets', desc: 'Commander brackets, Game Changers, and card and deck checkers', keywords: 'commander edh bracket game changers power level', onShow: renderBracketsGuide },
             prerelease:   { appId: 'prereleaseApp',   icon: '🎟️', navLabel: 'Prerelease',      title: '🎟️ Prerelease Toolkit', desc: 'New mechanics and rulings, hot cards, a sealed helper and printable handouts', keywords: 'prerelease sealed mechanics rulings judge new set handout print qr deck building event', onShow: showPrereleaseTab },
             valuevintage: { appId: 'valueVintageApp', icon: '🏆', navLabel: 'Value Vintage',   title: '🏆 Value Vintage (V30)', desc: 'Rules and the restricted list for $30 Vintage nights', keywords: 'v30 vintage budget restricted wednesday', onShow: renderValueVintagePanel },
@@ -8028,6 +8325,8 @@
             { label: 'Sealed deck helper', icon: '🧩', parent: 'prerelease', keywords: 'sealed pool build deck colors helper prerelease', go: () => navigateTo('prerelease', () => switchPrereleaseTab('sealed')) },
             { label: 'Print deck-building cards', icon: '🖨️', parent: 'prerelease', keywords: 'print handout deck building card prerelease', go: () => navigateTo('prerelease', () => switchPrereleaseTab('card')) },
             { label: 'Table QR sign', icon: '📱', parent: 'prerelease', keywords: 'qr code table sign print players', go: () => navigateTo('prerelease', () => switchPrereleaseTab('qr')) },
+            { label: 'Which format should I play?', icon: '🧭', parent: 'formats', keywords: 'format new player casual budget recommend', go: () => navigateTo('formats', () => scrollToFormatSection('formatPicker')) },
+            { label: 'Standard sets & rotation', icon: '🔄', parent: 'formats', keywords: 'standard legal sets rotation rotate', go: () => navigateTo('formats', () => scrollToFormatSection('formatStandardSets')) },
             { label: 'Price spikes', icon: '🚀', parent: 'market', keywords: 'spike jump reprice price up alert', go: () => navigateTo('market', () => switchMarketTab('spikes')) },
             { label: 'Ban watch', icon: '🔨', parent: 'market', keywords: 'ban unban banned announcement', go: () => navigateTo('market', () => switchMarketTab('bans')) },
             { label: 'Trending commanders', icon: '🔥', parent: 'market', keywords: 'trending rising popular commanders edhrec stock', go: () => navigateTo('market', () => switchMarketTab('trending')) },
@@ -8147,122 +8446,501 @@
         });
 
         // ============== FORMAT RULES ==============
-        // Deck-building rules are static (they don't change store-to-store), so
-        // they're hardcoded here rather than fetched. Ban lists DO change over
-        // time, so those are pulled live from Scryfall's search syntax
-        // (banned:<format> / restricted:<format>) on demand instead of being
-        // baked in, so this page never goes stale on that front.
+        // Deck-building rules don't change store to store, so they're written
+        // out here. They follow Wizards' own format pages (magic.wizards.com/
+        // en/formats/<slug>), rephrased for the counter; checked 2026-09-27.
+        // Ban lists DO change, so those are pulled live from Scryfall's
+        // banned:<key> / restricted:<key> search instead of being baked in.
+        // FORMATS_AS_OF is the date the hand-written facts (the Standard
+        // set list, rotation, B&R dates) were last checked.
+        const FORMATS_AS_OF = '2026-09-27';
+
+        const FORMAT_GROUPS = [
+            { key: 'competitive', label: '🏆 Competitive 1v1', desc: 'Bring your own 60-card deck and play one opponent. These are the tournament formats.' },
+            { key: 'multiplayer', label: '👑 Commander & multiplayer', desc: 'Casual games for a group. Most use a commander, and most games have 3 or more players.' },
+            { key: 'limited', label: '📦 Limited (open packs and play)', desc: 'Build a deck on the spot from packs opened at the event. Nobody needs to bring a deck.' },
+            { key: 'arena', label: '💻 MTG Arena only', desc: 'Digital formats on MTG Arena (free on phone, PC and Mac). Not played with paper cards.' }
+        ];
+
+        // Standard's legal sets, newest first, as listed on Wizards' Standard
+        // page. rotates: true = among the six oldest, which leave at the next
+        // rotation (February 2027, with the first set of the year).
+        // Foundations is exempt and stays legal until at least 2029.
+        const STANDARD_SETS = [
+            { name: 'Reality Fracture' },
+            { name: 'The Hobbit' },
+            { name: 'Marvel Super Heroes' },
+            { name: 'Secrets of Strixhaven' },
+            { name: 'Teenage Mutant Ninja Turtles' },
+            { name: 'Lorwyn Eclipsed' },
+            { name: 'Avatar: The Last Airbender' },
+            { name: 'Through the Omenpaths', note: 'digital only' },
+            { name: "Marvel's Spider-Man" },
+            { name: 'Edge of Eternities' },
+            { name: 'Final Fantasy' },
+            { name: 'Tarkir: Dragonstorm' },
+            { name: 'Aetherdrift' },
+            { name: 'Foundations', note: 'legal until at least 2029' },
+            { name: 'Duskmourn: House of Horror', rotates: true },
+            { name: 'Bloomburrow', rotates: true },
+            { name: 'Outlaws of Thunder Junction', note: 'includes The Big Score', rotates: true },
+            { name: 'Murders at Karlov Manor', rotates: true },
+            { name: 'The Lost Caverns of Ixalan', rotates: true },
+            { name: 'Wilds of Eldraine', rotates: true }
+        ];
+        const STANDARD_ROTATION = {
+            when: 'February 2027',
+            rule: 'Standard rotates once a year, after the Prerelease of the first premier set of the year. The six oldest sets leave.',
+            source: 'https://magic.wizards.com/en/formats/standard'
+        };
+        const BANNED_RESTRICTED_DATES = {
+            last: { date: 'August 10, 2026', url: 'https://magic.wizards.com/en/news/announcements/banned-and-restricted-august-10-2026', summary: 'Standard: Badgermole Cub, Stormchaser\'s Talent and Gran-Gran banned. The Fantasticar banned in Legacy and restricted in Vintage.' },
+            next: 'October 12, 2026'
+        };
+
+        // "Which format should I play?" - a customer describes themselves,
+        // staff tap the closest match, and it points at the right cards.
+        const FORMAT_PICKER = [
+            { key: 'new', label: '🌱 Brand new to Magic', picks: [
+                ['sealed', 'Nobody needs a deck. Everyone builds from the packs they open, so it\'s a level playing field. A Prerelease is the classic first event.'],
+                ['twoheaded', 'Team up with someone who knows the game and learn as you play.'],
+                ['commander', 'Start with a ready-to-play precon deck. Precons are built to be fair against each other.']
+            ] },
+            { key: 'friends', label: '🍕 Casual games with friends (3-5 players)', picks: [
+                ['commander', 'The most popular way to play. Use the Brackets so everyone\'s decks are at a similar power level.'],
+                ['oathbreaker', 'Commander\'s faster, cheaper cousin: 60 cards, 20 life, built around a planeswalker.'],
+                ['archenemy', 'Everyone teams up against one villain. Good for mixed skill levels.'],
+                ['planechase', 'Add big plane cards and a die to any casual game for extra chaos.']
+            ] },
+            { key: 'two', label: '👥 Just two players', picks: [
+                ['commander1v1', 'Commander rules, one opponent. Games run 40-50 minutes.'],
+                ['standard', 'Short 1v1 games with the newest cards.'],
+                ['pioneer', 'A bigger card pool that never rotates.']
+            ] },
+            { key: 'budget', label: '💵 On a budget', picks: [
+                ['pauper', 'Commons only, so even the best decks are cheap.'],
+                ['vintage', 'The store\'s Value Vintage nights cap a whole Vintage deck at $30.'],
+                ['commander', 'A precon is a full deck for one price, and it can be upgraded a few cards at a time.'],
+                ['draft', 'Pay the entry, keep every card you draft.']
+            ] },
+            { key: 'compete', label: '🏆 Wants to compete in tournaments', picks: [
+                ['standard', 'Wizards\' main competitive format. It\'s the path to Arena Championships and the Pro Tour.'],
+                ['pioneer', 'A big competitive format that doesn\'t rotate.'],
+                ['modern', 'The most popular non-rotating competitive format. High power, lots of different decks.']
+            ] },
+            { key: 'old', label: '📚 Has an older collection', picks: [
+                ['commander', 'Almost any card ever printed is legal, so old favorites have a home.'],
+                ['legacy', 'Nearly every card ever printed, four copies each.'],
+                ['vintage', 'Every card is legal, including the Power 9 (one copy each).']
+            ] },
+            { key: 'packs', label: '🎁 Wants to open packs and play', picks: [
+                ['draft', 'Up to 8 players pick cards from packs one at a time, then build and play.'],
+                ['picktwo', 'A draft for just four players, taking two cards per pick. Draft Night boxes are made for it.'],
+                ['sealed', 'Open six packs and build from them. This is how Prereleases work.'],
+                ['commanderlimited', 'Commander Box League: open a Play Booster box and build a 60-card Commander deck from it.']
+            ] },
+            { key: 'online', label: '📱 Plays on phone or computer', picks: [
+                ['brawl', 'Commander-style decks for 1v1 games on MTG Arena.'],
+                ['historic', 'Arena\'s big non-rotating format.'],
+                ['timeless', 'Every card on Arena is legal. The most powerful Arena format.'],
+                ['standard', 'Standard is on Arena too, alongside paper.']
+            ] }
+        ];
+
+        // Plain-English words players use about formats.
+        const FORMAT_GLOSSARY = [
+            ['Constructed vs Limited', 'Constructed: you bring a deck you built at home. Limited: you build a deck at the event from packs opened there (Draft, Sealed).'],
+            ['Rotation', 'In Standard, the oldest sets leave once a year so the newest cards stay in focus. Formats that never rotate (Pioneer, Modern, Commander...) are called "eternal" or "non-rotating".'],
+            ['Banned vs restricted', 'Banned: no copies allowed. Restricted (Vintage and Arena\'s Timeless): only 1 copy allowed, counting the sideboard.'],
+            ['Singleton', 'Only one copy of each card, except basic lands. Commander, Oathbreaker and Brawl are singleton.'],
+            ['Sideboard', 'Up to 15 extra cards you can swap into your deck between games of a match (in 60-card formats).'],
+            ['Best-of-one / best-of-three', 'One game decides it, or first to win two games. Most in-store 1v1 events are best-of-three.'],
+            ['Color identity', 'In Commander-style formats, every mana symbol on a card (cost and text) must also appear on your commander.'],
+            ['Command zone and commander tax', 'Your commander starts in the command zone. Each time you cast it from there, it costs 2 more than the last time.'],
+            ['Mulligan', 'Don\'t like your opening hand? Shuffle it back and draw 7 new cards, then put 1 card on the bottom for each mulligan you\'ve taken.'],
+            ['Game Changers', 'A Wizards list of Commander cards that swing games hard. The Brackets say how many a deck can run.']
+        ];
+
+        // Each format card. banKey is the Scryfall format key for the live ban
+        // list (restricted: also load its restricted list). links are extra
+        // sources; tryHere points at this tool's own tabs or the simulators.
         const FORMAT_INFO = [
+            // ---- Competitive 1v1 ----
             {
-                slug: 'standard',
-                name: 'Standard',
-                type: 'Constructed',
-                deckSize: 'Min. 60 cards + optional 15-card sideboard',
-                copies: 'Max 4 copies of any card (except basic lands)',
-                rotation: 'Yes - drops the oldest sets each fall',
-                blurb: 'The current-sets-only format. Newest cards, smallest legal card pool, and the one that rotates - a deck legal today may not be legal next year.',
+                slug: 'standard', name: 'Standard', group: 'competitive', type: 'Rotating',
+                players: '2', length: 'About 20 min a game',
+                deckSize: '60+ cards, up to 15 in the sideboard',
+                copies: 'Up to 4 of a card (any number of basic lands)',
+                rotation: `Newest sets only (${STANDARD_SETS.length} sets right now). The six oldest leave once a year.`,
+                blurb: 'The newest cards and the smallest card pool. It\'s Wizards\' main competitive format and it rotates, so a deck legal today may not be legal next year.',
+                why: ['New cards are easy to find in stores and packs', 'Great for learning to build decks', 'Leads to Arena Championships and the Pro Tour'],
+                rules: [`Next rotation: ${STANDARD_ROTATION.when}. ${STANDARD_SETS.filter(s => s.rotates).map(s => s.name).join(', ')} leave.`, 'Foundations (2024) stays legal until at least 2029.'],
                 exampleQuery: 'f:standard -is:digital -t:land order:usd',
+                banKey: 'standard',
                 wotcUrl: 'https://magic.wizards.com/en/formats/standard',
-                metagameUrl: 'https://www.mtggoldfish.com/metagame/standard'
+                links: [{ label: 'Real decklists (MTGGoldfish)', url: 'https://www.mtggoldfish.com/metagame/standard' }]
             },
             {
-                slug: 'pioneer',
-                name: 'Pioneer',
-                type: 'Constructed',
-                deckSize: 'Min. 60 cards + optional 15-card sideboard',
-                copies: 'Max 4 copies of any card (except basic lands)',
-                rotation: 'No - cards from Return to Ravnica (2012) forward',
-                blurb: 'Non-rotating version of Standard\'s card pool. A middle ground between Standard\'s small pool and Modern\'s much larger one.',
+                slug: 'pioneer', name: 'Pioneer', group: 'competitive', type: 'Non-rotating',
+                players: '2', length: 'About 20 min a game',
+                deckSize: '60+ cards, up to 15 in the sideboard',
+                copies: 'Up to 4 of a card (any number of basic lands)',
+                rotation: 'Return to Ravnica (2012) and every set since. Never rotates.',
+                blurb: 'Stronger than Standard but weaker than Modern or Legacy, on purpose. Standard cards stay playable here after they rotate.',
+                why: ['Cards never rotate out', 'Room to invent new decks', 'Also playable on MTG Arena'],
                 exampleQuery: 'f:pioneer -is:digital -t:land order:usd',
+                banKey: 'pioneer',
                 wotcUrl: 'https://magic.wizards.com/en/formats/pioneer',
-                metagameUrl: 'https://www.mtggoldfish.com/metagame/pioneer'
+                links: [{ label: 'Real decklists (MTGGoldfish)', url: 'https://www.mtggoldfish.com/metagame/pioneer' }]
             },
             {
-                slug: 'modern',
-                name: 'Modern',
-                type: 'Constructed',
-                deckSize: 'Min. 60 cards + optional 15-card sideboard',
-                copies: 'Max 4 copies of any card (except basic lands)',
-                rotation: 'No - cards from 8th Edition / Mirrodin (2003) forward',
-                blurb: 'The most popular non-rotating competitive format. Large card pool, high power level, and a large-ish ban list to keep it in check.',
+                slug: 'modern', name: 'Modern', group: 'competitive', type: 'Non-rotating',
+                players: '2', length: 'About 20 min a game',
+                deckSize: '60+ cards, up to 15 in the sideboard',
+                copies: 'Up to 4 of a card (any number of basic lands)',
+                rotation: 'Eighth Edition and Mirrodin (2003) forward, plus sets made for it (Modern Horizons). Never rotates.',
+                blurb: 'The most popular non-rotating competitive format. Twenty-plus years of cards, high power and lots of different decks to master over time.',
+                why: ['Cards never rotate out', 'A wide variety of decks', 'Master one deck for years'],
+                rules: ['Modern Horizons sets and some Universes Beyond sets (like Assassin\'s Creed) go straight into Modern without being in Standard.'],
                 exampleQuery: 'f:modern -is:digital -t:land order:usd',
+                banKey: 'modern',
                 wotcUrl: 'https://magic.wizards.com/en/formats/modern',
-                metagameUrl: 'https://www.mtggoldfish.com/metagame/modern'
+                links: [{ label: 'Real decklists (MTGGoldfish)', url: 'https://www.mtggoldfish.com/metagame/modern' }]
             },
             {
-                slug: 'legacy',
-                name: 'Legacy',
-                type: 'Constructed',
-                deckSize: 'Min. 60 cards + optional 15-card sideboard',
-                copies: 'Max 4 copies of any card (except basic lands)',
-                rotation: 'No - almost the entire card pool is legal',
-                blurb: 'Nearly every card ever printed is legal. Very few bans - the format is kept in check by card availability/price instead.',
+                slug: 'legacy', name: 'Legacy', group: 'competitive', type: 'Eternal',
+                players: '2', length: 'About 20 min a game',
+                deckSize: '60+ cards, up to 15 in the sideboard',
+                copies: 'Up to 4 of a card (any number of basic lands)',
+                rotation: 'Cards from every Magic set, except its banned list.',
+                blurb: 'Nearly every card ever printed is legal, so it\'s far more powerful than Modern. The ban list keeps out the most broken cards, including the Power 9.',
+                why: ['Cards from all of Magic\'s history', 'More powerful than other formats', 'Never rotates'],
                 exampleQuery: 'f:legacy -is:digital -t:land order:usd',
+                banKey: 'legacy',
                 wotcUrl: 'https://magic.wizards.com/en/formats/legacy',
-                metagameUrl: 'https://www.mtggoldfish.com/metagame/legacy'
+                links: [{ label: 'Real decklists (MTGGoldfish)', url: 'https://www.mtggoldfish.com/metagame/legacy' }]
             },
             {
-                slug: 'vintage',
-                name: 'Vintage',
-                type: 'Constructed',
-                deckSize: 'Min. 60 cards + optional 15-card sideboard',
-                copies: 'Max 4 copies (except basic lands) - but see Restricted below',
-                rotation: 'No - the entire card pool is legal',
-                blurb: 'Everything is legal, including the Power 9. Instead of banning the most broken cards outright, Vintage RESTRICTS them to a single copy per deck.',
+                slug: 'vintage', name: 'Vintage', group: 'competitive', type: 'Eternal',
+                players: '2', length: 'About 20 min a game',
+                deckSize: '60+ cards, up to 15 in the sideboard',
+                copies: 'Up to 4 of a card, but restricted cards only 1 (sideboard included)',
+                rotation: 'Every card from every set, except a short banned list.',
+                blurb: 'The biggest card pool and the highest power level. Instead of banning most broken cards, Vintage restricts them to one copy, so the Power 9 are legal.',
+                why: ['Every card ever is legal', 'The highest power level', 'Endless combo possibilities'],
+                rules: ['The store runs Value Vintage: Vintage rules with the whole deck capped at $30.'],
                 exampleQuery: 'restricted:vintage order:edhrec',
+                exampleLabel: 'For example, this is restricted to 1 copy:',
+                banKey: 'vintage', restricted: true,
                 wotcUrl: 'https://magic.wizards.com/en/formats/vintage',
-                metagameUrl: 'https://www.mtggoldfish.com/metagame/vintage'
+                links: [{ label: 'Real decklists (MTGGoldfish)', url: 'https://www.mtggoldfish.com/metagame/vintage' }],
+                tryHere: [{ label: '🏆 Value Vintage ($30 Vintage)', view: 'valuevintage' }]
             },
             {
-                slug: 'commander',
-                name: 'Commander (EDH)',
-                type: 'Constructed',
-                deckSize: 'Exactly 100 cards, including the commander',
-                copies: 'Singleton - exactly 1 copy of any card (except basic lands)',
-                rotation: 'No - casual/social format, own separate ban list',
-                blurb: 'A 100-card singleton deck built around a legendary creature (or eligible planeswalker) as your "commander", using only colors in its color identity. Usually played 4-player free-for-all.',
-                exampleQuery: 'f:commander t:legendary t:creature -is:digital order:edhrec',
-                wotcUrl: 'https://magic.wizards.com/en/formats/commander',
-                metagameUrl: 'https://edhrec.com/'
-            },
-            {
-                slug: 'pauper',
-                name: 'Pauper',
-                type: 'Constructed',
-                deckSize: 'Min. 60 cards + optional 15-card sideboard',
-                copies: 'Max 4 copies of any card (except basic lands)',
-                rotation: 'No - any card ever printed at common',
-                blurb: 'Every card must have been printed at common rarity at some point (in any set) - rarity in the specific set you own doesn\'t matter, only whether a common printing exists.',
+                slug: 'pauper', name: 'Pauper', group: 'competitive', type: 'Budget',
+                players: '2', length: 'About 20 min a game',
+                deckSize: '60+ cards, up to 15 in the sideboard',
+                copies: 'Up to 4 of a card (any number of basic lands)',
+                rotation: 'Any card ever printed at common, in paper or on Magic Online.',
+                blurb: 'Every card must have been printed at common at least once. If a common version exists, every version is legal, even a rare or foil printing.',
+                why: ['Cheap decks that still play powerful combos', 'Cards are easy to find', 'Uses your favorite commons from all of Magic\'s history'],
+                rules: ['Common promos only count if the card was also released at common in a set or product.', 'Lands printed with a common set symbol and the L rarity code count as common.'],
                 exampleQuery: 'f:pauper -is:digital -t:land r:common order:usd',
+                banKey: 'pauper',
                 wotcUrl: 'https://magic.wizards.com/en/formats/pauper',
-                metagameUrl: 'https://www.mtggoldfish.com/metagame/pauper'
+                links: [{ label: 'Real decklists (MTGGoldfish)', url: 'https://www.mtggoldfish.com/metagame/pauper' }]
+            },
+
+            // ---- Commander & multiplayer ----
+            {
+                slug: 'commander', name: 'Commander (EDH)', group: 'multiplayer', type: 'Most popular',
+                players: '3-5 (usually 4)', length: 'About 20 min per player',
+                deckSize: 'Exactly 100 cards: 99 + your commander',
+                copies: 'Singleton: 1 of each card (any number of basic lands)',
+                rotation: 'Cards from all of Magic\'s history. Its own ban list. Never rotates.',
+                blurb: 'Pick a legendary creature as your commander and build a 100-card deck around it, using only its colors. Free-for-all: attack anyone at the table. Wizards has run the format since 2024 with a Commander Format Panel.',
+                why: ['Multiplayer games with friends', 'Express yourself through deck building', 'Cards never rotate'],
+                rules: [
+                    'Everyone starts at 40 life.',
+                    'Color identity: every mana symbol on a card (cost and text) must also be on your commander. Colorless cards are fine.',
+                    'Your commander starts in the command zone. Each time you cast it from there, it costs 2 more.',
+                    'If your commander would go to your hand, library, graveyard or exile, you can put it back in the command zone.',
+                    '21 combat damage from one commander over the game and you lose.',
+                    'Brackets 1-5 (Exhibition, Core, Upgraded, Optimized, cEDH) help match decks of similar power. Talk about them before the game.'
+                ],
+                exampleQuery: 'f:commander t:legendary t:creature -is:digital order:edhrec',
+                exampleLabel: 'For example, this is a popular commander:',
+                banKey: 'commander',
+                wotcUrl: 'https://magic.wizards.com/en/formats/commander',
+                links: [{ label: 'Real decks on EDHREC', url: 'https://edhrec.com/' }],
+                tryHere: [{ label: '🪜 Brackets & Game Changers', view: 'brackets' }, { label: '🛍️ Precon decklists', view: 'products' }]
             },
             {
-                slug: 'draft',
-                name: 'Booster Draft',
-                type: 'Limited',
-                deckSize: 'Min. 40 cards (drafted cards + as many basic lands as needed)',
-                copies: 'No max - limited to what you draft/open',
-                rotation: 'N/A - built fresh each event from that event\'s packs',
-                blurb: 'Each player opens a booster pack, picks one card, passes the rest around the table, and repeats until the packs are empty (usually 3 packs/player). Deck is built entirely from what you picked plus basics.',
+                slug: 'commander1v1', name: 'Commander 1v1', group: 'multiplayer', type: 'Two players',
+                players: '2', length: '40-50 min',
+                deckSize: 'Exactly 100 cards: 99 + your commander',
+                copies: 'Singleton: 1 of each card (any number of basic lands)',
+                rotation: 'Cards from all of Magic\'s history. Never rotates.',
+                blurb: 'Commander deck-building, but one opponent instead of a table. Played on Magic Online, and just as easy at the kitchen table.',
+                why: ['Casual, for everyone', 'Uses the Commander decks people already own', 'Cards never rotate'],
+                rules: ['Everyone starts at 40 life.', 'Wizards\' banned list has no separate 1v1 section, so use the Commander ban list unless the event says otherwise.'],
+                banKey: 'commander',
+                wotcUrl: 'https://magic.wizards.com/en/formats/commander-1v1'
+            },
+            {
+                slug: 'oathbreaker', name: 'Oathbreaker', group: 'multiplayer', type: 'Faster Commander',
+                players: '3-5', length: 'About 50 min',
+                deckSize: 'Exactly 60 cards: a planeswalker (your Oathbreaker) + a signature spell + 58',
+                copies: 'Singleton: 1 of each card (any number of basic lands)',
+                rotation: 'Cards from all of Magic\'s history. Never rotates.',
+                blurb: 'Like Commander, but built around a planeswalker, with 60 cards and 20 life. Games are faster and decks are cheaper.',
+                why: ['Build around your favorite planeswalker', 'Multiplayer games with friends', 'Cards never rotate'],
+                rules: [
+                    'Everyone starts at 20 life.',
+                    'Your signature spell is an instant or sorcery in your Oathbreaker\'s colors. It lives in the command zone.',
+                    'You can only cast the signature spell while your Oathbreaker is on the battlefield. It goes back to the command zone after it resolves, and costs 2 more each time.',
+                    'Your Oathbreaker has commander tax (2 more each time), just like a commander.'
+                ],
+                exampleQuery: 'f:oathbreaker t:planeswalker -is:digital order:edhrec',
+                exampleLabel: 'For example, this is a popular Oathbreaker:',
+                banKey: 'oathbreaker',
+                banNote: 'oathbreakermtg.org runs the format and keeps the official list (Wizards\' B&amp;R page shows it too).',
+                wotcUrl: 'https://magic.wizards.com/en/formats/oathbreaker',
+                links: [{ label: 'oathbreakermtg.org (rules & ban list)', url: 'https://oathbreakermtg.org/banned-list/' }]
+            },
+            {
+                slug: 'twoheaded', name: 'Two-Headed Giant', group: 'multiplayer', type: '2v2 teams',
+                players: '4 (two teams of 2)', length: 'About 2 hours',
+                deckSize: '60+ cards (Constructed), 40+ (Limited) or 100 (Commander)',
+                copies: 'Constructed: teammates share a limit of 4 of any card',
+                rotation: 'Use any format\'s card pool: Standard, Limited, Commander...',
+                blurb: 'Two players team up against two others. Teammates share a life total and take their turns at the same time, and they can talk strategy openly.',
+                why: ['Team up with a friend', 'Great for learning with an experienced player', 'Plan and share information with your teammate'],
+                rules: [
+                    'Each team shares 30 life. Nothing else is shared: "you" on a card still means one player.',
+                    'The team that goes first skips its first draw.',
+                    'You can block creatures attacking your teammate.',
+                    'Limited: the team pools its packs and builds two 40-card decks together.',
+                    'Commander version: 60 life per team. A team loses to 21 damage from one commander or 15 poison counters.',
+                    'Banned in all Two-Headed Giant Constructed events: Erayo, Soratami Ascendant.'
+                ],
+                wotcUrl: 'https://magic.wizards.com/en/formats/two-headed-giant'
+            },
+            {
+                slug: 'archenemy', name: 'Archenemy', group: 'multiplayer', type: 'One vs all',
+                players: '4+ (1 villain vs a team)', length: 'About 60 min (90 for Archenemy Commander)',
+                deckSize: 'A normal 60+ card deck (or a Commander deck). The villain also has a scheme deck.',
+                copies: 'Scheme deck: 20+ schemes, no more than 2 of any one',
+                rotation: 'Casual: use any decks everyone agrees on.',
+                blurb: 'One player is the Archenemy, with extra life and a deck of oversized scheme cards. Everyone else teams up to take them down.',
+                why: ['Good for players of different skill levels', 'Schemes add exciting chaos', 'A new way to use Commander decks'],
+                rules: [
+                    'The Archenemy starts at 40 life and always goes first (and still draws).',
+                    'Each team member starts at 20 life. The team takes its turn together.',
+                    'At the start of the Archenemy\'s first main phase each turn, they set the top scheme in motion.',
+                    'Archenemy Commander: Commander decks, the team shares 60 life, the villain has 60 life and a scheme deck of 10+ different schemes.',
+                    'Supervillain Rumble: everyone has a scheme deck in a free-for-all.'
+                ],
+                wotcUrl: 'https://magic.wizards.com/en/formats/archenemy',
+                links: [{ label: 'Archenemy Commander (Wizards)', url: 'https://magic.wizards.com/en/formats/archenemy-commander' }],
+                tryHere: [{ label: '🦹 Archenemy simulator', href: 'Archenemy_Simulator.html' }]
+            },
+            {
+                slug: 'planechase', name: 'Planechase', group: 'multiplayer', type: 'Add-on',
+                players: '2-4 or more', length: 'About 50 min',
+                deckSize: 'A normal deck, plus a planar deck of oversized plane cards',
+                copies: 'Planar deck: every card different',
+                rotation: 'Casual: add it to any game.',
+                blurb: 'Everyone plays on a giant plane card whose effect hits the whole table. Roll the planar die to travel to the next plane or trigger chaos.',
+                why: ['Casual fun for every skill level', 'Works on top of any multiplayer game', 'Random, board-changing effects'],
+                rules: [
+                    'On your turn, you can roll the planar die. The first roll each turn is free. Each extra roll costs 1 more than the last.',
+                    'Planeswalker symbol: move to the next plane. Chaos symbol: trigger the plane\'s chaos ability.',
+                    'Shared planar deck: at least 40 cards or 10 per player, whichever is smaller, with no more phenomena than 2 per player.',
+                    'Individual planar decks: at least 10 cards, no more than 2 phenomena.'
+                ],
+                wotcUrl: 'https://magic.wizards.com/en/formats/planechase',
+                tryHere: [{ label: '🌀 Planechase simulator', href: 'Planechase_Simulator.html' }]
+            },
+
+            // ---- Limited ----
+            {
+                slug: 'draft', name: 'Booster Draft', group: 'limited', type: 'Draft',
+                players: '2-8 (8 is best)', length: 'About 2 hours with games',
+                deckSize: '40+ cards: what you draft plus any basic lands',
+                copies: 'Any number of what you draft',
+                rotation: 'Built fresh each event from that event\'s packs.',
+                blurb: 'Each player opens a pack, takes one card, and passes the rest. Repeat until the packs are gone, three packs each. Build from your picks and play 1v1.',
+                why: ['Build a deck on the spot', 'Different every time', 'A level playing field'],
+                rules: ['Pack 1 passes left, pack 2 passes right, pack 3 passes left.', 'Keep your picks hidden while drafting.', 'Basic lands are free and unlimited.'],
                 isLimited: true,
                 wotcUrl: 'https://magic.wizards.com/en/formats/booster-draft'
             },
             {
-                slug: 'sealed',
-                name: 'Sealed Deck',
-                type: 'Limited',
-                deckSize: 'Min. 40 cards (opened cards + as many basic lands as needed)',
-                copies: 'No max - limited to what you open',
-                rotation: 'N/A - built fresh each event from that event\'s packs',
-                blurb: 'Each player opens a fixed number of boosters (commonly 6) and builds a deck using only those cards plus basic lands. No drafting/passing - what you open is what you get.',
+                slug: 'sealed', name: 'Sealed Deck', group: 'limited', type: 'Prerelease',
+                players: '2 per game (any number in the event)', length: 'About 20 min a game',
+                deckSize: '40+ cards: what you open plus any basic lands',
+                copies: 'Any number of what you open',
+                rotation: 'Built fresh each event from that event\'s packs.',
+                blurb: 'Open six packs and build a deck using only those cards plus basic lands. No passing: what you open is what you get. It\'s the Prerelease format.',
+                why: ['No deck needed', 'Grow your collection while you play', 'Featured at every Prerelease'],
+                rules: ['The usual build: 17 lands and 23 spells in two colors.', 'Every card you opened but didn\'t play is your sideboard.', 'Best-of-one or best-of-three.'],
                 isLimited: true,
-                wotcUrl: 'https://magic.wizards.com/en/formats/sealed-deck'
+                wotcUrl: 'https://magic.wizards.com/en/formats/sealed-deck',
+                tryHere: [{ label: '🎟️ Sealed helper & prerelease cards', view: 'prerelease' }]
+            },
+            {
+                slug: 'picktwo', name: 'Pick-Two Draft', group: 'limited', type: 'Draft Night',
+                players: '4-7 (made for 4)', length: 'About 90 min',
+                deckSize: '40+ cards',
+                copies: 'Any number of what you draft',
+                rotation: 'Built fresh from the packs.',
+                blurb: 'A draft made for four players. Take two cards every pick instead of one, so the draft goes fast. Draft Night boxes have everything for it.',
+                why: ['A full draft with just four friends', 'Faster picks', 'Great for Commander groups wanting something new'],
+                rules: ['Three packs each, passing left, right, left, taking two cards a pick.', 'With four players, play two rounds: winners play winners.'],
+                isLimited: true,
+                wotcUrl: 'https://magic.wizards.com/en/formats/pick-two-draft'
+            },
+            {
+                slug: 'teamlimited', name: 'Team Draft / Team Sealed', group: 'limited', type: '3v3 teams',
+                players: '6 (two teams of 3)', length: 'About 2 hours',
+                deckSize: '40+ cards per player',
+                copies: 'Any number of what you draft or open',
+                rotation: 'Built fresh from the packs.',
+                blurb: 'Two teams of three. Each teammate plays 1v1 against someone on the other team, and the team that wins two matches wins.',
+                why: ['Play with friends as a team', 'Teammates can help while you play', 'Different every time'],
+                rules: [
+                    'Team Draft: seats alternate between teams. No talking or signals during the draft.',
+                    'Team Sealed: each team opens 12 packs and builds three decks, one per player.',
+                    'Roughly 30 min to draft, 30 min to build, then about 20 min a game.'
+                ],
+                isLimited: true,
+                wotcUrl: 'https://magic.wizards.com/en/formats/team-booster-draft',
+                links: [{ label: 'Team Sealed (Wizards)', url: 'https://magic.wizards.com/en/formats/team-sealed-deck' }]
+            },
+            {
+                slug: 'commanderlimited', name: 'Commander Draft & Box League', group: 'limited', type: 'Commander Limited',
+                players: '4-8, in pods of 4', length: 'About 2 hours',
+                deckSize: '60+ cards',
+                copies: 'Duplicates are allowed',
+                rotation: 'Built from the packs you draft or open.',
+                blurb: 'Commander, but you build the deck from packs. Games are free-for-all at 40 life, last player standing wins.',
+                why: ['Multiplayer with 4 to 8 players', 'Play as many copies of a card as you like', 'Casual and fun for everyone'],
+                rules: [
+                    'Commander Draft: take two cards at a time from each pack. Made for Commander Legends, Battle for Baldur\'s Gate and Commander Masters.',
+                    'Box League (during Prerelease): open a Play Booster box, build a 60-card Commander deck from it, and play through the Prerelease period.',
+                    'Box League ignores color identity when building, but cards that mention color identity still use it.',
+                    'Box League: Buy-a-Box and Commander promos can\'t go in the deck. You can adjust the deck between games.'
+                ],
+                isLimited: true,
+                wotcUrl: 'https://magic.wizards.com/en/formats/commander-limited'
+            },
+
+            // ---- MTG Arena only ----
+            {
+                slug: 'brawl', name: 'Brawl', group: 'arena', type: 'Arena',
+                players: '2', length: 'About 20 min',
+                deckSize: 'Exactly 100 cards: 99 + your commander. No sideboard.',
+                copies: 'Singleton: 1 of each card (any number of basic lands)',
+                rotation: 'Cards on MTG Arena.',
+                blurb: 'Commander-style decks for 1v1 games on MTG Arena. A legendary creature or planeswalker leads the deck.',
+                why: ['Great for new players learning to build', 'Play one-on-one online', 'Uses Commander-style deck building'],
+                rules: ['Starting life is 25.', 'Best-of-one, with a free mulligan.'],
+                banKey: 'brawl',
+                wotcUrl: 'https://magic.wizards.com/en/formats/brawl'
+            },
+            {
+                slug: 'historic', name: 'Historic', group: 'arena', type: 'Arena',
+                players: '2', length: 'About 10 min a game',
+                deckSize: '60+ cards, up to 15 in the sideboard (7 in best-of-one)',
+                copies: 'Up to 4 of a card (any number of basic lands)',
+                rotation: 'A large, curated Arena card pool. Never rotates.',
+                blurb: 'Arena\'s big non-rotating format, with old and new cards. Digital-only cards and rebalanced versions are legal.',
+                why: ['A large, curated card list', 'Never rotates', 'Rebalanced cards keep it fresh'],
+                banKey: 'historic',
+                wotcUrl: 'https://magic.wizards.com/en/formats/historic'
+            },
+            {
+                slug: 'timeless', name: 'Timeless', group: 'arena', type: 'Arena',
+                players: '2', length: 'About 10 min a game',
+                deckSize: '60+ cards, up to 15 in the sideboard',
+                copies: 'Up to 4 of a card, but restricted cards only 1',
+                rotation: 'Every card on MTG Arena.',
+                blurb: 'Arena\'s most powerful format: every Arena card is legal. Like Vintage, it restricts some cards to one copy instead of banning them.',
+                why: ['Play with any card on Arena', 'Never rotates', 'The most powerful cards on Arena'],
+                rules: ['Uses rebalanced versions of digital cards, but the original paper versions of all other cards.'],
+                banKey: 'timeless', restricted: true,
+                wotcUrl: 'https://magic.wizards.com/en/formats/timeless'
+            },
+            {
+                slug: 'alchemy', name: 'Alchemy', group: 'arena', type: 'Arena',
+                players: '2', length: 'About 10 min a game',
+                deckSize: '60+ cards',
+                copies: 'Up to 4 of a card (any number of basic lands)',
+                rotation: 'Based on Standard, plus digital-only cards. Rotates with Standard.',
+                blurb: 'Standard with a digital twist: new cards that only work on a computer, and rebalanced versions of Standard cards. About 30 new cards come out after each Standard set.',
+                why: ['Always changing', 'Mechanics only possible in digital play', 'Best-of-one and best-of-three'],
+                rules: ['Rebalanced cards show Arena\'s "A" symbol next to the name. Owning a card gives you both versions.'],
+                banKey: 'alchemy',
+                wotcUrl: 'https://magic.wizards.com/en/formats/alchemy'
             }
         ];
 
         let formatsGridRendered = false;
-        const formatBanlistCache = {}; // slug -> { banned: [...], restricted: [...] }
+        let formatGroupFilter = 'all';
+        const formatBanlistCache = {}; // Scryfall format key -> { banned: [...], restricted: [...] }
+
+        function formatNameBySlug(slug) {
+            const f = FORMAT_INFO.find(x => x.slug === slug);
+            return f ? f.name : slug;
+        }
+
+        function formatCardHTML(fmt) {
+            const meta = [
+                ['Players', fmt.players],
+                ['Game length', fmt.length],
+                ['Deck', fmt.deckSize],
+                ['Card limit', fmt.copies],
+                ['Card pool', fmt.rotation]
+            ].filter(r => r[1]);
+            const tryHere = (fmt.tryHere || []).map(t => t.view
+                ? `<button type="button" class="format-try-btn" onclick="navigateTo('${t.view}')">${t.label}</button>`
+                : `<a class="format-try-btn" href="${t.href}" target="_blank" rel="noopener">${t.label}</a>`
+            ).join('');
+            return `
+                <div class="format-card ${fmt.isLimited ? 'limited' : ''}" id="format-${fmt.slug}" data-group="${fmt.group}">
+                    <div class="format-name-row">
+                        <span class="format-name">${fmt.name}</span>
+                        <span class="format-type-badge">${fmt.type}</span>
+                    </div>
+                    <div class="format-meta-list">
+                        ${meta.map(([k, v]) => `
+                            <div class="format-meta-row">
+                                <span class="format-meta-key">${k}</span>
+                                <span class="format-meta-val">${v}</span>
+                            </div>`).join('')}
+                    </div>
+                    <div class="format-blurb">${fmt.blurb}</div>
+                    ${fmt.why && fmt.why.length ? `<ul class="format-why">${fmt.why.map(w => `<li>${w}</li>`).join('')}</ul>` : ''}
+                    ${fmt.rules && fmt.rules.length ? `
+                        <details class="format-rules">
+                            <summary>Key rules (${fmt.rules.length})</summary>
+                            <ul>${fmt.rules.map(r => `<li>${r}</li>`).join('')}</ul>
+                        </details>` : ''}
+                    ${fmt.exampleQuery ? `<div class="format-example-card" id="example-${fmt.slug}"></div>` : ''}
+                    ${tryHere ? `<div class="format-try-row">${tryHere}</div>` : ''}
+                    ${fmt.banKey ? `
+                        <button type="button" class="format-banlist-btn" onclick="loadFormatBanlist('${fmt.banKey}', 'banlist-${fmt.slug}', this, ${fmt.restricted ? 'true' : 'false'})">Show ${fmt.restricted ? 'Banned & Restricted' : 'Ban'} List</button>
+                        <div class="format-banlist-container" id="banlist-${fmt.slug}"></div>
+                        ${fmt.banNote ? `<div class="format-ban-note">${fmt.banNote}</div>` : ''}
+                    ` : ''}
+                    <div class="format-source-links">
+                        ${fmt.wotcUrl ? `<a href="${fmt.wotcUrl}" target="_blank" rel="noopener" class="text-link">Rules on Wizards' site</a>` : ''}
+                        ${(fmt.links || []).map(l => `<a href="${l.url}" target="_blank" rel="noopener" class="text-link">${l.label}</a>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
         function renderFormatsGrid() {
             if (formatsGridRendered) return; // static content - build once
@@ -8270,37 +8948,23 @@
             const grid = document.getElementById('formatsGrid');
             if (!grid) return;
 
-            grid.innerHTML = FORMAT_INFO.map(fmt => `
-                <div class="format-card ${fmt.isLimited ? 'limited' : ''}">
-                    <div class="format-name-row">
-                        <span class="format-name">${fmt.name}</span>
-                        <span class="format-type-badge">${fmt.type}</span>
-                    </div>
-                    <div class="format-meta-list">
-                        <div class="format-meta-row">
-                            <span class="format-meta-key">Deck Size</span>
-                            <span class="format-meta-val">${fmt.deckSize}</span>
-                        </div>
-                        <div class="format-meta-row">
-                            <span class="format-meta-key">Card Limit</span>
-                            <span class="format-meta-val">${fmt.copies}</span>
-                        </div>
-                        <div class="format-meta-row">
-                            <span class="format-meta-key">Rotation</span>
-                            <span class="format-meta-val">${fmt.rotation}</span>
-                        </div>
-                    </div>
-                    <div class="format-blurb">${fmt.blurb}</div>
-                    ${fmt.exampleQuery ? `<div class="format-example-card" id="example-${fmt.slug}"></div>` : ''}
-                    ${fmt.isLimited ? '' : `
-                        <button type="button" class="format-banlist-btn" onclick="loadFormatBanlist('${fmt.slug}', 'banlist-${fmt.slug}', this)">Show Ban List</button>
-                        <div class="format-banlist-container" id="banlist-${fmt.slug}"></div>
-                    `}
-                    <div class="format-source-links">
-                        ${fmt.wotcUrl ? `<a href="${fmt.wotcUrl}" target="_blank" rel="noopener" class="text-link">Official rules (Wizards)</a>` : ''}
-                        ${fmt.metagameUrl ? `<a href="${fmt.metagameUrl}" target="_blank" rel="noopener" class="text-link">${fmt.slug === 'commander' ? 'Real decks on EDHREC' : 'Real decklists (MTGGoldfish)'}</a>` : ''}
-                    </div>
-                </div>
+            renderFormatStatus();
+            renderFormatPicker();
+            renderFormatGlossary();
+
+            const chips = document.getElementById('formatGroupChips');
+            if (chips) {
+                chips.innerHTML = [{ key: 'all', label: 'All formats' }, ...FORMAT_GROUPS].map(g =>
+                    `<button type="button" class="format-group-chip ${g.key === formatGroupFilter ? 'active' : ''}" data-group="${g.key}" onclick="setFormatGroupFilter('${g.key}')">${g.label}</button>`
+                ).join('');
+            }
+
+            grid.innerHTML = FORMAT_GROUPS.map(g => `
+                <section class="format-group" data-group="${g.key}">
+                    <h2 class="format-group-title">${g.label}</h2>
+                    <p class="format-group-desc">${g.desc}</p>
+                    <div class="formats-grid">${FORMAT_INFO.filter(f => f.group === g.key).map(formatCardHTML).join('')}</div>
+                </section>
             `).join('');
 
             // Example cards load automatically (one light Scryfall query each,
@@ -8308,13 +8972,102 @@
             // the whole point is someone can glance at the card and go "oh,
             // that's what this format looks like" without extra steps.
             FORMAT_INFO.forEach(fmt => {
-                if (fmt.exampleQuery) loadFormatExampleCard(fmt.slug, fmt.exampleQuery);
+                if (fmt.exampleQuery) loadFormatExampleCard(fmt.slug, fmt.exampleQuery, fmt.exampleLabel);
             });
+        }
+
+        function setFormatGroupFilter(key) {
+            formatGroupFilter = key;
+            document.querySelectorAll('.format-group-chip').forEach(b => b.classList.toggle('active', b.dataset.group === key));
+            document.querySelectorAll('#formatsGrid .format-group').forEach(s => {
+                s.style.display = (key === 'all' || s.dataset.group === key) ? '' : 'none';
+            });
+        }
+
+        // Jumps to one format's card, showing its group if a filter hid it,
+        // and flashes it so the eye lands on the right card.
+        function showFormatCard(slug) {
+            const fmt = FORMAT_INFO.find(f => f.slug === slug);
+            if (fmt && formatGroupFilter !== 'all' && formatGroupFilter !== fmt.group) setFormatGroupFilter('all');
+            const el = document.getElementById(`format-${slug}`);
+            if (!el) return;
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.classList.remove('format-card-flash');
+            void el.offsetWidth;
+            el.classList.add('format-card-flash');
+        }
+
+        function scrollToFormatSection(id) {
+            renderFormatsGrid();
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.tagName === 'DETAILS') el.open = true;
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function renderFormatStatus() {
+            const el = document.getElementById('formatStatus');
+            if (!el) return;
+            const leaving = STANDARD_SETS.filter(s => s.rotates);
+            el.innerHTML = `
+                <div class="format-status-item">
+                    <div class="format-status-label">Standard right now</div>
+                    <div class="format-status-main">${STANDARD_SETS.length} legal sets</div>
+                    <div class="format-status-sub">Next rotation: <b>${STANDARD_ROTATION.when}</b>. ${leaving.length} sets leave.</div>
+                    <details class="format-status-details" id="formatStandardSets">
+                        <summary>Show the sets</summary>
+                        <ol class="format-set-list">
+                            ${STANDARD_SETS.map(s => `<li class="${s.rotates ? 'rotating' : ''}">${s.name}${s.note ? ` <span class="format-set-note">(${s.note})</span>` : ''}${s.rotates ? ' <span class="format-set-leaving">leaves Feb 2027</span>' : ''}</li>`).join('')}
+                        </ol>
+                        <div class="format-status-sub">${STANDARD_ROTATION.rule} <a class="text-link" href="${STANDARD_ROTATION.source}" target="_blank" rel="noopener">Wizards' Standard page</a></div>
+                    </details>
+                </div>
+                <div class="format-status-item">
+                    <div class="format-status-label">Banned & restricted updates</div>
+                    <div class="format-status-main">Next: ${BANNED_RESTRICTED_DATES.next}</div>
+                    <div class="format-status-sub">Last: <a class="text-link" href="${BANNED_RESTRICTED_DATES.last.url}" target="_blank" rel="noopener">${BANNED_RESTRICTED_DATES.last.date}</a>. ${BANNED_RESTRICTED_DATES.last.summary}</div>
+                    <div class="format-status-sub">The ban lists below are always live from Scryfall. <a class="text-link" href="#" onclick="navigateTo('market', () => switchMarketTab('bans')); return false;">Ban Watch</a> logs each change.</div>
+                </div>
+                <div class="format-status-item">
+                    <div class="format-status-label">Commander</div>
+                    <div class="format-status-main">Brackets 1-5</div>
+                    <div class="format-status-sub">Run by Wizards since 2024. Brackets and the Game Changers list help players match decks by power.</div>
+                    <button type="button" class="format-try-btn" onclick="navigateTo('brackets')">🪜 Open the Brackets tab</button>
+                </div>
+                <div class="format-status-asof">Standard sets, rotation and B&amp;R dates checked ${FORMATS_AS_OF} against magic.wizards.com.</div>
+            `;
+        }
+
+        function renderFormatPicker() {
+            const el = document.getElementById('formatPickerChips');
+            if (!el) return;
+            el.innerHTML = FORMAT_PICKER.map(p =>
+                `<button type="button" class="format-picker-chip" data-key="${p.key}" onclick="pickFormatFor('${p.key}')">${p.label}</button>`
+            ).join('');
+        }
+
+        function pickFormatFor(key) {
+            const p = FORMAT_PICKER.find(x => x.key === key);
+            const out = document.getElementById('formatPickerResult');
+            if (!p || !out) return;
+            document.querySelectorAll('.format-picker-chip').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+            out.innerHTML = `<ol class="format-picker-list">${p.picks.map(([slug, why]) => `
+                <li><a href="#" class="format-picker-name" onclick="showFormatCard('${slug}'); return false;">${formatNameBySlug(slug)}</a> <span>${why}</span></li>
+            `).join('')}</ol>`;
+        }
+
+        function renderFormatGlossary() {
+            const el = document.getElementById('formatGlossary');
+            if (!el) return;
+            el.innerHTML = FORMAT_GLOSSARY.map(([term, def]) =>
+                `<div class="format-glossary-item"><dt>${term}</dt><dd>${def}</dd></div>`
+            ).join('');
         }
 
         const formatExampleCache = {};
 
-        async function loadFormatExampleCard(slug, query) {
+        async function loadFormatExampleCard(slug, query, label) {
             const container = document.getElementById(`example-${slug}`);
             if (!container) return;
             container.innerHTML = `<div class="loading" style="padding:8px 0;">Loading example card...</div>`;
@@ -8331,7 +9084,7 @@
                 const imgUrl = getCardImageSmall(card);
                 const safeName = card.name.replace(/'/g, "\\'");
                 container.innerHTML = `
-                    <div class="format-example-label">${slug === 'vintage' ? 'For example, this is Restricted to 1 copy:' : 'For example, this is legal here:'}</div>
+                    <div class="format-example-label">${label || 'For example, this is legal here:'}</div>
                     <div class="format-example-tile" onclick="openCardModalByName('${safeName}')">
                         ${imgUrl ? `<img src="${imgUrl}" alt="${safeName}" loading="lazy">` : ''}
                         <span class="format-example-name">${card.name}</span>
@@ -8343,38 +9096,44 @@
             }
         }
 
-        // Fetch a format's current banned (and, for Vintage, restricted) cards
-        // live from Scryfall via its `banned:<format>` / `restricted:<format>`
-        // search syntax, cached per-format so re-opening doesn't re-fetch.
-        async function loadFormatBanlist(slug, containerId, btnEl) {
+        // Fetch a format's current banned (and, where the format has one,
+        // restricted) cards live from Scryfall via its `banned:<key>` /
+        // `restricted:<key>` search syntax, cached per format so re-opening
+        // doesn't re-fetch. Vintage always loads its restricted list.
+        async function loadFormatBanlist(key, containerId, btnEl, withRestricted) {
             const container = document.getElementById(containerId);
             if (!container) return;
+            const wantRestricted = withRestricted || key === 'vintage';
 
             if (btnEl) btnEl.style.display = 'none';
             container.innerHTML = `<div class="loading">Loading ban list...</div>`;
 
             try {
-                let cached = formatBanlistCache[slug];
+                let cached = formatBanlistCache[key];
                 if (!cached) {
                     // -set_type:funny excludes silver-bordered/Un-set joke cards - Scryfall
                     // marks those "banned" in every constructed format by convention
                     // since they were never tournament-legal to begin with, which
                     // would otherwise bury the real ban list under novelty cards.
-                    const bannedRes = await fetch(`${API_BASE}/cards/search?q=banned%3A${slug}+-set_type%3Afunny&order=name`);
+                    // A 404 just means nothing matched (an empty list).
+                    const bannedRes = await fetch(`${API_BASE}/cards/search?q=banned%3A${key}+-set_type%3Afunny&order=name`);
+                    if (!bannedRes.ok && bannedRes.status !== 404) throw new Error(`Scryfall ${bannedRes.status}`);
                     const banned = bannedRes.ok ? (await bannedRes.json()).data || [] : [];
 
                     let restricted = [];
-                    if (slug === 'vintage') {
-                        const restrictedRes = await fetch(`${API_BASE}/cards/search?q=restricted%3Avintage+-set_type%3Afunny&order=name`);
+                    if (wantRestricted) {
+                        const restrictedRes = await fetch(`${API_BASE}/cards/search?q=restricted%3A${key}+-set_type%3Afunny&order=name`);
+                        if (!restrictedRes.ok && restrictedRes.status !== 404) throw new Error(`Scryfall ${restrictedRes.status}`);
                         restricted = restrictedRes.ok ? (await restrictedRes.json()).data || [] : [];
                     }
 
                     cached = { banned, restricted };
-                    formatBanlistCache[slug] = cached;
+                    formatBanlistCache[key] = cached;
                 }
 
+                const source = `<div class="format-ban-note">Live from Scryfall, which follows each official list.</div>`;
                 if (cached.banned.length === 0 && cached.restricted.length === 0) {
-                    container.innerHTML = `<div class="format-banlist-empty">Nothing is currently banned in this format.</div>`;
+                    container.innerHTML = `<div class="format-banlist-empty">Nothing is currently banned in this format.</div>${source}`;
                     return;
                 }
 
@@ -8382,16 +9141,18 @@
                 if (cached.banned.length > 0) {
                     html += `<div class="format-banlist-group-label">Banned (${cached.banned.length}) - click a card to view it</div>`;
                     html += `<div class="format-banlist-items">${cached.banned.map((c, i) =>
-                        `<div class="format-banlist-item" onclick="openCardModal(formatBanlistCache['${slug}'].banned[${i}])">${c.name}</div>`
+                        `<div class="format-banlist-item" onclick="openCardModal(formatBanlistCache['${key}'].banned[${i}])">${c.name}</div>`
                     ).join('')}</div>`;
+                } else if (wantRestricted) {
+                    html += `<div class="format-banlist-empty">Nothing is banned outright.</div>`;
                 }
                 if (cached.restricted.length > 0) {
                     html += `<div class="format-banlist-group-label">Restricted to 1 copy (${cached.restricted.length}) - click a card to view it</div>`;
                     html += `<div class="format-banlist-items">${cached.restricted.map((c, i) =>
-                        `<div class="format-banlist-item restricted" onclick="openCardModal(formatBanlistCache['${slug}'].restricted[${i}])">${c.name}</div>`
+                        `<div class="format-banlist-item restricted" onclick="openCardModal(formatBanlistCache['${key}'].restricted[${i}])">${c.name}</div>`
                     ).join('')}</div>`;
                 }
-                container.innerHTML = html;
+                container.innerHTML = html + source;
             } catch (err) {
                 console.error('Error loading ban list:', err);
                 container.innerHTML = `<div class="error" style="padding:10px;">Couldn't load the ban list right now.</div>`;
@@ -8402,8 +9163,12 @@
         // Quick single-card version of the same banned/restricted question, for
         // settling a "wait, is this actually legal in Pauper?" argument at the
         // table without having to browse a whole format's list to find one card.
-        function renderLegalityGridHTML(legalities) {
-            return LEGALITY_FORMATS.map(fmt => {
+        // The Format Rules quick check covers more formats than the card
+        // panels do.
+        const QUICK_CHECK_FORMATS = [...LEGALITY_FORMATS, 'oathbreaker', 'brawl', 'historic', 'timeless', 'alchemy'];
+
+        function renderLegalityGridHTML(legalities, formats) {
+            return (formats || LEGALITY_FORMATS).map(fmt => {
                 const status = legalities[fmt] || 'not_legal';
                 const label = status.replace('_', ' ');
                 return `
@@ -8434,7 +9199,8 @@
 
                 resultEl.innerHTML = `
                     <div style="color:#fff; font-weight:600; margin-bottom:8px;">${card.name}</div>
-                    <div class="ban-status-grid">${renderLegalityGridHTML(legalities)}</div>
+                    <div class="ban-status-grid">${renderLegalityGridHTML(legalities, QUICK_CHECK_FORMATS)}</div>
+                    <div class="format-ban-note">Brawl, Historic, Timeless and Alchemy are MTG Arena formats.</div>
                 `;
             } catch (err) {
                 console.error('Ban check error:', err);
