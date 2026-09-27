@@ -13247,7 +13247,10 @@
             'Class': 'Starts at level 1. Pay a level-up cost (any time you could cast a sorcery) to add the next level\'s ability - you keep the earlier ones.',
             'Case': 'An enchantment with a goal: once you meet its "To solve" condition at your end step, it\'s solved and its "Solved" ability turns on.',
             'Room': 'An enchantment with two doors. Cast one door; you can unlock the other later by paying its cost.',
-            'Battle': 'Your opponent protects it. Attack it to remove its defense counters; when the last one is gone, you cast its back face for free.'
+            'Battle': 'Your opponent protects it. Attack it to remove its defense counters; when the last one is gone, you cast its back face for free.',
+            'Station': 'Tap another creature you control: put charge counters equal to its power on this Spacecraft (only as a sorcery). At the number shown, it gains abilities, and many Spacecraft become creatures.',
+            'Assimilate': 'Gain control of a creature (or put a creature card onto the battlefield under your control). It gets a +1/+1 counter, becomes a Borg artifact creature, and loses its other creature types.',
+            'Face a dilemma': 'You face a dilemma whenever you choose one or more modes for a spell or ability.'
         };
 
         // Hand-written notes per set (Scryfall set code). Written from the
@@ -13309,6 +13312,34 @@
                     GU: 'Empower Jace, planeswalker power'
                 },
                 kit: '6 Play Boosters, a foil promo, a deck box and a spindown'
+            },
+            // Star Trek (prerelease Nov 6-12, 2026). Written from Wizards'
+            // "Collecting Star Trek" first look and the cards previewed on
+            // Scryfall; no release notes or archetype guides were out yet.
+            trk: {
+                checked: '2026-09-27',
+                mechanics: [
+                    {
+                        name: 'Assimilate', match: /\bassimilat/i, isNew: true,
+                        text: 'You gain control of a creature, or put a creature card onto the battlefield under your control. Either way, it gets a +1/+1 counter, becomes a Borg artifact creature, and loses its other creature types.',
+                        rulings: []
+                    },
+                    {
+                        name: 'Face a dilemma', match: /faces? a dilemma/i, isNew: true,
+                        text: 'You face a dilemma whenever you choose one or more modes for a spell or ability. Some cards reward you each time you do.',
+                        rulings: ['Any choice of mode counts - it doesn\'t matter which mode you pick.']
+                    },
+                    {
+                        name: 'Federation', match: /\bFederation\s*[\u2014-]/, isNew: true,
+                        text: 'An ability word. These abilities count the number of different creature types among the non-Borg creatures you control - the more varied your crew, the bigger the effect.',
+                        rulings: ['Borg creatures don\'t count, and each creature type counts only once.']
+                    },
+                    {
+                        name: 'Station', match: /\bstation\b/i, isNew: false,
+                        text: 'Returning from Edge of Eternities. Tap another creature you control: put charge counters equal to its power on this Spacecraft (only as a sorcery). At the number shown (like 7+), it gains new abilities, and many Spacecraft become artifact creatures.',
+                        rulings: []
+                    }
+                ]
             }
         };
 
