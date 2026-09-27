@@ -56,7 +56,7 @@ Where the data is used:
   - New Set Tracker (EDHREC `sets/<code>`, the set's most-played new cards and commanders).
   - Pulled by New Sets (`MKT_PULLED_*`): the older cards a new or upcoming set's commanders pull into decks. It covers upcoming sets (EDHREC tracks previewed cards before release) and sets released in the last 90 days. For the set's 15 most-built new commanders it reads each commander's EDHREC page and keeps cards those decks play at least 15 points more than other decks (EDHREC's synergy). It leaves out the set's own cards, basic lands and EDHREC's 100 most-played staples (`top/year`). "New decks" is the card's share of each commander's decks times that commander's deck count, added up. The default sort, "Most tied to the new set", multiplies that by the card's best synergy so niche pieces rank above generic ones like shock lands. Rows show the driving commanders, the cheapest copy, and a 30-day trend from the market data. It all runs in the browser; no data job changes.
 - **Card Lookup:** the price panel's "Other stores" table shows what Card Kingdom and Mana Pool sell the printing for, and what Card Kingdom pays (its buylist), each with a 30-day change. "Price movement" in the price panel charts the printing on screen for each finish (a 30-day daily or 90-day weekly toggle), with its price range and 7/30/90-day changes. The All Printings table has a "30 days" column, filled in as each printing's history loads.
-- **Buylist:** typing a card name shows its 30- and 90-day trend at the cheapest printing. A move of 15% or more gets an "offer lower" or "don't offer too little" note. It also shows what Card Kingdom pays for that printing, with its 30-day trend, as a benchmark. A printing in the last 45 days, or an upcoming one (Scryfall includes previewed cards), shows a reprint warning. Values are still typed by hand.
+- **Buylist:** typing a card name shows its 30- and 90-day trend at the cheapest printing. A move of 15% or more gets an "up" or "down" note. It also shows what Card Kingdom pays for that printing, with its 30-day trend, as a benchmark. A printing in the last 45 days, or an upcoming one (Scryfall includes previewed cards), shows a reprint warning. Values are still typed by hand. The cash percentage starts at 50% and the store-credit bump at 0%. Keep the wording neutral: the tool isn't an official Moonshot tool, so it shouldn't read like store policy.
 - **Products:** "Box value: open it or sell it sealed?" computes each booster type's expected card value from MTGJSON's booster sheets and today's Scryfall prices. It shows the total, a "sellable" figure (cards $1+), chase cards, and a comparison against a sealed price staff type in. There's no free source for sealed prices or their history, so there's no sealed trend.
 - **Buyer's Guide → Price a Deck:** a pasted list is priced at the cheapest copies, with the total, a 30-day trend per card and a count of rising cards.
 
@@ -124,6 +124,10 @@ Explains every way to play, for staff talking to customers. The facts follow Wiz
 - **Quick check** covers the card panels' formats (`LEGALITY_FORMATS`) plus Oathbreaker and the Arena formats (`QUICK_CHECK_FORMATS`).
 - **Glossary** (`FORMAT_GLOSSARY`): plain-English terms (rotation, banned vs restricted, singleton, color identity, mulligan...).
 - Community formats (Pauper Commander, Premodern...) aren't included, because their sites can't be reached from Claude's environment to check the rules.
+
+## Case Map
+
+`CASE_MAP_DATA` holds only spot, shelf, side, category and card name. The old "location" and "notes" fields (which slots were chain-wide vs local picks) were removed on 2026-09-27 at the owner's request, since the repo is public. Don't add merchandising notes back.
 
 ## Commander Brackets tab (`MTG_Lookup_Tool.html`)
 
