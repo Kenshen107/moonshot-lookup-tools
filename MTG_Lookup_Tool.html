@@ -13975,21 +13975,20 @@
         }
 
         // ---- Printable deck-building card ----
-        // One universal card for every set (only the set name and the QR
-        // link change): building steps, play tips, a QR code to the set's
-        // Mechanics & Rulings page, and Wizards' Fan Content Policy notice.
+        // One universal card for every set - only the QR code (and the line
+        // above it) changes with the set: building steps, play tips, a QR
+        // code to the set's guide, and Wizards' Fan Content Policy notice.
         // Shown as an editable preview - staff can click any text to change
-        // it - and printed 4 to a letter page.
-        // v2 key: edits saved for the older, set-specific card are ignored.
-        function prCardKey() { return `prDeckCardV2:${prSetCode}`; }
+        // it - and printed 4 to a letter page. Edits are saved once for all
+        // sets (v3 key); the QR is refreshed for the chosen set on render.
+        function prCardKey() { return 'prDeckCardV3'; }
         const PR_CARD_TITLE = 'Moonshot Prerelease Guide';
         const PR_FAN_CONTENT_NOTICE = `${PR_CARD_TITLE} is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.`;
 
         async function defaultPrereleaseCardHTML() {
-            const set = prereleaseSetInfo();
             const qr = prereleaseQrTarget();
             return `
-                <div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">${set ? set.name : ''} Prerelease</span></div>
+                <div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">Prerelease</span></div>
                 <h4>Build your deck</h4>
                 <div class="pr-dc-recipe"><div><b>40</b>cards minimum</div><div><b>17</b>lands</div><div><b>23</b>spells</div></div>
                 <ol>
@@ -14011,7 +14010,7 @@
                     <div>
                         <h4>Good to know</h4>
                         <div>Shuffle well and offer your deck to be cut. Not sure how something works? Call a judge - don't guess.</div>
-                        <div class="pr-dc-scan">Scan for ${qr.official ? 'Wizards\' official guide to this set' : 'this set\'s mechanics &amp; rulings'} &rarr;</div>
+                        <div class="pr-dc-scan">${prereleaseCardScanHTML(qr)}</div>
                     </div>
                     <img class="pr-dc-qr" src="${qrImageUrl(qr.url, 240)}" alt="QR code: ${escapeAttr(qr.label)}">
                 </div>
@@ -14019,6 +14018,23 @@
                 <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Moonshot Games · Noblesville &amp; Plainfield · moonshotgamestore.com</span></div>
                 <div class="pr-dc-legal">${PR_FAN_CONTENT_NOTICE}</div>
             `;
+        }
+
+        function prereleaseCardScanHTML(qr) {
+            return `Scan for ${qr.official ? 'Wizards\' official guide to this set' : 'this set\'s mechanics &amp; rulings'} &rarr;`;
+        }
+
+        // Points the card's QR code (and the line above it) at the chosen
+        // set, so one saved card works for every set.
+        function refreshPrereleaseCardQr(el) {
+            const qr = prereleaseQrTarget();
+            const img = el.querySelector('.pr-dc-qr');
+            if (img) {
+                img.src = qrImageUrl(qr.url, 240);
+                img.alt = `QR code: ${qr.label}`;
+            }
+            const scan = el.querySelector('.pr-dc-scan');
+            if (scan) scan.innerHTML = prereleaseCardScanHTML(qr);
         }
 
         async function renderPrereleaseCard() {
@@ -14035,6 +14051,7 @@
                 <div class="pr-dc-preview-wrap"><div class="pr-dc" id="prDeckCardEdit" contenteditable="true" spellcheck="true" oninput="savePrereleaseCard()" onblur="fitPrereleaseCard()">${html}</div></div>
                 ${prereleaseQrNoteHTML()}
             `;
+            refreshPrereleaseCardQr(document.getElementById('prDeckCardEdit'));
             fitPrereleaseCard();
         }
 

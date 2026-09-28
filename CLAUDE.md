@@ -77,7 +77,7 @@ The 🎟️ Prerelease tab (under Rules & events, `PRERELEASE_SUBTABS`) works on
   - **Pair scores** (`PR_PAIR_WEIGHTS`) follow the usual sealed priorities: BREAD (Bombs, Removal, Evasion, Aggro, Duds) and Draftsim's sealed guide (bombs, removal, fixing, curve, creatures, card advantage, then tricks and interaction). Each playable counts 1, plus rare/mythic 1.5 (the likeliest bombs), removal 1.5, evasion / ramp / draw 0.5 each, and interaction / protection 0.25 each. The page states the weights.
   - Warnings: fewer than 22 playables, fewer than 13 creatures (most decks want 15-17), or fewer than 4 cards costing 2 or less. Curve advice follows Frank Karsten's sealed template (about four 2-drops, five 3s, three 4s and three 5+, with 17 lands).
 - **Deck-Building Card:** a handout printed 4 per letter page. Each card is exactly a quarter sheet (4.25in × 5.5in), printed with no page margin so the dashed cut lines are the page's center lines, with 0.2in padding to keep text off the printer's unprintable edge.
-  - **One universal card for every set** (owner's choice, 2026-09-25). Only the set name in the header and the QR link change. `defaultPrereleaseCardHTML` holds:
+  - **One universal card for every set** (owner's choice, 2026-09-25; since 2026-09-28 the header just says "Prerelease", with no set name). Only the QR code and the "Scan for..." line above it change with the set (`refreshPrereleaseCardQr`). `defaultPrereleaseCardHTML` holds:
     - the 40/17/23 recipe, the 4 build steps and the splash tip
     - "Playing your games" (5 play tips)
     - "Good to know" (shuffle and offer a cut; call a judge), next to a small QR code (image from api.qrserver.com). `prereleaseQrTarget()` picks where it goes: Wizards' official Prerelease Guide for the set, else its Release Notes (both from `PRERELEASE_OFFICIAL_LINKS`), else this tool's own Mechanics & Rulings page (`?set=<code>#prerelease/mechanics`).
@@ -87,7 +87,7 @@ The 🎟️ Prerelease tab (under Rules & events, `PRERELEASE_SUBTABS`) works on
   - **It no longer uses** `PRERELEASE_SET_NOTES` card lines or the theme table. The themes still feed the Sealed Helper.
   - **Fan Content Policy:** always keep the full notice. Never add Wizards logos, card art, set symbols or mana symbol art, never say "official", and hand the card out free.
   - **Tournament rules:** keep the "put it away during games" line, because players can't use outside notes during games.
-  - **Editing:** the preview can be edited by clicking. Edits are saved in the browser (`prDeckCardV2:<code>`; the v2 key drops edits made to the old set-specific card), and "Reset to default" undoes them.
+  - **Editing:** the preview can be edited by clicking. Edits are saved once in the browser for every set (`prDeckCardV3`; older per-set `prDeckCardV2:<code>` edits are ignored), and the QR is re-pointed at the chosen set each time the card is shown. "Reset to default" undoes the edits.
   - **Sizing:** `fitPrereleaseCard()` sets the text to the largest size that fits (the card's styles are in em), so the card always fills its quarter page, even after edits.
   - **Printing:** the print sheets use a named `@page prsheet` with no margin, so printing other pages keeps normal margins.
 - **Table QR:** a sign, 2 per page (each half the page), linking to the same place as the card's QR (`prereleaseQrTarget()`). The QR image comes from api.qrserver.com (goqr.me). Under both previews, a note tells staff where the QR goes, with the link to check it.
