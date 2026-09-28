@@ -131,6 +131,10 @@ Explains every way to play, for staff talking to customers. The facts follow Wiz
 
 `CASE_MAP_DATA` holds only spot, shelf, side, category and card name. The old "location" and "notes" fields (which slots were chain-wide vs local picks) were removed on 2026-09-27 at the owner's request, since the repo is public. Don't add merchandising notes back.
 
+## Grading & Spotting Fakes tab
+
+The fakes guide follows Three For One Trading's counterfeit guide (its photos are hotlinked from that site) and was checked against TCGplayer's Seller Blog article "How To Identify Counterfeit Magic: The Gathering Cards" on 2026-09-28. From TCGplayer it adds the "Start here" section (gut feel, side-by-side comparison, two kinds of counterfeit, what most fakes have in common), the warning not to rely on the light test, the older-cards note on the mana-symbol test, and "Tests to skip" (bend, blacklight, rip). The holofoil stamp dates from Magic 2015 and appears only on rares, mythics and most promos. This environment can reach seller.tcgplayer.com but not www.tcgplayer.com.
+
 ## Commander Brackets tab (`MTG_Lookup_Tool.html`)
 
 The bracket rules are written out by hand, because Wizards publishes them as articles, not data. Everything else on the tab comes live from Scryfall: the Game Changers list, the Commander banned list, and the mass-land-denial / extra-turn tags used by the checkers. When Wizards posts a bracket or banned-list update:
