@@ -77,7 +77,7 @@ The 🎟️ Prerelease tab (under Rules & events, `PRERELEASE_SUBTABS`) works on
   - **Pair scores** (`PR_PAIR_WEIGHTS`) follow the usual sealed priorities: BREAD (Bombs, Removal, Evasion, Aggro, Duds) and Draftsim's sealed guide (bombs, removal, fixing, curve, creatures, card advantage, then tricks and interaction). Each playable counts 1, plus rare/mythic 1.5 (the likeliest bombs), removal 1.5, evasion / ramp / draw 0.5 each, and interaction / protection 0.25 each. The page states the weights.
   - Warnings: fewer than 22 playables, fewer than 13 creatures (most decks want 15-17), or fewer than 4 cards costing 2 or less. Curve advice follows Frank Karsten's sealed template (about four 2-drops, five 3s, three 4s and three 5+, with 17 lands).
 - **Deck-Building Card:** a handout printed 4 per letter page. Each card is exactly a quarter sheet (4.25in × 5.5in), printed with no page margin so the dashed cut lines are the page's center lines, with 0.2in padding to keep text off the printer's unprintable edge.
-  - **One universal card for every set** (owner's choice, 2026-09-25). Only the set name in the header and the QR link change. `defaultPrereleaseCardHTML` holds:
+  - **One universal card for every set** (owner's choice, 2026-09-25; since 2026-09-28 the header just says "Prerelease", with no set name). Only the QR code and the "Scan for..." line above it change with the set (`refreshPrereleaseCardQr`). `defaultPrereleaseCardHTML` holds:
     - the 40/17/23 recipe, the 4 build steps and the splash tip
     - "Playing your games" (5 play tips)
     - "Good to know" (shuffle and offer a cut; call a judge), next to a small QR code (image from api.qrserver.com). `prereleaseQrTarget()` picks where it goes: Wizards' official Prerelease Guide for the set, else its Release Notes (both from `PRERELEASE_OFFICIAL_LINKS`), else this tool's own Mechanics & Rulings page (`?set=<code>#prerelease/mechanics`).
@@ -87,18 +87,20 @@ The 🎟️ Prerelease tab (under Rules & events, `PRERELEASE_SUBTABS`) works on
   - **It no longer uses** `PRERELEASE_SET_NOTES` card lines or the theme table. The themes still feed the Sealed Helper.
   - **Fan Content Policy:** always keep the full notice. Never add Wizards logos, card art, set symbols or mana symbol art, never say "official", and hand the card out free.
   - **Tournament rules:** keep the "put it away during games" line, because players can't use outside notes during games.
-  - **Editing:** the preview can be edited by clicking. Edits are saved in the browser (`prDeckCardV2:<code>`; the v2 key drops edits made to the old set-specific card), and "Reset to default" undoes them.
+  - **Editing:** the preview can be edited by clicking. Edits are saved once in the browser for every set (`prDeckCardV3`; older per-set `prDeckCardV2:<code>` edits are ignored), and the QR is re-pointed at the chosen set each time the card is shown. "Reset to default" undoes the edits.
   - **Sizing:** `fitPrereleaseCard()` sets the text to the largest size that fits (the card's styles are in em), so the card always fills its quarter page, even after edits.
   - **Printing:** the print sheets use a named `@page prsheet` with no margin, so printing other pages keeps normal margins.
 - **Table QR:** a sign, 2 per page (each half the page), linking to the same place as the card's QR (`prereleaseQrTarget()`). The QR image comes from api.qrserver.com (goqr.me). Under both previews, a note tells staff where the QR goes, with the link to check it.
 
 **Official links (`PRERELEASE_OFFICIAL_LINKS`):** each set's Wizards Prerelease Guide (or the older "Prerelease Primer") and Release Notes, as paths under `PR_WIZARDS_ARTICLE_BASE` (magic.wizards.com/en/news/feature/). They were found in Wizards' sitemap (`magic.wizards.com/en/sitemap.xml`), which lists them all. Each one was opened on 2026-09-25 to check its page title names the set.
-- **Coverage:** every prerelease set from Return to Ravnica to Reality Fracture has at least one link. Star Trek has none yet.
+- **Coverage:** every prerelease set from Return to Ravnica to Reality Fracture has at least one link. Star Trek (prerelease November 6-12, 2026) has none yet: as of 2026-09-27 Wizards had posted only the "Collecting Star Trek" first look. Add its Prerelease Guide / Release Notes when they appear.
 - **Gaps:** sets with only Release Notes (no guide in the sitemap) are FRF, THB, SNC, CLB, DMU, BRO, ONE, MOM, LTR, WOE, LCI, MKM, DSK and DFT. RTR, GTC and DGM have only a primer.
 - **Access:** this environment can reach magic.wizards.com, so check new links with curl (a missing page returns 404).
 - Printing goes through `printPrereleaseSheet()`, which builds `#prPrintArea`, hides everything else with print CSS, and removes it afterward.
 
 **Theme table (`PRERELEASE_PAIR_THEMES`):** the color-pair themes for every set from Zendikar Rising (2020) on, plus Khans of Tarkir. They were written from the archetype sections of Draftsim's draft and sealed guides on 2026-09-25. Keys are color pairs (`WU`); three-color sets list their clans or families (`WBG`). Sets with only five archetypes (Strixhaven, Spider-Man, The Hobbit…) list five. The Sealed Helper's "This pair's plan" reads it (the printed card is universal and doesn't), and `PRERELEASE_SET_NOTES` themes take priority when a set has both. Sets from before 2020 (other than KTK), plus IKO, M21, CLB and Star Trek, aren't in it yet. **Add every new set** from Draftsim's `mtg-<code>-draft-archetypes` article (usually out before the prerelease) or its sealed guide. A monthly Claude routine (the 2nd of each month, 8:48am Indiana time) does this automatically. It finds upcoming and recent sets missing from the table, adds their themes, their verified Wizards Prerelease Guide / Release Notes links (`PRERELEASE_OFFICIAL_LINKS`), and glossary entries for new mechanics whose reminder text is card-specific,, and opens a PR for the owner to approve. If Draftsim hasn't posted yet, it just reports which sets are still waiting.
+
+**Star Trek (`trk`):** `PRERELEASE_SET_NOTES.trk` (added 2026-09-27) covers Assimilate, Face a dilemma and Federation (new) and Station (returning), written from Wizards' first-look article and the cards previewed so far; its rulings are mostly empty until the release notes come out. It has no `themes` or `kit` yet, because Draftsim hadn't posted archetypes and Wizards hadn't listed the kit contents.
 
 **For each new set,** add an entry to `PRERELEASE_SET_NOTES`:
 - mechanics: `match`, `text`, `rulings`, `isNew` (the `cardName` / `card` lines are no longer used, since the handout is universal)
@@ -128,6 +130,10 @@ Explains every way to play, for staff talking to customers. The facts follow Wiz
 ## Case Map
 
 `CASE_MAP_DATA` holds only spot, shelf, side, category and card name. The old "location" and "notes" fields (which slots were chain-wide vs local picks) were removed on 2026-09-27 at the owner's request, since the repo is public. Don't add merchandising notes back.
+
+## Grading & Spotting Fakes tab
+
+The fakes guide follows Three For One Trading's counterfeit guide (updated 2026-08-14 and rechecked 2026-09-28; its photos are hotlinked from that site; this environment can reach threeforonetrading.com) and was checked on 2026-09-28 against TCGplayer's two counterfeit articles: the player one ("How to Spot Counterfeit Magic: The Gathering Cards", updated 2023-02-07) and the Seller Blog one, which say the same thing. From TCGplayer it adds the "Start here" section (gut feel, side-by-side comparison, two kinds of counterfeit, what most fakes have in common), the warning not to rely on the light test, the older-cards note on the mana-symbol test, and "Tests to skip" (bend, blacklight, rip). The rechecks added the collector-line check, the reback details, the black-core check for double-sided fakes, and the purple/orange core note for Collector Booster cards. A search summary mentioned "super fakes" that pass the weight and stamp tests, but neither Three For One nor TCGplayer says so, so it wasn't added. Wizards' support article on buying genuine products (magic-support.wizards.com) sits behind a Cloudflare check and couldn't be read. The holofoil stamp dates from Magic 2015 and appears only on rares, mythics and most promos. www.tcgplayer.com articles are a JavaScript shell; their text comes from `infinite-api.tcgplayer.com/content/article/<uuid>/` (JSON), which this environment can reach.
 
 ## Commander Brackets tab (`MTG_Lookup_Tool.html`)
 

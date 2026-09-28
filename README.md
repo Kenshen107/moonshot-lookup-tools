@@ -1,20 +1,28 @@
 # Moonshot Games Lookup Tools
 
-Self-contained, single-file staff tools for Moonshot Games (Noblesville, IN & Plainfield, IN) — card lookup, a buyer's guide (card finder, land finder, full-art basics), format rules, judge reference, buylist calculator, set primer, commander brackets, grading & fakes guide, pull list parser, and a hotlist case map.
+Card-lookup and reference tools for Magic: The Gathering and Pokémon, made for use at Moonshot Games (Noblesville, IN and Plainfield, IN). This is an independent project, not an official Moonshot Games tool.
 
-No build step, no backend — everything is plain HTML/CSS/JS calling Scryfall's public API directly in the browser.
+Each tool is a single HTML file with no build step and no backend. It calls public data sources straight from the browser: Scryfall for cards and prices, MTGJSON for sealed products and price history, and EDHREC for Commander play data.
 
 ## Live site
 
-Once GitHub Pages is enabled for this repo, the tools are at:
-- `https://<your-username>.github.io/<repo-name>/MTG_Lookup_Tool.html`
-- `https://<your-username>.github.io/<repo-name>/Pokemon_Lookup_Tool.html`
-- `https://<your-username>.github.io/<repo-name>/Archenemy_Simulator.html`
-- `https://<your-username>.github.io/<repo-name>/Planechase_Simulator.html`
+- MTG tools: https://kenshen107.github.io/moonshot-lookup-tools/MTG_Lookup_Tool.html
+- Pokémon lookup: https://kenshen107.github.io/moonshot-lookup-tools/Pokemon_Lookup_Tool.html
+- Archenemy simulator: https://kenshen107.github.io/moonshot-lookup-tools/Archenemy_Simulator.html
+- Planechase simulator: https://kenshen107.github.io/moonshot-lookup-tools/Planechase_Simulator.html
+
+## What's in the MTG tool
+
+- **Card Lookup:** prices, printings, rules text, legality, price history and Commander play data for any card.
+- **At the counter:** Buyer's Guide (card finder, land finder, full-art basics, price a deck), Products (what's in each sealed product, precon decklists and values), Buylist calculator, Market Watch (price spikes, ban changes, trending commanders, new-set demand), Pull List and the hotlist Case Map.
+- **Rules & events:** Format Rules, Commander Brackets, Prerelease toolkit, Value Vintage and a Judge quick reference.
+- **Learn & train:** Set Primer, Grading & Spotting Fakes, and a Card Quiz.
+
+A GitHub Action (`.github/workflows/market-data.yml`) builds daily price-history files from MTGJSON and publishes them to the `market-data` branch.
 
 ## Local use
 
-Just open any `.html` file directly in a browser — no server required.
+Open any `.html` file in a browser. No server is needed.
 
 ## Archenemy Simulator
 
