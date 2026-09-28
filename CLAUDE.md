@@ -133,7 +133,7 @@ Explains every way to play, for staff talking to customers. The facts follow Wiz
 
 ## Grading & Spotting Fakes tab
 
-The fakes guide follows Three For One Trading's counterfeit guide (its photos are hotlinked from that site) and was checked against TCGplayer's Seller Blog article "How To Identify Counterfeit Magic: The Gathering Cards" on 2026-09-28. From TCGplayer it adds the "Start here" section (gut feel, side-by-side comparison, two kinds of counterfeit, what most fakes have in common), the warning not to rely on the light test, the older-cards note on the mana-symbol test, and "Tests to skip" (bend, blacklight, rip). The holofoil stamp dates from Magic 2015 and appears only on rares, mythics and most promos. This environment can reach seller.tcgplayer.com but not www.tcgplayer.com.
+The fakes guide follows Three For One Trading's counterfeit guide (its photos are hotlinked from that site) and was checked on 2026-09-28 against TCGplayer's two counterfeit articles: the player one ("How to Spot Counterfeit Magic: The Gathering Cards", updated 2023-02-07) and the Seller Blog one, which say the same thing. From TCGplayer it adds the "Start here" section (gut feel, side-by-side comparison, two kinds of counterfeit, what most fakes have in common), the warning not to rely on the light test, the older-cards note on the mana-symbol test, and "Tests to skip" (bend, blacklight, rip). The holofoil stamp dates from Magic 2015 and appears only on rares, mythics and most promos. www.tcgplayer.com articles are a JavaScript shell; their text comes from `infinite-api.tcgplayer.com/content/article/<uuid>/` (JSON), which this environment can reach.
 
 ## Commander Brackets tab (`MTG_Lookup_Tool.html`)
 
