@@ -4424,6 +4424,8 @@
             white-space: nowrap;
         }
         .deck-row-price.hot { color: #f2cc60; font-weight: 700; }
+        .deck-row-price.est, .deck-pic-price.est { font-style: italic; }
+        .deck-value-est { margin: 6px 0 2px; font-size: 0.85em; color: var(--text-secondary); }
         .deck-row.deck-reprint-hot { background: rgba(242, 204, 96, 0.08); border-radius: 4px; }
         .deck-row.deck-new-hot { background: rgba(88, 196, 220, 0.08); border-radius: 4px; }
         .deck-row-price.newhot { color: #58c4dc; font-weight: 700; }
@@ -11606,6 +11608,10 @@
         // after the list shows, 75 printings per request.
         const REPRINT_VALUE_MIN = 5; // cards at or above this get flagged: 💰 reprints, 💎 new cards
         const deckPrintingCache = new Map(); // Scryfall id -> Scryfall card, or null if not found
+        // New decks' printings often have no price until they're released.
+        // For those, the card's cheapest other printing stands in, marked
+        // as an estimate. Card name -> Scryfall card (or null).
+        const deckFallbackCache = new Map();
         let productDeckPriceToken = 0;
 
         async function loadDeckPrintings(ids) {
@@ -11629,17 +11635,58 @@
             }
         }
 
+        function deckPrintingPrice(card, foil) {
+            const p = (card && card.prices) || {};
+            const raw = foil ? (p.usd_foil || p.usd_etched || p.usd) : (p.usd || p.usd_foil || p.usd_etched);
+            return raw ? parseFloat(raw) : null;
+        }
+
         // An entry's price (one copy) in its own finish, and reprint status.
+        // If this printing has no price yet, the cheapest other printing's
+        // price is used instead (estimate: true, estimateSet names it).
         function deckEntryPrice(e) {
             const id = e.card.identifiers && e.card.identifiers.scryfallId;
             const sc = id ? deckPrintingCache.get(id) : undefined;
             if (sc === undefined) return { loading: true };
-            if (!sc) return { price: null, reprint: false };
-            const p = sc.prices || {};
-            const raw = e.foil ? (p.usd_foil || p.usd_etched || p.usd) : (p.usd || p.usd_foil || p.usd_etched);
-            const price = raw ? parseFloat(raw) : null;
+            let price = sc ? deckPrintingPrice(sc, e.foil) : null;
+            let reprint = !!(sc && sc.reprint);
+            let estimate = false, estimateSet = '';
+            if (price === null) {
+                const alt = deckFallbackCache.get(e.card.name);
+                if (alt && alt.id !== id) {
+                    price = deckPrintingPrice(alt, e.foil);
+                    if (price !== null) {
+                        estimate = true;
+                        estimateSet = alt.set_name || '';
+                        if (!sc) reprint = true; // it has an earlier printing
+                    }
+                }
+            }
             const valuable = price !== null && price >= REPRINT_VALUE_MIN;
-            return { price, reprint: !!sc.reprint, flag: !!sc.reprint && valuable, newFlag: !sc.reprint && valuable };
+            return { price, reprint, estimate, estimateSet, flag: reprint && valuable, newFlag: !reprint && valuable };
+        }
+
+        // Looks up the cheapest printing of every card whose own printing
+        // has no price yet (see deckFallbackCache).
+        async function loadDeckFallbackPrices(d) {
+            const names = [...new Set(deckAllEntries(d)
+                .filter(e => { const pr = deckEntryPrice(e); return !pr.loading && pr.price === null; })
+                .map(e => e.card.name)
+                .filter(n => !deckFallbackCache.has(n)))];
+            if (!names.length) return false;
+            const found = await cheapestPrintings(names);
+            names.forEach(n => deckFallbackCache.set(n, found.get(edhrecNameKey(n)) || null));
+            return true;
+        }
+
+        function deckPriceText(pr) {
+            if (pr.loading) return '…';
+            if (pr.price === null) return '—';
+            return pr.estimate ? `~${formatUsd(pr.price)}` : formatUsd(pr.price);
+        }
+
+        function deckPriceTitle(pr) {
+            return pr.estimate ? `Estimate: this printing has no price yet, so this is the cheapest other printing${pr.estimateSet ? ` (${pr.estimateSet})` : ''}` : '';
         }
 
         function deckAllEntries(d) {
@@ -11711,6 +11758,7 @@
                 const deckRef = productDeckCurrent;
                 await loadDeckPrintings([...deckAllEntries(deckRef), ...deckRef.tokens].map(e => e.card.identifiers && e.card.identifiers.scryfallId));
                 if (myToken === productDeckPriceToken && productDeckCurrent === deckRef) renderProductDecklist();
+                if (await loadDeckFallbackPrices(deckRef) && myToken === productDeckPriceToken && productDeckCurrent === deckRef) renderProductDecklist();
             } catch (err) {
                 console.error('Decklist error:', err);
                 panel.innerHTML = '<div class="text-error">Couldn\'t load this decklist right now.</div>';
@@ -11730,7 +11778,8 @@
         function deckEntryHTML(e) {
             const c = e.card;
             const pr = deckEntryPrice(e);
-            const priceText = pr.loading ? '…' : pr.price === null ? '—' : formatUsd(pr.price);
+            const priceText = deckPriceText(pr);
+            const priceTitle = deckPriceTitle(pr);
             const flagTitle = pr.flag ? `Reprint worth ${formatUsd(REPRINT_VALUE_MIN)}+` : pr.newFlag ? `New card worth ${formatUsd(REPRINT_VALUE_MIN)}+` : '';
             const hotClass = pr.flag ? ' deck-reprint-hot' : pr.newFlag ? ' deck-new-hot' : '';
             const priceClass = pr.flag ? ' hot' : pr.newFlag ? ' newhot' : '';
@@ -11742,7 +11791,7 @@
                         ${e.count > 1 ? `<span class="deck-pic-count">×${e.count}</span>` : ''}
                         ${e.foil ? '<span class="deck-pic-foil">foil</span>' : ''}
                         ${pr.flag ? '<span class="deck-pic-reprint">💰 Reprint</span>' : pr.newFlag ? '<span class="deck-pic-reprint new">💎 New</span>' : ''}
-                        <span class="deck-pic-price${priceClass}">${priceText}</span>
+                        <span class="deck-pic-price${priceClass}${pr.estimate ? ' est' : ''}"${priceTitle ? ` title="${escapeAttr(priceTitle)}"` : ''}>${priceText}</span>
                     </div>
                 `;
             }
@@ -11753,7 +11802,7 @@
                     ${e.foil ? '<span class="deck-foil">foil</span>' : ''}
                     ${pr.flag ? `<span class="deck-reprint-badge" title="${flagTitle}">💰 Reprint</span>` : pr.newFlag ? `<span class="deck-reprint-badge new" title="${flagTitle}">💎 New</span>` : ''}
                     <span class="deck-row-cost">${c.manaCost ? renderManaCost(c.manaCost) : ''}</span>
-                    <span class="deck-row-price${priceClass}">${priceText}</span>
+                    <span class="deck-row-price${priceClass}${pr.estimate ? ' est' : ''}"${priceTitle ? ` title="${escapeAttr(priceTitle)}"` : ''}>${priceText}</span>
                 </div>
             `;
         }
@@ -11782,7 +11831,7 @@
                                 <div>
                                     <div class="deck-commander-label">Commander${e.foil ? ' · foil' : ''}</div>
                                     <div class="deck-commander-name">${c.name}</div>
-                                    ${(pr => (pr.loading ? '' : `<div class="deck-commander-price">${pr.price === null ? 'No price yet' : formatUsd(pr.price)}${pr.flag ? ' · 💰 Reprint' : pr.newFlag ? ' · 💎 New' : ''}</div>`))(deckEntryPrice(e))}
+                                    ${(pr => (pr.loading ? '' : `<div class="deck-commander-price"${pr.estimate ? ` title="${escapeAttr(deckPriceTitle(pr))}"` : ''}>${pr.price === null ? 'No price yet' : deckPriceText(pr)}${pr.estimate ? ' (est.)' : ''}${pr.flag ? ' · 💰 Reprint' : pr.newFlag ? ' · 💎 New' : ''}</div>`))(deckEntryPrice(e))}
                                     <div class="text-secondary">${c.type || ''}</div>
                                     ${c.manaCost ? `<div style="margin-top:4px;">${renderManaCost(c.manaCost)}</div>` : ''}
                                 </div>
@@ -11803,10 +11852,12 @@
             const valueRows = (list, cls) => `<div class="deck-value-list">${list.map(({ e, pr }) => `
                         <div class="deck-value-row">
                             <span class="set-link" data-name="${escapeAttr(e.card.name)}" onclick="${deckCardClick(e.card)}">${e.card.name}</span>${e.count > 1 ? ` <span class="text-secondary">×${e.count}</span>` : ''}${e.foil ? ' <span class="deck-foil">foil</span>' : ''}
-                            <span class="deck-row-price ${cls}">${formatUsd(pr.price)}</span>
+                            <span class="deck-row-price ${cls}${pr.estimate ? ' est' : ''}"${pr.estimate ? ` title="${escapeAttr(deckPriceTitle(pr))}"` : ''}>${deckPriceText(pr)}</span>
                         </div>`).join('')}</div>`;
             const sum = list => list.reduce((t, x) => t + (x.pr.price || 0) * x.e.count, 0);
             const reprintSum = sum(priced.filter(x => x.pr.reprint));
+            const estCount = priced.filter(x => x.pr.estimate).length;
+            const unpricedCount = priced.filter(x => !x.pr.loading && x.pr.price === null).length;
             const valueHTML = pricesLoading ? '<div class="deck-value"><div class="loading" style="padding:0;">Pricing the cards...</div></div>' : `
                 <div class="deck-value">
                     <div class="deck-value-head">
@@ -11815,7 +11866,8 @@
                     </div>
                     ${hot.length ? valueRows(hot, 'hot') : `<div class="text-secondary">No reprints in this deck are worth ${formatUsd(REPRINT_VALUE_MIN)} or more right now.</div>`}
                     ${hotNew.length ? `<div class="deck-value-sub">💎 New cards worth ${formatUsd(REPRINT_VALUE_MIN)}+ <span class="text-secondary">(${hotNew.length})</span></div>${valueRows(hotNew, 'newhot')}` : ''}
-                    <div class="edh-source">Prices are for the exact printing in this deck (foil where it's foil), from Scryfall's daily TCGplayer market prices. "Reprint" = the card was printed before this product; "New" = first printed here.</div>
+                    ${estCount || unpricedCount ? `<div class="deck-value-est">${estCount ? `<strong>~$</strong> = estimate: ${estCount} card${estCount === 1 ? '' : 's'} in this deck ${estCount === 1 ? 'has' : 'have'} no price yet for this printing, so the cheapest other printing is shown instead.` : ''}${unpricedCount ? ` ${unpricedCount} card${unpricedCount === 1 ? ' has' : 's have'} no price anywhere yet (usually brand-new cards) and ${unpricedCount === 1 ? 'isn\'t' : 'aren\'t'} counted.` : ''}</div>` : ''}
+                    <div class="edh-source">Prices are for the exact printing in this deck (foil where it's foil), from Scryfall's daily TCGplayer market prices. When a printing has no price yet, the card's cheapest other printing stands in (marked ~). "Reprint" = the card was printed before this product; "New" = first printed here.</div>
                 </div>
             `;
             panel.innerHTML = `
