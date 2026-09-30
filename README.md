@@ -10,6 +10,7 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 - Pokémon lookup: https://kenshen107.github.io/moonshot-lookup-tools/Pokemon_Lookup_Tool.html
 - Archenemy simulator: https://kenshen107.github.io/moonshot-lookup-tools/Archenemy_Simulator.html
 - Planechase simulator: https://kenshen107.github.io/moonshot-lookup-tools/Planechase_Simulator.html
+- Beginner guides & handouts: https://kenshen107.github.io/moonshot-lookup-tools/Beginner_Guides.html
 
 ## What's in the MTG tool
 
@@ -17,6 +18,8 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 - **At the counter:** Buyer's Guide (card finder, land finder, full-art basics, price a deck), Products (what's in each sealed product, precon decklists and values), Buylist calculator, Market Watch (price spikes, ban changes, trending commanders, new-set demand), Pull List and the hotlist Case Map.
 - **Rules & events:** Format Rules, Commander Brackets, Prerelease toolkit, Value Vintage and a Judge quick reference.
 - **Learn & train:** Set Primer, Grading & Spotting Fakes, and a Card Quiz.
+
+The **Beginner Guides** page has printable how-to-play and starter-checklist cards for Magic, Pokémon, Disney Lorcana, Riftbound and the Gundam Card Game, the Magic prerelease handouts, and a guide to the accessories a new player needs.
 
 A GitHub Action (`.github/workflows/market-data.yml`) builds daily price-history files from MTGJSON and publishes them to the `market-data` branch.
 

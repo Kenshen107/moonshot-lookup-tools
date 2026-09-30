@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beginner Guides</title>
+    <style>
+        /* Same original ("classic") palette as the MTG Lookup Tool. */
+        :root {
+            --brand: #1777a1;
+            --brand-light: #3aa3d1;
+            --bg-canvas: #1a1a1a;
+            --bg-panel: #2a2a2a;
+            --bg-panel-raised: #333333;
+            --bg-inset: #1a1a1a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #909090;
+            --text-muted: #707070;
+            --text-heading: #ffffff;
+            --border: #404040;
+            --border-subtle: #333333;
+            --color-link: #6cb2ff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg-canvas);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.45;
+        }
+        a { color: var(--color-link); }
+        .page { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+        .top-links { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center; font-size: 0.88em; margin-bottom: 10px; }
+        h1 { text-align: center; margin: 4px 0 6px; color: var(--text-heading); font-size: 1.9em; }
+        .intro { text-align: center; color: var(--text-secondary); max-width: 720px; margin: 0 auto 18px; font-size: 0.93em; }
+        h2 { color: var(--text-heading); font-size: 1.3em; margin: 30px 0 4px; }
+        .section-desc { color: var(--text-secondary); font-size: 0.9em; margin: 0 0 14px; }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 0 0 8px; }
+        .chip {
+            padding: 7px 13px; border-radius: 16px; border: 1px solid #505050;
+            background: var(--bg-panel-raised); color: var(--text-primary); font-size: 0.88em; cursor: pointer;
+        }
+        .chip:hover { border-color: var(--brand-light); }
+        .chip.active { background: var(--brand); border-color: var(--brand-light); color: #fff; }
+
+        .handout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+        .handout-tile {
+            text-align: left; background: var(--bg-panel); border: 1px solid var(--border); border-left: 4px solid var(--acc, var(--brand));
+            border-radius: 8px; padding: 10px 12px; color: var(--text-primary); cursor: pointer; font: inherit;
+        }
+        .handout-tile:hover { border-color: var(--brand-light); }
+        .handout-tile.active { background: var(--bg-panel-raised); border-color: var(--brand-light); }
+        .handout-tile .t-game { font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); font-weight: 700; }
+        .handout-tile .t-title { font-weight: 700; color: var(--text-heading); margin: 1px 0 2px; }
+        .handout-tile .t-desc { font-size: 0.82em; color: var(--text-secondary); }
+
+        .editor { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 14px; }
+        .editor-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+        .editor-title { font-weight: 700; color: var(--text-heading); font-size: 1.05em; }
+        .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .btn {
+            padding: 7px 14px; border-radius: 6px; border: 1px solid #505050; background: var(--bg-panel-raised);
+            color: var(--text-primary); font: inherit; font-size: 0.88em; cursor: pointer;
+        }
+        .btn:hover { border-color: var(--brand-light); }
+        .btn.primary { background: var(--brand); border-color: var(--brand-light); color: #fff; }
+        select { background: var(--bg-inset); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 0.88em; max-width: 100%; }
+        .note { font-size: 0.82em; color: var(--text-secondary); text-align: center; margin-top: 8px; }
+        .preview-wrap { display: flex; justify-content: center; margin: 12px auto 4px; max-width: 100%; overflow-x: auto; }
+
+        /* ---- Printable card (a quarter of a letter page, 4.25in x 5.5in) ----
+           Same layout and class names as the MTG Lookup Tool's prerelease card,
+           so edits saved there show up here too. Sizes are in em:
+           fitCard() sets the font size to the largest that fits. The 0.2in
+           padding keeps text off the printer's unprintable edge.
+           --acc is the game's accent color. */
+        .pr-dc {
+            --acc: #1777a1; --acc-bg: #e8f3f8;
+            box-sizing: border-box; width: 4.25in; height: 5.5in; padding: 0.2in;
+            background: #fff; color: #111; font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 7.5pt; line-height: 1.25; display: flex; flex-direction: column; gap: 0.28em;
+            overflow: hidden; text-align: left; flex: 0 0 auto;
+        }
+        .preview-wrap .pr-dc { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45); border-radius: 3px; }
+        .pr-dc:focus { outline: 2px solid var(--brand-light); }
+        .pr-dc h4 { margin: 0.15em 0 0; font-size: 1.13em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--acc); }
+        .pr-dc ol, .pr-dc ul { margin: 0; padding-left: 1.4em; }
+        .pr-dc li { margin: 0 0 0.12em; }
+        .pr-dc b { color: #000; }
+        .pr-dc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6em; border-bottom: 2px solid var(--acc); padding-bottom: 0.3em; }
+        .pr-dc-store { font-weight: 800; font-size: 1.41em; color: var(--acc); }
+        .pr-dc-set { font-weight: 700; font-size: 1.2em; text-align: right; }
+        .pr-dc-recipe { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5em; text-align: center; }
+        .pr-dc-recipe div { border: 1px solid #ccc; border-radius: 4px; padding: 0.1em 0.25em; }
+        .pr-dc-recipe b { display: block; font-size: 1.48em; line-height: 1.1; color: var(--acc); }
+        .pr-dc-small { font-size: 0.9em; color: #444; }
+        .pr-dc-tip { font-size: 0.99em; color: #333; border-left: 2px solid var(--acc); padding-left: 0.6em; }
+        .pr-dc-win { background: var(--acc-bg); border-left: 3px solid var(--acc); padding: 0.25em 0.6em; }
+        .pr-dc-fun { margin-top: auto; text-align: center; font-style: italic; font-size: 1.01em; color: var(--acc); }
+        .pr-dc-know { display: flex; gap: 0.8em; align-items: center; }
+        .pr-dc-know > div { flex: 1 1 auto; }
+        .pr-dc-scan { margin-top: 0.3em; font-weight: 700; color: var(--acc); }
+        .pr-dc-qr { flex: 0 0 auto; width: 0.85in; height: 0.85in; }
+        .pr-dc-legal { font-size: 0.72em; line-height: 1.2; color: #666; text-align: center; }
+        .pr-dc-foot { border-top: 1px solid #ccc; padding-top: 0.3em; display: flex; justify-content: space-between; gap: 1em; font-size: 0.92em; color: #444; }
+        .pr-dc-check { list-style: none; padding-left: 0.2em !important; }
+        .pr-dc-check li::before { content: '\2610'; margin-right: 0.45em; color: var(--acc); }
+        .g-mtg { --acc: #1777a1; --acc-bg: #e8f3f8; }
+        .g-pokemon { --acc: #b5412f; --acc-bg: #fbeee9; }
+        .g-lorcana { --acc: #5b3f8f; --acc-bg: #f1ecf8; }
+        .g-riftbound { --acc: #1f6f8b; --acc-bg: #e8f3f6; }
+        .g-gundam { --acc: #2c4a7a; --acc-bg: #eaeff7; }
+
+        /* Table QR sign: half a letter page (Magic prerelease). */
+        .pr-qr-sign {
+            box-sizing: border-box; width: 100%; max-width: 5.5in; padding: 0.3in; background: #fff; color: #111;
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: center; border-radius: 3px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+        }
+        .pr-qr-sign .pr-dc-store { color: #1777a1; font-weight: 800; font-size: 1.41em; }
+        .pr-qr-title { font-size: 18pt; font-weight: 800; margin: 4px 0 2px; }
+        .pr-qr-sub { font-size: 12pt; color: #1777a1; margin-bottom: 10px; }
+        .pr-qr-sign img { display: block; margin: 0 auto; width: 190px; height: 190px; }
+        .pr-qr-note { font-size: 10pt; margin-top: 10px; color: #333; }
+        .pr-qr-url { font-size: 7.5pt; color: #666; margin-top: 6px; word-break: break-all; }
+
+        /* ---- What you need to start ---- */
+        .gear-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+        .gear-item { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+        .gear-item .g-name { font-weight: 700; color: var(--text-heading); }
+        .gear-item .g-tag { font-size: 0.7em; font-weight: 700; text-transform: uppercase; padding: 1px 7px; border-radius: 8px; margin-left: 6px; vertical-align: 2px; }
+        .g-tag.need { background: rgba(58, 163, 209, 0.18); color: var(--brand-light); }
+        .g-tag.nice { background: rgba(144, 144, 144, 0.18); color: #b0b0b0; }
+        .gear-item p { margin: 4px 0 0; font-size: 0.86em; color: #c8c8c8; }
+        .game-gear { background: var(--bg-panel); border: 1px solid var(--border); border-left: 4px solid var(--acc); border-radius: 8px; padding: 12px 14px; margin-top: 10px; }
+        .game-gear h3 { margin: 0 0 6px; color: var(--text-heading); font-size: 1.05em; }
+        .game-gear ul { margin: 0; padding-left: 1.2em; font-size: 0.9em; }
+        .game-gear li { margin: 3px 0; }
+        .game-gear .gg-src { font-size: 0.78em; color: var(--text-muted); margin-top: 6px; }
+        .g-mtg.game-gear, .g-mtg.handout-tile { --acc: #3aa3d1; }
+        .g-pokemon.game-gear, .g-pokemon.handout-tile { --acc: #e0735f; }
+        .g-lorcana.game-gear, .g-lorcana.handout-tile { --acc: #9b7fd0; }
+        .g-riftbound.game-gear, .g-riftbound.handout-tile { --acc: #4fb0cf; }
+        .g-gundam.game-gear, .g-gundam.handout-tile { --acc: #6f8fc8; }
+        .foot-note { margin-top: 30px; font-size: 0.78em; color: var(--text-muted); text-align: center; }
+
+        /* ---- Printing: only the sheet built by printSheet(), on a full
+           letter page with no margin. */
+        #printArea { display: none; }
+        @page sheet { size: letter; margin: 0; }
+        @media print {
+            body.printing { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+            body.printing > *:not(#printArea) { display: none !important; }
+            body.printing #printArea { display: block; }
+            .print-sheet { page: sheet; width: 8.5in; height: 11in; margin: 0; overflow: hidden; }
+            .print-cards { position: relative; display: grid; grid-template-columns: 4.25in 4.25in; grid-template-rows: 5.5in 5.5in; }
+            .print-cards::before, .print-cards::after { content: ''; position: absolute; }
+            .print-cards::before { left: 4.25in; top: 0; bottom: 0; border-left: 1px dashed #999; }
+            .print-cards::after { top: 5.5in; left: 0; right: 0; border-top: 1px dashed #999; }
+            .print-qr { position: relative; display: grid; grid-template-rows: 5.5in 5.5in; }
+            .print-qr::after { content: ''; position: absolute; top: 5.5in; left: 0; right: 0; border-top: 1px dashed #999; }
+            .print-qr .pr-qr-sign { max-width: none; height: 5.5in; padding: 0.4in; box-shadow: none; border-radius: 0; display: flex; flex-direction: column; justify-content: center; }
+            .print-qr .pr-qr-title { font-size: 26pt; }
+            .print-qr .pr-qr-sub { font-size: 16pt; }
+            .print-qr .pr-qr-sign img { width: 2.5in; height: 2.5in; }
+            .print-qr .pr-qr-note { font-size: 13pt; }
+            .print-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        @media (max-width: 600px) {
+            h1 { font-size: 1.5em; }
+            .editor { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="top-links">
+        <a href="MTG_Lookup_Tool.html">🃏 MTG Lookup Tool</a>
+        <a href="Pokemon_Lookup_Tool.html">⚡ Pokémon Lookup</a>
+    </div>
+    <h1>📚 Beginner Guides</h1>
+    <div class="intro">Printable handouts and starter advice for new players, for every game in one place: Magic, Pokémon, Disney Lorcana, Riftbound and the Gundam Card Game. Every rule on the cards was checked against that game's official rules (dates below).</div>
+
+    <div class="chips" id="gameChips"></div>
+
+    <h2 id="handouts">🖨️ Printable handouts</h2>
+    <p class="section-desc">Pick a handout to preview it. Click any text on the card to change it before printing - your edits are saved on this computer. Cards print 4 to a letter page; cut once each way on the dashed lines.</p>
+    <div class="handout-grid" id="handoutGrid"></div>
+    <div class="editor" id="editor" hidden></div>
+
+    <h2 id="gear">🎒 What you need to start</h2>
+    <p class="section-desc">What a new player needs for any of these games, and what each game adds. "Need" items are for playing at all; "nice to have" items protect cards or make games smoother.</p>
+    <div class="gear-grid" id="gearGrid"></div>
+    <div id="gameGear"></div>
+
+    <div class="foot-note" id="footNote"></div>
+</div>
+
+<script>
+    // ================= Data =================
+    const STORE_LINE = 'Moonshot Games · Noblesville &amp; Plainfield';
+
+    const GAMES = {
+        mtg:       { name: 'Magic: The Gathering', short: 'Magic', icon: '🃏', checked: 'Wizards\' How to Play page, checked 2026-09-30', learnUrl: 'https://magic.wizards.com/en/how-to-play' },
+        pokemon:   { name: 'Pokémon TCG', short: 'Pokémon', icon: '⚡', checked: 'the Pokémon TCG rulebook (July 2026)', learnUrl: 'https://www.pokemon.com/us/pokemon-tcg/rules' },
+        lorcana:   { name: 'Disney Lorcana', short: 'Lorcana', icon: '✨', checked: 'the Quick Start rules and Comprehensive Rules 2.2.0 (July 9, 2026)', learnUrl: 'https://www.disneylorcana.com/en-US/how-to-play/' },
+        riftbound: { name: 'Riftbound', short: 'Riftbound', icon: '⚔️', checked: 'the Quick Start guide and Core Rules (July 16, 2026)', learnUrl: 'https://playriftbound.com/en-us/news/rules-and-releases/how-to-play-get-started/' },
+        gundam:    { name: 'Gundam Card Game', short: 'Gundam', icon: '🤖', checked: 'the official play guide and Comprehensive Rules 1.9.0 (Sep 11, 2026)', learnUrl: 'https://www.gundam-gcg.com/en/welcome/playguide.php' }
+    };
+
+    // Each company's notice. Text only - no logos, card art or symbols.
+    const MTG_FAN_NOTICE = 'Moonshot Beginner Guide is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.';
+    const LEGAL = {
+        mtg: MTG_FAN_NOTICE,
+        pokemon: 'Unofficial beginner\'s guide, handed out free. Not affiliated with or endorsed by The Pokémon Company, Nintendo, Creatures or GAME FREAK. Pokémon and character names are trademarks of Nintendo.',
+        lorcana: 'Unofficial beginner\'s guide, handed out free. Not affiliated with or endorsed by Disney or Ravensburger.',
+        riftbound: 'Moonshot Riftbound Guide was created under Riot Games\' "Legal Jibber Jabber" policy using assets owned by Riot Games. Riot Games does not endorse or sponsor this project.',
+        gundam: 'Unofficial beginner\'s guide, handed out free. Not affiliated with or endorsed by Bandai Namco or Sunrise.'
+    };
+
+    // Accessories every game shares.
+    const GEAR_COMMON = [
+        { name: 'A deck', tag: 'need', text: 'A ready-to-play starter or preconstructed deck is the easiest start - it\'s a legal deck out of the box, and you can swap cards in as you collect.' },
+        { name: 'Card sleeves', tag: 'need', text: 'All five games use standard-size cards (about 63 × 88 mm), so standard sleeves (about 66 × 91 mm) fit every one. They stop wear and make shuffling easier. Many players double-sleeve: a snug inner sleeve inside an outer one.' },
+        { name: 'A deck box', tag: 'need', text: 'Holds your sleeved deck. Check its capacity against your sleeved card count (each game\'s count is below) - sleeves make a deck thicker.' },
+        { name: 'Counters and dice', tag: 'need', text: 'Every game tracks something - damage, life, lore or points. Dice, glass beads or the counters that come with starter products all work.' },
+        { name: 'A playmat', tag: 'nice', text: 'Protects cards from the table and gives each zone a spot. Not required, and some games have free printable play sheets.' },
+        { name: 'Binder and toploaders', tag: 'nice', text: 'A binder for favorites and trades; a rigid toploader (or a sleeve plus toploader) for anything valuable.' },
+        { name: 'Storage box', tag: 'nice', text: 'Cardboard storage boxes hold the extra cards from packs that aren\'t in your deck yet.' },
+        { name: 'For store events', tag: 'nice', text: 'Use one full set of matching sleeves with an opaque back, so no card can be told apart from the back.' }
+    ];
+
+    // What each game adds. Items come from that game's own rules or quick start.
+    const GEAR_GAMES = {
+        mtg: {
+            deck: '60+ cards (most formats), or 100 for Commander - a sleeved Commander deck needs a 100+ box.',
+            items: [
+                'A way to track life: dice, a notepad or an app. You start at 20 (40 in Commander).',
+                'Tokens and counters for creatures and effects that make them - dice or spare tokens work.',
+                'Basic lands - at draft and sealed events (like Prereleases) they\'re provided free.'
+            ],
+            start: 'A Commander precon or a beginner product; Wizards points new players to Foundations.'
+        },
+        pokemon: {
+            deck: 'Exactly 60 cards.',
+            items: [
+                'Damage counters (each one is 10 damage).',
+                'A coin for coin flips.',
+                'Poison and Burn markers that look different from your damage counters.'
+            ],
+            start: 'A League Battle Deck or a Mega Battle Deck: a preconstructed 60-card deck with a strategy sheet and everything you need to play.'
+        },
+        lorcana: {
+            deck: '60+ cards from 1 or 2 inks.',
+            items: [
+                'Damage counters.',
+                'A lore tracker (you win at 20).',
+                'Both come with the ready-to-play starter decks.'
+            ],
+            start: 'A ready-to-play starter deck.'
+        },
+        riftbound: {
+            deck: 'A 40+ card main deck plus a 12-card rune deck, your Champion Legend and 3 battlefields - about 56 cards to sleeve and box.',
+            items: [
+                'Your rune deck (12 rune cards) and battlefield cards are part of your deck.',
+                'Counters or dice for damage and other effects.',
+                'A way to track points (first to 8 wins).'
+            ],
+            start: 'A preconstructed deck, then swap cards in as you collect.'
+        },
+        gundam: {
+            deck: 'Exactly 50 cards plus a 10-card resource deck.',
+            items: [
+                'Damage counters, such as dice.',
+                'Token cards, like the EX Base and EX Resource.',
+                'A play sheet showing each area - free to download from the official site.'
+            ],
+            start: 'A starter deck.'
+        }
+    };
+
+    // ---- Card bodies ----
+    const qrImageUrl = (text, size = 240) => `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=8&data=${encodeURIComponent(text)}`;
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+    function cardHead(game, title) {
+        return `<div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">${title}</span></div>`;
+    }
+    function cardQr(game, label, tip) {
+        const url = GAMES[game].learnUrl;
+        return `<div class="pr-dc-know"><div>${tip ? `<div>${tip}</div>` : ''}<div class="pr-dc-scan">${label} &rarr;</div></div><img class="pr-dc-qr" src="${qrImageUrl(url)}" alt="QR code: ${esc(url)}"></div>`;
+    }
+    function cardFoot(game, left) {
+        return `<div class="pr-dc-foot"><span>${left}</span><span>${STORE_LINE}</span></div><div class="pr-dc-legal">${LEGAL[game]}</div>`;
+    }
+
+    const HOW_TO = {
+        mtg: () => `
+            ${cardHead('mtg', 'Magic · How to Play')}
+            <h4>Your deck</h4>
+            <div class="pr-dc-recipe"><div><b>60+</b>cards</div><div><b>4</b>max copies*</div><div><b>20</b>starting life</div></div>
+            <div class="pr-dc-small">*Any number of basic lands. Commander decks are exactly 100 cards, one of each, at 40 life.</div>
+            <h4>Setting up</h4>
+            <ol>
+                <li>Shuffle and draw 7. Don't like your hand? <b>Mulligan</b>: shuffle it back, draw 7, then put 1 card on the bottom for each mulligan you've taken.</li>
+                <li>Pick a way to track life. The player going first skips their first draw.</li>
+            </ol>
+            <h4>Your turn</h4>
+            <ol>
+                <li><b>Beginning:</b> untap your cards, handle upkeep effects, draw a card.</li>
+                <li><b>Main:</b> play <b>1 land</b> per turn. Tap lands for mana to cast spells.</li>
+                <li><b>Combat:</b> tap creatures to attack. Your opponent may block with untapped creatures. Damage is dealt; creatures with damage equal to their toughness die.</li>
+                <li><b>Second main:</b> cast more spells (and your land, if you haven't).</li>
+                <li><b>End:</b> damage wears off creatures; pass the turn.</li>
+            </ol>
+            <div>New creatures can't attack the turn they come in. Creatures, artifacts and enchantments stay; instants and sorceries go to the graveyard.</div>
+            <div class="pr-dc-win"><b>You win</b> when your opponent's life hits 0, or they have to draw from an empty library.</div>
+            ${cardQr('mtg', 'Scan for the official how-to-play', 'Not sure how a card works? Ask - that\'s how everyone learns!')}
+            ${cardFoot('mtg', 'Just the basics - card text beats these rules.')}`,
+        pokemon: () => `
+            ${cardHead('pokemon', 'Pokémon TCG · How to Play')}
+            <h4>Your deck</h4>
+            <div class="pr-dc-recipe"><div><b>60</b>cards exactly</div><div><b>4</b>max copies*</div><div><b>6</b>Prize cards</div></div>
+            <div class="pr-dc-small">*By name; Basic Energy unlimited. Needs at least 1 Basic Pokémon. Starter mix: 12-15 Energy, 20-25 Trainers, the rest Pokémon.</div>
+            <h4>Setting up</h4>
+            <ol>
+                <li>Draw 7. Put 1 Basic Pokémon face down as your <b>Active</b>, and up to 5 more on your <b>Bench</b>.</li>
+                <li>No Basic Pokémon? Show your hand, shuffle it back and draw 7 again (your opponent may draw 1 extra card each time).</li>
+                <li>Set the top 6 cards aside face down as <b>Prize cards</b>. Flip your Pokémon face up and start.</li>
+            </ol>
+            <h4>Your turn</h4>
+            <ol>
+                <li><b>Draw</b> a card.</li>
+                <li>In any order: bench Basic Pokémon · <b>evolve</b> (not on a Pokémon's first turn in play) · attach <b>1 Energy</b> · play Trainers (only <b>1 Supporter</b> and 1 Stadium) · <b>retreat once</b> · use Abilities.</li>
+                <li><b>Attack</b> with your Active Pokémon - then your turn ends.</li>
+            </ol>
+            <div>Going first? You can't attack or play a Supporter on your first turn.</div>
+            <div class="pr-dc-win"><b>You win when you:</b> take all 6 Prize cards (1 per Knock Out; Pokémon ex give 2), or your opponent has no Pokémon in play, or can't draw at the start of their turn.</div>
+            ${cardQr('pokemon', 'Scan for the full rules', 'Weakness and Resistance only apply to the Active Pokémon.')}
+            ${cardFoot('pokemon', 'Just the basics - card text beats these rules.')}`,
+        lorcana: () => `
+            ${cardHead('lorcana', 'Disney Lorcana · How to Play')}
+            <h4>Your deck</h4>
+            <div class="pr-dc-recipe"><div><b>60+</b>cards</div><div><b>4</b>max copies</div><div><b>1-2</b>inks</div></div>
+            <div class="pr-dc-small">Sealed decks are 40+ cards; draft decks 35+.</div>
+            <h4>Setting up</h4>
+            <ol>
+                <li>Decide who goes first. Shuffle and draw 7.</li>
+                <li>Once, you may put any cards on the bottom of your deck and draw back up to 7, then shuffle.</li>
+            </ol>
+            <h4>Your turn</h4>
+            <ol>
+                <li><b>Ready</b> your exerted (sideways) cards.</li>
+                <li><b>Set:</b> start-of-turn effects happen.</li>
+                <li><b>Draw</b> a card (the first player skips this on turn 1).</li>
+                <li>Then, in any order: put <b>1 card</b> with the inkwell symbol face down into your <b>inkwell</b> (once per turn) · play cards by exerting that much ink · <b>quest</b> · <b>challenge</b> · use abilities · move characters to locations.</li>
+            </ol>
+            <h4>Questing &amp; challenging</h4>
+            <ul>
+                <li>New characters can't quest, challenge or sing the turn they're played - their ink is still drying!</li>
+                <li><b>Quest:</b> exert a character to gain its lore.</li>
+                <li><b>Challenge:</b> exert a character to fight an opponent's <i>exerted</i> character. Both deal damage at once; a character with damage equal to its willpower is banished.</li>
+            </ul>
+            <div class="pr-dc-win"><b>You win</b> when you reach <b>20 lore</b>. If you must draw from an empty deck, you lose.</div>
+            ${cardQr('lorcana', 'Scan for the official how-to-play', 'Songs can be sung for free by exerting a character with a high enough cost.')}
+            ${cardFoot('lorcana', 'Just the basics - card text beats these rules.')}`,
+        riftbound: () => `
+            ${cardHead('riftbound', 'Riftbound · How to Play (1v1)')}
+            <h4>Your deck</h4>
+            <div class="pr-dc-recipe"><div><b>40+</b>main deck</div><div><b>3</b>max copies</div><div><b>12</b>rune deck</div></div>
+            <div class="pr-dc-small">Plus a Champion Legend (it sets your deck's domains), your Chosen Champion (starts beside you, ready to play) and 3 battlefields.</div>
+            <h4>Setting up</h4>
+            <ol>
+                <li>Each player picks 1 of their 3 battlefields at random - those 2 battlefields are the ones you fight over.</li>
+                <li>Shuffle both decks. Draw 4. Once, you may set aside up to 2 cards, draw that many, and put the set-aside cards on the bottom.</li>
+                <li>The player going second gets 1 extra rune on their first turn.</li>
+            </ol>
+            <h4>Your turn</h4>
+            <ol>
+                <li><b>Awaken:</b> ready your cards.</li>
+                <li><b>Score:</b> 1 point for each battlefield you still control.</li>
+                <li><b>Channel</b> 2 runes from your rune deck, then <b>draw 1</b>.</li>
+                <li><b>Main:</b> play units, gear and spells using runes; move units to battlefields. Units meeting enemy units at a battlefield fight - the side left standing takes control.</li>
+            </ol>
+            <div class="pr-dc-win"><b>First to 8 points wins.</b> Score 1 when you conquer a battlefield, and 1 more each turn you hold it. If your deck runs out, your opponent gains a point.</div>
+            ${cardQr('riftbound', 'Scan for the official quick start', 'Runes pay costs two ways: turn one sideways, or return it to your rune deck for bigger costs.')}
+            ${cardFoot('riftbound', 'Just the basics - card text beats these rules.')}`,
+        gundam: () => `
+            ${cardHead('gundam', 'Gundam Card Game · How to Play')}
+            <h4>Your deck</h4>
+            <div class="pr-dc-recipe"><div><b>50</b>cards exactly</div><div><b>4</b>max copies</div><div><b>10</b>resource deck</div></div>
+            <div class="pr-dc-small">1 or 2 colors. Four card types: Units, Pilots, Commands and Bases. Bring tokens and damage counters (dice work).</div>
+            <h4>Setting up</h4>
+            <ol>
+                <li>Decide who goes first. Shuffle and draw 5. Once, you may put your hand on the bottom, draw 5 new cards and shuffle.</li>
+                <li>Put the top 6 cards of your deck face down as your <b>shields</b>, and an <b>EX Base</b> token in front of them.</li>
+                <li>The player going second starts with 1 <b>EX Resource</b> token.</li>
+            </ol>
+            <h4>Your turn</h4>
+            <ol>
+                <li><b>Start:</b> stand your rested (sideways) cards up.</li>
+                <li><b>Draw</b> 1 card.</li>
+                <li><b>Resource:</b> put the top card of your resource deck into play.</li>
+                <li><b>Main:</b> play cards, pair Pilots with Units, attack. End with no more than 10 cards in hand.</li>
+            </ol>
+            <h4>Playing &amp; attacking</h4>
+            <ul>
+                <li>You need resources at least equal to a card's <b>Lv.</b>; rest resources equal to its <b>cost</b> to play it.</li>
+                <li>Up to 6 Units. New Units attack from your next turn - unless paired with a Pilot that meets their link requirement.</li>
+                <li>Attack the player (hitting their base or top shield first) or an enemy Unit that's rested.</li>
+            </ul>
+            <div class="pr-dc-win"><b>You win</b> by dealing battle damage when your opponent has no shields left, or when they have no cards left in their deck.</div>
+            ${cardQr('gundam', 'Scan for the official play guide', '')}
+            ${cardFoot('gundam', 'Just the basics - card text beats these rules.')}`
+    };
+
+    // Starter checklist card, built from the same data as the section below.
+    function checklistCardHTML(game) {
+        const g = GEAR_GAMES[game];
+        const need = GEAR_COMMON.filter(x => x.tag === 'need' && x.name !== 'A deck' && x.name !== 'Counters and dice').map(x => x.name);
+        return `
+            ${cardHead(game, `${GAMES[game].short} · Starter Checklist`)}
+            <h4>To play</h4>
+            <ul class="pr-dc-check">
+                <li><b>A deck:</b> ${g.start}</li>
+                <li><b>Deck size:</b> ${g.deck}</li>
+                ${need.map(n => `<li><b>${n}</b>${n === 'Card sleeves' ? ' - standard size (about 66 × 91 mm)' : ''}</li>`).join('')}
+                ${g.items.map(i => `<li>${i}</li>`).join('')}
+            </ul>
+            <h4>Nice to have</h4>
+            <ul class="pr-dc-check">
+                ${GEAR_COMMON.filter(x => x.tag === 'nice' && x.name !== 'For store events').map(x => `<li><b>${x.name}</b></li>`).join('')}
+            </ul>
+            <div class="pr-dc-tip">Sleeves go on before the deck goes in the box. For store events, use one set of matching sleeves with an opaque back.</div>
+            ${cardQr(game, 'Scan to learn how to play', 'Questions? Ask us at the counter.')}
+            ${cardFoot(game, 'A starting point - buy what fits how you play.')}`;
+    }
+
+    // ---- Magic prerelease card: the same card as the MTG Lookup Tool's,
+    // sharing its saved edits (prDeckCardV3) and its QR rules. ----
+    const PR_CARD_TITLE = 'Moonshot Prerelease Guide';
+    const PR_FAN_CONTENT_NOTICE = `${PR_CARD_TITLE} is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.`;
+    let mtgSets = [];            // [{ code, name, released_at }]
+    let mtgSetCode = '';
+    let mtgOfficialLinks = null; // { base, links: { code: { guide, notes } } } read from the MTG tool
+
+    function prereleaseQrTarget() {
+        const links = mtgOfficialLinks && mtgOfficialLinks.links[mtgSetCode];
+        const path = links && (links.guide || links.notes);
+        if (path) return { url: mtgOfficialLinks.base + path, official: true, label: links.guide ? 'Wizards\' official Prerelease Guide' : 'Wizards\' official Release Notes' };
+        const base = location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, '');
+        return { url: `${base}MTG_Lookup_Tool.html?set=${mtgSetCode}#prerelease/mechanics`, official: false, label: 'this set\'s mechanics & rulings' };
+    }
+    function prereleaseCardScanHTML(qr) {
+        return `Scan for ${qr.official ? 'Wizards\' official guide to this set' : 'this set\'s mechanics &amp; rulings'} &rarr;`;
+    }
+    function mtgPrereleaseCardHTML() {
+        const qr = prereleaseQrTarget();
+        return `
+            <div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">Prerelease</span></div>
+            <h4>Build your deck</h4>
+            <div class="pr-dc-recipe"><div><b>40</b>cards minimum</div><div><b>17</b>lands</div><div><b>23</b>spells</div></div>
+            <ol>
+                <li><b>Sort</b> all 6 packs into piles by color, plus multicolor, artifacts and lands.</li>
+                <li><b>Pick your 2 best colors</b> - your strongest cards and most removal.</li>
+                <li><b>Play 15-17 creatures</b> plus your removal. Most cards should cost 2-4; only a few cost 5+.</li>
+                <li><b>Add 17 basic lands</b> (free at the land station), split by color - like 9 + 8.</li>
+            </ol>
+            <div class="pr-dc-tip">Splash a 3rd color only for a bomb or removal, with 3+ lands that make it. Between games you can swap in any card from your pool.</div>
+            <h4>Playing your games</h4>
+            <ul>
+                <li><b>Mulligan</b> hands with 0-1 or 6-7 lands.</li>
+                <li><b>Save your removal</b> for their best threats, not their first creature.</li>
+                <li><b>Watch their untapped mana</b> - open mana when you attack often means a trick.</li>
+                <li><b>Sealed games run long.</b> Cards that get you two-for-one win them.</li>
+                <li><b>Flyers and menace close games out</b> - evasive creatures win races.</li>
+            </ul>
+            <div class="pr-dc-know">
+                <div>
+                    <h4>Good to know</h4>
+                    <div>Shuffle well and offer your deck to be cut. Not sure how something works? Call a judge - don't guess.</div>
+                    <div class="pr-dc-scan">${prereleaseCardScanHTML(qr)}</div>
+                </div>
+                <img class="pr-dc-qr" src="${qrImageUrl(qr.url)}" alt="QR code: ${esc(qr.label)}">
+            </div>
+            <div class="pr-dc-fun">These are just tips, not rules. Build the deck you're excited to play - that's the fun of sealed!</div>
+            <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Moonshot Games · Noblesville &amp; Plainfield · moonshotgamestore.com</span></div>
+            <div class="pr-dc-legal">${PR_FAN_CONTENT_NOTICE}</div>`;
+    }
+    function refreshPrereleaseCardQr(el) {
+        const qr = prereleaseQrTarget();
+        const img = el.querySelector('.pr-dc-qr');
+        if (img) { img.src = qrImageUrl(qr.url); img.alt = `QR code: ${qr.label}`; }
+        const scan = el.querySelector('.pr-dc-scan');
+        if (scan) scan.innerHTML = prereleaseCardScanHTML(qr);
+    }
+    function prereleaseQrSignHTML() {
+        const set = mtgSets.find(s => s.code === mtgSetCode);
+        const qr = prereleaseQrTarget();
+        return `
+            <div class="pr-qr-sign">
+                <div class="pr-dc-store">Moonshot Games</div>
+                <div class="pr-qr-title">${set ? esc(set.name) : ''} Prerelease</div>
+                <div class="pr-qr-sub">Scan for ${qr.official ? 'Wizards\' official guide to this set' : 'the new mechanics &amp; rulings'}</div>
+                <img src="${qrImageUrl(qr.url, 300)}" alt="QR code: ${esc(qr.label)}" width="190" height="190">
+                <div class="pr-qr-note">Great for deck building and between games. During a game, raise your hand for a judge.</div>
+                <div class="pr-qr-url">${esc(qr.url)}</div>
+            </div>`;
+    }
+
+    // The official Prerelease Guide / Release Notes links live in one place:
+    // the MTG Lookup Tool's PRERELEASE_OFFICIAL_LINKS. Read them from that
+    // file (same site) so there's nothing to keep in sync here. If it can't
+    // be read, the QR falls back to the tool's own mechanics page.
+    async function loadMtgOfficialLinks() {
+        try {
+            const res = await fetch('MTG_Lookup_Tool.html', { cache: 'no-cache' });
+            if (!res.ok) throw new Error(res.status);
+            const src = await res.text();
+            const base = (src.match(/const PR_WIZARDS_ARTICLE_BASE = '([^']+)'/) || [])[1];
+            const start = src.indexOf('const PRERELEASE_OFFICIAL_LINKS = {');
+            const end = src.indexOf('};', start);
+            if (!base || start < 0 || end < 0) throw new Error('links not found');
+            const links = {};
+            src.slice(start, end).replace(/(\w+):\s*\{([^}]*)\}/g, (m, code, body) => {
+                const entry = {};
+                body.replace(/(guide|notes):\s*'([^']+)'/g, (mm, k, v) => { entry[k] = v; });
+                if (entry.guide || entry.notes) links[code] = entry;
+            });
+            mtgOfficialLinks = { base, links };
+        } catch (err) {
+            console.warn('Official prerelease links unavailable:', err);
+            mtgOfficialLinks = null;
+        }
+    }
+
+    // Sets for the Magic prerelease picker: Scryfall expansions and core sets
+    // from 2 years back to 6 months ahead, newest first. It defaults to the
+    // next upcoming set.
+    async function loadMtgSets() {
+        try {
+            const res = await fetch('https://api.scryfall.com/sets');
+            const data = await res.json();
+            const today = new Date().toISOString().slice(0, 10);
+            const d = (days) => new Date(Date.now() + days * 864e5).toISOString().slice(0, 10);
+            mtgSets = (data.data || [])
+                .filter(s => (s.set_type === 'expansion' || s.set_type === 'core') && !s.digital && s.released_at >= d(-730) && s.released_at <= d(183))
+                .map(s => ({ code: s.code, name: s.name, released_at: s.released_at }))
+                .sort((a, b) => b.released_at.localeCompare(a.released_at));
+            const upcoming = mtgSets.filter(s => s.released_at >= today);
+            mtgSetCode = (upcoming.length ? upcoming[upcoming.length - 1] : mtgSets[0] || {}).code || '';
+        } catch (err) {
+            console.warn('Set list unavailable:', err);
+        }
+    }
+
+    // ---- The handout list ----
+    const HANDOUTS = [
+        { id: 'mtg-howto', game: 'mtg', title: 'How to Play', desc: 'Deck, setup, turn steps and how to win.', kind: 'card', html: HOW_TO.mtg },
+        { id: 'mtg-prerelease', game: 'mtg', title: 'Prerelease Deck-Building Card', desc: 'The sealed deck recipe and play tips. Same card as the MTG tool\'s; the QR follows the set.', kind: 'card', html: mtgPrereleaseCardHTML, key: 'prDeckCardV3', needsSet: true },
+        { id: 'mtg-qrsign', game: 'mtg', title: 'Prerelease Table QR Sign', desc: 'A sign for each table, 2 per page.', kind: 'sign', needsSet: true },
+        { id: 'pokemon-howto', game: 'pokemon', title: 'How to Play', desc: 'Deck, setup, turn steps and how to win.', kind: 'card', html: HOW_TO.pokemon },
+        { id: 'lorcana-howto', game: 'lorcana', title: 'How to Play', desc: 'Deck, setup, turn steps and how to win.', kind: 'card', html: HOW_TO.lorcana },
+        { id: 'riftbound-howto', game: 'riftbound', title: 'How to Play (1v1)', desc: 'Deck, setup, turn steps and how to win.', kind: 'card', html: HOW_TO.riftbound },
+        { id: 'gundam-howto', game: 'gundam', title: 'How to Play', desc: 'Deck, setup, turn steps and how to win.', kind: 'card', html: HOW_TO.gundam },
+        ...Object.keys(GAMES).map(g => ({ id: `${g}-checklist`, game: g, title: 'Starter Checklist', desc: 'What to pick up to start playing.', kind: 'card', html: () => checklistCardHTML(g) }))
+    ];
+
+    // ================= Page =================
+    let gameFilter = 'all';
+    let currentId = null;
+    const storageGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    const storageSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } };
+    const storageDel = k => { try { localStorage.removeItem(k); } catch (e) { /* private mode */ } };
+    const cardKey = h => h.key || `bgCard:${h.id}`;
+
+    function renderChips() {
+        const list = [['all', '🌐 All games'], ...Object.entries(GAMES).map(([k, g]) => [k, `${g.icon} ${g.short}`])];
+        document.getElementById('gameChips').innerHTML = list.map(([k, label]) =>
+            `<button type="button" class="chip${k === gameFilter ? ' active' : ''}" onclick="setGame('${k}')">${label}</button>`).join('');
+    }
+    function setGame(k) {
+        gameFilter = k;
+        renderChips();
+        renderHandoutGrid();
+        renderGear();
+        try { history.replaceState(null, '', `#${k === 'all' ? '' : k}`); } catch (e) { /* ignore */ }
+    }
+
+    function renderHandoutGrid() {
+        const list = HANDOUTS.filter(h => gameFilter === 'all' || h.game === gameFilter);
+        document.getElementById('handoutGrid').innerHTML = list.map(h => `
+            <button type="button" class="handout-tile g-${h.game}${h.id === currentId ? ' active' : ''}" onclick="openHandout('${h.id}')">
+                <div class="t-game">${GAMES[h.game].icon} ${GAMES[h.game].short}</div>
+                <div class="t-title">${h.title}</div>
+                <div class="t-desc">${h.desc}</div>
+            </button>`).join('');
+    }
+
+    function setPickerHTML() {
+        if (!mtgSets.length) return '<span class="note">Couldn\'t load the set list.</span>';
+        return `<label class="note" style="margin:0;">Set <select onchange="mtgSetCode=this.value; openHandout(currentId)">${mtgSets.map(s =>
+            `<option value="${s.code}"${s.code === mtgSetCode ? ' selected' : ''}>${esc(s.name)} (${s.released_at})</option>`).join('')}</select></label>`;
+    }
+
+    function qrNoteHTML(h) {
+        if (h.game === 'mtg' && h.needsSet) {
+            const qr = prereleaseQrTarget();
+            return `<div class="note">The QR code opens <a href="${esc(qr.url)}" target="_blank" rel="noopener">${qr.label}</a>${qr.official ? '' : ' - Wizards hasn\'t posted a Prerelease Guide or Release Notes for this set yet'}. QR images are made by the free goqr.me service.</div>`;
+        }
+        const url = GAMES[h.game].learnUrl;
+        return `<div class="note">The QR code opens <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>. Rules checked against ${GAMES[h.game].checked}. QR images are made by the free goqr.me service.</div>`;
+    }
+
+    function openHandout(id) {
+        const h = HANDOUTS.find(x => x.id === id);
+        if (!h) return;
+        currentId = id;
+        renderHandoutGrid();
+        const ed = document.getElementById('editor');
+        ed.hidden = false;
+        const head = `
+            <div class="editor-head">
+                <div class="editor-title">${GAMES[h.game].icon} ${GAMES[h.game].short} · ${h.title}</div>
+                <div class="controls">
+                    ${h.needsSet ? setPickerHTML() : ''}
+                    <button type="button" class="btn primary" onclick="printSheet()">🖨️ Print (${h.kind === 'sign' ? 2 : 4} per page)</button>
+                    ${h.kind === 'card' ? '<button type="button" class="btn" onclick="resetCard()">↺ Reset to default</button>' : ''}
+                </div>
+            </div>`;
+        if (h.kind === 'sign') {
+            ed.innerHTML = `${head}<div class="preview-wrap">${prereleaseQrSignHTML()}</div>${qrNoteHTML(h)}`;
+        } else {
+            const saved = storageGet(cardKey(h));
+            ed.innerHTML = `${head}<div class="preview-wrap"><div class="pr-dc g-${h.game}" id="cardEdit" contenteditable="true" spellcheck="true" oninput="saveCard()" onblur="fitCard()">${saved || h.html()}</div></div>${qrNoteHTML(h)}
+                ${h.id === 'mtg-prerelease' ? '<div class="note">This card shares its edits with the Prerelease tab in the MTG Lookup Tool.</div>' : ''}`;
+            if (h.id === 'mtg-prerelease') refreshPrereleaseCardQr(document.getElementById('cardEdit'));
+            fitCard();
+        }
+        try { history.replaceState(null, '', `#${id}`); } catch (e) { /* ignore */ }
+    }
+
+    let fitTimer = null;
+    function saveCard() {
+        const h = HANDOUTS.find(x => x.id === currentId);
+        const el = document.getElementById('cardEdit');
+        if (!h || !el) return;
+        storageSet(cardKey(h), el.innerHTML);
+        clearTimeout(fitTimer);
+        fitTimer = setTimeout(fitCard, 600);
+    }
+    function resetCard() {
+        const h = HANDOUTS.find(x => x.id === currentId);
+        if (!h) return;
+        storageDel(cardKey(h));
+        openHandout(h.id);
+    }
+    // Largest font size (in 0.1pt steps) at which the card still fits.
+    function fitCard() {
+        const el = document.getElementById('cardEdit');
+        if (!el || !el.offsetHeight) return;
+        const fits = () => el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1;
+        let lo = 50, hi = 120;
+        while (lo < hi) {
+            const mid = Math.ceil((lo + hi) / 2);
+            el.style.fontSize = `${mid / 10}pt`;
+            if (fits()) lo = mid; else hi = mid - 1;
+        }
+        el.style.fontSize = `${lo / 10}pt`;
+    }
+
+    // Builds a print-only sheet, prints it, then removes it.
+    function printSheet() {
+        const h = HANDOUTS.find(x => x.id === currentId);
+        if (!h) return;
+        let area = document.getElementById('printArea');
+        if (area) area.remove();
+        area = document.createElement('div');
+        area.id = 'printArea';
+        if (h.kind === 'sign') {
+            area.innerHTML = `<div class="print-sheet print-qr">${prereleaseQrSignHTML().repeat(2)}</div>`;
+        } else {
+            const card = document.getElementById('cardEdit');
+            fitCard();
+            area.innerHTML = `<div class="print-sheet print-cards">${`<div class="pr-dc g-${h.game}" style="font-size:${card.style.fontSize}">${card.innerHTML}</div>`.repeat(4)}</div>`;
+        }
+        document.body.appendChild(area);
+        document.body.classList.add('printing');
+        const done = () => {
+            document.body.classList.remove('printing');
+            area.remove();
+            window.removeEventListener('afterprint', done);
+        };
+        window.addEventListener('afterprint', done);
+        const imgs = [...area.querySelectorAll('img')];
+        Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => window.print());
+    }
+
+    function renderGear() {
+        document.getElementById('gearGrid').innerHTML = GEAR_COMMON.map(x => `
+            <div class="gear-item"><span class="g-name">${x.name}</span><span class="g-tag ${x.tag}">${x.tag === 'need' ? 'Need' : 'Nice to have'}</span><p>${x.text}</p></div>`).join('');
+        const games = Object.keys(GEAR_GAMES).filter(g => gameFilter === 'all' || g === gameFilter);
+        document.getElementById('gameGear').innerHTML = games.map(g => `
+            <div class="game-gear g-${g}">
+                <h3>${GAMES[g].icon} ${GAMES[g].name}</h3>
+                <ul>
+                    <li><b>Deck:</b> ${GEAR_GAMES[g].deck}</li>
+                    ${GEAR_GAMES[g].items.map(i => `<li>${i}</li>`).join('')}
+                    <li><b>Easiest start:</b> ${GEAR_GAMES[g].start}</li>
+                </ul>
+                <div class="gg-src">From ${GAMES[g].checked}. <a href="${GAMES[g].learnUrl}" target="_blank" rel="noopener">Official how-to-play</a> · <a href="#" onclick="openHandout('${g}-checklist'); document.getElementById('handouts').scrollIntoView({behavior:'smooth'}); return false;">Printable checklist</a></div>
+            </div>`).join('');
+    }
+
+    async function init() {
+        document.getElementById('footNote').innerHTML = 'An independent project, not an official Moonshot Games tool. Every handout is text only - no logos, card art or symbols - and is meant to be handed out free. Sleeve sizes are general guidance; check the fit before buying in bulk.';
+        const hash = location.hash.slice(1);
+        if (GAMES[hash]) gameFilter = hash;
+        renderChips();
+        renderHandoutGrid();
+        renderGear();
+        await Promise.all([loadMtgOfficialLinks(), loadMtgSets()]);
+        if (HANDOUTS.some(h => h.id === hash)) {
+            openHandout(hash);
+            document.getElementById('handouts').scrollIntoView();
+        }
+    }
+    init();
+</script>
+</body>
+</html>

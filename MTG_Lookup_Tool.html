@@ -6866,6 +6866,8 @@
     <div class="container">
         <div style="text-align:center; margin-bottom:10px;">
             <a href="Pokemon_Lookup_Tool.html" style="color:#6cb2ff; font-size:0.85em; text-decoration:none;">⚡ Looking for Pokémon? →</a>
+            <span style="color:#707070; font-size:0.85em;"> · </span>
+            <a href="Beginner_Guides.html" style="color:#6cb2ff; font-size:0.85em; text-decoration:none;">📚 Beginner guides &amp; handouts →</a>
         </div>
 
         <!-- Moonshot Games store info bar -->
@@ -14124,7 +14126,7 @@
             try { saved = localStorage.getItem(prCardKey()); } catch (err) { /* private mode */ }
             const html = saved || await defaultPrereleaseCardHTML();
             el.innerHTML = `
-                <div class="formats-intro">A handout for players, printed 4 to a letter page - cut on the dashed lines (one cut each way). The text sizes itself to fill the card. Click any text on the card to change it before printing; your edits are saved on this computer.</div>
+                <div class="formats-intro">A handout for players, printed 4 to a letter page - cut on the dashed lines (one cut each way). The text sizes itself to fill the card. Click any text on the card to change it before printing; your edits are saved on this computer. This card, plus how-to-play cards for other games, is also on the <a href="Beginner_Guides.html#mtg-prerelease">Beginner Guides</a> page.</div>
                 <div class="staples-controls">
                     <button type="button" class="staples-sort-btn" onclick="printPrereleaseSheet('card')">🖨️ Print (4 per page)</button>
                     <button type="button" class="staples-sort-btn" onclick="resetPrereleaseCard()">↺ Reset to default</button>
