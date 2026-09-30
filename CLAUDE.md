@@ -12,6 +12,8 @@ Staff tools for Moonshot Games, used at work in both stores (Noblesville and Pla
   - Main: https://github.com/Kenshen107/moonshot-lookup-tools/tree/main
   - Live site: https://kenshen107.github.io/moonshot-lookup-tools/MTG_Lookup_Tool.html
   - Live site (fresh copy): the live-site link plus `?v=<date and time, e.g. 202609231245>`. Use a new value every reply so the browser can't serve a cached copy.
+  - Beginner Guides: https://kenshen107.github.io/moonshot-lookup-tools/Beginner_Guides.html
+  - Beginner Guides (fresh copy): the Beginner Guides link plus the same `?v=` value.
 
 ## Working in this repo
 
