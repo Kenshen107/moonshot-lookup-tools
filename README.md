@@ -14,8 +14,8 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 
 ## What's in the MTG tool
 
-- **Card Lookup:** prices, printings, rules text, legality, price history and Commander play data for any card.
-- **At the counter:** Buyer's Guide (card finder, land finder, full-art basics, price a deck), Products (what's in each sealed product, precon decklists and values), Buylist calculator, Market Watch (price spikes, ban changes, trending commanders, new-set demand), Pull List and the hotlist Case Map.
+- **Card Lookup:** prices, printings, rules text, legality, price history and Commander play data for any card. Type a set code (like FRA) to open a whole set: the sets before and after it, its cards A–Z, and the full card list.
+- **At the counter:** Buyer's Guide (card finder, land finder, full-art basics, price a deck), Products (what's in each sealed product, precon decklists and values, box value and pull rates), Buylist calculator, Market Watch (price spikes, ban changes, trending commanders, new-set demand), Pull List and the hotlist Case Map.
 - **Rules & events:** Format Rules, Commander Brackets, Prerelease toolkit, Value Vintage and a Judge quick reference.
 - **Learn & train:** Set Primer, Grading & Spotting Fakes, and a Card Quiz.
 
