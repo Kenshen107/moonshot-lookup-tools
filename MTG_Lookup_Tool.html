@@ -497,6 +497,50 @@
             color: var(--text-muted);
         }
 
+        /* Set view (a set code typed into Card Lookup) */
+        .setv { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+        .setv-head { display: flex; gap: 14px; align-items: center; }
+        .setv-icon { width: 48px; height: 48px; flex-shrink: 0; filter: brightness(0) invert(1); }
+        .setv-links { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 6px; font-size: 0.9em; }
+        .setv-section { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+        .setv-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .setv-nav-btn { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; width: 100%; margin: 0;
+            background: var(--bg-inset); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; color: var(--text-primary); cursor: pointer; font: inherit; }
+        .setv-nav-btn.next { align-items: flex-end; text-align: right; }
+        .setv-nav-btn:hover { border-color: var(--brand-light); background: var(--bg-panel-raised); }
+        .setv-nav-btn.empty { color: var(--text-muted); cursor: default; justify-content: center; font-size: 0.9em; }
+        .setv-nav-dir { font-size: 0.78em; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .setv-nav-name { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--text-heading); }
+        .setv-nav-name img { width: 18px; height: 18px; filter: brightness(0) invert(1); }
+        .setv-nav-meta { font-size: 0.82em; color: var(--text-secondary); }
+        .setv-related { margin-top: 8px; font-size: 0.9em; line-height: 1.6; }
+        .setv-az { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center; }
+        .setv-az-btn { width: 100%; margin: 0; padding: 10px; background: var(--bg-inset); border: 1px solid var(--border); border-radius: 6px;
+            color: var(--color-link); cursor: pointer; font: inherit; font-size: 0.9em; text-align: left; overflow-wrap: anywhere; }
+        .setv-az-btn.next { text-align: right; }
+        .setv-az-btn:hover:not([disabled]) { border-color: var(--brand-light); }
+        .setv-az-btn[disabled] { color: var(--text-muted); cursor: default; }
+        .setv-az-current { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; max-width: 200px; }
+        .setv-az-current img { width: 160px; border-radius: 8px; cursor: zoom-in; }
+        .setv-az-name { font-weight: 600; color: var(--text-heading); }
+        .setv-az-jump { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 10px; font-size: 0.9em; }
+        .setv-az-jump select { max-width: 260px; width: auto; padding: 4px 6px; background: var(--bg-inset); color: var(--text-primary);
+            border: 1px solid var(--border); border-radius: 4px; font: inherit; }
+        .staples-controls.setv-controls { justify-content: flex-start; flex-wrap: wrap; margin: 10px 0; }
+        .setv-rows { max-height: 480px; overflow-y: auto; border: 1px solid var(--border-subtle); border-radius: 4px; }
+        .setv-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) 20px 70px; gap: 8px; align-items: center; padding: 6px 10px;
+            border-bottom: 1px solid var(--border-subtle); cursor: pointer; font-size: 0.9em; }
+        .setv-row:hover { background: var(--bg-panel-raised); }
+        .setv-num, .setv-price { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+        .setv-price { text-align: right; }
+        .setv-rar { font-weight: 700; text-align: center; }
+        .autocomplete-set { border-bottom: 1px solid var(--border); }
+        @media (max-width: 600px) {
+            .setv-az { grid-template-columns: 1fr 1fr; }
+            .setv-az-current { grid-column: 1 / -1; grid-row: 1; max-width: none; }
+            .setv-az-current img { width: 140px; }
+        }
+
         .adjacent-sets {
             background: #1a1a1a;
             border-left: 3px solid #0066cc;
@@ -4840,7 +4884,24 @@
             }
         }
 
+        /* Products: pull rates */
+        .pull-type { border-top: 1px solid var(--border-subtle); padding-top: 6px; }
+        .pull-type summary { text-transform: none; font-size: 0.95em; color: var(--text-primary); letter-spacing: 0; }
+        .pull-slots { margin: 0; padding-left: 18px; font-size: 0.9em; line-height: 1.6; }
+        .pull-src { font-size: 0.75em; padding: 1px 6px; border-radius: 8px; background: var(--bg-panel-raised); color: var(--text-secondary); white-space: nowrap; }
+        .pull-foil { font-size: 0.75em; padding: 1px 6px; border-radius: 8px; background: rgba(58, 163, 209, 0.18); color: var(--brand-light); }
+        .pull-table td:nth-child(n+2) { white-space: nowrap; }
+
         .edh-brackets { margin: 8px 0; }
+
+        /* Bracket slider in "Build around this commander" */
+        .edh-bracket-slider { max-width: 460px; }
+        .edh-bracket-slider input[type="range"] { width: 100%; margin: 4px 0 0; accent-color: var(--brand-light); }
+        .edh-bracket-ticks { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 2px; }
+        .edh-bracket-ticks button { width: auto; margin: 0; padding: 3px 0; font-size: 0.8em; background: var(--bg-panel-raised);
+            border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); cursor: pointer; }
+        .edh-bracket-ticks button.active { border-color: var(--bk-color, var(--brand-light)); color: var(--text-heading); font-weight: 700;
+            box-shadow: inset 0 -3px 0 var(--bk-color, var(--brand-light)); }
 
         .edh-bracket-bar {
             display: flex;
@@ -6902,14 +6963,14 @@
         <div id="mtgApp">
             <div class="search-section">
                 <div class="search-box card-search">
-                    <label class="card-search-label" for="cardSearch">Look up a card</label>
+                    <label class="card-search-label" for="cardSearch">Look up a card or set</label>
                     <div class="card-search-row">
-                        <input type="text" id="cardSearch" placeholder="Start typing a card name..." autocomplete="off"
+                        <input type="text" id="cardSearch" placeholder="Start typing a card name, or a set code like FRA..." autocomplete="off" onfocus="fetchRawSets().catch(() => {})"
                                role="combobox" aria-autocomplete="list" aria-controls="autocompleteList" aria-expanded="false">
                         <button type="button" onclick="submitCardSearch()">Search</button>
                     </div>
                     <div class="autocomplete-list" id="autocompleteList" role="listbox" hidden></div>
-                    <div class="card-search-hint">Pick a suggestion, or press Enter to search what you typed - partial and misspelled names work too.</div>
+                    <div class="card-search-hint">Pick a suggestion, or press Enter to search what you typed - partial and misspelled names work too. Type a set code (like FRA) to open the whole set.</div>
                 </div>
             </div>
 
@@ -11280,6 +11341,7 @@
                     <div class="prod-set-promos" id="prodSetPromos"></div>
                 </div>
                 <div id="prodBoxValue">${productBoxValueButtonHTML(entry.set.code)}</div>
+                <div id="prodPullRates">${productPullRatesButtonHTML(entry.set.code)}</div>
                 <div class="staples-controls" style="flex-wrap:wrap;">${chips}</div>
                 <div class="prod-grid">${shown.map(productTileHTML).join('')}</div>
             `;
@@ -11328,11 +11390,7 @@
                 if (url) await new Promise(r => setTimeout(r, SCRYFALL_REQUEST_SPACING_MS));
             }
 
-            const packCount = key => {
-                const box = (setData.sealedProduct || []).find(p => p.subtype === key && /box/i.test(p.name) && !/case|bundle/i.test(p.name)
-                    && p.contents && p.contents.sealed && p.contents.sealed.length === 1);
-                return box ? box.contents.sealed[0].count : (BOX_PACKS_DEFAULT[key] || 36);
-            };
+            const packCount = key => pullBoxPackCount(setData, key) || 36;
 
             const types = boosters.map(([key, booster]) => {
                 const perCard = new Map(); // scryfall id -> { card, foil, copies per pack, price }
@@ -11455,6 +11513,326 @@
             `;
         }
 
+        // ---- Pull rates: what's in each pack, and how often ----
+        // Worked out from MTGJSON's booster data, the same source as Box
+        // value: each pack type's possible layouts (with how often each
+        // happens) and, for every slot, exactly which cards it can hold and
+        // how often. Cards are grouped by rarity, frame treatment and foil
+        // type from MTGJSON's card data. These are averages over many packs,
+        // and MTGJSON's odds follow Wizards' published collation where it's
+        // known, so they're close estimates rather than guarantees.
+        const PULL_RATE_SKIP = /sample|arena|tournament/;
+        const pullRatesCache = {}; // set code -> Promise of computed results
+
+        // promoTypes that name a kind of foil or a special finish
+        const PULL_FOIL_TYPES = {
+            serialized: 'Serialized', doublerainbow: 'Double rainbow foil', surgefoil: 'Surge foil', galaxyfoil: 'Galaxy foil',
+            textured: 'Textured foil', halofoil: 'Halo foil', fracturefoil: 'Fracture foil', facetfoil: 'Facet foil',
+            confettifoil: 'Confetti foil', raisedfoil: 'Raised foil', oilslick: 'Oil slick foil', stepandcompleat: 'Step-and-compleat foil',
+            rainbowfoil: 'Rainbow foil', ripplefoil: 'Ripple foil', manafoil: 'Mana foil', neonink: 'Neon ink', invisibleink: 'Invisible ink',
+            gilded: 'Gilded foil', silverfoil: 'Silver foil', firstplacefoil: 'First-place foil', dragonscalefoil: 'Dragonscale foil',
+            singularityfoil: 'Singularity foil', cosmicfoil: 'Cosmic foil', chocobotrackfoil: 'Chocobo track foil', starfoil: 'Star foil',
+            sunmoondfoil: 'Sun & moon foil', poisonfoil: 'Poison foil', dazzlefoil: 'Dazzle foil', imagine: 'Imagine foil'
+        };
+        const PULL_RARITY_ORDER = ['common', 'uncommon', 'rare', 'mythic', 'special', 'bonus', 'land', 'token'];
+
+        function pullBoxPackCount(setData, key) {
+            const box = (setData.sealedProduct || []).find(p => p.subtype === key && /box/i.test(p.name) && !/case|bundle/i.test(p.name)
+                && p.contents && p.contents.sealed && p.contents.sealed.length === 1);
+            return box ? box.contents.sealed[0].count : (BOX_PACKS_DEFAULT[key] || null);
+        }
+
+        // One card in one slot -> its group: rarity, treatment, finish and
+        // (for bonus sheets like Special Guests) the set it comes from.
+        function pullGroupOf(info, foilSheet, mainCode, mainFrame) {
+            const c = info.card;
+            const promo = c.promoTypes || [];
+            const frames = c.frameEffects || [];
+            let rarity = c.rarity || 'special';
+            if (info.token || /token/.test(c.layout || '')) rarity = 'token';
+            else if (c.layout === 'art_series') rarity = 'token';
+            else if ((c.supertypes || []).includes('Basic')) rarity = 'land';
+
+            let treatment = 'Regular frame';
+            if (promo.includes('serialized')) treatment = 'Serialized';
+            else if (promo.includes('japanshowcase')) treatment = 'Japanese showcase';
+            else if (frames.includes('showcase')) treatment = 'Showcase';
+            else if (c.borderColor === 'borderless') treatment = c.isFullArt && rarity === 'land' ? 'Full-art' : 'Borderless';
+            else if (frames.includes('extendedart')) treatment = 'Extended art';
+            else if ((c.frameVersion === '1997' || c.frameVersion === '1993') && c.frameVersion !== mainFrame) treatment = 'Retro frame';
+            else if (c.isFullArt) treatment = 'Full-art';
+            if (rarity === 'token') treatment = c.layout === 'art_series' ? 'Art card' : 'Token';
+
+            let finish = 'Non-foil';
+            if (foilSheet) {
+                const special = promo.map(t => PULL_FOIL_TYPES[t]).find(Boolean);
+                const etchedOnly = (c.finishes || []).length === 1 && c.finishes[0] === 'etched';
+                finish = special && special !== 'Serialized' ? special : (etchedOnly ? 'Etched foil' : 'Foil');
+            }
+
+            const source = info.setCode !== mainCode ? info.setName : '';
+            const rarityLabel = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', mythic: 'Mythic', special: 'Special', bonus: 'Bonus', land: 'Basic land', token: '' }[rarity] || rarity;
+            const label = rarity === 'token'
+                ? treatment
+                : `${treatment === 'Regular frame' ? '' : `${treatment} `}${treatment === 'Regular frame' ? rarityLabel : rarityLabel.toLowerCase()}`;
+            return {
+                key: [source, rarity, treatment, finish].join('|'),
+                label: label.charAt(0).toUpperCase() + label.slice(1),
+                finish, source, rarity, special: treatment !== 'Regular frame' || !!source
+            };
+        }
+
+        // Chance a slot that draws `count` cards (no repeats) out of a sheet
+        // of `size` cards holds none of a group with this weight share.
+        // Exact for equal weights; close enough otherwise.
+        function pullNoneChance(share, count, size) {
+            if (share <= 0) return 1;
+            if (share >= 1) return 0;
+            let p = 1;
+            for (let i = 0; i < count; i++) {
+                const left = size - i;
+                if (left <= 0) return 0;
+                p *= Math.max(0, (left - share * size) / left);
+            }
+            return p;
+        }
+
+        function pullSheetLabel(name) {
+            const words = name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').toLowerCase()
+                .replace(/\brare mythic\b|\brm\b/g, 'rare/mythic');
+            return words.charAt(0).toUpperCase() + words.slice(1);
+        }
+
+        async function computePullRates(code) {
+            const setData = await loadMtgjsonSetFile(code);
+            const boosters = Object.entries(setData.booster || {}).filter(([key]) => !PULL_RATE_SKIP.test(key));
+            const sourceCodes = [...new Set([code.toUpperCase(), ...boosters.flatMap(([, b]) => b.sourceSetCodes || [])])];
+            const sources = await Promise.all(sourceCodes.map(c => (c === code.toUpperCase() ? Promise.resolve(setData) : loadMtgjsonSetFile(c).catch(() => null))));
+            const byUuid = new Map();
+            sources.filter(Boolean).forEach(src => {
+                (src.cards || []).forEach(c => byUuid.set(c.uuid, { card: c, setCode: src.code, setName: src.name, token: false }));
+                (src.tokens || []).forEach(c => byUuid.set(c.uuid, { card: c, setCode: src.code, setName: src.name, token: true }));
+            });
+
+            // The set's usual frame, so old sets' cards don't count as "retro"
+            const frameCounts = {};
+            (setData.cards || []).forEach(c => { frameCounts[c.frameVersion] = (frameCounts[c.frameVersion] || 0) + 1; });
+            const mainFrame = Object.keys(frameCounts).sort((a, b) => frameCounts[b] - frameCounts[a])[0];
+
+            // The set itself: how many cards of each rarity in the main set
+            const base = setData.baseSetSize || 0;
+            const rarityCounts = {};
+            (setData.cards || []).forEach(c => {
+                const n = parseInt(c.number, 10);
+                if (!base || !/^\d+$/.test(c.number) || n > base) return;
+                const r = (c.supertypes || []).includes('Basic') ? 'land' : c.rarity;
+                rarityCounts[r] = (rarityCounts[r] || 0) + 1;
+            });
+
+            const types = boosters.map(([key, booster]) => {
+                // Each sheet's make-up by group: weight share and which cards
+                const sheetGroups = {};
+                Object.entries(booster.sheets).forEach(([sheetName, sheet]) => {
+                    const groups = new Map();
+                    const total = sheet.totalWeight || Object.values(sheet.cards).reduce((a, b) => a + b, 0);
+                    Object.entries(sheet.cards).forEach(([uuid, weight]) => {
+                        const info = byUuid.get(uuid);
+                        if (!info) return;
+                        const g = pullGroupOf(info, sheet.foil, setData.code, mainFrame);
+                        const entry = groups.get(g.key) || { ...g, share: 0, cards: new Set() };
+                        entry.share += weight / total;
+                        entry.cards.add(uuid);
+                        groups.set(g.key, entry);
+                    });
+                    sheetGroups[sheetName] = { groups, size: Object.keys(sheet.cards).length, foil: !!sheet.foil };
+                });
+
+                const totalW = booster.boostersTotalWeight || booster.boosters.reduce((a, b) => a + b.weight, 0);
+                // Variant sheets (pairAjani, pairChandra...) that stand in for
+                // each other - 4+ sheets sharing a prefix, never two in the same
+                // pack - show as one slot row.
+                const sheetFamily = {};
+                const families = {};
+                Object.keys(sheetGroups).forEach(n => {
+                    const m = n.match(/^([a-z]+)[A-Z]/);
+                    if (m) (families[m[1]] = families[m[1]] || []).push(n);
+                });
+                Object.entries(families).forEach(([prefix, names]) => {
+                    const exclusive = booster.boosters.every(cfg => names.filter(n => cfg.contents[n]).length <= 1);
+                    if (names.length >= 4 && exclusive) names.forEach(n => { sheetFamily[n] = { prefix, size: names.length }; });
+                });
+                const groups = new Map(); // key -> { label, finish, source, rarity, expected, none, cards }
+                const slots = new Map(); // merged sheet label -> { count, foil, rarity shares, special share }
+                let cardsPerPack = 0;
+                booster.boosters.forEach(cfg => {
+                    const w = cfg.weight / totalW;
+                    Object.entries(cfg.contents).forEach(([sheetName, count]) => {
+                        const sg = sheetGroups[sheetName];
+                        if (!sg) return;
+                        cardsPerPack += w * count;
+                        const fam = sheetFamily[sheetName];
+                        const slotKey = fam ? `${fam.prefix}*` : sheetName;
+                        const slot = slots.get(slotKey) || { label: fam ? `${pullSheetLabel(fam.prefix)} (one of ${fam.size} versions)` : pullSheetLabel(sheetName), count: 0, foil: sg.foil, rarity: {}, special: 0 };
+                        slot.count += w * count;
+                        sg.groups.forEach(g => {
+                            slot.rarity[g.rarity] = (slot.rarity[g.rarity] || 0) + w * count * g.share;
+                            if (g.special) slot.special += w * count * g.share;
+                            const entry = groups.get(g.key) || { label: g.label, finish: g.finish, source: g.source, rarity: g.rarity, expected: 0, none: 0, cards: new Set() };
+                            entry.expected += w * count * g.share;
+                            g.cards.forEach(u => entry.cards.add(u));
+                            groups.set(g.key, entry);
+                        });
+                        slots.set(slotKey, slot);
+                    });
+                });
+                // Chance a pack has none of each group, over every layout
+                // (a layout without the group counts as none).
+                booster.boosters.forEach(cfg => {
+                    const w = cfg.weight / totalW;
+                    groups.forEach((entry, k) => {
+                        let none = 1;
+                        Object.entries(cfg.contents).forEach(([sheetName, count]) => {
+                            const sg = sheetGroups[sheetName];
+                            const g = sg && sg.groups.get(k);
+                            if (g) none *= pullNoneChance(g.share, count, sg.size);
+                        });
+                        entry.none += w * none;
+                    });
+                });
+
+                const list = [...groups.values()].map(g => ({
+                    label: g.label, finish: g.finish, source: g.source, rarity: g.rarity,
+                    distinct: g.cards.size, expected: g.expected, chance: Math.max(0, Math.min(1, 1 - g.none)),
+                    perCard: g.cards.size ? g.expected / g.cards.size : 0
+                })).sort((a, b) => b.expected - a.expected);
+                return {
+                    key, name: booster.name || `${setData.name} ${key === 'default' ? 'booster' : `${key} booster`}`, packs: pullBoxPackCount(setData, key), cardsPerPack,
+                    layouts: booster.boosters.length, groups: list, slots: [...slots.values()].sort((a, b) => b.count - a.count)
+                };
+            });
+            return {
+                setName: setData.name, releaseDate: setData.releaseDate, type: setData.type,
+                baseSetSize: setData.baseSetSize, totalSetSize: setData.totalSetSize, rarityCounts, types
+            };
+        }
+
+        function productPullRatesButtonHTML(code) {
+            return `<button type="button" class="staples-sort-btn" style="margin:8px 0;" onclick="loadProductPullRates('${code}')">🎲 Pull rates: what's in each pack</button>`;
+        }
+
+        let pullRatesShowing = null; // the set whose pull rates were last asked for
+
+        async function loadProductPullRates(code, focusKey) {
+            const el = document.getElementById('prodPullRates');
+            if (!el) return;
+            pullRatesShowing = code;
+            el.innerHTML = '<div class="loading">Working out pull rates from the pack odds...</div>';
+            if (!pullRatesCache[code]) {
+                pullRatesCache[code] = computePullRates(code);
+                pullRatesCache[code].catch(() => { delete pullRatesCache[code]; });
+            }
+            try {
+                const res = await pullRatesCache[code];
+                if (code !== pullRatesShowing) return;
+                renderProductPullRates(code, res, focusKey);
+            } catch (err) {
+                console.error('Pull rates error:', err);
+                el.innerHTML = `<div class="error">Couldn't work out pull rates right now. ${productPullRatesButtonHTML(code)}</div>`;
+            }
+        }
+
+        // "1 in 37 packs" / "42% of packs" / "every pack"
+        function pullOddsText(chance, unit) {
+            const units = unit === 'box' ? 'boxes' : `${unit}s`;
+            if (chance >= 0.995) return `Every ${unit}`;
+            if (chance >= 0.1) return `${Math.round(chance * 100)}% of ${units}`;
+            if (chance <= 0) return '—';
+            const n = 1 / chance;
+            return `1 in ${n < 10 ? n.toFixed(1).replace(/\.0$/, '') : Math.round(n).toLocaleString()} ${units}`;
+        }
+
+        function pullBoxesText(n) {
+            const r = Math.round(n);
+            return `${r.toLocaleString()} box${r === 1 ? '' : 'es'}`;
+        }
+
+        function pullCountText(expected) {
+            if (expected >= 9.95) return Math.round(expected).toLocaleString();
+            if (expected >= 0.095) return expected.toFixed(expected >= 1 ? 1 : 2).replace(/\.?0+$/, '');
+            return expected > 0 ? '<0.1' : '0';
+        }
+
+        function renderProductPullRates(code, res, focusKey) {
+            const el = document.getElementById('prodPullRates');
+            if (!el) return;
+            if (!res.types.length) {
+                el.innerHTML = '<div class="moonshot-status">MTGJSON doesn\'t list pack contents for this set, so pull rates can\'t be worked out.</div>';
+                return;
+            }
+            const rc = res.rarityCounts;
+            const rarityLine = ['common', 'uncommon', 'rare', 'mythic', 'special', 'land']
+                .filter(r => rc[r]).map(r => `${rc[r]} ${{ common: 'common', uncommon: 'uncommon', rare: 'rare', mythic: 'mythic', special: 'special', land: 'basic land' }[r]}${rc[r] === 1 || r === 'special' ? '' : 's'}`).join(' · ');
+            const typeHTML = t => {
+                const rows = t.groups.map(g => {
+                    const box = t.packs ? g.expected * t.packs : null;
+                    const boxChance = t.packs ? 1 - Math.pow(1 - g.chance, t.packs) : null;
+                    const perCardPacks = g.perCard > 0 ? 1 / g.perCard : null;
+                    return `
+                        <tr>
+                            <td>${g.label}${g.source ? ` <span class="pull-src">${g.source}</span>` : ''}<div class="lands-row-meta text-secondary">${g.finish} · ${g.distinct} card${g.distinct === 1 ? '' : 's'}</div></td>
+                            <td>${pullCountText(g.expected)}</td>
+                            <td>${pullOddsText(g.chance, 'pack')}</td>
+                            <td>${box === null ? '—' : (box >= 1 ? `about ${pullCountText(box)}` : pullOddsText(boxChance, 'box'))}</td>
+                            <td class="text-secondary">${perCardPacks === null ? '—' : (perCardPacks <= 1 ? 'Every pack' : `1 in ${Math.round(perCardPacks).toLocaleString()} packs${t.packs && perCardPacks > t.packs ? ` (${pullBoxesText(perCardPacks / t.packs)})` : ''}`)}</td>
+                        </tr>
+                    `;
+                }).join('');
+                const slotRows = t.slots.map(s => {
+                    const total = Object.values(s.rarity).reduce((a, b) => a + b, 0) || 1;
+                    const mix = PULL_RARITY_ORDER.filter(r => s.rarity[r] / total >= 0.005)
+                        .map(r => `${Math.round((s.rarity[r] / total) * 100)}% ${r === 'land' ? 'basic land' : r}`).join(' · ');
+                    const special = s.special / total;
+                    return `<li><strong>${pullCountText(s.count)}×</strong> ${s.label}${s.foil && !/foil/i.test(s.label) ? ' <span class="pull-foil">foil</span>' : ''} <span class="text-secondary">- ${mix}${special >= 0.005 ? ` · ${Math.round(special * 100)}% special treatment` : ''}</span></li>`;
+                }).join('');
+                return `
+                    <details class="all-printings pull-type" id="pullType-${t.key}"${focusKey ? (focusKey === t.key ? ' open' : '') : ''}>
+                        <summary>${t.name} · ${pullCountText(t.cardsPerPack)} card${t.cardsPerPack === 1 ? '' : 's'} a pack${t.packs ? ` · ${t.packs} packs a box` : ''}</summary>
+                        <div class="edh-subhead">Pack layout <span class="text-secondary">(average per pack${t.layouts > 1 ? `; ${t.layouts} possible layouts` : ''})</span></div>
+                        <ul class="pull-slots">${slotRows}</ul>
+                        <div class="edh-subhead">Pull rates</div>
+                        <div class="buylist-table-wrap"><table class="lands-pkg-table mkt-table pull-table">
+                            <thead><tr><th>What you can pull</th><th>Per pack</th><th>Odds in a pack</th><th>${t.packs ? `In a ${t.packs}-pack box` : 'Per box'}</th><th>One specific card</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table></div>
+                    </details>
+                `;
+            };
+            const missing = focusKey && !res.types.some(t => t.key === focusKey);
+            el.innerHTML = `
+                <div class="edh-block">
+                    <div class="edh-head"><span class="edh-title">🎲 Pull rates: what's in each pack</span></div>
+                    ${missing ? `<div class="moonshot-status">MTGJSON doesn't list the odds for the ${packLabel(focusKey).toLowerCase()}. The set's other packs are below.</div>` : ''}
+                    <div>${res.setName} · ${res.releaseDate > todayISO() ? 'releases' : 'released'} ${res.releaseDate}${res.baseSetSize ? ` · ${res.baseSetSize} cards in the main set${res.totalSetSize > res.baseSetSize ? ` (${res.totalSetSize} counting variants)` : ''}` : ''}</div>
+                    ${rarityLine ? `<div class="text-secondary" style="font-size:0.9em;">Main set: ${rarityLine}</div>` : ''}
+                    <div class="bk-note">Open a pack type for its layout and odds. "Per pack" is the average number you'll find; "odds in a pack" is the chance of at least one. "One specific card" is the average for a single card in that group (some cards in a group can be a bit more or less common). Box figures assume the box's packs are independent, which is close but not exact.</div>
+                    ${res.types.map(typeHTML).join('')}
+                    <div class="edh-source">Pack layouts and odds from MTGJSON's booster data (it follows Wizards' published collation where it's known), read today. Odds are averages across many packs - any one pack or box can differ.</div>
+                </div>
+            `;
+            if (focusKey) {
+                const target = document.getElementById(`pullType-${focusKey}`);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // From a product's popup: close it and open the set's pull rates
+        // at that pack type.
+        function showPackPullRates(code, key) {
+            closeProductModal();
+            if (code !== productsSetCode && productEntry(code)) selectProductSet(code);
+            loadProductPullRates(code, key);
+        }
+
         function productImageHTML(p, size) {
             const img = tcgplayerProductImage(p, size);
             return img
@@ -11521,7 +11899,7 @@
                 items.push(item('📦', productsData.byUuid.has(x.uuid)
                     ? `<span class="set-link" onclick="openProductModal('${x.uuid}')">${label}</span>` : label));
             });
-            (c.pack || []).forEach(x => items.push(item('🎴', packLabel(x.code))));
+            (c.pack || []).forEach(x => items.push(item('🎴', `${packLabel(x.code)} <button type="button" class="staples-sort-btn prod-deck-btn" onclick="showPackPullRates('${x.set}', '${x.code}')">🎲 Pull rates</button>`)));
             (c.card || []).forEach(x => items.push(item('✨',
                 `Promo card: <span class="set-link" onclick="openPromoCard('${x.set}', '${x.number}')">${x.name}</span>${x.foil ? ' (foil)' : ''} <span class="text-secondary">#${x.number}</span>`)));
             (c.deck || []).forEach(x => items.push(item('🃏',
@@ -12087,7 +12465,7 @@
 
             let guideHTML = '';
             if (commander) {
-                edhrecGuide = { key, commander, list: 'highsynergycards' };
+                edhrecGuide = { key, commander, list: 'highsynergycards', bracket: 0, bracketData: null };
                 const decks = (edhrecPageCard(commander.data) || {}).num_decks;
                 guideHTML = `
                     <details class="all-printings" id="edhrecGuideDetails" ontoggle="if (this.open) loadEdhrecGuideList()">
@@ -12116,20 +12494,102 @@
             }
         }
 
+        // The bracket slider: EDHREC has a page per bracket for each
+        // commander (commanders/<slug>/core and so on), built only from
+        // decks at that bracket. 0 = all decks.
+        const EDHREC_BRACKET_PAGES = ['', 'exhibition', 'core', 'upgraded', 'optimized', 'cedh'];
+        const EDHREC_BRACKET_GC_NOTE = {
+            1: 'Bracket 1 allows no Game Changers.',
+            2: 'Bracket 2 allows no Game Changers.',
+            3: 'Bracket 3 allows up to 3 Game Changers.',
+            4: 'Bracket 4 allows any number of Game Changers.',
+            5: 'Bracket 5 (cEDH) allows any number of Game Changers.'
+        };
+
+        // The page the card lists come from: the chosen bracket's, or all decks.
+        function edhrecGuideData() {
+            return (edhrecGuide && (edhrecGuide.bracketData || edhrecGuide.commander.data)) || null;
+        }
+
+        function edhrecGuideListBtnsHTML() {
+            const lists = edhrecCardlists(edhrecGuideData()).filter(l => (l.cardviews || []).length);
+            const active = lists.some(l => l.tag === edhrecGuide.list) ? edhrecGuide.list : (lists[0] || {}).tag;
+            return lists.map(l => `<button type="button" class="staples-sort-btn${l.tag === active ? ' active' : ''}" onclick="setEdhrecGuideList('${l.tag}')">${l.header}</button>`).join('');
+        }
+
+        function edhrecBracketNoteHTML() {
+            const g = edhrecGuide;
+            const b = g.bracket;
+            const counts = g.commander.data.bracket_counts || {};
+            const all = (edhrecPageCard(g.commander.data) || {}).num_decks;
+            if (!b) return `Showing cards from all ${all ? `${all.toLocaleString()} ` : ''}decks. Slide to a bracket to see what players run at that power level.`;
+            const info = BRACKET_INFO.find(x => x.number === b);
+            const n = Number(counts[b]) || 0;
+            if (g.bracketState === 'loading') return `Loading Bracket ${b} decks...`;
+            if (g.bracketState === 'missing') return `EDHREC has no Bracket ${b} page for this commander, so the cards below are from all decks.`;
+            return `<strong class="bk-col-${b}" style="color:var(--bk-color);">Bracket ${b} · ${info ? info.name : ''}</strong>: cards from the ${n ? `${n.toLocaleString()} ` : ''}decks built at this bracket, and the share of those decks that run each one. ${EDHREC_BRACKET_GC_NOTE[b] || ''}${n && n < 50 ? ` <span class="mkt-down">Only ${n} decks, so the lists are thin.</span>` : ''} <a class="text-link" href="${EDHREC_SITE}/${g.commander.path}/${EDHREC_BRACKET_PAGES[b]}" target="_blank" rel="noopener">See it on EDHREC →</a>`;
+        }
+
+        function edhrecBracketSliderHTML() {
+            const b = edhrecGuide.bracket;
+            return `
+                <div class="edh-subhead">Recommend cards for a bracket</div>
+                <div class="edh-bracket-slider">
+                    <input type="range" min="0" max="5" step="1" value="${b}" aria-label="Bracket to recommend cards for (0 = all decks)" oninput="previewEdhrecBracket(this.value)" onchange="setEdhrecGuideBracket(this.value)">
+                    <div class="edh-bracket-ticks">${['All', '1', '2', '3', '4', '5'].map((t, i) => `<button type="button" class="${i ? `bk-col-${i}` : ''}${i === b ? ' active' : ''}" onclick="setEdhrecGuideBracket(${i})">${t}</button>`).join('')}</div>
+                    <div class="bk-note" id="edhrecBracketNote">${edhrecBracketNoteHTML()}</div>
+                </div>
+            `;
+        }
+
+        // While dragging, just move the highlight; the lists load on release.
+        function previewEdhrecBracket(value) {
+            const b = Number(value);
+            document.querySelectorAll('#edhrecGuideBody .edh-bracket-ticks button').forEach((btn, i) => btn.classList.toggle('active', i === b));
+        }
+
+        async function setEdhrecGuideBracket(value) {
+            const guide = edhrecGuide;
+            if (!guide) return;
+            const b = Math.min(5, Math.max(0, Number(value) || 0));
+            if (b === guide.bracket && guide.bracketState !== 'missing') return;
+            guide.bracket = b;
+            guide.bracketData = null;
+            guide.bracketState = b ? 'loading' : null;
+            const slider = document.querySelector('#edhrecGuideBody .edh-bracket-slider input');
+            if (slider) slider.value = b;
+            previewEdhrecBracket(b);
+            const refresh = () => {
+                const note = document.getElementById('edhrecBracketNote');
+                if (note) note.innerHTML = edhrecBracketNoteHTML();
+                const btns = document.getElementById('edhrecGuideListBtns');
+                if (btns) btns.innerHTML = edhrecGuideListBtnsHTML();
+            };
+            refresh();
+            if (b) {
+                const data = await fetchEdhrecPage(`${guide.commander.path}/${EDHREC_BRACKET_PAGES[b]}`);
+                if (edhrecGuide !== guide || guide.bracket !== b) return; // moved on meanwhile
+                guide.bracketData = data && edhrecCardlists(data).length ? data : null;
+                guide.bracketState = guide.bracketData ? 'ok' : 'missing';
+                refresh();
+            }
+            loadEdhrecGuideList();
+        }
+
         function edhrecGuideBodyHTML() {
-            const { commander, list } = edhrecGuide;
+            const { commander } = edhrecGuide;
             const data = commander.data;
             const themes = ((data.panels && data.panels.taglinks) || []).slice(0, 10);
-            const lists = edhrecCardlists(data).filter(l => (l.cardviews || []).length);
             const similar = (data.similar || []).map(s => (typeof s === 'string' ? s : s && s.name)).filter(Boolean).slice(0, 6);
             return `
                 ${edhrecBracketSplitHTML(data.bracket_counts, commander.name)}
+                ${edhrecBracketSliderHTML()}
                 ${themes.length ? `
                     <div class="edh-subhead">Popular themes <span class="text-secondary">(decks)</span></div>
                     <div class="edh-pills">${themes.map(t => `<a class="related-card-pill edh-pill-link" href="${EDHREC_SITE}/${commander.path}/${encodeURIComponent(t.slug)}" target="_blank" rel="noopener">${t.value}<span class="edh-pill-pct">${Number(t.count).toLocaleString()}</span></a>`).join('')}</div>
                 ` : ''}
                 <div class="edh-subhead">Cards players run with it</div>
-                <div class="edh-list-btns">${lists.map(l => `<button type="button" class="staples-sort-btn${l.tag === list ? ' active' : ''}" onclick="setEdhrecGuideList('${l.tag}')">${l.header}</button>`).join('')}</div>
+                <div class="edh-list-btns" id="edhrecGuideListBtns">${edhrecGuideListBtnsHTML()}</div>
                 <div class="card-tile-grid edh-tiles" id="edhrecGuideTiles"></div>
                 <div class="edh-subhead">Budget build</div>
                 <div id="edhrecBudget"><button type="button" class="staples-sort-btn" onclick="loadEdhrecBudget()">💰 Show EDHREC's budget deck, priced</button></div>
@@ -12154,12 +12614,14 @@
             const el = document.getElementById('edhrecGuideTiles');
             if (!guide || !el) return;
             const tag = guide.list;
-            const list = edhrecCardlists(guide.commander.data).find(l => l.tag === tag)
-                || edhrecCardlists(guide.commander.data)[0];
+            const bracket = guide.bracket;
+            const source = edhrecGuideData();
+            const list = edhrecCardlists(source).find(l => l.tag === tag)
+                || edhrecCardlists(source).find(l => (l.cardviews || []).length);
             if (!list) return;
             el.innerHTML = '<div class="loading">Pricing cards...</div>';
             const html = await edhrecTilesHTML(list.cardviews.map(cv => ({ name: cv.name, label: `${edhrecPct(edhrecInclusion(cv))} of decks` })));
-            if (edhrecGuide !== guide || guide.list !== tag) return; // switched away meanwhile
+            if (edhrecGuide !== guide || guide.list !== tag || guide.bracket !== bracket || edhrecGuideData() !== source) return; // switched away meanwhile
             el.innerHTML = html || '<div class="text-secondary">Couldn\'t price these cards right now.</div>';
         }
 
@@ -17257,8 +17719,9 @@
                     const data = await res.json();
                     if (myToken !== autocompleteToken) return; // typing moved on
                     const names = (data.data || []).slice(0, 10);
-                    showAutocomplete(names.length
-                        ? names.map(n => `<div class="autocomplete-item" role="option" data-name="${escapeAttr(n)}" onmousedown="event.preventDefault()" onclick="selectCard(this.dataset.name)">${n}</div>`).join('')
+                    const setItem = setSuggestionHTML(query);
+                    showAutocomplete(names.length || setItem
+                        ? setItem + names.map(n => `<div class="autocomplete-item" role="option" data-name="${escapeAttr(n)}" onmousedown="event.preventDefault()" onclick="selectCard(this.dataset.name)">${n}</div>`).join('')
                         : '<div class="autocomplete-item text-secondary">No exact matches - press Enter to search anyway</div>');
                 } catch (err) {
                     if (myToken !== autocompleteToken) return;
@@ -17279,7 +17742,9 @@
                 highlightAutocomplete();
             } else if (e.key === 'Enter') {
                 e.preventDefault();
-                if (autocompleteIndex >= 0 && items[autocompleteIndex]) selectCard(items[autocompleteIndex].dataset.name);
+                const picked = autocompleteIndex >= 0 && items[autocompleteIndex];
+                if (picked && picked.dataset.set) selectSetSuggestion(picked.dataset.set);
+                else if (picked) selectCard(picked.dataset.name);
                 else submitCardSearch();
             } else if (e.key === 'Escape') {
                 hideAutocomplete();
@@ -17296,12 +17761,19 @@
             performLookup(cardName);
         }
 
-        function submitCardSearch() {
+        async function submitCardSearch() {
             const cardName = document.getElementById('cardSearch').value.trim();
             if (!cardName) return;
             clearTimeout(searchTimeout);
             autocompleteToken++;
             hideAutocomplete();
+            // A set code (FRA, set:fra) opens the set instead
+            const set = await findSetForQuery(cardName);
+            if (set) {
+                document.getElementById('cardSearch').value = '';
+                openSetView(set.code);
+                return;
+            }
             performLookup(cardName);
         }
 
@@ -17606,8 +18078,8 @@
                             <div class="printings-list" id="printingsList"></div>
                         </details>
 
-                        <details class="all-printings" id="setContextDetails">
-                            <summary>Sets released around this one</summary>
+                        <details class="all-printings" id="setContextDetails" ontoggle="if (this.open && document.getElementById('adjacentAzContainer')) loadCardAzNeighbors()">
+                            <summary>Sets released around this one · A–Z in the set</summary>
                             <div id="adjacentSetsContainer"></div>
                         </details>
 
@@ -17623,6 +18095,11 @@
 
             // Populate the before/after block for the card's own set
             updateAdjacentContext(setCode, setName, card.released_at);
+            if (setContextOpenNext) {
+                setContextOpenNext = false;
+                const ctx = document.getElementById('setContextDetails');
+                if (ctx) ctx.open = true; // fires ontoggle, which loads the A-Z neighbors
+            }
 
             // Populate legality and related cards (no extra fetch needed - already in card data)
             renderLegality(card);
@@ -17775,13 +18252,352 @@
                 html += `<div class="adjacent-item"><span style="color: #909090;">After →</span> <span class="set-link" onclick="updateAdjacentContext('${adjacent.next.code}')">${adjacent.next.name} (${adjacent.next.code.toUpperCase()}, ${nextYear})</span></div>`;
             }
 
+            html += `<div class="adjacent-item"><span class="set-link" onclick="openSetView('${set.code.toLowerCase()}')">📋 Open ${set.code.toUpperCase()} - sets around it, A–Z, whole set →</span></div>`;
+
             if (currentCardSetCode && currentCardSetCode.toUpperCase() !== set.code.toUpperCase()) {
                 const safeCardSetName = (currentCardSetName || '').replace(/'/g, "\\'");
                 html += `<div class="adjacent-item"><span class="set-link" onclick="updateAdjacentContext('${currentCardSetCode}', '${safeCardSetName}', '${currentCardReleasedAt || ''}')">↺ Reset to this card's set</span></div>`;
             }
 
             html += '</div>';
+            // A-Z neighbors, when this is the set of the printing on screen
+            const shownSet = currentDisplayedCard && currentDisplayedCard.set;
+            if (shownSet && shownSet.toUpperCase() === set.code.toUpperCase()) html += '<div class="adjacent-sets" id="adjacentAzContainer"></div>';
             container.innerHTML = html;
+            const details = document.getElementById('setContextDetails');
+            if (details && details.open && document.getElementById('adjacentAzContainer')) loadCardAzNeighbors();
+        }
+
+        // ============== Set view (Card Lookup) ==============
+        // Typing a set code (FRA, or set:fra / e:fra) into the card search
+        // opens the set instead of a card: the sets released before and
+        // after it, an A-Z card browser, then the whole set as a drop-down.
+        // The card view's "Sets around this one" box reuses the same card
+        // list for the A-Z neighbors of the card on screen.
+        const SET_VIEW_MAX_PAGES = 8; // 175 cards a page; Secret Lair and The List go past this
+        const setCardsCache = new Map(); // set code -> Promise of { cards, total, truncated }
+        let setViewState = null; // { set, az, azIndex, sort, view }
+        let setViewOrder = []; // the whole-set list as shown, for the card popup's arrows
+
+        const SET_TYPE_LABELS = {
+            core: 'Core set', expansion: 'Expansion', masters: 'Masters set', commander: 'Commander',
+            draft_innovation: 'Draft set', funny: 'Un-set / funny', token: 'Tokens', promo: 'Promos',
+            memorabilia: 'Memorabilia', alchemy: 'Alchemy (Arena)', masterpiece: 'Masterpiece series',
+            arsenal: 'Arsenal', from_the_vault: 'From the Vault', spellbook: 'Spellbook',
+            premium_deck: 'Premium deck', duel_deck: 'Duel Decks', starter: 'Starter / intro',
+            box: 'Boxed set', planechase: 'Planechase', archenemy: 'Archenemy', vanguard: 'Vanguard',
+            treasure_chest: 'Treasure chest (Arena)', minigame: 'Minigame', eternal: 'Eternal set'
+        };
+
+        function setTypeLabel(type) {
+            return SET_TYPE_LABELS[type] || String(type || 'set').replace(/_/g, ' ');
+        }
+
+        // "fra", "FRA", "set:fra", "e:fra" -> the Scryfall set, or null.
+        async function findSetForQuery(text) {
+            const m = String(text || '').trim().toLowerCase().match(/^(?:(?:set|e|s):\s*)?([a-z0-9]{2,6})$/);
+            if (!m) return null;
+            try {
+                return (await fetchRawSets()).find(s => s.code === m[1]) || null;
+            } catch (err) {
+                return null;
+            }
+        }
+
+        // The autocomplete's set suggestion, if the sets are already loaded.
+        function setSuggestionHTML(query) {
+            const m = query.toLowerCase().match(/^(?:(?:set|e|s):\s*)?([a-z0-9]{2,6})$/);
+            const set = m && rawSetsCache && rawSetsCache.find(s => s.code === m[1]);
+            if (!set) return '';
+            return `<div class="autocomplete-item autocomplete-set" role="option" data-name="${escapeAttr(set.code)}" data-set="${escapeAttr(set.code)}" onmousedown="event.preventDefault()" onclick="selectSetSuggestion(this.dataset.set)">📦 Set: <strong>${set.name}</strong> <span class="text-secondary">(${set.code.toUpperCase()}, ${(set.released_at || '').slice(0, 4) || '?'})</span></div>`;
+        }
+
+        function selectSetSuggestion(code) {
+            clearTimeout(searchTimeout);
+            autocompleteToken++;
+            document.getElementById('cardSearch').value = '';
+            hideAutocomplete();
+            openSetView(code);
+        }
+
+        // Every printing in the set, in collector-number order.
+        function loadSetCards(code) {
+            code = code.toLowerCase();
+            if (!setCardsCache.has(code)) {
+                const job = (async () => {
+                    const cards = [];
+                    let url = `${API_BASE}/cards/search?q=${encodeURIComponent(`e:${code}`)}&unique=prints&order=set&include_extras=true&include_variations=true`;
+                    let pages = 0;
+                    let total = 0;
+                    while (url && pages < SET_VIEW_MAX_PAGES) {
+                        const page = await fetchScryfallSearchPage(url);
+                        total = page.total_cards || total;
+                        (page.data || []).forEach(c => { cardTileDataById[c.id] = c; cards.push(c); });
+                        url = page.has_more ? page.next_page : null;
+                        pages++;
+                        if (url) await new Promise(r => setTimeout(r, SCRYFALL_REQUEST_SPACING_MS));
+                    }
+                    return { cards, total: Math.max(total, cards.length), truncated: !!url };
+                })();
+                setCardsCache.set(code, job);
+                job.catch(() => setCardsCache.delete(code));
+            }
+            return setCardsCache.get(code);
+        }
+
+        // One entry per card name (its first printing in the set), A-Z.
+        function setAzList(cards) {
+            const seen = new Map();
+            cards.forEach(c => { if (!seen.has(c.name)) seen.set(c.name, c); });
+            return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+        }
+
+        // Neighbors by release date among sets of the same kind: main sets
+        // (core + expansion) for a main set, otherwise the same set type
+        // (Commander next to Commander, Masters next to Masters...).
+        // Digital-only sets are left out unless the set itself is one.
+        function setViewNeighbors(set, raw) {
+            const major = MAJOR_SET_TYPES.includes(set.set_type);
+            const pool = raw
+                .filter(s => s.released_at && !!s.digital === !!set.digital
+                    && (major ? MAJOR_SET_TYPES.includes(s.set_type) : s.set_type === set.set_type))
+                .sort((a, b) => a.released_at.localeCompare(b.released_at) || a.code.localeCompare(b.code));
+            const i = pool.findIndex(s => s.code === set.code);
+            return { prev: i > 0 ? pool[i - 1] : null, next: i >= 0 && i < pool.length - 1 ? pool[i + 1] : null };
+        }
+
+        function setNavButtonHTML(s, dir) {
+            if (!s) return `<div class="setv-nav-btn empty">${dir < 0 ? 'No earlier set' : 'No later set yet'}</div>`;
+            return `
+                <button type="button" class="setv-nav-btn${dir > 0 ? ' next' : ''}" onclick="openSetView('${s.code}')">
+                    <span class="setv-nav-dir">${dir < 0 ? '← Before' : 'After →'}</span>
+                    <span class="setv-nav-name"><img src="${s.icon_svg_uri || ''}" alt="" onerror="this.remove()">${s.name}</span>
+                    <span class="setv-nav-meta">${s.code.toUpperCase()} · ${s.released_at || '?'}</span>
+                </button>
+            `;
+        }
+
+        async function openSetView(code) {
+            const myToken = ++lookupRequestToken;
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">Loading the set...</div>';
+            let raw;
+            try {
+                [raw] = await Promise.all([fetchRawSets(), loadSets(), loadSymbology()]);
+            } catch (err) {
+                if (myToken === lookupRequestToken) resultsDiv.innerHTML = '<div class="error">❌ Couldn\'t load the set list from Scryfall.</div>';
+                return;
+            }
+            if (myToken !== lookupRequestToken) return;
+            const set = raw.find(s => s.code === String(code).toLowerCase());
+            if (!set) {
+                resultsDiv.innerHTML = `<div class="error">❌ No set with the code ${String(code).toUpperCase()}</div>`;
+                return;
+            }
+            currentDisplayedCard = null;
+            setViewState = { set, az: null, azIndex: 0, sort: 'number', view: 'list', cards: null, truncated: false, total: 0 };
+
+            const major = MAJOR_SET_TYPES.includes(set.set_type);
+            const same = setViewNeighbors(set, raw);
+            const mainAround = major ? null : getAdjacentSets(set.code, set.released_at);
+            const related = raw.filter(s => s.code !== set.code
+                && (s.parent_set_code === set.code || (set.parent_set_code && (s.code === set.parent_set_code || s.parent_set_code === set.parent_set_code))));
+            const upcoming = set.released_at && set.released_at > todayISO();
+            const cardName = await (async () => {
+                // ICE and WHO are also card names (Fire // Ice, Who // What // ...)
+                try {
+                    const res = await fetch(`${API_BASE}/cards/named?exact=${encodeURIComponent(set.code)}`);
+                    return res.ok ? (await res.json()).name : null;
+                } catch (err) {
+                    return null;
+                }
+            })();
+            if (myToken !== lookupRequestToken) return;
+
+            resultsDiv.innerHTML = `
+                <div class="setv">
+                    <div class="setv-head">
+                        <img class="setv-icon" src="${set.icon_svg_uri || ''}" alt="" onerror="this.remove()">
+                        <div>
+                            <div class="card-name" style="border-bottom:none; padding-bottom:0;">${set.name}</div>
+                            <div class="text-secondary">${set.code.toUpperCase()} · ${setTypeLabel(set.set_type)} · ${upcoming ? 'releases' : 'released'} ${set.released_at || '?'} · ${Number(set.card_count || 0).toLocaleString()} cards on Scryfall${set.digital ? ' · digital only' : ''}</div>
+                            <div class="setv-links">
+                                <a class="text-link" href="${set.scryfall_uri}" target="_blank" rel="noopener">See it on Scryfall →</a>
+                                ${cardName ? `<span class="set-link" data-name="${escapeAttr(cardName)}" onclick="performLookup(this.dataset.name)">Looking for the card ${cardName}? →</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setv-section">
+                        <div class="edh-subhead" style="margin-top:0;">Sets before and after <span class="text-secondary">(${major ? 'main sets' : `${setTypeLabel(set.set_type)} sets`}, by release date)</span></div>
+                        <div class="setv-nav">${setNavButtonHTML(same.prev, -1)}${setNavButtonHTML(same.next, 1)}</div>
+                        ${mainAround && (mainAround.prev || mainAround.next) ? `
+                            <div class="edh-subhead">Main sets around it</div>
+                            <div class="setv-nav">${setNavButtonHTML(mainAround.prev, -1)}${setNavButtonHTML(mainAround.next, 1)}</div>
+                        ` : ''}
+                        ${related.length ? `
+                            <div class="setv-related"><span class="text-secondary">Related sets:</span> ${related.map(s => `<span class="set-link" onclick="openSetView('${s.code}')">${s.name} (${s.code.toUpperCase()})</span>`).join(' · ')}</div>
+                        ` : ''}
+                    </div>
+
+                    <div class="setv-section">
+                        <div class="edh-subhead" style="margin-top:0;">Cards A–Z</div>
+                        <div id="setvAz"><div class="loading">Loading the cards...</div></div>
+                    </div>
+
+                    <details class="all-printings setv-section" id="setvListDetails">
+                        <summary>Whole set (loading...)</summary>
+                        <div id="setvList"></div>
+                    </details>
+                </div>
+            `;
+
+            try {
+                const res = await loadSetCards(set.code);
+                if (myToken !== lookupRequestToken) return;
+                setViewState.cards = res.cards;
+                setViewState.total = res.total;
+                setViewState.truncated = res.truncated;
+                setViewState.az = setAzList(res.cards);
+                renderSetAz();
+                renderSetList();
+            } catch (err) {
+                if (myToken !== lookupRequestToken) return;
+                console.error('Set view error:', err);
+                document.getElementById('setvAz').innerHTML = '<div class="error">Couldn\'t load this set\'s cards from Scryfall.</div>';
+                document.querySelector('#setvListDetails summary').textContent = 'Whole set (unavailable)';
+            }
+        }
+
+        function renderSetAz() {
+            const el = document.getElementById('setvAz');
+            const st = setViewState;
+            if (!el || !st || !st.az) return;
+            if (!st.az.length) {
+                el.innerHTML = '<div class="text-secondary">Scryfall has no cards for this set yet.</div>';
+                return;
+            }
+            const i = Math.min(Math.max(st.azIndex, 0), st.az.length - 1);
+            st.azIndex = i;
+            const card = st.az[i];
+            const prev = st.az[i - 1];
+            const next = st.az[i + 1];
+            const img = getCardImageSmall(card);
+            const price = printingPrice(card);
+            el.innerHTML = `
+                <div class="setv-az">
+                    <button type="button" class="setv-az-btn" onclick="stepSetAz(-1)" ${prev ? '' : 'disabled'}>← <span>${prev ? prev.name : 'Start of the set'}</span></button>
+                    <div class="setv-az-current">
+                        ${img ? `<img src="${img}" alt="${escapeAttr(card.name)}" onclick="openCardModal(cardTileDataById['${card.id}'], setViewState.az, ${i})">` : ''}
+                        <div class="setv-az-name">${card.name}</div>
+                        <div class="text-secondary" style="font-size:0.85em;">#${card.collector_number} · ${card.rarity || ''}${price ? ` · ${formatUsd(price.price)}${price.foilOnly ? ' (foil)' : ''}` : ''}</div>
+                        <div class="text-secondary" style="font-size:0.8em;">${i + 1} of ${st.az.length}</div>
+                        <button type="button" class="staples-sort-btn" onclick="showCardInLookup(cardTileDataById['${card.id}'])">Full lookup →</button>
+                    </div>
+                    <button type="button" class="setv-az-btn next" onclick="stepSetAz(1)" ${next ? '' : 'disabled'}><span>${next ? next.name : 'End of the set'}</span> →</button>
+                </div>
+                <label class="setv-az-jump"><span class="text-secondary">Jump to:</span>
+                    <select onchange="setViewState.azIndex = Number(this.value); renderSetAz();" aria-label="Jump to a card">
+                        ${st.az.map((c, j) => `<option value="${j}"${j === i ? ' selected' : ''}>${escapeAttr(c.name)}</option>`).join('')}
+                    </select>
+                </label>
+            `;
+        }
+
+        function stepSetAz(dir) {
+            if (!setViewState || !setViewState.az) return;
+            setViewState.azIndex += dir;
+            renderSetAz();
+        }
+
+        const SET_LIST_RARITY_ORDER = ['mythic', 'rare', 'uncommon', 'common', 'special', 'bonus'];
+
+        function setSetListMode(key, value) {
+            if (!setViewState) return;
+            setViewState[key] = value;
+            renderSetList();
+        }
+
+        function renderSetList() {
+            const el = document.getElementById('setvList');
+            const st = setViewState;
+            if (!el || !st || !st.cards) return;
+            const summary = document.querySelector('#setvListDetails summary');
+            if (summary) summary.textContent = `Whole set (${st.cards.length.toLocaleString()} cards${st.truncated ? ` of ${st.total.toLocaleString()}` : ''})`;
+            const cards = [...st.cards];
+            if (st.sort === 'az') cards.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }) || a.collector_number.localeCompare(b.collector_number, 'en', { numeric: true }));
+            else if (st.sort === 'rarity') cards.sort((a, b) => SET_LIST_RARITY_ORDER.indexOf(a.rarity) - SET_LIST_RARITY_ORDER.indexOf(b.rarity) || a.name.localeCompare(b.name));
+            else if (st.sort === 'price') cards.sort((a, b) => ((printingPrice(b) || {}).price || 0) - ((printingPrice(a) || {}).price || 0));
+            setViewOrder = cards;
+            const btn = (key, value, label) => `<button type="button" class="staples-sort-btn${st[key] === value ? ' active' : ''}" onclick="setSetListMode('${key}', '${value}')">${label}</button>`;
+            const body = st.view === 'pics'
+                ? `<div class="card-tile-grid">${cards.map((c, i) => buildCardTileHTML(c, `#${c.collector_number}`, i, 'setViewOrder')).join('')}</div>`
+                : `<div class="setv-rows">${cards.map((c, i) => {
+                    const p = printingPrice(c);
+                    return `
+                        <div class="setv-row" onclick="openCardModal(cardTileDataById['${c.id}'], setViewOrder, ${i})">
+                            <span class="setv-num">#${c.collector_number}</span>
+                            <span class="setv-rname">${c.name}</span>
+                            <span class="setv-rar" style="color:${RARITY_COLORS[c.rarity] || '#909090'};">${(c.rarity || '').charAt(0).toUpperCase()}</span>
+                            <span class="setv-price">${p ? `${formatUsd(p.price)}${p.foilOnly ? '*' : ''}` : '—'}</span>
+                        </div>
+                    `;
+                }).join('')}</div>`;
+            el.innerHTML = `
+                <div class="staples-controls setv-controls">
+                    <span class="text-secondary">Sort:</span>${btn('sort', 'number', '# Number')}${btn('sort', 'az', 'A–Z')}${btn('sort', 'rarity', 'Rarity')}${btn('sort', 'price', 'Price')}
+                    <span class="text-secondary" style="margin-left:8px;">Show:</span>${btn('view', 'list', 'List')}${btn('view', 'pics', 'Pictures')}
+                </div>
+                ${body}
+                <div class="bk-note">Every printing Scryfall lists for the set, including showcase and other variants. Prices are Scryfall's TCGplayer market price today (* = foil only).${st.truncated ? ` This set is very large, so only the first ${st.cards.length.toLocaleString()} are shown - see the full list on Scryfall.` : ''}</div>
+            `;
+        }
+
+        // Show a specific printing in Card Lookup (the set view's cards, and
+        // the A-Z neighbors), rather than looking the name up again, which
+        // would land on the newest printing.
+        let setContextOpenNext = false;
+
+        async function showCardInLookup(card, keepSetContextOpen) {
+            if (!card) return;
+            const myToken = ++lookupRequestToken;
+            closeCardModal();
+            await Promise.all([loadSets(), loadSymbology()]);
+            if (myToken !== lookupRequestToken) return;
+            setContextOpenNext = !!keepSetContextOpen;
+            displayCard(card);
+            loadAllPrintings(card);
+            loadRulings(card);
+            addToHistory(card);
+            if (!keepSetContextOpen) window.scrollTo({ top: document.getElementById('results').offsetTop - 80, behavior: 'smooth' });
+        }
+
+        // A-Z neighbors of the card on screen, inside its own set.
+        async function loadCardAzNeighbors() {
+            const el = document.getElementById('adjacentAzContainer');
+            const card = currentDisplayedCard;
+            if (!el || !card || !card.set) return;
+            el.innerHTML = '<div class="adjacent-item text-secondary">Loading A–Z neighbors...</div>';
+            let az;
+            try {
+                az = setAzList((await loadSetCards(card.set)).cards);
+            } catch (err) {
+                if (currentDisplayedCard === card) el.innerHTML = '';
+                return;
+            }
+            if (currentDisplayedCard !== card || !document.getElementById('adjacentAzContainer')) return;
+            const i = az.findIndex(c => c.name === card.name);
+            if (i < 0) {
+                el.innerHTML = '';
+                return;
+            }
+            const link = c => `<span class="set-link" onclick="showCardInLookup(cardTileDataById['${c.id}'], true)">${c.name}</span>`;
+            el.innerHTML = `
+                <div class="adjacent-item"><span class="text-secondary">A–Z in ${card.set.toUpperCase()} (card ${i + 1} of ${az.length}):</span></div>
+                <div class="adjacent-item">${az[i - 1] ? `← ${link(az[i - 1])}` : '<span class="text-secondary">← first card A–Z</span>'}
+                    &nbsp;·&nbsp; <strong>${card.name}</strong> &nbsp;·&nbsp;
+                    ${az[i + 1] ? `${link(az[i + 1])} →` : '<span class="text-secondary">last card A–Z →</span>'}</div>
+            `;
         }
 
         // Swap ALL displayed card info (image, symbol, set, year, type, cost,
