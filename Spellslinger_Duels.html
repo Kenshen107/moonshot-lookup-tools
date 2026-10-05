@@ -217,6 +217,18 @@
         .hand .hc.playable img { box-shadow: 0 0 0 2px var(--color-success), 0 0 10px var(--color-success); }
         .hand .hc.chosen img { box-shadow: 0 0 0 3px var(--gold); }
         .hand .hc .sup { position: absolute; top: 4px; right: 4px; }
+        .cr-sections { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 14px; font-size: 0.9rem; }
+        .cr-rule { padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 0.9rem; line-height: 1.5; }
+        .cr-num { font-weight: 700; margin-right: 4px; }
+        .cr-h { font-size: 1rem; margin: 12px 0 4px; }
+        .kw-help { margin-top: 8px; font-size: 0.85rem; background: var(--bg-inset); border-radius: var(--radius-sm); padding: 8px; display: grid; gap: 4px; }
+        .log a { color: var(--color-link); }
+        .stackbar { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; }
+        .stack-item { display: inline-flex; align-items: center; gap: 6px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); padding: 3px 8px 3px 3px; font-size: 0.8rem; max-width: 280px; }
+        .stack-item img { width: 30px; border-radius: 3px; }
+        .stack-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .stack-item.top { border-color: var(--gold); box-shadow: 0 0 10px color-mix(in srgb, var(--gold) 50%, transparent); }
+        .stack-item.selectable { box-shadow: 0 0 0 2px var(--gold), 0 0 12px var(--gold); }
         .log { max-height: 4.6em; overflow-y: auto; font-size: 0.8rem; color: var(--text-soft); padding: 4px 12px; background: color-mix(in srgb, var(--bg-canvas) 90%, transparent); }
         .log div:last-child { color: var(--text-heading); }
         .opp-hand { display: flex; gap: 2px; }
@@ -244,6 +256,45 @@
         .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100; background: var(--brand); color: var(--text-heading); padding: 10px 18px; border-radius: var(--radius-md); font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: calc(100vw - 32px); text-align: center; }
         .toast.show { opacity: 1; }
         footer { margin-top: 24px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+
+        /* ---- Playtester (goldfish a deck, like Moxfield's) ---- */
+        #playtest { position: fixed; inset: 0; z-index: 55; background: radial-gradient(ellipse at center, var(--felt-1), var(--felt-2) 70%, var(--bg-canvas)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; overflow: hidden; }
+        .pt-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 8px 12px; background: color-mix(in srgb, var(--bg-canvas) 75%, transparent); border-bottom: 1px solid var(--border-subtle); }
+        .pt-top .title { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); margin-right: 6px; }
+        .pt-life { display: inline-flex; align-items: center; gap: 4px; }
+        .pt-life b { font-family: var(--font-display); font-size: 1.3rem; color: var(--text-heading); min-width: 42px; text-align: center; }
+        .pt-main { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 10px; padding: 10px 12px; min-height: 0; }
+        .pt-field { overflow: auto; display: flex; flex-direction: column; gap: 8px; border: 2px dashed transparent; border-radius: var(--radius-lg); padding: 4px; }
+        .pt-field.drop, .pt-pile.drop, .pt-hand.drop { border-color: var(--gold); }
+        .pt-lane { display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; align-items: flex-start; }
+        .pt-lane.lands .pt-card + .pt-card { margin-left: calc(var(--land-w) * -0.4); }
+        .pt-side { display: flex; flex-direction: column; gap: 8px; overflow: auto; }
+        .pt-pile { border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 6px; text-align: center; font-size: 0.8rem; color: var(--text-soft); background: color-mix(in srgb, var(--bg-canvas) 60%, transparent); cursor: pointer; }
+        .pt-pile img { width: 70px; border-radius: 4px; display: block; margin: 4px auto 0; }
+        .pt-pile .back { width: 70px; aspect-ratio: 63 / 88; margin: 4px auto 0; border-radius: 4px; background: repeating-linear-gradient(45deg, var(--brand) 0 6px, var(--felt-1) 6px 12px); border: 2px solid var(--brand-light); }
+        .pt-card { position: relative; width: var(--card-w); flex: none; border: 0; background: none; padding: 0; transition: transform 0.2s; cursor: grab; }
+        .pt-card.land { width: var(--land-w); }
+        .pt-card img, .pt-card .noimg { width: 100%; aspect-ratio: 63 / 88; display: block; border-radius: 6px; object-fit: cover; background: var(--bg-inset); }
+        .pt-card .noimg { display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.72rem; padding: 4px; border: 1px solid var(--border); color: var(--text-primary); }
+        .pt-card.tapped { transform: rotate(90deg) scale(0.8); margin: 0 14px; }
+        .pt-card.tapped img { filter: brightness(0.7); }
+        .pt-card .ctr { position: absolute; top: 4px; left: 4px; background: var(--bg-canvas); border: 1px solid var(--gold); color: var(--gold); font-weight: 700; font-size: 0.72rem; padding: 0 5px; border-radius: 999px; }
+        .pt-hand { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; background: color-mix(in srgb, var(--bg-canvas) 85%, transparent); border: 2px dashed transparent; min-height: 70px; }
+        .pt-hand .pt-card { width: var(--hand-w); }
+        .pt-hand .pt-card:hover { transform: translateY(-8px); }
+        .pt-foot { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 4px 12px 8px; font-size: 0.8rem; color: var(--text-soft); background: color-mix(in srgb, var(--bg-canvas) 90%, transparent); }
+        .pt-menu { position: fixed; z-index: 70; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px; display: flex; flex-direction: column; gap: 2px; min-width: 190px; box-shadow: 0 12px 30px color-mix(in srgb, var(--bg-canvas) 80%, transparent); }
+        .pt-menu button { text-align: left; background: none; border: 0; color: var(--text-primary); padding: 6px 10px; border-radius: var(--radius-sm); font-size: 0.9rem; }
+        .pt-menu button:hover { background: var(--bg-panel-raised); color: var(--text-heading); }
+        .pt-menu .mh { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); padding: 4px 10px 2px; }
+        .pt-zone-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; text-align: left; max-height: 60vh; overflow: auto; }
+        .pt-zone-list .pt-card { width: 100%; }
+        @media (max-width: 700px) {
+            .pt-main { grid-template-columns: minmax(0, 1fr); }
+            .pt-side { flex-direction: row; overflow-x: auto; }
+            .pt-pile { min-width: 84px; }
+            .pt-keys { display: none; }
+        }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { transition: none !important; animation: none !important; }
         }
@@ -264,6 +315,7 @@
         <button class="tab" role="tab" id="tab-packs" aria-selected="false" onclick="showView('packs')">🎴 Packs</button>
         <button class="tab" role="tab" id="tab-decks" aria-selected="false" onclick="showView('decks')">🗂️ Collection &amp; Decks</button>
         <button class="tab" role="tab" id="tab-play" aria-selected="false" onclick="showView('play')">⚔️ Play</button>
+        <button class="tab" role="tab" id="tab-rules" aria-selected="false" onclick="showView('rules')">📖 Rules</button>
     </nav>
 
     <main>
@@ -295,7 +347,7 @@
             <div class="panel">
                 <h2>What the rules engine does (and doesn't, yet)</h2>
                 <p class="note">This is a base model. It plays real turns: untap, draw, a land a turn, mana from lands and mana rocks, summoning sickness, combat with attackers and blockers, and Commander damage and commander tax. These keywords work: flying, reach, trample, first strike, double strike, deathtouch, lifelink, vigilance, haste, defender, menace, indestructible and hexproof. Card text is read automatically: damage, destroy / exile / bounce, draw, life gain and loss, pump spells, +1/+1 counters, tapping, tokens, discard, auras and equipment that give +N/+N, and "when this enters" effects.</p>
-                <p class="note" style="margin-top:6px;">Every card shows how much of its text the game can run: <span class="badge sup-full">Automated</span> <span class="badge sup-partial">Partly</span> <span class="badge sup-none">Not yet</span>. "Partly" cards still play, but the text the game can't read does nothing. "Not yet" cards (planeswalkers, X spells, counterspells and most complex text) can't be cast yet. There's no stack yet: spells resolve right away, and you can cast instants on your turn or while blocking.</p>
+                <p class="note" style="margin-top:6px;">Every card shows how much of its text the game can run: <span class="badge sup-full">Automated</span> <span class="badge sup-partial">Partly</span> <span class="badge sup-none">Not yet</span>. "Partly" cards still play, but the text the game can't read does nothing. "Not yet" cards (planeswalkers, X spells and most complex text) can't be cast yet. Spells and "when this enters" abilities use the stack: the other player can respond with instants (including counterspells) before each one resolves, and a spell whose target is gone doesn't resolve. The <a href="#rules" onclick="showView('rules'); return false;">📖 Rules</a> tab has the official Comprehensive Rules to look things up.</p>
             </div>
         </section>
 
@@ -347,6 +399,17 @@
         </section>
 
         <!-- ============ PLAY ============ -->
+        <section id="view-rules" class="hidden">
+            <div class="panel">
+                <h2>Magic: The Gathering Comprehensive Rules</h2>
+                <p class="note" id="crInfo">Loading the rules...</p>
+                <div class="row" style="margin:10px 0;">
+                    <input type="search" id="crSearch" placeholder="Search: a keyword (trample), a rule number (702.19) or any words" style="flex:1; min-width:220px;" oninput="renderRulesView()" aria-label="Search the rules">
+                </div>
+                <div id="crResults"></div>
+            </div>
+        </section>
+
         <section id="view-play" class="hidden">
             <div class="panel">
                 <h2>1. Your deck</h2>
@@ -385,6 +448,17 @@
         <div class="hand" id="hand" aria-label="Your hand"></div>
         <div class="log" id="log" aria-live="polite"></div>
     </div>
+</section>
+
+<!-- Playtester: goldfish a deck (no opponent, no rules), like Moxfield's -->
+<section id="playtest" class="hidden" aria-label="Playtest">
+    <div class="pt-top" id="ptTop"></div>
+    <div class="pt-main">
+        <div class="pt-field" id="ptField" data-zone="bf"></div>
+        <div class="pt-side" id="ptSide"></div>
+    </div>
+    <div class="pt-hand" id="ptHand" data-zone="hand" aria-label="Hand"></div>
+    <div class="pt-foot" id="ptFoot"></div>
 </section>
 
 <div id="sheetHost"></div>
@@ -433,9 +507,12 @@ function renderCoins() { $('coinCount').textContent = (profile ? profile.coins :
 let sfQueue = Promise.resolve();
 function sfFetch(url, opts) {
     const p = sfQueue.then(async () => {
-        for (let attempt = 0; attempt < 3; attempt++) {
-            const res = await fetch(url, opts);
-            if (res.status === 429) { await sleep(1000 * (attempt + 1)); continue; }
+        for (let attempt = 0; attempt < 4; attempt++) {
+            let res;
+            // A rate-limited reply can arrive without CORS headers, which the
+            // browser reports as a network error: wait and try again either way.
+            try { res = await fetch(url, opts); } catch (e) { if (attempt === 3) throw e; await sleep(1500 * (attempt + 1)); continue; }
+            if (res.status === 429) { await sleep(1500 * (attempt + 1)); continue; }
             return res;
         }
         throw new Error('Scryfall is busy - try again in a minute');
@@ -613,6 +690,10 @@ const EFFECTS = [
     [/^put (\w+) \+1\/\+1 counters? on target creature(?: you control)?$/, m => ({ t: 'counters', n: num(m[1]), target: 'creature', good: true })],
     [/^put (\w+) \+1\/\+1 counters? on ~$/, m => ({ t: 'counters', n: num(m[1]), target: 'self' })],
     [/^tap target (?:creature|creature an opponent controls|creature you don't control)$/, () => ({ t: 'tap', target: 'creature', good: false })],
+    [/^counter target spell$/, () => ({ t: 'counter', target: 'spell', filter: 'any' })],
+    [/^counter target (noncreature|creature|instant or sorcery|artifact or enchantment) spell$/, m => ({ t: 'counter', target: 'spell', filter: m[1] })],
+    [/^counter target spell unless its controller pays \{(\d+)\}$/, m => ({ t: 'counter', target: 'spell', filter: 'any', unless: +m[1] })],
+    [/^counter target (?:activated or triggered|triggered) ability$/, () => ({ t: 'counter', target: 'spell', filter: 'ability' })],
     [/^scry (\w+)$/, m => ({ t: 'scry', n: num(m[1]) })],
     [/^surveil (\w+)$/, m => ({ t: 'scry', n: num(m[1]) })]
 ];
@@ -711,9 +792,87 @@ function supportBadge(card) {
 }
 
 // =====================================================================
+// The Comprehensive Rules. A copy is kept in rules/ by a weekly GitHub
+// job (tools/fetch_rules.py): rules/cr.json has every rule by number,
+// the section titles and the glossary. The game uses it for the 📖 Rules
+// tab, keyword explanations on cards and the rule numbers in the log.
+// =====================================================================
+let crData = null;
+let crPromise = null;
+function loadRules() {
+    if (!crPromise) {
+        crPromise = fetch('rules/cr.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => { crData = d; return d; });
+        crPromise.catch(() => { crPromise = null; });
+    }
+    return crPromise;
+}
+const CR_SOURCE = 'https://magic.wizards.com/en/rules';
+
+function ruleHTML(num, text) {
+    return `<div class="cr-rule" id="cr-${esc(num)}"><a class="cr-num" href="#" onclick="openRule('${esc(num)}'); return false;">${esc(num)}</a> ${esc(text).replace(/\n/g, '<br>').replace(/\b(\d{3}\.\d+[a-z]?)\b/g, m => `<a href="#" onclick="openRule('${m}'); return false;">${m}</a>`)}</div>`;
+}
+
+async function renderRulesView() {
+    const info = $('crInfo'), out = $('crResults');
+    try { await loadRules(); } catch (e) {
+        info.innerHTML = `The rules copy isn't here yet. It's fetched from <a href="${CR_SOURCE}" target="_blank" rel="noopener">Wizards' rules page</a> by a weekly job; until then, read them there.`;
+        out.innerHTML = '';
+        return;
+    }
+    info.innerHTML = `Effective ${esc(crData.effective || '?')} · ${Object.keys(crData.rules).length.toLocaleString()} rules and ${Object.keys(crData.glossary).length} glossary terms, copied ${esc(crData.fetched)} from <a href="${CR_SOURCE}" target="_blank" rel="noopener">Wizards of the Coast's rules page</a>. The rules are Wizards'; this copy keeps their wording.`;
+    const q = $('crSearch').value.trim();
+    if (!q) {
+        out.innerHTML = `<div class="cr-sections">${Object.entries(crData.sections).map(([n, t]) => `<a href="#" onclick="openRule('${n}.1'); return false;">${n}. ${esc(t)}</a>`).join('')}</div>`;
+        return;
+    }
+    const ql = q.toLowerCase();
+    let html = '';
+    if (/^\d{3}(\.\d+[a-z]?)?$/.test(q)) {
+        const hits = Object.entries(crData.rules).filter(([n]) => n === q || n.startsWith(q.includes('.') ? q : `${q}.`) || n.startsWith(`${q}`) && /[a-z]$/.test(n));
+        html = hits.slice(0, 80).map(([n, t]) => ruleHTML(n, t)).join('');
+    } else {
+        const gloss = Object.entries(crData.glossary).filter(([term]) => term.toLowerCase().includes(ql)).slice(0, 8);
+        const rules = Object.entries(crData.rules).filter(([, t]) => t.toLowerCase().includes(ql)).slice(0, 60);
+        html = (gloss.length ? `<h3 class="cr-h">Glossary</h3>${gloss.map(([term, t]) => `<div class="cr-rule"><strong>${esc(term)}</strong><br>${esc(t).replace(/\n/g, '<br>').replace(/\b(\d{3}\.\d+[a-z]?)\b/g, m => `<a href="#" onclick="openRule('${m}'); return false;">${m}</a>`)}</div>`).join('')}` : '')
+            + (rules.length ? `<h3 class="cr-h">Rules${rules.length === 60 ? ' (first 60)' : ''}</h3>${rules.map(([n, t]) => ruleHTML(n, t)).join('')}` : '');
+    }
+    out.innerHTML = html || '<p class="note">Nothing found.</p>';
+}
+
+// Show one rule (and the rules around it) - from the log, a card or a link.
+async function openRule(num) {
+    try { await loadRules(); } catch (e) { toast('The rules copy isn\'t available yet.'); return; }
+    const base = num.replace(/[a-z]$/, '');
+    const list = Object.entries(crData.rules).filter(([n]) => n === base || (n.startsWith(base) && /^[a-z]$/.test(n.slice(base.length))));
+    const sec = crData.sections[num.slice(0, 3)];
+    showModal(`<h2 style="font-size:1.2rem;">Rule ${esc(num)}${sec ? ` · ${esc(sec)}` : ''}</h2>
+        <div style="text-align:left; max-height:60vh; overflow:auto;">${list.map(([n, t]) => ruleHTML(n, t)).join('') || '<p class="note">That rule isn\'t in this copy.</p>'}</div>
+        <p class="note" style="margin-top:8px;">Comprehensive Rules effective ${esc(crData.effective || '?')}, from Wizards of the Coast.</p>
+        <div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
+}
+
+// The official glossary wording for a card's keywords
+async function keywordHelpHTML(card) {
+    const R = rulesFor(card);
+    const kws = [...R.kw];
+    if (!kws.length) return '';
+    try { await loadRules(); } catch (e) { return ''; }
+    const rows = kws.map(k => {
+        const term = Object.keys(crData.glossary).find(t => t.toLowerCase() === k);
+        return term ? `<div><strong>${esc(term)}:</strong> ${esc(crData.glossary[term].split('\n')[0])}</div>` : '';
+    }).filter(Boolean);
+    return rows.length ? `<div class="kw-help">${rows.join('')}<div class="muted">From the Comprehensive Rules glossary.</div></div>` : '';
+}
+async function fillKeywordHelp(card) {
+    const el = $('kwHelp');
+    if (!el) return;
+    el.innerHTML = await keywordHelpHTML(card);
+}
+
+// =====================================================================
 // Views, packs, collection and decks
 // =====================================================================
-const VIEWS = ['home', 'packs', 'decks', 'play'];
+const VIEWS = ['home', 'packs', 'decks', 'play', 'rules'];
 function showView(v) {
     VIEWS.forEach(k => {
         $(`view-${k}`).classList.toggle('hidden', k !== v);
@@ -723,6 +882,7 @@ function showView(v) {
     if (v === 'packs') renderPacksView();
     if (v === 'decks') { if (!editing) renderDeckPicker(); }
     if (v === 'play') renderPlayView();
+    if (v === 'rules') renderRulesView();
     try { history.replaceState(null, '', `#${v}`); } catch (e) { /* fine */ }
 }
 
@@ -892,10 +1052,12 @@ function showCardSheet(id, actionsHTML = '') {
                     <div class="note">${esc(card.setName || '')} · ${esc(card.rarity || '')}${profile.collection[id] ? ` · you own ${profile.collection[id]}` : ''}</div>
                     ${cardTextHTML(card)}
                     <div>${supportBadge(card)} <span class="note">${esc(R.why || 'Everything on this card works in the game.')}</span></div>
+                    <div id="kwHelp"></div>
                     <div class="actions">${actionsHTML}<button class="btn" onclick="closeSheet()">Close</button></div>
                 </div>
             </div>
         </div>`;
+    fillKeywordHelp(card);
 }
 function closeSheet() { $('sheetHost').innerHTML = ''; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
@@ -960,6 +1122,7 @@ async function renderDeckPicker() {
                 <strong style="flex:1; min-width:180px;">${esc(d.name)}</strong>
                 <span class="note">${FORMATS[d.format].name} · ${deckCount(d)} cards${d.starter ? ' · starter' : ''}</span>
                 ${probs.length ? `<span class="warn" title="${esc(probs.join('\n'))}">⚠ ${probs.length} to fix</span>` : '<span class="ok">✓ Ready</span>'}
+                <button class="btn small" onclick="playtestSaved(${i})">🧪 Playtest</button>
                 <button class="btn small" onclick="editDeck(${i})">Edit</button>
                 <button class="btn small danger" onclick="deleteDeck(${i})">Delete</button>
             </div>`;
@@ -1114,6 +1277,7 @@ function renderDeckPanel() {
         }).join('')}
         <div class="row" style="margin-top:12px;">
             <button class="btn primary" onclick="saveDeck()">💾 Save deck</button>
+            <button class="btn gold" onclick="playtestDeck()">🧪 Playtest</button>
             <button class="btn" onclick="closeBuilder()">Back</button>
         </div>`;
 }
@@ -1144,6 +1308,7 @@ const MODERN_THEMES = [
     { key: 'elves', name: 'Elves', desc: 'Elves and green pump', colors: ['G'], creatures: 't:elf t:creature c<=g', spells: 'c=g (t:instant or t:sorcery) o:"target creature" o:"gets +"', creatureCount: 7 },
     { key: 'zombies', name: 'Zombies', desc: 'Black zombies and removal', colors: ['B'], creatures: 't:zombie t:creature c<=b', spells: 'c=b (t:instant or t:sorcery) o:"destroy target creature"', creatureCount: 7 },
     { key: 'lifelink', name: 'Orzhov Lifelink', desc: 'White and black lifelinkers', colors: ['W', 'B'], creatures: 'id<=wb -c:c t:creature kw:lifelink', spells: '(c=w or c=b or c=wb) (t:instant or t:sorcery) (o:"gain" or o:"destroy target creature")' },
+    { key: 'tempo', name: 'Mono-Blue Tempo', desc: 'Blue flyers backed by counterspells and bounce', colors: ['U'], creatures: 'c=u t:creature kw:flying cmc<=4', spells: 'c=u t:instant (o:"counter target spell" or o:"counter target noncreature spell" or o:"counter target creature spell" or o:"to its owner\'s hand")', spellCount: 5 },
     { key: 'gruul', name: 'Gruul Trample', desc: 'Red and green tramplers', colors: ['R', 'G'], creatures: 'id<=rg -c:c t:creature kw:trample cmc<=5', spells: '(c=r or c=g or c=rg) (t:instant or t:sorcery) (o:"damage to any target" or o:"gets +")' }
 ];
 
@@ -1359,6 +1524,8 @@ const opp = P => G.players[1 - P.i];
 const allPerms = () => [...G.players[0].bf, ...G.players[1].bf];
 const onBf = uid => allPerms().find(o => o.uid === uid) || null;
 function findObj(uid) {
+    const onStack = G.stack.find(it => it.kind === 'spell' && it.o.uid === uid);
+    if (onStack) return onStack.o;
     for (const P of G.players) for (const z of ['bf', 'hand', 'command', 'gy', 'exile']) { const o = P[z].find(x => x.uid === uid); if (o) return o; }
     return null;
 }
@@ -1378,7 +1545,10 @@ function log(msg) {
     G.log.push(msg);
     if (G.log.length > 80) G.log.shift();
     const el = $('log');
-    if (el) { el.innerHTML = G.log.slice(-40).map(l => `<div>${esc(l)}</div>`).join(''); el.scrollTop = el.scrollHeight; }
+    if (el) {
+        el.innerHTML = G.log.slice(-40).map(l => `<div>${esc(l).replace(/rule (\d{3}\.\d+[a-z]?)/g, (m, n) => `<a href="#" onclick="openRule('${n}'); return false;">rule ${n}</a>`)}</div>`).join('');
+        el.scrollTop = el.scrollHeight;
+    }
 }
 const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 
@@ -1436,7 +1606,8 @@ async function startMatch(again) {
 
 async function newGame(myDeck, oppDeck) {
     uidSeq = 1;
-    G = { format: myDeck.format, players: [], active: 0, turn: 1, phase: 'setup', log: [], attackers: [], blocks: {}, mode: null, over: false, busy: true, fromCommand: false };
+    G = { format: myDeck.format, players: [], active: 0, turn: 1, phase: 'setup', log: [], attackers: [], blocks: {}, mode: null, over: false, busy: true,
+        stack: [], stackRunning: false, priority: null };
     G.players = [makePlayer(0, 'You', myDeck, AUTOPLAY), makePlayer(1, oppDeck.commander ? oppDeck.commander.name : oppDeck.name, oppDeck, true)];
     $('game').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -1618,6 +1789,9 @@ function canCastNow(P, o) {
     const r = Rx(o);
     if (G.over || r.support === 'none' || r.kind === 'land') return false;
     if (!P.hand.includes(o) && !P.command.includes(o)) return false;
+    // While something is on the stack, only the player holding priority can
+    // cast, and only instant-speed spells (CR 117.1a, 307.1).
+    if (G.stack.length || G.priority !== null) return (r.kind === 'instant' || !!r.flash) && G.priority === P.i;
     if (r.kind === 'instant' || r.flash) {
         if (G.active === P.i) return [...MAIN, 'afterBlocks'].includes(G.phase);
         return G.phase === 'declareBlocks';
@@ -1627,7 +1801,7 @@ function canCastNow(P, o) {
 function canPlayLand(P, o) { return Rx(o).kind === 'land' && G.active === P.i && MAIN.includes(G.phase) && P.landsPlayed < 1 && P.hand.includes(o) && !G.over; }
 
 // ---- Targets ----
-const TARGETED = ['any', 'creature', 'player'];
+const TARGETED = ['any', 'creature', 'player', 'spell'];
 function needsTarget(e) { return TARGETED.includes(e.target); }
 function firstTargetEffect(o) {
     const r = Rx(o);
@@ -1639,10 +1813,24 @@ function validTargets(P, e) {
     const creatures = allPerms().filter(isCreature).filter(c => !has(c, 'shroud') && !(has(c, 'hexproof') && c.owner !== P.i));
     if (e.target === 'any' || e.target === 'creature') out.push(...creatures.map(o => ({ o })));
     if (e.target === 'any' || e.target === 'player') out.push(...G.players.map(p => ({ p })));
+    if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter)).map(item => ({ item })));
     return out;
 }
-function sameTarget(a, b) { return a && b && (a.o ? b.o && a.o.uid === b.o.uid : b.p && a.p.i === b.p.i); }
-function targetStillOk(t) { return t.p ? true : !!onBf(t.o.uid); }
+function stackMatches(it, filter) {
+    if (filter === 'ability') return it.kind === 'trigger';
+    if (it.kind !== 'spell') return false;
+    const k = Rx(it.o).kind;
+    return filter === 'any' || (filter === 'creature' && k === 'creature') || (filter === 'noncreature' && k !== 'creature')
+        || (filter === 'instant or sorcery' && (k === 'instant' || k === 'sorcery')) || (filter === 'artifact or enchantment' && (k === 'artifact' || k === 'enchantment'));
+}
+function sameTarget(a, b) {
+    if (!a || !b) return false;
+    if (a.item) return !!b.item && a.item.id === b.item.id;
+    return a.o ? !!b.o && a.o.uid === b.o.uid : !!b.p && a.p.i === b.p.i;
+}
+// A target is still legal if it's still there (CR 608.2b): a permanent on
+// the battlefield, a spell or ability on the stack, a player in the game.
+function targetStillOk(t) { return t.p ? true : t.item ? G.stack.includes(t.item) : !!onBf(t.o.uid); }
 
 function chooseTarget(P, e, source, cancelable) {
     const valid = validTargets(P, e);
@@ -1678,35 +1866,140 @@ function playLand(P, o) {
     log(`${P.name} ${P.i === 0 ? 'play' : 'plays'} ${o.card.name}${o.tapped ? ' (tapped)' : ''}.`);
 }
 
+// ---- The stack (CR 405) ----
+// Casting puts a spell on the stack (601.2); "when this enters" abilities
+// trigger and go on the stack too (603.3), with their targets chosen then
+// (603.3d). After something goes on the stack, the other player gets the
+// chance to respond (117.3c-117.4, simplified: the player who acted passes).
+// When both pass, the top item resolves (608.1); a spell or ability whose
+// target is gone doesn't resolve (608.2b). Lands, combat damage and
+// state-based actions don't use the stack (305.1, 510, 704.3).
+let stackSeq = 1;
+
 async function castSpell(P, o, presetTarget) {
     const fromCommand = P.command.includes(o);
     if (!payFor(P, o)) return false;
     removeFromZones(o);
-    const r = Rx(o);
-    log(`${P.name} ${P.i === 0 ? 'cast' : 'casts'} ${o.card.name}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax ? ` (commander tax ${P.tax * 2})` : ''}.`);
     if (fromCommand) P.tax++;
-    if (r.kind === 'instant' || r.kind === 'sorcery') {
-        await resolveEffects(P, r.spell, presetTarget, o);
-        if (!o.token) G.players[o.owner].gy.push(o);
-    } else {
-        resetObj(o);
-        P.bf.push(o);
-        if (r.isAura && presetTarget && presetTarget.o) o.attachedTo = presetTarget.o.uid;
-        if (r.etb.length) await resolveEffects(P, r.etb, null, o);
-    }
-    sba();
+    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name };
+    G.stack.push(item);
+    log(`${P.name} ${P.i === 0 ? 'cast' : 'casts'} ${o.card.name}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax > 1 ? ` (commander tax ${(P.tax - 1) * 2})` : ''}.`);
     renderGame();
+    await runStack();
     return true;
 }
 
-function targetName(t) { return t.p ? (t.p.i === 0 ? 'you' : t.p.name) : t.o.card.name; }
+// Triggered "when this enters" abilities go on the stack (603.3). Targets
+// are chosen now; with no legal target the ability is removed (603.3d).
+async function putTriggers(P, source, effects) {
+    const te = effects.find(needsTarget);
+    let target = null;
+    if (te) {
+        target = await chooseTarget(P, te, source, false);
+        if (!target) { log(`${source.card.name}'s ability has no legal target and is removed from the stack (rule 603.3d).`); return; }
+    }
+    G.stack.push({ id: stackSeq++, kind: 'trigger', o: source, P, target, effects, name: `${source.card.name}'s ability` });
+    log(`${source.card.name}'s ability triggers${target ? ` targeting ${targetName(target)}` : ''}.`);
+    renderGame();
+}
+
+// Resolve the stack until it's empty, offering responses each time.
+async function runStack() {
+    if (G.stackRunning) return; // an outer loop is already working through it
+    G.stackRunning = true;
+    try {
+        while (G.stack.length && !G.over) {
+            const top = G.stack[G.stack.length - 1];
+            if (await offerPriority(opp(top.P), top)) continue; // they responded: the new top goes first
+            await resolveTop();
+            await pause(300);
+        }
+    } finally {
+        G.stackRunning = false;
+        G.priority = null;
+        renderGame();
+    }
+}
+
+// Give a player priority to respond to the top of the stack. Returns true
+// if they cast something.
+async function offerPriority(P, top) {
+    const castable = [...P.hand, ...P.command].filter(o => { G.priority = P.i; const ok = canCastNow(P, o) && canPay(P, o); return ok; });
+    if (!castable.length) { G.priority = null; return false; } // nothing they could do: pass automatically
+    G.priority = P.i;
+    if (P.isAI) {
+        const r = aiRespond(P, top);
+        if (!r) { G.priority = null; return false; }
+        await pause(400);
+        G.priority = null;
+        await castSpellAsResponse(P, r.o, r.target);
+        return true;
+    }
+    const prevMode = G.mode && G.mode.type !== 'respond' ? G.mode : null;
+    const prevBusy = G.busy;
+    G.busy = false;
+    const acted = await new Promise(resolve => { G.mode = { type: 'respond', item: top, resolve }; renderGame(); });
+    G.mode = prevMode;
+    G.busy = prevBusy;
+    G.priority = null;
+    return acted;
+}
+async function castSpellAsResponse(P, o, target) {
+    G.priority = P.i;
+    const ok = canCastNow(P, o) && canPay(P, o);
+    G.priority = null;
+    if (ok) await castSpell(P, o, target);
+}
+function passPriority() {
+    const m = G.mode;
+    if (m && m.type === 'respond') m.resolve(false);
+}
+
+async function resolveTop() {
+    const item = G.stack.pop();
+    if (!item) return;
+    renderGame();
+    if (item.target && !targetStillOk(item.target)) {
+        log(`${item.name} doesn't resolve - its target is gone (rule 608.2b).`);
+        if (item.kind === 'spell') moveSpellCard(item.o, 'gy');
+        return;
+    }
+    if (item.kind === 'trigger') {
+        await resolveEffects(item.P, item.effects, item.target, item.o);
+    } else {
+        const o = item.o, r = Rx(o);
+        if (r.kind === 'instant' || r.kind === 'sorcery') {
+            await resolveEffects(item.P, r.spell, item.target, o);
+            moveSpellCard(o, 'gy');
+        } else {
+            resetObj(o);
+            item.P.bf.push(o);
+            if (r.isAura && item.target && item.target.o) o.attachedTo = item.target.o.uid;
+            log(`${o.card.name} enters the battlefield.`);
+            if (r.etb.length) await putTriggers(item.P, o, r.etb);
+        }
+    }
+    sba();
+    renderGame();
+}
+
+// A spell card leaving the stack: to its owner's graveyard, or a commander
+// to the command zone (903.9a).
+function moveSpellCard(o, zone) {
+    const owner = G.players[o.owner];
+    resetObj(o);
+    if (o.isCommander) { owner.command.push(o); log(`${o.card.name} returns to the command zone.`); }
+    else owner[zone].push(o);
+}
+
+function targetName(t) { return t.p ? (t.p.i === 0 ? 'you' : t.p.name) : t.item ? t.item.name : t.o.card.name; }
 
 async function resolveEffects(P, effects, presetTarget, source) {
     for (const e of effects) {
         if (G.over) return;
         let target = null;
         if (needsTarget(e)) {
-            target = presetTarget;
+            target = presetTarget && (e.target === 'spell') === !!presetTarget.item ? presetTarget : null;
             if (!target) target = await chooseTarget(P, e, source, false);
             if (!target) { log(`${source.card.name}: no legal target.`); continue; }
             if (!targetStillOk(target)) { log(`${source.card.name}'s target is gone.`); continue; }
@@ -1761,6 +2054,19 @@ function applyEffect(P, e, t, src) {
         }
         case 'tap': t.o.tapped = true; log(`${t.o.card.name} is tapped.`); break;
         case 'scry': log(`${P.name} ${P.i === 0 ? 'scry' : 'scries'} ${e.n} (looked at, kept on top).`); break;
+        case 'counter': {
+            const it = t.item;
+            const i = G.stack.indexOf(it);
+            if (i < 0) break;
+            if (e.unless) {
+                const plan = planPayment(it.P, { generic: e.unless, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 });
+                if (plan) { plan.forEach(x => { x.tapped = true; }); log(`${it.P.name} ${it.P.i === 0 ? 'pay' : 'pays'} {${e.unless}}, so ${it.name} isn't countered.`); break; }
+            }
+            G.stack.splice(i, 1);
+            log(`${it.name} is countered (rule 701.6a).`);
+            if (it.kind === 'spell') moveSpellCard(it.o, 'gy');
+            break;
+        }
     }
 }
 
@@ -1875,18 +2181,27 @@ async function humanCast(uid) {
     const P = me();
     const o = findObj(uid);
     closeSheet();
-    if (!o || G.busy && !(G.mode && G.mode.type === 'block')) return;
-    if (!canCastNow(P, o)) { toast('You can\'t cast that right now.'); return; }
+    const responding = G.mode && G.mode.type === 'respond' ? G.mode : null;
+    if (!o || G.busy && !(G.mode && (G.mode.type === 'block' || responding))) return;
+    if (!canCastNow(P, o)) { toast(G.stack.length ? 'Only instants (and flash) while something is on the stack.' : 'You can\'t cast that right now.'); return; }
     if (!canPay(P, o)) { toast('Not enough mana.'); return; }
     let target = null;
     const te = firstTargetEffect(o);
+    const savedMode = G.mode;
     if (te) {
         if (!validTargets(P, te).length) { toast('There\'s nothing to target.'); return; }
-        const savedMode = G.mode;
         target = await chooseTarget(P, te, o, true);
-        G.mode = savedMode && savedMode.type === 'block' ? savedMode : null;
+        G.mode = savedMode;
         if (!target) { renderGame(); return; }
         if (Rx(o).isAura && !target.o) { toast('Auras go on creatures.'); renderGame(); return; }
+    }
+    if (responding) {
+        // Our response goes on the stack; the stack loop carries on from there
+        G.mode = null;
+        G.priority = null;
+        await castSpellAsResponse(P, o, target);
+        responding.resolve(true);
+        return;
     }
     G.busy = true;
     await castSpell(P, o, target);
@@ -2025,9 +2340,11 @@ function showGameCard(uid) {
                 <div>${o.card.img ? `<img src="${o.card.img}" alt="${esc(o.card.name)}">` : `<div class="otext">${esc(o.card.name)}</div>`}</div>
                 <div><h3>${esc(o.card.fullName || o.card.name)}</h3>${cardTextHTML(o.card)}${stats}
                     <div>${o.token ? '<span class="note">Token</span>' : supportBadge(o.card)} <span class="note">${esc(r.why || '')}</span></div>
+                    <div id="kwHelp"></div>
                     <div class="actions">${actions}<button class="btn" onclick="closeSheet()">Close</button></div></div>
             </div>
         </div>`;
+    fillKeywordHelp(o.card);
 }
 
 // ---- Game over ----
@@ -2095,6 +2412,8 @@ function aiPickTarget(P, e, source, valid) {
             return byValue(theirs.filter(v => tou(v.o) + e.q - v.o.dmg <= 0))[0] || byValue(theirs)[0] || null;
         case 'counters':
             return byValue(mine)[0] || null;
+        case 'counter':
+            return valid.filter(v => v.item && v.item.P !== P).pop() || null;
         case 'aura':
             return e.good ? (byValue(mine)[0] || null) : (byValue(theirs)[0] || null);
         default:
@@ -2139,6 +2458,59 @@ function aiScore(P, o, target) {
         }
     }
     return score;
+}
+
+// How bad something on the stack is for P (0 if it's P's own).
+function stackThreat(item, P) {
+    if (item.P === P) return 0;
+    if (item.kind === 'trigger') return item.effects.some(e => ['dmg', 'destroy', 'exile', 'bounce', 'drain'].includes(e.t)) ? 4 : 1;
+    const r = Rx(item.o);
+    const t = item.target;
+    let v = (item.o.card.cmc || 0) * 0.5;
+    if (r.kind === 'creature') v += 2 + creatureValue(item.o) * 0.5;
+    if (r.isAura || r.isEquipment) v += 3;
+    for (const e of r.spell || []) {
+        if (['destroy', 'exile', 'bounce'].includes(e.t) && t && t.o && t.o.owner === P.i) v += 3 + creatureValue(t.o);
+        if (e.t === 'dmg' && t && t.p === P) v += P.life <= e.n ? 100 : e.n;
+        if (e.t === 'dmg' && t && t.o && t.o.owner === P.i && tou(t.o) - t.o.dmg <= e.n) v += 2 + creatureValue(t.o);
+        if (e.t === 'dmg' && e.target === 'opponents') v += P.life <= e.n ? 100 : e.n;
+        if (e.t === 'drain') v += P.life <= e.n ? 100 : e.n;
+        if (e.t === 'draw') v += 2 + e.n;
+        if (e.t === 'token') v += 2 * e.n;
+        if (e.t === 'counter' && t && t.item && t.item.P === P) v += 3 + stackThreat({ ...t.item, P: item.P }, P);
+    }
+    return v;
+}
+
+// The opponent's answer when it gets priority with something on the stack:
+// counter what's worth countering, save a targeted creature with a trick,
+// or burn for lethal.
+function aiRespond(P, top) {
+    if (top.P === P) return null;
+    const opts = P.hand.filter(o => (Rx(o).kind === 'instant' || Rx(o).flash) && canCastNow(P, o) && canPay(P, o));
+    for (const o of opts) {
+        const ce = (Rx(o).spell || []).find(e => e.t === 'counter');
+        if (ce && stackMatches(top, ce.filter) && stackThreat(top, P) >= 5) return { o, target: { item: top } };
+    }
+    const mine = top.target && top.target.o && top.target.o.owner === P.i && onBf(top.target.o.uid) ? top.target.o : null;
+    if (mine && top.kind === 'spell') {
+        const eff = (Rx(top.o).spell || []).find(needsTarget);
+        for (const o of opts) {
+            const pe = (Rx(o).spell || []).find(e => e.t === 'pump' && e.good);
+            if (!pe || !eff) continue;
+            const saves = (eff.t === 'dmg' && tou(mine) + pe.q - mine.dmg > eff.n)
+                || (eff.t === 'pump' && !eff.good && tou(mine) + pe.q + eff.q - mine.dmg > 0)
+                || ((eff.t === 'destroy' || eff.t === 'dmg') && pe.kw.includes('indestructible'))
+                || pe.kw.includes('hexproof') || pe.kw.includes('shroud');
+            if (saves && creatureValue(mine) >= 3) return { o, target: { o: mine } };
+        }
+    }
+    const O = opp(P);
+    for (const o of opts) {
+        const de = (Rx(o).spell || []).find(e => e.t === 'dmg' && (e.target === 'any' || e.target === 'player'));
+        if (de && O.life <= de.n) return { o, target: { p: O } };
+    }
+    return null;
 }
 
 function aiBestPlay(P) {
@@ -2356,7 +2728,26 @@ function barHTML(P) {
         ${P.i === 1 ? `<span class="note" style="margin-left:auto;">${esc(P.deckName)} · ${esc(P.source)}</span>` : `<span style="margin-left:auto;" class="row"><button class="btn small danger" onclick="concede()">Concede</button></span>`}`;
 }
 
+function stackHTML() {
+    if (!G.stack.length) return '';
+    const m = G.mode;
+    return `<div class="stackbar" aria-label="The stack, top first"><span class="lane-label">Stack ↓</span>${G.stack.slice().reverse().map((it, i) => {
+        const sel = m && m.type === 'target' && m.valid.some(v => v.item && v.item.id === it.id);
+        return `<button type="button" class="stack-item${i === 0 ? ' top' : ''}${sel ? ' selectable' : ''}" onclick="stackClick(${it.id})" title="${esc(it.name)}">${it.o.card.imgS ? `<img src="${it.o.card.imgS}" alt="">` : ''}<span>${esc(it.name)}${it.target ? ` → ${esc(targetName(it.target))}` : ''}</span></button>`;
+    }).join('')}</div>`;
+}
+function stackClick(id) {
+    const it = G.stack.find(x => x.id === id);
+    if (!it) return;
+    if (G.mode && G.mode.type === 'target') { pickTarget({ item: it }); return; }
+    showGameCard(it.o.uid);
+}
+
 function midHTML() {
+    return stackHTML() + midControlsHTML();
+}
+
+function midControlsHTML() {
     if (G.over) return `<span class="phase">Game over</span><button class="btn primary" onclick="leaveGame()">Leave the table</button>`;
     const m = G.mode;
     const phase = `<span class="phase">${G.active === 0 ? 'Your turn' : `${esc(foe().name)}'s turn`} · ${PHASE_LABEL[G.phase] || G.phase}</span>`;
@@ -2365,6 +2756,10 @@ function midHTML() {
     }
     if (m && m.type === 'attack') {
         return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button><button class="btn" onclick="cancelAttack()">Back</button>`;
+    }
+    if (m && m.type === 'respond') {
+        const it = m.item;
+        return `${phase}<span class="prompt">↩️ ${esc(it.name)}${it.target ? ` (targeting ${esc(targetName(it.target))})` : ''} is on the stack. Cast an instant to respond, or:</span><button class="btn primary" onclick="passPriority()">✔ Let it resolve</button>`;
     }
     if (m && m.type === 'block') {
         return `${phase}<span class="prompt">🛡️ ${m.picked && onBf(m.picked) ? `Now tap the attacker ${esc(onBf(m.picked).card.name.split(',')[0])} should block` : 'Tap one of your creatures, then the attacker it blocks. You can cast instants now.'}</span><button class="btn primary" onclick="confirmBlocks()">✔ Done blocking</button>`;
@@ -2395,6 +2790,220 @@ function renderGame() {
     $('midBar').innerHTML = midHTML();
     $('hand').innerHTML = handHTML();
 }
+
+// =====================================================================
+// Playtester: goldfish any deck (or the one you're editing), like
+// Moxfield's playtest. No opponent and no rules enforcement - move
+// cards anywhere. Drag cards between zones, or tap a card for a menu.
+// Keys: D draw, U untap all, N next turn, S shuffle, M mulligan.
+// =====================================================================
+let PT = null;
+let ptUid = 1;
+const PT_ZONES = { hand: 'Hand', bf: 'Battlefield', gy: 'Graveyard', exile: 'Exile', library: 'Library', command: 'Command zone' };
+
+function playtestDeck(deck) {
+    const d = deck || editing;
+    if (!d) return;
+    const cards = [];
+    Object.entries(d.cards).forEach(([id, n]) => { const c = CARDS.get(id); if (c) for (let k = 0; k < n; k++) cards.push(c); });
+    if (!cards.length) { toast('Add some cards first.'); return; }
+    PT = { name: d.name, format: d.format, cards, commander: d.commander ? CARDS.get(d.commander) : null };
+    $('playtest').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    ptRestart();
+}
+function playtestSaved(i) { playtestDeck(profile.decks[i]); }
+
+function ptObj(card, extra) { return Object.assign({ uid: ptUid++, card, tapped: false, counters: 0 }, extra || {}); }
+
+function ptRestart() {
+    Object.assign(PT, { library: shuffle(PT.cards.map(c => ptObj(c))), hand: [], bf: [], gy: [], exile: [], command: PT.commander ? [ptObj(PT.commander)] : [],
+        life: FORMATS[PT.format].life, turn: 1, mulligans: 0, log: [] , bottoming: 0 });
+    ptDraw(7, true);
+    ptLog('New game: drew 7.');
+    ptRender();
+}
+function ptLog(msg) { PT.log.push(msg); if (PT.log.length > 30) PT.log.shift(); }
+function ptDraw(n = 1, quiet) {
+    for (let k = 0; k < n; k++) { const o = PT.library.shift(); if (!o) { toast('Your library is empty.'); break; } PT.hand.push(o); }
+    if (!quiet) ptLog(`Drew ${n === 1 ? 'a card' : `${n} cards`}.`);
+    ptRender();
+}
+function ptUntap() { PT.bf.forEach(o => { o.tapped = false; }); ptLog('Untapped everything.'); ptRender(); }
+function ptNextTurn() { PT.turn++; PT.bf.forEach(o => { o.tapped = false; }); ptDraw(1, true); ptLog(`Turn ${PT.turn}: untap, draw.`); ptRender(); }
+function ptShuffle() { shuffle(PT.library); ptLog('Shuffled the library.'); ptRender(); toast('Library shuffled.'); }
+// London mulligan: shuffle the hand in, draw 7, then put one on the bottom per mulligan
+function ptMulligan() {
+    PT.library.push(...PT.hand.splice(0));
+    shuffle(PT.library);
+    PT.mulligans++;
+    PT.hand = [];
+    ptDraw(7, true);
+    PT.bottoming = PT.mulligans;
+    ptLog(`Mulligan ${PT.mulligans}: drew 7 - put ${PT.mulligans} on the bottom (tap a card in your hand).`);
+    ptRender();
+}
+function ptAdjustLife(d) { PT.life += d; ptRender(); }
+function ptFind(uid) {
+    for (const z of Object.keys(PT_ZONES)) { const i = PT[z].findIndex(o => o.uid === uid); if (i >= 0) return { z, i, o: PT[z][i] }; }
+    return null;
+}
+function ptMove(uid, to, where) {
+    const f = ptFind(uid);
+    if (!f) return;
+    PT[f.z].splice(f.i, 1);
+    const o = f.o;
+    if (to !== 'bf') { o.tapped = false; o.counters = 0; }
+    if (o.token && to !== 'bf') { ptLog(`${o.card.name} (token) left the battlefield and is gone.`); ptRender(); return; }
+    if (to === 'library') { if (where === 'bottom') PT.library.push(o); else PT.library.unshift(o); }
+    else PT[to].push(o);
+    ptLog(`${o.card.name}: ${PT_ZONES[f.z]} → ${to === 'library' ? `${where === 'bottom' ? 'bottom' : 'top'} of library` : PT_ZONES[to]}.`);
+    closePtMenu();
+    ptRender();
+}
+function ptTap(uid) { const f = ptFind(uid); if (!f || f.z !== 'bf') return; f.o.tapped = !f.o.tapped; closePtMenu(); ptRender(); }
+function ptCounter(uid, d) { const f = ptFind(uid); if (!f) return; f.o.counters = Math.max(0, f.o.counters + d); closePtMenu(); ptRender(); }
+function ptToken() {
+    showModal(`<h2>Create a token</h2>
+        <div class="row" style="justify-content:center; margin:10px 0;">
+            <input type="text" id="ptTokName" value="Soldier" aria-label="Token name" style="width:140px;">
+            <input type="text" id="ptTokPT" value="1/1" aria-label="Power/toughness" style="width:60px;">
+            <input type="text" id="ptTokN" value="1" aria-label="How many" style="width:50px;">
+        </div>
+        <div class="row" style="justify-content:center;"><button class="btn primary" onclick="ptMakeToken()">Create</button><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+}
+function ptMakeToken() {
+    const name = $('ptTokName').value.trim() || 'Token';
+    const [p, t] = ($('ptTokPT').value.match(/\d+/g) || ['1', '1']);
+    const n = Math.min(20, Math.max(1, parseInt($('ptTokN').value, 10) || 1));
+    for (let k = 0; k < n; k++) PT.bf.push(ptObj({ id: `tok-${ptUid}`, name: `${name} token`, type: `Token Creature — ${name}`, text: '', power: p, toughness: t || p, img: null, imgS: null, cost: '', cmc: 0 }, { token: true }));
+    ptLog(`Created ${n} ${p}/${t || p} ${name} token${n === 1 ? '' : 's'}.`);
+    closeModal();
+    ptRender();
+}
+
+function ptCardHTML(o, zone) {
+    const land = /\bLand\b/.test(o.card.type) && !/\bCreature\b/.test(o.card.type);
+    const img = o.card.imgS || o.card.img;
+    return `<button type="button" class="pt-card${land && zone === 'bf' ? ' land' : ''}${o.tapped ? ' tapped' : ''}" draggable="true" data-uid="${o.uid}"
+        onclick="ptCardClick(event, ${o.uid})" ondblclick="ptCardDouble(${o.uid})" ondragstart="ptDragStart(event, ${o.uid})" title="${esc(o.card.name)}">
+        ${img ? `<img src="${zone === 'hand' ? (o.card.img || img) : img}" alt="${esc(o.card.name)}" draggable="false">` : `<span class="noimg">${esc(o.card.name)}${o.card.power !== undefined ? `<br>${esc(o.card.power)}/${esc(o.card.toughness)}` : ''}</span>`}
+        ${o.counters ? `<span class="ctr">+${o.counters}</span>` : ''}</button>`;
+}
+
+function ptRender() {
+    if (!PT || $('playtest').classList.contains('hidden')) return;
+    const lands = PT.bf.filter(o => /\bLand\b/.test(o.card.type) && !/\bCreature\b/.test(o.card.type));
+    const creatures = PT.bf.filter(o => /\bCreature\b/.test(o.card.type));
+    const other = PT.bf.filter(o => !lands.includes(o) && !creatures.includes(o));
+    const untappedLands = lands.filter(o => !o.tapped).length;
+    $('ptTop').innerHTML = `
+        <span class="title">🧪 Playtest · ${esc(PT.name)}</span>
+        <span class="note">Turn ${PT.turn}</span>
+        <span class="pt-life"><button class="btn small" onclick="ptAdjustLife(-1)" aria-label="Lose 1 life">−</button><b aria-label="Life">${PT.life}</b><button class="btn small" onclick="ptAdjustLife(1)" aria-label="Gain 1 life">+</button></span>
+        <button class="btn small primary" onclick="ptDraw()" title="Draw a card (D)">Draw</button>
+        <button class="btn small" onclick="ptNextTurn()" title="Untap and draw (N)">Next turn</button>
+        <button class="btn small" onclick="ptUntap()" title="Untap all (U)">Untap all</button>
+        <button class="btn small" onclick="ptShuffle()" title="Shuffle the library (S)">Shuffle</button>
+        <button class="btn small" onclick="ptMulligan()" title="London mulligan (M)">Mulligan</button>
+        <button class="btn small" onclick="ptToken()">＋ Token</button>
+        <button class="btn small" onclick="ptRestart()">↺ Restart</button>
+        <button class="btn small danger" onclick="closePlaytest()" style="margin-left:auto;">Close</button>`;
+    const lane = (list, cls) => `<div class="pt-lane ${cls || ''}">${list.map(o => ptCardHTML(o, 'bf')).join('')}</div>`;
+    $('ptField').innerHTML = PT.bf.length
+        ? `${creatures.length ? `<div class="lane-label">Creatures</div>${lane(creatures)}` : ''}${other.length ? `<div class="lane-label">Other permanents</div>${lane(other)}` : ''}${lands.length ? `<div class="lane-label">Lands · ${untappedLands} untapped</div>${lane(lands, 'lands')}` : ''}`
+        : '<p class="note" style="margin:auto; text-align:center;">Drag cards here from your hand (or tap a card in your hand and pick "Battlefield"). Double-click a permanent to tap it.</p>';
+    const pile = (z, label) => {
+        const top = PT[z][PT[z].length - 1];
+        const face = z === 'library' ? (PT.library.length ? '<div class="back"></div>' : '') : top ? `<img src="${top.card.imgS || top.card.img || ''}" alt="">` : '';
+        return `<div class="pt-pile" data-zone="${z}" onclick="ptOpenZone('${z}')" ondragover="ptDragOver(event)" ondragleave="ptDragLeave(event)" ondrop="ptDrop(event, '${z}')">${label} (${PT[z].length})${face}</div>`;
+    };
+    $('ptSide').innerHTML = (PT.command.length || PT.commander ? pile('command', '👑 Command') : '') + pile('library', '📚 Library') + pile('gy', '🪦 Graveyard') + pile('exile', '🚫 Exile');
+    $('ptHand').innerHTML = PT.hand.map(o => ptCardHTML(o, 'hand')).join('') || '<span class="note">No cards in hand.</span>';
+    const handLands = PT.hand.filter(o => /\bLand\b/.test(o.card.type)).length;
+    $('ptFoot').innerHTML = `<span>✋ ${PT.hand.length} in hand (${handLands} land${handLands === 1 ? '' : 's'})</span><span>📚 ${PT.library.length} in library</span>${PT.bottoming ? `<span class="warn">Tap ${PT.bottoming} card${PT.bottoming === 1 ? '' : 's'} in your hand to put on the bottom</span>` : ''}<span class="muted">${esc(PT.log[PT.log.length - 1] || '')}</span><span class="muted pt-keys" style="margin-left:auto;">Keys: D draw · N next turn · U untap · S shuffle · M mulligan</span>`;
+    ['ptField', 'ptHand'].forEach(id => {
+        const el = $(id);
+        el.ondragover = ptDragOver; el.ondragleave = ptDragLeave;
+        el.ondrop = e => ptDrop(e, el.dataset.zone);
+    });
+}
+
+// Tap a card: a menu of moves (also how phones move cards)
+function ptCardClick(e, uid) {
+    e.stopPropagation();
+    const f = ptFind(uid);
+    if (!f) return;
+    if (f.z === 'hand' && PT.bottoming) {
+        ptMove(uid, 'library', 'bottom');
+        PT.bottoming--;
+        ptRender();
+        return;
+    }
+    const items = [];
+    if (f.z === 'bf') items.push(['↻ Tap / untap', `ptTap(${uid})`], ['＋1/＋1 counter', `ptCounter(${uid}, 1)`], ['−1 counter', `ptCounter(${uid}, -1)`]);
+    Object.entries(PT_ZONES).forEach(([z, label]) => {
+        if (z === f.z) return;
+        if (z === 'library') { items.push(['To top of library', `ptMove(${uid}, 'library', 'top')`], ['To bottom of library', `ptMove(${uid}, 'library', 'bottom')`]); return; }
+        if (z === 'command' && !(PT.commander && f.o.card.id === PT.commander.id)) return;
+        items.push([`To ${label.toLowerCase()}`, `ptMove(${uid}, '${z}')`]);
+    });
+    items.push(['🔍 View card', `closePtMenu(); showCardSheet('${f.o.card.id}')`]);
+    const menu = document.createElement('div');
+    menu.className = 'pt-menu';
+    menu.id = 'ptMenu';
+    menu.innerHTML = `<div class="mh">${esc(f.o.card.name)}</div>${items.map(([label, fn]) => `<button type="button" onclick="${fn}">${label}</button>`).join('')}`;
+    closePtMenu();
+    document.body.appendChild(menu);
+    const r = menu.getBoundingClientRect();
+    menu.style.left = `${Math.min(e.clientX, innerWidth - r.width - 8)}px`;
+    menu.style.top = `${Math.min(e.clientY, innerHeight - r.height - 8)}px`;
+}
+function closePtMenu() { const m = $('ptMenu'); if (m) m.remove(); }
+document.addEventListener('click', e => { if (!e.target.closest('#ptMenu')) closePtMenu(); });
+function ptCardDouble(uid) {
+    const f = ptFind(uid);
+    if (!f) return;
+    if (f.z === 'bf') ptTap(uid);
+    else if (f.z === 'hand' || f.z === 'command') ptMove(uid, 'bf');
+}
+
+// Drag and drop between zones
+function ptDragStart(e, uid) { e.dataTransfer.setData('text/plain', String(uid)); e.dataTransfer.effectAllowed = 'move'; closePtMenu(); }
+function ptDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drop'); }
+function ptDragLeave(e) { e.currentTarget.classList.remove('drop'); }
+function ptDrop(e, zone) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drop');
+    const uid = Number(e.dataTransfer.getData('text/plain'));
+    if (uid) ptMove(uid, zone, 'top');
+}
+
+function ptOpenZone(z) {
+    const list = z === 'library' ? PT.library : PT[z].slice().reverse();
+    showModal(`<h2>${PT_ZONES[z]} (${PT[z].length})</h2>
+        ${z === 'library' ? '<p class="note">Top of the library first. Tap a card to move it.</p>' : ''}
+        <div class="pt-zone-list">${list.map(o => ptCardHTML(o, z)).join('') || '<p class="note">Empty.</p>'}</div>
+        <div class="row" style="justify-content:center; margin-top:12px;">${z === 'library' ? '<button class="btn" onclick="ptShuffle(); closeModal();">Shuffle</button>' : ''}<button class="btn" onclick="closeModal()">Close</button></div>`);
+}
+
+function closePlaytest() {
+    $('playtest').classList.add('hidden');
+    document.body.style.overflow = '';
+    closePtMenu();
+    PT = null;
+}
+
+document.addEventListener('keydown', e => {
+    if (!PT || $('playtest').classList.contains('hidden') || /input|textarea|select/i.test(e.target.tagName) || $('modalHost').innerHTML) return;
+    const k = e.key.toLowerCase();
+    if (k === 'd') ptDraw();
+    else if (k === 'n') ptNextTurn();
+    else if (k === 'u') ptUntap();
+    else if (k === 's') ptShuffle();
+    else if (k === 'm') ptMulligan();
+    else if (k === 'escape') closePtMenu();
+});
 
 // =====================================================================
 // Start-up
