@@ -13,12 +13,15 @@ Inputs (all free MTGJSON downloads):
 Outputs (in --out):
   meta.json            price date, build time, the weekly dates used below
   history/<xx>.json    TCGplayer market prices per printing: 14 weekly points
-                       (n/f/e = non-foil/foil/etched) and 31 daily points for
-                       the last 30 days (dn/df/de), sharded by the first two
+                       (n/f/e = non-foil/foil/etched) and 91 daily points for
+                       the last 90 days (dn/df/de), sharded by the first two
                        characters of the Scryfall id
                        Also per finish: ck<f>/mp<f> = Card Kingdom / Mana Pool
                        retail [now, 7 days ago, 30 days ago], and kb<f> = Card
-                       Kingdom buylist, weekly like the TCGplayer points.
+                       Kingdom buylist, weekly like the TCGplayer points; plus
+                       the same three as 91 daily points (ckd<f>, mpd<f>,
+                       kbd<f>; None where the store wasn't listing it) for the
+                       Card Lookup price chart.
   spikes.json          printings whose price jumped in the last 1-7 days,
                        with Card Kingdom / Mana Pool retail [now, 1, 3, 7 days
                        ago] for the same printing (ck, mp)
@@ -51,7 +54,7 @@ DOWNLOADS = {
 }
 
 WEEKS = 13            # weekly points kept per printing (about 90 days)
-DAYS = 30             # plus daily points for the last 30 days
+DAYS = 90             # plus daily points for the last 90 days (the price chart)
 HISTORY_MIN_PRICE = 1.0   # skip printings that never reached $1 in the window
 SPIKE_MIN_PRICE = 2.0     # spike list: current price at least this
 SPIKE_MIN_JUMP = 1.0      # ...up at least this many dollars
@@ -177,6 +180,15 @@ def build(inputs, out, previous):
                         weekly = [recent_price(buy, buy_days, d) for d in week_dates]
                         if any(v is not None for v in weekly):
                             slot.setdefault("kb" + key, [round(v, 2) if v is not None else None for v in weekly])
+                    # Daily store prices for the chart (a price more than
+                    # STORE_MAX_AGE_DAYS old counts as not listed).
+                    for store, store_series in (("ckd", ck_retail.get(finish)), ("mpd", mp_retail.get(finish)), ("kbd", buy)):
+                        if not store_series:
+                            continue
+                        store_days = sorted(store_series)
+                        daily = [recent_price(store_series, store_days, d) for d in day_dates]
+                        if any(v is not None for v in daily):
+                            slot.setdefault(store + key, [round(v, 2) if v is not None else None for v in daily])
 
                 if now >= SPIKE_MIN_PRICE:
                     ago = {n: price_on_or_before(series, days, iso(latest - dt.timedelta(days=n))) for n in (1, 3, 7)}
