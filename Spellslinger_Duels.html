@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moonshot Duels</title>
-    <!-- Moonshot Duels: a test game. Open packs (from MTGJSON's real booster
+    <title>Spellslinger Duels</title>
+    <!-- Spellslinger Duels: a fan-made test game. Open packs (from MTGJSON's real booster
          odds) with free in-game coins, build Modern or Commander decks, and
          play against themed opponents. Cards come from Scryfall, Commander
-         opponents from EDHREC's average decks. A single self-contained file,
-         like the other tools. See CLAUDE.md ("Moonshot Duels"). -->
+         opponents from EDHREC's average decks. A single self-contained file
+         that stands alone (no links to the other tools). See CLAUDE.md
+         ("Spellslinger Duels"). -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&display=swap">
     <style>
-        /* Design tokens: the Moonshot tools' original look (see CLAUDE.md),
-           plus a few game colors. Every color below comes from these. */
+        /* Design tokens: a dark teal look, plus a few game colors. Every
+           color below comes from these. */
         :root {
             --brand: #1777a1;
             --brand-light: #3aa3d1;
@@ -252,14 +253,13 @@
 <div class="wrap">
     <header class="topbar">
         <div class="brand">
-            <h1>🌙 Moonshot Duels</h1>
+            <h1>🪄 Spellslinger Duels</h1>
             <span class="tag">Test build</span>
         </div>
         <span class="coins" id="coinPill" title="Coins: free, in-game only. Win games to earn more.">🪙 <span id="coinCount">0</span></span>
-        <a class="toplink" href="MTG_Lookup_Tool.html">🔮 Back to the Magic tool →</a>
     </header>
 
-    <nav class="tabs" role="tablist" aria-label="Moonshot Duels">
+    <nav class="tabs" role="tablist" aria-label="Spellslinger Duels">
         <button class="tab" role="tab" id="tab-home" aria-selected="true" onclick="showView('home')">🏠 Home</button>
         <button class="tab" role="tab" id="tab-packs" aria-selected="false" onclick="showView('packs')">🎴 Packs</button>
         <button class="tab" role="tab" id="tab-decks" aria-selected="false" onclick="showView('decks')">🗂️ Collection &amp; Decks</button>
@@ -270,13 +270,13 @@
         <!-- ============ HOME ============ -->
         <section id="view-home">
             <div class="panel">
-                <h2>Welcome to Moonshot Duels</h2>
+                <h2>Welcome to Spellslinger Duels</h2>
                 <p>A test game: open packs with free coins, build a deck, and play Magic against an opponent playing a real deck theme.</p>
                 <div class="grid-2" style="margin-top:12px;">
                     <div>
                         <h3 style="font-size:1rem; margin-bottom:6px;">How it works</h3>
                         <ol class="note" style="padding-left:18px; display:grid; gap:4px;">
-                            <li><strong>Packs:</strong> spend coins on packs from recent sets. What's inside follows the real pack odds (from MTGJSON).</li>
+                            <li><strong>Packs:</strong> spend coins on packs from any set, Alpha to today. What's inside follows the real pack odds (from MTGJSON).</li>
                             <li><strong>Decks:</strong> build a <strong>Modern</strong> deck (60 cards, up to 4 of each) or a <strong>Commander</strong> deck (100 cards, one of each, plus a commander). Basic lands are free. Or grab a ready-made starter deck.</li>
                             <li><strong>Play:</strong> pick an opponent. Modern opponents play themed decks built from Scryfall; Commander opponents play EDHREC's average deck for this week's trending commanders.</li>
                             <li><strong>Earn:</strong> 150 coins for a win (200 in Commander), 40 for trying.</li>
@@ -303,7 +303,7 @@
         <section id="view-packs" class="hidden">
             <div class="panel">
                 <h2>Open packs</h2>
-                <p class="note">Packs follow each set's real pack layouts and odds from MTGJSON. Coins are free and in-game only - there's nothing to buy with real money.</p>
+                <p class="note">Any Magic set that came in booster packs, from Alpha (1993) to today. Packs follow each set's real pack layouts and odds from MTGJSON. Coins are free and in-game only - there's nothing to buy with real money.</p>
                 <div class="row" style="margin-top:10px;">
                     <label for="packSet" class="note">Set</label>
                     <select id="packSet"><option>Loading sets...</option></select>
@@ -369,8 +369,8 @@
     </main>
 
     <footer>
-        Moonshot Duels is an unofficial, free test game made for Moonshot Games staff. Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>; pack odds from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>; Commander decks from <a href="https://edhrec.com" target="_blank" rel="noopener">EDHREC</a>. Coins are in-game only and can't be bought or cashed out.<br>
-        Moonshot Duels is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
+        Spellslinger Duels is a free, fan-made test game. Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>; pack odds from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>; Commander decks from <a href="https://edhrec.com" target="_blank" rel="noopener">EDHREC</a>. Coins are in-game only and can't be bought or cashed out.<br>
+        Spellslinger Duels is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
     </footer>
 </div>
 
@@ -392,7 +392,7 @@
 <div class="toast" id="toast"></div>
 <script>
 // =====================================================================
-// Moonshot Duels - core: helpers, storage, card data
+// Spellslinger Duels - core: helpers, storage, card data
 // =====================================================================
 const SF = 'https://api.scryfall.com';
 const MTGJSON = 'https://mtgjson.com/api/v5';
@@ -744,18 +744,20 @@ function renderHome() {
 }
 
 // ---------------------------------------------------------------------
-// Packs: the same method as the Magic tool's "Crack a pack". Pick one of
+// Packs: pick one of
 // the pack's layouts by its weight, then cards from each sheet by their
 // weights (no repeats within a sheet).
 // ---------------------------------------------------------------------
 let packSets = [];
+const PACK_SET_TYPES = ['expansion', 'core', 'masters', 'draft_innovation', 'funny'];
+const PACK_TYPE_LABEL = { expansion: 'Expansions', core: 'Core sets', masters: 'Masters sets', draft_innovation: 'Draft sets', funny: 'Un-sets and other fun sets' };
 async function loadPackSets() {
     if (packSets.length) return packSets;
     const res = await sfJSON(`${SF}/sets`);
-    const cutoff = new Date();
-    cutoff.setFullYear(cutoff.getFullYear() - 3);
-    packSets = (res ? res.data : []).filter(s => ['expansion', 'core'].includes(s.set_type) && !s.digital && s.released_at
-        && s.released_at <= todayISO() && new Date(s.released_at) >= cutoff)
+    // Every paper set that came in booster packs, back to Alpha (1993).
+    // MTGJSON has the pack odds for nearly all of them; a set without them
+    // says so when you try to open one.
+    packSets = (res ? res.data : []).filter(s => PACK_SET_TYPES.includes(s.set_type) && !s.digital && s.released_at && s.released_at <= todayISO())
         .sort((a, b) => b.released_at.localeCompare(a.released_at));
     return packSets;
 }
@@ -765,7 +767,10 @@ async function renderPacksView() {
     try {
         await loadPackSets();
         if (sel.dataset.ready !== '1') {
-            sel.innerHTML = packSets.map(s => `<option value="${s.code}">${esc(s.name)} (${s.released_at.slice(0, 4)})</option>`).join('');
+            // Grouped by decade, newest first
+            const groups = {};
+            packSets.forEach(s => { const dec = `${s.released_at.slice(0, 3)}0s`; (groups[dec] = groups[dec] || []).push(s); });
+            sel.innerHTML = Object.entries(groups).map(([dec, list]) => `<optgroup label="${dec}">${list.map(s => `<option value="${s.code}">${esc(s.name)} (${s.released_at.slice(0, 4)})</option>`).join('')}</optgroup>`).join('');
             sel.dataset.ready = '1';
         }
     } catch (e) {
@@ -844,7 +849,7 @@ function renderPackReveal(pack) {
         <div class="pack-stage">
             <button type="button" class="pack-wrapper" id="packWrap" onclick="openPack()" aria-label="Open the pack">
                 <span class="pack-half top">${esc(pack.set.code)}</span>
-                <span class="pack-half bottom"><span style="font-size:2rem;" aria-hidden="true">🌙</span>${esc(pack.set.name)}<small>Tap to open</small></span>
+                <span class="pack-half bottom"><span style="font-size:2rem;" aria-hidden="true">✨</span>${esc(pack.set.name)}<small>Tap to open</small></span>
             </button>
             <div class="cards hidden" id="packCards">${pack.cards.map((p, i) => `
                 <button type="button" class="ctile reveal" data-r="${p.card.rarity}" onclick="showCardSheet('${p.card.id}')">
