@@ -213,6 +213,47 @@
         .perm.picked img { box-shadow: 0 0 0 3px var(--text-heading), 0 0 16px var(--brand-light); }
         .perm .blocklabel { position: absolute; left: 0; right: 0; bottom: -18px; font-size: 0.72rem; text-align: center; color: var(--mana-U); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .hand { display: flex; gap: 6px; padding: 6px 12px 8px; overflow-x: auto; background: color-mix(in srgb, var(--bg-canvas) 85%, transparent); min-height: 60px; }
+        /* The game's hand dock: S / M / L sizes, fanned and overlapping when full */
+        #game { --hand-h: clamp(110px, 20vh, 190px); }
+        #game[data-hand="s"] { --hand-h: clamp(80px, 13vh, 128px); }
+        #game[data-hand="l"] { --hand-h: clamp(140px, 28vh, 270px); }
+        .dock { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); background: color-mix(in srgb, var(--bg-canvas) 85%, transparent); border-top: 1px solid var(--border-subtle); }
+        .hand-wrap { min-width: 0; display: flex; flex-direction: column; }
+        .hand-tools { display: flex; align-items: center; gap: 10px; padding: 4px 12px 0; }
+        .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+        .seg button { background: var(--bg-panel); border: 0; color: var(--text-soft); padding: 1px 9px; font-size: 0.8rem; }
+        .seg button[aria-pressed="true"] { background: var(--brand); color: var(--text-heading); }
+        .dock .hand { gap: 0; justify-content: center; overflow: visible; background: none; padding: 14px 28px 22px; min-height: calc(var(--hand-h) + 36px); }
+        .dock .hand .hc { width: calc(var(--hand-h) * 63 / 88); transform: translateY(var(--dip, 0px)) rotate(var(--rot, 0deg)); transform-origin: 50% 100%; }
+        .dock .hand .hc:hover, .dock .hand .hc:focus-visible { transform: translateY(-16px) scale(1.12); z-index: 60 !important; }
+        .logwrap { border-left: 1px solid var(--border-subtle); padding: 4px 8px; min-width: 0; }
+        .logwrap .log { max-height: calc(var(--hand-h) + 10px); background: none; padding: 4px 2px; }
+        .logwrap summary { cursor: pointer; }
+        @media (max-width: 700px), (max-height: 640px) {
+            #game { --hand-h: clamp(76px, 14vh, 128px); }
+            #game[data-hand="s"] { --hand-h: clamp(60px, 10vh, 96px); }
+            #game[data-hand="l"] { --hand-h: clamp(104px, 22vh, 200px); }
+        }
+        @media (max-width: 700px) { .dock { grid-template-columns: minmax(0, 1fr); } .logwrap { border-left: 0; border-top: 1px solid var(--border-subtle); } .logwrap .log { max-height: 5em; } }
+        .perm.pile img, .perm.pile .noimg { box-shadow: 3px -3px 0 -1px var(--bg-panel-raised), 3px -3px 0 0 var(--border), 6px -6px 0 -1px var(--bg-panel-raised), 6px -6px 0 0 var(--border); }
+        .pile-n { position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%); background: var(--gold); color: var(--bg-canvas); font-weight: 800; font-size: 0.8rem; padding: 0 7px; border-radius: 999px; }
+        .perm .chips { flex-wrap: wrap; max-width: 100%; flex-direction: row; }
+        .perm .chip.c-plus { color: var(--color-success); border-color: var(--color-success); font-weight: 700; }
+        .perm .chip.c-minus { color: var(--color-error); border-color: var(--color-error); font-weight: 700; }
+        .perm .chip.c-temp { color: var(--color-warning); border-color: var(--color-warning); }
+        .perm .chip.c-dmg { color: var(--color-error); }
+        .pc { font-size: 0.85rem; padding: 0 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-soft); }
+        .pc.poison { border-color: var(--mana-G); color: var(--mana-G); font-weight: 700; }
+        .card-peek { position: fixed; top: 50%; right: 14px; transform: translateY(-50%); width: min(260px, 24vw); z-index: 70; pointer-events: none; filter: drop-shadow(0 10px 30px var(--bg-canvas)); }
+        .card-peek.left { right: auto; left: 14px; }
+        .card-peek img { width: 100%; border-radius: 12px; display: block; }
+        .peek-stats { margin-top: 6px; text-align: center; font-family: var(--font-display); font-weight: 700; color: var(--text-heading); background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 6px; }
+        .tracker { margin-top: 8px; padding: 8px; background: var(--bg-inset); border-radius: var(--radius-sm); display: grid; gap: 6px; }
+        .trk-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .trk-row > span:first-child { min-width: 92px; }
+        .trk-row strong { min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; }
+        .sheet.one { grid-template-columns: minmax(0, 1fr); max-width: 420px; }
+        .trk-row select { padding: 3px 6px; }
         .hand .hc { width: var(--hand-w); flex: none; border: 0; background: none; padding: 0; transition: transform 0.15s; position: relative; }
         .hand .hc img, .hand .hc .noimg { width: 100%; aspect-ratio: 63 / 88; display: block; border-radius: 6px; object-fit: cover; background: var(--bg-inset); }
         .hand .hc .noimg { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; text-align: center; padding: 4px; border: 1px solid var(--border); }
@@ -672,10 +713,15 @@
     <div class="midbar" id="midBar"></div>
     <div class="side me-side" id="meSide"></div>
     <div class="pbar me" id="meBar"></div>
-    <div>
-        <div class="hand" id="hand" aria-label="Your hand"></div>
-        <div class="log" id="log" aria-live="polite"></div>
+    <div class="dock">
+        <div class="hand-wrap">
+            <div class="hand-tools"><span class="lane-label" id="handCount">Hand</span>
+                <span class="seg" role="group" aria-label="Hand size"><button type="button" data-hs="s" onclick="setHandSize('s')">S</button><button type="button" data-hs="m" onclick="setHandSize('m')">M</button><button type="button" data-hs="l" onclick="setHandSize('l')">L</button></span></div>
+            <div class="hand" id="hand" aria-label="Your hand"></div>
+        </div>
+        <details class="logwrap" id="logWrap" open><summary class="lane-label">Game log</summary><div class="log" id="log" aria-live="polite"></div></details>
     </div>
+    <div class="card-peek hidden" id="cardPeek" aria-hidden="true"></div>
 </section>
 
 <!-- Playtester: goldfish a deck (no opponent, no rules), like Moxfield's -->
@@ -1785,7 +1831,8 @@ let uidSeq = 1;
 const AUTOPLAY = new URLSearchParams(location.search).has('autoplay'); // testing: the game plays both sides
 
 function makeObj(card, owner, extra) {
-    return Object.assign({ uid: uidSeq++, card, owner, tapped: false, sick: true, dmg: 0, counters: 0, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, token: false, isCommander: false }, extra || {});
+    // counters: net +1/+1 (negative = -1/-1; the two cancel, rule 704.5q); ctr: other named counters
+    return Object.assign({ uid: uidSeq++, card, owner, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, token: false, isCommander: false }, extra || {});
 }
 const Rx = o => rulesFor(o.card);
 const me = () => G.players[0];
@@ -1826,7 +1873,7 @@ const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
         landsPlayed: 0, tax: 0, cmdDmg: 0, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
-        aiLevel: deck.aiLevel || 'normal', aiStyle: deck.aiStyle || null };
+        aiLevel: deck.aiLevel || 'normal', aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
     deck.entries.forEach(e => { for (let k = 0; k < e.n; k++) P.library.push(makeObj(e.card, i)); });
     shuffle(P.library);
     if (deck.commander) {
@@ -1962,7 +2009,7 @@ function removeFromZones(o) {
         if (i >= 0) { P[z].splice(i, 1); return; }
     }
 }
-function resetObj(o) { Object.assign(o, { tapped: false, sick: true, dmg: 0, counters: 0, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false }); }
+function resetObj(o) { Object.assign(o, { tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false }); }
 // A commander that would go to the graveyard or exile goes back to the command zone.
 function leaveBattlefield(o, zone) {
     removeFromZones(o);
@@ -2006,12 +2053,13 @@ function sba() {
             if (Rx(o).isEquipment && o.attachedTo && !onBf(o.attachedTo)) o.attachedTo = null;
         }
     }
-    const lost = G.players.filter(P => P.life <= 0 || P.drewEmpty || (G.format === 'commander' && P.cmdDmg >= 21));
+    const lost = G.players.filter(P => P.life <= 0 || P.drewEmpty || P.poison >= 10 || (G.format === 'commander' && P.cmdDmg >= 21));
     if (lost.length) {
         const P = lost[0];
         const you = P.i === 0;
         const reason = P.life <= 0 ? `${you ? 'You are' : `${P.name} is`} at ${P.life} life.`
             : P.drewEmpty ? `${you ? 'You have' : `${P.name} has`} no cards left to draw.`
+            : P.poison >= 10 ? `${you ? 'You have' : `${P.name} has`} 10 poison counters (rule 704.5c).`
             : `${you ? 'You' : P.name} took 21 commander damage.`;
         endGame(lost.length === 2 ? null : 1 - P.i, lost.length === 2 ? 'Both players lost at the same time.' : reason);
     }
@@ -2621,13 +2669,16 @@ function showGameCard(uid) {
     } else if (P.bf.includes(o) && r.isEquipment && r.equip !== null) {
         actions = `<button class="btn primary" onclick="humanEquip(${uid})">Equip {${r.equip}}</button>`;
     }
-    const stats = isCreature(o) && onBf(uid) ? `<div class="note">Now: ${pow(o)}/${tou(o)}${o.dmg ? `, ${o.dmg} damage` : ''}${o.counters ? `, ${o.counters} +1/+1 counter${o.counters === 1 ? '' : 's'}` : ''}${o.sick && !has(o, 'haste') && o.owner === G.active ? ', summoning sick' : ''}</div>` : '';
+    const temp = o.tp || o.tq || o.tkw.length ? `, until end of turn ${[o.tp || o.tq ? `${o.tp >= 0 ? '+' : ''}${o.tp}/${o.tq >= 0 ? '+' : ''}${o.tq}` : '', ...o.tkw].filter(Boolean).join(', ')}` : '';
+    const stats = isCreature(o) && onBf(uid) ? `<div class="note">Now: ${pow(o)}/${tou(o)}${o.dmg ? `, ${o.dmg} damage` : ''}${o.counters ? `, ${Math.abs(o.counters)} ${o.counters > 0 ? '+1/+1' : '-1/-1'} counter${Math.abs(o.counters) === 1 ? '' : 's'}` : ''}${temp}${o.sick && !has(o, 'haste') && o.owner === G.active ? ', summoning sick' : ''}</div>` : '';
+    const tracker = onBf(uid) ? counterTrackerHTML(o) : '';
     $('sheetHost').innerHTML = `
         <div class="sheet-bg" onclick="if (event.target === this) closeSheet()">
             <div class="sheet" role="dialog" aria-label="${esc(o.card.name)}">
                 <div>${o.card.img ? `<img src="${o.card.img}" alt="${esc(o.card.name)}">` : `<div class="otext">${esc(o.card.name)}</div>`}</div>
                 <div><h3>${esc(o.card.fullName || o.card.name)}</h3>${cardTextHTML(o.card)}${stats}
                     <div>${o.token ? '<span class="note">Token</span>' : supportBadge(o.card)} <span class="note">${esc(r.why || '')}</span></div>
+                    ${tracker}
                     <div id="kwHelp"></div>
                     <div class="actions">${actions}<button class="btn" onclick="closeSheet()">Close</button></div></div>
             </div>
@@ -2984,7 +3035,9 @@ function cardImg(card, big) {
         : `<span class="noimg">${esc(card.name)}${card.power !== undefined ? `<br>${esc(card.power)}/${esc(card.toughness)}` : ''}</span>`;
 }
 
-function permHTML(o) {
+const COUNTER_KINDS = [['charge', '🔌'], ['oil', '🛢️'], ['stun', '💫'], ['shield', '🔰'], ['lore', '📖'], ['time', '⏳'], ['ice', '🧊'], ['fade', '🌫️'], ['age', '📅'], ['quest', '🗝️'], ['level', '📶'], ['flood', '🌊'], ['other', '🔹']];
+const counterIcon = k => (COUNTER_KINDS.find(x => x[0] === k) || [k, '🔹'])[1];
+function permHTML(o, count = 1) {
     const r = Rx(o);
     const m = G.mode;
     const cls = ['perm'];
@@ -3001,7 +3054,11 @@ function permHTML(o) {
     if (m && m.type === 'block' && m.picked === o.uid) cls.push('picked');
     const chips = [];
     if (o.isCommander) chips.push('<span class="chip">👑</span>');
-    if (o.counters) chips.push(`<span class="chip">+${o.counters}</span>`);
+    if (o.counters > 0) chips.push(`<span class="chip c-plus" title="${o.counters} +1/+1 counter${o.counters === 1 ? '' : 's'}">+${o.counters}</span>`);
+    if (o.counters < 0) chips.push(`<span class="chip c-minus" title="${-o.counters} -1/-1 counter${o.counters === -1 ? '' : 's'}">−${-o.counters}</span>`);
+    Object.entries(o.ctr || {}).forEach(([k, n]) => chips.push(`<span class="chip" title="${n} ${esc(k)} counter${n === 1 ? '' : 's'}">${counterIcon(k)}${n}</span>`));
+    if (o.tp || o.tq || o.tkw.length) chips.push(`<span class="chip c-temp" title="Until end of turn: ${[o.tp || o.tq ? `${o.tp >= 0 ? '+' : ''}${o.tp}/${o.tq >= 0 ? '+' : ''}${o.tq}` : '', ...o.tkw].filter(Boolean).join(', ')}">⏱</span>`);
+    if (o.dmg) chips.push(`<span class="chip c-dmg" title="${o.dmg} damage marked (wears off at end of turn)">💥${o.dmg}</span>`);
     if (isCreature(o) && o.sick && !has(o, 'haste') && o.owner === G.active) chips.push('<span class="chip sick" title="Summoning sick">💤</span>');
     if (allPerms().some(a => a.attachedTo === o.uid)) chips.push(`<span class="chip" title="${esc(allPerms().filter(a => a.attachedTo === o.uid).map(a => a.card.name).join(', '))}">🛡️</span>`);
     if (o.attachedTo) chips.push(`<span class="chip">on ${esc((onBf(o.attachedTo) || { card: { name: '?' } }).card.name.split(',')[0])}</span>`);
@@ -3013,15 +3070,31 @@ function permHTML(o) {
     }
     const blockedAtk = blocking && onBf(Number(blocking[0]));
     const blockLabel = blockedAtk ? `<span class="blocklabel">blocks ${esc(blockedAtk.card.name.split(',')[0])}</span>` : '';
-    return `<button type="button" class="${cls.join(' ')}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}">${cardImg(o.card)}<span class="chips">${chips.join('')}</span>${pt}${blockLabel}</button>`;
+    if (count > 1) cls.push('pile');
+    return `<button type="button" class="${cls.join(' ')}" data-uid="${o.uid}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}${count > 1 ? ` ×${count}` : ''}">${cardImg(o.card)}<span class="chips">${chips.join('')}</span>${pt}${blockLabel}${count > 1 ? `<span class="pile-n">×${count}</span>` : ''}</button>`;
+}
+// Identical permanents share one pile (lands and others from 2, creatures
+// from 3, only while nothing is being chosen) so a full board fits.
+function groupPerms(list, min) {
+    const m = G.mode;
+    const out = [], byKey = new Map();
+    list.forEach(o => {
+        const plain = !m && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.counters && !Object.keys(o.ctr || {}).length && !o.dmg && !o.tp && !o.tq && !o.tkw.length
+            && !G.attackers.includes(o.uid) && !Object.values(G.blocks).some(bs => bs.includes(o.uid)) && !o.isCommander;
+        if (!plain) { out.push([o]); return; }
+        const key = `${o.card.id}|${o.tapped}|${isCreature(o) && o.sick && !has(o, 'haste')}|${o.token}`;
+        if (byKey.has(key)) byKey.get(key).push(o);
+        else { const g = [o]; byKey.set(key, g); out.push(g); }
+    });
+    return out.flatMap(g => g.length >= min ? [g] : g.map(o => [o]));
 }
 
 function sideHTML(P) {
     const lands = P.bf.filter(o => Rx(o).kind === 'land');
     const creatures = P.bf.filter(isCreature);
     const other = P.bf.filter(o => !isCreature(o) && Rx(o).kind !== 'land');
-    const lane = (list, extra = '') => `<div class="lane ${extra}">${list.map(permHTML).join('')}</div>`;
-    const left = `<div class="col">${creatures.length ? lane(creatures) : '<span class="note muted">No creatures</span>'}</div>`;
+    const lane = (list, extra = '', min = 2) => `<div class="lane ${extra}">${groupPerms(list, min).map(g => permHTML(g[0], g.length)).join('')}</div>`;
+    const left = `<div class="col">${creatures.length ? lane(creatures, 'creatures', 3) : '<span class="note muted">No creatures</span>'}</div>`;
     const right = `<div class="col right">${other.length ? lane(other, 'stack') : ''}${lane(lands, 'lands')}</div>`;
     return left + right;
 }
@@ -3042,6 +3115,8 @@ function barHTML(P) {
         <span class="who">${P.i === 0 ? '🧙 You' : `🤖 ${esc(P.name)}`}</span>
         <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${P.i === 0 ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}">❤️ ${P.life}</button>
         ${G.format === 'commander' ? `<span class="zone-count" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
+        ${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
+        <button type="button" class="btn small" onclick="playerSheet(${P.i})" title="Track life, poison, energy and experience">🧮</button>
         <span class="zone-count" title="Library">📚 ${P.library.length}</span>
         <span class="zone-count" title="Graveyard">🪦 ${P.gy.length}</span>
         ${P.i === 1 ? `<span class="zone-count">✋ ${P.hand.length}</span><span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
@@ -3098,7 +3173,7 @@ function handHTML() {
     return P.hand.map(o => {
         const r = Rx(o);
         const playable = r.kind === 'land' ? canPlayLand(P, o) : (canCastNow(P, o) && canPay(P, o));
-        return `<button type="button" class="hc${playable ? ' playable' : ''}" onclick="showGameCard(${o.uid})" title="${esc(o.card.name)}">${cardImg(o.card, true)}${r.support !== 'full' ? `<span class="sup badge sup-${r.support}">${r.support === 'none' ? '!' : '~'}</span>` : ''}</button>`;
+        return `<button type="button" class="hc${playable ? ' playable' : ''}" data-uid="${o.uid}" onclick="showGameCard(${o.uid})" title="${esc(o.card.name)}">${cardImg(o.card, true)}${r.support !== 'full' ? `<span class="sup badge sup-${r.support}">${r.support === 'none' ? '!' : '~'}</span>` : ''}</button>`;
     }).join('') || '<span class="note">No cards in hand.</span>';
 }
 
@@ -3110,6 +3185,123 @@ function renderGame() {
     $('meSide').innerHTML = sideHTML(me());
     $('midBar').innerHTML = midHTML();
     $('hand').innerHTML = handHTML();
+    $('handCount').textContent = `Hand · ${me().hand.length}`;
+    fitTable();
+}
+
+// ---- Fitting the table: battlefield cards shrink to fit; the hand fans out ----
+let handSize = store.get('handSize', 'm');
+function setHandSize(sz) {
+    handSize = sz;
+    store.set('handSize', sz);
+    applyHandSize();
+    fitTable();
+}
+function applyHandSize() {
+    $('game').dataset.hand = handSize;
+    document.querySelectorAll('.seg [data-hs]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.hs === handSize)));
+}
+function fitSide(side) {
+    const col = side.querySelector('.col:not(.right)');
+    if (!col) return;
+    const n = col.querySelectorAll('.perm').length;
+    const W = col.clientWidth, H = side.clientHeight - 20;
+    let w = 124;
+    for (; w > 40; w -= 4) {
+        const perRow = Math.max(1, Math.floor((W + 8) / (w + 8)));
+        if (Math.ceil(Math.max(1, n) / perRow) * (w * 88 / 63 + 10) + 14 <= H) break;
+    }
+    const set = v => { side.style.setProperty('--card-w', `${v}px`); side.style.setProperty('--land-w', `${Math.max(34, Math.min(76, Math.round(v * 0.7)))}px`); };
+    set(w);
+    // The land column's width moves with the card size: shrink until nothing scrolls
+    for (let k = 0; k < 14 && w > 40 && side.scrollHeight > side.clientHeight + 2; k++) set(w -= 6);
+}
+function fitHand() {
+    const el = $('hand');
+    const cards = [...el.querySelectorAll('.hc')];
+    if (!cards.length) return;
+    const W = el.clientWidth - 56, w = cards[0].offsetWidth, n = cards.length;
+    const over = n * w + (n - 1) * 6 > W && n > 1;
+    const step = over ? (W - w) / (n - 1) : w + 6;
+    cards.forEach((c, i) => {
+        c.style.marginLeft = i ? `${Math.round(step - w)}px` : '0';
+        // A gentle fan: small tilt, outer cards dip a little
+        const k = n > 1 ? (i - (n - 1) / 2) / ((n - 1) / 2) : 0;
+        c.style.setProperty('--rot', over ? `${(k * 3).toFixed(2)}deg` : '0deg');
+        c.style.setProperty('--dip', over ? `${Math.round(k * k * 6)}px` : '0px');
+        c.style.zIndex = String(i + 1);
+    });
+}
+function fitTable() {
+    if (!G || $('game').classList.contains('hidden')) return;
+    applyHandSize();
+    fitSide($('oppSide'));
+    fitSide($('meSide'));
+    fitHand();
+}
+window.addEventListener('resize', () => fitTable());
+// Big preview of whatever card you point at (mouse only)
+document.addEventListener('mouseover', e => {
+    const peek = $('cardPeek');
+    if (!peek || !G || !matchMedia('(hover: hover)').matches) return;
+    const el = e.target.closest && e.target.closest('#game [data-uid]');
+    if (!el) { peek.classList.add('hidden'); return; }
+    const o = findObj(Number(el.dataset.uid));
+    if (!o || !o.card.img) { peek.classList.add('hidden'); return; }
+    const rect = el.getBoundingClientRect();
+    peek.innerHTML = `<img src="${o.card.img}" alt="">${onBf(o.uid) && isCreature(o) ? `<div class="peek-stats">${pow(o)}/${tou(o) - o.dmg}${o.counters ? ` · ${o.counters > 0 ? '+1/+1' : '-1/-1'} ×${Math.abs(o.counters)}` : ''}</div>` : ''}`;
+    peek.classList.toggle('left', rect.left + rect.width / 2 > innerWidth / 2);
+    peek.classList.remove('hidden');
+});
+
+// ---- Tracking counters by hand (card popup and the 🧮 player button) ----
+function counterTrackerHTML(o) {
+    const n = o.counters;
+    const rows = Object.entries(o.ctr || {}).map(([k, v]) => `<div class="trk-row"><span>${counterIcon(k)} ${esc(k)}</span><button class="btn small" onclick="adjCounter(${o.uid}, '${esc(k)}', -1)" aria-label="Remove a ${esc(k)} counter">−</button><strong>${v}</strong><button class="btn small" onclick="adjCounter(${o.uid}, '${esc(k)}', 1)" aria-label="Add a ${esc(k)} counter">+</button></div>`).join('');
+    return `<div class="tracker"><div class="lane-label">Counters</div>
+        <div class="trk-row"><span>${n < 0 ? '−1/−1' : '+1/+1'}</span><button class="btn small" onclick="adjCounter(${o.uid}, 'pm', -1)" aria-label="Remove a +1/+1 or add a -1/-1 counter">−</button><strong>${Math.abs(n)}</strong><button class="btn small" onclick="adjCounter(${o.uid}, 'pm', 1)" aria-label="Add a +1/+1 or remove a -1/-1 counter">+</button><span class="note">+1/+1 and −1/−1 cancel out</span></div>
+        ${rows}
+        <div class="trk-row"><select id="trkKind" aria-label="Counter type">${COUNTER_KINDS.filter(([k]) => !(k in (o.ctr || {}))).map(([k, i]) => `<option value="${k}">${i} ${k}</option>`).join('')}</select><button class="btn small" onclick="adjCounter(${o.uid}, $('trkKind').value, 1)">Add counter</button></div>
+    </div>`;
+}
+function adjCounter(uid, kind, d) {
+    const o = onBf(uid);
+    if (!o) return;
+    const who = o.card.name;
+    if (kind === 'pm') {
+        o.counters += d;
+        log(`${d > 0 ? (o.counters > 0 ? `A +1/+1 counter goes on ${who}` : `A -1/-1 counter comes off ${who}`) : (o.counters < 0 ? `A -1/-1 counter goes on ${who}` : `A +1/+1 counter comes off ${who}`)} (tracked by hand).`);
+    } else {
+        o.ctr[kind] = Math.max(0, (o.ctr[kind] || 0) + d);
+        if (!o.ctr[kind]) delete o.ctr[kind];
+        log(`${who}: ${o.ctr[kind] || 0} ${kind} counter${o.ctr[kind] === 1 ? '' : 's'} (tracked by hand).`);
+    }
+    sba();
+    renderGame();
+    if (onBf(uid)) showGameCard(uid); else closeSheet();
+}
+const PLAYER_COUNTERS = [['life', '❤️ Life'], ['poison', '☠️ Poison (10 loses)'], ['energy', '🔋 Energy'], ['exp', '🎓 Experience']];
+function playerSheet(i) {
+    const P = G.players[i];
+    $('sheetHost').innerHTML = `<div class="sheet-bg" onclick="if (event.target === this) closeSheet()">
+        <div class="sheet one" role="dialog" aria-label="Counters for ${esc(P.i === 0 ? 'you' : P.name)}">
+            <div><h3>🧮 ${P.i === 0 ? 'Your counters' : esc(P.name)}</h3>
+            <p class="note">Track life and player counters by hand. Changes go in the game log.</p>
+            ${PLAYER_COUNTERS.map(([k, label]) => `<div class="trk-row"><span>${label}</span>
+                ${k === 'life' ? `<button class="btn small" onclick="adjPlayer(${i}, '${k}', -5)">−5</button>` : ''}<button class="btn small" onclick="adjPlayer(${i}, '${k}', -1)">−</button><strong>${P[k]}</strong><button class="btn small" onclick="adjPlayer(${i}, '${k}', 1)">+</button>${k === 'life' ? `<button class="btn small" onclick="adjPlayer(${i}, '${k}', 5)">+5</button>` : ''}</div>`).join('')}
+            <div class="actions"><button class="btn" onclick="closeSheet()">Close</button></div></div>
+        </div></div>`;
+}
+function adjPlayer(i, key, d) {
+    const P = G.players[i];
+    if (!P || G.over) return;
+    P[key] = key === 'life' ? P[key] + d : Math.max(0, P[key] + d);
+    const name = P.i === 0 ? 'You' : P.name;
+    log(`${name}: ${key === 'exp' ? 'experience' : key} ${P[key]} (tracked by hand).`);
+    sba();
+    renderGame();
+    if (!G.over) playerSheet(i);
+    else closeSheet();
 }
 
 // =====================================================================
