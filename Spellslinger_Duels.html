@@ -78,6 +78,8 @@
         .brand h1 { font-size: 1.5rem; }
         .brand .tag { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--color-warning); color: var(--color-warning); }
         .coins { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--bg-panel); border: 1px solid var(--gold); color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+        .acct { display: inline-flex; align-items: center; gap: 6px; color: var(--text-soft); }
+        .acct select { padding: 5px 8px; }
         .toplink { font-size: 0.85rem; text-decoration: none; }
         .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
         .tab { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-soft); padding: 8px 16px; border-radius: var(--radius-md); font-weight: 600; }
@@ -307,7 +309,9 @@
             <h1>🪄 Spellslinger Duels</h1>
             <span class="tag">Test build</span>
         </div>
+        <label class="acct" title="Each player has their own coins, collection, decks and record (saved in this browser)">👤 <select id="acctSel" onchange="pickAccount(this.value)" aria-label="Player"></select></label>
         <span class="coins" id="coinPill" title="Coins: free, in-game only. Win games to earn more.">🪙 <span id="coinCount">0</span></span>
+        <button class="btn small" onclick="addTestCoins()" title="Test build: add free coins to this player">＋🪙 Add coins</button>
     </header>
 
     <nav class="tabs" role="tablist" aria-label="Spellslinger Duels">
@@ -499,8 +503,52 @@ const store = {
     get(k, d) { try { const v = localStorage.getItem('duels:' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('duels:' + k, JSON.stringify(v)); return true; } catch (e) { return false; } }
 };
-let profile = store.get('profile', null);
-function saveProfile() { store.set('profile', profile); renderCoins(); }
+// Players: each has their own profile (duels:profile:<name>). A profile
+// saved before players existed (duels:profile) moves to the first one
+// signed in (Ovid, 2026-10-05).
+const DEFAULT_ACCOUNTS = ['Dustyn', 'Ovid'];
+let accounts = store.get('accounts', null);
+if (!accounts) {
+    accounts = { list: DEFAULT_ACCOUNTS.slice(), current: 'Ovid' };
+    const old = store.get('profile', null);
+    if (old) { store.set('profile:Ovid', old); try { localStorage.removeItem('duels:profile'); } catch (e) { /* fine */ } }
+    store.set('accounts', accounts);
+}
+let profile = store.get('profile:' + accounts.current, null);
+function saveProfile() { store.set('profile:' + accounts.current, profile); renderCoins(); }
+function renderAccounts() {
+    $('acctSel').innerHTML = accounts.list.map(n => `<option value="${esc(n)}"${n === accounts.current ? ' selected' : ''}>${esc(n)}</option>`).join('')
+        + '<option value="__add">＋ Add player…</option>';
+}
+function pickAccount(name) {
+    if (name === '__add') {
+        const n = (prompt('New player name:') || '').trim().slice(0, 24);
+        if (!n) { renderAccounts(); return; }
+        if (!accounts.list.includes(n)) accounts.list.push(n);
+        name = n;
+    }
+    if (editing && !confirm('Switch players? Unsaved changes to the deck you are building will be lost.')) { renderAccounts(); return; }
+    editing = null;
+    accounts.current = name;
+    store.set('accounts', accounts);
+    profile = store.get('profile:' + name, null);
+    ensureProfile();
+    renderAccounts();
+    const v = VIEWS.find(k => !$(`view-${k}`).classList.contains('hidden')) || 'home';
+    showView(v);
+    toast(`Playing as ${name}.`);
+}
+// Test build: free coins on demand, for trying things out.
+function addTestCoins() {
+    const raw = prompt(`Add how many coins to ${accounts.current}?`, '1000');
+    const n = Math.floor(Number(String(raw || '').replace(/[, ]/g, '')));
+    if (!n || n < 1) return;
+    profile.coins += Math.min(n, 1e7);
+    saveProfile();
+    if (!$('view-home').classList.contains('hidden')) renderHome();
+    if (!$('view-packs').classList.contains('hidden')) renderPacksView();
+    toast(`🪙 +${Math.min(n, 1e7).toLocaleString()} coins for ${accounts.current}.`);
+}
 function renderCoins() { $('coinCount').textContent = (profile ? profile.coins : 0).toLocaleString(); }
 
 // ---- Scryfall: requests spaced out, as Scryfall asks (50-100ms apart) ----
@@ -3020,6 +3068,7 @@ document.addEventListener('keydown', e => {
 // =====================================================================
 async function init() {
     ensureProfile();
+    renderAccounts();
     const v = (location.hash || '').slice(1);
     showView(VIEWS.includes(v) ? v : 'home');
     window.addEventListener('beforeunload', persistCards);
