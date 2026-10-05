@@ -300,6 +300,61 @@
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { transition: none !important; animation: none !important; }
         }
+
+        /* ---- Card shop: glass point-of-sale ---- */
+        .shop-floor { display: grid; gap: 14px; padding: 14px; border-radius: var(--radius-lg);
+            background: radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--brand) 45%, transparent), transparent 55%),
+                        radial-gradient(circle at 85% 90%, color-mix(in srgb, var(--gold) 25%, transparent), transparent 50%), var(--felt-2); }
+        .pos { background: color-mix(in srgb, var(--bg-panel) 55%, transparent); border: 1px solid color-mix(in srgb, var(--brand-light) 35%, transparent);
+            border-radius: var(--radius-lg); padding: 14px; backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
+            box-shadow: 0 8px 28px -12px var(--bg-canvas), inset 0 1px 0 color-mix(in srgb, var(--text-heading) 12%, transparent); min-width: 0; }
+        .pos h3 { font-size: 1rem; margin-bottom: 8px; }
+        .pos-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 10px; }
+        .pos-title h2 { font-size: 1.2rem; }
+        .pos-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 10px; }
+        .pos-stats > div { background: color-mix(in srgb, var(--bg-inset) 70%, transparent); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 8px 10px; display: grid; }
+        .pos-k { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
+        .pos-stats strong { font-family: var(--font-display); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+        .pos-stats .neg { color: var(--color-error); }
+        .pos-event { border-left: 3px solid var(--gold); background: color-mix(in srgb, var(--gold) 12%, transparent); padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 0.9rem; }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        @media (max-width: 800px) { .shop-grid { grid-template-columns: 1fr; } }
+        .cust { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px; margin-bottom: 10px; background: color-mix(in srgb, var(--bg-panel-raised) 60%, transparent); animation: custIn 0.35s ease backwards; }
+        @keyframes custIn { from { opacity: 0; transform: translateY(8px); } }
+        .cust-head { display: flex; gap: 10px; align-items: flex-start; }
+        .cust-face { font-size: 1.8rem; line-height: 1; }
+        .cust-items { margin: 8px 0 6px 18px; font-size: 0.9rem; }
+        .cust-offer { margin-bottom: 8px; }
+        .cust-offer .offer { color: var(--color-success); }
+        .counter-in, .ask-in { width: 82px; padding: 4px 6px !important; }
+        .patience { height: 3px; background: var(--border-subtle); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+        .patience span { display: block; height: 100%; background: var(--gold); transition: width 0.4s linear; }
+        .pos-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .pos-table th { text-align: left; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--border); }
+        .pos-table td { padding: 5px 6px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+        .pos-table select { max-width: 220px; padding: 4px 6px; }
+        .pos-actions { white-space: nowrap; }
+        @media (max-width: 640px) { .pos-table thead { display: none; } .pos-table tr { display: grid; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--border-subtle); } .pos-table td { border: 0; padding: 2px 0; } .pos-actions { white-space: normal; } }
+        .pos-log { list-style: none; font-size: 0.85rem; color: var(--text-soft); max-height: 180px; overflow-y: auto; display: grid; gap: 3px; margin-top: 6px; }
+        .linkish { background: none; border: 0; color: var(--color-link); padding: 0; text-align: left; }
+        .linkish:hover { text-decoration: underline; }
+        .cond { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 0 6px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-soft); vertical-align: middle; }
+        .cond-M { border-color: var(--color-success); color: var(--color-success); }
+        .cond-LP { border-color: var(--color-link); color: var(--color-link); }
+        .cond-MP { border-color: var(--color-warning); color: var(--color-warning); }
+        .cond-D { border-color: var(--color-error); color: var(--color-error); }
+        .serial-tag { display: inline-block; margin-left: 4px; font-size: 0.72rem; font-weight: 800; padding: 0 6px; border-radius: 999px; color: var(--bg-canvas);
+            background: linear-gradient(90deg, var(--mana-R), var(--gold), var(--mana-G), var(--mana-U), var(--mana-B), var(--mana-R)); background-size: 200% 100%; animation: serialShift 3s linear infinite; }
+        .serial-row td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
+        .reveal.serial .front { box-shadow: 0 0 26px 2px var(--gold); }
+        .reveal.serial .front::after { content: ''; position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: 0.55; pointer-events: none;
+            background: linear-gradient(115deg, var(--mana-R), var(--gold), var(--mana-G), var(--mana-U), var(--mana-B), var(--mana-R)); background-size: 300% 300%; animation: serialShift 3s linear infinite; }
+        @keyframes serialShift { to { background-position: 200% 0; } }
+        @media (prefers-reduced-motion: reduce) { .serial-tag, .reveal.serial .front::after, .cust { animation: none; } }
+        .vault { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 360px; }
+        .vault-slot { aspect-ratio: 63 / 88; border-radius: 5% / 3.6%; border: 1px solid var(--gold); background: var(--bg-inset); padding: 0; overflow: hidden; color: var(--text-soft); box-shadow: 0 0 14px -4px var(--gold); }
+        .vault-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .vault-slot.empty { display: grid; place-content: center; text-align: center; border-style: dashed; box-shadow: none; font-size: 1.4rem; }
     </style>
 </head>
 <body>
@@ -320,6 +375,7 @@
         <button class="tab" role="tab" id="tab-packs" aria-selected="false" onclick="showView('packs')">🎴 Packs</button>
         <button class="tab" role="tab" id="tab-decks" aria-selected="false" onclick="showView('decks')">🗂️ Collection &amp; Decks</button>
         <button class="tab" role="tab" id="tab-play" aria-selected="false" onclick="showView('play')">⚔️ Play</button>
+        <button class="tab" role="tab" id="tab-shop" aria-selected="false" onclick="showView('shop')">🏪 Shop</button>
         <button class="tab" role="tab" id="tab-rules" aria-selected="false" onclick="showView('rules')">📖 Rules</button>
     </nav>
 
@@ -337,6 +393,7 @@
                             <li><strong>Decks:</strong> build a <strong>Modern</strong> deck (60 cards, up to 4 of each) or a <strong>Commander</strong> deck (100 cards, one of each, plus a commander). Basic lands are free. Or grab a ready-made starter deck.</li>
                             <li><strong>Play:</strong> pick an opponent. Modern opponents play themed decks built from Scryfall; Commander opponents play EDHREC's average deck for this week's trending commanders.</li>
                             <li><strong>Earn:</strong> 150 coins for a win (200 in Commander), 40 for trying.</li>
+                            <li><strong>Shop:</strong> run a card shop. Put cards in your display case, haggle with customers, and close up each day (rent is due). Each card you open has a condition, and a rare few are serialized.</li>
                         </ol>
                     </div>
                     <div>
@@ -403,7 +460,43 @@
             </div>
         </section>
 
-        <!-- ============ PLAY ============ -->
+        <!-- ============ SHOP ============ -->
+        <section id="view-shop" class="hidden">
+            <div class="shop-floor">
+                <div class="pos" aria-label="Point of sale">
+                    <div class="pos-title"><h2>🏪 Your card shop</h2><span class="note">Prices: Scryfall's TCGplayer market price × condition × today's market. Shop cash is in-game only.</span></div>
+                    <div id="shopHead"></div>
+                </div>
+                <div class="shop-grid">
+                    <div class="pos">
+                        <h3>🛎️ At the counter</h3>
+                        <div id="shopCustomers"></div>
+                        <details class="pos-logwrap" open><summary class="note">Shop log</summary><ul id="shopLog" class="pos-log"></ul></details>
+                    </div>
+                    <div class="pos">
+                        <h3>🗄️ Display case</h3>
+                        <div id="shopCase"></div>
+                        <h3 style="margin-top:14px;">Bulk bin</h3>
+                        <div id="shopBulk"></div>
+                        <h3 style="margin-top:14px;">Vault</h3>
+                        <div id="shopVault" class="vault"></div>
+                    </div>
+                </div>
+                <div class="pos">
+                    <div class="row" style="justify-content:space-between;">
+                        <h3>🃏 Your collection</h3>
+                        <div class="row">
+                            <input type="search" placeholder="Find a card" aria-label="Find a card" oninput="shopFilter = this.value; renderShopStock()">
+                            <label class="note">Markup <input type="number" id="shopMarkup" value="20" min="0" max="500" step="5" style="width:70px;" aria-label="Markup percent">%</label>
+                        </div>
+                    </div>
+                    <p class="note">Cards in the case or bulk bin leave your collection (and your decks) until they sell or you take them back.</p>
+                    <div id="shopStock"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ RULES ============ -->
         <section id="view-rules" class="hidden">
             <div class="panel">
                 <h2>Magic: The Gathering Comprehensive Rules</h2>
@@ -437,7 +530,7 @@
     </main>
 
     <footer>
-        Spellslinger Duels is a free, fan-made test game. Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>; pack odds from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>; Commander decks from <a href="https://edhrec.com" target="_blank" rel="noopener">EDHREC</a>. Coins are in-game only and can't be bought or cashed out.<br>
+        Spellslinger Duels is a free, fan-made test game. Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>; pack odds from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>; Commander decks from <a href="https://edhrec.com" target="_blank" rel="noopener">EDHREC</a>. Coins and shop cash are in-game only and can't be bought or cashed out.<br>
         Spellslinger Duels is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
     </footer>
 </div>
@@ -530,6 +623,7 @@ function pickAccount(name) {
     }
     if (editing && !confirm('Switch players? Unsaved changes to the deck you are building will be lost.')) { renderAccounts(); return; }
     editing = null;
+    pauseShop(); SHOP.queue = []; SHOP.log = [];
     accounts.current = name;
     store.set('accounts', accounts);
     profile = store.get('profile:' + name, null);
@@ -543,6 +637,7 @@ function pickAccount(name) {
 function restartPlayer() {
     if (!confirm(`Start ${accounts.current} over? This deletes their coins, cards, decks and win/loss record (other players aren't touched).`)) return;
     editing = null;
+    pauseShop(); SHOP.queue = []; SHOP.log = [];
     profile = null;
     ensureProfile();
     const v = VIEWS.find(k => !$(`view-${k}`).classList.contains('hidden')) || 'home';
@@ -611,7 +706,9 @@ function slimCard(c) {
         colors: face.colors || c.colors || [], ci: c.color_identity || [], img: img.normal || null, imgS: img.small || null,
         rarity: c.rarity, set: c.set, setName: c.set_name, layout: c.layout,
         legal: { modern: L.modern, commander: L.commander },
-        usd: (c.prices && (c.prices.usd || c.prices.usd_foil)) || null
+        usd: (c.prices && (c.prices.usd || c.prices.usd_foil)) || null,
+        usdFoil: (c.prices && c.prices.usd_foil) || null,
+        frame: c.frame_effects || [], released: c.released_at || null, v: 2
     };
 }
 function remember(c) { const s = slimCard(c); CARDS.set(s.id, s); cardsDirty = true; return s; }
@@ -931,7 +1028,7 @@ async function fillKeywordHelp(card) {
 // =====================================================================
 // Views, packs, collection and decks
 // =====================================================================
-const VIEWS = ['home', 'packs', 'decks', 'play', 'rules'];
+const VIEWS = ['home', 'packs', 'decks', 'play', 'shop', 'rules'];
 function showView(v) {
     VIEWS.forEach(k => {
         $(`view-${k}`).classList.toggle('hidden', k !== v);
@@ -942,14 +1039,16 @@ function showView(v) {
     if (v === 'decks') { if (!editing) renderDeckPicker(); }
     if (v === 'play') renderPlayView();
     if (v === 'rules') renderRulesView();
+    if (v === 'shop') renderShop();
     try { history.replaceState(null, '', `#${v}`); } catch (e) { /* fine */ }
 }
 
 function ensureProfile() {
     if (!profile) {
         profile = { coins: START_COINS, freePacks: 3, collection: {}, decks: [], wins: 0, losses: 0, packs: 0, created: todayISO() };
-        saveProfile();
     }
+    upgradeProfile(profile);
+    saveProfile();
     renderCoins();
 }
 
@@ -1055,7 +1154,7 @@ async function buyPack(kind) {
         const pack = await drawPack(code, kind);
         if (free) profile.freePacks--; else profile.coins -= price;
         profile.packs++;
-        pack.cards.forEach(p => { profile.collection[p.id] = (profile.collection[p.id] || 0) + 1; });
+        pack.cards.forEach(p => { p.copy = rollCopy(p.foil, pack.set.releaseDate); addCopy(p.id, p.copy); });
         saveProfile();
         renderPackReveal(pack);
     } catch (e) {
@@ -1075,9 +1174,9 @@ function renderPackReveal(pack) {
                 <span class="pack-half bottom"><span style="font-size:2rem;" aria-hidden="true">✨</span>${esc(pack.set.name)}<small>Tap to open</small></span>
             </button>
             <div class="cards hidden" id="packCards">${pack.cards.map((p, i) => `
-                <button type="button" class="ctile reveal" data-r="${p.card.rarity}" onclick="showCardSheet('${p.card.id}')">
+                <button type="button" class="ctile reveal${p.copy && p.copy.s ? ' serial' : ''}" data-r="${p.card.rarity}" onclick="showCardSheet('${p.card.id}')">
                     <div class="flipper"><div class="front">${p.card.img ? `<img src="${p.card.img}" alt="${esc(p.card.name)}" loading="lazy">` : `<div class="noimg">${esc(p.card.name)}</div>`}</div><div class="back"></div></div>
-                    <span class="meta"><strong>${esc(p.card.name)}</strong>${p.foil ? ' ✨' : ''}<br>${p.card.rarity} · ${supportBadge(p.card)}</span>
+                    <span class="meta"><strong>${esc(p.card.name)}</strong>${p.copy ? ` ${condBadge(p.copy)}` : (p.foil ? ' ✨' : '')}<br>${p.card.rarity} · ${supportBadge(p.card)}</span>
                 </button>`).join('')}</div>
             <p class="note hidden" id="packSummary">${pack.cards.length} cards added to your collection${best ? ` · best pull: <strong>${esc(best.card.name)}</strong>` : ''}${total ? ` · about $${total.toFixed(2)} at TCGplayer market (just for fun - these are in-game cards)` : ''}.</p>
         </div>`;
@@ -3077,6 +3176,537 @@ document.addEventListener('keydown', e => {
     else if (k === 'm') ptMulligan();
     else if (k === 'escape') closePtMenu();
 });
+
+// =====================================================================
+// Card shop (phase 1, 2026-10-05): the profile's shop fields, card
+// conditions and serialized copies, daily market events, the personalities
+// shared by shop customers and (later) campaign opponents, and the shop
+// day loop. Shop cash ($) is in-game money like coins: it can't be bought
+// or cashed out.
+// =====================================================================
+
+// ---- Profile: the shop and collector fields, filled in on old profiles ----
+const SHOP_START_USD = 50;
+const SHOP_RENT = 12;            // taken when you close the shop each day
+const SHOP_MAX_QUEUE = 3;        // customers waiting at once
+const SHOP_TICK_MS = 3000;       // how often a customer might walk in
+const SHOP_PATIENCE_TICKS = 14;  // about 40 seconds before a customer gives up
+function profileDefaults() {
+    return {
+        usd: SHOP_START_USD, shopDay: 1, shopReputation: 0,
+        displayCase: [],   // { id, condition, foil, serial, askingPrice }
+        bulkBox: [],       // { id, condition, foil } (the bulk bin)
+        bulkPrice: 0.25,   // what the bulk bin charges per card
+        vault: [],         // up to 3 card ids, shown off (not for sale)
+        copies: {},        // id -> [{ c, f, s }] condition / foil / serialized per copy
+        campaignProgress: [], starterDeck: null, setBinders: {},
+        cosmetics: { sleeves: 'default', playmat: 'default' },
+        marketEvent: null, // { key, day }
+        shopToday: null,   // { day, visitsLeft, sales: [], revenue }
+        shopLedger: []     // the last few closed days
+    };
+}
+function upgradeProfile(p) {
+    const d = profileDefaults();
+    Object.keys(d).forEach(k => { if (p[k] === undefined) p[k] = d[k]; });
+    return p;
+}
+
+// ---- Conditions and copies ----
+// Each owned copy has a condition (and may be foil or serialized). Copies
+// opened before conditions existed count as Mint, non-foil.
+const CONDITIONS = {
+    M: { label: 'Mint', short: 'M', mult: 1 },
+    LP: { label: 'Lightly Played', short: 'LP', mult: 0.8 },
+    MP: { label: 'Moderately Played', short: 'MP', mult: 0.6 },
+    D: { label: 'Damaged', short: 'DMG', mult: 0.3 }
+};
+// How often each condition comes out of a pack (a game choice, not real data)
+const CONDITION_ODDS = [['M', 70], ['LP', 18], ['MP', 9], ['D', 3]];
+const SERIAL_CHANCE = 0.001;          // per card, sets from 2020 on
+const SERIAL_FROM = '2020-01-01';
+const SERIAL_MULT = 10;
+function rollCopy(foil, setRelease) {
+    const c = CONDITION_ODDS[pickWeighted(CONDITION_ODDS)][0];
+    const copy = { c };
+    if (foil) copy.f = 1;
+    if (setRelease && setRelease >= SERIAL_FROM && Math.random() < SERIAL_CHANCE) copy.s = 1;
+    return copy;
+}
+function ownedCopies(id) {
+    const n = profile.collection[id] || 0;
+    const list = (profile.copies[id] || []).slice(0, n);
+    while (list.length < n) list.push({ c: 'M' });
+    return list;
+}
+function addCopy(id, copy) {
+    profile.collection[id] = (profile.collection[id] || 0) + 1;
+    const list = ownedCopies(id).slice(0, profile.collection[id] - 1);
+    list.push(copy);
+    profile.copies[id] = list;
+}
+// Take one copy matching `match` (a copy object) out of the collection
+function takeCopy(id, match) {
+    const list = ownedCopies(id);
+    const i = list.findIndex(c => c.c === match.c && !!c.f === !!match.f && !!c.s === !!match.s);
+    if (i < 0) return null;
+    const [copy] = list.splice(i, 1);
+    profile.collection[id] = list.length;
+    if (list.length) profile.copies[id] = list;
+    else { delete profile.collection[id]; delete profile.copies[id]; }
+    return copy;
+}
+function copyKey(c) { return `${c.c}${c.f ? 'f' : ''}${c.s ? 's' : ''}`; }
+function copyLabel(c) { return `${CONDITIONS[c.c].label}${c.f ? ' foil' : ''}${c.s ? ' · SERIALIZED' : ''}`; }
+function condBadge(c) {
+    return `<span class="cond cond-${c.c}" title="${esc(copyLabel(c))}">${CONDITIONS[c.c].short}${c.f ? ' ✨' : ''}</span>${c.s ? '<span class="serial-tag">#/500</span>' : ''}`;
+}
+
+// ---- Values: Scryfall's TCGplayer price x condition x serialized x today's market ----
+function baseUsd(card, foil) { return parseFloat((foil && card.usdFoil) || card.usd) || 0; }
+function copyValue(card, copy, ignoreCondition) {
+    if (!card) return 0;
+    let v = baseUsd(card, copy.f);
+    if (!ignoreCondition) v *= CONDITIONS[copy.c].mult;
+    if (copy.s) v *= SERIAL_MULT;
+    return Math.round(v * eventMult(card) * 100) / 100;
+}
+const usd = n => `$${(Math.round(n * 100) / 100).toFixed(2)}`;
+
+// ---- Market events: one each shop day (made-up in-game news) ----
+const MARKET_EVENTS = [
+    { key: 'pt-red', icon: '🏆', title: 'Pro Tour spike', text: 'A red deck won the Pro Tour: red cards are worth 40% more today.', mult: 1.4, match: c => c.colors.includes('R') },
+    { key: 'ban-blue', icon: '🔨', title: 'Banlist update', text: 'Blue staples got hit: blue cards are worth 25% less today.', mult: 0.75, match: c => c.colors.includes('U') },
+    { key: 'precon', icon: '👑', title: 'Commander precon hype', text: 'A new precon is out: legendary creatures are worth 30% more.', mult: 1.3, match: c => /Legendary/.test(c.type) && /Creature/.test(c.type) },
+    { key: 'artifacts', icon: '⚙️', title: 'Artifact season', text: 'An artifact deck is everywhere: artifacts are worth 25% more.', mult: 1.25, match: c => /Artifact/.test(c.type) },
+    { key: 'yard', icon: '🪦', title: 'Graveyard meta', text: 'Graveyard decks are winning: cards that mention the graveyard are worth 30% more.', mult: 1.3, match: c => /graveyard/i.test(c.text || '') },
+    { key: 'ramp', icon: '🌲', title: 'Ramp craze', text: 'Big green decks are back: green cards are worth 20% more.', mult: 1.2, match: c => c.colors.includes('G') },
+    { key: 'dragons', icon: '🐉', title: 'Dragon week', text: 'A dragon set was announced: Dragons are worth 50% more.', mult: 1.5, match: c => /\bDragon\b/.test(c.type) },
+    { key: 'reprint', icon: '📉', title: 'Reprint announced', text: 'A big reprint set is coming: mythic rares are worth 15% less.', mult: 0.85, match: c => c.rarity === 'mythic' },
+    { key: 'instants', icon: '⚡', title: 'Tempo is in', text: 'Fast decks are popular: instants are worth 20% more.', mult: 1.2, match: c => /Instant/.test(c.type) },
+    { key: 'quiet', icon: '☕', title: 'Quiet market', text: 'Nothing big happened: prices are steady.', mult: 1, match: () => false }
+];
+function todayEvent() {
+    const e = profile && profile.marketEvent;
+    return e ? MARKET_EVENTS.find(m => m.key === e.key) || null : null;
+}
+function eventMult(card) {
+    const e = todayEvent();
+    return e && card && e.match(card) ? e.mult : 1;
+}
+function rollMarketEvent() {
+    const last = profile.marketEvent && profile.marketEvent.key;
+    const pool = MARKET_EVENTS.filter(m => m.key !== last);
+    profile.marketEvent = { key: pool[rand(pool.length)].key, day: profile.shopDay };
+}
+
+// ---- Personalities: shop customers now; campaign opponents later ----
+// `duel` is what each one plays as an opponent (wired up with the campaign);
+// `shop` is how they buy: what they want, which conditions they take, what
+// share of today's value they pay, and how far a counteroffer can push them.
+const HATE_RE = /\b(players can't|can't cast|can't be cast|exile (?:target player's|all cards from|each opponent's) graveyard|doesn't untap|don't untap|each player sacrifices|costs? \{\d\} more|can't search)/i;
+const PERSONALITIES = {
+    greg: {
+        name: 'Greg', archetype: 'Timmy', emoji: '🦖',
+        duel: { theme: 'stompy', style: 'aggro', desc: 'Green Stompy, all-out attacks' },
+        shop: { desc: 'Big mythic creatures (5/5 or bigger). Takes LP and MP copies.', conditions: ['M', 'LP', 'MP'], pay: () => 1.1, tolerance: 0.1,
+            wants: card => card.rarity === 'mythic' && /Creature/.test(card.type) && +card.power >= 5 && +card.toughness >= 5 }
+    },
+    marcus: {
+        name: 'Marcus', archetype: 'Spike', emoji: '🧠',
+        duel: { theme: 'control', style: 'control', desc: 'Azorius Control, holds mana up for instants' },
+        shop: { desc: 'Mint tournament staples only (Modern-legal, $4+). Always lowballs.', conditions: ['M'], pay: () => 0.8 + Math.random() * 0.1, tolerance: 0.05, lowball: true,
+            wants: (card, copy) => card.legal && card.legal.modern === 'legal' && !isBasic(card) && copyValue(card, copy) >= 4 }
+    },
+    sarah: {
+        name: 'Sarah', archetype: 'Johnny', emoji: '🧩',
+        duel: { theme: 'artifacts', style: 'combo', desc: 'Artifact combo' },
+        shop: { desc: 'Odd enchantments and bulk rares, at full value.', conditions: ['M', 'LP', 'MP'], pay: () => 1, tolerance: 0.1,
+            wants: (card, copy) => (/Enchantment/.test(card.type) && !/Creature/.test(card.type) && copyValue(card, copy) < 3)
+                || (['rare', 'mythic'].includes(card.rarity) && copyValue(card, copy) < 1.5) }
+    },
+    leo: {
+        name: 'Leo', archetype: 'Vorthos', emoji: '📜',
+        duel: { theme: 'tribal', style: 'midrange', desc: 'Themed tribal decks' },
+        shop: { desc: 'Foils, showcase frames and cards from before 2003. Pays 125%.', conditions: ['M', 'LP'], pay: () => 1.25, tolerance: 0.15,
+            wants: (card, copy) => !!copy.f || (card.frame || []).includes('showcase') || (!!card.released && card.released < '2003-01-01') }
+    },
+    trevor: {
+        name: 'Trevor', archetype: 'Melvin', emoji: '🔒',
+        duel: { theme: 'stax', style: 'prison', desc: 'Stax and prison pieces' },
+        shop: { desc: 'Hate cards (cards that stop other players). Takes your price or walks: no haggling.', conditions: ['M', 'LP', 'MP'], pay: () => 1, tolerance: 0, noHaggle: true,
+            wants: card => HATE_RE.test(card.text || '') }
+    },
+    sam: {
+        name: 'Sam', archetype: 'Speedrunner', emoji: '🏃',
+        duel: { theme: 'burn', style: 'aggro', desc: 'Red Deck Wins' },
+        shop: { desc: 'Playsets of cheap playables ($1-$5 each). Doesn\'t care about condition.', conditions: ['M', 'LP', 'MP', 'D'], pay: () => 1, tolerance: 0.05, ignoreCondition: true, playset: true,
+            wants: (card, copy) => { const v = copyValue(card, copy, true); return v >= 1 && v <= 5 && !isBasic(card); } }
+    },
+    arthur: {
+        name: 'Arthur', archetype: 'Whale', emoji: '🐋',
+        duel: { theme: 'power', style: 'control', desc: 'Vintage with the Power 9' },
+        shop: { desc: 'Glass-case cards worth more than $50. Pays 150%.', conditions: ['M', 'LP'], pay: () => 1.5, tolerance: 0.2, best: true,
+            wants: (card, copy) => copyValue(card, copy) > 50 }
+    },
+    brenda: {
+        name: 'Brenda', archetype: 'Budget', emoji: '🧺',
+        duel: { theme: 'precon', style: 'casual', desc: 'Preconstructed decks' },
+        shop: { desc: 'Digs through the bulk bin for cards under $2.', conditions: ['M', 'LP', 'MP', 'D'], pay: () => 1, tolerance: 0.1, bulkOnly: true,
+            wants: (card, copy) => copyValue(card, copy) < 2 }
+    },
+    luke: {
+        name: 'Luke', archetype: 'Disruptor', emoji: '🌀',
+        duel: { theme: 'mill', style: 'disrupt', desc: 'Mill and discard' },
+        shop: { desc: 'Cards that mill or make players discard.', conditions: ['M', 'LP', 'MP'], pay: () => 1, tolerance: 0.1,
+            wants: card => /\blibrary\b|\bdiscard/i.test(card.text || '') }
+    }
+};
+
+// ---- The shop day ----
+const SHOP = { open: false, timer: null, queue: [], seq: 1, log: [] };
+function shopVisitsFor(rep) { return Math.min(20, 6 + Math.floor(rep / 4)); }
+function ensureShopDay() {
+    if (!profile.marketEvent) rollMarketEvent();
+    if (!profile.shopToday || profile.shopToday.day !== profile.shopDay)
+        profile.shopToday = { day: profile.shopDay, visitsLeft: shopVisitsFor(profile.shopReputation), sales: [], revenue: 0 };
+}
+function vaultBonus() {
+    // Trophies draw a crowd: up to +15% customer chance
+    const total = profile.vault.reduce((a, id) => a + baseUsd(CARDS.get(id) || {}, false), 0);
+    return Math.min(0.15, total / 400);
+}
+function shopLog(msg) { SHOP.log.unshift(msg); SHOP.log.length = Math.min(SHOP.log.length, 30); }
+
+function openShop() {
+    ensureShopDay();
+    if (profile.shopToday.visitsLeft <= 0) { toast('No more customers today - close up to start a new day.'); return; }
+    SHOP.open = true;
+    clearInterval(SHOP.timer);
+    SHOP.timer = setInterval(shopTick, SHOP_TICK_MS);
+    shopLog(`🔓 Day ${profile.shopDay}: the shop is open.`);
+    renderShop();
+}
+function pauseShop() {
+    SHOP.open = false;
+    clearInterval(SHOP.timer);
+    SHOP.timer = null;
+}
+function shopTick() {
+    if ($('view-shop').classList.contains('hidden') || !$('game').classList.contains('hidden')) return; // paused while you're elsewhere
+    // Waiting customers lose patience
+    SHOP.queue.forEach(c => c.patience--);
+    SHOP.queue.filter(c => c.patience <= 0).forEach(c => shopLog(`⌛ ${c.p.name} got tired of waiting and left.`));
+    SHOP.queue = SHOP.queue.filter(c => c.patience > 0);
+    const T = profile.shopToday;
+    if (T.visitsLeft > 0 && SHOP.queue.length < SHOP_MAX_QUEUE) {
+        const chance = 0.35 + Math.min(profile.shopReputation, 40) * 0.01 + vaultBonus();
+        if (Math.random() < chance) {
+            T.visitsLeft--;
+            spawnCustomer();
+            saveProfile();
+        }
+    }
+    if (T.visitsLeft <= 0 && !SHOP.queue.length && SHOP.open) {
+        pauseShop();
+        shopLog('🚪 That was the last customer today. Close the shop to start a new day.');
+    }
+    renderShopFloor();
+}
+
+// What a customer would take home: listings from the case (or the bulk bin)
+function buildBasket(P) {
+    const S = P.shop;
+    const ok = (l, inBulk) => {
+        const card = CARDS.get(l.id);
+        if (!card || !S.conditions.includes(l.condition)) return false;
+        const copy = { c: l.condition, f: l.foil, s: l.serial };
+        return S.wants(card, copy) && (inBulk || !S.bulkOnly);
+    };
+    if (S.bulkOnly) {
+        const pick = shuffle(profile.bulkBox.map((l, i) => ({ l, i })).filter(x => ok(x.l, true))).slice(0, 1 + rand(6));
+        return pick.length ? { from: 'bulk', items: pick } : null;
+    }
+    const all = profile.displayCase.map((l, i) => ({ l, i })).filter(x => ok(x.l, false));
+    if (!all.length) return null;
+    if (S.playset) {
+        const byId = {};
+        all.forEach(x => (byId[x.l.id] = byId[x.l.id] || []).push(x));
+        const sets = Object.values(byId).sort((a, b) => b.length - a.length);
+        return { from: 'case', items: sets[0].slice(0, 4) };
+    }
+    if (S.best) return { from: 'case', items: [all.sort((a, b) => listingValue(b.l) - listingValue(a.l))[0]] };
+    return { from: 'case', items: [all[rand(all.length)]] };
+}
+function listingValue(l, ignoreCondition) { return copyValue(CARDS.get(l.id), { c: l.condition, f: l.foil, s: l.serial }, ignoreCondition); }
+function listingAsk(l, from) { return from === 'bulk' ? profile.bulkPrice : l.askingPrice; }
+
+function spawnCustomer() {
+    const keys = Object.keys(PERSONALITIES).filter(k => !SHOP.queue.some(c => c.p === PERSONALITIES[k])); // one of each at a time
+    if (!keys.length) return;
+    const P = PERSONALITIES[keys[rand(keys.length)]];
+    const basket = buildBasket(P);
+    if (!basket) { shopLog(`👀 ${P.emoji} ${P.name} looked for ${P.shop.desc.charAt(0).toLowerCase()}${P.shop.desc.slice(1, 60).replace(/\.$/, '')}${P.shop.desc.length > 60 ? '...' : ''} and found nothing.`); return; }
+    const value = basket.items.reduce((a, x) => a + listingValue(x.l, P.shop.ignoreCondition), 0);
+    const asking = basket.items.reduce((a, x) => a + listingAsk(x.l, basket.from), 0);
+    const maxPay = Math.max(0.05, value * P.shop.pay());
+    let offer;
+    if (P.shop.lowball) offer = Math.min(asking, maxPay);                        // Spike: never more than 80-90%
+    else if (asking <= maxPay) offer = asking;                                   // happy to pay your price
+    else offer = maxPay * (0.85 + Math.random() * 0.1);                          // offers a bit under their limit
+    offer = Math.round(offer * 100) / 100;
+    SHOP.queue.push({ id: SHOP.seq++, p: P, basket, value, asking, maxPay, offer, patience: SHOP_PATIENCE_TICKS, countered: false });
+    shopLog(`🔔 ${P.emoji} ${P.name} walked in.`);
+}
+
+function findCustomer(id) { return SHOP.queue.find(c => c.id === id); }
+function removeCustomer(c) { SHOP.queue = SHOP.queue.filter(x => x !== c); }
+function completeSale(c, price) {
+    // Take the items out of the case or bin (highest index first)
+    const list = c.basket.from === 'bulk' ? profile.bulkBox : profile.displayCase;
+    c.basket.items.map(x => x.l).forEach(l => { const i = list.indexOf(l); if (i >= 0) list.splice(i, 1); });
+    profile.usd = Math.round((profile.usd + price) * 100) / 100;
+    const T = profile.shopToday;
+    T.revenue = Math.round((T.revenue + price) * 100) / 100;
+    T.sales.push({ who: c.p.name, cards: c.basket.items.map(x => CARDS.get(x.l.id)?.name || '?'), price });
+    // Fair deals build the shop's name
+    if (price <= c.value * 1.1) profile.shopReputation++;
+    removeCustomer(c);
+    // Other customers' baskets may hold the sold items now: send them home politely
+    SHOP.queue.filter(o => o.basket.items.some(x => !(o.basket.from === 'bulk' ? profile.bulkBox : profile.displayCase).includes(x.l)))
+        .forEach(o => { shopLog(`🤷 ${o.p.name} saw their pick get sold and left.`); removeCustomer(o); });
+    shopLog(`💵 Sold ${c.basket.items.length > 1 ? `${c.basket.items.length} cards` : esc(CARDS.get(c.basket.items[0].l.id)?.name || 'a card')} to ${c.p.name} for ${usd(price)}.`);
+    saveProfile();
+}
+function acceptOffer(id) {
+    const c = findCustomer(id);
+    if (!c) return;
+    completeSale(c, c.offer);
+    renderShop();
+}
+function declineOffer(id) {
+    const c = findCustomer(id);
+    if (!c) return;
+    removeCustomer(c);
+    shopLog(`👋 You turned down ${c.p.name}.`);
+    renderShopFloor();
+}
+function counterOffer(id) {
+    const c = findCustomer(id);
+    if (!c) return;
+    const input = $(`counter-${id}`);
+    const price = Math.round(parseFloat(String(input && input.value || '').replace(/[$,]/g, '')) * 100) / 100;
+    if (!(price > 0)) { toast('Type a price first.'); return; }
+    if (c.p.shop.noHaggle) {
+        removeCustomer(c);
+        shopLog(`😤 ${c.p.name} doesn't haggle. They left.`);
+    } else if (price <= c.maxPay * (1 + c.p.shop.tolerance)) {
+        completeSale(c, price);
+        shopLog(`🤝 ${c.p.name} took your counteroffer.`);
+    } else if (!c.countered) {
+        // One more try: they meet you partway, up to their limit
+        c.countered = true;
+        c.offer = Math.round(Math.min(c.maxPay * (1 + c.p.shop.tolerance), (price + c.offer) / 2) * 100) / 100;
+        shopLog(`🤔 ${c.p.name} came up to ${usd(c.offer)}.`);
+    } else {
+        removeCustomer(c);
+        if (price > c.value * 1.5) { profile.shopReputation = Math.max(0, profile.shopReputation - 1); saveProfile(); }
+        shopLog(`🚶 ${c.p.name} walked out over the price.`);
+    }
+    renderShop();
+}
+
+function closeShop() {
+    ensureShopDay();
+    const T = profile.shopToday;
+    pauseShop();
+    SHOP.queue.forEach(c => shopLog(`🚪 ${c.p.name} left at closing.`));
+    SHOP.queue = [];
+    profile.usd = Math.round((profile.usd - SHOP_RENT) * 100) / 100;
+    profile.shopLedger.unshift({ day: profile.shopDay, revenue: T.revenue, rent: SHOP_RENT, sales: T.sales.length, event: profile.marketEvent && profile.marketEvent.key });
+    profile.shopLedger.length = Math.min(profile.shopLedger.length, 14);
+    shopLog(`🔒 Closed day ${profile.shopDay}: ${T.sales.length} sale${T.sales.length === 1 ? '' : 's'}, ${usd(T.revenue)} in, ${usd(SHOP_RENT)} rent.`);
+    profile.shopDay++;
+    rollMarketEvent();
+    profile.shopToday = null;
+    ensureShopDay();
+    // Restocking the wholesale distributor comes with phase 2
+    saveProfile();
+    const e = todayEvent();
+    toast(`Day ${profile.shopDay}: ${e.icon} ${e.title}`);
+    renderShop();
+}
+
+// ---- Moving cards: collection <-> case, bulk bin, vault ----
+function suggestedAsk(card, copy) {
+    const markup = parseFloat($('shopMarkup') ? $('shopMarkup').value : 20) || 0;
+    return Math.max(0.1, Math.round(copyValue(card, copy) * (1 + markup / 100) * 100) / 100);
+}
+function listCopy(id, key) {
+    const copy = ownedCopies(id).find(c => copyKey(c) === key);
+    const card = CARDS.get(id);
+    if (!copy || !card) return;
+    takeCopy(id, copy);
+    profile.displayCase.push({ id, condition: copy.c, foil: copy.f ? 1 : 0, serial: copy.s ? 1 : 0, askingPrice: suggestedAsk(card, copy) });
+    saveProfile();
+    renderShop();
+}
+function bulkCopy(id, key) {
+    const copy = ownedCopies(id).find(c => copyKey(c) === key);
+    if (!copy) return;
+    takeCopy(id, copy);
+    profile.bulkBox.push({ id, condition: copy.c, foil: copy.f ? 1 : 0 });
+    saveProfile();
+    renderShop();
+}
+function unlist(i) {
+    const l = profile.displayCase[i];
+    if (!l) return;
+    profile.displayCase.splice(i, 1);
+    addCopy(l.id, { c: l.condition, ...(l.foil ? { f: 1 } : {}), ...(l.serial ? { s: 1 } : {}) });
+    saveProfile();
+    renderShop();
+}
+function setAsk(i, val) {
+    const l = profile.displayCase[i];
+    const n = Math.round(parseFloat(String(val).replace(/[$,]/g, '')) * 100) / 100;
+    if (l && n > 0) { l.askingPrice = n; saveProfile(); }
+    renderShopFloor();
+}
+function setBulkPrice(val) {
+    const n = Math.round(parseFloat(String(val).replace(/[$,]/g, '')) * 100) / 100;
+    if (n > 0) { profile.bulkPrice = n; saveProfile(); }
+    renderShopFloor();
+}
+function emptyBulkBin() {
+    profile.bulkBox.forEach(l => addCopy(l.id, { c: l.condition, ...(l.foil ? { f: 1 } : {}) }));
+    profile.bulkBox = [];
+    saveProfile();
+    renderShop();
+}
+// Cheap commons and uncommons go to the bin; copies your decks use stay
+function sweepBulk() {
+    const used = {};
+    profile.decks.forEach(d => Object.entries(d.cards || {}).forEach(([id, n]) => { used[id] = Math.max(used[id] || 0, n); }));
+    let moved = 0;
+    Object.keys(profile.collection).forEach(id => {
+        const card = CARDS.get(id);
+        if (!card || isBasic(card) || !['common', 'uncommon'].includes(card.rarity)) return;
+        let spare = (profile.collection[id] || 0) - (used[id] || 0);
+        while (spare-- > 0) {
+            const copy = ownedCopies(id).filter(c => !c.s).sort((a, b) => copyValue(card, a) - copyValue(card, b))[0];
+            if (!copy || copyValue(card, copy) >= 0.5) break;
+            takeCopy(id, copy);
+            profile.bulkBox.push({ id, condition: copy.c, foil: copy.f ? 1 : 0 });
+            moved++;
+        }
+    });
+    saveProfile();
+    toast(moved ? `${moved} bulk card${moved === 1 ? '' : 's'} went in the bin.` : 'No spare commons or uncommons under $0.50.');
+    renderShop();
+}
+function toggleVault(id) {
+    const i = profile.vault.indexOf(id);
+    if (i >= 0) profile.vault.splice(i, 1);
+    else if (profile.vault.length >= 3) { toast('The vault holds 3 trophies. Take one out first.'); return; }
+    else profile.vault.push(id);
+    saveProfile();
+    renderShop();
+}
+function addTestCash() {
+    const raw = prompt(`Add how much shop cash to ${accounts.current}? (test build)`, '100');
+    const n = Math.round(Number(String(raw || '').replace(/[$, ]/g, '')) * 100) / 100;
+    if (!(n > 0)) return;
+    profile.usd = Math.round((profile.usd + Math.min(n, 1e7)) * 100) / 100;
+    saveProfile();
+    renderShop();
+}
+
+// ---- Shop view ----
+let shopFilter = '';
+async function renderShop() {
+    if (!$('view-shop')) return;
+    ensureShopDay();
+    // Cards cached before the shop existed lack foil prices, frames and dates
+    const ids = [...new Set([...Object.keys(profile.collection), ...profile.displayCase.map(l => l.id), ...profile.bulkBox.map(l => l.id), ...profile.vault])];
+    const stale = ids.filter(id => CARDS.has(id) && !(CARDS.get(id).v >= 2));
+    if (stale.length) {
+        $('shopStock').innerHTML = '<div class="loading">Getting today\'s prices...</div>';
+        await fetchCollection(stale.map(id => ({ id }))).catch(() => {});
+    }
+    const missing = ids.filter(id => !CARDS.has(id));
+    if (missing.length) await cardsByIds(missing).catch(() => {});
+    renderShopFloor();
+    renderShopStock();
+}
+function renderShopFloor() {
+    const T = profile.shopToday;
+    const e = todayEvent();
+    $('shopHead').innerHTML = `
+        <div class="pos-stats">
+            <div><span class="pos-k">Day</span><strong>${profile.shopDay}</strong></div>
+            <div><span class="pos-k">Shop cash</span><strong class="${profile.usd < 0 ? 'neg' : ''}">💵 ${usd(profile.usd)}</strong></div>
+            <div><span class="pos-k">Reputation</span><strong>⭐ ${profile.shopReputation}</strong></div>
+            <div><span class="pos-k">Today</span><strong>${T.sales.length} sale${T.sales.length === 1 ? '' : 's'} · ${usd(T.revenue)}</strong></div>
+            <div><span class="pos-k">Customers left</span><strong>${T.visitsLeft}</strong></div>
+        </div>
+        ${e ? `<div class="pos-event"><span aria-hidden="true">${e.icon}</span> <strong>${esc(e.title)}:</strong> ${esc(e.text)}</div>` : ''}
+        <div class="row">
+            ${SHOP.open ? '<button class="btn" onclick="pauseShop(); renderShopFloor();">⏸ Pause</button>' : `<button class="btn primary" onclick="openShop()" ${T.visitsLeft <= 0 ? 'disabled' : ''}>🔓 Open the shop</button>`}
+            <button class="btn" onclick="closeShop()">🔒 Close shop (rent ${usd(SHOP_RENT)}) → day ${profile.shopDay + 1}</button>
+            <button class="btn small" onclick="addTestCash()" title="Test build: add free shop cash">＋💵 Add cash</button>
+            <span class="note">${SHOP.open ? 'Open: customers walk in while you\'re on this tab.' : 'Closed: open up to let customers in.'}</span>
+        </div>`;
+    $('shopCustomers').innerHTML = SHOP.queue.length ? SHOP.queue.map(c => {
+        const items = c.basket.items.map(x => { const card = CARDS.get(x.l.id); return `<li>${esc(card ? card.name : '?')} ${condBadge({ c: x.l.condition, f: x.l.foil, s: x.l.serial })} <span class="note">worth ${usd(listingValue(x.l, c.p.shop.ignoreCondition))}</span></li>`; }).join('');
+        return `<div class="cust">
+            <div class="cust-head"><span class="cust-face" aria-hidden="true">${c.p.emoji}</span><div><strong>${esc(c.p.name)}</strong> <span class="note">the ${esc(c.p.archetype)}</span><div class="note">${esc(c.p.shop.desc)}</div></div></div>
+            <ul class="cust-items">${items}</ul>
+            <div class="cust-offer">${c.basket.from === 'bulk' ? 'Bulk bin' : 'Your price'}: <strong>${usd(c.asking)}</strong> · Offers: <strong class="offer">${usd(c.offer)}</strong></div>
+            <div class="row">
+                <button class="btn primary small" onclick="acceptOffer(${c.id})">✔ Accept</button>
+                ${c.p.shop.noHaggle ? '' : `<input type="text" inputmode="decimal" id="counter-${c.id}" placeholder="$" aria-label="Counteroffer" class="counter-in"><button class="btn small" onclick="counterOffer(${c.id})">↔ Counter</button>`}
+                <button class="btn small" onclick="declineOffer(${c.id})">✖ Decline</button>
+            </div>
+            <div class="patience" aria-hidden="true"><span style="width:${Math.max(0, c.patience / SHOP_PATIENCE_TICKS * 100)}%"></span></div>
+        </div>`;
+    }).join('') : `<p class="note">${SHOP.open ? 'Waiting for customers...' : 'No one here. Open the shop.'}</p>`;
+    $('shopCase').innerHTML = profile.displayCase.length ? `<table class="pos-table"><thead><tr><th>Card</th><th>Worth today</th><th>Your price</th><th></th></tr></thead><tbody>${profile.displayCase.map((l, i) => {
+        const card = CARDS.get(l.id);
+        return `<tr class="${l.serial ? 'serial-row' : ''}"><td><button class="linkish" onclick="showCardSheet('${l.id}')">${esc(card ? card.name : '?')}</button> ${condBadge({ c: l.condition, f: l.foil, s: l.serial })}</td>
+            <td>${usd(listingValue(l))}</td>
+            <td><input type="text" inputmode="decimal" value="${l.askingPrice.toFixed(2)}" onchange="setAsk(${i}, this.value)" aria-label="Asking price" class="ask-in"></td>
+            <td><button class="btn small" onclick="unlist(${i})" title="Back to your collection">↩</button></td></tr>`;
+    }).join('')}</tbody></table>` : '<p class="note">The case is empty. Add cards from your collection below.</p>';
+    $('shopBulk').innerHTML = `<div class="row"><span>🧺 <strong>${profile.bulkBox.length}</strong> card${profile.bulkBox.length === 1 ? '' : 's'} in the bin</span>
+        <label class="note">Price each: <input type="text" inputmode="decimal" value="${profile.bulkPrice.toFixed(2)}" onchange="setBulkPrice(this.value)" class="ask-in" aria-label="Bulk price per card"></label>
+        <button class="btn small" onclick="sweepBulk()" title="Spare commons and uncommons under $0.50 (copies your decks use stay)">🧹 Sweep bulk in</button>
+        ${profile.bulkBox.length ? '<button class="btn small" onclick="emptyBulkBin()">↩ Empty the bin</button>' : ''}</div>`;
+    $('shopVault').innerHTML = [0, 1, 2].map(i => {
+        const id = profile.vault[i];
+        const card = id && CARDS.get(id);
+        return card ? `<button class="vault-slot" onclick="showCardSheet('${id}')" title="${esc(card.name)} · ${usd(baseUsd(card))}">${card.imgS ? `<img src="${card.imgS}" alt="${esc(card.name)}">` : esc(card.name)}</button>`
+            : '<div class="vault-slot empty">🏆<span class="note">empty</span></div>';
+    }).join('') + `<p class="note" style="grid-column:1/-1;">Trophies aren't for sale; they draw a crowd (up to +15% customers).${vaultBonus() ? ` Now: +${Math.round(vaultBonus() * 100)}%.` : ''}</p>`;
+    $('shopLog').innerHTML = SHOP.log.length ? SHOP.log.map(m => `<li>${m}</li>`).join('') : '<li class="note">Nothing yet today.</li>';
+}
+function renderShopStock() {
+    const q = shopFilter.trim().toLowerCase();
+    const rows = Object.keys(profile.collection).map(id => CARDS.get(id)).filter(c => c && !isBasic(c) && (!q || c.name.toLowerCase().includes(q)))
+        .map(c => ({ c, best: Math.max(...ownedCopies(c.id).map(cp => copyValue(c, cp))) })).sort((a, b) => b.best - a.best).slice(0, 60).map(x => x.c);
+    $('shopStock').innerHTML = rows.length ? `<table class="pos-table"><thead><tr><th>Card</th><th>Copies</th><th></th></tr></thead><tbody>${rows.map(card => {
+        const groups = {};
+        ownedCopies(card.id).forEach(c => { const k = copyKey(c); (groups[k] = groups[k] || { c, n: 0 }).n++; });
+        const opts = Object.entries(groups).sort((a, b) => copyValue(card, b[1].c) - copyValue(card, a[1].c));
+        const sel = `<select id="cp-${card.id}" aria-label="Which copy">${opts.map(([k, g]) => `<option value="${k}">${esc(copyLabel(g.c))} ×${g.n} · ${usd(copyValue(card, g.c))}</option>`).join('')}</select>`;
+        const inVault = profile.vault.includes(card.id);
+        return `<tr><td><button class="linkish" onclick="showCardSheet('${card.id}')">${esc(card.name)}</button> <span class="note">${esc((card.set || '').toUpperCase())} · ${card.rarity}</span></td><td>${sel}</td>
+            <td class="pos-actions"><button class="btn small primary" onclick="listCopy('${card.id}', $('cp-${card.id}').value)">＋ Case</button>
+            <button class="btn small" onclick="bulkCopy('${card.id}', $('cp-${card.id}').value)">→ Bulk</button>
+            <button class="btn small" onclick="toggleVault('${card.id}')" aria-pressed="${inVault}">${inVault ? '🏆 Out' : '🏆 Vault'}</button></td></tr>`;
+    }).join('')}</tbody></table>${Object.keys(profile.collection).length > 60 && !q ? '<p class="note">Showing your 60 most valuable cards. Search to find others.</p>' : ''}`
+        : `<p class="note">${q ? 'No cards match.' : 'No cards yet. Open some packs first.'}</p>`;
+}
 
 // =====================================================================
 // Start-up
