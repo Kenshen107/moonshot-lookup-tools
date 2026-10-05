@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTG Card Lookup</title>
+    <!-- Display font for headings, card names and prices (✨ Effects: Full / Subtle) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&display=swap">
     <style>
         * {
             margin: 0;
@@ -1567,11 +1571,20 @@
             .util-bar-btn {
                 padding: 2px 10px;
             }
+            #fxLevelBtn {
+                padding: 2px 8px;
+            }
             .store-bar {
                 justify-content: space-between;
             }
-            .container > h1 {
+            .container > h1,
+            .scene-copy h1 {
                 font-size: 1.6em;
+            }
+        }
+        @media (max-width: 380px) {
+            .util-bar {
+                flex-wrap: wrap;
             }
         }
 
@@ -6734,6 +6747,476 @@
             .pr-print-qr .pr-qr-note { font-size: 13pt; }
             .pr-print-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
+
+        /* ================================================================
+           Visual effects (added 2026-10-05, from the Flash Lab mock).
+           html[data-fx] is "full", "subtle" or "off", chosen per device
+           with the ✨ Effects button in the utility row (fxLevel in
+           localStorage). Everything here reads the theme tokens, so the
+           seasonal themes restyle it. "subtle" keeps the glass panels,
+           card foils, motion and display type; "off" is the plain look.
+           ================================================================ */
+        :root {
+            --font-display: 'Chakra Petch', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Rarity glow behind the card picture */
+            --rarity-uncommon: #c9d4de;
+            --rarity-rare: #e8c25a;
+            --rarity-mythic: #ff6a2a;
+            --rarity-special: #c26bc2;
+            /* Heat scale for price changes: small moves cool, big moves hot */
+            --heat-1: #6cb6ff;
+            --heat-2: #4fd1c5;
+            --heat-3: #e8d44d;
+            --heat-4: #ff9f43;
+            --heat-5: #ff5e57;
+            /* Solid panel colors, kept for things that must stay opaque
+               when panels turn see-through (menus, popups, sheets) */
+            --panel-base: var(--bg-panel);
+            --raised-base: var(--bg-panel-raised);
+            /* Foil sheens for the card picture. These copy the look of the
+               physical foils, so they stay the same in every theme. */
+            --glare-strong: rgba(255, 255, 255, 0.85);
+            --glare-soft: rgba(255, 255, 255, 0.15);
+            --foil-rainbow: repeating-linear-gradient(115deg, #ff5f6d 0%, #ffc371 6%, #f8ff7a 12%, #55ffb0 18%, #5ad1ff 24%, #a07cff 30%, #ff5f6d 36%);
+            --foil-etched: repeating-linear-gradient(100deg, #dfe9f3 0%, #9fb6cc 8%, #f5fbff 16%, #8aa3bb 24%, #dfe9f3 32%), repeating-linear-gradient(10deg, rgba(255, 255, 255, 0.25) 0 1px, transparent 1px 3px);
+            --foil-sparkle: radial-gradient(circle, #fff 0 1px, transparent 1.6px), radial-gradient(circle, #fff 0 0.8px, transparent 1.3px), repeating-linear-gradient(125deg, #7f5cff 0%, #3fd0ff 10%, #ff6ad5 20%, #ffe36e 30%, #7f5cff 40%);
+            --foil-textured: linear-gradient(135deg, #ff7eb3, #ffd56b, #6ef0c2, #6aa8ff, #c58bff, #ff7eb3);
+        }
+
+        /* ---- Glass panels (full + subtle) ---- */
+        html[data-fx="full"] body,
+        html[data-fx="subtle"] body {
+            --bg-panel: color-mix(in srgb, var(--panel-base) 80%, transparent);
+            --bg-panel-raised: color-mix(in srgb, var(--raised-base) 84%, transparent);
+        }
+        html[data-fx="full"] .card-result,
+        html[data-fx="subtle"] .card-result,
+        html[data-fx="full"] .search-box,
+        html[data-fx="subtle"] .search-box {
+            box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 7%, transparent),
+                        0 24px 60px -36px color-mix(in srgb, var(--bg-canvas) 90%, transparent);
+            -webkit-backdrop-filter: blur(14px) saturate(130%);
+            backdrop-filter: blur(14px) saturate(130%);
+        }
+        /* Popups, menus and sheets stay solid so nothing shows through */
+        html[data-fx] .app-bottom-bar,
+        html[data-fx] .app-sheet,
+        html[data-fx] .quick-stock-panel,
+        html[data-fx] .quick-jump-panel,
+        html[data-fx] .card-modal {
+            background-color: var(--panel-base);
+        }
+
+        /* ---- Display type (full + subtle) ---- */
+        html[data-fx="full"] h1, html[data-fx="subtle"] h1,
+        html[data-fx="full"] h2, html[data-fx="subtle"] h2,
+        html[data-fx="full"] .card-name, html[data-fx="subtle"] .card-name,
+        html[data-fx="full"] .price-value, html[data-fx="subtle"] .price-value,
+        html[data-fx="full"] .pc-stat-value, html[data-fx="subtle"] .pc-stat-value {
+            font-family: var(--font-display);
+            letter-spacing: 0.2px;
+        }
+
+        /* ---- Background glow (full) ---- */
+        #fxAurora { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; display: none; }
+        html[data-fx="full"] #fxAurora { display: block; }
+        #fxAurora i { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(90px); opacity: 0.16; animation: fx-aurora 28s ease-in-out infinite alternate; }
+        #fxAurora i:nth-child(1) { background: var(--brand); top: -28vmax; left: -18vmax; }
+        #fxAurora i:nth-child(2) { background: var(--brand-light); top: -24vmax; right: -24vmax; opacity: 0.12; animation-duration: 34s; animation-delay: -9s; }
+        #fxAurora i:nth-child(3) { background: color-mix(in srgb, var(--brand) 50%, var(--color-link)); bottom: -38vmax; left: 22vw; opacity: 0.1; animation-duration: 40s; animation-delay: -15s; }
+        @keyframes fx-aurora { to { transform: translate(8vw, 6vh) scale(1.15); } }
+
+        /* ---- Scene banner behind the page title ---- */
+        .scene-banner {
+            position: relative;
+            margin: 6px auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .scene-canvas { display: none; }
+        .scene-copy { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; }
+        .scene-copy h1 { display: block; width: fit-content; margin: 0; }
+        html[data-fx="full"] .scene-banner {
+            min-height: 132px;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid color-mix(in srgb, var(--text-heading) 9%, transparent);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--bg-canvas) 90%, transparent), color-mix(in srgb, var(--brand) 25%, var(--bg-canvas)));
+            align-items: flex-end;
+            padding: 18px 20px;
+        }
+        html[data-fx="full"] .scene-canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+        html[data-fx="full"] .scene-banner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 40%, color-mix(in srgb, var(--bg-canvas) 55%, transparent));
+            pointer-events: none;
+        }
+        html[data-fx="full"] .scene-copy { z-index: 1; }
+        html[data-fx="full"] .scene-copy h1 { text-shadow: 0 2px 14px var(--bg-inset); }
+        @media (max-width: 768px) {
+            html[data-fx="full"] .scene-banner { min-height: 104px; padding: 14px; }
+        }
+
+        /* Weather chip (both stores; tap to pick which one the scene shows) */
+        .scene-weather {
+            width: auto;
+            margin: 0;
+            padding: 4px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--bg-panel);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .scene-weather[hidden] { display: none; }
+        .scene-weather:hover { border-color: var(--brand-light); background: var(--bg-panel-raised); }
+        .scene-weather .wx-store { color: var(--text-secondary); }
+        .scene-weather .wx-store.is-on { color: var(--text-heading); font-weight: 600; }
+        html[data-fx="full"] .scene-weather {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            z-index: 1;
+            background: color-mix(in srgb, var(--bg-canvas) 45%, transparent);
+            border-color: color-mix(in srgb, var(--text-heading) 14%, transparent);
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+        }
+        @media (max-width: 520px) {
+            .scene-weather .wx-other { display: none; }
+        }
+
+        /* ---- Moonshot mark: a moon with an orbiting rocket ---- */
+        .ms-mark { display: none; width: 46px; height: 46px; flex: none; }
+        html[data-fx="full"] .ms-mark, html[data-fx="subtle"] .ms-mark { display: inline-block; }
+        .ms-mark svg { width: 100%; height: 100%; overflow: visible; }
+        .ms-moon { fill: var(--text-heading); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--brand-light) 60%, transparent)); }
+        .ms-crater { fill: color-mix(in srgb, var(--text-heading) 75%, var(--bg-canvas)); }
+        .ms-body { fill: var(--text-heading); }
+        .ms-window { fill: var(--brand-light); }
+        .ms-fin { fill: var(--brand); }
+        .ms-flame { fill: var(--color-warning); transform-box: fill-box; transform-origin: top center; }
+        .ms-orbit { transform-origin: 24px 24px; }
+        .ms-star { fill: var(--brand-light); opacity: 0; }
+        .ms-mark.play .ms-orbit { animation: ms-orbit 1.8s cubic-bezier(.3, .1, .2, 1) both; }
+        .ms-mark.play .ms-flame { animation: ms-flame 0.12s ease-in-out 15 alternate; }
+        .ms-mark.play .ms-star { animation: ms-star 1.8s ease-out both; }
+        .ms-mark.play .ms-star:nth-of-type(2) { animation-delay: 0.3s; }
+        @keyframes ms-orbit { from { transform: rotate(-300deg) scale(0.6); } to { transform: rotate(0deg) scale(1); } }
+        @keyframes ms-flame { from { transform: scaleY(0.6); } to { transform: scaleY(1.4); } }
+        @keyframes ms-star { 0%, 55% { opacity: 0; transform: scale(0.3); } 75% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0.7; transform: scale(1); } }
+        .ms-star { transform-box: fill-box; transform-origin: center; }
+
+        /* ---- Glow accents (full) ---- */
+        @property --fx-ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+        html[data-fx="full"] .card-search-row {
+            border-radius: var(--radius-md);
+            padding: 2px;
+            background: conic-gradient(from var(--fx-ang), var(--brand), var(--brand-light), color-mix(in srgb, var(--brand) 40%, var(--color-link)), var(--brand));
+            animation: fx-spin 7s linear infinite;
+            box-shadow: 0 0 22px -8px var(--brand-light);
+        }
+        html[data-fx="full"] .card-search-row input { border-color: transparent; }
+        @keyframes fx-spin { to { --fx-ang: 360deg; } }
+        html[data-fx="full"] .price-value:not(.na) { text-shadow: 0 0 18px color-mix(in srgb, var(--brand-light) 55%, transparent); }
+        html[data-fx="full"] .pc-line:first-of-type { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--chart-1) 70%, transparent)); }
+
+        /* ---- Side-margin particles (full): drawn on a canvas in #seasonalFx ---- */
+        #seasonalFx canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+        /* ---- Card picture: tilt, foil treatments, rarity glow, 3D flip ---- */
+        .holo-card {
+            position: relative;
+            width: 100%;
+            max-width: 240px;
+            margin: 0 auto 15px;
+            perspective: 900px;
+        }
+        .holo-tilt {
+            position: relative;
+            transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+            transition: transform 0.5s cubic-bezier(.2, .8, .2, 1);
+            transform-style: preserve-3d;
+            border-radius: 4.75% / 3.4%;
+        }
+        .holo-card.is-tilting .holo-tilt { transition: transform 0.08s linear; }
+        .holo-flip {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.7s cubic-bezier(.4, .1, .2, 1);
+            border-radius: inherit;
+        }
+        .holo-card.is-flipped .holo-flip { transform: rotateY(180deg); }
+        .holo-face {
+            position: relative;
+            border-radius: inherit;
+            overflow: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+        .holo-face.back { position: absolute; inset: 0; transform: rotateY(180deg); }
+        .holo-face .card-image { display: block; margin: 0; max-width: 100%; border-radius: inherit; }
+        .holo-face .card-image:hover { transform: none; }
+        .holo-shine, .holo-glare { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
+        /* Regular (non-foil) printings get no treatment at all */
+        html[data-fx="full"] .holo-card[data-foil]:not([data-foil="none"]) .holo-shine,
+        html[data-fx="subtle"] .holo-card[data-foil]:not([data-foil="none"]) .holo-shine { opacity: calc(0.16 + var(--o, 0) * 0.42); }
+        html[data-fx="full"] .holo-card[data-foil]:not([data-foil="none"]) .holo-glare,
+        html[data-fx="subtle"] .holo-card[data-foil]:not([data-foil="none"]) .holo-glare { opacity: calc(var(--o, 0) * 0.85); }
+        .holo-glare { mix-blend-mode: overlay; background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), var(--glare-strong) 0%, var(--glare-soft) 30%, transparent 60%); }
+        .holo-shine { mix-blend-mode: color-dodge; background-position: var(--mx, 50%) var(--my, 50%); }
+        /* Traditional foil: a rainbow sheen */
+        .holo-card[data-foil="rainbow"] .holo-shine {
+            background-image: var(--foil-rainbow);
+            background-size: 300% 300%;
+            filter: saturate(1.15) brightness(0.9);
+        }
+        /* Etched foil: a cool, frosty metallic sheen */
+        .holo-card[data-foil="etched"] .holo-shine {
+            background-image: var(--foil-etched);
+            background-size: 260% 260%, 100% 100%;
+            filter: brightness(0.85);
+        }
+        /* Galaxy / surge / confetti foils: sparkles over a soft rainbow */
+        .holo-card[data-foil="sparkle"] .holo-shine {
+            background-image: var(--foil-sparkle);
+            background-size: 23px 23px, 13px 13px, 300% 300%;
+            background-position: calc(var(--mx, 50%) * 0.3) calc(var(--my, 50%) * 0.3), calc(var(--mx, 50%) * -0.5) calc(var(--my, 50%) * -0.5), var(--mx, 50%) var(--my, 50%);
+            animation: fx-sparkle 2.8s ease-in-out infinite alternate;
+        }
+        @keyframes fx-sparkle { from { filter: brightness(0.85); } to { filter: brightness(1.25); } }
+        /* Textured foil: a slow, shifting color wash */
+        .holo-card[data-foil="textured"] .holo-shine {
+            background-image: var(--foil-textured);
+            background-size: 400% 400%;
+            animation: fx-shift 9s linear infinite;
+        }
+        @keyframes fx-shift { to { background-position: 400% 400%; } }
+        /* Foils sway gently when nobody's pointing at them */
+        html[data-fx="full"] .holo-card[data-foil]:not([data-foil="none"]):not(.is-tilting) .holo-tilt { animation: fx-sway 7s ease-in-out infinite; }
+        @keyframes fx-sway { 0%, 100% { transform: rotateY(-5deg) rotateX(2deg); } 50% { transform: rotateY(5deg) rotateX(-2deg); } }
+        html[data-fx="full"] .holo-card.is-tilting .holo-tilt { box-shadow: 0 26px 50px -22px color-mix(in srgb, var(--bg-inset) 90%, transparent); }
+
+        /* Rarity glow behind the card */
+        .holo-card::before {
+            content: '';
+            position: absolute;
+            inset: 4% 2%;
+            border-radius: 12px;
+            background: var(--aura, transparent);
+            filter: blur(22px);
+            opacity: 0;
+            transition: opacity 0.5s, background 0.5s;
+            pointer-events: none;
+        }
+        html[data-fx="full"] .holo-card::before, html[data-fx="subtle"] .holo-card::before { opacity: 0.55; }
+        .holo-card[data-rarity="uncommon"] { --aura: var(--rarity-uncommon); }
+        .holo-card[data-rarity="rare"] { --aura: var(--rarity-rare); }
+        .holo-card[data-rarity="mythic"] { --aura: var(--rarity-mythic); }
+        .holo-card[data-rarity="special"], .holo-card[data-rarity="bonus"] { --aura: var(--rarity-special); }
+        html[data-fx="full"] .holo-card[data-rarity="mythic"]::before { animation: fx-aura 3.2s ease-in-out infinite alternate; }
+        @keyframes fx-aura { from { opacity: 0.4; } to { opacity: 0.75; } }
+
+        .holo-card.fading { opacity: 0.25; transition: opacity 0.15s; }
+        .holo-finishes { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: -4px 0 12px; }
+        .holo-finishes button {
+            width: auto;
+            margin: 0;
+            padding: 3px 10px;
+            font-size: 0.8rem;
+            border-radius: 999px;
+            background: var(--bg-inset);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .holo-finishes button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand-light); color: var(--text-heading); }
+        .holo-finish-label { font-size: 0.8rem; color: var(--text-soft); }
+
+        /* Mythic badge shine */
+        html[data-fx="full"] .rarity-badge.is-mythic, html[data-fx="subtle"] .rarity-badge.is-mythic {
+            background-image: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--rarity-mythic) 35%, transparent) 50%, transparent 70%);
+            background-size: 250% 100%;
+            animation: fx-badge 3.5s linear infinite;
+        }
+        @keyframes fx-badge { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+
+        /* ---- Motion: views fade in, chart draws in, rows shimmer ---- */
+        html[data-fx="full"] .fx-enter, html[data-fx="subtle"] .fx-enter { animation: fx-enter 0.35s cubic-bezier(.2, .8, .2, 1) both; }
+        @keyframes fx-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        html[data-fx="full"] .pc-chart.fx-draw .pc-line, html[data-fx="subtle"] .pc-chart.fx-draw .pc-line {
+            stroke-dasharray: var(--len, 2000);
+            animation: fx-draw 1.3s cubic-bezier(.4, 0, .2, 1) both;
+        }
+        html[data-fx="full"] .pc-chart.fx-draw .pc-area, html[data-fx="subtle"] .pc-chart.fx-draw .pc-area { animation: fx-fade 1.3s ease both; }
+        @keyframes fx-draw { from { stroke-dashoffset: var(--len, 2000); } to { stroke-dashoffset: 0; } }
+        @keyframes fx-fade { from { opacity: 0; } }
+        .pc-ping { fill: none; stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; pointer-events: none; }
+        html[data-fx="full"] .pc-ping, html[data-fx="subtle"] .pc-ping { animation: fx-ping 2.4s ease-out 1.3s infinite; }
+        @keyframes fx-ping { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(3); } }
+        html[data-fx="full"] .fx-shimmer, html[data-fx="subtle"] .fx-shimmer { position: relative; overflow: hidden; }
+        html[data-fx="full"] .fx-shimmer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            transform: translateX(-120%);
+            background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--text-heading) 8%, transparent) 50%, transparent 70%);
+            animation: fx-sweep 6s ease-in-out infinite;
+            animation-delay: calc(var(--i, 0) * 0.15s);
+        }
+        @keyframes fx-sweep { 0%, 60% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+        html[data-fx="full"] .printing-item, html[data-fx="full"] .card-tile, html[data-fx="full"] .pc-stat {
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+        html[data-fx="full"] .pc-stat:hover, html[data-fx="full"] .card-tile:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px -14px var(--brand-light);
+        }
+
+        /* ---- Rolling numbers ---- */
+        .roll { display: inline-flex; font-variant-numeric: tabular-nums; }
+        .roll-d { display: inline-block; height: 1.15em; line-height: 1.15em; overflow: hidden; vertical-align: bottom; }
+        .roll-s { display: flex; flex-direction: column; transition: transform 0.9s cubic-bezier(.2, .7, .2, 1); }
+        .roll-s > span { height: 1.15em; line-height: 1.15em; text-align: center; }
+
+        /* ---- Heat colors for price changes ---- */
+        .heat {
+            color: var(--heat);
+            background: color-mix(in srgb, var(--heat) 14%, transparent);
+            border-radius: 999px;
+            padding: 0 7px;
+            font-weight: 700;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+        .heat-1 { --heat: var(--heat-1); }
+        .heat-2 { --heat: var(--heat-2); }
+        .heat-3 { --heat: var(--heat-3); }
+        .heat-4 { --heat: var(--heat-4); }
+        .heat-5 { --heat: var(--heat-5); }
+
+        /* ---- Skeleton loading: shimmering placeholder lines ---- */
+        .loading::before {
+            content: '';
+            display: block;
+            max-width: 520px;
+            height: 58px;
+            margin: 0 auto 12px;
+            border-radius: var(--radius-sm);
+            background:
+                linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--text-heading) 9%, transparent) 50%, transparent 80%) 0 0 / 220% 100% no-repeat,
+                linear-gradient(var(--bg-panel-raised), var(--bg-panel-raised)) 0 0 / 100% 14px no-repeat,
+                linear-gradient(var(--bg-panel-raised), var(--bg-panel-raised)) 0 22px / 82% 14px no-repeat,
+                linear-gradient(var(--bg-panel-raised), var(--bg-panel-raised)) 0 44px / 64% 14px no-repeat;
+            animation: fx-skeleton 1.4s ease-in-out infinite;
+        }
+        .loading[style*="padding:0"]::before, .loading[style*="padding: 0"]::before,
+        .loading[style*="padding:8px 0"]::before {
+            height: 14px;
+            max-width: 240px;
+            margin: 0 0 6px;
+            background:
+                linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--text-heading) 9%, transparent) 50%, transparent 80%) 0 0 / 220% 100% no-repeat,
+                linear-gradient(var(--bg-panel-raised), var(--bg-panel-raised)) 0 0 / 100% 14px no-repeat;
+        }
+        .loading { font-size: 0.85em; }
+        @keyframes fx-skeleton { from { background-position: 160% 0, 0 0, 0 22px, 0 44px; } to { background-position: -60% 0, 0 0, 0 22px, 0 44px; } }
+
+        /* ---- Crack a pack (Products → Pull rates) ---- */
+        .pack-stage { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+        .pack-wrapper {
+            position: relative;
+            width: 150px;
+            height: 230px;
+            margin: 6px auto;
+            perspective: 700px;
+            cursor: pointer;
+            border: 0;
+            background: none;
+            padding: 0;
+        }
+        .pack-half {
+            position: absolute;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+            background: linear-gradient(160deg, var(--brand-light), var(--brand) 45%, color-mix(in srgb, var(--brand) 50%, var(--bg-canvas)));
+            border: 1px solid color-mix(in srgb, var(--text-heading) 25%, transparent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-heading);
+            font-family: var(--font-display);
+            font-weight: 700;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(.3, .1, .2, 1), opacity 0.6s;
+        }
+        .pack-half.top { top: 0; height: 22%; border-radius: 10px 10px 2px 2px; clip-path: polygon(0 0, 100% 0, 100% 86%, 92% 100%, 84% 86%, 76% 100%, 68% 86%, 60% 100%, 52% 86%, 44% 100%, 36% 86%, 28% 100%, 20% 86%, 12% 100%, 4% 86%, 0 100%); font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; }
+        .pack-half.bottom { top: 20%; height: 80%; border-radius: 2px 2px 10px 10px; clip-path: polygon(0 14px, 4% 0, 12% 14px, 20% 0, 28% 14px, 36% 0, 44% 14px, 52% 0, 60% 14px, 68% 0, 76% 14px, 84% 0, 92% 14px, 100% 0, 100% 100%, 0 100%); flex-direction: column; gap: 6px; padding: 10px; }
+        .pack-half.bottom .pack-moon { font-size: 2rem; }
+        .pack-half.bottom small { font-family: inherit; font-weight: 600; font-size: 0.72rem; opacity: 0.85; }
+        .pack-wrapper:hover .pack-half.bottom { filter: brightness(1.08); }
+        .pack-wrapper.is-open .pack-half.top { transform: translateY(-40px) rotate(-14deg); opacity: 0; }
+        .pack-wrapper.is-open .pack-half.bottom { transform: translateY(30px); opacity: 0; }
+        .pack-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        .pack-card { perspective: 700px; display: flex; flex-direction: column; gap: 4px; }
+        .pack-card-inner {
+            position: relative;
+            aspect-ratio: 63 / 88;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(.3, .1, .2, 1);
+            transform: rotateY(180deg);
+        }
+        .pack-card.is-shown .pack-card-inner { transform: none; }
+        .pack-card-face, .pack-card-back {
+            position: absolute;
+            inset: 0;
+            border-radius: 5% / 3.6%;
+            overflow: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+        .pack-card-face img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+        .pack-card-face .pack-card-noimg { height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; background: var(--bg-panel-raised); font-size: 0.8rem; }
+        .pack-card-back {
+            transform: rotateY(180deg);
+            background: repeating-linear-gradient(45deg, var(--brand) 0 8px, color-mix(in srgb, var(--brand) 70%, var(--bg-canvas)) 8px 16px);
+            border: 3px solid color-mix(in srgb, var(--brand-light) 60%, var(--bg-canvas));
+        }
+        .pack-card[data-rarity="rare"] .pack-card-face { box-shadow: 0 0 18px -2px var(--rarity-rare); }
+        .pack-card[data-rarity="mythic"] .pack-card-face { box-shadow: 0 0 22px 0 var(--rarity-mythic); }
+        .pack-card-meta { font-size: 0.8rem; color: var(--text-soft); line-height: 1.3; }
+        .pack-card-meta .heat { font-size: 0.95em; }
+        .pack-summary { font-size: 0.9rem; color: var(--text-primary); }
+        .pack-cards[hidden], .pack-summary[hidden], .pack-wrapper[hidden] { display: none; }
+        .pack-card:not(.is-shown) .pack-card-meta { visibility: hidden; }
+        .pack-card[data-foil] .pack-card-face::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image: var(--foil-rainbow);
+            background-size: 300% 300%;
+            mix-blend-mode: color-dodge;
+            opacity: 0.3;
+            animation: fx-shift 8s linear infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #fxAurora, .scene-canvas { display: none !important; }
+            .holo-tilt, .holo-flip, .roll-s, .pack-half, .pack-card-inner { transition: none !important; }
+            .holo-shine, .holo-tilt, .ms-orbit, .ms-flame, .ms-star, .card-search-row, .rarity-badge, .fx-enter, .pc-line, .pc-area, .pc-ping, .holo-card::before, .loading::before, .fx-shimmer::after { animation: none !important; }
+            .ms-star { opacity: 0.7; }
+        }
     </style>
     <script>
         // ============== SEASONAL THEMES ==============
@@ -6742,6 +7225,14 @@
         // only overrides the design tokens - no data-theme attribute means the
         // original look. Seasons are added as new SEASONAL_SCHEDULES entries
         // (see CLAUDE.md for the running list).
+        // Visual effects level for this device (✨ Effects button): set here,
+        // before the page draws, so it never flashes the wrong look.
+        const FX_LEVELS = ['full', 'subtle', 'off'];
+        function fxLevel() {
+            try { const v = localStorage.getItem('fxLevel'); return FX_LEVELS.includes(v) ? v : 'full'; } catch (e) { return 'full'; }
+        }
+        document.documentElement.setAttribute('data-fx', fxLevel());
+
         const SEASONAL_THEMES = {
             harvest:     { label: 'Autumn Harvest',     icon: '🍂', fx: [['🍂', 'fall'], ['🍁', 'fall']] },
             pumpkin:     { label: 'Pumpkin Patch',      icon: '🎃', fx: [['🍂', 'fall'], ['🎃', 'fall'], ['🍁', 'fall']] },
@@ -7046,6 +7537,10 @@
             const layer = document.getElementById('seasonalFx');
             if (!layer) return;
             layer.innerHTML = '';
+            // Full effects draw on a canvas instead (fxRefresh); Off shows none.
+            const level = document.documentElement.getAttribute('data-fx');
+            if (level === 'full') { if (typeof fxRefresh === 'function') fxRefresh(); return; }
+            if (level === 'off') return;
             if (!document.documentElement.hasAttribute('data-theme')) return;
             const { fx, fxCount = 18 } = SEASONAL_THEMES[SEASONAL_TODAY.key];
             if (!fx.length) return; // days of remembrance: no decorations
@@ -7086,6 +7581,7 @@
 </head>
 <body>
     <div id="seasonalFx" aria-hidden="true"></div>
+    <div id="fxAurora" aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="container">
         <!-- Utility row: the other tools, and Our Values (was a floating button) -->
         <div class="util-bar">
@@ -7093,6 +7589,7 @@
             <a href="Beginner_Guides.html">📚 <span class="util-long">Beginner guides &amp; handouts</span><span class="util-short">Guides</span> →</a>
             <a class="util-shop" href="https://moonshotgamestore.com" target="_blank" rel="noopener">🛒 Shop<span class="util-long"> moonshotgamestore.com</span> →</a>
             <button type="button" class="util-bar-btn" onclick="openValues()" title="Show our values">💛<span class="util-long"> Our</span> Values</button>
+            <button type="button" class="util-bar-btn" id="fxLevelBtn" onclick="cycleFxLevel()">✨ Effects</button>
         </div>
 
         <!-- Moonshot Games store info bar -->
@@ -7112,7 +7609,31 @@
             </div>
         </div>
 
-        <h1 id="pageTitle">🃏 MTG Card Lookup</h1>
+        <!-- Page title on a drawn scene (✨ Effects: Full): night sky with the
+             Moonshot moon, today's weather at the stores, and the season. -->
+        <header class="scene-banner" id="sceneBanner">
+            <canvas class="scene-canvas" id="sceneCanvas" aria-hidden="true"></canvas>
+            <div class="scene-copy">
+                <span class="ms-mark" id="msMark" aria-hidden="true">
+                    <svg viewBox="0 0 48 48">
+                        <defs><mask id="msCrescent"><rect width="48" height="48" fill="white"/><circle cx="31" cy="19" r="12" fill="black"/></mask></defs>
+                        <circle class="ms-moon" cx="24" cy="24" r="14" mask="url(#msCrescent)"/>
+                        <circle class="ms-crater" cx="16" cy="28" r="2.2" mask="url(#msCrescent)"/>
+                        <circle class="ms-crater" cx="21" cy="33" r="1.3" mask="url(#msCrescent)"/>
+                        <circle class="ms-star" cx="40" cy="8" r="1.6"/>
+                        <circle class="ms-star" cx="6" cy="12" r="1.2"/>
+                        <g class="ms-orbit"><g transform="translate(36 10) rotate(45)">
+                            <path class="ms-flame" d="M-1.6 5.5 L0 10 L1.6 5.5 Z"/>
+                            <path class="ms-fin" d="M-2.2 2 L-4 6 L-1.5 4.8 Z M2.2 2 L4 6 L1.5 4.8 Z"/>
+                            <path class="ms-body" d="M0 -6.5 C2.8 -4 2.8 2.5 1.8 5.5 L-1.8 5.5 C-2.8 2.5 -2.8 -4 0 -6.5 Z"/>
+                            <circle class="ms-window" cx="0" cy="-1" r="1.2"/>
+                        </g></g>
+                    </svg>
+                </span>
+                <h1 id="pageTitle">🃏 MTG Card Lookup</h1>
+            </div>
+            <button type="button" class="scene-weather" id="sceneWeather" hidden onclick="cycleWeatherStore()"></button>
+        </header>
         <div class="seasonal-badge" id="seasonalBadge" hidden></div>
 
         <!-- Tool navigation - built by renderAppNav() from NAV_GROUPS/APP_VIEWS.
@@ -8307,7 +8828,13 @@
         // classList calls.
         function setTabActive(btn, isActive) {
             if (!btn) return;
+            const newlyActive = isActive && !btn.classList.contains('active');
             btn.classList.toggle('active', isActive);
+            // Fade the newly shown panel in (once the caller has shown it)
+            if (newlyActive && typeof fxEnter === 'function') {
+                const panelId = btn.getAttribute('aria-controls');
+                requestAnimationFrame(() => fxEnter(panelId && document.getElementById(panelId)));
+            }
             btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
             btn.tabIndex = isActive ? 0 : -1;
         }
@@ -8430,6 +8957,7 @@
 
             const active = APP_VIEWS[view];
             document.getElementById(active.appId).style.display = '';
+            if (typeof fxEnter === 'function' && view !== currentGameMode) fxEnter(document.getElementById(active.appId));
             title.textContent = active.title;
 
             // Set before onShow runs, not after - the Buyer's Guide's onShow
@@ -11765,16 +12293,25 @@
             return words.charAt(0).toUpperCase() + words.slice(1);
         }
 
-        async function computePullRates(code) {
-            const setData = await loadMtgjsonSetFile(code);
-            const boosters = Object.entries(setData.booster || {}).filter(([key]) => !PULL_RATE_SKIP.test(key));
-            const sourceCodes = [...new Set([code.toUpperCase(), ...boosters.flatMap(([, b]) => b.sourceSetCodes || [])])];
-            const sources = await Promise.all(sourceCodes.map(c => (c === code.toUpperCase() ? Promise.resolve(setData) : loadMtgjsonSetFile(c).catch(() => null))));
+        // Every card a pack can hold, by MTGJSON uuid: the set's own cards
+        // and tokens plus those of any other set its sheets draw from
+        // (Special Guests, The List...).
+        async function pullCardIndex(setData, extraCodes) {
+            const code = setData.code.toUpperCase();
+            const sourceCodes = [...new Set([code, ...extraCodes])];
+            const sources = await Promise.all(sourceCodes.map(c => (c === code ? Promise.resolve(setData) : loadMtgjsonSetFile(c).catch(() => null))));
             const byUuid = new Map();
             sources.filter(Boolean).forEach(src => {
                 (src.cards || []).forEach(c => byUuid.set(c.uuid, { card: c, setCode: src.code, setName: src.name, token: false }));
                 (src.tokens || []).forEach(c => byUuid.set(c.uuid, { card: c, setCode: src.code, setName: src.name, token: true }));
             });
+            return byUuid;
+        }
+
+        async function computePullRates(code) {
+            const setData = await loadMtgjsonSetFile(code);
+            const boosters = Object.entries(setData.booster || {}).filter(([key]) => !PULL_RATE_SKIP.test(key));
+            const byUuid = await pullCardIndex(setData, boosters.flatMap(([, b]) => b.sourceSetCodes || []));
 
             // The set's usual frame, so old sets' cards don't count as "retro"
             const frameCounts = {};
@@ -11878,6 +12415,121 @@
             };
         }
 
+        // ---- Crack a pack: a sample pack drawn from the same booster odds ----
+        // Picks one of the pack's layouts by its weight, then cards from each
+        // sheet by their weights (no repeats within a sheet), exactly the
+        // odds the table shows. MTGJSON doesn't model every collation rule
+        // (color balancing on commons, for one), so it's a fair sample, not a
+        // copy of a real pack. Prices are Scryfall's TCGplayer market price
+        // for each card's exact printing and finish.
+        const PACK_REVEAL_ORDER = { token: 0, land: 1, common: 2, uncommon: 3, special: 4, rare: 5, bonus: 6, mythic: 6 };
+
+        function pickWeighted(entries) {
+            const total = entries.reduce((a, [, w]) => a + w, 0);
+            let x = Math.random() * total;
+            const i = entries.findIndex(([, w]) => (x -= w) < 0);
+            return i < 0 ? entries.length - 1 : i;
+        }
+
+        async function crackPack(code, key) {
+            const stage = document.getElementById(`packStage-${key}`);
+            if (!stage) return;
+            stage.innerHTML = '<div class="loading" style="padding:0;">Shuffling the sheets...</div>';
+            try {
+                const setData = await loadMtgjsonSetFile(code);
+                const booster = (setData.booster || {})[key];
+                if (!booster || !booster.boosters || !booster.boosters.length) throw new Error('No pack data');
+                const byUuid = await pullCardIndex(setData, booster.sourceSetCodes || []);
+                const cfg = booster.boosters[pickWeighted(booster.boosters.map(b => [b, b.weight]))];
+                const picks = [];
+                Object.entries(cfg.contents).forEach(([sheetName, count]) => {
+                    const sheet = booster.sheets[sheetName];
+                    if (!sheet) return;
+                    const pool = Object.entries(sheet.cards);
+                    for (let i = 0; i < count && pool.length; i++) {
+                        const [uuid] = pool.splice(pickWeighted(pool), 1)[0];
+                        const info = byUuid.get(uuid);
+                        if (!info) continue;
+                        const c = info.card;
+                        let rarity = c.rarity || 'special';
+                        if (info.token || c.layout === 'art_series') rarity = 'token';
+                        else if ((c.supertypes || []).includes('Basic')) rarity = 'land';
+                        const special = (c.promoTypes || []).map(t => PULL_FOIL_TYPES[t]).find(Boolean);
+                        const etched = (c.finishes || []).length === 1 && c.finishes[0] === 'etched';
+                        picks.push({
+                            name: c.name, rarity, foil: !!sheet.foil, etched,
+                            finishLabel: sheet.foil ? (special && special !== 'Serialized' ? special : etched ? 'Etched foil' : 'Foil') : (special === 'Serialized' ? 'Serialized' : ''),
+                            id: c.identifiers && c.identifiers.scryfallId, setName: info.setCode !== setData.code ? info.setName : ''
+                        });
+                    }
+                });
+                picks.sort((a, b) => (a.foil - b.foil) || ((PACK_REVEAL_ORDER[a.rarity] ?? 4) - (PACK_REVEAL_ORDER[b.rarity] ?? 4)));
+                await loadDeckPrintings(picks.map(p => p.id));
+                picks.forEach(p => {
+                    const sc = p.id && deckPrintingCache.get(p.id);
+                    const prices = (sc && sc.prices) || {};
+                    const v = p.foil ? (p.etched ? prices.usd_etched : (prices.usd_foil || prices.usd_etched)) : (prices.usd || prices.usd_foil);
+                    p.price = v ? parseFloat(v) : null;
+                    p.img = sc ? getCardImageUrl(sc) : null;
+                    if (sc) p.name = sc.name;
+                });
+                renderCrackedPack(code, key, setData, picks);
+            } catch (err) {
+                console.error('Crack a pack error:', err);
+                stage.innerHTML = `<div class="error">Couldn't open a sample pack right now. <button type="button" class="staples-sort-btn" onclick="crackPack('${code}', '${key}')">Try again</button></div>`;
+            }
+        }
+
+        function renderCrackedPack(code, key, setData, picks) {
+            const stage = document.getElementById(`packStage-${key}`);
+            if (!stage) return;
+            const priced = picks.filter(p => p.price !== null);
+            const total = priced.reduce((a, p) => a + p.price, 0);
+            const best = priced.slice().sort((a, b) => b.price - a.price)[0];
+            const cards = picks.map((p, i) => `
+                <div class="pack-card" data-rarity="${p.rarity}"${p.foil ? ' data-foil' : ''} style="--i:${i};">
+                    <div class="pack-card-inner">
+                        <div class="pack-card-face">${p.img
+                            ? `<img src="${p.img}" alt="${escapeAttr(p.name)}" loading="lazy" onclick="openLightboxSrc(this.src, this.alt)">`
+                            : `<div class="pack-card-noimg">${escapeAttr(p.name)}</div>`}</div>
+                        <div class="pack-card-back"></div>
+                    </div>
+                    <div class="pack-card-meta"><strong>${escapeAttr(p.name)}</strong><br>
+                        <span style="color:${RARITY_COLORS[p.rarity] || 'var(--text-secondary)'};">${p.rarity === 'land' ? 'basic land' : p.rarity}</span>${p.finishLabel ? ` · ${p.finishLabel}` : ''}${p.setName ? ` · ${escapeAttr(p.setName)}` : ''}
+                        · ${p.price !== null ? formatUsd(p.price) : '—'}</div>
+                </div>`).join('');
+            stage.innerHTML = `
+                <button type="button" class="pack-wrapper" id="packWrap-${key}" onclick="openCrackedPack('${key}')" aria-label="Open the sample pack">
+                    <span class="pack-half top">${escapeAttr(setData.code)}</span>
+                    <span class="pack-half bottom"><span class="pack-moon" aria-hidden="true">🌙</span>${escapeAttr(setData.name)}<small>Tap to open</small></span>
+                </button>
+                <div class="pack-cards" id="packCards-${key}" hidden>${cards}</div>
+                <div class="pack-summary" id="packSummary-${key}" hidden>
+                    <strong>This pack: ${picks.length} cards${priced.length ? ` · ${formatUsd(total)} at TCGplayer market` : ''}</strong>${best ? ` · best pull: ${escapeAttr(best.name)} (${formatUsd(best.price)})` : ''}
+                    <div class="text-secondary" style="font-size:0.85em;">A sample drawn at random from MTGJSON's pack odds, not a real pack. Prices are Scryfall's TCGplayer market price for each printing and finish${priced.length < picks.length ? `; ${picks.length - priced.length} card${picks.length - priced.length === 1 ? ' has' : 's have'} no price yet` : ''}.</div>
+                    <button type="button" class="staples-sort-btn" style="margin-top:6px;" onclick="crackPack('${code}', '${key}')">🎴 Crack another</button>
+                </div>
+            `;
+            if (!fxMotionOn()) openCrackedPack(key);
+        }
+
+        function openCrackedPack(key) {
+            const wrap = document.getElementById(`packWrap-${key}`);
+            const cardsEl = document.getElementById(`packCards-${key}`);
+            const summary = document.getElementById(`packSummary-${key}`);
+            if (!wrap || !cardsEl) return;
+            const motion = fxMotionOn();
+            wrap.classList.add('is-open');
+            wrap.disabled = true;
+            setTimeout(() => {
+                wrap.hidden = true;
+                cardsEl.hidden = false;
+                const cards = [...cardsEl.querySelectorAll('.pack-card')];
+                cards.forEach((c, i) => setTimeout(() => c.classList.add('is-shown'), motion ? 120 + i * 170 : 0));
+                setTimeout(() => { if (summary) summary.hidden = false; }, motion ? 400 + cards.length * 170 : 0);
+            }, motion ? 550 : 0);
+        }
+
         function productPullRatesButtonHTML(code) {
             return `<button type="button" class="staples-sort-btn" style="margin:8px 0;" onclick="loadProductPullRates('${code}')">🎲 Pull rates: what's in each pack</button>`;
         }
@@ -11959,6 +12611,7 @@
                 return `
                     <details class="all-printings pull-type" id="pullType-${t.key}"${focusKey ? (focusKey === t.key ? ' open' : '') : ''}>
                         <summary>${t.name} · ${pullCountText(t.cardsPerPack)} card${t.cardsPerPack === 1 ? '' : 's'} a pack${t.packs ? ` · ${t.packs} packs a box` : ''}</summary>
+                        <div class="pack-stage" id="packStage-${t.key}"><div><button type="button" class="staples-sort-btn" onclick="crackPack('${code}', '${t.key}')">🎴 Crack a pack</button> <span class="text-secondary" style="font-size:0.85em;">Open a sample ${escapeAttr(t.name)} drawn from these odds</span></div></div>
                         <div class="edh-subhead">Pack layout <span class="text-secondary">(average per pack${t.layouts > 1 ? `; ${t.layouts} possible layouts` : ''})</span></div>
                         <ul class="pull-slots">${slotRows}</ul>
                         <div class="edh-subhead">Pull rates</div>
@@ -12986,11 +13639,20 @@
             return { now, then, diff: now - then, pct: (now - then) / then, weeks: points.length - 1 - i };
         }
 
+        // Heat colors: how big a price move is, from cool (small) to hot
+        // (big), whichever way it went - the arrow shows the direction.
+        const HEAT_WORDS = ['', 'small move (under 5%)', 'moderate move (5-15%)', 'big move (15-30%)', 'very big move (30-60%)', 'huge move (60%+)'];
+        function heatLevel(pct) {
+            const a = Math.abs(pct || 0);
+            return a < 0.05 ? 1 : a < 0.15 ? 2 : a < 0.3 ? 3 : a < 0.6 ? 4 : 5;
+        }
+
         function trendChipHTML(trend, label) {
             if (!trend) return '';
             const cls = trend.pct >= 0.05 ? 'up' : trend.pct <= -0.05 ? 'down' : 'flat';
             const arrow = cls === 'up' ? '▲' : cls === 'down' ? '▼' : '–';
-            return `<span class="mkt-trend mkt-${cls}" title="${formatUsd(trend.then)} → ${formatUsd(trend.now)}">${arrow} ${Math.abs(Math.round(trend.pct * 100))}% ${label}</span>`;
+            const heat = heatLevel(trend.pct);
+            return `<span class="mkt-trend mkt-${cls} heat heat-${heat}" title="${formatUsd(trend.then)} → ${formatUsd(trend.now)} · ${HEAT_WORDS[heat]}">${arrow} ${Math.abs(Math.round(trend.pct * 100))}% ${label}</span>`;
         }
 
         function sparklineSVG(points, width = 80, height = 20) {
@@ -13194,7 +13856,7 @@
                 results.innerHTML = `<div class="moonshot-status">Nothing in these ranges over the last ${windowText}. Try a wider range, a longer window${buylistMode ? '' : ', or untick "Only if another store is up too"'}.</div>${marketSourceHTML(mktSpikeData.meta)}`;
                 return;
             }
-            const change = s => `<span class="mkt-trend mkt-up">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span>`;
+            const change = s => `<span class="mkt-trend mkt-up heat heat-${heatLevel(s.pct)}${heatLevel(s.pct) >= 3 ? ' fx-shimmer' : ''}" title="${HEAT_WORDS[heatLevel(s.pct)]}">▲ ${formatUsd(s.diff)} (${Math.round(s.pct * 100)}%)</span>`;
             const confirmHTML = s => (s.confirms.length
                 ? `<div class="mkt-confirms">${s.confirms.map(c => `<span class="mkt-confirm" title="${c.label} went from ${formatUsd(c.then)} to ${formatUsd(c.now)} over the same days">✓ ${c.label} also up (now ${formatUsd(c.now)})</span>`).join(' ')}</div>`
                 : '');
@@ -18076,7 +18738,9 @@
 
         // Open/close the full-size image lightbox
         function openLightbox() {
-            const imgEl = document.getElementById('cardImageMain');
+            const holo = document.getElementById('cardHolo');
+            const back = document.getElementById('cardImageBack');
+            const imgEl = holo && back && holo.classList.contains('is-flipped') ? back : document.getElementById('cardImageMain');
             if (!imgEl) return;
             openLightboxSrc(imgEl.src, imgEl.alt);
         }
@@ -18095,6 +18759,106 @@
 
         function closeLightbox() {
             document.getElementById('lightboxOverlay').classList.remove('open');
+        }
+
+        // ---- The card picture: tilt, foil treatment, rarity glow, 3D flip ----
+        // Regular (non-foil) printings get no foil treatment. Foils match the
+        // printing (Scryfall's finishes and promo_types): a rainbow sheen for
+        // traditional foil, frosty metal for etched, sparkles for galaxy /
+        // surge / confetti / halo / fracture foils, a slow color shift for
+        // textured foil. The finish buttons under the card switch between a
+        // printing's finishes and stay in step with the price chart's.
+        const FOIL_SPARKLE_TYPES = { galaxyfoil: 'Galaxy foil', surgefoil: 'Surge foil', confettifoil: 'Confetti foil', halofoil: 'Halo foil', fracturefoil: 'Fracture foil' };
+        let cardFinishView = 'nonfoil';
+
+        function foilTreatment(card, finish) {
+            if (finish === 'nonfoil') return { key: 'none', label: 'Regular' };
+            if (finish === 'etched') return { key: 'etched', label: 'Etched foil' };
+            const types = card.promo_types || [];
+            const sparkle = types.find(t => FOIL_SPARKLE_TYPES[t]);
+            if (sparkle) return { key: 'sparkle', label: FOIL_SPARKLE_TYPES[sparkle] };
+            if (types.includes('textured')) return { key: 'textured', label: 'Textured foil' };
+            return { key: 'rainbow', label: 'Foil' };
+        }
+
+        function defaultCardFinish(card) {
+            const finishes = card.finishes || ['nonfoil'];
+            const fromChart = { n: 'nonfoil', f: 'foil', e: 'etched' }[priceHistoryFinish];
+            return finishes.includes('nonfoil') ? 'nonfoil' : (finishes.includes(fromChart) ? fromChart : finishes[0]);
+        }
+
+        function holoCardHTML(card) {
+            const front = getCardImageUrl(card);
+            const back = isDoubleFaced(card) && card.card_faces[1].image_uris ? card.card_faces[1].image_uris.normal : null;
+            const finish = defaultCardFinish(card);
+            const treatment = foilTreatment(card, finish);
+            const name = (card.card_faces && card.card_faces[0] && card.card_faces[0].name) || card.name;
+            return `
+                <div class="holo-card" id="cardHolo" data-foil="${treatment.key}" data-rarity="${escapeAttr(card.rarity || '')}">
+                    <div class="holo-tilt">
+                        <div class="holo-flip">
+                            <div class="holo-face front"><img class="card-image" id="cardImageMain" src="${front}" alt="${escapeAttr(name)}" onclick="openLightbox()"></div>
+                            ${back ? `<div class="holo-face back"><img class="card-image" id="cardImageBack" src="${back}" alt="${escapeAttr(card.card_faces[1].name)}" onclick="openLightbox()" loading="lazy"></div>` : ''}
+                        </div>
+                        <div class="holo-shine"></div>
+                        <div class="holo-glare"></div>
+                    </div>
+                </div>
+                <div class="holo-finishes" id="cardFinishes">${cardFinishButtonsHTML(card, finish)}</div>
+            `;
+        }
+
+        function cardFinishButtonsHTML(card, finish) {
+            const finishes = (card.finishes || ['nonfoil']).filter(f => ['nonfoil', 'foil', 'etched'].includes(f));
+            if (finishes.length <= 1) {
+                const t = foilTreatment(card, finishes[0] || 'nonfoil');
+                return t.key === 'none' ? '' : `<span class="holo-finish-label">✨ ${t.label} only</span>`;
+            }
+            return finishes.map(f => {
+                const t = foilTreatment(card, f);
+                return `<button type="button" aria-pressed="${f === finish}" onclick="setCardFinish('${f}')">${t.key === 'none' ? 'Regular' : t.label}</button>`;
+            }).join('');
+        }
+
+        function setCardFinish(finish, fromChart) {
+            const card = currentDisplayedCard;
+            const holo = document.getElementById('cardHolo');
+            if (!card || !holo) return;
+            cardFinishView = finish;
+            holo.dataset.foil = foilTreatment(card, finish).key;
+            const btns = document.getElementById('cardFinishes');
+            if (btns) btns.innerHTML = cardFinishButtonsHTML(card, finish);
+            const key = { nonfoil: 'n', foil: 'f', etched: 'e' }[finish];
+            if (!fromChart && priceHistoryCurrent && priceHistoryCurrent.history && priceHistoryCurrent.history[key] && priceHistoryFinish !== key) {
+                priceHistoryFinish = key;
+                renderPriceHistoryPanel();
+            }
+        }
+
+        function initHoloCard(card) {
+            const holo = document.getElementById('cardHolo');
+            if (!holo) return;
+            cardFinishView = defaultCardFinish(card);
+            holo.classList.add('fx-enter');
+            const move = e => {
+                if (e.pointerType === 'touch' || !fxIs('full', 'subtle') || fxReducedMotion.matches) return;
+                const r = holo.getBoundingClientRect();
+                const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+                const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+                holo.classList.add('is-tilting');
+                holo.style.setProperty('--ry', `${((px - 0.5) * 22).toFixed(1)}deg`);
+                holo.style.setProperty('--rx', `${((0.5 - py) * 22).toFixed(1)}deg`);
+                holo.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`);
+                holo.style.setProperty('--my', `${(py * 100).toFixed(1)}%`);
+                holo.style.setProperty('--o', '1');
+            };
+            const leave = () => {
+                holo.classList.remove('is-tilting');
+                ['--ry', '--rx'].forEach(p => holo.style.setProperty(p, '0deg'));
+                holo.style.setProperty('--o', '0');
+            };
+            holo.addEventListener('pointermove', move);
+            holo.addEventListener('pointerleave', leave);
         }
 
         // Does this card have two distinct faces with their own art (transform,
@@ -18173,9 +18937,7 @@
 
             // Card image (click to enlarge)
             const imageUrl = getCardImageUrl(card);
-            const imageHTML = imageUrl
-                ? `<img class="card-image" id="cardImageMain" src="${imageUrl}" alt="${card.name}" onclick="openLightbox()">`
-                : '';
+            const imageHTML = imageUrl ? holoCardHTML(card) : '';
 
             const flipButtonHTML = `<div id="flipButtonContainer" style="${isDoubleFaced(card) ? '' : 'display:none;'}"><button class="flip-button" onclick="flipCard()">⟳ Flip Card</button></div>`;
 
@@ -18198,7 +18960,7 @@
             // Rarity badge
             const rarityColor = RARITY_COLORS[card.rarity] || '#909090';
             const rarityHTML = card.rarity
-                ? `<span class="rarity-badge" id="rarityBadge" style="color:${rarityColor};">${card.rarity}</span>`
+                ? `<span class="rarity-badge${card.rarity === 'mythic' ? ' is-mythic' : ''}" id="rarityBadge" style="color:${rarityColor};">${card.rarity}</span>`
                 : '';
 
             const html = `
@@ -18263,6 +19025,9 @@
             `;
 
             resultsDiv.innerHTML = html;
+            initHoloCard(card);
+            rollNumbersIn(document.getElementById('priceContainer'));
+            fxEnter(resultsDiv.firstElementChild);
 
             // Populate the before/after block for the card's own set
             updateAdjacentContext(setCode, setName, card.released_at);
@@ -18384,8 +19149,12 @@
             currentFaceIndex = currentFaceIndex === 0 ? 1 : 0;
             const face = card.card_faces[currentFaceIndex];
 
+            const holo = document.getElementById('cardHolo');
             const imgEl = document.getElementById('cardImageMain');
-            if (imgEl && face.image_uris && face.image_uris.normal) {
+            if (holo && document.getElementById('cardImageBack') && fxMotionOn()) {
+                // Turn the card over in 3D (both faces are already loaded)
+                holo.classList.toggle('is-flipped', currentFaceIndex === 1);
+            } else if (imgEl && face.image_uris && face.image_uris.normal) {
                 imgEl.classList.add('fading');
                 setTimeout(() => {
                     imgEl.src = face.image_uris.normal;
@@ -18796,15 +19565,19 @@
             currentDisplayedCard = print;
             currentFaceIndex = 0;
 
-            // Swap the main card image to this printing's artwork (small fade for polish)
-            const imgEl = document.getElementById('cardImageMain');
+            // Swap the card picture to this printing (its own finishes, foil
+            // treatment, rarity glow and back face), with a short fade
+            const holoEl = document.getElementById('cardHolo');
             const newImageUrl = getCardImageUrl(print);
-            if (imgEl && newImageUrl) {
-                imgEl.classList.add('fading');
+            if (holoEl && newImageUrl) {
+                holoEl.classList.add('fading');
                 setTimeout(() => {
-                    imgEl.src = newImageUrl;
-                    imgEl.alt = print.name;
-                    imgEl.classList.remove('fading');
+                    const current = document.getElementById('cardHolo');
+                    if (!current || currentDisplayedCard !== print) return;
+                    const finishesEl = document.getElementById('cardFinishes');
+                    if (finishesEl) finishesEl.remove();
+                    current.outerHTML = holoCardHTML(print);
+                    initHoloCard(print);
                 }, 150);
             }
 
@@ -18848,7 +19621,7 @@
             refreshCardText();
 
             const priceContainer = document.getElementById('priceContainer');
-            if (priceContainer) priceContainer.innerHTML = buildPriceHTML(print);
+            if (priceContainer) { priceContainer.innerHTML = buildPriceHTML(print); rollNumbersIn(priceContainer); }
             printingsActiveId = print.id;
             loadPriceHistoryPanel(print);
 
@@ -18857,6 +19630,7 @@
             if (rarityBadge && print.rarity) {
                 rarityBadge.textContent = print.rarity;
                 rarityBadge.style.color = RARITY_COLORS[print.rarity] || '#909090';
+                rarityBadge.classList.toggle('is-mythic', print.rarity === 'mythic');
             }
 
             // Legality and related cards are the same across printings of a card,
@@ -18964,6 +19738,8 @@
         function setPriceHistoryFinish(key) {
             priceHistoryFinish = key;
             renderPriceHistoryPanel();
+            const finish = { n: 'nonfoil', f: 'foil', e: 'etched' }[key];
+            if (finish && currentDisplayedCard && (currentDisplayedCard.finishes || []).includes(finish)) setCardFinish(finish, true);
         }
 
         function togglePriceSeries(key) {
@@ -19128,7 +19904,7 @@
                 stats = `
                     <div class="pc-stats">
                         ${tile('Market now', formatUsd(now), shortDate(dates[lastI]))}
-                        ${tile(`Change, ${range} days`, `${arrow} ${formatUsd(Math.abs(diff))}`, `${diff >= 0 ? '+' : '−'}${Math.abs(Math.round((diff / then) * 100))}% from ${formatUsd(then)}`)}
+                        ${tile(`Change, ${range} days`, `<span class="heat heat-${heatLevel(diff / then)}" title="${HEAT_WORDS[heatLevel(diff / then)]}">${arrow} ${formatUsd(Math.abs(diff))}</span>`, `${diff >= 0 ? '+' : '−'}${Math.abs(Math.round((diff / then) * 100))}% from ${formatUsd(then)}`)}
                         ${tile('High', formatUsd(pts[hiI]), shortDate(dates[hiI]))}
                         ${tile('Low', formatUsd(pts[loI]), shortDate(dates[loI]))}
                         ${jump && Math.abs(jump.d) >= 0.01 ? tile('Biggest day move', `${jump.d > 0 ? '▲' : '▼'} ${formatUsd(Math.abs(jump.d))}`, shortDate(dates[jump.i])) : ''}
@@ -19176,9 +19952,12 @@
                 ${otherStoresHTML(history)}
             `;
             drawPriceChart();
+            rollNumbersIn(el);
         }
 
         // The SVG itself, sized to the box it sits in.
+        let priceChartDrawnKey = '';
+
         function drawPriceChart() {
             const box = document.getElementById('priceChart');
             const st = priceChartState;
@@ -19239,7 +20018,10 @@
                 }
                 parts.push(`<path class="pc-line" style="stroke:${s.color};" d="${d}"/>`);
                 const li = s.pts.length - 1 - [...s.pts].reverse().findIndex(v => v !== null);
-                if (li >= 0 && li < s.pts.length) parts.push(`<circle class="pc-end" cx="${x(li)}" cy="${y(s.pts[li])}" r="4" style="fill:${s.color};"/>`);
+                if (li >= 0 && li < s.pts.length) {
+                    if (s.key === 'tcg') parts.push(`<circle class="pc-ping" cx="${x(li)}" cy="${y(s.pts[li])}" r="4" style="stroke:${s.color};"/>`);
+                    parts.push(`<circle class="pc-end" cx="${x(li)}" cy="${y(s.pts[li])}" r="4" style="fill:${s.color};"/>`);
+                }
             });
             parts.push(`<line class="pc-cross" id="pcCross" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" visibility="hidden"/>`);
             st.series.forEach((s, k) => parts.push(`<circle class="pc-hover-dot" id="pcDot${k}" r="4" style="fill:${s.color};" visibility="hidden"/>`));
@@ -19248,6 +20030,17 @@
             st.geom = { x, y, m, iw, W, n };
 
             const svg = box.querySelector('svg');
+            // Draw the lines in once per card / finish / range (not on every redraw)
+            const drawKey = `${priceHistoryCurrent && priceHistoryCurrent.card.id}|${priceHistoryFinish}|${priceHistoryRange}`;
+            if (fxMotionOn() && drawKey !== priceChartDrawnKey) {
+                svg.querySelectorAll('.pc-line').forEach(p => p.style.setProperty('--len', Math.ceil(p.getTotalLength())));
+                box.classList.remove('fx-draw');
+                void box.offsetWidth;
+                box.classList.add('fx-draw');
+                clearTimeout(box._fxTimer);
+                box._fxTimer = setTimeout(() => box.classList.remove('fx-draw'), 1500);
+            }
+            priceChartDrawnKey = drawKey;
             const show = i => showPriceChartPoint(i);
             const fromEvent = ev => {
                 const rect = svg.getBoundingClientRect();
@@ -20127,6 +20920,502 @@
         initTablist('prTabs', PRERELEASE_SUBTABS, 'mechanics');
         // A bookmarked/shared link (e.g. #buyersguide/lands) opens straight to
         // that tab instead of always landing on MTG Card Lookup.
+
+        // ================================================================
+        // Visual effects (added 2026-10-05, from the Flash Lab mock). The
+        // level (full / subtle / off) is per device: html[data-fx], set in
+        // <head> from localStorage('fxLevel') and changed by the ✨ Effects
+        // button. See the "Visual effects" CSS block for what each level shows.
+        // ================================================================
+        const FX_LABELS = { full: 'Full', subtle: 'Subtle', off: 'Off' };
+        const FX_HINTS = {
+            full: 'Full effects: scene banner with live weather, glow, particles, foil cards and motion',
+            subtle: 'Subtle effects: glass panels, foil cards and motion, without the banner, glow or particles',
+            off: 'Effects off: the plain look'
+        };
+        const fxReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+        function fxIs(...levels) {
+            return levels.includes(document.documentElement.getAttribute('data-fx'));
+        }
+        // Motion-based effects (rolling numbers, chart draw-in) only run when
+        // they're switched on and the device doesn't ask for reduced motion.
+        function fxMotionOn() {
+            return fxIs('full', 'subtle') && !fxReducedMotion.matches;
+        }
+
+        function renderFxButton() {
+            const btn = document.getElementById('fxLevelBtn');
+            if (!btn) return;
+            const level = fxLevel();
+            btn.innerHTML = `✨<span class="util-long"> Effects: ${FX_LABELS[level]}</span>`;
+            btn.title = `${FX_HINTS[level]}. Click to change (saved on this device).`;
+            btn.setAttribute('aria-label', `Effects: ${FX_LABELS[level]}. ${FX_HINTS[level]}. Click to change.`);
+        }
+
+        function cycleFxLevel() {
+            const next = FX_LEVELS[(FX_LEVELS.indexOf(fxLevel()) + 1) % FX_LEVELS.length];
+            try { localStorage.setItem('fxLevel', next); } catch (e) { /* storage blocked - still switch for this visit */ }
+            document.documentElement.setAttribute('data-fx', next);
+            renderFxButton();
+            renderSeasonalFx();
+            fxRefresh();
+            showToast(`✨ ${FX_HINTS[next]}`);
+        }
+
+        // ---- Colors: read the theme tokens so every season restyles the scene ----
+        function fxToken(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+        function fxRgb(color) {
+            const c = (color || '').trim();
+            if (c[0] === '#') {
+                let h = c.slice(1);
+                if (h.length === 3) h = h.split('').map(x => x + x).join('');
+                return [0, 2, 4].map(i => parseInt(h.substr(i, 2), 16) || 0);
+            }
+            const m = c.match(/[\d.]+/g);
+            return m ? m.slice(0, 3).map(Number) : [0, 0, 0];
+        }
+        function fxMix(a, b, t) {
+            const A = fxRgb(a), B = fxRgb(b);
+            return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`;
+        }
+        function fxAlpha(color, alpha) {
+            return `rgba(${fxRgb(color).join(',')},${alpha})`;
+        }
+
+        // ---- Live weather at both stores (National Weather Service) ----
+        // api.weather.gov is free, needs no key and allows browser requests.
+        // The points lookup gives each store's hourly forecast URL (cached
+        // for good); the forecast itself is cached 30 minutes per store.
+        const WX_STORES = [
+            { key: 'noblesville', name: 'Noblesville', lat: 40.0456, lon: -86.0086 },
+            { key: 'plainfield', name: 'Plainfield', lat: 39.7042, lon: -86.3994 }
+        ];
+        const WX_MAX_AGE_MS = 30 * 60 * 1000;
+        const WX_ICONS = { clear: ['☀️', '🌙'], partly: ['⛅', '☁️'], clouds: ['☁️', '☁️'], rain: ['🌧️', '🌧️'], storm: ['⛈️', '⛈️'], snow: ['🌨️', '🌨️'], fog: ['🌫️', '🌫️'] };
+        let fxWeather = {}; // store key -> { temp, unit, day, text, kind, at }
+
+        function wxKind(text) {
+            const t = (text || '').toLowerCase();
+            if (/thunder|t-storm/.test(t)) return 'storm';
+            if (/snow|flurr|sleet|ice|wintry|freezing/.test(t)) return 'snow';
+            if (/rain|shower|drizzle/.test(t)) return 'rain';
+            if (/fog|haze|mist|smoke/.test(t)) return 'fog';
+            if (/partly|mostly sunny|mostly clear/.test(t)) return 'partly';
+            if (/cloud|overcast/.test(t)) return 'clouds';
+            return 'clear';
+        }
+
+        async function wxFetchStore(store) {
+            const cacheKey = `wx:${store.key}`;
+            try {
+                const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+                if (cached && Date.now() - cached.t < WX_MAX_AGE_MS) return cached.d;
+            } catch (e) { /* no cache */ }
+            const headers = { Accept: 'application/geo+json' };
+            let hourlyUrl = null;
+            try { hourlyUrl = localStorage.getItem(`wxGrid:${store.key}`); } catch (e) { /* no cache */ }
+            if (!hourlyUrl) {
+                const res = await fetch(`https://api.weather.gov/points/${store.lat},${store.lon}`, { headers });
+                if (!res.ok) throw new Error(`weather.gov points ${res.status}`);
+                hourlyUrl = (await res.json()).properties.forecastHourly;
+                try { localStorage.setItem(`wxGrid:${store.key}`, hourlyUrl); } catch (e) { /* fine */ }
+            }
+            const res = await fetch(hourlyUrl, { headers });
+            if (!res.ok) {
+                try { localStorage.removeItem(`wxGrid:${store.key}`); } catch (e) { /* fine */ }
+                throw new Error(`weather.gov forecast ${res.status}`);
+            }
+            const periods = ((await res.json()).properties || {}).periods || [];
+            const now = Date.now();
+            const p = periods.find(x => new Date(x.endTime).getTime() > now) || periods[0];
+            if (!p) throw new Error('weather.gov: no forecast');
+            const d = { temp: p.temperature, unit: p.temperatureUnit || 'F', day: !!p.isDaytime, text: p.shortForecast || '', kind: wxKind(p.shortForecast), at: p.startTime };
+            try { localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), d })); } catch (e) { /* fine */ }
+            return d;
+        }
+
+        function wxSelectedStore() {
+            let key = null;
+            try { key = localStorage.getItem('wxStore'); } catch (e) { /* default */ }
+            return WX_STORES.find(s => s.key === key) || WX_STORES[0];
+        }
+
+        function wxSceneWeather() {
+            return fxWeather[wxSelectedStore().key] || null;
+        }
+
+        async function loadWeather() {
+            const results = await Promise.allSettled(WX_STORES.map(wxFetchStore));
+            results.forEach((r, i) => { if (r.status === 'fulfilled') fxWeather[WX_STORES[i].key] = r.value; });
+            renderWeatherChip();
+            fxBuildScene();
+        }
+
+        function renderWeatherChip() {
+            const chip = document.getElementById('sceneWeather');
+            if (!chip) return;
+            const sel = wxSelectedStore();
+            const shown = WX_STORES.filter(s => fxWeather[s.key]);
+            if (!shown.length) { chip.hidden = true; return; }
+            const w = fxWeather[sel.key] || fxWeather[shown[0].key];
+            const icon = (WX_ICONS[w.kind] || WX_ICONS.clear)[w.day ? 0 : 1];
+            chip.innerHTML = `<span aria-hidden="true">${icon}</span>` + shown.map(s =>
+                `<span class="wx-store ${s.key === sel.key ? 'is-on' : 'wx-other'}">${s.name} ${fxWeather[s.key].temp}°</span>`
+            ).join('<span class="wx-other" aria-hidden="true">·</span>');
+            const other = WX_STORES.find(s => s.key !== sel.key);
+            const at = w.at ? new Date(w.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+            chip.title = `${sel.name}: ${w.text}, ${w.temp}°${w.unit}${at ? ` (forecast for ${at})` : ''}. Weather from the National Weather Service (weather.gov). Click to show ${other.name} on the banner.`;
+            chip.setAttribute('aria-label', chip.title);
+            chip.hidden = false;
+        }
+
+        function cycleWeatherStore() {
+            const sel = wxSelectedStore();
+            const next = WX_STORES[(WX_STORES.indexOf(sel) + 1) % WX_STORES.length];
+            try { localStorage.setItem('wxStore', next.key); } catch (e) { /* fine */ }
+            renderWeatherChip();
+            fxBuildScene();
+        }
+
+        // ---- The scene banner and the side-margin particles (canvas) ----
+        const fxState = { pal: null, scene: null, margin: [], running: false, sceneVisible: true, w: 0, h: 0 };
+        const fxRand = (a, b) => a + Math.random() * (b - a);
+
+        function fxThemeGlyphs() {
+            const on = document.documentElement.hasAttribute('data-theme') && typeof SEASONAL_TODAY !== 'undefined' && SEASONAL_TODAY;
+            if (!on) return [];
+            const theme = SEASONAL_THEMES[SEASONAL_TODAY.key];
+            return theme && theme.fx ? theme.fx : [];
+        }
+
+        function fxPalette() {
+            const t = n => fxToken(n);
+            const canvas = t('--bg-canvas'), inset = t('--bg-inset') || canvas, panel = t('--bg-panel'), raised = t('--bg-panel-raised');
+            const brand = t('--brand'), brandLight = t('--brand-light'), heading = t('--text-heading'), gray = t('--text-secondary');
+            return { canvas, inset, panel, raised, brand, brandLight, heading, gray, warn: t('--color-warning') };
+        }
+
+        function fxSkyFor(pal, w) {
+            const day = w ? w.day : (h => h >= 7 && h < 19)(new Date().getHours());
+            const kind = w ? w.kind : 'clear';
+            const gloomy = ['clouds', 'rain', 'storm', 'snow', 'fog'].includes(kind);
+            let top = day ? fxMix(pal.brandLight, pal.panel, 0.45) : fxMix(pal.inset, '#000000', 0.35);
+            let bottom = day ? fxMix(pal.brand, pal.raised, 0.5) : fxMix(pal.brand, pal.canvas, 0.75);
+            if (gloomy) { top = fxMix(top, pal.gray, day ? 0.45 : 0.15); bottom = fxMix(bottom, pal.gray, day ? 0.35 : 0.1); }
+            if (kind === 'storm') { top = fxMix(top, '#000000', 0.35); bottom = fxMix(bottom, '#000000', 0.3); }
+            return { day, kind, top, bottom };
+        }
+
+        function fxBuildScene() {
+            const canvas = document.getElementById('sceneCanvas');
+            if (!canvas) return;
+            const r = canvas.getBoundingClientRect();
+            const w = Math.max(1, r.width), h = Math.max(1, r.height);
+            const pal = fxState.pal || fxPalette();
+            const sky = fxSkyFor(pal, wxSceneWeather());
+            const s = { w, h, sky, stars: [], clouds: [], drops: [], glyphs: [], fog: [], shooting: null, flash: 0 };
+            if (!sky.day && (sky.kind === 'clear' || sky.kind === 'partly')) {
+                for (let i = 0; i < 80; i++) s.stars.push({ x: fxRand(0, w), y: fxRand(0, h * 0.75), r: fxRand(0.4, 1.5), ph: fxRand(0, 6.28) });
+            }
+            const cloudCount = { partly: 3, clouds: 6, rain: 6, storm: 7, snow: 5 }[sky.kind] || 0;
+            for (let i = 0; i < cloudCount; i++) s.clouds.push({ x: fxRand(-0.2, 1.1) * w, y: fxRand(0.05, 0.45) * h, s: fxRand(0.7, 1.4), v: fxRand(0.05, 0.18) });
+            const dropCount = { rain: 110, storm: 150, snow: 80 }[sky.kind] || 0;
+            for (let i = 0; i < dropCount; i++) s.drops.push({ x: fxRand(0, w), y: fxRand(0, h), z: fxRand(0.35, 1), ph: fxRand(0, 6.28) });
+            if (sky.kind === 'fog') for (let i = 0; i < 4; i++) s.fog.push({ y: h * (0.35 + i * 0.15), x: fxRand(0, w), v: fxRand(0.08, 0.2) });
+            fxThemeGlyphs().forEach(([glyph, motion], i) => {
+                for (let k = 0; k < 2; k++) s.glyphs.push({ glyph, motion, x: fxRand(0, w), y: fxRand(0, h), z: fxRand(0.4, 1), ph: fxRand(0, 6.28) });
+            });
+            fxState.scene = s;
+            fxDrawScene(performance.now(), true);
+        }
+
+        function fxBuildMargin() {
+            const gutter = (window.innerWidth - 1300) / 2 - 10;
+            fxState.margin = [];
+            if (gutter < 50) return;
+            const glyphs = fxThemeGlyphs();
+            const count = glyphs.length ? 14 : 36;
+            for (let i = 0; i < count; i++) {
+                const left = i % 2 === 0;
+                const g = glyphs.length ? glyphs[i % glyphs.length] : null;
+                fxState.margin.push({
+                    side: left ? 0 : 1, gutter, x: fxRand(4, gutter - 4), y: fxRand(0, window.innerHeight),
+                    z: fxRand(0.35, 1), ph: fxRand(0, 6.28), glyph: g ? g[0] : null, motion: g ? g[1] : 'twinkle'
+                });
+            }
+        }
+
+        function fxSizeCanvas(c) {
+            const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+            const r = c.getBoundingClientRect();
+            const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
+            if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+            const ctx = c.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            return { ctx, w: r.width, h: r.height };
+        }
+
+        function fxHills(ctx, w, h, color, base, amp, freq, phase) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(0, h);
+            for (let x = 0; x <= w + 8; x += 8) ctx.lineTo(x, h - base - Math.sin(x * freq + phase) * amp - Math.sin(x * freq * 2.3 + phase * 1.7) * amp * 0.35);
+            ctx.lineTo(w, h);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function fxCloud(ctx, x, y, s, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            [[0, 0, 22], [20, -8, 18], [38, 0, 20], [18, 8, 20]].forEach(([dx, dy, r]) => {
+                ctx.moveTo(x + dx * s + r * s, y + dy * s);
+                ctx.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2);
+            });
+            ctx.fill();
+        }
+
+        function fxGlyph(ctx, g, size, alpha) {
+            ctx.globalAlpha = alpha;
+            ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(g.glyph, g.x, g.y);
+            ctx.globalAlpha = 1;
+        }
+
+        function fxMoveGlyph(g, w, h, t) {
+            const sp = 0.25 + g.z * 0.55;
+            if (g.motion === 'fall') { g.y += sp; g.x += Math.sin(t / 1500 + g.ph) * 0.4; }
+            else if (g.motion === 'rise') { g.y -= sp; g.x += Math.sin(t / 1300 + g.ph) * 0.3; }
+            else if (g.motion === 'drift') { g.x += sp * 0.9; g.y += Math.sin(t / 900 + g.ph) * 0.5; }
+            if (g.y > h + 30) { g.y = -30; g.x = fxRand(0, w); }
+            if (g.y < -30) { g.y = h + 30; g.x = fxRand(0, w); }
+            if (g.x > w + 30) { g.x = -30; g.y = fxRand(0, h); }
+        }
+
+        function fxDrawScene(t, still) {
+            const canvas = document.getElementById('sceneCanvas');
+            const s = fxState.scene;
+            if (!canvas || !s || !fxIs('full')) return;
+            const { ctx, w, h } = fxSizeCanvas(canvas);
+            if (Math.abs(w - s.w) > 2 || Math.abs(h - s.h) > 2) { fxBuildScene(); return; }
+            const pal = fxState.pal, sky = s.sky;
+            const g = ctx.createLinearGradient(0, 0, 0, h);
+            g.addColorStop(0, sky.top);
+            g.addColorStop(1, sky.bottom);
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, w, h);
+            // stars
+            s.stars.forEach(p => {
+                ctx.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(t / 1100 + p.ph));
+                ctx.fillStyle = pal.heading;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            // sun or crescent moon (the Moonshot moon), hidden behind heavy weather
+            // (left out on narrow banners, where it would sit behind the title)
+            if (w >= 600 && (!['rain', 'storm', 'snow', 'fog'].includes(sky.kind) || sky.kind === 'fog')) {
+                const mx = w * 0.7, my = h * 0.36, mr = Math.min(30, h * 0.22);
+                const glowColor = sky.day ? pal.warn : pal.brandLight;
+                const glow = ctx.createRadialGradient(mx, my, mr * 0.4, mx, my, mr * 4);
+                glow.addColorStop(0, fxAlpha(glowColor, sky.kind === 'fog' ? 0.15 : 0.35));
+                glow.addColorStop(1, fxAlpha(glowColor, 0));
+                ctx.fillStyle = glow;
+                ctx.fillRect(0, 0, w, h);
+                ctx.fillStyle = sky.day ? fxMix(pal.warn, '#ffffff', 0.45) : pal.heading;
+                ctx.globalAlpha = sky.kind === 'fog' ? 0.5 : 1;
+                ctx.save();
+                ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.clip();
+                ctx.beginPath(); ctx.rect(mx - mr, my - mr, mr * 2, mr * 2);
+                // At night, cut a crescent (the Moonshot moon)
+                if (!sky.day) ctx.arc(mx + mr * 0.45, my - mr * 0.25, mr * 0.88, 0, Math.PI * 2);
+                ctx.fill('evenodd');
+                ctx.restore();
+                ctx.globalAlpha = 1;
+            }
+            // shooting star on clear nights
+            if (!still && !sky.day && sky.kind === 'clear') {
+                if (!s.shooting && Math.random() < 0.003) s.shooting = { x: fxRand(w * 0.1, w * 0.6), y: fxRand(8, h * 0.3), life: 0 };
+                if (s.shooting) {
+                    const sh = s.shooting;
+                    sh.life++;
+                    const px = sh.x + sh.life * 7, py = sh.y + sh.life * 2.4, len = 70;
+                    const lg = ctx.createLinearGradient(px - len, py - len * 0.34, px, py);
+                    lg.addColorStop(0, fxAlpha(pal.heading, 0));
+                    lg.addColorStop(1, fxAlpha(pal.heading, 1 - sh.life / 40));
+                    ctx.strokeStyle = lg; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(px - len, py - len * 0.34); ctx.lineTo(px, py); ctx.stroke();
+                    if (sh.life > 40) s.shooting = null;
+                }
+            }
+            // clouds
+            const cloudColor = sky.day ? fxAlpha(fxMix(pal.heading, pal.gray, sky.kind === 'partly' ? 0.1 : 0.45), 0.85) : fxAlpha(fxMix(pal.raised, pal.gray, 0.3), 0.85);
+            s.clouds.forEach(c => {
+                if (!still) { c.x += c.v; if (c.x > w + 80) c.x = -100; }
+                fxCloud(ctx, c.x, c.y, c.s, cloudColor);
+            });
+            // hills
+            const ph = still ? 0 : t / 9000;
+            const snowy = sky.kind === 'snow' || (fxThemeGlyphs().some(([gl]) => gl.startsWith('❄')));
+            fxHills(ctx, w, h, fxMix(pal.inset, pal.brand, sky.day ? 0.35 : 0.22), h * 0.3, h * 0.07, 0.006, ph * 0.3);
+            fxHills(ctx, w, h, fxMix(pal.inset, pal.brand, sky.day ? 0.22 : 0.12), h * 0.18, h * 0.08, 0.009, 1.3 + ph * 0.5);
+            fxHills(ctx, w, h, snowy ? fxMix(pal.heading, pal.raised, 0.35) : fxMix(pal.inset, pal.canvas, 0.5), h * 0.07, h * 0.05, 0.013, 2.1 + ph);
+            // fog
+            s.fog.forEach(f => {
+                if (!still) { f.x += f.v; if (f.x > w) f.x -= w; }
+                const fg = ctx.createLinearGradient(0, f.y - 12, 0, f.y + 12);
+                fg.addColorStop(0, fxAlpha(pal.heading, 0));
+                fg.addColorStop(0.5, fxAlpha(pal.heading, 0.16));
+                fg.addColorStop(1, fxAlpha(pal.heading, 0));
+                ctx.fillStyle = fg;
+                ctx.fillRect(0, f.y - 12, w, 24);
+            });
+            // seasonal glyphs (bats, leaves, snowflakes...) with depth
+            s.glyphs.forEach(gl => {
+                if (!still) fxMoveGlyph(gl, w, h, t);
+                const tw = gl.motion === 'twinkle' ? 0.4 + 0.6 * Math.abs(Math.sin(t / 900 + gl.ph)) : 1;
+                // Fade behind the title so it stays easy to read
+                const behindTitle = Math.abs(gl.x - w / 2) < Math.min(260, w * 0.35) && gl.y > h * 0.35;
+                fxGlyph(ctx, gl, 12 + gl.z * 14, (0.35 + gl.z * 0.5) * tw * (behindTitle ? 0.3 : 1));
+            });
+            // rain, storm and snow
+            if (s.drops.length) {
+                const snow = sky.kind === 'snow';
+                ctx.strokeStyle = fxAlpha(pal.heading, 0.45);
+                ctx.fillStyle = fxAlpha(pal.heading, 0.85);
+                ctx.lineWidth = 1;
+                s.drops.forEach(d => {
+                    if (!still) {
+                        d.y += snow ? 0.4 + d.z * 0.8 : 5 + d.z * 6;
+                        d.x += snow ? Math.sin(t / 1200 + d.ph) * 0.3 : -1.2 * d.z;
+                        if (d.y > h) { d.y = -10; d.x = fxRand(0, w + 40); }
+                    }
+                    ctx.globalAlpha = 0.3 + d.z * 0.6;
+                    if (snow) { ctx.beginPath(); ctx.arc(d.x, d.y, 0.8 + d.z * 1.6, 0, Math.PI * 2); ctx.fill(); }
+                    else { ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 2 * d.z, d.y + 9 * d.z); ctx.stroke(); }
+                });
+                ctx.globalAlpha = 1;
+                if (sky.kind === 'storm' && !still) {
+                    if (s.flash <= 0 && Math.random() < 0.004) s.flash = 10;
+                    if (s.flash > 0) { ctx.fillStyle = fxAlpha(pal.heading, s.flash / 30); ctx.fillRect(0, 0, w, h); s.flash--; }
+                }
+            }
+        }
+
+        function fxDrawMargin(t) {
+            const layer = document.getElementById('seasonalFx');
+            if (!layer) return;
+            let canvas = layer.querySelector('canvas');
+            if (!fxState.margin.length || !fxIs('full')) { if (canvas) canvas.remove(); return; }
+            if (!canvas) { canvas = document.createElement('canvas'); layer.appendChild(canvas); }
+            const { ctx, w, h } = fxSizeCanvas(canvas);
+            ctx.clearRect(0, 0, w, h);
+            const pal = fxState.pal;
+            fxState.margin.forEach(p => {
+                const offset = p.side === 0 ? 0 : w - p.gutter;
+                if (p.glyph) {
+                    const area = { glyph: p.glyph, motion: p.motion, x: p.x, y: p.y, z: p.z, ph: p.ph };
+                    fxMoveGlyph(area, p.gutter, h, t);
+                    p.x = area.x; p.y = area.y;
+                    if (p.x > p.gutter) p.x = 0;
+                    const tw = p.motion === 'twinkle' ? 0.4 + 0.6 * Math.abs(Math.sin(t / 900 + p.ph)) : 1;
+                    fxGlyph(ctx, { glyph: p.glyph, x: p.x + offset, y: p.y }, 14 + p.z * 18, (0.18 + p.z * 0.32) * tw);
+                } else {
+                    ctx.globalAlpha = (0.2 + 0.6 * p.z) * Math.abs(Math.sin(t / 1300 + p.ph));
+                    ctx.fillStyle = pal.brandLight;
+                    ctx.shadowColor = pal.brandLight;
+                    ctx.shadowBlur = 6;
+                    ctx.beginPath(); ctx.arc(p.x + offset, p.y, 0.6 + p.z * 1.4, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.globalAlpha = 1;
+                }
+            });
+        }
+
+        function fxLoop(t) {
+            if (!fxState.running) return;
+            if (fxState.sceneVisible) fxDrawScene(t, false);
+            fxDrawMargin(t);
+            requestAnimationFrame(fxLoop);
+        }
+
+        // Rebuild everything for the current level and theme.
+        function fxRefresh() {
+            fxState.pal = fxPalette();
+            const full = fxIs('full');
+            if (full) { fxBuildScene(); fxBuildMargin(); }
+            else fxDrawMargin(0);
+            const animate = full && !fxReducedMotion.matches;
+            if (animate && !fxState.running) { fxState.running = true; requestAnimationFrame(fxLoop); }
+            if (!animate) fxState.running = false;
+            if (full && !animate) fxDrawScene(0, true);
+        }
+
+        // Rolling numbers: prices roll into place digit by digit, like a
+        // flip clock (Effects: Full / Subtle). Screen readers get the plain text.
+        function rollNumbersIn(root) {
+            if (!root || !fxMotionOn()) return;
+            root.querySelectorAll('.price-value:not(.na), .pc-stat-value').forEach(el => {
+                const target = el.querySelector('.heat') || el;
+                const text = target.textContent.trim();
+                if (!/\d/.test(text) || target.querySelector('.roll')) return;
+                const digits = '0123456789'.repeat(2).split('').map(d => `<span>${d}</span>`).join('');
+                target.innerHTML = `<span class="sr-only">${escapeAttr(text)}</span><span class="roll" aria-hidden="true">${[...text].map(ch =>
+                    /\d/.test(ch) ? `<span class="roll-d"><span class="roll-s" data-d="${ch}">${digits}</span></span>` : `<span>${escapeAttr(ch)}</span>`
+                ).join('')}</span>`;
+                const strips = [...target.querySelectorAll('.roll-s')];
+                strips.forEach(st => { st.style.transition = 'none'; st.style.transform = `translateY(-${Math.floor(Math.random() * 10) * 1.15}em)`; });
+                void target.offsetWidth;
+                strips.forEach((st, i) => {
+                    st.style.transition = '';
+                    st.style.transitionDelay = `${i * 45}ms`;
+                    st.style.transform = `translateY(-${(10 + Number(st.dataset.d)) * 1.15}em)`;
+                });
+                // Back to plain text once it has landed, so copying works
+                setTimeout(() => { if (target.querySelector('.roll')) target.textContent = text; }, 1000 + strips.length * 45 + 200);
+            });
+        }
+
+        // Fade a freshly shown view or result in (Effects: Full / Subtle).
+        function fxEnter(el) {
+            if (!el || !fxMotionOn()) return;
+            el.classList.remove('fx-enter');
+            void el.offsetWidth;
+            el.classList.add('fx-enter');
+        }
+
+        function playMoonshotMark() {
+            const mark = document.getElementById('msMark');
+            if (!mark || fxReducedMotion.matches) return;
+            mark.classList.remove('play');
+            void mark.offsetWidth;
+            mark.classList.add('play');
+        }
+
+        function initVisualEffects() {
+            renderFxButton();
+            const banner = document.getElementById('sceneBanner');
+            if (banner && 'IntersectionObserver' in window) {
+                new IntersectionObserver(entries => { fxState.sceneVisible = entries[0].isIntersecting; }).observe(banner);
+            }
+            const mark = document.getElementById('msMark');
+            if (mark) mark.addEventListener('mouseenter', playMoonshotMark);
+            playMoonshotMark();
+            let resizeTimer = null;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => { if (fxIs('full')) { fxBuildScene(); fxBuildMargin(); } }, 200);
+            });
+            fxRefresh();
+            loadWeather().catch(() => {});
+            setInterval(() => loadWeather().catch(() => {}), WX_MAX_AGE_MS);
+        }
+
+        initVisualEffects();
         if (location.hash) applyRouteFromHash();
         let alreadySeenValues = false;
         try {
