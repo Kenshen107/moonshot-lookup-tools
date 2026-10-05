@@ -1,6 +1,7 @@
 # Keeps a copy of Magic's Comprehensive Rules in rules/ for Spellslinger
 # Duels (see tools/fetch_rules.py). Checks Wizards' rules page every
-# Monday and commits only when the rules have changed. Also runs when the
+# Monday and commits only when the rules have changed (there is no history
+# of old versions beyond git's own). Also runs when the
 # script or this file changes, to fetch the first copy.
 name: Comprehensive Rules
 

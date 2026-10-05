@@ -217,6 +217,12 @@
         .hand .hc.playable img { box-shadow: 0 0 0 2px var(--color-success), 0 0 10px var(--color-success); }
         .hand .hc.chosen img { box-shadow: 0 0 0 3px var(--gold); }
         .hand .hc .sup { position: absolute; top: 4px; right: 4px; }
+        .stackbar { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; }
+        .stack-item { display: inline-flex; align-items: center; gap: 6px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); padding: 3px 8px 3px 3px; font-size: 0.8rem; max-width: 280px; }
+        .stack-item img { width: 30px; border-radius: 3px; }
+        .stack-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .stack-item.top { border-color: var(--gold); box-shadow: 0 0 10px color-mix(in srgb, var(--gold) 50%, transparent); }
+        .stack-item.selectable { box-shadow: 0 0 0 2px var(--gold), 0 0 12px var(--gold); }
         .log { max-height: 4.6em; overflow-y: auto; font-size: 0.8rem; color: var(--text-soft); padding: 4px 12px; background: color-mix(in srgb, var(--bg-canvas) 90%, transparent); }
         .log div:last-child { color: var(--text-heading); }
         .opp-hand { display: flex; gap: 2px; }
@@ -433,9 +439,12 @@ function renderCoins() { $('coinCount').textContent = (profile ? profile.coins :
 let sfQueue = Promise.resolve();
 function sfFetch(url, opts) {
     const p = sfQueue.then(async () => {
-        for (let attempt = 0; attempt < 3; attempt++) {
-            const res = await fetch(url, opts);
-            if (res.status === 429) { await sleep(1000 * (attempt + 1)); continue; }
+        for (let attempt = 0; attempt < 4; attempt++) {
+            let res;
+            // A rate-limited reply can arrive without CORS headers, which the
+            // browser reports as a network error: wait and try again either way.
+            try { res = await fetch(url, opts); } catch (e) { if (attempt === 3) throw e; await sleep(1500 * (attempt + 1)); continue; }
+            if (res.status === 429) { await sleep(1500 * (attempt + 1)); continue; }
             return res;
         }
         throw new Error('Scryfall is busy - try again in a minute');
@@ -613,6 +622,10 @@ const EFFECTS = [
     [/^put (\w+) \+1\/\+1 counters? on target creature(?: you control)?$/, m => ({ t: 'counters', n: num(m[1]), target: 'creature', good: true })],
     [/^put (\w+) \+1\/\+1 counters? on ~$/, m => ({ t: 'counters', n: num(m[1]), target: 'self' })],
     [/^tap target (?:creature|creature an opponent controls|creature you don't control)$/, () => ({ t: 'tap', target: 'creature', good: false })],
+    [/^counter target spell$/, () => ({ t: 'counter', target: 'spell', filter: 'any' })],
+    [/^counter target (noncreature|creature|instant or sorcery|artifact or enchantment) spell$/, m => ({ t: 'counter', target: 'spell', filter: m[1] })],
+    [/^counter target spell unless its controller pays \{(\d+)\}$/, m => ({ t: 'counter', target: 'spell', filter: 'any', unless: +m[1] })],
+    [/^counter target (?:activated or triggered|triggered) ability$/, () => ({ t: 'counter', target: 'spell', filter: 'ability' })],
     [/^scry (\w+)$/, m => ({ t: 'scry', n: num(m[1]) })],
     [/^surveil (\w+)$/, m => ({ t: 'scry', n: num(m[1]) })]
 ];
@@ -1144,6 +1157,7 @@ const MODERN_THEMES = [
     { key: 'elves', name: 'Elves', desc: 'Elves and green pump', colors: ['G'], creatures: 't:elf t:creature c<=g', spells: 'c=g (t:instant or t:sorcery) o:"target creature" o:"gets +"', creatureCount: 7 },
     { key: 'zombies', name: 'Zombies', desc: 'Black zombies and removal', colors: ['B'], creatures: 't:zombie t:creature c<=b', spells: 'c=b (t:instant or t:sorcery) o:"destroy target creature"', creatureCount: 7 },
     { key: 'lifelink', name: 'Orzhov Lifelink', desc: 'White and black lifelinkers', colors: ['W', 'B'], creatures: 'id<=wb -c:c t:creature kw:lifelink', spells: '(c=w or c=b or c=wb) (t:instant or t:sorcery) (o:"gain" or o:"destroy target creature")' },
+    { key: 'tempo', name: 'Mono-Blue Tempo', desc: 'Blue flyers backed by counterspells and bounce', colors: ['U'], creatures: 'c=u t:creature kw:flying cmc<=4', spells: 'c=u t:instant (o:"counter target spell" or o:"counter target noncreature spell" or o:"counter target creature spell" or o:"to its owner\'s hand")', spellCount: 5 },
     { key: 'gruul', name: 'Gruul Trample', desc: 'Red and green tramplers', colors: ['R', 'G'], creatures: 'id<=rg -c:c t:creature kw:trample cmc<=5', spells: '(c=r or c=g or c=rg) (t:instant or t:sorcery) (o:"damage to any target" or o:"gets +")' }
 ];
 
@@ -1359,6 +1373,8 @@ const opp = P => G.players[1 - P.i];
 const allPerms = () => [...G.players[0].bf, ...G.players[1].bf];
 const onBf = uid => allPerms().find(o => o.uid === uid) || null;
 function findObj(uid) {
+    const onStack = G.stack.find(it => it.kind === 'spell' && it.o.uid === uid);
+    if (onStack) return onStack.o;
     for (const P of G.players) for (const z of ['bf', 'hand', 'command', 'gy', 'exile']) { const o = P[z].find(x => x.uid === uid); if (o) return o; }
     return null;
 }
@@ -1436,7 +1452,8 @@ async function startMatch(again) {
 
 async function newGame(myDeck, oppDeck) {
     uidSeq = 1;
-    G = { format: myDeck.format, players: [], active: 0, turn: 1, phase: 'setup', log: [], attackers: [], blocks: {}, mode: null, over: false, busy: true, fromCommand: false };
+    G = { format: myDeck.format, players: [], active: 0, turn: 1, phase: 'setup', log: [], attackers: [], blocks: {}, mode: null, over: false, busy: true,
+        stack: [], stackRunning: false, priority: null };
     G.players = [makePlayer(0, 'You', myDeck, AUTOPLAY), makePlayer(1, oppDeck.commander ? oppDeck.commander.name : oppDeck.name, oppDeck, true)];
     $('game').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -1618,6 +1635,9 @@ function canCastNow(P, o) {
     const r = Rx(o);
     if (G.over || r.support === 'none' || r.kind === 'land') return false;
     if (!P.hand.includes(o) && !P.command.includes(o)) return false;
+    // While something is on the stack, only the player holding priority can
+    // cast, and only instant-speed spells (CR 117.1a, 307.1).
+    if (G.stack.length || G.priority !== null) return (r.kind === 'instant' || !!r.flash) && G.priority === P.i;
     if (r.kind === 'instant' || r.flash) {
         if (G.active === P.i) return [...MAIN, 'afterBlocks'].includes(G.phase);
         return G.phase === 'declareBlocks';
@@ -1627,7 +1647,7 @@ function canCastNow(P, o) {
 function canPlayLand(P, o) { return Rx(o).kind === 'land' && G.active === P.i && MAIN.includes(G.phase) && P.landsPlayed < 1 && P.hand.includes(o) && !G.over; }
 
 // ---- Targets ----
-const TARGETED = ['any', 'creature', 'player'];
+const TARGETED = ['any', 'creature', 'player', 'spell'];
 function needsTarget(e) { return TARGETED.includes(e.target); }
 function firstTargetEffect(o) {
     const r = Rx(o);
@@ -1639,10 +1659,24 @@ function validTargets(P, e) {
     const creatures = allPerms().filter(isCreature).filter(c => !has(c, 'shroud') && !(has(c, 'hexproof') && c.owner !== P.i));
     if (e.target === 'any' || e.target === 'creature') out.push(...creatures.map(o => ({ o })));
     if (e.target === 'any' || e.target === 'player') out.push(...G.players.map(p => ({ p })));
+    if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter)).map(item => ({ item })));
     return out;
 }
-function sameTarget(a, b) { return a && b && (a.o ? b.o && a.o.uid === b.o.uid : b.p && a.p.i === b.p.i); }
-function targetStillOk(t) { return t.p ? true : !!onBf(t.o.uid); }
+function stackMatches(it, filter) {
+    if (filter === 'ability') return it.kind === 'trigger';
+    if (it.kind !== 'spell') return false;
+    const k = Rx(it.o).kind;
+    return filter === 'any' || (filter === 'creature' && k === 'creature') || (filter === 'noncreature' && k !== 'creature')
+        || (filter === 'instant or sorcery' && (k === 'instant' || k === 'sorcery')) || (filter === 'artifact or enchantment' && (k === 'artifact' || k === 'enchantment'));
+}
+function sameTarget(a, b) {
+    if (!a || !b) return false;
+    if (a.item) return !!b.item && a.item.id === b.item.id;
+    return a.o ? !!b.o && a.o.uid === b.o.uid : !!b.p && a.p.i === b.p.i;
+}
+// A target is still legal if it's still there (CR 608.2b): a permanent on
+// the battlefield, a spell or ability on the stack, a player in the game.
+function targetStillOk(t) { return t.p ? true : t.item ? G.stack.includes(t.item) : !!onBf(t.o.uid); }
 
 function chooseTarget(P, e, source, cancelable) {
     const valid = validTargets(P, e);
@@ -1678,35 +1712,140 @@ function playLand(P, o) {
     log(`${P.name} ${P.i === 0 ? 'play' : 'plays'} ${o.card.name}${o.tapped ? ' (tapped)' : ''}.`);
 }
 
+// ---- The stack (CR 405) ----
+// Casting puts a spell on the stack (601.2); "when this enters" abilities
+// trigger and go on the stack too (603.3), with their targets chosen then
+// (603.3d). After something goes on the stack, the other player gets the
+// chance to respond (117.3c-117.4, simplified: the player who acted passes).
+// When both pass, the top item resolves (608.1); a spell or ability whose
+// target is gone doesn't resolve (608.2b). Lands, combat damage and
+// state-based actions don't use the stack (305.1, 510, 704.3).
+let stackSeq = 1;
+
 async function castSpell(P, o, presetTarget) {
     const fromCommand = P.command.includes(o);
     if (!payFor(P, o)) return false;
     removeFromZones(o);
-    const r = Rx(o);
-    log(`${P.name} ${P.i === 0 ? 'cast' : 'casts'} ${o.card.name}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax ? ` (commander tax ${P.tax * 2})` : ''}.`);
     if (fromCommand) P.tax++;
-    if (r.kind === 'instant' || r.kind === 'sorcery') {
-        await resolveEffects(P, r.spell, presetTarget, o);
-        if (!o.token) G.players[o.owner].gy.push(o);
-    } else {
-        resetObj(o);
-        P.bf.push(o);
-        if (r.isAura && presetTarget && presetTarget.o) o.attachedTo = presetTarget.o.uid;
-        if (r.etb.length) await resolveEffects(P, r.etb, null, o);
-    }
-    sba();
+    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name };
+    G.stack.push(item);
+    log(`${P.name} ${P.i === 0 ? 'cast' : 'casts'} ${o.card.name}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax > 1 ? ` (commander tax ${(P.tax - 1) * 2})` : ''}.`);
     renderGame();
+    await runStack();
     return true;
 }
 
-function targetName(t) { return t.p ? (t.p.i === 0 ? 'you' : t.p.name) : t.o.card.name; }
+// Triggered "when this enters" abilities go on the stack (603.3). Targets
+// are chosen now; with no legal target the ability is removed (603.3d).
+async function putTriggers(P, source, effects) {
+    const te = effects.find(needsTarget);
+    let target = null;
+    if (te) {
+        target = await chooseTarget(P, te, source, false);
+        if (!target) { log(`${source.card.name}'s ability has no legal target and is removed from the stack (rule 603.3d).`); return; }
+    }
+    G.stack.push({ id: stackSeq++, kind: 'trigger', o: source, P, target, effects, name: `${source.card.name}'s ability` });
+    log(`${source.card.name}'s ability triggers${target ? ` targeting ${targetName(target)}` : ''}.`);
+    renderGame();
+}
+
+// Resolve the stack until it's empty, offering responses each time.
+async function runStack() {
+    if (G.stackRunning) return; // an outer loop is already working through it
+    G.stackRunning = true;
+    try {
+        while (G.stack.length && !G.over) {
+            const top = G.stack[G.stack.length - 1];
+            if (await offerPriority(opp(top.P), top)) continue; // they responded: the new top goes first
+            await resolveTop();
+            await pause(300);
+        }
+    } finally {
+        G.stackRunning = false;
+        G.priority = null;
+        renderGame();
+    }
+}
+
+// Give a player priority to respond to the top of the stack. Returns true
+// if they cast something.
+async function offerPriority(P, top) {
+    const castable = [...P.hand, ...P.command].filter(o => { G.priority = P.i; const ok = canCastNow(P, o) && canPay(P, o); return ok; });
+    if (!castable.length) { G.priority = null; return false; } // nothing they could do: pass automatically
+    G.priority = P.i;
+    if (P.isAI) {
+        const r = aiRespond(P, top);
+        if (!r) { G.priority = null; return false; }
+        await pause(400);
+        G.priority = null;
+        await castSpellAsResponse(P, r.o, r.target);
+        return true;
+    }
+    const prevMode = G.mode && G.mode.type !== 'respond' ? G.mode : null;
+    const prevBusy = G.busy;
+    G.busy = false;
+    const acted = await new Promise(resolve => { G.mode = { type: 'respond', item: top, resolve }; renderGame(); });
+    G.mode = prevMode;
+    G.busy = prevBusy;
+    G.priority = null;
+    return acted;
+}
+async function castSpellAsResponse(P, o, target) {
+    G.priority = P.i;
+    const ok = canCastNow(P, o) && canPay(P, o);
+    G.priority = null;
+    if (ok) await castSpell(P, o, target);
+}
+function passPriority() {
+    const m = G.mode;
+    if (m && m.type === 'respond') m.resolve(false);
+}
+
+async function resolveTop() {
+    const item = G.stack.pop();
+    if (!item) return;
+    renderGame();
+    if (item.target && !targetStillOk(item.target)) {
+        log(`${item.name} doesn't resolve - its target is gone (rule 608.2b).`);
+        if (item.kind === 'spell') moveSpellCard(item.o, 'gy');
+        return;
+    }
+    if (item.kind === 'trigger') {
+        await resolveEffects(item.P, item.effects, item.target, item.o);
+    } else {
+        const o = item.o, r = Rx(o);
+        if (r.kind === 'instant' || r.kind === 'sorcery') {
+            await resolveEffects(item.P, r.spell, item.target, o);
+            moveSpellCard(o, 'gy');
+        } else {
+            resetObj(o);
+            item.P.bf.push(o);
+            if (r.isAura && item.target && item.target.o) o.attachedTo = item.target.o.uid;
+            log(`${o.card.name} enters the battlefield.`);
+            if (r.etb.length) await putTriggers(item.P, o, r.etb);
+        }
+    }
+    sba();
+    renderGame();
+}
+
+// A spell card leaving the stack: to its owner's graveyard, or a commander
+// to the command zone (903.9a).
+function moveSpellCard(o, zone) {
+    const owner = G.players[o.owner];
+    resetObj(o);
+    if (o.isCommander) { owner.command.push(o); log(`${o.card.name} returns to the command zone.`); }
+    else owner[zone].push(o);
+}
+
+function targetName(t) { return t.p ? (t.p.i === 0 ? 'you' : t.p.name) : t.item ? t.item.name : t.o.card.name; }
 
 async function resolveEffects(P, effects, presetTarget, source) {
     for (const e of effects) {
         if (G.over) return;
         let target = null;
         if (needsTarget(e)) {
-            target = presetTarget;
+            target = presetTarget && (e.target === 'spell') === !!presetTarget.item ? presetTarget : null;
             if (!target) target = await chooseTarget(P, e, source, false);
             if (!target) { log(`${source.card.name}: no legal target.`); continue; }
             if (!targetStillOk(target)) { log(`${source.card.name}'s target is gone.`); continue; }
@@ -1761,6 +1900,19 @@ function applyEffect(P, e, t, src) {
         }
         case 'tap': t.o.tapped = true; log(`${t.o.card.name} is tapped.`); break;
         case 'scry': log(`${P.name} ${P.i === 0 ? 'scry' : 'scries'} ${e.n} (looked at, kept on top).`); break;
+        case 'counter': {
+            const it = t.item;
+            const i = G.stack.indexOf(it);
+            if (i < 0) break;
+            if (e.unless) {
+                const plan = planPayment(it.P, { generic: e.unless, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 });
+                if (plan) { plan.forEach(x => { x.tapped = true; }); log(`${it.P.name} ${it.P.i === 0 ? 'pay' : 'pays'} {${e.unless}}, so ${it.name} isn't countered.`); break; }
+            }
+            G.stack.splice(i, 1);
+            log(`${it.name} is countered (rule 701.6a).`);
+            if (it.kind === 'spell') moveSpellCard(it.o, 'gy');
+            break;
+        }
     }
 }
 
@@ -1875,18 +2027,27 @@ async function humanCast(uid) {
     const P = me();
     const o = findObj(uid);
     closeSheet();
-    if (!o || G.busy && !(G.mode && G.mode.type === 'block')) return;
-    if (!canCastNow(P, o)) { toast('You can\'t cast that right now.'); return; }
+    const responding = G.mode && G.mode.type === 'respond' ? G.mode : null;
+    if (!o || G.busy && !(G.mode && (G.mode.type === 'block' || responding))) return;
+    if (!canCastNow(P, o)) { toast(G.stack.length ? 'Only instants (and flash) while something is on the stack.' : 'You can\'t cast that right now.'); return; }
     if (!canPay(P, o)) { toast('Not enough mana.'); return; }
     let target = null;
     const te = firstTargetEffect(o);
+    const savedMode = G.mode;
     if (te) {
         if (!validTargets(P, te).length) { toast('There\'s nothing to target.'); return; }
-        const savedMode = G.mode;
         target = await chooseTarget(P, te, o, true);
-        G.mode = savedMode && savedMode.type === 'block' ? savedMode : null;
+        G.mode = savedMode;
         if (!target) { renderGame(); return; }
         if (Rx(o).isAura && !target.o) { toast('Auras go on creatures.'); renderGame(); return; }
+    }
+    if (responding) {
+        // Our response goes on the stack; the stack loop carries on from there
+        G.mode = null;
+        G.priority = null;
+        await castSpellAsResponse(P, o, target);
+        responding.resolve(true);
+        return;
     }
     G.busy = true;
     await castSpell(P, o, target);
@@ -2095,6 +2256,8 @@ function aiPickTarget(P, e, source, valid) {
             return byValue(theirs.filter(v => tou(v.o) + e.q - v.o.dmg <= 0))[0] || byValue(theirs)[0] || null;
         case 'counters':
             return byValue(mine)[0] || null;
+        case 'counter':
+            return valid.filter(v => v.item && v.item.P !== P).pop() || null;
         case 'aura':
             return e.good ? (byValue(mine)[0] || null) : (byValue(theirs)[0] || null);
         default:
@@ -2139,6 +2302,59 @@ function aiScore(P, o, target) {
         }
     }
     return score;
+}
+
+// How bad something on the stack is for P (0 if it's P's own).
+function stackThreat(item, P) {
+    if (item.P === P) return 0;
+    if (item.kind === 'trigger') return item.effects.some(e => ['dmg', 'destroy', 'exile', 'bounce', 'drain'].includes(e.t)) ? 4 : 1;
+    const r = Rx(item.o);
+    const t = item.target;
+    let v = (item.o.card.cmc || 0) * 0.5;
+    if (r.kind === 'creature') v += 2 + creatureValue(item.o) * 0.5;
+    if (r.isAura || r.isEquipment) v += 3;
+    for (const e of r.spell || []) {
+        if (['destroy', 'exile', 'bounce'].includes(e.t) && t && t.o && t.o.owner === P.i) v += 3 + creatureValue(t.o);
+        if (e.t === 'dmg' && t && t.p === P) v += P.life <= e.n ? 100 : e.n;
+        if (e.t === 'dmg' && t && t.o && t.o.owner === P.i && tou(t.o) - t.o.dmg <= e.n) v += 2 + creatureValue(t.o);
+        if (e.t === 'dmg' && e.target === 'opponents') v += P.life <= e.n ? 100 : e.n;
+        if (e.t === 'drain') v += P.life <= e.n ? 100 : e.n;
+        if (e.t === 'draw') v += 2 + e.n;
+        if (e.t === 'token') v += 2 * e.n;
+        if (e.t === 'counter' && t && t.item && t.item.P === P) v += 3 + stackThreat({ ...t.item, P: item.P }, P);
+    }
+    return v;
+}
+
+// The opponent's answer when it gets priority with something on the stack:
+// counter what's worth countering, save a targeted creature with a trick,
+// or burn for lethal.
+function aiRespond(P, top) {
+    if (top.P === P) return null;
+    const opts = P.hand.filter(o => (Rx(o).kind === 'instant' || Rx(o).flash) && canCastNow(P, o) && canPay(P, o));
+    for (const o of opts) {
+        const ce = (Rx(o).spell || []).find(e => e.t === 'counter');
+        if (ce && stackMatches(top, ce.filter) && stackThreat(top, P) >= 5) return { o, target: { item: top } };
+    }
+    const mine = top.target && top.target.o && top.target.o.owner === P.i && onBf(top.target.o.uid) ? top.target.o : null;
+    if (mine && top.kind === 'spell') {
+        const eff = (Rx(top.o).spell || []).find(needsTarget);
+        for (const o of opts) {
+            const pe = (Rx(o).spell || []).find(e => e.t === 'pump' && e.good);
+            if (!pe || !eff) continue;
+            const saves = (eff.t === 'dmg' && tou(mine) + pe.q - mine.dmg > eff.n)
+                || (eff.t === 'pump' && !eff.good && tou(mine) + pe.q + eff.q - mine.dmg > 0)
+                || ((eff.t === 'destroy' || eff.t === 'dmg') && pe.kw.includes('indestructible'))
+                || pe.kw.includes('hexproof') || pe.kw.includes('shroud');
+            if (saves && creatureValue(mine) >= 3) return { o, target: { o: mine } };
+        }
+    }
+    const O = opp(P);
+    for (const o of opts) {
+        const de = (Rx(o).spell || []).find(e => e.t === 'dmg' && (e.target === 'any' || e.target === 'player'));
+        if (de && O.life <= de.n) return { o, target: { p: O } };
+    }
+    return null;
 }
 
 function aiBestPlay(P) {
@@ -2356,7 +2572,26 @@ function barHTML(P) {
         ${P.i === 1 ? `<span class="note" style="margin-left:auto;">${esc(P.deckName)} · ${esc(P.source)}</span>` : `<span style="margin-left:auto;" class="row"><button class="btn small danger" onclick="concede()">Concede</button></span>`}`;
 }
 
+function stackHTML() {
+    if (!G.stack.length) return '';
+    const m = G.mode;
+    return `<div class="stackbar" aria-label="The stack, top first"><span class="lane-label">Stack ↓</span>${G.stack.slice().reverse().map((it, i) => {
+        const sel = m && m.type === 'target' && m.valid.some(v => v.item && v.item.id === it.id);
+        return `<button type="button" class="stack-item${i === 0 ? ' top' : ''}${sel ? ' selectable' : ''}" onclick="stackClick(${it.id})" title="${esc(it.name)}">${it.o.card.imgS ? `<img src="${it.o.card.imgS}" alt="">` : ''}<span>${esc(it.name)}${it.target ? ` → ${esc(targetName(it.target))}` : ''}</span></button>`;
+    }).join('')}</div>`;
+}
+function stackClick(id) {
+    const it = G.stack.find(x => x.id === id);
+    if (!it) return;
+    if (G.mode && G.mode.type === 'target') { pickTarget({ item: it }); return; }
+    showGameCard(it.o.uid);
+}
+
 function midHTML() {
+    return stackHTML() + midControlsHTML();
+}
+
+function midControlsHTML() {
     if (G.over) return `<span class="phase">Game over</span><button class="btn primary" onclick="leaveGame()">Leave the table</button>`;
     const m = G.mode;
     const phase = `<span class="phase">${G.active === 0 ? 'Your turn' : `${esc(foe().name)}'s turn`} · ${PHASE_LABEL[G.phase] || G.phase}</span>`;
@@ -2365,6 +2600,10 @@ function midHTML() {
     }
     if (m && m.type === 'attack') {
         return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button><button class="btn" onclick="cancelAttack()">Back</button>`;
+    }
+    if (m && m.type === 'respond') {
+        const it = m.item;
+        return `${phase}<span class="prompt">↩️ ${esc(it.name)}${it.target ? ` (targeting ${esc(targetName(it.target))})` : ''} is on the stack. Cast an instant to respond, or:</span><button class="btn primary" onclick="passPriority()">✔ Let it resolve</button>`;
     }
     if (m && m.type === 'block') {
         return `${phase}<span class="prompt">🛡️ ${m.picked && onBf(m.picked) ? `Now tap the attacker ${esc(onBf(m.picked).card.name.split(',')[0])} should block` : 'Tap one of your creatures, then the attacker it blocks. You can cast instants now.'}</span><button class="btn primary" onclick="confirmBlocks()">✔ Done blocking</button>`;
