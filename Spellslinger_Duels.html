@@ -35,6 +35,7 @@
             --color-warning: #ffcc80;
             --color-error: #ff9b94;
             --gold: #e8c25a;
+            --chart-bar: #2f93c2; /* mana curve; passes the dataviz lightness and 3:1 contrast checks on --bg-panel */
             --mythic: #ff6a2a;
             --felt-1: #0f2a33;
             --felt-2: #0b1d24;
@@ -415,6 +416,39 @@
         .wrap.shake { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97); }
         @keyframes shake { 10%, 90% { transform: translate(-2px, 1px); } 20%, 80% { transform: translate(4px, -2px); } 30%, 50%, 70% { transform: translate(-7px, 2px); } 40%, 60% { transform: translate(7px, -1px); } }
         @media (prefers-reduced-motion: reduce) { .pack3d, .pk-body::after, .fcard, .fcard.hit .fc-front, .wrap.shake { animation: none; } .pull-announce.show { animation: none; } }
+
+        /* ---- Campaign map ---- */
+        .camp-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+        @media (max-width: 860px) { .camp-grid { grid-template-columns: 1fr; } }
+        .camp-side { position: sticky; top: 10px; display: grid; gap: 6px; }
+        .tier-band { padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 12px; background: color-mix(in srgb, var(--bg-inset) 50%, transparent); }
+        .tier-band.tier-2 { border-color: color-mix(in srgb, var(--color-link) 50%, var(--border)); }
+        .tier-band.tier-3 { border-color: var(--gold); box-shadow: 0 0 18px -8px var(--gold); }
+        .tier-band.locked { opacity: 0.55; }
+        .tier-head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+        .tier-icon { font-size: 1.6rem; line-height: 1; }
+        .trail { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 0; }
+        .trail-line { flex: 0 0 18px; height: 2px; background: var(--border); }
+        .trail-node { display: grid; justify-items: center; gap: 4px; width: 92px; background: none; border: 0; color: var(--text-soft); padding: 2px; }
+        .trail-node .dot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--bg-panel-raised); border: 2px solid var(--brand-light); color: var(--text-heading); transition: transform 0.15s; }
+        .trail-node:hover:not(:disabled) .dot { transform: scale(1.08); }
+        .trail-node.beaten .dot { background: color-mix(in srgb, var(--color-success) 25%, var(--bg-panel-raised)); border-color: var(--color-success); }
+        .trail-node.sel .dot { box-shadow: 0 0 0 3px var(--gold); }
+        .trail-node .lbl { font-size: 0.72rem; text-align: center; line-height: 1.2; max-height: 2.4em; overflow: hidden; }
+        .trail-node:disabled { cursor: not-allowed; }
+
+        /* ---- Deck analytics ---- */
+        .analytics { margin: 8px 0; }
+        .curve-svg { width: 100%; max-width: 320px; height: auto; display: block; }
+        .cv-bar { fill: var(--chart-bar); }
+        .cv-col:hover .cv-bar { filter: brightness(1.2); }
+        .cv-base { stroke: var(--border); stroke-width: 1; }
+        .cv-axis { fill: var(--text-secondary); font-size: 10px; text-anchor: middle; }
+        .cv-val { fill: var(--text-primary); font-size: 10px; font-weight: 700; text-anchor: middle; }
+        .test-hand { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+        .th-card { width: 58px; padding: 0; border: 0; background: none; animation: dealIn 0.35s ease backwards; animation-delay: calc(var(--i) * 60ms); }
+        .th-card img, .th-card .noimg { width: 100%; aspect-ratio: 63 / 88; border-radius: 5% / 3.6%; display: block; object-fit: cover; }
+        .th-card .noimg { display: grid; place-items: center; font-size: 0.72rem; background: var(--bg-inset); border: 1px solid var(--border); }
     </style>
 </head>
 <body>
@@ -435,6 +469,7 @@
         <button class="tab" role="tab" id="tab-packs" aria-selected="false" onclick="showView('packs')">🎴 Packs</button>
         <button class="tab" role="tab" id="tab-decks" aria-selected="false" onclick="showView('decks')">🗂️ Collection &amp; Decks</button>
         <button class="tab" role="tab" id="tab-play" aria-selected="false" onclick="showView('play')">⚔️ Play</button>
+        <button class="tab" role="tab" id="tab-campaign" aria-selected="false" onclick="showView('campaign')">🗺️ Campaign</button>
         <button class="tab" role="tab" id="tab-shop" aria-selected="false" onclick="showView('shop')">🏪 Shop</button>
         <button class="tab" role="tab" id="tab-dist" aria-selected="false" onclick="showView('dist')">📦 Distributor</button>
         <button class="tab" role="tab" id="tab-rules" aria-selected="false" onclick="showView('rules')">📖 Rules</button>
@@ -463,6 +498,7 @@
                         <div class="row" style="margin-top:10px;">
                             <button class="btn primary" onclick="showView('play')">⚔️ Play a game</button>
                             <button class="btn gold" onclick="showView('packs')">🎴 Open packs</button>
+                            <button class="btn gold" id="homePrecon" onclick="preconPicker()">🎁 Free starter precon</button>
                         </div>
                     </div>
                 </div>
@@ -518,6 +554,20 @@
                     <div class="cards" id="collectionGrid"></div>
                 </div>
                 <div class="panel decklist" id="deckPanel"></div>
+            </div>
+        </section>
+
+        <!-- ============ CAMPAIGN ============ -->
+        <section id="view-campaign" class="hidden">
+            <div class="shop-floor">
+                <div class="pos">
+                    <div class="pos-title"><h2>🗺️ Campaign</h2><span class="note">Climb from the kitchen table to the Regional Qualifier. Opponents play real precons (MTGJSON decklists) or the personalities' own decks.</span></div>
+                    <div id="campaignHead"></div>
+                </div>
+                <div class="camp-grid">
+                    <div class="pos"><div id="campaignMap"></div></div>
+                    <div class="pos camp-side" id="campaignNode"></div>
+                </div>
             </div>
         </section>
 
@@ -712,6 +762,7 @@ function pickAccount(name) {
     const v = VIEWS.find(k => !$(`view-${k}`).classList.contains('hidden')) || 'home';
     showView(v);
     toast(`Playing as ${name}.`);
+    if (needsOnboarding()) preconPicker(true);
 }
 // Test build: wipe the current player back to a brand-new profile.
 function restartPlayer() {
@@ -723,6 +774,7 @@ function restartPlayer() {
     const v = VIEWS.find(k => !$(`view-${k}`).classList.contains('hidden')) || 'home';
     showView(v);
     toast(`${accounts.current} starts fresh: 🪙 ${START_COINS} coins and 3 free packs.`);
+    preconPicker(true);
 }
 // Test build: free coins on demand, for trying things out.
 function addTestCoins() {
@@ -919,6 +971,8 @@ const EFFECTS = [
     [/^you lose (\w+) life$/, m => ({ t: 'loseSelf', n: num(m[1]) })],
     [/^(?:each opponent|target opponent|target player) loses (\w+) life$/, m => ({ t: 'drain', n: num(m[1]) })],
     [/^(?:each opponent|target opponent|target player) discards (\w+) cards?$/, m => ({ t: 'discard', n: num(m[1]) })],
+    [/^(?:each opponent|target opponent|target player) mills (\w+) cards?$/, m => ({ t: 'mill', n: num(m[1]) })],
+    [/^target player draws (\w+) cards?$/, m => ({ t: 'draw', n: num(m[1]) })],
     [/^target creature(?: you control)? gets \+(\d+)\/\+(\d+)(?: and gains ([a-z ,]+?))? until end of turn$/, m => ({ t: 'pump', p: +m[1], q: +m[2], kw: m[3] ? splitKw(m[3]) : [], target: 'creature', good: true })],
     [/^target creature(?: an opponent controls| you don't control)? gets -(\d+)\/-(\d+) until end of turn$/, m => ({ t: 'pump', p: -m[1], q: -m[2], kw: [], target: 'creature', good: false })],
     [/^target creature(?: you control)? gains ([a-z ,]+?) until end of turn$/, m => ({ t: 'pump', p: 0, q: 0, kw: splitKw(m[1]), target: 'creature', good: true })],
@@ -1108,7 +1162,7 @@ async function fillKeywordHelp(card) {
 // =====================================================================
 // Views, packs, collection and decks
 // =====================================================================
-const VIEWS = ['home', 'packs', 'decks', 'play', 'shop', 'dist', 'rules'];
+const VIEWS = ['home', 'packs', 'decks', 'play', 'campaign', 'shop', 'dist', 'rules'];
 function showView(v) {
     VIEWS.forEach(k => {
         $(`view-${k}`).classList.toggle('hidden', k !== v);
@@ -1121,6 +1175,7 @@ function showView(v) {
     if (v === 'rules') renderRulesView();
     if (v === 'shop') renderShop();
     if (v === 'dist') renderDist();
+    if (v === 'campaign') renderCampaign();
     try { history.replaceState(null, '', `#${v}`); } catch (e) { /* fine */ }
 }
 
@@ -1134,6 +1189,7 @@ function ensureProfile() {
 }
 
 function renderHome() {
+    $('homePrecon').classList.toggle('hidden', !!profile.starterDeck);
     const owned = Object.values(profile.collection).reduce((a, b) => a + b, 0);
     $('homeStats').innerHTML = `
         <div>🪙 <strong>${profile.coins.toLocaleString()}</strong> coins${profile.freePacks ? ` · 🎁 <strong>${profile.freePacks}</strong> free pack${profile.freePacks === 1 ? '' : 's'} to open` : ''}</div>
@@ -1280,7 +1336,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet()
 // ---------------------------------------------------------------------
 const FORMATS = {
     modern: { name: 'Modern', size: 60, copies: 4, life: 20 },
-    commander: { name: 'Commander', size: 100, copies: 1, life: 40 }
+    commander: { name: 'Commander', size: 100, copies: 1, life: 40 },
+    // Kitchen-table rules for precons and the campaign: 30+ cards, 4 copies, any card
+    casual: { name: 'Casual', size: 30, copies: 4, life: 20 }
 };
 
 function deckCount(deck) { return Object.values(deck.cards).reduce((a, b) => a + b, 0) + (deck.commander ? 1 : 0); }
@@ -1290,6 +1348,7 @@ function deckProblems(deck) {
     const out = [];
     const total = deckCount(deck);
     if (deck.format === 'modern' && total < 60) out.push(`${total}/60 cards - a Modern deck needs at least 60.`);
+    if (deck.format === 'casual' && total < 30) out.push(`${total}/30 cards - a Casual deck needs at least 30.`);
     if (deck.format === 'commander') {
         if (total !== 100) out.push(`${total}/100 cards - a Commander deck has exactly 100, commander included.`);
         const cmd = deck.commander && CARDS.get(deck.commander);
@@ -1343,6 +1402,7 @@ async function renderDeckPicker() {
         <div class="row" style="margin-top:12px;">
             <button class="btn primary" onclick="newDeck('modern')">➕ New Modern deck</button>
             <button class="btn primary" onclick="newDeck('commander')">➕ New Commander deck</button>
+            <button class="btn primary" onclick="newDeck('casual')">➕ New Casual deck</button>
             <button class="btn gold" onclick="starterPicker()">🎁 Get a starter deck</button>
         </div>
         <p class="note" style="margin-top:8px;">Starter decks are ready to play and don't use your collection. Decks you build use cards you've pulled from packs (basic lands are free).</p>
@@ -1468,17 +1528,13 @@ function renderDeckPanel() {
     const d = editing;
     const entries = Object.entries(d.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c);
     const probs = deckProblems(d);
-    const curve = [0, 0, 0, 0, 0, 0, 0];
-    entries.forEach(({ c, n }) => { if (rulesFor(c).kind !== 'land') curve[Math.min(6, Math.round(c.cmc))] += n; });
-    const max = Math.max(1, ...curve);
     const cmd = d.commander && CARDS.get(d.commander);
     const uncastable = deckUncastable(d);
     $('deckPanel').innerHTML = `
         <input type="text" id="deckName" value="${esc(d.name)}" aria-label="Deck name" style="width:100%; font-weight:700; margin-bottom:6px;" oninput="editing.name = this.value">
         <div class="note">${FORMATS[d.format].name} · <strong>${deckCount(d)}</strong>/${FORMATS[d.format].size} cards${d.starter ? ' · starter deck' : ''}</div>
         ${d.format === 'commander' ? `<div style="margin:8px 0;">👑 Commander: ${cmd ? `<strong style="cursor:pointer;" onclick="showCardSheet('${cmd.id}')">${esc(cmd.name)}</strong> ${cmd.ci.map(x => `<span class="pip ${x}"></span>`).join('')}` : '<span class="warn">none yet - open a legendary creature and pick "Make commander"</span>'}</div>` : ''}
-        <div class="curve" aria-hidden="true">${curve.map(v => `<div style="height:${(v / max) * 100}%" title="${v}"></div>`).join('')}</div>
-        <div class="curve-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6+</span></div>
+        ${deckAnalyticsHTML(d)}
         ${probs.length ? `<div class="warn" style="margin:8px 0;">${probs.slice(0, 6).map(p => `⚠ ${esc(p)}`).join('<br>')}${probs.length > 6 ? `<br>...and ${probs.length - 6} more` : ''}</div>` : '<div class="ok" style="margin:8px 0;">✓ Ready to play</div>'}
         ${uncastable ? `<div class="note" style="margin-bottom:6px;">${uncastable} card${uncastable === 1 ? '' : 's'} can't be cast yet (marked "Not yet").</div>` : ''}
         ${TYPE_GROUPS.map(([k, label]) => {
@@ -1541,7 +1597,8 @@ function landSplit(cards, colors, landCount) {
 
 async function buildThemeDeck(theme) {
     await loadBasics();
-    const base = ' f:modern game:paper -t:land';
+    const base = theme.base || ' f:modern game:paper -t:land';
+    const fixed = theme.fixed ? [...(await cardsByNames(theme.fixed)).values()].filter(c => rulesFor(c).support !== 'none') : [];
     const [creaturePool, spellPool] = await Promise.all([
         searchCards(theme.creatures + base, 3),
         theme.spells ? searchCards(theme.spells + base, 2) : Promise.resolve([])
@@ -1561,7 +1618,7 @@ async function buildThemeDeck(theme) {
     chosen.push(...cheap.slice(0, Math.max(creatureN - 2, creatureN - top.length)));
     chosen.push(...top.slice(0, creatureN - chosen.length));
     if (chosen.length < creatureN) chosen.push(...picked.filter(c => !chosen.includes(c)).slice(0, creatureN - chosen.length));
-    const nonland = [...chosen, ...spells.slice(0, spellN)].map(card => ({ card, n: 4 }));
+    const nonland = [...fixed.map(card => ({ card, n: 1 })), ...[...chosen, ...spells.slice(0, spellN)].map(card => ({ card, n: 4 }))];
     const nonlandCount = nonland.reduce((a, e) => a + e.n, 0);
     const landCount = Math.max(20, 60 - nonlandCount);
     const split = landSplit(nonland, theme.colors, landCount);
@@ -1692,7 +1749,7 @@ async function renderOpponents() {
     }
     const probs = deckProblems(deck);
     $('playDeckNote').innerHTML = probs.length ? `<span class="warn">⚠ ${esc(probs[0])}${probs.length > 1 ? ` (+${probs.length - 1} more)` : ''}</span>` : '<span class="ok">✓ Ready</span>';
-    if (deck.format === 'modern') {
+    if (deck.format !== 'commander') {
         list.innerHTML = `<p class="note" style="margin-bottom:8px;">Themed decks built live from Scryfall: the most-played Modern-legal cards for each theme that the game can run (not tournament lists).</p>
             <div class="opp-grid">${MODERN_THEMES.map(t => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === t.key}" onclick="chooseOpponent({ type: 'theme', key: '${t.key}' })">
                 <strong>${t.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(t.name)}</strong><small>${esc(t.desc)}</small></button>`).join('')}</div>`;
@@ -1707,7 +1764,7 @@ async function renderOpponents() {
             list.innerHTML = '<p class="warn">EDHREC is unavailable right now, so there are no Commander opponents. Try again later.</p>';
         }
     }
-    if (chosenOpponent && ((deck.format === 'modern') !== (chosenOpponent.type === 'theme'))) chosenOpponent = null;
+    if (chosenOpponent && ((deck.format !== 'commander') !== (chosenOpponent.type === 'theme'))) chosenOpponent = null;
     $('startNote').textContent = chosenOpponent ? '' : 'Pick an opponent.';
 }
 function chooseOpponent(o) {
@@ -1768,7 +1825,8 @@ const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 // ---- Setup ----
 function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
-        landsPlayed: 0, tax: 0, cmdDmg: 0, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0 };
+        landsPlayed: 0, tax: 0, cmdDmg: 0, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
+        aiLevel: deck.aiLevel || 'normal', aiStyle: deck.aiStyle || null };
     deck.entries.forEach(e => { for (let k = 0; k < e.n; k++) P.library.push(makeObj(e.card, i)); });
     shuffle(P.library);
     if (deck.commander) {
@@ -1820,7 +1878,7 @@ async function startMatch(again) {
 async function newGame(myDeck, oppDeck) {
     uidSeq = 1;
     G = { format: myDeck.format, players: [], active: 0, turn: 1, phase: 'setup', log: [], attackers: [], blocks: {}, mode: null, over: false, busy: true,
-        stack: [], stackRunning: false, priority: null };
+        stack: [], stackRunning: false, priority: null, campaign: oppDeck.campaign || null };
     G.players = [makePlayer(0, 'You', myDeck, AUTOPLAY), makePlayer(1, oppDeck.commander ? oppDeck.commander.name : oppDeck.name, oppDeck, true)];
     $('game').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -2254,6 +2312,12 @@ function applyEffect(P, e, t, src) {
         case 'discard':
             for (let k = 0; k < e.n && O.hand.length; k++) { const d = O.hand.splice(rand(O.hand.length), 1)[0]; O.gy.push(d); log(`${O.name} ${O.i === 0 ? 'discard' : 'discards'} ${d.card.name} (at random).`); }
             break;
+        case 'mill': {
+            const milled = O.library.splice(0, e.n);
+            O.gy.push(...milled);
+            log(`${O.name} ${O.i === 0 ? 'mill' : 'mills'} ${milled.length}${milled.length ? `: ${milled.map(x => x.card.name).join(', ')}` : ''}.`);
+            break;
+        }
         case 'pump':
             t.o.tp += e.p; t.o.tq += e.q; t.o.tkw.push(...e.kw);
             log(`${t.o.card.name} gets ${e.p >= 0 ? '+' : ''}${e.p}/${e.q >= 0 ? '+' : ''}${e.q}${e.kw.length ? ` and ${e.kw.join(', ')}` : ''} until end of turn.`);
@@ -2467,6 +2531,7 @@ async function confirmAttack() {
     G.phase = 'declareBlocks';
     renderGame();
     await pause(400);
+    if (foe().aiLevel === 'hard') { await aiRemoveAttacker(foe()); if (G.over) return; }
     G.blocks = aiChooseBlocks(foe(), me());
     fixMenace();
     logBlocks();
@@ -2579,19 +2644,23 @@ function endGame(winner, reason) {
     const won = winner === 0;
     let reward = 0;
     if (!AUTOPLAY) {
-        if (won) { reward = G.format === 'commander' ? REWARDS.winCommander : REWARDS.win; profile.wins++; }
-        else { reward = REWARDS.loss; profile.losses++; }
-        profile.coins += reward;
+        if (G.campaign) { if (won) profile.wins++; else profile.losses++; }
+        else {
+            if (won) { reward = G.format === 'commander' ? REWARDS.winCommander : REWARDS.win; profile.wins++; }
+            else { reward = REWARDS.loss; profile.losses++; }
+            profile.coins += reward;
+        }
         saveProfile();
     }
+    const campLine = !AUTOPLAY && G.campaign && winner !== null ? campaignResult(won) : '';
     log(`Game over: ${reason}`);
     window.lastResult = { winner, reason, turns: G.turn };
     renderGame();
     if (AUTOPLAY) return;
     showModal(`<h2>${winner === null ? '🤝 Draw' : won ? '🏆 You win!' : '💀 You lose'}</h2>
-        <p>${esc(reason)}</p><p class="note">${G.turn} turns · 🪙 +${reward} coins</p>
+        <p>${esc(reason)}</p><p class="note">${G.turn} turns${G.campaign ? '' : ` · 🪙 +${reward} coins`}</p>${campLine ? `<p class="ok">${esc(campLine)}</p>` : ''}
         <div class="row" style="justify-content:center; margin-top:14px;">
-            <button class="btn primary" onclick="closeModal(); leaveGame(); startMatch(true);">Play again</button>
+            ${G.campaign ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'campaign\');">🗺️ Back to the map</button>' : '<button class="btn primary" onclick="closeModal(); leaveGame(); startMatch(true);">Play again</button>'}
             <button class="btn gold" onclick="closeModal(); leaveGame(); showView('packs');">🎴 Open packs</button>
             <button class="btn" onclick="closeModal(); leaveGame();">Back</button>
         </div>`);
@@ -2672,6 +2741,7 @@ function aiScore(P, o, target) {
             case 'gain': score += P.life < 10 ? 4 : 1; break;
             case 'drain': score += O.life <= e.n ? 1000 : 4; break;
             case 'discard': score += O.hand.length ? 3 : 0; break;
+            case 'mill': score += 2 + e.n * 0.3 + (O.library.length <= e.n ? 1000 : 0); break;
             case 'token': score += 5 + e.n * 2; break;
             case 'counters': score += t ? 4 : 0; break;
             case 'pump': score += e.good ? 0 : (t && t.o.owner !== P.i && tou(t.o) + e.q - t.o.dmg <= 0 ? 6 + creatureValue(t.o) : 0); break;
@@ -2709,7 +2779,7 @@ function stackThreat(item, P) {
 // counter what's worth countering, save a targeted creature with a trick,
 // or burn for lethal.
 function aiRespond(P, top) {
-    if (top.P === P) return null;
+    if (top.P === P || P.aiLevel === 'easy') return null;
     const opts = P.hand.filter(o => (Rx(o).kind === 'instant' || Rx(o).flash) && canCastNow(P, o) && canPay(P, o));
     for (const o of opts) {
         const ce = (Rx(o).spell || []).find(e => e.t === 'counter');
@@ -2736,18 +2806,44 @@ function aiRespond(P, top) {
     return null;
 }
 
+// AI levels (campaign): easy picks a random good play 40% of the time and
+// never responds; hard saves removal for real threats, and a control deck
+// keeps mana up for its counterspells and instant removal.
+function heldInstantCost(P) {
+    const held = P.hand.filter(o => Rx(o).kind === 'instant' && (Rx(o).spell || []).some(e => ['counter', 'destroy', 'exile', 'dmg'].includes(e.t)));
+    return held.length ? Math.min(...held.map(o => o.card.cmc || 0)) : 0;
+}
 function aiBestPlay(P) {
-    let best = null;
+    const cands = [];
+    const O = opp(P);
+    const untapped = P.bf.filter(o => !o.tapped && Rx(o).mana).length;
+    const reserve = P.aiStyle === 'control' && P.aiLevel !== 'easy' && G.active === P.i && O.hand.length ? heldInstantCost(P) : 0;
     for (const o of [...P.hand, ...P.command]) {
         const r = Rx(o);
         if (r.kind === 'land' || !canCastNow(P, o) || !canPay(P, o)) continue;
+        if (reserve && r.kind !== 'instant' && (o.card.cmc || 0) > untapped - reserve) continue; // hold mana up
         const te = firstTargetEffect(o);
         const target = te ? aiPickTarget(P, te, o) : null;
         if (te && !target) continue;
-        const s = aiScore(P, o, target);
-        if (s > 0 && (!best || s > best.s)) best = { o, target, s };
+        let s = aiScore(P, o, target);
+        if (P.aiLevel === 'hard' && target && target.o && target.o.owner !== P.i && ['destroy', 'exile', 'dmg'].includes(te.t) && creatureValue(target.o) < 5 && !(te.t === 'dmg' && target.p)) s = 0; // save it
+        if (s > 0) cands.push({ o, target, s });
     }
-    return best;
+    if (!cands.length) return null;
+    if (P.aiLevel === 'easy' && Math.random() < 0.4) return cands[rand(cands.length)];
+    return cands.sort((a, b) => b.s - a.s)[0];
+}
+// Hard AI: when you attack, kill the biggest attacker with instant removal before blocks
+async function aiRemoveAttacker(P) {
+    const atks = G.attackers.map(onBf).filter(Boolean).sort((a, b) => creatureValue(b) - creatureValue(a));
+    if (!atks.length) return;
+    for (const o of P.hand.filter(x => Rx(x).kind === 'instant' && canCastNow(P, x) && canPay(P, x))) {
+        const e = (Rx(o).spell || []).find(x => ['destroy', 'exile'].includes(x.t) || (x.t === 'dmg' && ['creature', 'any'].includes(x.target)));
+        if (!e) continue;
+        const valid = validTargets(P, e);
+        const t = atks.find(a => valid.some(v => v.o && v.o.uid === a.uid) && (e.t !== 'dmg' || tou(a) - a.dmg <= e.n) && !(e.t === 'destroy' && has(a, 'indestructible')));
+        if (t && creatureValue(t) >= 4) { await pause(400); await castSpell(P, o, { o: t }); return; }
+    }
 }
 
 function aiPlayLand(P) {
@@ -2789,7 +2885,8 @@ function aiChooseAttackers(P) {
     const unblockable = cands.filter(a => !canBeBlocked(a));
     const blockable = cands.filter(a => canBeBlocked(a)).sort((a, b) => pow(b) - pow(a));
     const through = unblockable.reduce((s, a) => s + pow(a), 0) + blockable.slice(blockers.length).reduce((s, a) => s + pow(a), 0);
-    if (through >= D.life) return cands;
+    if (through >= D.life && !(P.aiLevel === 'easy' && Math.random() < 0.3)) return cands;
+    if (P.aiLevel === 'easy') return cands.filter(a => !canBeBlocked(a) || Math.random() < 0.5);
     return cands.filter(a => {
         if (!canBeBlocked(a)) return true;
         const threats = blockers.filter(b => canBlock(b, a) && (pow(b) >= tou(a) - a.dmg || has(b, 'deathtouch')));
@@ -2825,6 +2922,7 @@ function aiChooseBlocks(D, A) {
         const trade = options.filter(b => blockerKills(b) && creatureValue(b) <= creatureValue(atk) + 1);
         let pick = safeKill[0] || safe.sort((a, b) => creatureValue(a) - creatureValue(b))[0] || trade.sort((a, b) => creatureValue(a) - creatureValue(b))[0];
         if (!pick && incoming >= D.life) pick = options.sort((a, b) => creatureValue(a) - creatureValue(b))[0]; // chump to survive
+        if (pick && D.aiLevel === 'easy' && incoming < D.life && Math.random() < 0.5) pick = null; // misses blocks
         if (pick) {
             take(pick);
             blocks[atk.uid] = [pick.uid];
@@ -3256,7 +3354,9 @@ function profileDefaults() {
         shopToday: null,   // { day, visitsLeft, sales: [], revenue }
         shopLedger: [],    // the last few closed days
         sealed: {},        // 'code|kind' -> { code, kind, name, type, released, n } sealed packs in the stockroom
-        distStock: null    // today's distributor offers { day, offers }
+        distStock: null,   // today's distributor offers { day, offers }
+        campaignNodes: {}, // ladder stop -> its precon opponent { file, name, type, code }
+        campaignDiscount: 0 // permanent distributor discount from Regional wins
     };
 }
 function upgradeProfile(p) {
@@ -3800,7 +3900,7 @@ const PACK_TIERS = [
 ];
 function packTier(b) { return PACK_TIERS.find(t => t.test(b)); }
 function packMarket(b) { return PACK_BASE_USD * packTier(b).mult; }
-function wholesaleDiscount() { return 0; } // set binder rewards add to this (phase 4)
+function wholesaleDiscount() { return Math.min(CAMPAIGN_DISCOUNT_MAX, profile.campaignDiscount || 0); } // + set binder rewards (phase 4)
 const round2 = n => Math.round(n * 100) / 100;
 function boxPrice(b) { return round2(b.packs * packMarket(b) * WHOLESALE_BOX * (1 - wholesaleDiscount())); }
 function loosePackPrice(b) { return round2(packMarket(b) * WHOLESALE_PACK * (1 - wholesaleDiscount())); }
@@ -4031,6 +4131,413 @@ function packSummary(areaId) {
 }
 
 // =====================================================================
+// Precons, the campaign ladder and deck analytics (shop phase 3,
+// 2026-10-05). Real preconstructed decks come from MTGJSON's deck files
+// (DeckList.json, decks/<file>.json); the campaign uses them for Kitchen
+// Table and FNM opponents and the personalities as Regional bosses.
+// =====================================================================
+const PRECON_TYPES = {
+    'Welcome Deck': 'Welcome Decks (30 cards, for brand-new players)',
+    'Starter Kit': 'Starter Kits (60 cards)',
+    'Arena Starter Kit': 'Arena Starter Kits (60 cards)',
+    'Planeswalker Deck': 'Planeswalker Decks (60 cards)',
+    'Challenger Deck': 'Challenger Decks (60 cards, tournament-ready)',
+    'Pioneer Challenger Deck': 'Pioneer Challenger Decks (60 cards)',
+    'Intro Pack': 'Intro Packs (about 60 cards)',
+    'Theme Deck': 'Theme Decks (classic, 40-60 cards)',
+    'Starter Deck': 'Starter Decks (1990s)'
+};
+let preconList = store.get('precons', null);
+async function loadPreconList() {
+    if (preconList && preconList.list && preconList.list.length && Date.now() - preconList.fetched < 7 * 864e5) return preconList.list;
+    const res = await fetch(`${MTGJSON}/DeckList.json`);
+    if (!res.ok) throw new Error(`MTGJSON's deck list didn't load (${res.status})`);
+    const data = (await res.json()).data;
+    const list = data.filter(d => PRECON_TYPES[d.type]).map(d => ({ file: d.fileName, name: d.name, code: d.code, type: d.type, date: d.releaseDate }))
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    preconList = { fetched: Date.now(), list };
+    store.set('precons', preconList);
+    return list;
+}
+const preconCache = {};
+// A precon's main deck as game entries (casual format: 30+ cards)
+async function loadPreconDeck(p) {
+    if (!preconCache[p.file]) {
+        preconCache[p.file] = (async () => {
+            const res = await fetch(`${MTGJSON}/decks/${encodeURIComponent(p.file)}.json`);
+            if (!res.ok) throw new Error(`Couldn't load ${p.name} (${res.status})`);
+            const d = (await res.json()).data;
+            const counts = {};
+            (d.mainBoard || []).forEach(c => { const id = c.identifiers && c.identifiers.scryfallId; if (id) counts[id] = (counts[id] || 0) + c.count; });
+            await cardsByIds(Object.keys(counts));
+            const entries = Object.entries(counts).map(([id, n]) => ({ card: CARDS.get(id), n })).filter(e => e.card);
+            return { name: p.name, format: 'casual', commander: null, entries, type: p.type, code: p.code };
+        })();
+        preconCache[p.file].catch(() => { delete preconCache[p.file]; });
+    }
+    return preconCache[p.file];
+}
+function deckColors(entries) {
+    const n = {};
+    entries.forEach(({ card, n: k }) => { if (rulesFor(card).kind !== 'land') (card.colors || []).forEach(c => { n[c] = (n[c] || 0) + k; }); });
+    return Object.keys(n).filter(c => 'WUBRG'.includes(c)).sort((a, b) => n[b] - n[a]);
+}
+// For an AI opponent: cards the game can't cast become basics of its colors
+async function preconForAI(deck) {
+    await loadBasics();
+    const cols = deckColors(deck.entries);
+    let swapped = 0, k = 0;
+    const out = [];
+    deck.entries.forEach(e => {
+        if (rulesFor(e.card).kind === 'land' || rulesFor(e.card).support !== 'none') { out.push(e); return; }
+        swapped += e.n;
+        for (let i = 0; i < e.n; i++) {
+            const col = cols.length ? cols[k++ % cols.length] : 'W';
+            const land = CARDS.get(BASIC_IDS[col]);
+            const ex = out.find(x => x.card === land);
+            if (ex) ex.n++; else out.push({ card: land, n: 1 });
+        }
+    });
+    return { ...deck, entries: out, swapped };
+}
+function supportSummary(entries) {
+    const s = { full: 0, partial: 0, none: 0 };
+    entries.forEach(({ card, n }) => { if (rulesFor(card).kind !== 'land') s[rulesFor(card).support] += n; });
+    return s;
+}
+
+// ---- Onboarding: a new player picks a real precon as their first deck ----
+function needsOnboarding() {
+    return !AUTOPLAY && profile && !profile.starterDeck && !profile.decks.length && !Object.keys(profile.collection).length;
+}
+async function preconPicker(auto) {
+    showModal(`<h2>🎁 Choose your first deck</h2>
+        <p class="note">Pick a real preconstructed deck (decklists from MTGJSON). Its cards go into your collection, Mint, and it's ready to play in the Campaign's Kitchen Table.</p>
+        <div id="pcPick" class="loading" style="margin-top:10px;">Loading Wizards' precons...</div>
+        <div id="pcPreview" style="margin-top:10px; text-align:left;"></div>
+        <div class="row" style="justify-content:center; margin-top:12px;">
+            <button class="btn primary" id="pcTake" onclick="takePrecon()" disabled>Take this deck</button>
+            <button class="btn" onclick="closeModal()">${auto ? 'Later' : 'Close'}</button>
+        </div>`);
+    try {
+        const list = await loadPreconList();
+        const groups = Object.keys(PRECON_TYPES).map(t => [t, list.filter(p => p.type === t).slice(0, t === 'Theme Deck' || t === 'Intro Pack' ? 40 : 30)]).filter(([, l]) => l.length);
+        $('pcPick').className = '';
+        $('pcPick').innerHTML = `<select id="pcSel" style="width:100%;" onchange="previewPrecon()" aria-label="Precon deck">${groups.map(([t, l]) => `<optgroup label="${esc(PRECON_TYPES[t])}">${l.map(p => `<option value="${esc(p.file)}">${esc(p.name)} (${esc(p.code)}, ${(p.date || '').slice(0, 4)})</option>`).join('')}</optgroup>`).join('')}</select>`;
+        // Default to the newest Starter Kit: two-player-ready, 60 cards
+        const def = list.find(p => p.type === 'Starter Kit') || list[0];
+        if (def) $('pcSel').value = def.file;
+        previewPrecon();
+    } catch (e) {
+        $('pcPick').className = 'warn';
+        $('pcPick').textContent = `${e.message}. Try again in a moment.`;
+    }
+}
+let pcChosen = null;
+async function previewPrecon() {
+    const file = $('pcSel') && $('pcSel').value;
+    const p = (preconList && preconList.list || []).find(x => x.file === file);
+    if (!p) return;
+    pcChosen = null;
+    $('pcTake').disabled = true;
+    $('pcPreview').innerHTML = '<div class="loading">Loading the decklist...</div>';
+    try {
+        const deck = await loadPreconDeck(p);
+        if (($('pcSel') || {}).value !== file) return;
+        pcChosen = { p, deck };
+        const total = deck.entries.reduce((a, e) => a + e.n, 0);
+        const s = supportSummary(deck.entries);
+        const value = deck.entries.reduce((a, e) => a + (isBasic(e.card) ? 0 : baseUsd(e.card) * e.n), 0);
+        const top = deck.entries.filter(e => rulesFor(e.card).kind !== 'land').sort((a, b) => baseUsd(b.card) - baseUsd(a.card)).slice(0, 6);
+        $('pcPreview').innerHTML = `<div><strong>${esc(p.name)}</strong> <span class="note">${esc(p.type)} · ${total} cards · ${deckColors(deck.entries).map(c => `<span class="pip ${c}"></span>`).join('')}</span></div>
+            <div class="note">The game runs ${s.full} spells fully, ${s.partial} partly${s.none ? `, ${s.none} not yet` : ''}. Worth about ${usd(value)} (Scryfall's TCGplayer prices).</div>
+            <div class="note">Best cards: ${top.map(e => `<a href="#" onclick="showCardSheet('${e.card.id}'); return false;">${esc(e.card.name)}</a>`).join(', ')}</div>`;
+        $('pcTake').disabled = false;
+    } catch (e) {
+        $('pcPreview').innerHTML = `<p class="warn">${esc(e.message)}</p>`;
+    }
+}
+function takePrecon() {
+    if (!pcChosen) return;
+    const { p, deck } = pcChosen;
+    const cards = {};
+    deck.entries.forEach(e => { cards[e.card.id] = (cards[e.card.id] || 0) + e.n; for (let i = 0; i < e.n; i++) if (!isBasic(e.card)) addCopy(e.card.id, { c: 'M' }); });
+    profile.decks.push({ id: `d${Date.now()}`, name: `${p.name} (${p.type})`, format: 'casual', cards, commander: null, starter: false });
+    profile.starterDeck = p.file;
+    saveProfile();
+    closeModal();
+    toast(`🎁 ${p.name} is yours. Try it in the Campaign!`);
+    if (!$('view-home').classList.contains('hidden')) renderHome();
+}
+
+// ---- Boss decks: what each personality plays at the Regional Qualifier ----
+// Built like the theme decks (two Scryfall searches, only cards the game
+// can run), but not limited to Modern. Checked live on 2026-10-05.
+const BOSS_THEMES = {
+    control: { name: 'Azorius Control', colors: ['W', 'U'], base: ' f:modern game:paper -t:land', creatures: '(c=w or c=u or c=wu) t:creature (kw:flying or kw:flash) cmc<=5', spells: '(c=u or c=w or c=wu) t:instant (o:"counter target spell" or o:"exile target creature" or o:"destroy target creature" or o:"draw two cards")', spellCount: 6, creatureCount: 5 },
+    artifacts: { name: 'Artifact Combo', colors: ['U'], base: ' f:modern game:paper -t:land', creatures: 'id<=u t:artifact t:creature cmc<=5', spells: 'c=u (t:instant or t:sorcery) (o:"draw two cards" or o:"to its owner\'s hand")', spellCount: 3, creatureCount: 7 },
+    tribal: { name: 'Goblin Tribal', colors: ['R'], base: ' f:modern game:paper -t:land', creatures: 't:goblin t:creature c<=r', spells: 'c=r (t:instant or t:sorcery) o:"damage to any target"', creatureCount: 7 },
+    stax: { name: 'Lockdown', colors: ['W'], base: ' f:modern game:paper -t:land', creatures: 'c=w t:creature o:"tap target creature" cmc<=5', spells: 'c=w (t:instant or t:sorcery) (o:"tap target creature" or o:"exile target creature")', spellCount: 4 },
+    burn: MODERN_THEMES.find(t => t.key === 'burn'),
+    stompy: MODERN_THEMES.find(t => t.key === 'stompy'),
+    power: { name: 'Vintage Power', colors: ['U'], base: ' f:vintage game:paper -t:land', creatures: 'c=u t:creature kw:flying cmc<=5', spells: 'c=u t:instant (o:"counter target spell" or o:"draw three cards" or o:"draws three cards")', spellCount: 4,
+        fixed: ['Mox Sapphire', 'Mox Pearl', 'Mox Jet', 'Mox Ruby', 'Mox Emerald', 'Sol Ring', 'Ancestral Recall'] },
+    mill: { name: 'Mill & Discard', colors: ['U', 'B'], base: ' f:modern game:paper -t:land', creatures: '(c=u or c=b or c=ub) t:creature (o:"mills" or o:"discards" or o:"draw")', spells: '(c=u or c=b or c=ub) (t:instant or t:sorcery) (o:"mills" or o:"discards" or o:"destroy target creature")', spellCount: 5 }
+};
+async function buildBossDeck(P) {
+    const key = P.duel.theme;
+    if (key === 'precon') {
+        const list = (await loadPreconList()).filter(p => p.type === 'Theme Deck' || p.type === 'Intro Pack');
+        const deck = await preconForAI(await loadPreconDeck(list[rand(Math.min(list.length, 40))]));
+        return { ...deck, name: `${P.name}'s ${deck.name}` };
+    }
+    const deck = await buildThemeDeck(BOSS_THEMES[key]);
+    return { ...deck, format: 'casual', name: `${P.name}'s ${BOSS_THEMES[key].name}` };
+}
+
+// ---- The campaign ladder ----
+const CAMPAIGN_TIERS = [
+    { tier: 1, key: 'kitchen', icon: '🍕', name: 'Kitchen Table', level: 'easy', nodes: 5, entry: { coins: 0, usd: 0 }, minValue: 0, unlock: 0,
+        types: ['Welcome Deck', 'Theme Deck', 'Intro Pack', 'Starter Deck'], reward: { coins: 30 }, lossReward: { coins: 5 },
+        desc: 'Free. Casual opponents with classic precons, and they make mistakes. Good for testing a starter deck.' },
+    { tier: 2, key: 'fnm', icon: '🎉', name: 'Friday Night Magic', level: 'normal', nodes: 5, entry: { coins: 100, usd: 0 }, minValue: 50, unlock: 3,
+        types: ['Challenger Deck', 'Planeswalker Deck', 'Arena Starter Kit', 'Starter Kit', 'Pioneer Challenger Deck'], reward: { usd: 20, packs: 2 }, lossReward: {},
+        desc: 'Entry 🪙 100 and a deck worth $50+. Upgraded precons and Challenger Decks, played properly.' },
+    { tier: 3, key: 'rq', icon: '🏆', name: 'Regional Qualifier', level: 'hard', bosses: true, entry: { coins: 300, usd: 25 }, minValue: 100, unlock: 3,
+        reward: { usd: 100, collector: 2, discount: 0.02 }, lossReward: {},
+        desc: 'Entry 🪙 300 + $25 and a deck worth $100+. The personalities bring their own decks and play to win: they hold removal and counters for real threats.' }
+];
+const CAMPAIGN_DISCOUNT_MAX = 0.18;
+function tierWins(t) { return profile.campaignProgress.filter(id => id.startsWith(`${t.key}-`)).length; }
+function tierUnlocked(t) {
+    if (t.tier === 1) return true;
+    const prev = CAMPAIGN_TIERS[t.tier - 2];
+    return tierWins(prev) >= t.unlock;
+}
+function tierNodes(t) {
+    if (t.bosses) return Object.keys(PERSONALITIES).map(k => ({ id: `${t.key}-${k}`, boss: k }));
+    return Array.from({ length: t.nodes }, (_, i) => ({ id: `${t.key}-${i + 1}` }));
+}
+// Each Kitchen Table / FNM stop gets a precon opponent the first time it's shown, and keeps it
+async function assignNodeDecks() {
+    const list = await loadPreconList();
+    let changed = false;
+    profile.campaignNodes = profile.campaignNodes || {};
+    CAMPAIGN_TIERS.filter(t => !t.bosses).forEach(t => {
+        const pool = list.filter(p => t.types.includes(p.type));
+        const used = new Set(Object.values(profile.campaignNodes).map(n => n.file));
+        tierNodes(t).forEach(n => {
+            if (profile.campaignNodes[n.id] || !pool.length) return;
+            const free = pool.filter(p => !used.has(p.file));
+            const p = (free.length ? free : pool)[rand((free.length ? free : pool).length)];
+            profile.campaignNodes[n.id] = { file: p.file, name: p.name, type: p.type, code: p.code };
+            used.add(p.file);
+            changed = true;
+        });
+    });
+    if (changed) saveProfile();
+}
+function deckValue(deck) {
+    return Object.entries(deck.cards).reduce((a, [id, n]) => { const c = CARDS.get(id); return a + (c && !isBasic(c) ? baseUsd(c) * n : 0); }, 0);
+}
+let campaignSel = null;
+async function renderCampaign() {
+    const box = $('campaignMap');
+    box.innerHTML = '<div class="loading">Setting up the ladder...</div>';
+    try { await assignNodeDecks(); } catch (e) { box.innerHTML = `<p class="warn">${esc(e.message)}. Try this tab again in a moment.</p>`; return; }
+    const ids = profile.decks.flatMap(d => Object.keys(d.cards)).filter(id => !CARDS.has(id));
+    if (ids.length) await cardsByIds(ids).catch(() => {});
+    $('campaignHead').innerHTML = `<div class="pos-stats">
+            <div><span class="pos-k">Coins</span><strong>🪙 ${profile.coins.toLocaleString()}</strong></div>
+            <div><span class="pos-k">Shop cash</span><strong>💵 ${usd(profile.usd)}</strong></div>
+            <div><span class="pos-k">Wins on the ladder</span><strong>${profile.campaignProgress.length}</strong></div>
+            <div><span class="pos-k">Distributor discount</span><strong>${Math.round((profile.campaignDiscount || 0) * 100)}%</strong></div>
+        </div>`;
+    box.innerHTML = CAMPAIGN_TIERS.map(t => {
+        const open = tierUnlocked(t);
+        const nodes = tierNodes(t);
+        return `<div class="tier-band tier-${t.tier}${open ? '' : ' locked'}">
+            <div class="tier-head"><span class="tier-icon" aria-hidden="true">${t.icon}</span><div><strong>Tier ${t.tier}: ${esc(t.name)}</strong>
+                <div class="note">${esc(t.desc)}${open ? '' : ` 🔒 Win ${t.unlock} games in ${esc(CAMPAIGN_TIERS[t.tier - 2].name)} to unlock (${tierWins(CAMPAIGN_TIERS[t.tier - 2])}/${t.unlock}).`}</div></div></div>
+            <div class="trail">${nodes.map((n, i) => {
+                const beaten = profile.campaignProgress.includes(n.id);
+                const P = n.boss && PERSONALITIES[n.boss];
+                const info = P ? P.name : (profile.campaignNodes[n.id] ? profile.campaignNodes[n.id].name : `Game ${i + 1}`);
+                return `<button type="button" class="trail-node${beaten ? ' beaten' : ''}${campaignSel === n.id ? ' sel' : ''}" ${open ? '' : 'disabled'} onclick="selectNode('${n.id}')" aria-pressed="${campaignSel === n.id}">
+                    <span class="dot" aria-hidden="true">${beaten ? '✓' : P ? P.emoji : i + 1}</span><span class="lbl">${esc(info)}</span></button>`;
+            }).join('<span class="trail-line" aria-hidden="true"></span>')}</div>
+        </div>`;
+    }).join('');
+    renderNodePanel();
+}
+function selectNode(id) { campaignSel = id; renderCampaign(); }
+function nodeInfo(id) {
+    const t = CAMPAIGN_TIERS.find(x => id.startsWith(`${x.key}-`));
+    const n = tierNodes(t).find(x => x.id === id);
+    return { t, n };
+}
+function rewardText(r) {
+    const parts = [];
+    if (r.coins) parts.push(`🪙 ${r.coins}`);
+    if (r.usd) parts.push(`💵 ${usd(r.usd)}`);
+    if (r.packs) parts.push(`📦 ${r.packs} play boosters`);
+    if (r.collector) parts.push(`📦 ${r.collector} collector boosters`);
+    if (r.discount) parts.push(`a permanent ${Math.round(r.discount * 100)}% distributor discount (first win against each boss, up to ${Math.round(CAMPAIGN_DISCOUNT_MAX * 100)}%)`);
+    return parts.join(' + ') || 'nothing';
+}
+function renderNodePanel() {
+    const box = $('campaignNode');
+    if (!campaignSel) { box.innerHTML = '<p class="note">Pick a stop on the map.</p>'; return; }
+    const { t, n } = nodeInfo(campaignSel);
+    const P = n.boss && PERSONALITIES[n.boss];
+    const opp = P ? `${P.emoji} <strong>${esc(P.name)}</strong> the ${esc(P.archetype)} · ${esc(P.duel.desc)}` : (() => { const d = profile.campaignNodes[n.id]; return d ? `<strong>${esc(d.name)}</strong> <span class="note">${esc(d.type)} (${esc(d.code)})</span>` : 'A random precon'; })();
+    const decks = profile.decks.map((d, i) => ({ d, i })).filter(x => x.d.format !== 'commander');
+    box.innerHTML = `<h3>${t.icon} ${esc(t.name)}</h3>
+        <div>Opponent: ${opp}</div>
+        <div class="note">AI: ${t.level === 'easy' ? 'casual (makes mistakes)' : t.level === 'normal' ? 'solid' : 'expert (holds answers for real threats)'} · Entry: ${t.entry.coins || t.entry.usd ? [t.entry.coins ? `🪙 ${t.entry.coins}` : '', t.entry.usd ? `💵 ${usd(t.entry.usd)}` : ''].filter(Boolean).join(' + ') : 'free'}${t.minValue ? ` · Your deck must be worth ${usd(t.minValue)}+` : ''}</div>
+        <div class="note">Win: ${rewardText(t.reward)}${t.lossReward.coins ? ` · Loss: 🪙 ${t.lossReward.coins}` : ''}</div>
+        ${decks.length ? `<div class="row" style="margin-top:8px;"><select id="campDeck" onchange="renderNodeDeckNote()" aria-label="Your deck">${decks.map(x => `<option value="${x.i}">${esc(x.d.name)} · ${FORMATS[x.d.format].name}</option>`).join('')}</select>
+            <button class="btn primary" onclick="startCampaignMatch()">⚔️ Play</button></div><div id="campDeckNote" class="note"></div>`
+        : `<p class="note">You need a Modern or Casual deck. <button class="btn small gold" onclick="preconPicker()">🎁 Choose a starter precon</button></p>`}`;
+    renderNodeDeckNote();
+}
+function renderNodeDeckNote() {
+    const el = $('campDeckNote');
+    if (!el || !campaignSel) return;
+    const deck = profile.decks[$('campDeck').value];
+    const { t } = nodeInfo(campaignSel);
+    const v = deckValue(deck);
+    const probs = deckProblems(deck);
+    el.innerHTML = `Deck value: ${usd(v)}${t.minValue && v < t.minValue ? ` <span class="warn">(needs ${usd(t.minValue)})</span>` : ''}${probs.length ? ` · <span class="warn">⚠ ${esc(probs[0])}</span>` : ''}`;
+}
+async function startCampaignMatch() {
+    const { t, n } = nodeInfo(campaignSel);
+    const deck = profile.decks[$('campDeck').value];
+    if (!deck) return;
+    const probs = deckProblems(deck);
+    if (probs.length) { toast(`Fix your deck first: ${probs[0]}`); return; }
+    if (t.minValue && deckValue(deck) < t.minValue) { toast(`This tier needs a deck worth ${usd(t.minValue)} or more.`); return; }
+    if (profile.coins < t.entry.coins || profile.usd < t.entry.usd) { toast('Not enough for the entry fee.'); return; }
+    showModal('<h2>Shuffling up...</h2><p class="loading">Building your opponent\'s deck...</p>');
+    try {
+        await cardsByIds(Object.keys(deck.cards));
+        let oppDeck, P = null;
+        if (n.boss) {
+            P = PERSONALITIES[n.boss];
+            oppDeck = await buildBossDeck(P);
+            oppDeck.source = `${P.archetype} boss deck`;
+        } else {
+            const d = profile.campaignNodes[n.id];
+            oppDeck = await preconForAI(await loadPreconDeck(d));
+            oppDeck.source = `${d.type} from MTGJSON${oppDeck.swapped ? `, ${oppDeck.swapped} cards swapped for lands` : ''}`;
+        }
+        profile.coins -= t.entry.coins;
+        profile.usd = round2(profile.usd - t.entry.usd);
+        saveProfile();
+        closeModal();
+        oppDeck.aiLevel = t.level;
+        oppDeck.aiStyle = P ? P.duel.style : null;
+        oppDeck.campaign = { tier: t.tier, node: n.id, boss: n.boss || null };
+        const mine = deckToEntries(deck);
+        mine.format = 'casual';
+        oppDeck.format = 'casual';
+        newGame(mine, oppDeck);
+    } catch (e) {
+        console.error(e);
+        showModal(`<h2>Couldn't start</h2><p class="warn">${esc(e.message)}</p><div class="row" style="justify-content:center; margin-top:12px;"><button class="btn" onclick="closeModal()">OK</button></div>`);
+    }
+}
+// Called from endGame for campaign games; returns a line for the result box
+function campaignResult(won) {
+    const c = G.campaign;
+    const t = CAMPAIGN_TIERS[c.tier - 1];
+    const r = won ? t.reward : t.lossReward;
+    const first = won && !profile.campaignProgress.includes(c.node);
+    if (first) profile.campaignProgress.push(c.node);
+    if (r.coins) profile.coins += r.coins;
+    if (r.usd) profile.usd = round2(profile.usd + r.usd);
+    let line = won ? `Campaign win! ${rewardText({ ...r, discount: 0 })}` : (r.coins ? `Campaign: 🪙 ${r.coins} for trying.` : 'Campaign: no prize this time.');
+    if (won && r.discount && first) {
+        profile.campaignDiscount = Math.min(CAMPAIGN_DISCOUNT_MAX, round2((profile.campaignDiscount || 0) + r.discount));
+        line += ` · Distributor discount now ${Math.round(profile.campaignDiscount * 100)}%.`;
+    }
+    if (won && (r.packs || r.collector)) grantPrizePacks(r.packs || 0, r.collector || 0);
+    saveProfile();
+    return line;
+}
+async function grantPrizePacks(play, collector) {
+    try {
+        const list = await loadBoxCatalog();
+        const recent = list.filter(b => ['expansion', 'core'].includes(b.type)).sort((a, b) => b.released.localeCompare(a.released));
+        const p = recent.find(b => b.kind === 'play');
+        const c = recent.find(b => b.kind === 'collector');
+        if (play && p) addSealed(p, play);
+        if (collector && c) addSealed(c, collector);
+        saveProfile();
+        toast(`📦 Prize packs are in your stockroom (Distributor tab).`);
+    } catch (e) {
+        toast('Prize packs will arrive when MTGJSON can be reached.');
+    }
+}
+
+// ---- Deck analytics in the builder: mana curve and a test hand ----
+function curveSVG(curve) {
+    const W = 260, H = 120, padL = 4, padB = 18, padT = 16;
+    const max = Math.max(1, ...curve);
+    const slot = (W - padL) / curve.length;
+    const bw = Math.min(24, slot - 6);
+    const peak = curve.indexOf(Math.max(...curve));
+    const y = v => H - padB - (v / max) * (H - padB - padT);
+    const bar = (v, i) => {
+        const x = padL + i * slot + (slot - bw) / 2;
+        const top = y(v), h = H - padB - top;
+        const r = Math.min(4, h / 2);
+        const path = h > 0 ? `M${x},${H - padB} V${top + r} Q${x},${top} ${x + r},${top} H${x + bw - r} Q${x + bw},${top} ${x + bw},${top + r} V${H - padB} Z` : '';
+        const label = i === curve.length - 1 ? '7+' : String(i);
+        return `<g class="cv-col"><title>Mana value ${label}: ${v} card${v === 1 ? '' : 's'}</title>
+            <rect x="${padL + i * slot}" y="0" width="${slot}" height="${H}" fill="transparent"></rect>
+            ${path ? `<path d="${path}" class="cv-bar"></path>` : ''}
+            ${i === peak && v ? `<text x="${x + bw / 2}" y="${top - 4}" class="cv-val">${v}</text>` : ''}
+            <text x="${x + bw / 2}" y="${H - 4}" class="cv-axis">${label}</text></g>`;
+    };
+    return `<svg viewBox="0 0 ${W} ${H}" class="curve-svg" role="img" aria-label="Mana curve: ${curve.map((v, i) => `${i === curve.length - 1 ? '7+' : i}: ${v}`).join(', ')}">
+        <line x1="${padL}" x2="${W}" y1="${H - padB}" y2="${H - padB}" class="cv-base"></line>${curve.map(bar).join('')}</svg>`;
+}
+function deckAnalyticsHTML(d) {
+    const entries = Object.entries(d.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c);
+    const curve = Array(8).fill(0);
+    let spells = 0, mvSum = 0, lands = 0, creatures = 0;
+    entries.forEach(({ c, n }) => {
+        const k = rulesFor(c).kind;
+        if (k === 'land') { lands += n; return; }
+        curve[Math.min(7, Math.round(c.cmc))] += n;
+        spells += n; mvSum += c.cmc * n;
+        if (k === 'creature') creatures += n;
+    });
+    return `<div class="analytics">
+        <div class="lane-label">Mana curve (nonland cards)</div>
+        ${curveSVG(curve)}
+        <div class="note">Average mana value <strong>${spells ? (mvSum / spells).toFixed(2) : '0'}</strong> · ${creatures} creatures · ${spells - creatures} other spells · ${lands} lands</div>
+        <details class="note"><summary>Curve as a table</summary><table class="pos-table"><tr>${curve.map((_, i) => `<th>${i === 7 ? '7+' : i}</th>`).join('')}</tr><tr>${curve.map(v => `<td>${v}</td>`).join('')}</tr></table></details>
+        <div class="row" style="margin-top:8px;"><button class="btn small" onclick="drawTestHand()">🃏 Draw test hand</button><span class="note" id="testHandNote"></span></div>
+        <div id="testHand" class="test-hand"></div>
+    </div>`;
+}
+function drawTestHand() {
+    const d = editing;
+    if (!d) return;
+    const pool = [];
+    Object.entries(d.cards).forEach(([id, n]) => { const c = CARDS.get(id); if (c) for (let i = 0; i < n; i++) pool.push(c); });
+    if (pool.length < 7) { $('testHandNote').textContent = 'Add at least 7 cards first.'; return; }
+    const hand = shuffle(pool).slice(0, 7);
+    const lands = hand.filter(c => rulesFor(c).kind === 'land').length;
+    const cheap = hand.filter(c => rulesFor(c).kind !== 'land' && c.cmc <= 2).length;
+    const verdict = lands <= 1 ? 'Risky: too few lands - most players would mulligan.' : lands >= 6 ? 'Flood: too many lands - most players would mulligan.' : lands === 2 && !cheap ? 'Two lands and nothing cheap: a borderline keep.' : 'A keepable hand.';
+    $('testHandNote').innerHTML = `${lands} land${lands === 1 ? '' : 's'}, ${cheap} play${cheap === 1 ? '' : 's'} at 2 or less. ${verdict}`;
+    $('testHand').innerHTML = hand.map((c, i) => `<button type="button" class="th-card" style="--i:${i}" onclick="showCardSheet('${c.id}')" title="${esc(c.name)}">${c.imgS || c.img ? `<img src="${c.imgS || c.img}" alt="${esc(c.name)}">` : `<span class="noimg">${esc(c.name)}</span>`}</button>`).join('');
+}
+
+// =====================================================================
 // Start-up
 // =====================================================================
 async function init() {
@@ -4041,6 +4548,7 @@ async function init() {
     window.addEventListener('beforeunload', persistCards);
     loadBasics().catch(() => {});
     if (AUTOPLAY) autoTest();
+    else if (needsOnboarding()) preconPicker(true);
 }
 
 // Testing hook (?autoplay&a=burn&b=stompy, or b=<commander slug> with
@@ -4053,6 +4561,11 @@ async function autoTest() {
         if (format === 'commander') {
             A = await buildCommanderDeck(q.get('a'));
             B = await buildCommanderDeck(q.get('b'));
+        } else if (format === 'boss') {
+            // Personality decks at set AI levels: format=boss&a=marcus&b=greg&la=hard&lb=easy
+            const PA = PERSONALITIES[q.get('a')], PB = PERSONALITIES[q.get('b')];
+            A = { ...(await buildBossDeck(PA)), aiLevel: q.get('la') || 'hard', aiStyle: PA.duel.style };
+            B = { ...(await buildBossDeck(PB)), aiLevel: q.get('lb') || 'hard', aiStyle: PB.duel.style };
         } else {
             A = await buildThemeDeck(MODERN_THEMES.find(t => t.key === (q.get('a') || 'burn')));
             B = await buildThemeDeck(MODERN_THEMES.find(t => t.key === (q.get('b') || 'stompy')));
