@@ -18,6 +18,7 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 - **At the counter:** Buyer's Guide (card finder, land finder, full-art basics, price a deck), Products (what's in each sealed product, precon decklists and values, box value and pull rates), Buylist calculator, Market Watch (price spikes, ban changes, trending commanders, new-set demand), Pull List and the hotlist Case Map.
 - **Rules & events:** Format Rules, Commander Brackets, Prerelease toolkit, Value Vintage and a Judge quick reference.
 - **Learn & train:** Set Primer, Grading & Spotting Fakes, and a Card Quiz.
+- **Looks:** seasonal themes, a drawn title banner with the live weather at both stores (from the National Weather Service), foil cards that tilt and shine to match each printing, a "Crack a pack" sample opener in Pull rates, and more. The ✨ Effects button switches between Full, Subtle and Off on each device.
 
 ## What's in the Pokémon tool
 
