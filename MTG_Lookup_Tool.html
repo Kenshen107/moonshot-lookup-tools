@@ -6795,8 +6795,8 @@
         html[data-fx="subtle"] .search-box {
             box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 7%, transparent),
                         0 24px 60px -36px color-mix(in srgb, var(--bg-canvas) 90%, transparent);
-            -webkit-backdrop-filter: blur(14px) saturate(130%);
-            backdrop-filter: blur(14px) saturate(130%);
+            /* No backdrop-filter here: it would put each panel on its own
+               layer and the next panel would cover the search suggestions. */
         }
         /* Popups, menus and sheets stay solid so nothing shows through */
         html[data-fx] .app-bottom-bar,
@@ -7050,7 +7050,7 @@
         @keyframes fx-badge { from { background-position: 150% 0; } to { background-position: -100% 0; } }
 
         /* ---- Motion: views fade in, chart draws in, rows shimmer ---- */
-        html[data-fx="full"] .fx-enter, html[data-fx="subtle"] .fx-enter { animation: fx-enter 0.35s cubic-bezier(.2, .8, .2, 1) both; }
+        html[data-fx="full"] .fx-enter, html[data-fx="subtle"] .fx-enter { animation: fx-enter 0.35s cubic-bezier(.2, .8, .2, 1) backwards; }
         @keyframes fx-enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         html[data-fx="full"] .pc-chart.fx-draw .pc-line, html[data-fx="subtle"] .pc-chart.fx-draw .pc-line {
             stroke-dasharray: var(--len, 2000);
