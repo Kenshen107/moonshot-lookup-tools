@@ -27,7 +27,7 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 
 The **Beginner Guides** page has printable how-to-play and starter-checklist cards for Magic, Pokémon, Disney Lorcana, Riftbound and the Gundam Card Game, the Magic prerelease handouts, and a guide to the accessories a new player needs.
 
-A GitHub Action (`.github/workflows/market-data.yml`) builds daily price-history files from MTGJSON and publishes them to the `market-data` branch.
+A GitHub Action (`.github/workflows/market-data.yml`) builds daily price-history files from MTGJSON and publishes them to the `market-data` branch. It also keeps our own copy of each day's prices for the last 60 days on the `price-archive` branch (see the README there for the format).
 
 ## Local use
 
