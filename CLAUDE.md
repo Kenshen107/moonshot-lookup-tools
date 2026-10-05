@@ -19,6 +19,14 @@ Staff tools for Moonshot Games, used at work in both stores (Noblesville and Pla
 
 - Keep each tool a single self-contained HTML file. Don't add frameworks, build steps, or a backend. The one exception is the daily market data job (see below), which the owner approved on 2026-09-25: it only produces data files, and the HTML stays a single file.
 - In `MTG_Lookup_Tool.html`, tabs are driven by the `APP_VIEWS` table (each entry has an icon, a menu label and a one-line description). `NAV_GROUPS` puts every tool except Card Lookup into one of three groups (At the counter, Rules & events, Learn & train); the desktop menu bar, the phone bottom bar and the quick-jump search (`/` or Ctrl+K) are all built from these two tables. `QUICK_JUMP_EXTRAS` adds sub-tabs and sections to quick jump. The Buyer's Guide and Grading tabs use sub-tab tables (`BUYERS_GUIDE_SUBTABS`, `GUIDE_SUBTABS`). Reuse the existing helpers (card tiles, the card popup, the Moonshot store links `moonshotLinkHTML` / `moonshotBlockHTML`, `fetchScryfallSearchPage`) instead of writing new copies.
+- **Layout and design rules (cleanup of 2026-10-05):**
+  - The page top is a slim utility row (Pokémon tool, Beginner guides, Shop, 💛 Our Values), then the store bar. On phones the store bar is one row; the locations fold behind "📍 Hours & locations" (`toggleStoreBar`).
+  - The desktop menu bar is sticky and holds "📦 Moonshot Search"; on phones it's the "Stock" item in the bottom bar. Both open `#quickStockPanel` (Esc closes it). There are no floating buttons; don't add new ones, since they cover content.
+  - Use the design tokens in `:root` for every color (`var(--...)`), never new hex values outside the theme blocks, so seasonal themes reach every part of the page. `--text-soft` is for notes that must stay readable (`.bk-note`, hints); `--color-warning` is amber.
+  - Text sizes use a short scale (0.72 / 0.8 / 0.85 / 0.9 / 0.95 / 1 / 1.1 / 1.2em and up), and corners use `--radius-sm/md/lg`. Notes under panels are at least 0.85em.
+  - The prerelease print card (`.pr-dc`) and print CSS keep their own fixed colors and sizes; leave them out of these rules.
+  - The seasonal decorations layer (`#seasonalFx`) is masked to the side margins so it never crosses content.
+  - Card Lookup: the card image is sticky on desktop; jump chips under the name (`jumpToCardSection`) open and scroll to each section. Legality chips use a colored edge plus a one-line label (`renderLegalityGridHTML`, shared with the popup and Format Rules). A card with no rulings shows a plain "Rulings: none" line.
 - Moonshot stock isn't checked live. Shopify doesn't let other sites read the store, and the free CORS relays that worked around that were unreliable, so the tool links to moonshotgamestore.com's own search instead. Don't bring back third-party relays. A live check would need a Shopify Storefront API token from the store admin.
 - Scryfall search queries (otags especially) can't be guessed reliably. Mark anything not checked against live results as unverified or approximate, as the land-cycle data already does.
 - Claude's cloud environment can reach `api.scryfall.com`, so check new or changed Scryfall queries against live results before shipping them. The Land Finder's fixed cycles use exact card-name lists (`LAND_CYCLE_CARDS`), checked live on 2026-09-24.
@@ -179,6 +187,7 @@ The site's colors all come from the design tokens in the `:root` CSS block. A se
 | `--bg-panel-raised` | `#333333` | | `--border` | `#404040` |
 | `--bg-inset` | `#1a1a1a` | | `--border-subtle` | `#333333` |
 | `--color-link` | `#6cb2ff` | | `--color-success` | `#7ee787` |
+| `--text-soft` | `#c0c0c0` (added 2026-10-05) | | `--color-warning` | `#ffcc80` (added 2026-10-05) |
 
 ### Season log
 
