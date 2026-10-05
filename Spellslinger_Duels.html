@@ -1908,11 +1908,20 @@ async function runStack() {
     if (G.stackRunning) return; // an outer loop is already working through it
     G.stackRunning = true;
     try {
+        // Comprehensive Rules 117.3b-c and 117.4: whoever casts a spell gets
+        // priority next, and the top of the stack resolves only once both
+        // players pass in a row; after it resolves, the active player gets
+        // priority first. Like Arena, a player auto-passes on their own spell
+        // or ability, so in practice the other player is asked.
+        let holder = null, passes = 0;
         while (G.stack.length && !G.over) {
             const top = G.stack[G.stack.length - 1];
-            if (await offerPriority(opp(top.P), top)) continue; // they responded: the new top goes first
+            if (holder === null) { holder = top.P; passes = 0; } // 117.3c: the caster first
+            if (await offerPriority(holder, top)) { holder = null; continue; } // they responded: the new top goes first
+            if (++passes < 2) { holder = opp(holder); continue; }
             await resolveTop();
             await pause(300);
+            holder = G.players[G.active]; passes = 0; // 117.3b
         }
     } finally {
         G.stackRunning = false;
@@ -1924,6 +1933,7 @@ async function runStack() {
 // Give a player priority to respond to the top of the stack. Returns true
 // if they cast something.
 async function offerPriority(P, top) {
+    if (top.P === P) return false; // auto-pass on your own spell or ability
     const castable = [...P.hand, ...P.command].filter(o => { G.priority = P.i; const ok = canCastNow(P, o) && canPay(P, o); return ok; });
     if (!castable.length) { G.priority = null; return false; } // nothing they could do: pass automatically
     G.priority = P.i;
