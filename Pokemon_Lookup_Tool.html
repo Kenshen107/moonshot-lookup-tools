@@ -1331,7 +1331,7 @@
             box-shadow: var(--focus-ring);
         }
 
-        /* ---- Utility row (other tools + Our Values) ---- */
+        /* ---- Utility row (other tools + the store's site) ---- */
         .util-bar {
             display: flex;
             flex-wrap: wrap;
@@ -1387,6 +1387,13 @@
             border-radius: 10px;
             padding: 10px 18px;
             margin-bottom: 16px;
+        }
+
+        .store-bar-name {
+            font-weight: 700;
+            color: var(--text-heading);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .store-bar-logo {
@@ -4284,7 +4291,7 @@
 
         <!-- On phones the locations fold away behind the toggle -->
         <div class="store-bar" id="storeBar">
-            <img class="store-bar-logo" src="https://moonshotgamestore.com/cdn/shop/files/MoonshotLog_CGE_White_200x@2x.png" alt="Moonshot Games">
+            <span class="store-bar-name" title="Store info: hours and locations">🏪 Moonshot Games</span>
             <button type="button" class="store-bar-toggle" aria-expanded="false" aria-controls="storeBarLocations" onclick="toggleStoreBar()">📍 Hours &amp; locations <span aria-hidden="true">▾</span></button>
             <div class="store-bar-locations" id="storeBarLocations">
                 <div class="store-bar-location">
@@ -4383,7 +4390,7 @@
             <div id="pkQuizBody"></div>
         </div>
 
-        <div class="pk-legal-note">Unofficial staff tool, not affiliated with or endorsed by The Pokémon Company, Nintendo, Creatures or GAME FREAK. Pokémon and character names are trademarks of Nintendo. Card data and images from <a class="text-link" href="https://tcgdex.dev" target="_blank" rel="noopener">TCGdex</a>.</div>
+        <div class="pk-legal-note">A fan-made tool. It isn't made or run by Moonshot Games (store links are included for convenience), and it isn't affiliated with or endorsed by The Pokémon Company, Nintendo, Creatures or GAME FREAK. Pokémon and character names are trademarks of Nintendo. Card data and images from <a class="text-link" href="https://tcgdex.dev" target="_blank" rel="noopener">TCGdex</a>.</div>
     </div>
 
     <!-- Card popup (set lists, quiz answers) -->

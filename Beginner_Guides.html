@@ -200,7 +200,7 @@
 
 <script>
     // ================= Data =================
-    const STORE_LINE = 'Moonshot Games · Noblesville &amp; Plainfield';
+    const STORE_LINE = 'Local play: Moonshot Games, Noblesville &amp; Plainfield';
 
     const GAMES = {
         mtg:       { name: 'Magic: The Gathering', short: 'Magic', icon: '🃏', checked: 'Wizards\' How to Play page, checked 2026-09-30', learnUrl: 'https://magic.wizards.com/en/how-to-play' },
@@ -211,12 +211,12 @@
     };
 
     // Each company's notice. Text only - no logos, card art or symbols.
-    const MTG_FAN_NOTICE = 'Moonshot Beginner Guide is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.';
+    const MTG_FAN_NOTICE = 'Beginner Guide is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.';
     const LEGAL = {
         mtg: MTG_FAN_NOTICE,
         pokemon: 'Unofficial beginner\'s guide, handed out free. Not affiliated with or endorsed by The Pokémon Company, Nintendo, Creatures or GAME FREAK. Pokémon and character names are trademarks of Nintendo.',
         lorcana: 'Unofficial beginner\'s guide, handed out free. Not affiliated with or endorsed by Disney or Ravensburger.',
-        riftbound: 'Moonshot Riftbound Guide was created under Riot Games\' "Legal Jibber Jabber" policy using assets owned by Riot Games. Riot Games does not endorse or sponsor this project.',
+        riftbound: 'Riftbound Beginner Guide was created under Riot Games\' "Legal Jibber Jabber" policy using assets owned by Riot Games. Riot Games does not endorse or sponsor this project.',
         gundam: 'Unofficial beginner\'s guide, handed out free. Not affiliated with or endorsed by Bandai Namco or Sunrise.'
     };
 
@@ -286,7 +286,7 @@
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
     function cardHead(game, title) {
-        return `<div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">${title}</span></div>`;
+        return `<div class="pr-dc-head"><span class="pr-dc-store">Beginner Guide</span><span class="pr-dc-set">${title}</span></div>`;
     }
     function cardQr(game, label, tip) {
         const url = GAMES[game].learnUrl;
@@ -440,7 +440,7 @@
 
     // ---- Magic prerelease card: the same card as the MTG Lookup Tool's,
     // sharing its saved edits (prDeckCardV3) and its QR rules. ----
-    const PR_CARD_TITLE = 'Moonshot Prerelease Guide';
+    const PR_CARD_TITLE = 'Prerelease Deck-Building Guide';
     const PR_FAN_CONTENT_NOTICE = `${PR_CARD_TITLE} is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.`;
     let mtgSets = [];            // [{ code, name, released_at }]
     let mtgSetCode = '';
@@ -459,7 +459,7 @@
     function mtgPrereleaseCardHTML() {
         const qr = prereleaseQrTarget();
         return `
-            <div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">Prerelease</span></div>
+            <div class="pr-dc-head"><span class="pr-dc-store">Deck-Building Guide</span><span class="pr-dc-set">Prerelease</span></div>
             <h4>Build your deck</h4>
             <div class="pr-dc-recipe"><div><b>40</b>cards minimum</div><div><b>17</b>lands</div><div><b>23</b>spells</div></div>
             <ol>
@@ -486,7 +486,7 @@
                 <img class="pr-dc-qr" src="${qrImageUrl(qr.url)}" alt="QR code: ${esc(qr.label)}">
             </div>
             <div class="pr-dc-fun">These are just tips, not rules. Build the deck you're excited to play - that's the fun of sealed!</div>
-            <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Moonshot Games · Noblesville &amp; Plainfield · moonshotgamestore.com</span></div>
+            <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Local play: Moonshot Games, Noblesville &amp; Plainfield · moonshotgamestore.com</span></div>
             <div class="pr-dc-legal">${PR_FAN_CONTENT_NOTICE}</div>`;
     }
     function refreshPrereleaseCardQr(el) {
@@ -501,7 +501,6 @@
         const qr = prereleaseQrTarget();
         return `
             <div class="pr-qr-sign">
-                <div class="pr-dc-store">Moonshot Games</div>
                 <div class="pr-qr-title">${set ? esc(set.name) : ''} Prerelease</div>
                 <div class="pr-qr-sub">Scan for ${qr.official ? 'Wizards\' official guide to this set' : 'the new mechanics &amp; rulings'}</div>
                 <img src="${qrImageUrl(qr.url, 300)}" alt="QR code: ${esc(qr.label)}" width="190" height="190">
@@ -715,7 +714,7 @@
     }
 
     async function init() {
-        document.getElementById('footNote').innerHTML = 'An independent project, not an official Moonshot Games tool. Every handout is text only - no logos, card art or symbols - and is meant to be handed out free. Sleeve sizes are general guidance; check the fit before buying in bulk.';
+        document.getElementById('footNote').innerHTML = 'A fan-made project. It isn\'t made or run by Moonshot Games (store details are included for convenience). Every handout is text only - no logos, card art or symbols - and is meant to be handed out free. Sleeve sizes are general guidance; check the fit before buying in bulk.';
         const hash = location.hash.slice(1);
         if (GAMES[hash]) gameFilter = hash;
         renderChips();

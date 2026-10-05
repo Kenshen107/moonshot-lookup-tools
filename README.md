@@ -1,6 +1,6 @@
-# Moonshot Games Lookup Tools
+# Card Lookup Tools
 
-Card-lookup and reference tools for Magic: The Gathering and Pokémon, made for use at Moonshot Games (Noblesville, IN and Plainfield, IN). This is an independent project, not an official Moonshot Games tool.
+Fan-made card-lookup and reference tools for Magic: The Gathering and Pokémon, built to be handy at Moonshot Games (Noblesville, IN and Plainfield, IN). They aren't made or run by Moonshot Games; links to the store's site, hours and events are included for convenience.
 
 Each tool is a single HTML file with no build step and no backend. It calls public data sources straight from the browser: Scryfall for cards and prices, MTGJSON for sealed products and price history, and EDHREC for Commander play data; the Pokémon tool uses TCGdex.
 
@@ -11,6 +11,7 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 - Archenemy simulator: https://kenshen107.github.io/moonshot-lookup-tools/Archenemy_Simulator.html
 - Planechase simulator: https://kenshen107.github.io/moonshot-lookup-tools/Planechase_Simulator.html
 - Beginner guides & handouts: https://kenshen107.github.io/moonshot-lookup-tools/Beginner_Guides.html
+- Spellslinger Duels (test game): https://kenshen107.github.io/moonshot-lookup-tools/Spellslinger_Duels.html
 
 ## What's in the MTG tool
 
@@ -29,6 +30,8 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 The **Beginner Guides** page has printable how-to-play and starter-checklist cards for Magic, Pokémon, Disney Lorcana, Riftbound and the Gundam Card Game, the Magic prerelease handouts, and a guide to the accessories a new player needs.
 
 A GitHub Action (`.github/workflows/market-data.yml`) builds daily price-history files from MTGJSON and publishes them to the `market-data` branch. It also keeps our own copy of each day's prices for the last 60 days on the `price-archive` branch (see the README there for the format).
+
+**Spellslinger Duels** is a fan-made test game: open packs (any set, Alpha to today; real pack odds from MTGJSON) with free in-game coins, build Modern or Commander decks, and play against themed opponents built from Scryfall searches or EDHREC's average Commander decks. Each card shows how much of its text the game can run so far.
 
 ## Local use
 

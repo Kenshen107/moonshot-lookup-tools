@@ -1410,7 +1410,7 @@
             margin: 6px auto 16px;
         }
 
-        /* ---- Utility row (other tools + Our Values) ---- */
+        /* ---- Utility row (other tools + About Moonshot Games) ---- */
         .util-bar {
             display: flex;
             flex-wrap: wrap;
@@ -1466,6 +1466,13 @@
             border-radius: 10px;
             padding: 10px 18px;
             margin-bottom: 16px;
+        }
+
+        .store-bar-name {
+            font-weight: 700;
+            color: var(--text-heading);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .store-bar-logo {
@@ -1588,7 +1595,7 @@
             }
         }
 
-        /* ---- Our Values - start-page overlay + recall button ---- */
+        /* ---- About Moonshot Games panel (opened from the utility row) ---- */
         .values-overlay {
             display: none;
             position: fixed;
@@ -6748,6 +6755,15 @@
             .pr-print-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
 
+
+        /* About Moonshot Games panel and the fan-made note */
+        .values-intro { color: var(--text-soft); font-size: 0.9em; margin: 4px 0 12px; line-height: 1.5; }
+        .values-stores { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 16px; font-size: 0.9em; line-height: 1.5; margin-bottom: 14px; }
+        .values-stores > div { background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px 12px; }
+        .values-stores a { color: var(--color-link); }
+        .values-subtitle { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); margin-bottom: 8px; }
+        .site-note { max-width: 1300px; margin: 24px auto 0; padding: 0 4px 90px; font-size: 0.85em; color: var(--text-secondary); text-align: center; line-height: 1.5; }
+
         /* ================================================================
            Visual effects (added 2026-10-05, from the Flash Lab mock).
            html[data-fx] is "full", "subtle" or "off", chosen per device
@@ -7591,19 +7607,19 @@
     <div id="seasonalFx" aria-hidden="true"></div>
     <div id="fxAurora" aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="container">
-        <!-- Utility row: the other tools, and Our Values (was a floating button) -->
+        <!-- Utility row: the other tools, the store's site, and About Moonshot Games -->
         <div class="util-bar">
             <a href="Pokemon_Lookup_Tool.html">⚡ Pokémon<span class="util-long"> tool</span> →</a>
             <a href="Beginner_Guides.html">📚 <span class="util-long">Beginner guides &amp; handouts</span><span class="util-short">Guides</span> →</a>
             <a class="util-shop" href="https://moonshotgamestore.com" target="_blank" rel="noopener">🛒 Shop<span class="util-long"> moonshotgamestore.com</span> →</a>
-            <button type="button" class="util-bar-btn" onclick="openValues()" title="Show our values">💛<span class="util-long"> Our</span> Values</button>
+            <button type="button" class="util-bar-btn" onclick="openValues()" title="About Moonshot Games: hours, locations, events and values">🏪<span class="util-long"> About Moonshot Games</span><span class="util-short"> Store</span></button>
             <button type="button" class="util-bar-btn" id="fxLevelBtn" onclick="cycleFxLevel()">✨ Effects</button>
         </div>
 
         <!-- Moonshot Games store info bar -->
         <!-- On phones the locations fold away behind the toggle -->
         <div class="store-bar" id="storeBar">
-            <img class="store-bar-logo" src="https://moonshotgamestore.com/cdn/shop/files/MoonshotLog_CGE_White_200x@2x.png" alt="Moonshot Games">
+            <span class="store-bar-name" title="Store info: hours and locations">🏪 Moonshot Games</span>
             <button type="button" class="store-bar-toggle" aria-expanded="false" aria-controls="storeBarLocations" onclick="toggleStoreBar()">📍 Hours &amp; locations <span aria-hidden="true">▾</span></button>
             <div class="store-bar-locations" id="storeBarLocations">
                 <div class="store-bar-location">
@@ -8704,50 +8720,57 @@
         </div>
     </div>
 
+    <footer class="site-note">MTG Card Lookup is a fan-made tool. It isn't made or run by Moonshot Games, and it isn't affiliated with or endorsed by Wizards of the Coast. Links to Moonshot Games' store, hours and events are included for convenience. Card data and images from Scryfall; prices from Scryfall and MTGJSON; Commander data from EDHREC.</footer>
+
     <!-- Card hover preview - see "Hover preview" in the script -->
     <div class="card-hover-preview" id="cardHoverPreview" aria-hidden="true"><img alt=""></div>
 
     <!-- Toast notification -->
     <div class="toast" id="toast"></div>
 
-    <!-- Our Values - shown on first load, and recallable anytime via the
-         floating button. Overlays whatever tab/search state is underneath
-         instead of navigating to it, so closing it drops you back exactly
-         where you were - handy mid-conversation with a customer. -->
+
+    <!-- About Moonshot Games: store info (hours, locations, events) and what
+         the store says it stands for, summarized from its About page. Opened
+         from the utility row; it doesn't pop up on its own. -->
     <div class="values-overlay" id="valuesOverlay" onclick="if (event.target === this) closeValues()">
-        <div class="values-panel">
+        <div class="values-panel" role="dialog" aria-labelledby="valuesTitle">
             <div class="values-header">
-                <span class="values-title">What Moonshot Games Is About</span>
-                <a href="https://moonshotgamestore.com/pages/about-us" target="_blank" rel="noopener" class="values-link">Full story on moonshotgamestore.com →</a>
+                <span class="values-title" id="valuesTitle">About Moonshot Games</span>
+                <a href="https://moonshotgamestore.com/pages/about-us" target="_blank" rel="noopener" class="values-link">The store's own About page →</a>
             </div>
+            <p class="values-intro">Moonshot Games is a game store in Noblesville and Plainfield, Indiana, with Magic, Pokémon, board games and weekly events. This lookup tool is a separate, fan-made project; the details below are here for convenience.</p>
+            <div class="values-stores">
+                <div><strong>Noblesville</strong> · <a href="https://maps.google.com/?q=50+N+9th+St,+Noblesville,+IN+46060" target="_blank" rel="noopener">50 N 9th St</a><br>Mon-Sat 10am-9pm · Sun 10am-6pm · <a href="tel:317-219-5916">(317) 219-5916</a><br><a href="https://moonshotgamestore.com/pages/event-calendar" target="_blank" rel="noopener">Event calendar →</a></div>
+                <div><strong>Plainfield</strong> · <a href="https://maps.google.com/?q=1620+E+Main+St+Suite+151,+Plainfield,+IN+46168" target="_blank" rel="noopener">1620 E Main St, Suite 151</a><br>Mon-Thu 12pm-9pm · Fri-Sat 11am-10pm · Sun 11am-6pm · <a href="tel:317-742-7401">(317) 742-7401</a><br><a href="https://moonshotgamestore.com/pages/event-calendar-plainfield" target="_blank" rel="noopener">Event calendar →</a></div>
+            </div>
+            <div class="values-subtitle">What the store says it stands for</div>
             <div class="values-grid">
                 <div class="value-item">
                     <span class="value-icon">🎲</span>
-                    <div><strong>The power of play.</strong> We believe in play and making memories with loved ones - whether that's a game night, a birthday gift, or quality time at the table.</div>
+                    <div><strong>The power of play.</strong> Games as a way to make memories with family and friends - game nights, gifts and time at the table.</div>
                 </div>
                 <div class="value-item">
                     <span class="value-icon">🤝</span>
-                    <div><strong>A place for people without a place.</strong> A safe, welcoming spot to visit, play, laugh, and learn within a loving, supportive community.</div>
+                    <div><strong>A place for people without a place.</strong> A safe, welcoming spot to visit, play, laugh and learn, with a supportive community.</div>
                 </div>
                 <div class="value-item">
                     <span class="value-icon">🌙</span>
-                    <div><strong>Big, ambitious ideas.</strong> "Moonshot" - an extremely ambitious, innovative project. We were told board games wouldn't sell in Noblesville; we dreamed big anyway.</div>
+                    <div><strong>Big, ambitious ideas.</strong> The name comes from "moonshot", an ambitious, innovative project. The founders were told board games wouldn't sell in Noblesville and opened anyway.</div>
                 </div>
                 <div class="value-item">
                     <span class="value-icon">💵</span>
-                    <div><strong>People over shortcuts.</strong> We hired rock-solid, knowledgeable team members and were determined to pay them a living wage from day one.</div>
+                    <div><strong>People over shortcuts.</strong> Knowledgeable staff, paid a living wage from the first day.</div>
                 </div>
                 <div class="value-item">
                     <span class="value-icon">🏪</span>
-                    <div><strong>Community-built.</strong> This dream wasn't ours to build alone - it was Noblesville's dream too, and we keep serving that community with more big ideas.</div>
+                    <div><strong>Community-built.</strong> The store sees itself as Noblesville's project as much as its own, and keeps building for that community.</div>
                 </div>
                 <div class="value-item">
                     <span class="value-icon">✨</span>
-                    <div><strong>Great products, great service.</strong> A variety of products at great prices, with the best customer service around, so you walk away happy.</div>
+                    <div><strong>Great products, great service.</strong> A wide range of products at fair prices, with friendly service.</div>
                 </div>
             </div>
-            <div class="values-tagline">Onward!</div>
-            <button type="button" class="values-continue-btn" onclick="closeValues()">Continue to Card Lookup →</button>
+            <button type="button" class="values-continue-btn" onclick="closeValues()">Close</button>
         </div>
     </div>
 
@@ -15359,13 +15382,13 @@
         // it - and printed 4 to a letter page. Edits are saved once for all
         // sets (v3 key); the QR is refreshed for the chosen set on render.
         function prCardKey() { return 'prDeckCardV3'; }
-        const PR_CARD_TITLE = 'Moonshot Prerelease Guide';
+        const PR_CARD_TITLE = 'Prerelease Deck-Building Guide';
         const PR_FAN_CONTENT_NOTICE = `${PR_CARD_TITLE} is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.`;
 
         async function defaultPrereleaseCardHTML() {
             const qr = prereleaseQrTarget();
             return `
-                <div class="pr-dc-head"><span class="pr-dc-store">Moonshot Games</span><span class="pr-dc-set">Prerelease</span></div>
+                <div class="pr-dc-head"><span class="pr-dc-store">Deck-Building Guide</span><span class="pr-dc-set">Prerelease</span></div>
                 <h4>Build your deck</h4>
                 <div class="pr-dc-recipe"><div><b>40</b>cards minimum</div><div><b>17</b>lands</div><div><b>23</b>spells</div></div>
                 <ol>
@@ -15392,7 +15415,7 @@
                     <img class="pr-dc-qr" src="${qrImageUrl(qr.url, 240)}" alt="QR code: ${escapeAttr(qr.label)}">
                 </div>
                 <div class="pr-dc-fun">These are just tips, not rules. Build the deck you're excited to play - that's the fun of sealed!</div>
-                <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Moonshot Games · Noblesville &amp; Plainfield · moonshotgamestore.com</span></div>
+                <div class="pr-dc-foot"><span>Use while building - put it away during games.</span><span>Local play: Moonshot Games, Noblesville &amp; Plainfield · moonshotgamestore.com</span></div>
                 <div class="pr-dc-legal">${PR_FAN_CONTENT_NOTICE}</div>
             `;
         }
@@ -15486,7 +15509,6 @@
             const url = qr.url;
             return `
                 <div class="pr-qr-sign">
-                    <div class="pr-dc-store">Moonshot Games</div>
                     <div class="pr-qr-title">${set ? set.name : ''} Prerelease</div>
                     <div class="pr-qr-sub">Scan for ${qr.official ? 'Wizards\' official guide to this set' : 'the new mechanics &amp; rulings'}</div>
                     <img src="${qrImageUrl(url)}" alt="QR code: ${escapeAttr(qr.label)}" width="190" height="190">
@@ -20302,26 +20324,14 @@
             spawnManaBurst(e.clientX, e.clientY);
         });
 
-        // Our Values overlay - acts as the start page (open on load) and is
-        // recallable anytime via the floating button, without disturbing
-        // whatever tab/search state is underneath. Only auto-opens once per
-        // browser session (sessionStorage) - previously it re-opened on every
-        // single reload, which is a real annoyance for a tool meant to be
-        // reloaded/reopened repeatedly through a shift. The 💛 Our Values
-        // button stays available the whole time either way, so nothing about
-        // the content itself is actually hidden - just not forced every time.
+        // About Moonshot Games: store info and values, opened from the
+        // utility row (it used to open on every visit; owner, 2026-10-05).
         function openValues() {
             document.getElementById('valuesOverlay').classList.add('open');
         }
 
         function closeValues() {
             document.getElementById('valuesOverlay').classList.remove('open');
-            try {
-                sessionStorage.setItem('valuesSeenThisSession', '1');
-            } catch (err) {
-                // sessionStorage unavailable (e.g. private browsing) - fine to
-                // just skip remembering, worst case it shows again next reload
-            }
         }
 
         // Moonshot Search - the floating widget for "do we have X?" from any
@@ -21425,13 +21435,6 @@
 
         initVisualEffects();
         if (location.hash) applyRouteFromHash();
-        let alreadySeenValues = false;
-        try {
-            alreadySeenValues = sessionStorage.getItem('valuesSeenThisSession') === '1';
-        } catch (err) {
-            // sessionStorage unavailable - default to showing it, same as before
-        }
-        if (!alreadySeenValues) openValues();
     </script>
 </body>
 </html>
