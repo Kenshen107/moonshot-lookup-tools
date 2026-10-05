@@ -217,6 +217,12 @@
         .hand .hc.playable img { box-shadow: 0 0 0 2px var(--color-success), 0 0 10px var(--color-success); }
         .hand .hc.chosen img { box-shadow: 0 0 0 3px var(--gold); }
         .hand .hc .sup { position: absolute; top: 4px; right: 4px; }
+        .cr-sections { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 14px; font-size: 0.9rem; }
+        .cr-rule { padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 0.9rem; line-height: 1.5; }
+        .cr-num { font-weight: 700; margin-right: 4px; }
+        .cr-h { font-size: 1rem; margin: 12px 0 4px; }
+        .kw-help { margin-top: 8px; font-size: 0.85rem; background: var(--bg-inset); border-radius: var(--radius-sm); padding: 8px; display: grid; gap: 4px; }
+        .log a { color: var(--color-link); }
         .stackbar { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; }
         .stack-item { display: inline-flex; align-items: center; gap: 6px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary); padding: 3px 8px 3px 3px; font-size: 0.8rem; max-width: 280px; }
         .stack-item img { width: 30px; border-radius: 3px; }
@@ -270,6 +276,7 @@
         <button class="tab" role="tab" id="tab-packs" aria-selected="false" onclick="showView('packs')">🎴 Packs</button>
         <button class="tab" role="tab" id="tab-decks" aria-selected="false" onclick="showView('decks')">🗂️ Collection &amp; Decks</button>
         <button class="tab" role="tab" id="tab-play" aria-selected="false" onclick="showView('play')">⚔️ Play</button>
+        <button class="tab" role="tab" id="tab-rules" aria-selected="false" onclick="showView('rules')">📖 Rules</button>
     </nav>
 
     <main>
@@ -301,7 +308,7 @@
             <div class="panel">
                 <h2>What the rules engine does (and doesn't, yet)</h2>
                 <p class="note">This is a base model. It plays real turns: untap, draw, a land a turn, mana from lands and mana rocks, summoning sickness, combat with attackers and blockers, and Commander damage and commander tax. These keywords work: flying, reach, trample, first strike, double strike, deathtouch, lifelink, vigilance, haste, defender, menace, indestructible and hexproof. Card text is read automatically: damage, destroy / exile / bounce, draw, life gain and loss, pump spells, +1/+1 counters, tapping, tokens, discard, auras and equipment that give +N/+N, and "when this enters" effects.</p>
-                <p class="note" style="margin-top:6px;">Every card shows how much of its text the game can run: <span class="badge sup-full">Automated</span> <span class="badge sup-partial">Partly</span> <span class="badge sup-none">Not yet</span>. "Partly" cards still play, but the text the game can't read does nothing. "Not yet" cards (planeswalkers, X spells, counterspells and most complex text) can't be cast yet. There's no stack yet: spells resolve right away, and you can cast instants on your turn or while blocking.</p>
+                <p class="note" style="margin-top:6px;">Every card shows how much of its text the game can run: <span class="badge sup-full">Automated</span> <span class="badge sup-partial">Partly</span> <span class="badge sup-none">Not yet</span>. "Partly" cards still play, but the text the game can't read does nothing. "Not yet" cards (planeswalkers, X spells and most complex text) can't be cast yet. Spells and "when this enters" abilities use the stack: the other player can respond with instants (including counterspells) before each one resolves, and a spell whose target is gone doesn't resolve. The <a href="#rules" onclick="showView('rules'); return false;">📖 Rules</a> tab has the official Comprehensive Rules to look things up.</p>
             </div>
         </section>
 
@@ -353,6 +360,17 @@
         </section>
 
         <!-- ============ PLAY ============ -->
+        <section id="view-rules" class="hidden">
+            <div class="panel">
+                <h2>Magic: The Gathering Comprehensive Rules</h2>
+                <p class="note" id="crInfo">Loading the rules...</p>
+                <div class="row" style="margin:10px 0;">
+                    <input type="search" id="crSearch" placeholder="Search: a keyword (trample), a rule number (702.19) or any words" style="flex:1; min-width:220px;" oninput="renderRulesView()" aria-label="Search the rules">
+                </div>
+                <div id="crResults"></div>
+            </div>
+        </section>
+
         <section id="view-play" class="hidden">
             <div class="panel">
                 <h2>1. Your deck</h2>
@@ -724,9 +742,87 @@ function supportBadge(card) {
 }
 
 // =====================================================================
+// The Comprehensive Rules. A copy is kept in rules/ by a weekly GitHub
+// job (tools/fetch_rules.py): rules/cr.json has every rule by number,
+// the section titles and the glossary. The game uses it for the 📖 Rules
+// tab, keyword explanations on cards and the rule numbers in the log.
+// =====================================================================
+let crData = null;
+let crPromise = null;
+function loadRules() {
+    if (!crPromise) {
+        crPromise = fetch('rules/cr.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => { crData = d; return d; });
+        crPromise.catch(() => { crPromise = null; });
+    }
+    return crPromise;
+}
+const CR_SOURCE = 'https://magic.wizards.com/en/rules';
+
+function ruleHTML(num, text) {
+    return `<div class="cr-rule" id="cr-${esc(num)}"><a class="cr-num" href="#" onclick="openRule('${esc(num)}'); return false;">${esc(num)}</a> ${esc(text).replace(/\n/g, '<br>').replace(/\b(\d{3}\.\d+[a-z]?)\b/g, m => `<a href="#" onclick="openRule('${m}'); return false;">${m}</a>`)}</div>`;
+}
+
+async function renderRulesView() {
+    const info = $('crInfo'), out = $('crResults');
+    try { await loadRules(); } catch (e) {
+        info.innerHTML = `The rules copy isn't here yet. It's fetched from <a href="${CR_SOURCE}" target="_blank" rel="noopener">Wizards' rules page</a> by a weekly job; until then, read them there.`;
+        out.innerHTML = '';
+        return;
+    }
+    info.innerHTML = `Effective ${esc(crData.effective || '?')} · ${Object.keys(crData.rules).length.toLocaleString()} rules and ${Object.keys(crData.glossary).length} glossary terms, copied ${esc(crData.fetched)} from <a href="${CR_SOURCE}" target="_blank" rel="noopener">Wizards of the Coast's rules page</a>. The rules are Wizards'; this copy keeps their wording.`;
+    const q = $('crSearch').value.trim();
+    if (!q) {
+        out.innerHTML = `<div class="cr-sections">${Object.entries(crData.sections).map(([n, t]) => `<a href="#" onclick="openRule('${n}.1'); return false;">${n}. ${esc(t)}</a>`).join('')}</div>`;
+        return;
+    }
+    const ql = q.toLowerCase();
+    let html = '';
+    if (/^\d{3}(\.\d+[a-z]?)?$/.test(q)) {
+        const hits = Object.entries(crData.rules).filter(([n]) => n === q || n.startsWith(q.includes('.') ? q : `${q}.`) || n.startsWith(`${q}`) && /[a-z]$/.test(n));
+        html = hits.slice(0, 80).map(([n, t]) => ruleHTML(n, t)).join('');
+    } else {
+        const gloss = Object.entries(crData.glossary).filter(([term]) => term.toLowerCase().includes(ql)).slice(0, 8);
+        const rules = Object.entries(crData.rules).filter(([, t]) => t.toLowerCase().includes(ql)).slice(0, 60);
+        html = (gloss.length ? `<h3 class="cr-h">Glossary</h3>${gloss.map(([term, t]) => `<div class="cr-rule"><strong>${esc(term)}</strong><br>${esc(t).replace(/\n/g, '<br>').replace(/\b(\d{3}\.\d+[a-z]?)\b/g, m => `<a href="#" onclick="openRule('${m}'); return false;">${m}</a>`)}</div>`).join('')}` : '')
+            + (rules.length ? `<h3 class="cr-h">Rules${rules.length === 60 ? ' (first 60)' : ''}</h3>${rules.map(([n, t]) => ruleHTML(n, t)).join('')}` : '');
+    }
+    out.innerHTML = html || '<p class="note">Nothing found.</p>';
+}
+
+// Show one rule (and the rules around it) - from the log, a card or a link.
+async function openRule(num) {
+    try { await loadRules(); } catch (e) { toast('The rules copy isn\'t available yet.'); return; }
+    const base = num.replace(/[a-z]$/, '');
+    const list = Object.entries(crData.rules).filter(([n]) => n === base || (n.startsWith(base) && /^[a-z]$/.test(n.slice(base.length))));
+    const sec = crData.sections[num.slice(0, 3)];
+    showModal(`<h2 style="font-size:1.2rem;">Rule ${esc(num)}${sec ? ` · ${esc(sec)}` : ''}</h2>
+        <div style="text-align:left; max-height:60vh; overflow:auto;">${list.map(([n, t]) => ruleHTML(n, t)).join('') || '<p class="note">That rule isn\'t in this copy.</p>'}</div>
+        <p class="note" style="margin-top:8px;">Comprehensive Rules effective ${esc(crData.effective || '?')}, from Wizards of the Coast.</p>
+        <div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
+}
+
+// The official glossary wording for a card's keywords
+async function keywordHelpHTML(card) {
+    const R = rulesFor(card);
+    const kws = [...R.kw];
+    if (!kws.length) return '';
+    try { await loadRules(); } catch (e) { return ''; }
+    const rows = kws.map(k => {
+        const term = Object.keys(crData.glossary).find(t => t.toLowerCase() === k);
+        return term ? `<div><strong>${esc(term)}:</strong> ${esc(crData.glossary[term].split('\n')[0])}</div>` : '';
+    }).filter(Boolean);
+    return rows.length ? `<div class="kw-help">${rows.join('')}<div class="muted">From the Comprehensive Rules glossary.</div></div>` : '';
+}
+async function fillKeywordHelp(card) {
+    const el = $('kwHelp');
+    if (!el) return;
+    el.innerHTML = await keywordHelpHTML(card);
+}
+
+// =====================================================================
 // Views, packs, collection and decks
 // =====================================================================
-const VIEWS = ['home', 'packs', 'decks', 'play'];
+const VIEWS = ['home', 'packs', 'decks', 'play', 'rules'];
 function showView(v) {
     VIEWS.forEach(k => {
         $(`view-${k}`).classList.toggle('hidden', k !== v);
@@ -736,6 +832,7 @@ function showView(v) {
     if (v === 'packs') renderPacksView();
     if (v === 'decks') { if (!editing) renderDeckPicker(); }
     if (v === 'play') renderPlayView();
+    if (v === 'rules') renderRulesView();
     try { history.replaceState(null, '', `#${v}`); } catch (e) { /* fine */ }
 }
 
@@ -905,10 +1002,12 @@ function showCardSheet(id, actionsHTML = '') {
                     <div class="note">${esc(card.setName || '')} · ${esc(card.rarity || '')}${profile.collection[id] ? ` · you own ${profile.collection[id]}` : ''}</div>
                     ${cardTextHTML(card)}
                     <div>${supportBadge(card)} <span class="note">${esc(R.why || 'Everything on this card works in the game.')}</span></div>
+                    <div id="kwHelp"></div>
                     <div class="actions">${actionsHTML}<button class="btn" onclick="closeSheet()">Close</button></div>
                 </div>
             </div>
         </div>`;
+    fillKeywordHelp(card);
 }
 function closeSheet() { $('sheetHost').innerHTML = ''; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
@@ -1394,7 +1493,10 @@ function log(msg) {
     G.log.push(msg);
     if (G.log.length > 80) G.log.shift();
     const el = $('log');
-    if (el) { el.innerHTML = G.log.slice(-40).map(l => `<div>${esc(l)}</div>`).join(''); el.scrollTop = el.scrollHeight; }
+    if (el) {
+        el.innerHTML = G.log.slice(-40).map(l => `<div>${esc(l).replace(/rule (\d{3}\.\d+[a-z]?)/g, (m, n) => `<a href="#" onclick="openRule('${n}'); return false;">rule ${n}</a>`)}</div>`).join('');
+        el.scrollTop = el.scrollHeight;
+    }
 }
 const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 
@@ -2186,9 +2288,11 @@ function showGameCard(uid) {
                 <div>${o.card.img ? `<img src="${o.card.img}" alt="${esc(o.card.name)}">` : `<div class="otext">${esc(o.card.name)}</div>`}</div>
                 <div><h3>${esc(o.card.fullName || o.card.name)}</h3>${cardTextHTML(o.card)}${stats}
                     <div>${o.token ? '<span class="note">Token</span>' : supportBadge(o.card)} <span class="note">${esc(r.why || '')}</span></div>
+                    <div id="kwHelp"></div>
                     <div class="actions">${actions}<button class="btn" onclick="closeSheet()">Close</button></div></div>
             </div>
         </div>`;
+    fillKeywordHelp(o.card);
 }
 
 // ---- Game over ----
