@@ -825,6 +825,15 @@
             --color-warning: #ffcc80;
             --color-link: #6cb2ff;
 
+            /* Price chart lines (TCGplayer, Card Kingdom sells, Mana Pool
+               sells, Card Kingdom pays) - validated with the dataviz
+               palette checker on the dark panel (#1a1a1a), 2026-10-05.
+               Kept the same in every seasonal theme. */
+            --chart-1: #3987e5;
+            --chart-2: #d95926;
+            --chart-3: #199e70;
+            --chart-4: #c98500;
+
             /* Radius scale */
             --radius-sm: 4px;
             --radius-md: 8px;
@@ -4746,6 +4755,52 @@
         .price-history-chips { display: inline-flex; gap: 4px; flex-wrap: wrap; }
 
         .printing-trend { text-align: right; }
+
+        /* ---- Price history chart (Card Lookup) ---- */
+        .pc-controls { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+        .pc-group { display: inline-flex; gap: 4px; }
+        .pc-group .staples-sort-btn { padding: 4px 10px; }
+        .pc-summary { color: var(--text-primary); font-size: 0.95em; margin: 2px 0 8px; }
+        .pc-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; margin-bottom: 8px; }
+        .pc-stat { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; background: var(--bg-panel); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); }
+        .pc-stat-label { font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-secondary); }
+        .pc-stat-value { font-size: 1.1em; font-weight: 700; color: var(--text-heading); font-variant-numeric: tabular-nums; }
+        .pc-stat-sub { font-size: 0.8em; color: var(--text-soft); }
+        .pc-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+        .pc-legend-item { display: inline-flex; align-items: center; gap: 6px; width: auto; margin: 0; padding: 4px 10px; font-size: 0.85em;
+            background: var(--bg-panel); border: 1px solid var(--border); border-radius: 999px; color: var(--text-primary); cursor: pointer; }
+        .pc-legend-item strong { color: var(--text-heading); }
+        .pc-legend-item.off { opacity: 0.5; }
+        .pc-legend-item.off .pc-key { background: transparent !important; outline: 2px solid var(--text-muted); }
+        .pc-key { display: inline-block; width: 14px; height: 3px; border-radius: 2px; }
+        .pc-chart { position: relative; width: 100%; }
+        .pc-chart svg { display: block; width: 100%; height: auto; outline: none; touch-action: pan-y; }
+        .pc-chart svg:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+        .pc-grid { stroke: var(--border-subtle); stroke-width: 1; }
+        .pc-axis { fill: var(--text-secondary); font-size: 11px; font-variant-numeric: tabular-nums; }
+        .pc-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+        .pc-area { opacity: 0.1; }
+        .pc-end, .pc-hover-dot { stroke: var(--bg-inset); stroke-width: 2; }
+        .pc-cross { stroke: var(--text-muted); stroke-width: 1; }
+        .pc-hit { fill: transparent; cursor: crosshair; }
+        .pc-event line { stroke: var(--text-muted); stroke-width: 1; }
+        .pc-event circle { fill: var(--bg-panel-raised); stroke: var(--text-muted); stroke-width: 1; }
+        .pc-event text { fill: var(--text-heading); font-size: 9px; font-weight: 700; }
+        .pc-tooltip { position: absolute; top: 8px; z-index: 2; min-width: 150px; padding: 8px 10px; pointer-events: none;
+            background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); font-size: 0.85em; }
+        .pc-tip-date { color: var(--text-secondary); margin-bottom: 4px; }
+        .pc-tip-row { display: flex; align-items: center; gap: 6px; padding: 1px 0; }
+        .pc-tip-row strong { color: var(--text-heading); font-variant-numeric: tabular-nums; min-width: 52px; }
+        .pc-tip-label { color: var(--text-secondary); }
+        .pc-tip-key { display: inline-block; width: 12px; height: 3px; border-radius: 2px; }
+        .pc-tip-event { margin-top: 4px; color: var(--color-warning); }
+        .pc-events { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 4px; font-size: 0.85em; color: var(--text-soft); }
+        .pc-event-num { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-right: 4px;
+            border-radius: 50%; border: 1px solid var(--text-muted); font-size: 0.72em; font-weight: 700; color: var(--text-heading); }
+        .pc-table-details { margin: 6px 0; }
+        .pc-table-details summary { cursor: pointer; font-size: 0.85em; color: var(--color-link); }
+        .pc-table td, .pc-table th { text-align: right; }
+        .pc-table td:first-child, .pc-table th:first-child { text-align: left; }
 
         .other-stores {
             border-collapse: collapse;
@@ -12962,7 +13017,7 @@
         // any, otherwise the nearest weekly point.
         function priceTrendDays(fh, days) {
             if (!fh) return null;
-            if (fh.daily && days <= 30) return priceTrend(fh.daily, days);
+            if (fh.daily && days < fh.daily.length) return priceTrend(fh.daily, days);
             return priceTrend(fh.weekly, Math.round(days / 7));
         }
 
@@ -18849,6 +18904,8 @@
                 currentPrints = prints;
                 renderPrintingsTable();
                 refreshPriceAcross();
+                // reprints in the chart's range get a marker
+                if (priceHistoryCurrent && priceHistoryCurrent.card.oracle_id === card.oracle_id) renderPriceHistoryPanel();
             } catch (err) {
                 console.error('Error loading printings:', err);
                 if (summaryEl) summaryEl.textContent = 'All Printings (unavailable)';
@@ -18863,20 +18920,39 @@
             renderPrintingsTable();
         }
 
-        // ---- Price movement for the printing on screen ----
-        // From the daily market data: a chart for each finish (last 30 days
-        // day by day, or about 90 days week by week) with 7/30/90-day changes.
-        let priceHistoryRange = 30; // 30 (daily) or 90 (weekly)
-        let priceHistoryCurrent = null; // { card, history } for re-rendering on toggle
+        // ---- Price history for the printing on screen ----
+        // One chart per finish (Regular / Foil / Etched) with 7, 30 and 90-day
+        // ranges, from the daily market data: TCGplayer market, and Card
+        // Kingdom and Mana Pool (selling) and Card Kingdom's buylist (paying)
+        // as lines you can switch on and off. Above it, the range's change,
+        // high and low (with dates), biggest one-day move and Card Kingdom's
+        // buy price as a share of market; below it, reprints and ban changes
+        // in the range are marked, and a table view lists every point.
+        // Files from before the 90-day daily data (2026-10-05) fall back to
+        // the weekly points for 90 days.
+        let priceHistoryRange = 30; // 7, 30 or 90 days
+        let priceHistoryFinish = null; // 'n' | 'f' | 'e' - the finish on the chart
+        const priceChartHidden = new Set(); // series switched off ('tcg', 'ck', 'mp', 'kb')
+        let priceHistoryCurrent = null; // { card, history, meta, bans } for re-rendering
+        let priceChartState = null; // what the chart on screen plots, for the hover layer
+
+        const PRICE_SERIES = [
+            { key: 'tcg', label: 'TCGplayer market', color: 'var(--chart-1)' },
+            { key: 'ck', label: 'Card Kingdom sells', color: 'var(--chart-2)', daily: 'ckd' },
+            { key: 'mp', label: 'Mana Pool sells', color: 'var(--chart-3)', daily: 'mpd' },
+            { key: 'kb', label: 'Card Kingdom pays', color: 'var(--chart-4)', daily: 'kbd' }
+        ];
 
         async function loadPriceHistoryPanel(card) {
             const el = document.getElementById('priceHistory');
             if (!el) return;
             priceHistoryCurrent = null;
             el.innerHTML = '<span class="text-secondary">Loading price history...</span>';
-            const [history, meta] = await Promise.all([priceHistoryFor(card.id), loadMarketMeta()]);
+            const [history, meta, bans] = await Promise.all([priceHistoryFor(card.id), loadMarketMeta(), fetchMarketFile('bans.json').catch(() => null)]);
             if (!currentDisplayedCard || currentDisplayedCard.id !== card.id) return; // switched printing meanwhile
-            priceHistoryCurrent = { card, history, meta };
+            priceHistoryCurrent = { card, history, meta, bans };
+            const finishes = PRICE_FINISHES.filter(([key]) => history && history[key]).map(([key]) => key);
+            if (!finishes.includes(priceHistoryFinish)) priceHistoryFinish = finishes[0] || null;
             renderPriceHistoryPanel();
         }
 
@@ -18885,43 +18961,381 @@
             renderPriceHistoryPanel();
         }
 
+        function setPriceHistoryFinish(key) {
+            priceHistoryFinish = key;
+            renderPriceHistoryPanel();
+        }
+
+        function togglePriceSeries(key) {
+            if (priceChartHidden.has(key)) priceChartHidden.delete(key);
+            else priceChartHidden.add(key);
+            renderPriceHistoryPanel();
+        }
+
+        // The dates and points for one finish over the chosen range. Daily
+        // points line up with meta.days from the newest end; with only
+        // weekly points (older files) the 90-day range uses meta.weeks.
+        function priceChartData(history, meta, finish, range) {
+            const tcgDaily = history['d' + finish];
+            const dailyLen = tcgDaily ? tcgDaily.length : 0;
+            let dates, pick;
+            if (dailyLen >= range + 1) {
+                dates = meta.days.slice(-(range + 1));
+                pick = arr => (arr && arr.length >= range + 1 ? arr.slice(-(range + 1)) : null);
+            } else if (range > 30 || !dailyLen) {
+                dates = meta.weeks.slice();
+                pick = arr => (arr && arr.length === dates.length ? arr.slice() : null);
+            } else {
+                const n = Math.min(range + 1, dailyLen);
+                dates = meta.days.slice(-n);
+                pick = arr => (arr && arr.length >= n ? arr.slice(-n) : null);
+            }
+            const weekly = dates.length === meta.weeks.length && dates[0] === meta.weeks[0];
+            const series = PRICE_SERIES.map(s => {
+                let pts;
+                if (s.key === 'tcg') pts = weekly ? pick(history[finish]) : pick(tcgDaily);
+                else if (s.key === 'kb' && weekly) pts = pick(history['kb' + finish]);
+                else pts = weekly ? null : pick(history[s.daily + finish]);
+                return { ...s, pts: pts && pts.some(v => v !== null) ? pts : null };
+            }).filter(s => s.pts);
+            // A store price far from TCGplayer's is usually a different
+            // version or a data slip - hidden unless switched on.
+            const tcg = series.find(s => s.key === 'tcg');
+            const tcgNow = tcg && lastValue(tcg.pts);
+            series.forEach(s => {
+                const now = lastValue(s.pts);
+                s.suspect = s.key !== 'tcg' && s.key !== 'kb' && tcgNow && now && (now > tcgNow * 2 || now < tcgNow / 2);
+            });
+            return { dates, series, weekly };
+        }
+
+        function lastValue(pts) {
+            for (let i = (pts || []).length - 1; i >= 0; i--) if (pts[i] !== null) return pts[i];
+            return null;
+        }
+
+        function shortDate(iso) {
+            const d = new Date(iso + 'T12:00:00');
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // 3-5 round price ticks covering lo..hi
+        function niceTicks(lo, hi) {
+            const span = hi - lo || hi || 1;
+            const raw = span / 4;
+            const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+            const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || raw;
+            const start = Math.floor(lo / step) * step;
+            const ticks = [];
+            for (let v = start; v <= hi + step * 0.001; v += step) ticks.push(Math.round(v * 100) / 100);
+            if (ticks[ticks.length - 1] < hi) ticks.push(Math.round((ticks[ticks.length - 1] + step) * 100) / 100);
+            return ticks;
+        }
+
+        // Plain-English read of one series over the range.
+        function priceSummaryText(pts, dates, range) {
+            const idx = pts.map((v, i) => (v === null ? -1 : i)).filter(i => i >= 0);
+            if (idx.length < 2) return '';
+            const first = pts[idx[0]], last = pts[idx[idx.length - 1]];
+            const pct = (last - first) / first;
+            const word = Math.abs(pct) < 0.03 ? 'Steady' : pct > 0 ? 'Up' : 'Down';
+            let text = word === 'Steady' ? `Steady over ${range} days (${pct >= 0 ? '+' : '−'}${Math.abs(Math.round(pct * 100))}%)` : `${word} ${Math.abs(Math.round(pct * 100))}% over ${range} days`;
+            // Where most of the move happened: the 7-point window with the
+            // biggest change, if it holds more than half of the total.
+            const win = Math.min(7, Math.floor(idx.length / 2));
+            if (word !== 'Steady' && win >= 2 && idx.length > win + 1) {
+                let best = null;
+                for (let k = 0; k + win < idx.length; k++) {
+                    const a = pts[idx[k]], b = pts[idx[k + win]];
+                    if (!best || Math.abs(b - a) > Math.abs(best.d)) best = { d: b - a, from: idx[k], to: idx[k + win] };
+                }
+                if (best && Math.sign(best.d) === Math.sign(last - first) && Math.abs(best.d) > Math.abs(last - first) * 0.5) {
+                    text += `, mostly ${shortDate(dates[best.from])} to ${shortDate(dates[best.to])}`;
+                }
+            }
+            // The last week, when the range is longer than that
+            if (range > 7 && idx.length > 7) {
+                const wk = pts[idx[idx.length - 1 - Math.min(7, idx.length - 1)]];
+                const wpct = wk ? (last - wk) / wk : 0;
+                text += Math.abs(wpct) < 0.03 ? '; flat this week' : `; ${wpct > 0 ? 'up' : 'down'} ${Math.abs(Math.round(wpct * 100))}% this week`;
+            }
+            return text + '.';
+        }
+
+        // Reprints (other paper printings released in the range) and ban
+        // changes for this card in the range, to mark on the chart.
+        function priceChartEvents(card, dates, bans) {
+            const from = dates[0], to = dates[dates.length - 1];
+            const events = [];
+            (currentPrints || []).forEach(p => {
+                if (p.id === card.id || !p.released_at || !(p.games || []).includes('paper')) return;
+                if (p.released_at >= from && p.released_at <= to) events.push({ date: p.released_at, label: `Reprint: ${p.set_name}`, kind: 'reprint' });
+            });
+            ((bans && bans.log) || []).forEach(e => {
+                if (e.card === card.name && e.date >= from && e.date <= to) events.push({ date: e.date, label: `${e.change.charAt(0).toUpperCase()}${e.change.slice(1)} in ${e.format.charAt(0).toUpperCase()}${e.format.slice(1)}`, kind: 'ban' });
+            });
+            // one marker per date
+            const byDate = new Map();
+            events.forEach(e => {
+                const prev = byDate.get(e.date);
+                if (prev && prev.label.split('; ').includes(e.label)) return; // several printings in one set
+                byDate.set(e.date, prev ? { ...prev, label: `${prev.label}; ${e.label}` } : e);
+            });
+            return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+        }
+
         function renderPriceHistoryPanel() {
             const el = document.getElementById('priceHistory');
             if (!el || !priceHistoryCurrent) return;
-            const { history, meta } = priceHistoryCurrent;
+            const { card, history, meta, bans } = priceHistoryCurrent;
             if (!meta) {
                 el.innerHTML = '<span class="text-secondary">Price history isn\'t available right now.</span>';
                 return;
             }
-            const finishes = PRICE_FINISHES.map(([key, label]) => ({ label, fh: finishHistory(history, key) })).filter(f => f.fh);
-            if (!finishes.length) {
+            const finishes = PRICE_FINISHES.filter(([key]) => history && history[key]);
+            if (!finishes.length || !priceHistoryFinish) {
                 el.innerHTML = '<span class="text-secondary">No price history for this printing yet - it\'s new, or it hasn\'t been worth $1 in the last 90 days. The 30-day column under All Printings shows how the other versions are moving.</span>';
                 return;
             }
-            const hasDaily = finishes.some(f => f.fh.daily);
-            const range = hasDaily ? priceHistoryRange : 90;
-            const btn = (days, label) => `<button type="button" class="staples-sort-btn${range === days ? ' active' : ''}" onclick="setPriceHistoryRange(${days})">${label}</button>`;
+            const range = priceHistoryRange;
+            const { dates, series, weekly } = priceChartData(history, meta, priceHistoryFinish, range);
+            const shown = series.filter(s => (s.suspect ? priceChartHidden.has('show-' + s.key) : !priceChartHidden.has(s.key)));
+            const tcg = series.find(s => s.key === 'tcg');
+            const finishLabel = (finishes.find(([k]) => k === priceHistoryFinish) || [])[1];
+
+            // Stats for the TCGplayer line over the range
+            let stats = '';
+            let summary = '';
+            if (tcg) {
+                const pts = tcg.pts;
+                const idx = pts.map((v, i) => (v === null ? -1 : i)).filter(i => i >= 0);
+                const firstI = idx[0], lastI = idx[idx.length - 1];
+                const now = pts[lastI], then = pts[firstI];
+                let hiI = firstI, loI = firstI, jump = null;
+                idx.forEach((i, n) => {
+                    if (pts[i] > pts[hiI]) hiI = i;
+                    if (pts[i] < pts[loI]) loI = i;
+                    if (!weekly && n > 0) {
+                        const d = pts[i] - pts[idx[n - 1]];
+                        if (!jump || Math.abs(d) > Math.abs(jump.d)) jump = { d, i };
+                    }
+                });
+                const diff = now - then;
+                const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '–';
+                const kb = series.find(s => s.key === 'kb');
+                const kbNow = kb && lastValue(kb.pts);
+                const tile = (label, value, sub) => `<div class="pc-stat"><span class="pc-stat-label">${label}</span><span class="pc-stat-value">${value}</span>${sub ? `<span class="pc-stat-sub">${sub}</span>` : ''}</div>`;
+                stats = `
+                    <div class="pc-stats">
+                        ${tile('Market now', formatUsd(now), shortDate(dates[lastI]))}
+                        ${tile(`Change, ${range} days`, `${arrow} ${formatUsd(Math.abs(diff))}`, `${diff >= 0 ? '+' : '−'}${Math.abs(Math.round((diff / then) * 100))}% from ${formatUsd(then)}`)}
+                        ${tile('High', formatUsd(pts[hiI]), shortDate(dates[hiI]))}
+                        ${tile('Low', formatUsd(pts[loI]), shortDate(dates[loI]))}
+                        ${jump && Math.abs(jump.d) >= 0.01 ? tile('Biggest day move', `${jump.d > 0 ? '▲' : '▼'} ${formatUsd(Math.abs(jump.d))}`, shortDate(dates[jump.i])) : ''}
+                        ${kbNow && now ? tile('Card Kingdom pays', formatUsd(kbNow), `${Math.round((kbNow / now) * 100)}% of market`) : ''}
+                    </div>
+                `;
+                summary = priceSummaryText(pts, dates, range);
+            }
+
+            const events = priceChartEvents(card, dates, bans);
+            priceChartState = { dates, series: shown, events, weekly };
+            const btn = (days, label) => `<button type="button" class="staples-sort-btn${range === days ? ' active' : ''}" onclick="setPriceHistoryRange(${days})" aria-pressed="${range === days}">${label}</button>`;
+            const finishBtn = ([key, label]) => `<button type="button" class="staples-sort-btn${priceHistoryFinish === key ? ' active' : ''}" onclick="setPriceHistoryFinish('${key}')" aria-pressed="${priceHistoryFinish === key}">${label}</button>`;
+            const legend = series.map(s => {
+                const on = shown.includes(s);
+                const now = lastValue(s.pts);
+                return `<button type="button" class="pc-legend-item${on ? '' : ' off'}" aria-pressed="${on}" onclick="togglePriceSeries('${s.suspect ? 'show-' + s.key : s.key}')" title="${s.suspect ? 'Hidden: far from TCGplayer\'s price, likely a different version or a data slip. Click to show.' : 'Click to show or hide'}">
+                    <span class="pc-key" style="background:${s.color};"></span>${s.label}${now ? ` <strong>${formatUsd(now)}</strong>` : ''}${s.suspect ? ' <span class="text-secondary">(looks off)</span>' : ''}
+                </button>`;
+            }).join('');
+
             el.innerHTML = `
                 <div class="price-history-head">
-                    <span class="price-across-label">Price movement</span>
-                    ${hasDaily ? `<span>${btn(30, '30 days')} ${btn(90, '90 days')}</span>` : ''}
+                    <span class="price-across-label">Price history</span>
+                    <span class="pc-controls">
+                        ${finishes.length > 1 ? `<span class="pc-group">${finishes.map(finishBtn).join('')}</span>` : ''}
+                        <span class="pc-group">${btn(7, '7D')}${btn(30, '30D')}${btn(90, '90D')}</span>
+                    </span>
                 </div>
-                ${finishes.map(({ label, fh }) => {
-                    const points = range === 30 && fh.daily ? fh.daily : fh.weekly;
-                    const vals = points.filter(v => v !== null);
-                    return `
-                        <div class="price-history-row">
-                            <span class="price-history-label">${label}</span>
-                            ${sparklineSVG(points, 150, 34)}
-                            <span class="price-history-range text-secondary">${vals.length ? `low ${formatUsd(Math.min(...vals))} · high ${formatUsd(Math.max(...vals))}` : ''}</span>
-                            <span class="price-history-chips">${trendChipHTML(priceTrendDays(fh, 7), '7d')} ${trendChipHTML(priceTrendDays(fh, 30), '30d')} ${trendChipHTML(priceTrend(fh.weekly, 13), '90d')}</span>
-                        </div>
-                    `;
-                }).join('')}
-                <div class="price-note">${range === 30 ? 'Daily' : 'Weekly'} TCGplayer market prices via MTGJSON, as of ${meta.priceDate} - they update each morning, so they can be a day behind the price above. Chips show the change over 7, 30 and 90 days.</div>
+                ${summary ? `<div class="pc-summary">${finishLabel ? `${finishLabel}: ` : ''}${summary}</div>` : ''}
+                ${stats}
+                <div class="pc-legend">${legend}</div>
+                <div class="pc-chart" id="priceChart">
+                    <div class="pc-tooltip" id="priceChartTip" hidden></div>
+                </div>
+                ${events.length ? `<div class="pc-events">${events.map((e, i) => `<span><span class="pc-event-num">${i + 1}</span>${shortDate(e.date)}: ${e.label}</span>`).join('')}</div>` : ''}
+                <details class="pc-table-details">
+                    <summary>Show as a table</summary>
+                    <div class="buylist-table-wrap"><table class="other-stores pc-table">
+                        <thead><tr><th>Date</th>${series.map(s => `<th>${s.label}</th>`).join('')}</tr></thead>
+                        <tbody>${dates.map((d, i) => `<tr><td>${shortDate(d)}</td>${series.map(s => `<td>${s.pts[i] !== null ? formatUsd(s.pts[i]) : '—'}</td>`).join('')}</tr>`).reverse().join('')}</tbody>
+                    </table></div>
+                </details>
+                <div class="price-note">${weekly ? 'Weekly' : 'Daily'} near-mint prices via MTGJSON, as of ${meta.priceDate} - updated each morning, so they can be a day behind the price above. TCGplayer market is the average of recent sales; the store lines are what Card Kingdom and Mana Pool sell for and what Card Kingdom pays (its buylist). Point at the chart to read any day.</div>
                 ${otherStoresHTML(history)}
             `;
+            drawPriceChart();
         }
+
+        // The SVG itself, sized to the box it sits in.
+        function drawPriceChart() {
+            const box = document.getElementById('priceChart');
+            const st = priceChartState;
+            if (!box || !st) return;
+            const W = Math.max(280, Math.round(box.clientWidth || 600));
+            const H = W < 480 ? 190 : 230;
+            const m = { l: 48, r: 14, t: 14, b: 26 };
+            const iw = W - m.l - m.r, ih = H - m.t - m.b;
+            const vals = st.series.flatMap(s => s.pts.filter(v => v !== null));
+            const old = box.querySelector('svg');
+            if (old) old.remove();
+            if (!vals.length) {
+                box.insertAdjacentHTML('afterbegin', '<div class="text-secondary" style="padding:20px 0;">Every line is switched off.</div>');
+                return;
+            }
+            let lo = Math.min(...vals), hi = Math.max(...vals);
+            // A flat card shouldn't look like a rollercoaster: show at
+            // least a 20% band around the price.
+            const minSpan = hi * 0.2;
+            if (hi - lo < minSpan) {
+                const mid = (hi + lo) / 2;
+                lo = Math.max(0, mid - minSpan / 2);
+                hi = mid + minSpan / 2;
+            }
+            const ticks = niceTicks(lo, hi);
+            const y0 = ticks[0], y1 = ticks[ticks.length - 1];
+            const n = st.dates.length;
+            const x = i => m.l + (n === 1 ? iw / 2 : (i / (n - 1)) * iw);
+            const y = v => m.t + ih - ((v - y0) / (y1 - y0 || 1)) * ih;
+            const cents = (y1 - y0) / (ticks.length - 1) < 1;
+            const money = v => (cents ? `$${v.toFixed(2)}` : `$${Math.round(v).toLocaleString()}`);
+
+            const parts = [];
+            ticks.forEach(t => parts.push(`<line class="pc-grid" x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}"/><text class="pc-axis" x="${m.l - 6}" y="${y(t) + 4}" text-anchor="end">${money(t)}</text>`));
+            const xTicks = Math.min(5, n);
+            for (let k = 0; k < xTicks; k++) {
+                const i = Math.round((k / (xTicks - 1 || 1)) * (n - 1));
+                parts.push(`<text class="pc-axis" x="${x(i)}" y="${H - 8}" text-anchor="${k === 0 ? 'start' : k === xTicks - 1 ? 'end' : 'middle'}">${shortDate(st.dates[i])}</text>`);
+            }
+            // Event markers: a hairline with a numbered tag at the top
+            st.events.forEach((e, k) => {
+                let i = st.dates.findIndex(d => d >= e.date);
+                if (i < 0) i = n - 1;
+                parts.push(`<g class="pc-event"><line x1="${x(i)}" x2="${x(i)}" y1="${m.t}" y2="${m.t + ih}"/><circle cx="${x(i)}" cy="${m.t + 7}" r="7"/><text x="${x(i)}" y="${m.t + 11}" text-anchor="middle">${k + 1}</text><title>${shortDate(e.date)}: ${escapeAttr(e.label)}</title></g>`);
+            });
+            // Lines (gaps where a store wasn't listing), a wash under TCGplayer
+            st.series.forEach(s => {
+                let d = '';
+                let pen = false;
+                s.pts.forEach((v, i) => {
+                    if (v === null) { pen = false; return; }
+                    d += `${pen ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`;
+                    pen = true;
+                });
+                if (s.key === 'tcg') {
+                    const idx = s.pts.map((v, i) => (v === null ? -1 : i)).filter(i => i >= 0);
+                    if (idx.length > 1) parts.push(`<path class="pc-area" style="fill:${s.color};" d="M${x(idx[0])},${m.t + ih} ${idx.map(i => `L${x(i).toFixed(1)},${y(s.pts[i]).toFixed(1)}`).join(' ')} L${x(idx[idx.length - 1])},${m.t + ih} Z"/>`);
+                }
+                parts.push(`<path class="pc-line" style="stroke:${s.color};" d="${d}"/>`);
+                const li = s.pts.length - 1 - [...s.pts].reverse().findIndex(v => v !== null);
+                if (li >= 0 && li < s.pts.length) parts.push(`<circle class="pc-end" cx="${x(li)}" cy="${y(s.pts[li])}" r="4" style="fill:${s.color};"/>`);
+            });
+            parts.push(`<line class="pc-cross" id="pcCross" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" visibility="hidden"/>`);
+            st.series.forEach((s, k) => parts.push(`<circle class="pc-hover-dot" id="pcDot${k}" r="4" style="fill:${s.color};" visibility="hidden"/>`));
+            parts.push(`<rect class="pc-hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}"/>`);
+            box.insertAdjacentHTML('afterbegin', `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" tabindex="0" aria-label="Price history chart. Use the left and right arrow keys to read each day.">${parts.join('')}</svg>`);
+            st.geom = { x, y, m, iw, W, n };
+
+            const svg = box.querySelector('svg');
+            const show = i => showPriceChartPoint(i);
+            const fromEvent = ev => {
+                const rect = svg.getBoundingClientRect();
+                const px = (ev.clientX - rect.left) * (W / rect.width);
+                return Math.max(0, Math.min(n - 1, Math.round(((px - m.l) / iw) * (n - 1))));
+            };
+            svg.addEventListener('pointermove', ev => show(fromEvent(ev)));
+            svg.addEventListener('pointerdown', ev => show(fromEvent(ev)));
+            svg.addEventListener('pointerleave', () => hidePriceChartPoint());
+            svg.addEventListener('keydown', ev => {
+                if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight' && ev.key !== 'Escape') return;
+                ev.preventDefault();
+                if (ev.key === 'Escape') { hidePriceChartPoint(); return; }
+                const cur = st.hoverIndex == null ? n - 1 : st.hoverIndex + (ev.key === 'ArrowLeft' ? -1 : 1);
+                show(Math.max(0, Math.min(n - 1, cur)));
+            });
+            svg.addEventListener('blur', () => hidePriceChartPoint());
+        }
+
+        function showPriceChartPoint(i) {
+            const st = priceChartState;
+            const tip = document.getElementById('priceChartTip');
+            const cross = document.getElementById('pcCross');
+            if (!st || !st.geom || !tip || !cross) return;
+            st.hoverIndex = i;
+            const { x, y, W } = st.geom;
+            cross.setAttribute('x1', x(i));
+            cross.setAttribute('x2', x(i));
+            cross.setAttribute('visibility', 'visible');
+            st.series.forEach((s, k) => {
+                const dot = document.getElementById(`pcDot${k}`);
+                if (!dot) return;
+                if (s.pts[i] === null) { dot.setAttribute('visibility', 'hidden'); return; }
+                dot.setAttribute('cx', x(i));
+                dot.setAttribute('cy', y(s.pts[i]));
+                dot.setAttribute('visibility', 'visible');
+            });
+            // Values lead, labels follow; line keys, built with textContent
+            tip.textContent = '';
+            const head = document.createElement('div');
+            head.className = 'pc-tip-date';
+            head.textContent = st.weekly ? `Week of ${shortDate(st.dates[i])}` : new Date(st.dates[i] + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            tip.appendChild(head);
+            st.series.forEach(s => {
+                const row = document.createElement('div');
+                row.className = 'pc-tip-row';
+                const key = document.createElement('span');
+                key.className = 'pc-tip-key';
+                key.style.background = s.color;
+                const val = document.createElement('strong');
+                val.textContent = s.pts[i] !== null ? formatUsd(s.pts[i]) : '—';
+                const lab = document.createElement('span');
+                lab.className = 'pc-tip-label';
+                lab.textContent = s.label;
+                row.append(key, val, lab);
+                tip.appendChild(row);
+            });
+            st.events.filter(e => {
+                const j = st.dates.findIndex(d => d >= e.date);
+                return j === i;
+            }).forEach(e => {
+                const row = document.createElement('div');
+                row.className = 'pc-tip-event';
+                row.textContent = e.label;
+                tip.appendChild(row);
+            });
+            tip.hidden = false;
+            const px = x(i);
+            const tw = tip.offsetWidth;
+            tip.style.left = `${px + 14 + tw > W ? Math.max(0, px - 14 - tw) : px + 14}px`;
+        }
+
+        function hidePriceChartPoint() {
+            const st = priceChartState;
+            if (st) st.hoverIndex = null;
+            const tip = document.getElementById('priceChartTip');
+            if (tip) tip.hidden = true;
+            const cross = document.getElementById('pcCross');
+            if (cross) cross.setAttribute('visibility', 'hidden');
+            document.querySelectorAll('.pc-hover-dot').forEach(d => d.setAttribute('visibility', 'hidden'));
+        }
+
+        // Redraw at the new width when the window resizes
+        let priceChartResizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(priceChartResizeTimer);
+            priceChartResizeTimer = setTimeout(drawPriceChart, 150);
+        });
 
         // Card Kingdom and Mana Pool for the same printing: what they sell
         // it for, and what Card Kingdom pays (its buylist), with 30-day moves.
