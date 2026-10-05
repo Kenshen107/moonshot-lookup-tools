@@ -312,6 +312,7 @@
         <label class="acct" title="Each player has their own coins, collection, decks and record (saved in this browser)">👤 <select id="acctSel" onchange="pickAccount(this.value)" aria-label="Player"></select></label>
         <span class="coins" id="coinPill" title="Coins: free, in-game only. Win games to earn more.">🪙 <span id="coinCount">0</span></span>
         <button class="btn small" onclick="addTestCoins()" title="Test build: add free coins to this player">＋🪙 Add coins</button>
+        <button class="btn small" onclick="restartPlayer()" title="Test build: wipe this player's coins, cards, decks and record and start fresh">↺ Start over</button>
     </header>
 
     <nav class="tabs" role="tablist" aria-label="Spellslinger Duels">
@@ -537,6 +538,16 @@ function pickAccount(name) {
     const v = VIEWS.find(k => !$(`view-${k}`).classList.contains('hidden')) || 'home';
     showView(v);
     toast(`Playing as ${name}.`);
+}
+// Test build: wipe the current player back to a brand-new profile.
+function restartPlayer() {
+    if (!confirm(`Start ${accounts.current} over? This deletes their coins, cards, decks and win/loss record (other players aren't touched).`)) return;
+    editing = null;
+    profile = null;
+    ensureProfile();
+    const v = VIEWS.find(k => !$(`view-${k}`).classList.contains('hidden')) || 'home';
+    showView(v);
+    toast(`${accounts.current} starts fresh: 🪙 ${START_COINS} coins and 3 free packs.`);
 }
 // Test build: free coins on demand, for trying things out.
 function addTestCoins() {
@@ -972,8 +983,11 @@ async function loadPackSets() {
 
 async function renderPacksView() {
     const sel = $('packSet');
+    // No buying until the set list is in (a click before then had no set and failed)
+    if (sel.dataset.ready !== '1') $('buyPlay').disabled = $('buyCollector').disabled = true;
     try {
         await loadPackSets();
+        if (!packSets.length) throw new Error('no sets');
         if (sel.dataset.ready !== '1') {
             // Grouped by decade, newest first
             const groups = {};
@@ -982,7 +996,8 @@ async function renderPacksView() {
             sel.dataset.ready = '1';
         }
     } catch (e) {
-        sel.innerHTML = '<option>Couldn\'t load sets</option>';
+        sel.innerHTML = '<option value="">Couldn\'t load sets - open this tab again to retry</option>';
+        return;
     }
     const free = profile.freePacks > 0;
     $('buyPlay').textContent = free ? `Play booster · 🎁 free (${profile.freePacks} left)` : `Play booster · 🪙 ${PACK_PRICES.play}`;
