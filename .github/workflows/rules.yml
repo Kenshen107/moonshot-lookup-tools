@@ -1,0 +1,47 @@
+# Keeps a copy of Magic's Comprehensive Rules in rules/ for Spellslinger
+# Duels (see tools/fetch_rules.py). Checks Wizards' rules page every
+# Monday and commits only when the rules have changed. Also runs when the
+# script or this file changes, to fetch the first copy.
+name: Comprehensive Rules
+
+on:
+  schedule:
+    - cron: '17 14 * * 1' # Mondays, 14:17 UTC
+  workflow_dispatch: {}
+  push:
+    paths:
+      - 'tools/fetch_rules.py'
+      - '.github/workflows/rules.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: comprehensive-rules
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch the Comprehensive Rules
+        run: python tools/fetch_rules.py
+
+      - name: Commit if they changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add rules
+          if git diff --cached --quiet; then
+            echo "No change"
+          else
+            git commit -q -m "Update the Comprehensive Rules copy ($(python -c 'import json; print(json.load(open("rules/cr.json"))["effective"])'))"
+            git push
+          fi
