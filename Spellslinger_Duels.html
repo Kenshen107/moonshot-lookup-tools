@@ -355,6 +355,66 @@
         .vault-slot { aspect-ratio: 63 / 88; border-radius: 5% / 3.6%; border: 1px solid var(--gold); background: var(--bg-inset); padding: 0; overflow: hidden; color: var(--text-soft); box-shadow: 0 0 14px -4px var(--gold); }
         .vault-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .vault-slot.empty { display: grid; place-content: center; text-align: center; border-style: dashed; box-shadow: none; font-size: 1.4rem; }
+
+        /* ---- Distributor ---- */
+        .offer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+        .offer-card { display: grid; gap: 4px; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border); background: color-mix(in srgb, var(--bg-panel-raised) 60%, transparent); }
+        .offer-top { display: flex; justify-content: space-between; align-items: center; }
+        .tier-chip { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-soft); }
+        .tier-collector .tier-chip { border-color: var(--mythic); color: var(--mythic); }
+        .tier-masters .tier-chip { border-color: var(--color-link); color: var(--color-link); }
+        .tier-vintage .tier-chip, .tier-power .tier-chip { border-color: var(--gold); color: var(--gold); }
+        .tier-power { box-shadow: 0 0 18px -6px var(--gold); border-color: var(--gold); }
+
+        /* ---- Pack reveal: 3D peel, then flip each card ---- */
+        .crack-stage { perspective: 1200px; display: grid; gap: 14px; margin-top: 12px; position: relative; }
+        .pack3d { position: relative; width: 170px; height: 262px; margin: 10px auto; transform-style: preserve-3d; transform: rotateX(8deg) rotateY(-16deg);
+            animation: packFloat 3.2s ease-in-out infinite alternate; cursor: pointer; transition: transform 0.5s ease, opacity 0.5s ease; }
+        .pack3d:focus-visible { outline: 2px solid var(--brand-light); outline-offset: 6px; }
+        @keyframes packFloat { to { transform: rotateX(4deg) rotateY(14deg) translateY(-6px); } }
+        .pk-flap, .pk-body { position: absolute; left: 0; right: 0; color: var(--text-heading); font-family: var(--font-display); text-align: center;
+            background: linear-gradient(160deg, var(--brand-light), var(--brand) 45%, var(--felt-1)); border: 1px solid color-mix(in srgb, var(--text-heading) 25%, transparent); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .pk-flap { top: 0; height: 22%; border-radius: 10px 10px 2px 2px; display: flex; align-items: center; justify-content: center; font-weight: 700; letter-spacing: 1px; font-size: 0.85rem;
+            transform-origin: 50% 100%; transition: transform 0.65s cubic-bezier(.3, .1, .2, 1);
+            clip-path: polygon(0 0, 100% 0, 100% 86%, 92% 100%, 84% 86%, 76% 100%, 68% 86%, 60% 100%, 52% 86%, 44% 100%, 36% 86%, 28% 100%, 20% 86%, 12% 100%, 4% 86%, 0 100%); }
+        .pk-body { top: 21%; bottom: 0; border-radius: 2px 2px 10px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px;
+            box-shadow: inset 0 0 30px color-mix(in srgb, var(--bg-canvas) 50%, transparent); }
+        .pk-body::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(115deg, transparent 30%, color-mix(in srgb, var(--text-heading) 30%, transparent) 48%, transparent 62%); background-size: 250% 100%; animation: packGlint 2.8s linear infinite; }
+        @keyframes packGlint { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+        .pk-spark { font-size: 2rem; }
+        .pk-body small { font-family: var(--font-body); font-size: 0.75rem; opacity: 0.85; }
+        .pk-body em { font-family: var(--font-body); font-style: normal; font-size: 0.8rem; color: var(--gold); }
+        .pack3d.peeling { animation: none; transform: rotateX(18deg); }
+        .pack3d.peeling .pk-flap { transform: rotateX(-170deg) translateZ(4px); }
+        .pack3d.opened { transform: translateY(60px) rotateX(70deg) scale(0.8); opacity: 0; }
+        .crack-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+        .fcard { position: relative; display: flex; flex-direction: column; gap: 3px; background: none; border: 0; color: inherit; text-align: left; padding: 0; perspective: 900px; animation: dealIn 0.45s cubic-bezier(.2, .8, .3, 1) backwards; animation-delay: calc(var(--i) * 70ms); }
+        @keyframes dealIn { from { opacity: 0; transform: translateY(-50px) rotate(-8deg) scale(0.9); } }
+        .fc-inner { position: relative; display: block; aspect-ratio: 63 / 88; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(.3, .1, .2, 1); transform: rotateY(180deg); }
+        .fcard.flipped .fc-inner { transform: none; }
+        .fc-front, .fc-back { position: absolute; inset: 0; border-radius: 5% / 3.6%; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: block; }
+        .fc-front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .fc-front .noimg { display: flex; height: 100%; align-items: center; justify-content: center; padding: 6px; font-size: 0.8rem; text-align: center; background: var(--bg-inset); border: 1px solid var(--border); }
+        .fc-back { transform: rotateY(180deg); background: repeating-linear-gradient(45deg, var(--brand) 0 8px, var(--felt-1) 8px 16px); border: 3px solid var(--brand-light); }
+        .fcard:not(.flipped):hover .fc-inner { transform: rotateY(180deg) translateY(-4px); }
+        .fcard .meta { visibility: hidden; font-size: 0.8rem; color: var(--text-soft); line-height: 1.25; }
+        .fcard.flipped .meta { visibility: visible; }
+        .fcard.flipped[data-r="rare"] .fc-front { box-shadow: 0 0 16px -2px var(--gold); }
+        .fcard.hit .fc-front { box-shadow: 0 0 30px 4px var(--gold); animation: hitGlow 1.1s ease-in-out 3; }
+        .fcard.hit[data-r="mythic"] .fc-front { box-shadow: 0 0 30px 4px var(--mythic); }
+        @keyframes hitGlow { 50% { filter: brightness(1.25) saturate(1.2); } }
+        .fcard.serial .fc-front::after { content: ''; position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: 0.55; pointer-events: none;
+            background: linear-gradient(115deg, var(--mana-R), var(--gold), var(--mana-G), var(--mana-U), var(--mana-B), var(--mana-R)); background-size: 300% 300%; animation: serialShift 3s linear infinite; }
+        .pull-announce { position: fixed; left: 50%; top: 38%; transform: translate(-50%, -50%); z-index: 60; pointer-events: none; display: none; text-align: center; padding: 16px 26px; border-radius: var(--radius-lg);
+            background: color-mix(in srgb, var(--bg-canvas) 82%, transparent); border: 1px solid var(--gold); box-shadow: 0 0 40px -6px var(--gold); }
+        .pull-announce.show { display: grid; gap: 2px; animation: announce 2.4s ease forwards; }
+        .ann-what { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; color: var(--gold); letter-spacing: 1px; }
+        .ann-name { font-size: 1.1rem; color: var(--text-heading); }
+        .ann-val { font-family: var(--font-display); font-size: 1.4rem; color: var(--color-success); }
+        @keyframes announce { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); } 20% { transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -60%); } }
+        .wrap.shake { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97); }
+        @keyframes shake { 10%, 90% { transform: translate(-2px, 1px); } 20%, 80% { transform: translate(4px, -2px); } 30%, 50%, 70% { transform: translate(-7px, 2px); } 40%, 60% { transform: translate(7px, -1px); } }
+        @media (prefers-reduced-motion: reduce) { .pack3d, .pk-body::after, .fcard, .fcard.hit .fc-front, .wrap.shake { animation: none; } .pull-announce.show { animation: none; } }
     </style>
 </head>
 <body>
@@ -376,6 +436,7 @@
         <button class="tab" role="tab" id="tab-decks" aria-selected="false" onclick="showView('decks')">🗂️ Collection &amp; Decks</button>
         <button class="tab" role="tab" id="tab-play" aria-selected="false" onclick="showView('play')">⚔️ Play</button>
         <button class="tab" role="tab" id="tab-shop" aria-selected="false" onclick="showView('shop')">🏪 Shop</button>
+        <button class="tab" role="tab" id="tab-dist" aria-selected="false" onclick="showView('dist')">📦 Distributor</button>
         <button class="tab" role="tab" id="tab-rules" aria-selected="false" onclick="showView('rules')">📖 Rules</button>
     </nav>
 
@@ -492,6 +553,25 @@
                     </div>
                     <p class="note">Cards in the case or bulk bin leave your collection (and your decks) until they sell or you take them back.</p>
                     <div id="shopStock"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ DISTRIBUTOR ============ -->
+        <section id="view-dist" class="hidden">
+            <div class="shop-floor">
+                <div class="pos">
+                    <div class="pos-title"><h2>📦 Wholesale distributor</h2><span class="note">Order sealed boxes with shop cash. Sell packs sealed for a safe profit, or crack them for singles.</span></div>
+                    <div id="distHead"></div>
+                </div>
+                <div class="pos">
+                    <h3>Today's offers</h3>
+                    <div id="distOffers" class="offer-grid"></div>
+                </div>
+                <div class="pos">
+                    <h3>🗃️ Your stockroom</h3>
+                    <div id="stockroom"></div>
+                    <div id="crackArea"></div>
                 </div>
             </div>
         </section>
@@ -1028,7 +1108,7 @@ async function fillKeywordHelp(card) {
 // =====================================================================
 // Views, packs, collection and decks
 // =====================================================================
-const VIEWS = ['home', 'packs', 'decks', 'play', 'shop', 'rules'];
+const VIEWS = ['home', 'packs', 'decks', 'play', 'shop', 'dist', 'rules'];
 function showView(v) {
     VIEWS.forEach(k => {
         $(`view-${k}`).classList.toggle('hidden', k !== v);
@@ -1040,6 +1120,7 @@ function showView(v) {
     if (v === 'play') renderPlayView();
     if (v === 'rules') renderRulesView();
     if (v === 'shop') renderShop();
+    if (v === 'dist') renderDist();
     try { history.replaceState(null, '', `#${v}`); } catch (e) { /* fine */ }
 }
 
@@ -1164,36 +1245,6 @@ async function buyPack(kind) {
     renderPacksView();
 }
 
-function renderPackReveal(pack) {
-    const total = pack.cards.reduce((a, p) => a + (parseFloat(p.card.usd) || 0), 0);
-    const best = pack.cards.slice().sort((a, b) => (parseFloat(b.card.usd) || 0) - (parseFloat(a.card.usd) || 0))[0];
-    $('packArea').innerHTML = `
-        <div class="pack-stage">
-            <button type="button" class="pack-wrapper" id="packWrap" onclick="openPack()" aria-label="Open the pack">
-                <span class="pack-half top">${esc(pack.set.code)}</span>
-                <span class="pack-half bottom"><span style="font-size:2rem;" aria-hidden="true">✨</span>${esc(pack.set.name)}<small>Tap to open</small></span>
-            </button>
-            <div class="cards hidden" id="packCards">${pack.cards.map((p, i) => `
-                <button type="button" class="ctile reveal${p.copy && p.copy.s ? ' serial' : ''}" data-r="${p.card.rarity}" onclick="showCardSheet('${p.card.id}')">
-                    <div class="flipper"><div class="front">${p.card.img ? `<img src="${p.card.img}" alt="${esc(p.card.name)}" loading="lazy">` : `<div class="noimg">${esc(p.card.name)}</div>`}</div><div class="back"></div></div>
-                    <span class="meta"><strong>${esc(p.card.name)}</strong>${p.copy ? ` ${condBadge(p.copy)}` : (p.foil ? ' ✨' : '')}<br>${p.card.rarity} · ${supportBadge(p.card)}</span>
-                </button>`).join('')}</div>
-            <p class="note hidden" id="packSummary">${pack.cards.length} cards added to your collection${best ? ` · best pull: <strong>${esc(best.card.name)}</strong>` : ''}${total ? ` · about $${total.toFixed(2)} at TCGplayer market (just for fun - these are in-game cards)` : ''}.</p>
-        </div>`;
-}
-
-function openPack() {
-    const wrap = $('packWrap');
-    wrap.classList.add('open');
-    wrap.disabled = true;
-    setTimeout(() => {
-        wrap.classList.add('hidden');
-        $('packCards').classList.remove('hidden');
-        const tiles = [...document.querySelectorAll('#packCards .reveal')];
-        tiles.forEach((t, i) => setTimeout(() => t.classList.add('shown'), 120 + i * 160));
-        setTimeout(() => $('packSummary').classList.remove('hidden'), 300 + tiles.length * 160);
-    }, 550);
-}
 
 // ---------------------------------------------------------------------
 // Card details popup, used everywhere outside the game
@@ -3203,7 +3254,9 @@ function profileDefaults() {
         cosmetics: { sleeves: 'default', playmat: 'default' },
         marketEvent: null, // { key, day }
         shopToday: null,   // { day, visitsLeft, sales: [], revenue }
-        shopLedger: []     // the last few closed days
+        shopLedger: [],    // the last few closed days
+        sealed: {},        // 'code|kind' -> { code, kind, name, type, released, n } sealed packs in the stockroom
+        distStock: null    // today's distributor offers { day, offers }
     };
 }
 function upgradeProfile(p) {
@@ -3438,7 +3491,7 @@ function buildBasket(P) {
     if (S.best) return { from: 'case', items: [all.sort((a, b) => listingValue(b.l) - listingValue(a.l))[0]] };
     return { from: 'case', items: [all[rand(all.length)]] };
 }
-function listingValue(l, ignoreCondition) { return copyValue(CARDS.get(l.id), { c: l.condition, f: l.foil, s: l.serial }, ignoreCondition); }
+function listingValue(l, ignoreCondition) { if (l.sealed) return packMarket(l.meta); return copyValue(CARDS.get(l.id), { c: l.condition, f: l.foil, s: l.serial }, ignoreCondition); }
 function listingAsk(l, from) { return from === 'bulk' ? profile.bulkPrice : l.askingPrice; }
 
 function spawnCustomer() {
@@ -3446,6 +3499,7 @@ function spawnCustomer() {
     if (!keys.length) return;
     const P = PERSONALITIES[keys[rand(keys.length)]];
     const basket = buildBasket(P);
+    if (!basket && sellSealedTo(P)) return;
     if (!basket) { shopLog(`👀 ${P.emoji} ${P.name} looked for ${P.shop.desc.charAt(0).toLowerCase()}${P.shop.desc.slice(1, 60).replace(/\.$/, '')}${P.shop.desc.length > 60 ? '...' : ''} and found nothing.`); return; }
     const value = basket.items.reduce((a, x) => a + listingValue(x.l, P.shop.ignoreCondition), 0);
     const asking = basket.items.reduce((a, x) => a + listingAsk(x.l, basket.from), 0);
@@ -3459,6 +3513,21 @@ function spawnCustomer() {
     shopLog(`🔔 ${P.emoji} ${P.name} walked in.`);
 }
 
+// Sealed packs are the safe flip: a customer who finds no single they want
+// often grabs a pack priced at or near its shop price (up to 10% over).
+function sellSealedTo(P) {
+    const packs = profile.displayCase.filter(l => l.sealed && l.askingPrice <= packMarket(l.meta) * 1.1);
+    if (!packs.length || Math.random() > 0.7) return false;
+    const l = packs.sort((a, b) => a.askingPrice - b.askingPrice)[0];
+    profile.displayCase.splice(profile.displayCase.indexOf(l), 1);
+    profile.usd = round2(profile.usd + l.askingPrice);
+    const T = profile.shopToday;
+    T.revenue = round2(T.revenue + l.askingPrice);
+    T.sales.push({ who: P.name, cards: [`${l.meta.name} pack`], price: l.askingPrice });
+    shopLog(`📦 ${P.emoji} ${P.name} grabbed a ${esc(l.meta.name)} ${kindLabel(l.meta).toLowerCase()} for ${usd(l.askingPrice)}.`);
+    saveProfile();
+    return true;
+}
 function findCustomer(id) { return SHOP.queue.find(c => c.id === id); }
 function removeCustomer(c) { SHOP.queue = SHOP.queue.filter(x => x !== c); }
 function completeSale(c, price) {
@@ -3530,7 +3599,7 @@ function closeShop() {
     rollMarketEvent();
     profile.shopToday = null;
     ensureShopDay();
-    // Restocking the wholesale distributor comes with phase 2
+    // The distributor restocks for the new day (ensureDistStock)
     saveProfile();
     const e = todayEvent();
     toast(`Day ${profile.shopDay}: ${e.icon} ${e.title}`);
@@ -3563,6 +3632,7 @@ function unlist(i) {
     const l = profile.displayCase[i];
     if (!l) return;
     profile.displayCase.splice(i, 1);
+    if (l.sealed) { addSealed(l.meta, 1); saveProfile(); renderShop(); return; }
     addCopy(l.id, { c: l.condition, ...(l.foil ? { f: 1 } : {}), ...(l.serial ? { s: 1 } : {}) });
     saveProfile();
     renderShop();
@@ -3628,7 +3698,7 @@ async function renderShop() {
     if (!$('view-shop')) return;
     ensureShopDay();
     // Cards cached before the shop existed lack foil prices, frames and dates
-    const ids = [...new Set([...Object.keys(profile.collection), ...profile.displayCase.map(l => l.id), ...profile.bulkBox.map(l => l.id), ...profile.vault])];
+    const ids = [...new Set([...Object.keys(profile.collection), ...profile.displayCase.map(l => l.id).filter(Boolean), ...profile.bulkBox.map(l => l.id), ...profile.vault])];
     const stale = ids.filter(id => CARDS.has(id) && !(CARDS.get(id).v >= 2));
     if (stale.length) {
         $('shopStock').innerHTML = '<div class="loading">Getting today\'s prices...</div>';
@@ -3672,6 +3742,10 @@ function renderShopFloor() {
         </div>`;
     }).join('') : `<p class="note">${SHOP.open ? 'Waiting for customers...' : 'No one here. Open the shop.'}</p>`;
     $('shopCase').innerHTML = profile.displayCase.length ? `<table class="pos-table"><thead><tr><th>Card</th><th>Worth today</th><th>Your price</th><th></th></tr></thead><tbody>${profile.displayCase.map((l, i) => {
+        if (l.sealed) return `<tr><td>📦 <strong>${esc(l.meta.name)}</strong> <span class="note">${kindLabel(l.meta)} pack</span></td>
+            <td>${usd(packMarket(l.meta))}</td>
+            <td><input type="text" inputmode="decimal" value="${l.askingPrice.toFixed(2)}" onchange="setAsk(${i}, this.value)" aria-label="Asking price" class="ask-in"></td>
+            <td><button class="btn small" onclick="unlist(${i})" title="Back to your stockroom">↩</button></td></tr>`;
         const card = CARDS.get(l.id);
         return `<tr class="${l.serial ? 'serial-row' : ''}"><td><button class="linkish" onclick="showCardSheet('${l.id}')">${esc(card ? card.name : '?')}</button> ${condBadge({ c: l.condition, f: l.foil, s: l.serial })}</td>
             <td>${usd(listingValue(l))}</td>
@@ -3706,6 +3780,254 @@ function renderShopStock() {
             <button class="btn small" onclick="toggleVault('${card.id}')" aria-pressed="${inVault}">${inVault ? '🏆 Out' : '🏆 Vault'}</button></td></tr>`;
     }).join('')}</tbody></table>${Object.keys(profile.collection).length > 60 && !q ? '<p class="note">Showing your 60 most valuable cards. Search to find others.</p>' : ''}`
         : `<p class="note">${q ? 'No cards match.' : 'No cards yet. Open some packs first.'}</p>`;
+}
+
+// =====================================================================
+// Wholesale distributor and sealed product (shop phase 2, 2026-10-05).
+// Which boxes exist and how many packs they hold come from MTGJSON's
+// SetList (sealedProduct); pack prices are the game's own ($4 x the set's
+// tier), not real market prices.
+// =====================================================================
+const PACK_BASE_USD = 4;
+const WHOLESALE_BOX = 0.65;   // a box costs 65% of its packs' shop price
+const WHOLESALE_PACK = 0.8;   // a loose pack costs 80%
+const PACK_TIERS = [
+    { key: 'power', label: 'Alpha / Beta', mult: 500, test: b => ['lea', 'leb'].includes(b.code) },
+    { key: 'vintage', label: 'Early vintage', mult: 50, test: b => b.released < '2000-01-01' },
+    { key: 'collector', label: 'Collector', mult: 6, test: b => b.kind === 'collector' },
+    { key: 'masters', label: 'Masters', mult: 3, test: b => b.type === 'masters' },
+    { key: 'standard', label: 'Standard', mult: 1, test: () => true }
+];
+function packTier(b) { return PACK_TIERS.find(t => t.test(b)); }
+function packMarket(b) { return PACK_BASE_USD * packTier(b).mult; }
+function wholesaleDiscount() { return 0; } // set binder rewards add to this (phase 4)
+const round2 = n => Math.round(n * 100) / 100;
+function boxPrice(b) { return round2(b.packs * packMarket(b) * WHOLESALE_BOX * (1 - wholesaleDiscount())); }
+function loosePackPrice(b) { return round2(packMarket(b) * WHOLESALE_PACK * (1 - wholesaleDiscount())); }
+function kindLabel(b) { return b.kind === 'collector' ? 'Collector Booster' : 'Booster'; }
+function sealedKey(b) { return `${b.code}|${b.kind}`; }
+
+// MTGJSON's set list, slimmed to one standard box and one collector box per
+// set, saved for a week (duels:boxes)
+let boxCatalog = store.get('boxes', null);
+async function loadBoxCatalog() {
+    if (boxCatalog && boxCatalog.list && boxCatalog.list.length && Date.now() - boxCatalog.fetched < 7 * 864e5) return boxCatalog.list;
+    const res = await fetch(`${MTGJSON}/SetList.json.gz`);
+    if (!res.ok) throw new Error(`MTGJSON's product list didn't load (${res.status})`);
+    const data = JSON.parse(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).text()).data;
+    const today = todayISO();
+    const STD = ['play', 'set', 'draft', 'default'];
+    // A few entries list the box as holding 1 item (a display, not packs): use a normal box size then
+    const packsIn = (p, kind) => { const s = ((p.contents && p.contents.sealed) || [])[0]; return s && s.count >= 6 ? s.count : (kind === 'collector' ? 12 : 36); };
+    const list = [];
+    data.forEach(s => {
+        if (s.isOnlineOnly || !s.releaseDate || s.releaseDate > today || !PACK_SET_TYPES.includes(s.type)) return;
+        const boxes = (s.sealedProduct || []).filter(p => p.category === 'booster_box');
+        const std = STD.map(k => boxes.find(p => p.subtype === k)).find(Boolean);
+        const col = boxes.find(p => p.subtype === 'collector');
+        const base = { code: s.code.toLowerCase(), name: s.name, type: s.type, released: s.releaseDate };
+        if (std) list.push({ ...base, kind: 'play', packs: packsIn(std, 'play'), box: std.name });
+        if (col) list.push({ ...base, kind: 'collector', packs: packsIn(col, 'collector'), box: col.name });
+    });
+    boxCatalog = { fetched: Date.now(), list };
+    store.set('boxes', boxCatalog);
+    return list;
+}
+
+// Today's offers: 3 recent sets, 1 collector box, 1 Masters set and one
+// vintage find (now and then Alpha or Beta). New offers each shop day.
+async function ensureDistStock() {
+    if (profile.distStock && profile.distStock.day === profile.shopDay) return;
+    const list = await loadBoxCatalog();
+    const d = new Date(); d.setFullYear(d.getFullYear() - 4);
+    const recent = d.toISOString().slice(0, 10);
+    const pick = (pool, n) => shuffle(pool.slice()).slice(0, n);
+    const std = list.filter(b => b.kind === 'play' && ['expansion', 'core', 'draft_innovation'].includes(b.type) && b.released >= recent);
+    const col = list.filter(b => b.kind === 'collector' && b.released >= recent);
+    const mas = list.filter(b => b.kind === 'play' && b.type === 'masters');
+    const vin = list.filter(b => b.kind === 'play' && b.released < '2000-01-01' && !['lea', 'leb'].includes(b.code));
+    const pow = list.filter(b => ['lea', 'leb'].includes(b.code));
+    const offers = [...pick(std, 3), ...pick(col, 1), ...pick(mas, 1), ...pick(pow.length && Math.random() < 0.15 ? pow : vin, 1)]
+        .map(b => ({ ...b, boxesLeft: b.released < '2000-01-01' ? 1 : 1 + rand(3) }));
+    profile.distStock = { day: profile.shopDay, offers };
+    saveProfile();
+}
+
+function addSealed(b, n) {
+    const k = sealedKey(b);
+    const s = profile.sealed[k] || { code: b.code, kind: b.kind, name: b.name, type: b.type, released: b.released, n: 0 };
+    s.n += n;
+    profile.sealed[k] = s;
+}
+function buyBox(i) {
+    const o = profile.distStock && profile.distStock.offers[i];
+    if (!o || o.boxesLeft <= 0) return;
+    const price = boxPrice(o);
+    if (profile.usd < price) { toast(`A box costs ${usd(price)} - you have ${usd(profile.usd)}.`); return; }
+    profile.usd = round2(profile.usd - price);
+    o.boxesLeft--;
+    addSealed(o, o.packs);
+    saveProfile();
+    toast(`📦 ${o.box || o.name} arrived: ${o.packs} packs in your stockroom.`);
+    renderDist();
+}
+function buyLoosePack(i) {
+    const o = profile.distStock && profile.distStock.offers[i];
+    if (!o) return;
+    const price = loosePackPrice(o);
+    if (profile.usd < price) { toast(`A pack costs ${usd(price)} - you have ${usd(profile.usd)}.`); return; }
+    profile.usd = round2(profile.usd - price);
+    addSealed(o, 1);
+    saveProfile();
+    renderDist();
+}
+async function crackSealed(k) {
+    const s = profile.sealed[k];
+    if (!s || !s.n) return;
+    const area = $('crackArea');
+    area.innerHTML = '<div class="loading">Shuffling the sheets...</div>';
+    area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    let pack;
+    try {
+        pack = await drawPack(s.code, s.kind);
+    } catch (e) {
+        area.innerHTML = `<p class="warn">Couldn't open it: ${esc(e.message)} The pack is still sealed - you can sell it in the case.</p>`;
+        return;
+    }
+    s.n--;
+    if (!s.n) delete profile.sealed[k];
+    pack.cards.forEach(p => { p.copy = rollCopy(p.foil, pack.set.releaseDate); addCopy(p.id, p.copy); });
+    profile.packs++;
+    saveProfile();
+    renderStockroom();
+    renderPackReveal(pack, 'crackArea');
+}
+function listSealed(k) {
+    const s = profile.sealed[k];
+    if (!s || !s.n) return;
+    s.n--;
+    // Listed at its shop price: pack buyers pay up to 10% over, never more
+    profile.displayCase.push({ sealed: k, meta: { code: s.code, kind: s.kind, name: s.name, type: s.type, released: s.released }, askingPrice: packMarket(s) });
+    if (!s.n) delete profile.sealed[k];
+    saveProfile();
+    renderStockroom();
+    toast(`📦 A ${s.name} pack is in your display case.`);
+}
+
+async function renderDist() {
+    ensureShopDay();
+    $('distHead').innerHTML = `<div class="pos-stats">
+            <div><span class="pos-k">Day</span><strong>${profile.shopDay}</strong></div>
+            <div><span class="pos-k">Shop cash</span><strong class="${profile.usd < 0 ? 'neg' : ''}">💵 ${usd(profile.usd)}</strong></div>
+            <div><span class="pos-k">Sealed packs</span><strong>📦 ${Object.values(profile.sealed).reduce((a, s) => a + s.n, 0)}</strong></div>
+        </div>
+        <p class="note">Boxes and pack counts are real products from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>. Pack prices are game prices: $${PACK_BASE_USD} × the set's tier (${PACK_TIERS.slice().reverse().map(t => `${t.label} ×${t.mult}`).join(', ')}). Boxes cost ${Math.round(WHOLESALE_BOX * 100)}% of their packs' shop price, loose packs ${Math.round(WHOLESALE_PACK * 100)}%. New offers come each shop day.</p>`;
+    renderStockroom();
+    const box = $('distOffers');
+    if (!profile.distStock || profile.distStock.day !== profile.shopDay) box.innerHTML = '<div class="loading">Calling the distributor...</div>';
+    try {
+        await ensureDistStock();
+    } catch (e) {
+        box.innerHTML = `<p class="warn">${esc(e.message)}. Try this tab again in a moment.</p>`;
+        return;
+    }
+    box.innerHTML = profile.distStock.offers.map((o, i) => {
+        const t = packTier(o);
+        return `<div class="offer-card tier-${t.key}">
+            <div class="offer-top"><span class="tier-chip">${esc(t.label)}</span><span class="note">${o.released.slice(0, 4)}</span></div>
+            <strong>${esc(o.name)}</strong>
+            <div class="note">${esc(o.box || `${o.name} box`)} · ${o.packs} packs</div>
+            <div class="note">Shop price ${usd(packMarket(o))} a pack</div>
+            <div class="row">
+                <button class="btn gold small" onclick="buyBox(${i})" ${o.boxesLeft <= 0 || profile.usd < boxPrice(o) ? 'disabled' : ''}>Box ${usd(boxPrice(o))}</button>
+                <button class="btn small" onclick="buyLoosePack(${i})" ${profile.usd < loosePackPrice(o) ? 'disabled' : ''}>1 pack ${usd(loosePackPrice(o))}</button>
+            </div>
+            <div class="note">${o.boxesLeft > 0 ? `${o.boxesLeft} box${o.boxesLeft === 1 ? '' : 'es'} left today` : 'Boxes sold out today'}</div>
+        </div>`;
+    }).join('');
+}
+function renderStockroom() {
+    const list = Object.entries(profile.sealed).sort((a, b) => packMarket(b[1]) - packMarket(a[1]));
+    $('stockroom').innerHTML = list.length ? `<table class="pos-table"><thead><tr><th>Sealed</th><th>Packs</th><th>Shop price</th><th></th></tr></thead><tbody>${list.map(([k, s]) => `
+        <tr><td><strong>${esc(s.name)}</strong> <span class="note">${kindLabel(s)} · ${esc(packTier(s).label)}</span></td><td>${s.n}</td><td>${usd(packMarket(s))}</td>
+        <td class="pos-actions"><button class="btn small primary" onclick="crackSealed('${k}')">✂️ Crack one</button>
+        <button class="btn small" onclick="listSealed('${k}')" title="Sell it sealed at its shop price: customers who don't find a single they want often grab a pack (they pay up to 10% over the shop price)">＋ Case</button></td></tr>`).join('')}</tbody></table>`
+        : '<p class="note">No sealed product yet. Order a box or a pack above.</p>';
+}
+
+// ---------------------------------------------------------------------
+// Pack reveal: the wrapper peels open in 3D, the cards are dealt face
+// down, and you flip each one. Mythics, foils and serialized cards shake
+// the screen, glow and announce their value.
+// ---------------------------------------------------------------------
+const REVEALS = {};
+function isBigPull(p) { return p.card.rarity === 'mythic' || p.foil || (p.copy && p.copy.s); }
+function renderPackReveal(pack, areaId = 'packArea') {
+    REVEALS[areaId] = { pack, flipped: new Set() };
+    const code = (pack.set.code || '').toUpperCase();
+    $(areaId).innerHTML = `
+        <div class="crack-stage">
+            <div class="pack3d" id="p3d-${areaId}" role="button" tabindex="0" aria-label="Tear the pack open" onclick="peelPack('${areaId}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); peelPack('${areaId}'); }">
+                <div class="pk-flap"><span>${esc(code)}</span></div>
+                <div class="pk-body"><span class="pk-spark" aria-hidden="true">✨</span><strong>${esc(pack.set.name)}</strong><small>${esc(pack.name || '')}</small><em>Tap to tear open</em></div>
+            </div>
+            <div class="crack-cards hidden" id="cc-${areaId}">${pack.cards.map((p, i) => `
+                <button type="button" class="fcard${p.copy && p.copy.s ? ' serial' : ''}" style="--i:${i}" data-r="${p.card.rarity}" onclick="flipPackCard('${areaId}', ${i})" aria-label="Card ${i + 1}, face down: tap to flip">
+                    <span class="fc-inner"><span class="fc-back"></span><span class="fc-front">${p.card.img ? `<img src="${p.card.img}" alt="${esc(p.card.name)}" loading="lazy">` : `<span class="noimg">${esc(p.card.name)}</span>`}</span></span>
+                    <span class="meta"><strong>${esc(p.card.name)}</strong>${p.copy ? ` ${condBadge(p.copy)}` : ''}<br>${p.card.rarity} · ${usd(p.copy ? copyValue(p.card, p.copy) : baseUsd(p.card, p.foil))} · ${supportBadge(p.card)}</span>
+                </button>`).join('')}</div>
+            <div class="row hidden" id="ccbar-${areaId}"><button class="btn small" onclick="flipAllPack('${areaId}')">Flip all</button><span class="note">Tap a card to flip it; tap again for details.</span></div>
+            <div class="pull-announce" id="ann-${areaId}" aria-live="polite"></div>
+            <p class="note hidden" id="sum-${areaId}"></p>
+        </div>`;
+}
+function peelPack(areaId) {
+    const el = $(`p3d-${areaId}`);
+    if (!el || el.classList.contains('peeling')) return;
+    el.classList.add('peeling');
+    setTimeout(() => el.classList.add('opened'), 650);
+    setTimeout(() => {
+        el.classList.add('hidden');
+        $(`cc-${areaId}`).classList.remove('hidden');
+        $(`ccbar-${areaId}`).classList.remove('hidden');
+    }, 1150);
+}
+function flipPackCard(areaId, i) {
+    const R = REVEALS[areaId];
+    if (!R) return;
+    const p = R.pack.cards[i];
+    if (R.flipped.has(i)) { showCardSheet(p.card.id); return; }
+    R.flipped.add(i);
+    const btn = document.querySelectorAll(`#cc-${areaId} .fcard`)[i];
+    btn.classList.add('flipped');
+    btn.setAttribute('aria-label', `${p.card.name}: tap for details`);
+    if (isBigPull(p)) {
+        btn.classList.add('hit');
+        const value = p.copy ? copyValue(p.card, p.copy) : baseUsd(p.card, p.foil);
+        const what = p.copy && p.copy.s ? '🌈 SERIALIZED!' : p.card.rarity === 'mythic' ? (p.foil ? '🌟 FOIL MYTHIC!' : '🌟 MYTHIC!') : '✨ FOIL!';
+        const ann = $(`ann-${areaId}`);
+        ann.innerHTML = `<span class="ann-what">${what}</span><span class="ann-name">${esc(p.card.name)}</span><span class="ann-val">${usd(value)}</span>`;
+        ann.classList.remove('show'); void ann.offsetWidth; ann.classList.add('show');
+        clearTimeout(ann._t); ann._t = setTimeout(() => ann.classList.remove('show'), 2500);
+        const wrap = document.querySelector('.wrap');
+        wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+        setTimeout(() => wrap.classList.remove('shake'), 600);
+    }
+    if (R.flipped.size === R.pack.cards.length) packSummary(areaId);
+}
+function flipAllPack(areaId) {
+    const R = REVEALS[areaId];
+    if (!R) return;
+    R.pack.cards.forEach((p, i) => { if (!R.flipped.has(i)) setTimeout(() => flipPackCard(areaId, i), 90 * i); });
+}
+function packSummary(areaId) {
+    const cards = REVEALS[areaId].pack.cards;
+    const val = p => p.copy ? copyValue(p.card, p.copy) : baseUsd(p.card, p.foil);
+    const total = cards.reduce((a, p) => a + val(p), 0);
+    const best = cards.slice().sort((a, b) => val(b) - val(a))[0];
+    const sum = $(`sum-${areaId}`);
+    sum.innerHTML = `${cards.length} cards added to your collection${best ? ` · best pull: <strong>${esc(best.card.name)}</strong> (${usd(val(best))})` : ''} · pack total about ${usd(total)} (Scryfall's TCGplayer prices × condition × today's market).`;
+    sum.classList.remove('hidden');
 }
 
 // =====================================================================
