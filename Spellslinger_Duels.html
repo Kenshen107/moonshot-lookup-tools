@@ -180,10 +180,25 @@
         .life.targetable { border-color: var(--gold); box-shadow: 0 0 12px var(--gold); cursor: pointer; }
         .zone-count { font-size: 0.85rem; color: var(--text-soft); }
         .cmd-zone { display: flex; gap: 6px; align-items: center; }
-        .side { overflow-y: auto; overflow-x: hidden; padding: 8px 10px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto); gap: 10px 16px; align-content: start; }
-        .side.opp-side { align-content: end; }
-        .side .col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-        .side .col.right { max-width: 42vw; align-items: flex-end; }
+        .side { overflow-y: auto; overflow-x: hidden; padding: 6px 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+        .row-front { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .board-sum { position: absolute; right: 0; top: -2px; z-index: 3; font-size: 0.72rem; color: var(--text-soft); background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); border: 1px solid var(--border-subtle); border-radius: 999px; padding: 0 8px; pointer-events: none; }
+        .opp-side .board-sum { top: auto; bottom: -2px; }
+        .row-back { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px 16px; min-width: 0; }
+        .opp-side .row-back { align-items: flex-start; }
+        .back-lands { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+        .back-other { min-width: 0; max-width: 50%; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+        .lane.creatures.crowded { flex-wrap: nowrap; }
+        .lane.crowded .perm .pt { right: auto; left: 3px; }
+        .lane.crowded .pile-n { left: 3px; bottom: 22px; transform: none; }
+        .lane.creatures.crowded > *:hover, .lane.creatures.crowded > *:focus-within { z-index: 6; }
+        .lane.creatures > * { position: relative; }
+        .perm-wrap { position: relative; flex: none; display: flex; padding-top: calc(var(--tucks) * 14px); }
+        .perm-wrap .perm { position: relative; z-index: 2; }
+        .tuck { position: absolute; top: calc(var(--i) * 14px); left: calc(10px + var(--i) * 4px); width: var(--card-w); border: 0; padding: 0; background: none; z-index: 1; }
+        .tuck img, .tuck .noimg { width: 100%; aspect-ratio: 63 / 88; border-radius: 6px; display: block; object-fit: cover; filter: brightness(0.85); }
+        .tuck .noimg { display: flex; align-items: flex-start; justify-content: center; font-size: 0.72rem; padding: 2px; background: var(--bg-inset); border: 1px solid var(--border); }
+        .tuck:hover img { filter: none; }
         .lane.lands .perm + .perm, .lane.stack .perm + .perm { margin-left: calc(var(--land-w) * -0.45); }
         .lane.stack .perm { width: var(--land-w); }
         .lane { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; min-height: 30px; }
@@ -280,8 +295,7 @@
         .pool { display: inline-flex; gap: 3px; align-items: center; font-size: 0.85rem; }
         @media (max-width: 700px) {
             :root { --card-w: clamp(50px, 8vh, 64px); --land-w: 40px; --hand-w: clamp(56px, 9vh, 78px); }
-            .side { grid-template-columns: minmax(0, 1fr); }
-            .side .col.right { max-width: none; align-items: flex-start; }
+            .back-other { max-width: 45%; }
             .life { font-size: 1.1rem; min-width: 52px; }
             body { font-size: 14px; }
         }
@@ -3061,7 +3075,7 @@ function permHTML(o, count = 1) {
     if (o.dmg) chips.push(`<span class="chip c-dmg" title="${o.dmg} damage marked (wears off at end of turn)">💥${o.dmg}</span>`);
     if (isCreature(o) && o.sick && !has(o, 'haste') && o.owner === G.active) chips.push('<span class="chip sick" title="Summoning sick">💤</span>');
     if (allPerms().some(a => a.attachedTo === o.uid)) chips.push(`<span class="chip" title="${esc(allPerms().filter(a => a.attachedTo === o.uid).map(a => a.card.name).join(', '))}">🛡️</span>`);
-    if (o.attachedTo) chips.push(`<span class="chip">on ${esc((onBf(o.attachedTo) || { card: { name: '?' } }).card.name.split(',')[0])}</span>`);
+
     let pt = '';
     if (isCreature(o)) {
         const p = pow(o), t = tou(o);
@@ -3089,14 +3103,27 @@ function groupPerms(list, min) {
     return out.flatMap(g => g.length >= min ? [g] : g.map(o => [o]));
 }
 
+// Laid out like MTG Arena and the tournament table rules: creatures in the
+// front row (toward the middle), lands in the back row by the player, other
+// permanents to the right of the lands. Auras and Equipment are tucked
+// behind the creature they're on.
 function sideHTML(P) {
-    const lands = P.bf.filter(o => Rx(o).kind === 'land');
-    const creatures = P.bf.filter(isCreature);
-    const other = P.bf.filter(o => !isCreature(o) && Rx(o).kind !== 'land');
-    const lane = (list, extra = '', min = 2) => `<div class="lane ${extra}">${groupPerms(list, min).map(g => permHTML(g[0], g.length)).join('')}</div>`;
-    const left = `<div class="col">${creatures.length ? lane(creatures, 'creatures', 3) : '<span class="note muted">No creatures</span>'}</div>`;
-    const right = `<div class="col right">${other.length ? lane(other, 'stack') : ''}${lane(lands, 'lands')}</div>`;
-    return left + right;
+    const tucked = o => !!(o.attachedTo && onBf(o.attachedTo));
+    const lands = P.bf.filter(o => Rx(o).kind === 'land' && !tucked(o));
+    const creatures = P.bf.filter(o => isCreature(o) && !tucked(o));
+    const other = P.bf.filter(o => !isCreature(o) && Rx(o).kind !== 'land' && !tucked(o));
+    const lane = (list, extra = '', min = 2) => `<div class="lane ${extra}">${groupPerms(list, min).map(g => permWrapHTML(g[0], g.length)).join('')}</div>`;
+    const power = creatures.reduce((a, o) => a + Math.max(0, pow(o)), 0);
+    const untapped = lands.filter(o => !o.tapped).length;
+    const front = `<div class="row-front"><span class="board-sum" title="Creatures and their total power">${creatures.length ? `⚔️ ${creatures.length} · power ${power}` : 'No creatures'}</span>${creatures.length ? lane(creatures, 'creatures', 3) : ''}</div>`;
+    const back = `<div class="row-back"><div class="back-lands" title="Lands: ${lands.length}, ${untapped} untapped">${lane(lands, 'lands')}</div>${other.length ? `<div class="back-other">${lane(other, 'stack')}</div>` : ''}</div>`;
+    return P.i === 0 ? front + back : back + front;
+}
+// A permanent plus whatever is attached to it, tucked behind (tap one to see it)
+function permWrapHTML(o, count) {
+    const att = allPerms().filter(a => a.attachedTo === o.uid);
+    if (!att.length) return permHTML(o, count);
+    return `<div class="perm-wrap" style="--tucks:${att.length}">${att.map((a, i) => `<button type="button" class="tuck" style="--i:${i}" data-uid="${a.uid}" onclick="permClick(${a.uid})" title="${esc(a.card.name)} (attached)">${cardImg(a.card)}</button>`).join('')}${permHTML(o, count)}</div>`;
 }
 
 function manaSummary(P) {
@@ -3202,19 +3229,33 @@ function applyHandSize() {
     document.querySelectorAll('.seg [data-hs]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.hs === handSize)));
 }
 function fitSide(side) {
-    const col = side.querySelector('.col:not(.right)');
-    if (!col) return;
-    const n = col.querySelectorAll('.perm').length;
-    const W = col.clientWidth, H = side.clientHeight - 20;
-    let w = 124;
-    for (; w > 40; w -= 4) {
+    const front = side.querySelector('.lane.creatures');
+    const back = side.querySelector('.row-back');
+    const H = side.clientHeight - 14;
+    const phone = innerWidth < 700;
+    // Back row: lands and other permanents, about a quarter of the side
+    side.style.setProperty('--land-w', `${Math.max(32, Math.min(70, Math.round(H * 0.27 * 63 / 88)))}px`);
+    if (!front) return;
+    front.classList.remove('crowded');
+    const items = [...front.children];
+    items.forEach(c => { c.style.marginLeft = ''; });
+    const Hf = H - (back ? back.offsetHeight : 0) - 10 - (front.querySelector('.perm-wrap') ? 30 : 0);
+    const W = front.clientWidth, n = items.length;
+    // Like Arena, never shrink cards past readable: below this they overlap instead
+    const minW = phone ? 46 : 64;
+    let w = 132, fits = false;
+    for (; w >= minW; w -= 4) {
         const perRow = Math.max(1, Math.floor((W + 8) / (w + 8)));
-        if (Math.ceil(Math.max(1, n) / perRow) * (w * 88 / 63 + 10) + 14 <= H) break;
+        if (Math.ceil(n / perRow) * (w * 88 / 63 + 12) <= Hf) { fits = true; break; }
     }
-    const set = v => { side.style.setProperty('--card-w', `${v}px`); side.style.setProperty('--land-w', `${Math.max(34, Math.min(76, Math.round(v * 0.7)))}px`); };
-    set(w);
-    // The land column's width moves with the card size: shrink until nothing scrolls
-    for (let k = 0; k < 14 && w > 40 && side.scrollHeight > side.clientHeight + 2; k++) set(w -= 6);
+    if (!fits) {
+        // One row at the largest readable size, cards cascading over each other
+        w = Math.max(minW, Math.min(132, Math.floor((Hf - 12) * 63 / 88)));
+        front.classList.add('crowded');
+        const step = n > 1 ? Math.min(w + 8, (W - w) / (n - 1)) : 0;
+        items.forEach((c, i) => { if (i) c.style.marginLeft = `${Math.round(step - w)}px`; });
+    }
+    side.style.setProperty('--card-w', `${w}px`);
 }
 function fitHand() {
     const el = $('hand');
