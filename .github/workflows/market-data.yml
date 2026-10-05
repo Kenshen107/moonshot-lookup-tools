@@ -1,7 +1,9 @@
 # Builds the Market Watch data (price history, spikes, ban log) twice a
 # day and publishes it to the `market-data` branch, which
 # MTG_Lookup_Tool.html reads from raw.githubusercontent.com.
-# The branch is replaced each run (one commit, no history), so the repo
+# It also keeps our own copy of each day's prices for the last 60 days on
+# the `price-archive` branch.
+# Both branches are replaced each run (one commit, no history), so the repo
 # doesn't grow. See tools/build_market_data.py for what's in the files.
 name: Market data
 
@@ -36,12 +38,20 @@ jobs:
           path: previous
         continue-on-error: true
 
+      # The price archive so far (missing on the first run, when it's
+      # seeded from MTGJSON's history).
+      - uses: actions/checkout@v4
+        with:
+          ref: price-archive
+          path: previous-archive
+        continue-on-error: true
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Build data
-        run: python tools/build_market_data.py --out out --previous previous
+        run: python tools/build_market_data.py --out out --previous previous --archive-in previous-archive --archive-out archive
 
       - name: Publish to the market-data branch
         run: |
@@ -52,3 +62,13 @@ jobs:
           git add -A
           git commit -q -m "Market data for $(python -c 'import json; print(json.load(open("meta.json"))["priceDate"])')"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" market-data
+
+      - name: Publish to the price-archive branch
+        run: |
+          cd archive
+          git init -q -b price-archive
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Price archive through $(python -c 'import json; print(json.load(open("../out/meta.json"))["priceDate"])')"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" price-archive

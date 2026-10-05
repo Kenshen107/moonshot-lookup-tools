@@ -29,10 +29,31 @@ Outputs (in --out):
   bans.json            current banned/restricted cards per format, plus a
                        log of changes seen since the job started running
 
+Price archive (--archive-out, published to the `price-archive` branch):
+  Our own copy of each day's prices, so the data doesn't depend on MTGJSON
+  alone. MTGJSON's AllPrices only covers a rolling 90 days and is one big
+  download; the archive keeps the last ARCHIVE_DAYS days (60).
+  cards.csv.gz         one row per printing: uuid (MTGJSON), scryfallId, name,
+                       set, number. Rows are only ever added, so a row number
+                       means the same printing in every day file.
+  days/<date>.csv.gz   that day's prices: `gap` (row number in cards.csv.gz
+                       minus the previous line's; the first line counts from
+                       -1) then TCGplayer, Card Kingdom and Mana Pool retail
+                       and Card Kingdom buylist, each as normal/foil/etched in
+                       US dollars (blank = no price that day). See ARCHIVE_COLUMNS.
+  README.md            the same, for anyone opening the branch.
+  Each run adds the newest day (and any day in the window the archive is
+  missing), drops days older than ARCHIVE_DAYS, and reads the archive back
+  in to fill days MTGJSON's file is missing. If AllPrices.json.gz can't be
+  downloaded, the job uses AllPricesToday.json.gz plus the archive instead.
+
 Usage:
   python tools/build_market_data.py --out out [--previous prev] [--inputs dir]
+  python tools/build_market_data.py --out out --archive-in prev-archive --archive-out archive
   --previous is last run's output (for the ban log); --inputs is a folder
-  that already holds the downloads (otherwise they're fetched).
+  that already holds the downloads (otherwise they're fetched);
+  --archive-in is the last run's price archive (missing on the first run)
+  and --archive-out is where the updated archive is written.
 """
 
 import argparse
@@ -52,6 +73,8 @@ DOWNLOADS = {
     "cards.csv.gz": f"{MTGJSON}/csv/cards.csv.gz",
     "cardLegalities.csv.gz": f"{MTGJSON}/csv/cardLegalities.csv.gz",
 }
+# Today's prices only - the fallback when AllPrices.json.gz can't be fetched.
+PRICES_TODAY = ("AllPricesToday.json.gz", f"{MTGJSON}/AllPricesToday.json.gz")
 
 WEEKS = 13            # weekly points kept per printing (about 90 days)
 DAYS = 90             # plus daily points for the last 90 days (the price chart)
@@ -64,20 +87,48 @@ BUYLIST_SPIKE_MAX = 3000
 BUYLIST_SPIKE_MIN_PRICE = 1.0   # Card Kingdom buylist increases: paying at least this now
 BUYLIST_SPIKE_MIN_JUMP = 0.5    # ...up at least this much (and SPIKE_MIN_PCT)
 STORE_MAX_AGE_DAYS = 2          # a store price older than this counts as "not listed"
+ARCHIVE_DAYS = 60   # days kept in the price archive (owner's choice, 2026-10-05)
+# (column, MTGJSON store, list, finish) for each price in an archive day file.
+ARCHIVE_COLUMNS = [
+    (f"{label}_{fk}", store, kind, finish)
+    for label, store, kind in (("tcg", "tcgplayer", "retail"), ("ck", "cardkingdom", "retail"),
+                               ("mp", "manapool", "retail"), ("ckbuy", "cardkingdom", "buylist"))
+    for finish, fk in (("normal", "n"), ("foil", "f"), ("etched", "e"))
+]
 BAN_FORMATS = ["standard", "pioneer", "modern", "legacy", "vintage", "commander", "pauper"]
 
 
+def download(url, path):
+    print(f"Downloading {url}", flush=True)
+    req = urllib.request.Request(url, headers={"User-Agent": "moonshot-lookup-tools market-data job"})
+    tmp = path + ".part"
+    with urllib.request.urlopen(req, timeout=600) as res, open(tmp, "wb") as out:
+        while chunk := res.read(1 << 20):
+            out.write(chunk)
+    os.replace(tmp, path)
+
+
 def fetch(inputs):
+    """Downloads the inputs; returns the prices file to read. If the full
+    90-day AllPrices can't be fetched, falls back to today's prices (the
+    price archive fills in the earlier days)."""
     os.makedirs(inputs, exist_ok=True)
+    prices_file = os.path.join(inputs, "AllPrices.json.gz")
     for name, url in DOWNLOADS.items():
         path = os.path.join(inputs, name)
         if os.path.exists(path):
             continue
-        print(f"Downloading {url}", flush=True)
-        req = urllib.request.Request(url, headers={"User-Agent": "moonshot-lookup-tools market-data job"})
-        with urllib.request.urlopen(req, timeout=600) as res, open(path, "wb") as out:
-            while chunk := res.read(1 << 20):
-                out.write(chunk)
+        if name != "AllPrices.json.gz":
+            download(url, path)
+            continue
+        try:
+            download(url, path)
+        except Exception as err:  # noqa: BLE001 - any failure means "use the fallback"
+            print(f"Couldn't download AllPrices ({err}); using today's prices plus the archive", flush=True)
+            prices_file = os.path.join(inputs, PRICES_TODAY[0])
+            if not os.path.exists(prices_file):
+                download(PRICES_TODAY[1], prices_file)
+    return prices_file
 
 
 def read_csv(path, columns):
@@ -123,7 +174,151 @@ def iso(d):
     return d.isoformat()
 
 
-def build(inputs, out, previous):
+def load_archive(folder):
+    """The last run's price archive: (cards, days). cards is a list of
+    [uuid, scryfallId, name, set, number] in row order; days maps each date
+    to {uuid: {column: price}}. Empty if there's no archive yet."""
+    cards, days = [], {}
+    if not folder or not os.path.exists(os.path.join(folder, "cards.csv.gz")):
+        return cards, days
+    with gzip.open(os.path.join(folder, "cards.csv.gz"), "rt", encoding="utf-8", newline="") as f:
+        reader = csv.reader(f)
+        next(reader, None)
+        cards = [row for row in reader]
+    day_dir = os.path.join(folder, "days")
+    for fname in sorted(os.listdir(day_dir)) if os.path.isdir(day_dir) else []:
+        if not fname.endswith(".csv.gz"):
+            continue
+        day = fname[:-len(".csv.gz")]
+        prices = days[day] = {}
+        with gzip.open(os.path.join(day_dir, fname), "rt", encoding="utf-8", newline="") as f:
+            reader = csv.reader(f)
+            header = next(reader, None)
+            row = -1
+            for line in reader:
+                row += int(line[0])
+                if row >= len(cards):
+                    break
+                prices[cards[row][0]] = {col: float(v) for col, v in zip(header[1:], line[1:]) if v}
+    print(f"Archive: {len(cards)} printings, {len(days)} days", flush=True)
+    return cards, days
+
+
+def merge_archive(prices, days):
+    """Fills in archived prices for days MTGJSON's file doesn't have
+    (MTGJSON's own numbers win where both exist)."""
+    by_col = {col: (store, kind, finish) for col, store, kind, finish in ARCHIVE_COLUMNS}
+    data = prices["data"]
+    added = 0
+    for day, rows in days.items():
+        for uuid, values in rows.items():
+            paper = data.setdefault(uuid, {}).setdefault("paper", {})
+            for col, price in values.items():
+                store, kind, finish = by_col[col]
+                series = paper.setdefault(store, {}).setdefault(kind, {}).setdefault(finish, {})
+                if day not in series:
+                    series[day] = price
+                    added += 1
+    print(f"Archive: filled in {added} prices MTGJSON's file didn't have", flush=True)
+
+
+def write_archive(folder, prices, cards, days, info, scryfall_id, latest):
+    """Writes the updated archive: today's prices (and any day in the window
+    the archive is missing), minus days older than ARCHIVE_DAYS."""
+    window = [iso(latest - dt.timedelta(days=i)) for i in range(ARCHIVE_DAYS - 1, -1, -1)]
+    data = prices["data"]
+
+    def snapshot(day):
+        out = {}
+        for uuid, entry in data.items():
+            paper = entry.get("paper", {})
+            values = {}
+            for col, store, kind, finish in ARCHIVE_COLUMNS:
+                v = paper.get(store, {}).get(kind, {}).get(finish, {}).get(day)
+                if v is not None:
+                    values[col] = v
+            if values:
+                out[uuid] = values
+        return out
+
+    kept = {}
+    for day in window:
+        # Always rebuild the newest day (a later run can have more of it),
+        # and fill any day the archive is missing from MTGJSON's history.
+        if day == window[-1] or day not in days:
+            snap = snapshot(day)
+            if snap:
+                kept[day] = snap
+                continue
+        if day in days:
+            kept[day] = days[day]
+
+    # Rows are only ever added, so old day files keep pointing at the same
+    # printings. Name, set and number are refreshed from today's files.
+    row_of = {c[0]: i for i, c in enumerate(cards)}
+    for snap in kept.values():
+        for uuid in snap:
+            if uuid not in row_of:
+                row_of[uuid] = len(cards)
+                cards.append([uuid, "", "", "", ""])
+    for c in cards:
+        if c[0] in info:
+            name, set_code, number = info[c[0]]
+            c[1:] = [scryfall_id.get(c[0], c[1]), name, set_code, number]
+
+    os.makedirs(os.path.join(folder, "days"), exist_ok=True)
+    with gzip.open(os.path.join(folder, "cards.csv.gz"), "wt", encoding="utf-8", newline="") as f:
+        w = csv.writer(f, lineterminator="\n")
+        w.writerow(["uuid", "scryfallId", "name", "set", "number"])
+        w.writerows(cards)
+    cols = [c[0] for c in ARCHIVE_COLUMNS]
+    for day, snap in kept.items():
+        rows = sorted((row_of[u], v) for u, v in snap.items())
+        with gzip.open(os.path.join(folder, "days", f"{day}.csv.gz"), "wt", encoding="utf-8", newline="") as f:
+            w = csv.writer(f, lineterminator="\n")
+            w.writerow(["gap", *cols])
+            prev = -1
+            for row, values in rows:
+                w.writerow([row - prev, *(f"{values[c]:.2f}" if c in values else "" for c in cols)])
+                prev = row
+    with open(os.path.join(folder, "README.md"), "w", encoding="utf-8") as f:
+        f.write(ARCHIVE_README.format(days=ARCHIVE_DAYS, first=min(kept), last=max(kept), count=len(kept),
+                                      columns=", ".join(cols)))
+    print(f"Archive: wrote {len(kept)} days ({min(kept)} to {max(kept)}), {len(cards)} printings", flush=True)
+
+
+ARCHIVE_README = """# Moonshot price archive
+
+Daily card prices for every Magic printing MTGJSON prices, kept for the last
+{days} days ({count} days here: {first} to {last}). Built by
+`tools/build_market_data.py` on the `main` branch, which replaces this branch
+(one commit, no history) every run, so it never grows past {days} days.
+
+Prices come from MTGJSON (TCGplayer market, Card Kingdom and Mana Pool retail,
+Card Kingdom buylist), in US dollars.
+
+- `cards.csv.gz`: one row per printing (uuid, scryfallId, name, set, number).
+  Rows are only ever added, so row N is the same printing in every day file.
+- `days/<date>.csv.gz`: that day's prices. The first column, `gap`, is this
+  line's row number in `cards.csv.gz` minus the previous line's (the first
+  line counts from -1); the rest are {columns}
+  (n/f/e = normal/foil/etched; blank = no price that day).
+
+Reading it in Python:
+
+```python
+import csv, gzip
+cards = list(csv.reader(gzip.open("cards.csv.gz", "rt")))[1:]
+rows = csv.reader(gzip.open("days/{last}.csv.gz", "rt"))
+header, row = next(rows), -1
+for line in rows:
+    row += int(line[0])
+    print(cards[row][2], dict((k, v) for k, v in zip(header[1:], line[1:]) if v))
+```
+"""
+
+
+def build(inputs, out, previous, prices_file=None, archive_in="", archive_out=""):
     print("Reading identifiers and names", flush=True)
     scryfall_id = {r["uuid"]: r["scryfallId"] for r in read_csv(os.path.join(inputs, "cardIdentifiers.csv.gz"), ["uuid", "scryfallId"])}
     info = {}
@@ -134,8 +329,11 @@ def build(inputs, out, previous):
             promo.add(r["uuid"])
 
     print("Reading prices", flush=True)
-    with gzip.open(os.path.join(inputs, "AllPrices.json.gz"), "rt", encoding="utf-8") as f:
+    with gzip.open(prices_file or os.path.join(inputs, "AllPrices.json.gz"), "rt", encoding="utf-8") as f:
         prices = json.load(f)
+    fallback = os.path.basename(prices_file or "") == PRICES_TODAY[0]
+    archive_cards, archive_days = load_archive(archive_in)
+    merge_archive(prices, archive_days)
     price_date = prices["meta"]["date"]
     latest = dt.date.fromisoformat(price_date)
     week_dates = [iso(latest - dt.timedelta(days=7 * i)) for i in range(WEEKS, -1, -1)]  # oldest -> newest
@@ -294,7 +492,9 @@ def build(inputs, out, previous):
     with open(os.path.join(out, "meta.json"), "w", encoding="utf-8") as f:
         json.dump({"priceDate": price_date, "built": dt.datetime.now(dt.timezone.utc).isoformat(timespec="minutes"),
                    "weeks": week_dates, "days": day_dates, "printings": len(history), "spikes": len(spikes), "buylistSpikes": len(buylist_spikes),
-                   "source": "MTGJSON (TCGplayer market prices)"}, f, separators=(",", ":"))
+                   "source": "MTGJSON (TCGplayer market prices)" + (" - today's file plus the price archive" if fallback else "")}, f, separators=(",", ":"))
+    if archive_out:
+        write_archive(archive_out, prices, archive_cards, archive_days, info, scryfall_id, latest)
     print(f"Done: {len(history)} printings with history, {len(spikes)} spikes, {len(buylist_spikes)} buylist increases, {len(log)} ban log entries", flush=True)
 
 
@@ -303,9 +503,11 @@ def main():
     parser.add_argument("--out", required=True)
     parser.add_argument("--previous", default="")
     parser.add_argument("--inputs", default="mtgjson-downloads")
+    parser.add_argument("--archive-in", default="")
+    parser.add_argument("--archive-out", default="")
     args = parser.parse_args()
-    fetch(args.inputs)
-    build(args.inputs, args.out, args.previous)
+    prices_file = fetch(args.inputs)
+    build(args.inputs, args.out, args.previous, prices_file, args.archive_in, args.archive_out)
 
 
 if __name__ == "__main__":
