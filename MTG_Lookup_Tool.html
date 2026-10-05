@@ -6972,6 +6972,12 @@
         html[data-fx="subtle"] .holo-card[data-foil]:not([data-foil="none"]) .holo-shine { opacity: calc(0.16 + var(--o, 0) * 0.42); }
         html[data-fx="full"] .holo-card[data-foil]:not([data-foil="none"]) .holo-glare,
         html[data-fx="subtle"] .holo-card[data-foil]:not([data-foil="none"]) .holo-glare { opacity: calc(var(--o, 0) * 0.85); }
+        /* Plain foil and etched foil stay soft (owner, 2026-10-05); only the
+           fancy foils (sparkle, textured) get the full sheen. */
+        html:not([data-fx="off"]) .holo-card[data-foil="rainbow"]:not([data-foil="none"]) .holo-shine,
+        html:not([data-fx="off"]) .holo-card[data-foil="etched"]:not([data-foil="none"]) .holo-shine { opacity: calc(0.05 + var(--o, 0) * 0.17); }
+        html:not([data-fx="off"]) .holo-card[data-foil="rainbow"]:not([data-foil="none"]) .holo-glare,
+        html:not([data-fx="off"]) .holo-card[data-foil="etched"]:not([data-foil="none"]) .holo-glare { opacity: calc(var(--o, 0) * 0.35); }
         .holo-glare { mix-blend-mode: overlay; background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), var(--glare-strong) 0%, var(--glare-soft) 30%, transparent 60%); }
         .holo-shine { mix-blend-mode: color-dodge; background-position: var(--mx, 50%) var(--my, 50%); }
         /* Traditional foil: a rainbow sheen */
@@ -7002,7 +7008,8 @@
         }
         @keyframes fx-shift { to { background-position: 400% 400%; } }
         /* Foils sway gently when nobody's pointing at them */
-        html[data-fx="full"] .holo-card[data-foil]:not([data-foil="none"]):not(.is-tilting) .holo-tilt { animation: fx-sway 7s ease-in-out infinite; }
+        html[data-fx="full"] .holo-card[data-foil="sparkle"]:not(.is-tilting) .holo-tilt,
+        html[data-fx="full"] .holo-card[data-foil="textured"]:not(.is-tilting) .holo-tilt { animation: fx-sway 7s ease-in-out infinite; }
         @keyframes fx-sway { 0%, 100% { transform: rotateY(-5deg) rotateX(2deg); } 50% { transform: rotateY(5deg) rotateX(-2deg); } }
         html[data-fx="full"] .holo-card.is-tilting .holo-tilt { box-shadow: 0 26px 50px -22px color-mix(in srgb, var(--bg-inset) 90%, transparent); }
 
@@ -7210,6 +7217,7 @@
             opacity: 0.3;
             animation: fx-shift 8s linear infinite;
         }
+        .pack-card[data-foil="plain"] .pack-card-face::after { opacity: 0.12; animation: none; }
 
         @media (prefers-reduced-motion: reduce) {
             #fxAurora, .scene-canvas { display: none !important; }
@@ -12487,7 +12495,7 @@
             const total = priced.reduce((a, p) => a + p.price, 0);
             const best = priced.slice().sort((a, b) => b.price - a.price)[0];
             const cards = picks.map((p, i) => `
-                <div class="pack-card" data-rarity="${p.rarity}"${p.foil ? ' data-foil' : ''} style="--i:${i};">
+                <div class="pack-card" data-rarity="${p.rarity}"${p.foil ? ` data-foil="${/^(Foil|Etched foil)$/.test(p.finishLabel) ? 'plain' : 'fancy'}"` : ''} style="--i:${i};">
                     <div class="pack-card-inner">
                         <div class="pack-card-face">${p.img
                             ? `<img src="${p.img}" alt="${escapeAttr(p.name)}" loading="lazy" onclick="openLightboxSrc(this.src, this.alt)">`
