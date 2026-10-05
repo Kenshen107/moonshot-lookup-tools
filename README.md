@@ -11,6 +11,7 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 - Archenemy simulator: https://kenshen107.github.io/moonshot-lookup-tools/Archenemy_Simulator.html
 - Planechase simulator: https://kenshen107.github.io/moonshot-lookup-tools/Planechase_Simulator.html
 - Beginner guides & handouts: https://kenshen107.github.io/moonshot-lookup-tools/Beginner_Guides.html
+- Moonshot Duels (test game): https://kenshen107.github.io/moonshot-lookup-tools/MTG_Duels.html
 
 ## What's in the MTG tool
 
@@ -29,6 +30,8 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 The **Beginner Guides** page has printable how-to-play and starter-checklist cards for Magic, Pokémon, Disney Lorcana, Riftbound and the Gundam Card Game, the Magic prerelease handouts, and a guide to the accessories a new player needs.
 
 A GitHub Action (`.github/workflows/market-data.yml`) builds daily price-history files from MTGJSON and publishes them to the `market-data` branch. It also keeps our own copy of each day's prices for the last 60 days on the `price-archive` branch (see the README there for the format).
+
+**Moonshot Duels** is a test game: open packs (real pack odds from MTGJSON) with free in-game coins, build Modern or Commander decks, and play against themed opponents built from Scryfall searches or EDHREC's average Commander decks. Each card shows how much of its text the game can run so far.
 
 ## Local use
 

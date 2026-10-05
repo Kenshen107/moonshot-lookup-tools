@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moonshot Duels</title>
+    <!-- Moonshot Duels: a test game. Open packs (from MTGJSON's real booster
+         odds) with free in-game coins, build Modern or Commander decks, and
+         play against themed opponents. Cards come from Scryfall, Commander
+         opponents from EDHREC's average decks. A single self-contained file,
+         like the other tools. See CLAUDE.md ("Moonshot Duels"). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&display=swap">
+    <style>
+        /* Design tokens: the Moonshot tools' original look (see CLAUDE.md),
+           plus a few game colors. Every color below comes from these. */
+        :root {
+            --brand: #1777a1;
+            --brand-light: #3aa3d1;
+            --bg-canvas: #1a1a1a;
+            --bg-panel: #2a2a2a;
+            --bg-panel-raised: #333333;
+            --bg-inset: #141414;
+            --text-primary: #e0e0e0;
+            --text-secondary: #909090;
+            --text-muted: #707070;
+            --text-soft: #c0c0c0;
+            --text-heading: #ffffff;
+            --border: #404040;
+            --border-subtle: #333333;
+            --color-link: #6cb2ff;
+            --color-success: #7ee787;
+            --color-warning: #ffcc80;
+            --color-error: #ff9b94;
+            --gold: #e8c25a;
+            --mythic: #ff6a2a;
+            --felt-1: #0f2a33;
+            --felt-2: #0b1d24;
+            --mana-W: #f8f1d4;
+            --mana-U: #4ea3e8;
+            --mana-B: #a68fb5;
+            --mana-R: #f0644c;
+            --mana-G: #4fbf6f;
+            --mana-C: #b9b9b9;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --font-body: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-display: 'Chakra Petch', 'Segoe UI', Tahoma, sans-serif;
+            /* Card sizes on the table follow the screen height */
+            --card-w: clamp(52px, 9vh, 96px);
+            --land-w: clamp(40px, 6vh, 62px);
+            --hand-w: clamp(60px, 11vh, 104px);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { background: var(--bg-canvas); }
+        body {
+            background: var(--bg-canvas);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 15px;
+            line-height: 1.45;
+            min-height: 100vh;
+            padding: 0 16px 40px;
+        }
+        button { font: inherit; cursor: pointer; }
+        a { color: var(--color-link); }
+        h1, h2, h3 { color: var(--text-heading); font-family: var(--font-display); letter-spacing: 0.2px; }
+        .wrap { max-width: 1240px; margin: 0 auto; }
+        .hidden { display: none !important; }
+
+        /* ---- Top bar ---- */
+        .topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 0 10px; }
+        .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+        .brand h1 { font-size: 1.5rem; }
+        .brand .tag { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--color-warning); color: var(--color-warning); }
+        .coins { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--bg-panel); border: 1px solid var(--gold); color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+        .toplink { font-size: 0.85rem; text-decoration: none; }
+        .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .tab { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-soft); padding: 8px 16px; border-radius: var(--radius-md); font-weight: 600; }
+        .tab:hover { border-color: var(--brand-light); color: var(--text-heading); }
+        .tab[aria-selected="true"] { background: var(--brand); border-color: var(--brand-light); color: var(--text-heading); }
+
+        /* ---- Panels and controls ---- */
+        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+        .panel + .panel { margin-top: 14px; }
+        .panel h2 { font-size: 1.2rem; margin-bottom: 8px; }
+        .note { font-size: 0.85rem; color: var(--text-soft); }
+        .muted { color: var(--text-secondary); }
+        .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .btn { background: var(--bg-panel-raised); border: 1px solid var(--border); color: var(--text-primary); padding: 7px 14px; border-radius: var(--radius-md); font-weight: 600; }
+        .btn:hover:not(:disabled) { border-color: var(--brand-light); color: var(--text-heading); }
+        .btn.primary { background: var(--brand); border-color: var(--brand-light); color: var(--text-heading); }
+        .btn.gold { background: color-mix(in srgb, var(--gold) 20%, var(--bg-panel-raised)); border-color: var(--gold); color: var(--gold); }
+        .btn.danger { border-color: var(--color-error); color: var(--color-error); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn.small { padding: 3px 10px; font-size: 0.85rem; }
+        select, input[type="text"], input[type="search"] { background: var(--bg-inset); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; font: inherit; }
+        :focus-visible { outline: 2px solid var(--brand-light); outline-offset: 2px; }
+        .grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+        @media (max-width: 820px) { .grid-2 { grid-template-columns: minmax(0, 1fr); } }
+        .loading { color: var(--text-secondary); padding: 14px 0; }
+        .loading::before { content: ''; display: inline-block; width: 12px; height: 12px; margin-right: 8px; border-radius: 50%; border: 2px solid var(--brand-light); border-top-color: transparent; animation: spin 0.8s linear infinite; vertical-align: -1px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .badge { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+        .sup-full { color: var(--color-success); }
+        .sup-partial { color: var(--color-warning); }
+        .sup-none { color: var(--color-error); }
+
+        /* ---- Card thumbnails (collection, packs, deck) ---- */
+        .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+        .ctile { position: relative; display: flex; flex-direction: column; gap: 3px; background: none; border: 0; color: inherit; text-align: left; padding: 0; }
+        .ctile img, .ctile .noimg { width: 100%; aspect-ratio: 63 / 88; border-radius: 5% / 3.6%; display: block; background: var(--bg-inset); object-fit: cover; }
+        .ctile .noimg { display: flex; align-items: center; justify-content: center; padding: 6px; font-size: 0.8rem; text-align: center; border: 1px solid var(--border); }
+        .ctile .cnt { position: absolute; top: 6px; right: 6px; background: var(--bg-canvas); border: 1px solid var(--gold); color: var(--gold); font-weight: 700; font-size: 0.8rem; padding: 0 7px; border-radius: 999px; }
+        .ctile .meta { font-size: 0.8rem; color: var(--text-soft); line-height: 1.25; }
+        .ctile:hover img { outline: 2px solid var(--brand-light); }
+        .ctile.dim img { opacity: 0.4; }
+
+        /* ---- Pack opening ---- */
+        .pack-stage { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+        .pack-wrapper { position: relative; width: 160px; height: 246px; margin: 6px auto; border: 0; background: none; padding: 0; }
+        .pack-half { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-heading); font-family: var(--font-display); font-weight: 700; background: linear-gradient(160deg, var(--brand-light), var(--brand) 45%, var(--felt-1)); border: 1px solid color-mix(in srgb, var(--text-heading) 25%, transparent); transition: transform 0.6s cubic-bezier(.3, .1, .2, 1), opacity 0.6s; }
+        .pack-half.top { top: 0; height: 22%; border-radius: 10px 10px 2px 2px; font-size: 0.8rem; letter-spacing: 1px; clip-path: polygon(0 0, 100% 0, 100% 86%, 92% 100%, 84% 86%, 76% 100%, 68% 86%, 60% 100%, 52% 86%, 44% 100%, 36% 86%, 28% 100%, 20% 86%, 12% 100%, 4% 86%, 0 100%); }
+        .pack-half.bottom { top: 20%; height: 80%; border-radius: 2px 2px 10px 10px; flex-direction: column; gap: 6px; padding: 10px; clip-path: polygon(0 14px, 4% 0, 12% 14px, 20% 0, 28% 14px, 36% 0, 44% 14px, 52% 0, 60% 14px, 68% 0, 76% 14px, 84% 0, 92% 14px, 100% 0, 100% 100%, 0 100%); }
+        .pack-half.bottom small { font-family: var(--font-body); font-weight: 600; font-size: 0.75rem; opacity: 0.85; }
+        .pack-wrapper:hover .pack-half { filter: brightness(1.1); }
+        .pack-wrapper.open .pack-half.top { transform: translateY(-40px) rotate(-14deg); opacity: 0; }
+        .pack-wrapper.open .pack-half.bottom { transform: translateY(30px); opacity: 0; }
+        .reveal { perspective: 800px; }
+        .reveal .flipper { position: relative; aspect-ratio: 63 / 88; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(.3, .1, .2, 1); transform: rotateY(180deg); }
+        .reveal.shown .flipper { transform: none; }
+        .reveal .front, .reveal .back { position: absolute; inset: 0; border-radius: 5% / 3.6%; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .reveal .front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .reveal .back { transform: rotateY(180deg); background: repeating-linear-gradient(45deg, var(--brand) 0 8px, var(--felt-1) 8px 16px); border: 3px solid var(--brand-light); }
+        .reveal[data-r="rare"] .front { box-shadow: 0 0 16px -2px var(--gold); }
+        .reveal[data-r="mythic"] .front { box-shadow: 0 0 22px 0 var(--mythic); }
+        .reveal .meta { visibility: hidden; }
+        .reveal.shown .meta { visibility: visible; }
+
+        /* ---- Deck builder ---- */
+        .builder { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
+        @media (max-width: 900px) { .builder { grid-template-columns: minmax(0, 1fr); } }
+        .decklist { position: sticky; top: 10px; max-height: calc(100vh - 20px); overflow: auto; }
+        .dl-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--border-subtle); font-size: 0.9rem; }
+        .dl-row .n { width: 22px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-soft); }
+        .dl-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+        .dl-row button { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-soft); border-radius: var(--radius-sm); width: 24px; height: 24px; line-height: 1; }
+        .warn { color: var(--color-warning); font-size: 0.85rem; }
+        .ok { color: var(--color-success); font-size: 0.85rem; }
+        .curve { display: flex; align-items: flex-end; gap: 4px; height: 60px; margin: 8px 0 2px; }
+        .curve div { flex: 1; background: var(--brand); border-radius: 3px 3px 0 0; min-height: 2px; }
+        .curve-labels { display: flex; gap: 4px; font-size: 0.72rem; color: var(--text-secondary); }
+        .curve-labels span { flex: 1; text-align: center; }
+        .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .pip { display: inline-block; width: 16px; height: 16px; border-radius: 50%; vertical-align: -3px; border: 1px solid color-mix(in srgb, var(--bg-canvas) 50%, transparent); }
+        .pip.W { background: var(--mana-W); } .pip.U { background: var(--mana-U); } .pip.B { background: var(--mana-B); }
+        .pip.R { background: var(--mana-R); } .pip.G { background: var(--mana-G); } .pip.C { background: var(--mana-C); }
+
+        /* ---- Opponent picker ---- */
+        .opp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+        .opp { text-align: left; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; color: inherit; display: flex; flex-direction: column; gap: 4px; }
+        .opp:hover { border-color: var(--brand-light); }
+        .opp[aria-pressed="true"] { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+        .opp strong { color: var(--text-heading); }
+        .opp small { color: var(--text-secondary); }
+
+        /* ---- The game table ---- */
+        #game { position: fixed; inset: 0; z-index: 50; background: radial-gradient(ellipse at center, var(--felt-1), var(--felt-2) 70%, var(--bg-canvas)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto auto; overflow: hidden; }
+        .pbar { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 6px 14px; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); border-bottom: 1px solid var(--border-subtle); }
+        .pbar.me { border-top: 1px solid var(--border-subtle); border-bottom: 0; }
+        .pbar .who { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); }
+        .life { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--text-heading); background: var(--bg-panel); border: 2px solid var(--border); border-radius: var(--radius-md); padding: 0 12px; min-width: 64px; text-align: center; }
+        .life.targetable { border-color: var(--gold); box-shadow: 0 0 12px var(--gold); cursor: pointer; }
+        .zone-count { font-size: 0.85rem; color: var(--text-soft); }
+        .cmd-zone { display: flex; gap: 6px; align-items: center; }
+        .side { overflow-y: auto; overflow-x: hidden; padding: 8px 10px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto); gap: 10px 16px; align-content: start; }
+        .side.opp-side { align-content: end; }
+        .side .col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+        .side .col.right { max-width: 42vw; align-items: flex-end; }
+        .lane.lands .perm + .perm, .lane.stack .perm + .perm { margin-left: calc(var(--land-w) * -0.45); }
+        .lane.stack .perm { width: var(--land-w); }
+        .lane { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; min-height: 30px; }
+        .lane.lands { gap: 4px; }
+        .lane-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); }
+        .midbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; padding: 6px 12px; background: color-mix(in srgb, var(--bg-canvas) 80%, transparent); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); }
+        .phase { font-family: var(--font-display); font-weight: 700; color: var(--gold); }
+        .prompt { color: var(--text-heading); font-weight: 600; }
+        .perm { position: relative; width: var(--card-w); flex: none; border: 0; background: none; padding: 0; transition: transform 0.25s; border-radius: 6px; }
+        .perm.land { width: var(--land-w); }
+        .perm img, .perm .noimg { width: 100%; aspect-ratio: 63 / 88; display: block; border-radius: 6px; object-fit: cover; background: var(--bg-inset); }
+        .perm .noimg { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; text-align: center; padding: 4px; border: 1px solid var(--border); color: var(--text-primary); }
+        .perm.tapped { transform: rotate(14deg) translateY(4px); }
+        .perm.tapped img { filter: brightness(0.6); }
+        .perm .pt { position: absolute; right: 3px; bottom: 3px; background: var(--bg-canvas); color: var(--text-heading); border: 1px solid var(--border); border-radius: 4px; font-weight: 700; font-size: 0.8rem; padding: 0 5px; font-variant-numeric: tabular-nums; }
+        .perm .pt.up { color: var(--color-success); border-color: var(--color-success); }
+        .perm .pt.hurt { color: var(--color-error); border-color: var(--color-error); }
+        .perm .chips { position: absolute; left: 3px; top: 3px; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+        .perm .chip { background: var(--bg-canvas); border: 1px solid var(--border); border-radius: 4px; font-size: 0.72rem; padding: 0 4px; color: var(--text-soft); }
+        .perm .chip.sick { color: var(--color-warning); }
+        .perm.attacking { transform: translateY(-14px); }
+        .opp-side .perm.attacking { transform: translateY(14px); }
+        .perm.attacking img { box-shadow: 0 0 0 3px var(--mana-R), 0 0 16px var(--mana-R); }
+        .perm.blocking img { box-shadow: 0 0 0 3px var(--mana-U), 0 0 14px var(--mana-U); }
+        .perm.selectable { cursor: pointer; }
+        .perm.selectable img, .perm.selectable .noimg { box-shadow: 0 0 0 2px var(--gold), 0 0 12px var(--gold); }
+        .perm.picked img { box-shadow: 0 0 0 3px var(--text-heading), 0 0 16px var(--brand-light); }
+        .perm .blocklabel { position: absolute; left: 0; right: 0; bottom: -18px; font-size: 0.72rem; text-align: center; color: var(--mana-U); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hand { display: flex; gap: 6px; padding: 6px 12px 8px; overflow-x: auto; background: color-mix(in srgb, var(--bg-canvas) 85%, transparent); min-height: 60px; }
+        .hand .hc { width: var(--hand-w); flex: none; border: 0; background: none; padding: 0; transition: transform 0.15s; position: relative; }
+        .hand .hc img, .hand .hc .noimg { width: 100%; aspect-ratio: 63 / 88; display: block; border-radius: 6px; object-fit: cover; background: var(--bg-inset); }
+        .hand .hc .noimg { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; text-align: center; padding: 4px; border: 1px solid var(--border); }
+        .hand .hc:hover { transform: translateY(-8px); }
+        .hand .hc.playable img { box-shadow: 0 0 0 2px var(--color-success), 0 0 10px var(--color-success); }
+        .hand .hc.chosen img { box-shadow: 0 0 0 3px var(--gold); }
+        .hand .hc .sup { position: absolute; top: 4px; right: 4px; }
+        .log { max-height: 4.6em; overflow-y: auto; font-size: 0.8rem; color: var(--text-soft); padding: 4px 12px; background: color-mix(in srgb, var(--bg-canvas) 90%, transparent); }
+        .log div:last-child { color: var(--text-heading); }
+        .opp-hand { display: flex; gap: 2px; }
+        .opp-hand i { width: 12px; height: 17px; border-radius: 2px; background: repeating-linear-gradient(45deg, var(--brand) 0 3px, var(--felt-1) 3px 6px); border: 1px solid var(--brand-light); }
+        .pool { display: inline-flex; gap: 3px; align-items: center; font-size: 0.85rem; }
+        @media (max-width: 700px) {
+            :root { --card-w: clamp(50px, 8vh, 64px); --land-w: 40px; --hand-w: clamp(56px, 9vh, 78px); }
+            .side { grid-template-columns: minmax(0, 1fr); }
+            .side .col.right { max-width: none; align-items: flex-start; }
+            .life { font-size: 1.1rem; min-width: 52px; }
+            body { font-size: 14px; }
+        }
+
+        /* ---- Card popup (details + actions) ---- */
+        .sheet-bg { position: fixed; inset: 0; z-index: 80; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .sheet { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; max-width: 640px; width: 100%; max-height: calc(100vh - 32px); overflow: auto; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 14px; }
+        @media (max-width: 560px) { .sheet { grid-template-columns: minmax(0, 1fr); } .sheet img { max-width: 220px; margin: 0 auto; } }
+        .sheet img { width: 100%; border-radius: 10px; display: block; }
+        .sheet .otext { white-space: pre-wrap; font-size: 0.9rem; background: var(--bg-inset); border-radius: var(--radius-sm); padding: 8px; margin: 6px 0; }
+        .sheet .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .modal { position: fixed; inset: 0; z-index: 90; background: color-mix(in srgb, var(--bg-canvas) 75%, transparent); display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .modal .box { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; max-width: 760px; width: 100%; max-height: calc(100vh - 32px); overflow: auto; text-align: center; }
+        .modal h2 { font-size: 1.6rem; margin-bottom: 8px; }
+        .modal .hand { justify-content: center; flex-wrap: wrap; background: none; }
+        .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100; background: var(--brand); color: var(--text-heading); padding: 10px 18px; border-radius: var(--radius-md); font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: calc(100vw - 32px); text-align: center; }
+        .toast.show { opacity: 1; }
+        footer { margin-top: 24px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition: none !important; animation: none !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header class="topbar">
+        <div class="brand">
+            <h1>🌙 Moonshot Duels</h1>
+            <span class="tag">Test build</span>
+        </div>
+        <span class="coins" id="coinPill" title="Coins: free, in-game only. Win games to earn more.">🪙 <span id="coinCount">0</span></span>
+        <a class="toplink" href="MTG_Lookup_Tool.html">🔮 Back to the Magic tool →</a>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Moonshot Duels">
+        <button class="tab" role="tab" id="tab-home" aria-selected="true" onclick="showView('home')">🏠 Home</button>
+        <button class="tab" role="tab" id="tab-packs" aria-selected="false" onclick="showView('packs')">🎴 Packs</button>
+        <button class="tab" role="tab" id="tab-decks" aria-selected="false" onclick="showView('decks')">🗂️ Collection &amp; Decks</button>
+        <button class="tab" role="tab" id="tab-play" aria-selected="false" onclick="showView('play')">⚔️ Play</button>
+    </nav>
+
+    <main>
+        <!-- ============ HOME ============ -->
+        <section id="view-home">
+            <div class="panel">
+                <h2>Welcome to Moonshot Duels</h2>
+                <p>A test game: open packs with free coins, build a deck, and play Magic against an opponent playing a real deck theme.</p>
+                <div class="grid-2" style="margin-top:12px;">
+                    <div>
+                        <h3 style="font-size:1rem; margin-bottom:6px;">How it works</h3>
+                        <ol class="note" style="padding-left:18px; display:grid; gap:4px;">
+                            <li><strong>Packs:</strong> spend coins on packs from recent sets. What's inside follows the real pack odds (from MTGJSON).</li>
+                            <li><strong>Decks:</strong> build a <strong>Modern</strong> deck (60 cards, up to 4 of each) or a <strong>Commander</strong> deck (100 cards, one of each, plus a commander). Basic lands are free. Or grab a ready-made starter deck.</li>
+                            <li><strong>Play:</strong> pick an opponent. Modern opponents play themed decks built from Scryfall; Commander opponents play EDHREC's average deck for this week's trending commanders.</li>
+                            <li><strong>Earn:</strong> 150 coins for a win (200 in Commander), 40 for trying.</li>
+                        </ol>
+                    </div>
+                    <div>
+                        <h3 style="font-size:1rem; margin-bottom:6px;">Your stats</h3>
+                        <div id="homeStats" class="note"></div>
+                        <div class="row" style="margin-top:10px;">
+                            <button class="btn primary" onclick="showView('play')">⚔️ Play a game</button>
+                            <button class="btn gold" onclick="showView('packs')">🎴 Open packs</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>What the rules engine does (and doesn't, yet)</h2>
+                <p class="note">This is a base model. It plays real turns: untap, draw, a land a turn, mana from lands and mana rocks, summoning sickness, combat with attackers and blockers, and Commander damage and commander tax. These keywords work: flying, reach, trample, first strike, double strike, deathtouch, lifelink, vigilance, haste, defender, menace, indestructible and hexproof. Card text is read automatically: damage, destroy / exile / bounce, draw, life gain and loss, pump spells, +1/+1 counters, tapping, tokens, discard, auras and equipment that give +N/+N, and "when this enters" effects.</p>
+                <p class="note" style="margin-top:6px;">Every card shows how much of its text the game can run: <span class="badge sup-full">Automated</span> <span class="badge sup-partial">Partly</span> <span class="badge sup-none">Not yet</span>. "Partly" cards still play, but the text the game can't read does nothing. "Not yet" cards (planeswalkers, X spells, counterspells and most complex text) can't be cast yet. There's no stack yet: spells resolve right away, and you can cast instants on your turn or while blocking.</p>
+            </div>
+        </section>
+
+        <!-- ============ PACKS ============ -->
+        <section id="view-packs" class="hidden">
+            <div class="panel">
+                <h2>Open packs</h2>
+                <p class="note">Packs follow each set's real pack layouts and odds from MTGJSON. Coins are free and in-game only - there's nothing to buy with real money.</p>
+                <div class="row" style="margin-top:10px;">
+                    <label for="packSet" class="note">Set</label>
+                    <select id="packSet"><option>Loading sets...</option></select>
+                    <button class="btn gold" id="buyPlay" onclick="buyPack('play')">Play booster · 🪙 100</button>
+                    <button class="btn gold" id="buyCollector" onclick="buyPack('collector')">Collector booster · 🪙 400</button>
+                </div>
+                <div id="packArea"></div>
+            </div>
+        </section>
+
+        <!-- ============ COLLECTION & DECKS ============ -->
+        <section id="view-decks" class="hidden">
+            <div class="panel" id="deckPicker"></div>
+            <div class="builder hidden" id="builder">
+                <div class="panel">
+                    <div class="filters">
+                        <input type="search" id="fName" placeholder="Search your collection" oninput="renderCollection()" aria-label="Search your collection">
+                        <select id="fColor" onchange="renderCollection()" aria-label="Color">
+                            <option value="">Any color</option><option value="W">White</option><option value="U">Blue</option><option value="B">Black</option><option value="R">Red</option><option value="G">Green</option><option value="C">Colorless</option><option value="M">Multicolor</option>
+                        </select>
+                        <select id="fType" onchange="renderCollection()" aria-label="Type">
+                            <option value="">Any type</option><option>Creature</option><option>Instant</option><option>Sorcery</option><option>Artifact</option><option>Enchantment</option><option>Land</option>
+                        </select>
+                        <select id="fSupport" onchange="renderCollection()" aria-label="Automation">
+                            <option value="">Any automation</option><option value="full">Automated</option><option value="partial">Partly</option><option value="none">Not yet</option>
+                        </select>
+                        <label class="note"><input type="checkbox" id="fLegal" checked onchange="renderCollection()"> Only cards this deck can use</label>
+                    </div>
+                    <div class="row" style="margin-bottom:10px;">
+                        <span class="note">Free basic lands:</span>
+                        <button class="btn small" onclick="addBasic('W')"><span class="pip W"></span> Plains</button>
+                        <button class="btn small" onclick="addBasic('U')"><span class="pip U"></span> Island</button>
+                        <button class="btn small" onclick="addBasic('B')"><span class="pip B"></span> Swamp</button>
+                        <button class="btn small" onclick="addBasic('R')"><span class="pip R"></span> Mountain</button>
+                        <button class="btn small" onclick="addBasic('G')"><span class="pip G"></span> Forest</button>
+                    </div>
+                    <div class="cards" id="collectionGrid"></div>
+                </div>
+                <div class="panel decklist" id="deckPanel"></div>
+            </div>
+        </section>
+
+        <!-- ============ PLAY ============ -->
+        <section id="view-play" class="hidden">
+            <div class="panel">
+                <h2>1. Your deck</h2>
+                <div class="row">
+                    <select id="playDeck" aria-label="Your deck" onchange="renderOpponents()"></select>
+                    <span class="note" id="playDeckNote"></span>
+                </div>
+            </div>
+            <div class="panel">
+                <h2>2. Your opponent</h2>
+                <div id="oppList"></div>
+            </div>
+            <div class="panel">
+                <div class="row">
+                    <button class="btn primary" id="startBtn" onclick="startMatch()">⚔️ Start the game</button>
+                    <span class="note" id="startNote"></span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        Moonshot Duels is an unofficial, free test game made for Moonshot Games staff. Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>; pack odds from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>; Commander decks from <a href="https://edhrec.com" target="_blank" rel="noopener">EDHREC</a>. Coins are in-game only and can't be bought or cashed out.<br>
+        Moonshot Duels is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
+    </footer>
+</div>
+
+<!-- The game table (shown during a match) -->
+<section id="game" class="hidden" aria-label="Game">
+    <div class="pbar" id="oppBar"></div>
+    <div class="side opp-side" id="oppSide"></div>
+    <div class="midbar" id="midBar"></div>
+    <div class="side me-side" id="meSide"></div>
+    <div class="pbar me" id="meBar"></div>
+    <div>
+        <div class="hand" id="hand" aria-label="Your hand"></div>
+        <div class="log" id="log" aria-live="polite"></div>
+    </div>
+</section>
+
+<div id="sheetHost"></div>
+<div id="modalHost"></div>
+<div class="toast" id="toast"></div>
+<script>
+// =====================================================================
+// Moonshot Duels - core: helpers, storage, card data
+// =====================================================================
+const SF = 'https://api.scryfall.com';
+const MTGJSON = 'https://mtgjson.com/api/v5';
+const EDH = 'https://json.edhrec.com/pages';
+const COLORS = ['W', 'U', 'B', 'R', 'G'];
+const COLOR_NAMES = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green', C: 'colorless' };
+const BASIC_FOR = { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' };
+const PACK_PRICES = { play: 100, collector: 400 };
+const REWARDS = { win: 150, winCommander: 200, loss: 40 };
+const START_COINS = 500;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rand = n => Math.floor(Math.random() * n);
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function todayISO() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+
+let toastTimer = null;
+function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ---- Saved data (this browser only) ----
+const store = {
+    get(k, d) { try { const v = localStorage.getItem('duels:' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('duels:' + k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+let profile = store.get('profile', null);
+function saveProfile() { store.set('profile', profile); renderCoins(); }
+function renderCoins() { $('coinCount').textContent = (profile ? profile.coins : 0).toLocaleString(); }
+
+// ---- Scryfall: requests spaced out, as Scryfall asks (50-100ms apart) ----
+let sfQueue = Promise.resolve();
+function sfFetch(url, opts) {
+    const p = sfQueue.then(async () => {
+        for (let attempt = 0; attempt < 3; attempt++) {
+            const res = await fetch(url, opts);
+            if (res.status === 429) { await sleep(1000 * (attempt + 1)); continue; }
+            return res;
+        }
+        throw new Error('Scryfall is busy - try again in a minute');
+    });
+    sfQueue = p.then(() => sleep(110), () => sleep(110));
+    return p;
+}
+async function sfJSON(url, opts) {
+    const res = await sfFetch(url, opts);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Scryfall error ${res.status}`);
+    return res.json();
+}
+
+// ---- Card cache: only the fields the game needs, saved between visits ----
+const CARDS = new Map(Object.entries(store.get('cards', {})));
+let cardsDirty = false;
+function persistCards() {
+    if (!cardsDirty) return;
+    cardsDirty = false;
+    const obj = Object.fromEntries(CARDS);
+    if (!store.set('cards', obj)) {
+        // Browser storage full: keep the cards the collection and decks use
+        const keep = new Set(Object.keys(profile.collection));
+        profile.decks.forEach(d => Object.keys(d.cards).forEach(id => keep.add(id)));
+        store.set('cards', Object.fromEntries([...CARDS].filter(([id]) => keep.has(id))));
+    }
+}
+
+function slimCard(c) {
+    const face = c.card_faces && !c.oracle_text ? c.card_faces[0] : c;
+    const img = c.image_uris || (c.card_faces && c.card_faces[0].image_uris) || {};
+    const L = c.legalities || {};
+    return {
+        id: c.id, name: face.name || c.name, fullName: c.name, cost: face.mana_cost || c.mana_cost || '', cmc: c.cmc || 0,
+        type: face.type_line || c.type_line || '', text: face.oracle_text || '', power: face.power, toughness: face.toughness,
+        colors: face.colors || c.colors || [], ci: c.color_identity || [], img: img.normal || null, imgS: img.small || null,
+        rarity: c.rarity, set: c.set, setName: c.set_name, layout: c.layout,
+        legal: { modern: L.modern, commander: L.commander },
+        usd: (c.prices && (c.prices.usd || c.prices.usd_foil)) || null
+    };
+}
+function remember(c) { const s = slimCard(c); CARDS.set(s.id, s); cardsDirty = true; return s; }
+
+// Scryfall's /cards/collection: up to 75 cards a request, by id or by name.
+async function fetchCollection(identifiers) {
+    const found = [];
+    const missing = [];
+    for (let i = 0; i < identifiers.length; i += 75) {
+        const batch = identifiers.slice(i, i + 75);
+        const res = await sfJSON(`${SF}/cards/collection`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: batch }) });
+        if (!res) continue;
+        (res.data || []).forEach(c => found.push(remember(c)));
+        (res.not_found || []).forEach(n => missing.push(n));
+    }
+    persistCards();
+    return { found, missing };
+}
+async function cardsByIds(ids) {
+    const need = [...new Set(ids)].filter(id => id && !CARDS.has(id));
+    if (need.length) await fetchCollection(need.map(id => ({ id })));
+    return ids.map(id => CARDS.get(id)).filter(Boolean);
+}
+// Names -> cards (first printing Scryfall returns for each name)
+async function cardsByNames(names) {
+    const uniq = [...new Set(names)];
+    const { found } = await fetchCollection(uniq.map(name => ({ name })));
+    const byName = new Map();
+    found.forEach(c => { byName.set(c.fullName.toLowerCase(), c); byName.set(c.name.toLowerCase(), c); });
+    return byName;
+}
+async function searchCards(q, maxPages = 2, order = 'edhrec') {
+    let url = `${SF}/cards/search?q=${encodeURIComponent(q)}&order=${order}&unique=cards`;
+    const out = [];
+    for (let page = 0; page < maxPages && url; page++) {
+        const res = await sfJSON(url);
+        if (!res) break;
+        (res.data || []).forEach(c => out.push(remember(c)));
+        url = res.has_more ? res.next_page : null;
+    }
+    persistCards();
+    return out;
+}
+
+// Basic lands: one fixed printing each (Foundations), fetched once
+const BASIC_IDS = {};
+async function loadBasics() {
+    if (Object.keys(BASIC_IDS).length === 5) return;
+    const saved = store.get('basics', null);
+    if (saved && Object.values(saved).every(id => CARDS.has(id))) { Object.assign(BASIC_IDS, saved); return; }
+    const res = await sfJSON(`${SF}/cards/search?q=${encodeURIComponent('t:basic -t:snow (name:plains or name:island or name:swamp or name:mountain or name:forest) set:fdn')}&unique=cards`);
+    (res ? res.data : []).forEach(c => {
+        const s = remember(c);
+        const color = Object.keys(BASIC_FOR).find(k => BASIC_FOR[k] === s.name);
+        if (color) BASIC_IDS[color] = s.id;
+    });
+    persistCards();
+    store.set('basics', BASIC_IDS);
+}
+function isBasic(card) { return /\bBasic\b/.test(card.type) && /\bLand\b/.test(card.type); }
+
+// MTGJSON files come gzipped; browsers can unzip them directly.
+const mtgjsonCache = {};
+function mtgjsonSet(code) {
+    if (!mtgjsonCache[code]) {
+        mtgjsonCache[code] = fetch(`${MTGJSON}/${code.toUpperCase()}.json.gz`).then(async res => {
+            if (!res.ok) throw new Error(`Couldn't load ${code.toUpperCase()} (${res.status})`);
+            return JSON.parse(await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).text()).data;
+        });
+        mtgjsonCache[code].catch(() => { delete mtgjsonCache[code]; });
+    }
+    return mtgjsonCache[code];
+}
+
+// =====================================================================
+// Reading card text. Each card's Oracle text is matched against patterns
+// the engine knows; the result says how much of the card the game can
+// run: 'full' (everything), 'partial' (castable, some text does nothing)
+// or 'none' (can't be cast yet: planeswalkers, X costs, counterspells...).
+// =====================================================================
+const KEYWORDS = ['flying', 'reach', 'trample', 'first strike', 'double strike', 'deathtouch', 'lifelink', 'vigilance', 'haste', 'defender', 'menace', 'indestructible', 'hexproof', 'shroud', 'flash'];
+const allKnown = kws => kws.every(k => KEYWORDS.includes(k));
+const NUMWORDS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+const num = s => (/^\d+$/.test(s) ? Number(s) : NUMWORDS[String(s).toLowerCase()]);
+
+function parseCost(str) {
+    const c = { generic: 0, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0, x: false, odd: false };
+    (str.match(/\{[^}]+\}/g) || []).forEach(tok => {
+        const s = tok.slice(1, -1);
+        if (/^\d+$/.test(s)) c.generic += Number(s);
+        else if (s === 'X') c.x = true;
+        else if ('WUBRGC'.includes(s) && s.length === 1) c[s]++;
+        else if (/^[WUBRG]\/P$/.test(s) || /^[WUBRG]\/[WUBRG]$/.test(s)) c[s[0]]++; // hybrid / Phyrexian: pay the first color
+        else if (/^2\/[WUBRG]$/.test(s)) c.generic += 2;
+        else c.odd = true;
+    });
+    return c;
+}
+function costTotal(c) { return c.generic + c.W + c.U + c.B + c.R + c.G + c.C; }
+
+function splitKw(s) { return s.split(/,\s*(?:and\s+)?|\s+and\s+/).map(x => x.trim().toLowerCase()).filter(Boolean); }
+
+function parseManaProduce(s) {
+    s = s.trim();
+    if (/^one mana of any color(?: in your commander's color identity)?$/i.test(s)) return { colors: [...COLORS], n: 1 };
+    // Exotic Orchard, Reflecting Pool: played as any color (approximate)
+    if (/^one mana of any (?:color|type) that a land (?:an opponent|you) controls? could produce$/i.test(s)) return { colors: [...COLORS], n: 1, approx: true };
+    let m = s.match(/^((?:\{[WUBRGC]\})+)$/);
+    if (m) { const syms = m[1].match(/[WUBRGC]/g); return { colors: [...new Set(syms)], n: syms.length, fixed: syms.length > 1 }; }
+    m = s.match(/^\{([WUBRGC])\}(?:, \{([WUBRGC])\})*,? or \{([WUBRGC])\}$/);
+    if (m) return { colors: [...new Set(s.match(/[WUBRGC]/g))], n: 1 };
+    return null;
+}
+
+// One sentence of an effect -> an action, or null if the engine can't do it.
+const EFFECTS = [
+    [/^~ deals (\w+) damage to any target$/, m => ({ t: 'dmg', n: num(m[1]), target: 'any' })],
+    [/^~ deals (\w+) damage to target (?:creature|creature or planeswalker|creature an opponent controls)$/, m => ({ t: 'dmg', n: num(m[1]), target: 'creature' })],
+    [/^~ deals (\w+) damage to target (?:player|opponent|player or planeswalker|opponent or planeswalker)$/, m => ({ t: 'dmg', n: num(m[1]), target: 'player' })],
+    [/^~ deals (\w+) damage to each opponent$/, m => ({ t: 'dmg', n: num(m[1]), target: 'opponents' })],
+    [/^~ deals (\w+) damage to each creature$/, m => ({ t: 'dmg', n: num(m[1]), target: 'allCreatures' })],
+    [/^~ deals (\w+) damage to each creature (?:your opponents control|you don't control)$/, m => ({ t: 'dmg', n: num(m[1]), target: 'oppCreatures' })],
+    [/^destroy target (?:creature|creature an opponent controls|creature you don't control|nonland permanent|artifact or creature|creature or planeswalker|nonland permanent an opponent controls)$/, () => ({ t: 'destroy', target: 'creature' })],
+    [/^exile target (?:creature|creature an opponent controls|creature you don't control|nonland permanent|creature or planeswalker|nonland permanent an opponent controls)$/, () => ({ t: 'exile', target: 'creature' })],
+    [/^return target (?:creature|nonland permanent|creature an opponent controls|creature you don't control) to its owner's hand$/, () => ({ t: 'bounce', target: 'creature' })],
+    [/^(?:you )?draw (\w+) cards?$/, m => ({ t: 'draw', n: num(m[1]) })],
+    [/^(?:you )?gain (\w+) life$/, m => ({ t: 'gain', n: num(m[1]) })],
+    [/^you lose (\w+) life$/, m => ({ t: 'loseSelf', n: num(m[1]) })],
+    [/^(?:each opponent|target opponent|target player) loses (\w+) life$/, m => ({ t: 'drain', n: num(m[1]) })],
+    [/^(?:each opponent|target opponent|target player) discards (\w+) cards?$/, m => ({ t: 'discard', n: num(m[1]) })],
+    [/^target creature(?: you control)? gets \+(\d+)\/\+(\d+)(?: and gains ([a-z ,]+?))? until end of turn$/, m => ({ t: 'pump', p: +m[1], q: +m[2], kw: m[3] ? splitKw(m[3]) : [], target: 'creature', good: true })],
+    [/^target creature(?: an opponent controls| you don't control)? gets -(\d+)\/-(\d+) until end of turn$/, m => ({ t: 'pump', p: -m[1], q: -m[2], kw: [], target: 'creature', good: false })],
+    [/^target creature(?: you control)? gains ([a-z ,]+?) until end of turn$/, m => ({ t: 'pump', p: 0, q: 0, kw: splitKw(m[1]), target: 'creature', good: true })],
+    [/^create (\w+) (\d+)\/(\d+) ([a-z ]+?) creature tokens?(?: with ([a-z ,]+))?$/, m => ({ t: 'token', n: num(m[1]), p: +m[2], q: +m[3], name: m[4], kw: m[5] ? splitKw(m[5]) : [] })],
+    [/^put (\w+) \+1\/\+1 counters? on target creature(?: you control)?$/, m => ({ t: 'counters', n: num(m[1]), target: 'creature', good: true })],
+    [/^put (\w+) \+1\/\+1 counters? on ~$/, m => ({ t: 'counters', n: num(m[1]), target: 'self' })],
+    [/^tap target (?:creature|creature an opponent controls|creature you don't control)$/, () => ({ t: 'tap', target: 'creature', good: false })],
+    [/^scry (\w+)$/, m => ({ t: 'scry', n: num(m[1]) })],
+    [/^surveil (\w+)$/, m => ({ t: 'scry', n: num(m[1]) })]
+];
+
+function parseEffects(text) {
+    const sentences = text.replace(/\.$/, '').split(/\.\s+/).map(s => s.trim()).filter(Boolean);
+    const out = [];
+    for (let s of sentences) {
+        s = s.replace(/^you may /i, '').replace(/^then,? /i, '');
+        // "~ deals 3 damage to target creature and 2 damage to you" etc. aren't handled
+        const parts = s.split(/,? and (?=(?:you |draw |gain |each opponent |~ deals |put |create ))/i);
+        for (const part of parts) {
+            const p = part.trim().replace(/\.$/, '');
+            let hit = null;
+            for (const [re, make] of EFFECTS) {
+                const m = p.match(re) || p.toLowerCase().match(re);
+                if (m) { hit = make(m); break; }
+            }
+            if (!hit || (hit.n === undefined && 'n' in hit) || (hit.kw && !allKnown(hit.kw))) return null;
+            out.push(hit);
+        }
+    }
+    return out.length ? out : null;
+}
+
+function rulesFor(card) {
+    if (card._r) return card._r;
+    const R = { kind: 'other', kw: new Set(), etb: [], spell: null, mana: null, entersTapped: false, buff: null, equip: null, aura: false, unhandled: [], support: 'full', why: '' };
+    const t = card.type || '';
+    R.kind = /\bLand\b/.test(t) && !/\bCreature\b/.test(t) ? 'land'
+        : /\bCreature\b/.test(t) ? 'creature'
+        : /\bPlaneswalker\b/.test(t) ? 'planeswalker'
+        : /\bBattle\b/.test(t) ? 'battle'
+        : /\bInstant\b/.test(t) ? 'instant'
+        : /\bSorcery\b/.test(t) ? 'sorcery'
+        : /\bArtifact\b/.test(t) ? 'artifact'
+        : /\bEnchantment\b/.test(t) ? 'enchantment' : 'other';
+    R.cost = parseCost(card.cost || '');
+    R.legendary = /\bLegendary\b/.test(t);
+    R.isAura = /\bAura\b/.test(t);
+    R.isEquipment = /\bEquipment\b/.test(t);
+    let text = (card.text || '').replace(/\([^)]*\)/g, '');
+    const names = [card.name, card.name.split(',')[0]].filter((v, i, a) => v && a.indexOf(v) === i);
+    names.forEach(n => { text = text.split(n).join('~'); });
+    text = text.replace(/\bthis (?:creature|spell|land|artifact|enchantment|card|permanent|Aura|Equipment)\b/gi, '~');
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    for (const line of lines) {
+        let m;
+        const kws = splitKw(line.replace(/\.$/, ''));
+        if (kws.length && kws.every(k => KEYWORDS.includes(k))) { kws.forEach(k => R.kw.add(k)); continue; }
+        if ((m = line.match(/^\{T\}(?:, Pay (\d+) life)?: Add (.+?)\.$/))) { const p = parseManaProduce(m[2]); if (p) { R.mana = p; if (m[1]) p.life = Number(m[1]); if (p.approx) R.approx = 'Taps for any color here (an approximation).'; continue; } }
+        // Signets ({1}, {T}: Add two colors): played as one mana of either color
+        if ((m = line.match(/^\{1\}, \{T\}: Add \{([WUBRGC])\}\{([WUBRGC])\}\.$/))) { R.mana = { colors: [...new Set([m[1], m[2]])], n: 1 }; R.approx = 'Plays as one mana of either color (the {1} it filters isn\'t modeled).'; continue; }
+        // Fetch lands: played as a land that taps for the colors it could fetch
+        if (R.kind === 'land' && (m = line.match(/^\{T\}, (?:Pay 1 life, )?Sacrifice ~: Search your library for (?:an? )?(basic land|\w+ or \w+) card/))) {
+            const types = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
+            const cols = m[1] === 'basic land' ? [...COLORS] : m[1].split(' or ').map(x => types[x]).filter(Boolean);
+            if (cols.length) { R.mana = { colors: cols, n: 1 }; R.approx = 'Fetching isn\'t automated: this plays as a land that taps for the colors it could fetch.'; continue; }
+        }
+        if (/^~ enters tapped\.$/.test(line)) { R.entersTapped = true; continue; }
+        if (R.kind === 'land' && /^~ enters tapped unless/.test(line)) { R.entersTapped = true; continue; } // approximation
+        if ((m = line.match(/^When ~ enters(?: the battlefield)?, (.+)$/))) { const fx = parseEffects(m[1]); if (fx) { R.etb.push(...fx); continue; } }
+        if ((R.kind === 'instant' || R.kind === 'sorcery')) { const fx = parseEffects(line); if (fx) { R.spell = (R.spell || []).concat(fx); continue; } }
+        if (/^Enchant creature$/i.test(line)) { R.aura = true; continue; }
+        if ((m = line.match(/^(?:Enchanted|Equipped) creature gets ([+-]\d+)\/([+-]\d+)(?: and has ([a-z ,]+))?\.$/i)) && (!m[3] || allKnown(splitKw(m[3])))) { R.buff = { p: +m[1], q: +m[2], kw: m[3] ? splitKw(m[3]) : [] }; continue; }
+        if ((m = line.match(/^(?:Enchanted|Equipped) creature has ([a-z ,]+)\.$/i)) && allKnown(splitKw(m[1]))) { R.buff = { p: 0, q: 0, kw: splitKw(m[1]) }; continue; }
+        if ((m = line.match(/^Equip \{(\d+)\}$/))) { R.equip = Number(m[1]); continue; }
+        R.unhandled.push(line);
+    }
+    // Basic land types tap for their color (the reminder text was stripped)
+    if (R.kind === 'land' || /\bLand\b/.test(t)) {
+        const types = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest: 'G' };
+        const cols = Object.keys(types).filter(k => new RegExp(`\\b${k}\\b`).test(t)).map(k => types[k]);
+        if (cols.length) R.mana = { colors: [...new Set([...(R.mana ? R.mana.colors : []), ...cols])], n: 1 };
+        if (/\bWastes\b/.test(card.name)) R.mana = { colors: ['C'], n: 1 };
+    }
+    // How much of it works
+    const numeric = v => v !== undefined && /^\d+$/.test(String(v));
+    if (R.kind === 'planeswalker' || R.kind === 'battle') { R.support = 'none'; R.why = `${R.kind === 'planeswalker' ? 'Planeswalkers' : 'Battles'} aren't in the game yet.`; }
+    else if (R.cost.x || R.cost.odd) { R.support = 'none'; R.why = 'X costs and unusual mana symbols aren\'t in the game yet.'; }
+    else if (R.kind === 'creature' && (!numeric(card.power) || !numeric(card.toughness))) { R.support = 'none'; R.why = 'Power or toughness that changes (like */*) isn\'t in the game yet.'; }
+    else if ((R.kind === 'instant' || R.kind === 'sorcery') && !R.spell) { R.support = 'none'; R.why = 'The game can\'t read what this spell does yet.'; }
+    else if (R.isAura && (!R.aura || !R.buff)) { R.support = 'none'; R.why = 'Only Auras that give a creature +N/+N or keywords work so far.'; }
+    else if (R.isEquipment && (!R.buff || R.equip === null)) { R.support = 'none'; R.why = 'Only Equipment that gives +N/+N or keywords (with a plain Equip cost) works so far.'; }
+    else if (R.unhandled.length) { R.support = 'partial'; R.why = `Not automated: "${R.unhandled.join(' / ')}"`; }
+    if (R.approx) { if (R.support === 'full') R.support = 'partial'; R.why = [R.approx, R.why].filter(Boolean).join(' '); }
+    if (R.kw.has('flash') && R.kind !== 'instant') R.flash = true;
+    Object.defineProperty(card, '_r', { value: R, enumerable: false, configurable: true });
+    return R;
+}
+
+const SUPPORT_LABEL = { full: 'Automated', partial: 'Partly', none: 'Not yet' };
+function supportBadge(card) {
+    const R = rulesFor(card);
+    return `<span class="badge sup-${R.support}" title="${esc(R.why || 'Everything on this card works in the game.')}">${SUPPORT_LABEL[R.support]}</span>`;
+}
+
+// =====================================================================
+// Views, packs, collection and decks
+// =====================================================================
+const VIEWS = ['home', 'packs', 'decks', 'play'];
+function showView(v) {
+    VIEWS.forEach(k => {
+        $(`view-${k}`).classList.toggle('hidden', k !== v);
+        $(`tab-${k}`).setAttribute('aria-selected', String(k === v));
+    });
+    if (v === 'home') renderHome();
+    if (v === 'packs') renderPacksView();
+    if (v === 'decks') { if (!editing) renderDeckPicker(); }
+    if (v === 'play') renderPlayView();
+    try { history.replaceState(null, '', `#${v}`); } catch (e) { /* fine */ }
+}
+
+function ensureProfile() {
+    if (!profile) {
+        profile = { coins: START_COINS, freePacks: 3, collection: {}, decks: [], wins: 0, losses: 0, packs: 0, created: todayISO() };
+        saveProfile();
+    }
+    renderCoins();
+}
+
+function renderHome() {
+    const owned = Object.values(profile.collection).reduce((a, b) => a + b, 0);
+    $('homeStats').innerHTML = `
+        <div>🪙 <strong>${profile.coins.toLocaleString()}</strong> coins${profile.freePacks ? ` · 🎁 <strong>${profile.freePacks}</strong> free pack${profile.freePacks === 1 ? '' : 's'} to open` : ''}</div>
+        <div>🃏 <strong>${owned}</strong> cards collected (${Object.keys(profile.collection).length} different) from ${profile.packs} pack${profile.packs === 1 ? '' : 's'}</div>
+        <div>🗂️ <strong>${profile.decks.length}</strong> deck${profile.decks.length === 1 ? '' : 's'}</div>
+        <div>⚔️ <strong>${profile.wins}</strong> win${profile.wins === 1 ? '' : 's'} · <strong>${profile.losses}</strong> loss${profile.losses === 1 ? '' : 'es'}</div>`;
+}
+
+// ---------------------------------------------------------------------
+// Packs: the same method as the Magic tool's "Crack a pack". Pick one of
+// the pack's layouts by its weight, then cards from each sheet by their
+// weights (no repeats within a sheet).
+// ---------------------------------------------------------------------
+let packSets = [];
+async function loadPackSets() {
+    if (packSets.length) return packSets;
+    const res = await sfJSON(`${SF}/sets`);
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 3);
+    packSets = (res ? res.data : []).filter(s => ['expansion', 'core'].includes(s.set_type) && !s.digital && s.released_at
+        && s.released_at <= todayISO() && new Date(s.released_at) >= cutoff)
+        .sort((a, b) => b.released_at.localeCompare(a.released_at));
+    return packSets;
+}
+
+async function renderPacksView() {
+    const sel = $('packSet');
+    try {
+        await loadPackSets();
+        if (sel.dataset.ready !== '1') {
+            sel.innerHTML = packSets.map(s => `<option value="${s.code}">${esc(s.name)} (${s.released_at.slice(0, 4)})</option>`).join('');
+            sel.dataset.ready = '1';
+        }
+    } catch (e) {
+        sel.innerHTML = '<option>Couldn\'t load sets</option>';
+    }
+    const free = profile.freePacks > 0;
+    $('buyPlay').textContent = free ? `Play booster · 🎁 free (${profile.freePacks} left)` : `Play booster · 🪙 ${PACK_PRICES.play}`;
+    $('buyPlay').disabled = !free && profile.coins < PACK_PRICES.play;
+    $('buyCollector').disabled = profile.coins < PACK_PRICES.collector;
+}
+
+function pickWeighted(entries) {
+    const total = entries.reduce((a, [, w]) => a + w, 0);
+    let x = Math.random() * total;
+    const i = entries.findIndex(([, w]) => (x -= w) < 0);
+    return i < 0 ? entries.length - 1 : i;
+}
+
+async function drawPack(code, kind) {
+    const setData = await mtgjsonSet(code);
+    const boosters = setData.booster || {};
+    const key = kind === 'collector' ? (boosters.collector ? 'collector' : null)
+        : ['play', 'draft', 'default', 'set'].find(k => boosters[k]);
+    if (!key) throw new Error(kind === 'collector' ? 'This set has no collector booster data.' : 'This set has no booster data.');
+    const booster = boosters[key];
+    const sources = [setData, ...await Promise.all((booster.sourceSetCodes || []).filter(c => c !== setData.code).map(c => mtgjsonSet(c).catch(() => null)))];
+    const byUuid = new Map();
+    sources.filter(Boolean).forEach(src => [...(src.cards || []), ...(src.tokens || [])].forEach(c => byUuid.set(c.uuid, c)));
+    const cfg = booster.boosters[pickWeighted(booster.boosters.map(b => [b, b.weight]))];
+    const picks = [];
+    Object.entries(cfg.contents).forEach(([sheetName, count]) => {
+        const sheet = booster.sheets[sheetName];
+        if (!sheet) return;
+        const pool = Object.entries(sheet.cards);
+        for (let i = 0; i < count && pool.length; i++) {
+            const [uuid] = pool.splice(pickWeighted(pool), 1)[0];
+            const c = byUuid.get(uuid);
+            const id = c && c.identifiers && c.identifiers.scryfallId;
+            if (id && !(c.types || []).includes('Token') && c.layout !== 'token' && c.layout !== 'art_series') picks.push({ id, foil: !!sheet.foil });
+        }
+    });
+    const cards = await cardsByIds(picks.map(p => p.id));
+    const byId = new Map(cards.map(c => [c.id, c]));
+    const order = { common: 0, uncommon: 1, rare: 2, mythic: 3, special: 2, bonus: 3 };
+    return { name: booster.name || `${setData.name} booster`, set: setData,
+        cards: picks.map(p => ({ ...p, card: byId.get(p.id) })).filter(p => p.card)
+            .sort((a, b) => (a.foil - b.foil) || ((isBasic(a.card) ? -1 : order[a.card.rarity] ?? 1) - (isBasic(b.card) ? -1 : order[b.card.rarity] ?? 1))) };
+}
+
+async function buyPack(kind) {
+    const code = $('packSet').value;
+    const free = kind === 'play' && profile.freePacks > 0;
+    const price = free ? 0 : PACK_PRICES[kind];
+    if (profile.coins < price) { toast('Not enough coins - win a game to earn more.'); return; }
+    const area = $('packArea');
+    area.innerHTML = '<div class="loading">Shuffling the sheets...</div>';
+    $('buyPlay').disabled = $('buyCollector').disabled = true;
+    try {
+        const pack = await drawPack(code, kind);
+        if (free) profile.freePacks--; else profile.coins -= price;
+        profile.packs++;
+        pack.cards.forEach(p => { profile.collection[p.id] = (profile.collection[p.id] || 0) + 1; });
+        saveProfile();
+        renderPackReveal(pack);
+    } catch (e) {
+        console.error(e);
+        area.innerHTML = `<p class="warn">Couldn't open a pack: ${esc(e.message)}</p>`;
+    }
+    renderPacksView();
+}
+
+function renderPackReveal(pack) {
+    const total = pack.cards.reduce((a, p) => a + (parseFloat(p.card.usd) || 0), 0);
+    const best = pack.cards.slice().sort((a, b) => (parseFloat(b.card.usd) || 0) - (parseFloat(a.card.usd) || 0))[0];
+    $('packArea').innerHTML = `
+        <div class="pack-stage">
+            <button type="button" class="pack-wrapper" id="packWrap" onclick="openPack()" aria-label="Open the pack">
+                <span class="pack-half top">${esc(pack.set.code)}</span>
+                <span class="pack-half bottom"><span style="font-size:2rem;" aria-hidden="true">🌙</span>${esc(pack.set.name)}<small>Tap to open</small></span>
+            </button>
+            <div class="cards hidden" id="packCards">${pack.cards.map((p, i) => `
+                <button type="button" class="ctile reveal" data-r="${p.card.rarity}" onclick="showCardSheet('${p.card.id}')">
+                    <div class="flipper"><div class="front">${p.card.img ? `<img src="${p.card.img}" alt="${esc(p.card.name)}" loading="lazy">` : `<div class="noimg">${esc(p.card.name)}</div>`}</div><div class="back"></div></div>
+                    <span class="meta"><strong>${esc(p.card.name)}</strong>${p.foil ? ' ✨' : ''}<br>${p.card.rarity} · ${supportBadge(p.card)}</span>
+                </button>`).join('')}</div>
+            <p class="note hidden" id="packSummary">${pack.cards.length} cards added to your collection${best ? ` · best pull: <strong>${esc(best.card.name)}</strong>` : ''}${total ? ` · about $${total.toFixed(2)} at TCGplayer market (just for fun - these are in-game cards)` : ''}.</p>
+        </div>`;
+}
+
+function openPack() {
+    const wrap = $('packWrap');
+    wrap.classList.add('open');
+    wrap.disabled = true;
+    setTimeout(() => {
+        wrap.classList.add('hidden');
+        $('packCards').classList.remove('hidden');
+        const tiles = [...document.querySelectorAll('#packCards .reveal')];
+        tiles.forEach((t, i) => setTimeout(() => t.classList.add('shown'), 120 + i * 160));
+        setTimeout(() => $('packSummary').classList.remove('hidden'), 300 + tiles.length * 160);
+    }, 550);
+}
+
+// ---------------------------------------------------------------------
+// Card details popup, used everywhere outside the game
+// ---------------------------------------------------------------------
+function cardTextHTML(card) {
+    return `<div class="otext">${esc(card.cost)}${card.cost ? '\n' : ''}${esc(card.type)}${card.text ? `\n\n${esc(card.text)}` : ''}${card.power !== undefined ? `\n\n${esc(card.power)}/${esc(card.toughness)}` : ''}</div>`;
+}
+function showCardSheet(id, actionsHTML = '') {
+    const card = CARDS.get(id);
+    if (!card) return;
+    const R = rulesFor(card);
+    $('sheetHost').innerHTML = `
+        <div class="sheet-bg" onclick="if (event.target === this) closeSheet()">
+            <div class="sheet" role="dialog" aria-label="${esc(card.name)}">
+                <div>${card.img ? `<img src="${card.img}" alt="${esc(card.name)}">` : ''}</div>
+                <div>
+                    <h3>${esc(card.fullName)}</h3>
+                    <div class="note">${esc(card.setName || '')} · ${esc(card.rarity || '')}${profile.collection[id] ? ` · you own ${profile.collection[id]}` : ''}</div>
+                    ${cardTextHTML(card)}
+                    <div>${supportBadge(card)} <span class="note">${esc(R.why || 'Everything on this card works in the game.')}</span></div>
+                    <div class="actions">${actionsHTML}<button class="btn" onclick="closeSheet()">Close</button></div>
+                </div>
+            </div>
+        </div>`;
+}
+function closeSheet() { $('sheetHost').innerHTML = ''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+// ---------------------------------------------------------------------
+// Deck rules
+// ---------------------------------------------------------------------
+const FORMATS = {
+    modern: { name: 'Modern', size: 60, copies: 4, life: 20 },
+    commander: { name: 'Commander', size: 100, copies: 1, life: 40 }
+};
+
+function deckCount(deck) { return Object.values(deck.cards).reduce((a, b) => a + b, 0) + (deck.commander ? 1 : 0); }
+
+function deckProblems(deck) {
+    const F = FORMATS[deck.format];
+    const out = [];
+    const total = deckCount(deck);
+    if (deck.format === 'modern' && total < 60) out.push(`${total}/60 cards - a Modern deck needs at least 60.`);
+    if (deck.format === 'commander') {
+        if (total !== 100) out.push(`${total}/100 cards - a Commander deck has exactly 100, commander included.`);
+        const cmd = deck.commander && CARDS.get(deck.commander);
+        if (!cmd) out.push('Pick a commander: a legendary creature.');
+        else if (!(rulesFor(cmd).legendary && rulesFor(cmd).kind === 'creature')) out.push(`${cmd.name} isn't a legendary creature.`);
+    }
+    const cmd = deck.commander && CARDS.get(deck.commander);
+    for (const [id, n] of Object.entries(deck.cards)) {
+        const c = CARDS.get(id);
+        if (!c) continue;
+        if (!isBasic(c) && n > F.copies) out.push(`${c.name}: ${n} copies (${F.copies} max).`);
+        if (c.legal[deck.format] && c.legal[deck.format] !== 'legal') out.push(`${c.name} isn't legal in ${F.name} (${c.legal[deck.format].replace('_', ' ')}).`);
+        if (cmd && c.ci.some(col => !cmd.ci.includes(col))) out.push(`${c.name} is outside ${cmd.name}'s colors.`);
+        if (!deck.starter && !isBasic(c) && n + (deck.commander === id ? 1 : 0) > (profile.collection[id] || 0)) out.push(`You own ${profile.collection[id] || 0} ${c.name} but the deck uses ${n}.`);
+    }
+    return out;
+}
+function deckUncastable(deck) {
+    return Object.entries(deck.cards).filter(([id]) => CARDS.get(id) && rulesFor(CARDS.get(id)).support === 'none').reduce((a, [, n]) => a + n, 0);
+}
+
+// ---------------------------------------------------------------------
+// Deck list and builder
+// ---------------------------------------------------------------------
+let editing = null; // the deck open in the builder (a copy until saved)
+
+async function renderDeckPicker() {
+    $('builder').classList.add('hidden');
+    const el = $('deckPicker');
+    el.classList.remove('hidden');
+    const need = new Set();
+    profile.decks.forEach(d => { Object.keys(d.cards).forEach(id => need.add(id)); if (d.commander) need.add(d.commander); });
+    Object.keys(profile.collection).forEach(id => need.add(id));
+    if ([...need].some(id => !CARDS.has(id))) {
+        el.innerHTML = '<div class="loading">Loading your cards...</div>';
+        await cardsByIds([...need]);
+    }
+    el.innerHTML = `
+        <h2>Your decks</h2>
+        ${profile.decks.length ? profile.decks.map((d, i) => {
+            const probs = deckProblems(d);
+            return `<div class="row" style="padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+                <strong style="flex:1; min-width:180px;">${esc(d.name)}</strong>
+                <span class="note">${FORMATS[d.format].name} · ${deckCount(d)} cards${d.starter ? ' · starter' : ''}</span>
+                ${probs.length ? `<span class="warn" title="${esc(probs.join('\n'))}">⚠ ${probs.length} to fix</span>` : '<span class="ok">✓ Ready</span>'}
+                <button class="btn small" onclick="editDeck(${i})">Edit</button>
+                <button class="btn small danger" onclick="deleteDeck(${i})">Delete</button>
+            </div>`;
+        }).join('') : '<p class="note">No decks yet. Start one below, or grab a starter deck to play right away.</p>'}
+        <div class="row" style="margin-top:12px;">
+            <button class="btn primary" onclick="newDeck('modern')">➕ New Modern deck</button>
+            <button class="btn primary" onclick="newDeck('commander')">➕ New Commander deck</button>
+            <button class="btn gold" onclick="starterPicker()">🎁 Get a starter deck</button>
+        </div>
+        <p class="note" style="margin-top:8px;">Starter decks are ready to play and don't use your collection. Decks you build use cards you've pulled from packs (basic lands are free).</p>
+        <h2 style="margin-top:16px;">Your collection</h2>
+        <p class="note">${Object.keys(profile.collection).length ? `${Object.values(profile.collection).reduce((a, b) => a + b, 0)} cards. Open a deck to browse and add them.` : 'Empty so far - open some packs!'}</p>`;
+}
+
+function newDeck(format) {
+    editing = { id: `d${Date.now()}`, name: `My ${FORMATS[format].name} deck`, format, cards: {}, commander: null, starter: false, isNew: true };
+    openBuilder();
+}
+function editDeck(i) {
+    editing = JSON.parse(JSON.stringify(profile.decks[i]));
+    editing.index = i;
+    openBuilder();
+}
+function deleteDeck(i) {
+    const d = profile.decks[i];
+    if (!d) return;
+    if ($('deckPicker').dataset.confirm !== String(i)) {
+        $('deckPicker').dataset.confirm = String(i);
+        toast(`Click Delete again to delete "${d.name}".`);
+        return;
+    }
+    delete $('deckPicker').dataset.confirm;
+    profile.decks.splice(i, 1);
+    saveProfile();
+    renderDeckPicker();
+}
+
+async function openBuilder() {
+    $('deckPicker').classList.add('hidden');
+    $('builder').classList.remove('hidden');
+    $('collectionGrid').innerHTML = '<div class="loading">Loading cards...</div>';
+    await loadBasics().catch(() => {});
+    await cardsByIds([...Object.keys(profile.collection), ...Object.keys(editing.cards), editing.commander].filter(Boolean));
+    renderCollection();
+    renderDeckPanel();
+}
+
+function cardColorsKey(c) { return c.colors.length > 1 ? 'M' : (c.colors[0] || 'C'); }
+
+function usableIn(deck, c) {
+    if (c.legal[deck.format] && c.legal[deck.format] !== 'legal') return false;
+    const cmd = deck.commander && CARDS.get(deck.commander);
+    if (cmd && c.ci.some(col => !cmd.ci.includes(col))) return false;
+    return true;
+}
+
+function renderCollection() {
+    if (!editing) return;
+    const q = $('fName').value.trim().toLowerCase();
+    const col = $('fColor').value, type = $('fType').value, sup = $('fSupport').value, legal = $('fLegal').checked;
+    const ids = editing.starter ? Object.keys(editing.cards) : Object.keys(profile.collection);
+    const list = ids.map(id => CARDS.get(id)).filter(Boolean)
+        .filter(c => !q || c.fullName.toLowerCase().includes(q))
+        .filter(c => !col || cardColorsKey(c) === col)
+        .filter(c => !type || c.type.includes(type))
+        .filter(c => !sup || rulesFor(c).support === sup)
+        .filter(c => !legal || usableIn(editing, c))
+        .sort((a, b) => a.cmc - b.cmc || a.name.localeCompare(b.name));
+    $('collectionGrid').innerHTML = list.length ? list.map(c => {
+        const owned = editing.starter ? '' : profile.collection[c.id] || 0;
+        const used = (editing.cards[c.id] || 0) + (editing.commander === c.id ? 1 : 0);
+        return `<button type="button" class="ctile${owned !== '' && used >= owned ? ' dim' : ''}" onclick="collectionClick('${c.id}')" title="${esc(c.name)}">
+            ${c.imgS || c.img ? `<img src="${c.img || c.imgS}" alt="${esc(c.name)}" loading="lazy">` : `<div class="noimg">${esc(c.name)}</div>`}
+            ${owned !== '' ? `<span class="cnt">${used}/${owned}</span>` : ''}
+            <span class="meta">${esc(c.name)}<br>${supportBadge(c)}</span>
+        </button>`;
+    }).join('') : `<p class="note">${ids.length ? 'No cards match these filters.' : 'No cards yet - open packs to fill your collection.'}</p>`;
+}
+
+function collectionClick(id) {
+    const c = CARDS.get(id);
+    const R = rulesFor(c);
+    const canCmd = editing.format === 'commander' && R.legendary && R.kind === 'creature';
+    showCardSheet(id, `
+        <button class="btn primary" onclick="addToDeck('${id}'); closeSheet();">➕ Add to deck</button>
+        ${editing.cards[id] ? `<button class="btn" onclick="removeFromDeck('${id}'); closeSheet();">➖ Remove one</button>` : ''}
+        ${canCmd ? `<button class="btn gold" onclick="setCommander('${id}'); closeSheet();">👑 Make commander</button>` : ''}`);
+}
+
+function addToDeck(id) {
+    const c = CARDS.get(id);
+    const F = FORMATS[editing.format];
+    const n = editing.cards[id] || 0;
+    if (!isBasic(c)) {
+        if (n >= F.copies) { toast(`${F.name} allows ${F.copies === 1 ? 'one copy' : `${F.copies} copies`} of ${c.name}.`); return; }
+        const owned = profile.collection[id] || 0;
+        if (!editing.starter && n + (editing.commander === id ? 1 : 0) >= owned) { toast(`You only own ${owned} ${c.name}.`); return; }
+        if (editing.format === 'commander' && editing.commander === id) { toast(`${c.name} is already your commander.`); return; }
+    }
+    editing.cards[id] = n + 1;
+    renderDeckPanel();
+    renderCollection();
+}
+function removeFromDeck(id) {
+    if (!editing.cards[id]) return;
+    editing.cards[id]--;
+    if (!editing.cards[id]) delete editing.cards[id];
+    renderDeckPanel();
+    renderCollection();
+}
+function setCommander(id) {
+    if (editing.cards[id]) { editing.cards[id]--; if (!editing.cards[id]) delete editing.cards[id]; }
+    editing.commander = id;
+    renderDeckPanel();
+    renderCollection();
+}
+async function addBasic(color) {
+    if (!editing) return;
+    await loadBasics();
+    const id = BASIC_IDS[color];
+    if (!id) { toast('Couldn\'t load basic lands.'); return; }
+    if (editing.commander && !CARDS.get(editing.commander).ci.includes(color)) { toast(`${BASIC_FOR[color]} is outside your commander's colors.`); return; }
+    editing.cards[id] = (editing.cards[id] || 0) + 1;
+    renderDeckPanel();
+}
+
+const TYPE_GROUPS = [['creature', 'Creatures'], ['instant', 'Instants'], ['sorcery', 'Sorceries'], ['artifact', 'Artifacts'], ['enchantment', 'Enchantments'], ['planeswalker', 'Planeswalkers'], ['battle', 'Battles'], ['land', 'Lands'], ['other', 'Other']];
+
+function renderDeckPanel() {
+    const d = editing;
+    const entries = Object.entries(d.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c);
+    const probs = deckProblems(d);
+    const curve = [0, 0, 0, 0, 0, 0, 0];
+    entries.forEach(({ c, n }) => { if (rulesFor(c).kind !== 'land') curve[Math.min(6, Math.round(c.cmc))] += n; });
+    const max = Math.max(1, ...curve);
+    const cmd = d.commander && CARDS.get(d.commander);
+    const uncastable = deckUncastable(d);
+    $('deckPanel').innerHTML = `
+        <input type="text" id="deckName" value="${esc(d.name)}" aria-label="Deck name" style="width:100%; font-weight:700; margin-bottom:6px;" oninput="editing.name = this.value">
+        <div class="note">${FORMATS[d.format].name} · <strong>${deckCount(d)}</strong>/${FORMATS[d.format].size} cards${d.starter ? ' · starter deck' : ''}</div>
+        ${d.format === 'commander' ? `<div style="margin:8px 0;">👑 Commander: ${cmd ? `<strong style="cursor:pointer;" onclick="showCardSheet('${cmd.id}')">${esc(cmd.name)}</strong> ${cmd.ci.map(x => `<span class="pip ${x}"></span>`).join('')}` : '<span class="warn">none yet - open a legendary creature and pick "Make commander"</span>'}</div>` : ''}
+        <div class="curve" aria-hidden="true">${curve.map(v => `<div style="height:${(v / max) * 100}%" title="${v}"></div>`).join('')}</div>
+        <div class="curve-labels"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6+</span></div>
+        ${probs.length ? `<div class="warn" style="margin:8px 0;">${probs.slice(0, 6).map(p => `⚠ ${esc(p)}`).join('<br>')}${probs.length > 6 ? `<br>...and ${probs.length - 6} more` : ''}</div>` : '<div class="ok" style="margin:8px 0;">✓ Ready to play</div>'}
+        ${uncastable ? `<div class="note" style="margin-bottom:6px;">${uncastable} card${uncastable === 1 ? '' : 's'} can't be cast yet (marked "Not yet").</div>` : ''}
+        ${TYPE_GROUPS.map(([k, label]) => {
+            const rows = entries.filter(e => rulesFor(e.c).kind === k).sort((a, b) => a.c.cmc - b.c.cmc || a.c.name.localeCompare(b.c.name));
+            if (!rows.length) return '';
+            return `<div style="margin-top:8px;"><div class="lane-label">${label} (${rows.reduce((a, r) => a + r.n, 0)})</div>${rows.map(({ c, n }) => `
+                <div class="dl-row"><span class="n">${n}</span><span class="nm" onclick="showCardSheet('${c.id}')">${esc(c.name)}</span>${rulesFor(c).support !== 'full' ? `<span class="badge sup-${rulesFor(c).support}">${rulesFor(c).support === 'none' ? '!' : '~'}</span>` : ''}
+                <button onclick="removeFromDeck('${c.id}')" aria-label="Remove one ${esc(c.name)}">−</button><button onclick="addToDeck('${c.id}')" aria-label="Add one ${esc(c.name)}">+</button></div>`).join('')}</div>`;
+        }).join('')}
+        <div class="row" style="margin-top:12px;">
+            <button class="btn primary" onclick="saveDeck()">💾 Save deck</button>
+            <button class="btn" onclick="closeBuilder()">Back</button>
+        </div>`;
+}
+
+function saveDeck() {
+    const d = { ...editing };
+    delete d.index; delete d.isNew;
+    if (editing.index !== undefined) profile.decks[editing.index] = d;
+    else { profile.decks.push(d); editing.index = profile.decks.length - 1; }
+    saveProfile();
+    toast(`Saved "${d.name}".`);
+}
+function closeBuilder() { editing = null; renderDeckPicker(); }
+
+// ---------------------------------------------------------------------
+// Theme decks (Modern) and Commander decks, for opponents and starters
+// ---------------------------------------------------------------------
+// Each theme is two Scryfall searches (creatures, spells), most-played
+// first. Only cards the game can run go in: fully automated first, then
+// "partly" creatures if there aren't enough. Checked live on 2026-10-05.
+const MODERN_THEMES = [
+    { key: 'burn', name: 'Red Burn', desc: 'Fast red creatures and burn spells', colors: ['R'], creatures: 'c=r t:creature cmc<=3 pow>=2', spells: 'c=r (t:instant or t:sorcery) (o:"damage to any target" or o:"damage to target creature")', spellCount: 4 },
+    { key: 'stompy', name: 'Green Stompy', desc: 'Big green creatures and pump spells', colors: ['G'], creatures: 'c=g t:creature cmc<=4 pow>=3', spells: 'c=g (t:instant or t:sorcery) o:"target creature" o:"gets +"' },
+    { key: 'weenie', name: 'White Weenie', desc: 'A wide army of small white creatures', colors: ['W'], creatures: 'c=w t:creature cmc<=3', spells: 'c=w (t:instant or t:sorcery) (o:"exile target creature" or o:"destroy target creature" or o:"gets +")' },
+    { key: 'skies', name: 'Azorius Skies', desc: 'White and blue flyers with bounce and card draw', colors: ['W', 'U'], creatures: '(c=w or c=u or c=wu) t:creature kw:flying cmc<=4', spells: '(c=u or c=w or c=wu) (t:instant or t:sorcery) (o:"to its owner\'s hand" or o:"draw two cards" or o:"exile target creature")' },
+    { key: 'black', name: 'Mono-Black Removal', desc: 'Black creatures backed by removal and drain', colors: ['B'], creatures: 'c=b t:creature cmc<=4', spells: 'c=b (t:instant or t:sorcery) (o:"destroy target creature" or o:"loses")', spellCount: 4 },
+    { key: 'goblins', name: 'Goblins', desc: 'A goblin horde', colors: ['R'], creatures: 't:goblin t:creature c<=r', spells: 'c=r (t:instant or t:sorcery) o:"damage to any target"', creatureCount: 7 },
+    { key: 'elves', name: 'Elves', desc: 'Elves and green pump', colors: ['G'], creatures: 't:elf t:creature c<=g', spells: 'c=g (t:instant or t:sorcery) o:"target creature" o:"gets +"', creatureCount: 7 },
+    { key: 'zombies', name: 'Zombies', desc: 'Black zombies and removal', colors: ['B'], creatures: 't:zombie t:creature c<=b', spells: 'c=b (t:instant or t:sorcery) o:"destroy target creature"', creatureCount: 7 },
+    { key: 'lifelink', name: 'Orzhov Lifelink', desc: 'White and black lifelinkers', colors: ['W', 'B'], creatures: 'id<=wb -c:c t:creature kw:lifelink', spells: '(c=w or c=b or c=wb) (t:instant or t:sorcery) (o:"gain" or o:"destroy target creature")' },
+    { key: 'gruul', name: 'Gruul Trample', desc: 'Red and green tramplers', colors: ['R', 'G'], creatures: 'id<=rg -c:c t:creature kw:trample cmc<=5', spells: '(c=r or c=g or c=rg) (t:instant or t:sorcery) (o:"damage to any target" or o:"gets +")' }
+];
+
+function landSplit(cards, colors, landCount) {
+    const pips = Object.fromEntries(colors.map(c => [c, 0]));
+    cards.forEach(({ card, n }) => colors.forEach(col => { pips[col] += (card.cost.split(`{${col}}`).length - 1) * n; }));
+    const total = Object.values(pips).reduce((a, b) => a + b, 0) || colors.length;
+    const out = {};
+    let given = 0;
+    colors.forEach((col, i) => {
+        const share = i === colors.length - 1 ? landCount - given : Math.round(landCount * ((pips[col] || 1) / total));
+        out[col] = share;
+        given += share;
+    });
+    return out;
+}
+
+async function buildThemeDeck(theme) {
+    await loadBasics();
+    const base = ' f:modern game:paper -t:land';
+    const [creaturePool, spellPool] = await Promise.all([
+        searchCards(theme.creatures + base, 3),
+        theme.spells ? searchCards(theme.spells + base, 2) : Promise.resolve([])
+    ]);
+    const ok = (c, kind) => rulesFor(c).kind === kind && rulesFor(c).support !== 'none';
+    const creatures = [
+        ...creaturePool.filter(c => ok(c, 'creature') && rulesFor(c).support === 'full'),
+        ...creaturePool.filter(c => ok(c, 'creature') && rulesFor(c).support === 'partial')
+    ];
+    const spells = spellPool.filter(c => ['instant', 'sorcery'].includes(rulesFor(c).kind) && rulesFor(c).support === 'full');
+    const spellN = Math.min(spells.length, theme.spellCount || 3);
+    const creatureN = Math.min(creatures.length, (theme.creatureCount || 6) + (3 - Math.min(spellN, 3)));
+    // A sensible curve: mostly cheap creatures, a couple of top-end ones
+    const picked = creatures.slice(0, creatureN * 2);
+    const chosen = [];
+    const cheap = picked.filter(c => c.cmc <= 3), top = picked.filter(c => c.cmc > 3);
+    chosen.push(...cheap.slice(0, Math.max(creatureN - 2, creatureN - top.length)));
+    chosen.push(...top.slice(0, creatureN - chosen.length));
+    if (chosen.length < creatureN) chosen.push(...picked.filter(c => !chosen.includes(c)).slice(0, creatureN - chosen.length));
+    const nonland = [...chosen, ...spells.slice(0, spellN)].map(card => ({ card, n: 4 }));
+    const nonlandCount = nonland.reduce((a, e) => a + e.n, 0);
+    const landCount = Math.max(20, 60 - nonlandCount);
+    const split = landSplit(nonland, theme.colors, landCount);
+    const lands = Object.entries(split).filter(([, n]) => n > 0).map(([col, n]) => ({ card: CARDS.get(BASIC_IDS[col]), n }));
+    return { name: theme.name, format: 'modern', commander: null, entries: [...nonland, ...lands].filter(e => e.card) };
+}
+
+let trendingCommanders = null;
+async function loadTrendingCommanders() {
+    if (trendingCommanders) return trendingCommanders;
+    const res = await fetch(`${EDH}/commanders/week.json`);
+    if (!res.ok) throw new Error('EDHREC unavailable');
+    const json = await res.json();
+    const views = ((json.container && json.container.json_dict && json.container.json_dict.cardlists) || [])[0];
+    trendingCommanders = ((views && views.cardviews) || []).slice(0, 16).map(v => ({ name: v.name, slug: v.sanitized || v.slug, decks: v.num_decks }));
+    return trendingCommanders;
+}
+
+// EDHREC's average deck for a commander: the cards most of its decks run.
+// Cards the game can't cast yet are swapped for basic lands of its colors.
+async function buildCommanderDeck(slug) {
+    await loadBasics();
+    const res = await fetch(`${EDH}/average-decks/${slug}.json`);
+    if (!res.ok) throw new Error('EDHREC has no average deck for that commander');
+    const avg = await res.json();
+    const cmdName = avg.deck.commander[0];
+    const list = Object.values(avg.deck.cards).flat();
+    const byName = await cardsByNames([cmdName, ...list.map(e => e[0])]);
+    const commander = byName.get(cmdName.toLowerCase());
+    if (!commander) throw new Error(`Couldn't find ${cmdName}`);
+    const ci = commander.ci.filter(c => BASIC_IDS[c]);
+    const entries = [];
+    let swapped = 0;
+    list.forEach(([name, q]) => {
+        const card = byName.get(String(name).toLowerCase());
+        if (!card || card.id === commander.id) return;
+        if (rulesFor(card).support === 'none' && !isBasic(card)) { swapped += q; return; }
+        entries.push({ card, n: q });
+    });
+    let total = entries.reduce((a, e) => a + e.n, 0);
+    for (let i = 0; total < 99; i++, total++) {
+        const id = BASIC_IDS[ci.length ? ci[i % ci.length] : 'W'];
+        const e = entries.find(x => x.card.id === id);
+        if (e) e.n++; else entries.push({ card: CARDS.get(id), n: 1 });
+    }
+    return { name: `${commander.name}`, format: 'commander', commander, entries, swapped, source: 'EDHREC average deck' };
+}
+
+function generatedToDeck(gen, name) {
+    const cards = {};
+    gen.entries.forEach(e => { cards[e.card.id] = (cards[e.card.id] || 0) + e.n; });
+    return { id: `d${Date.now()}`, name, format: gen.format, cards, commander: gen.commander ? gen.commander.id : null, starter: true };
+}
+
+async function starterPicker() {
+    let cmdOptions = '<option disabled>Loading trending commanders...</option>';
+    showModal(`<h2>🎁 Starter decks</h2>
+        <p class="note">Ready-made decks to play right away. They don't use your collection.</p>
+        <div class="grid-2" style="text-align:left; margin-top:12px;">
+            <div><h3 style="font-size:1rem;">Modern (60 cards)</h3>
+                <select id="starterTheme" style="width:100%; margin:6px 0;">${MODERN_THEMES.map(t => `<option value="${t.key}">${esc(t.name)} - ${esc(t.desc)}</option>`).join('')}</select>
+                <button class="btn primary" onclick="makeStarter('modern')">Build this deck</button></div>
+            <div><h3 style="font-size:1rem;">Commander (100 cards)</h3>
+                <select id="starterCmd" style="width:100%; margin:6px 0;">${cmdOptions}</select>
+                <button class="btn primary" onclick="makeStarter('commander')">Build this deck</button>
+                <div class="note" style="margin-top:4px;">This week's trending commanders on EDHREC, with their average deck.</div></div>
+        </div>
+        <div id="starterStatus" class="note" style="margin-top:10px;"></div>
+        <div class="row" style="justify-content:center; margin-top:12px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
+    try {
+        const list = await loadTrendingCommanders();
+        if ($('starterCmd')) $('starterCmd').innerHTML = list.map(c => `<option value="${esc(c.slug)}">${esc(c.name)}</option>`).join('');
+    } catch (e) {
+        if ($('starterCmd')) $('starterCmd').innerHTML = '<option disabled>EDHREC is unavailable right now</option>';
+    }
+}
+
+async function makeStarter(format) {
+    const status = $('starterStatus');
+    status.innerHTML = '<span class="loading">Building the deck from live card data...</span>';
+    try {
+        let deck;
+        if (format === 'modern') {
+            const theme = MODERN_THEMES.find(t => t.key === $('starterTheme').value);
+            deck = generatedToDeck(await buildThemeDeck(theme), `${theme.name} (starter)`);
+        } else {
+            const slug = $('starterCmd').value;
+            const gen = await buildCommanderDeck(slug);
+            deck = generatedToDeck(gen, `${gen.name} (starter)`);
+        }
+        profile.decks.push(deck);
+        saveProfile();
+        closeModal();
+        toast(`Added "${deck.name}" to your decks.`);
+        renderDeckPicker();
+        renderPlayView();
+    } catch (e) {
+        console.error(e);
+        status.innerHTML = `<span class="warn">Couldn't build that deck: ${esc(e.message)}</span>`;
+    }
+}
+
+function showModal(html) { $('modalHost').innerHTML = `<div class="modal"><div class="box" role="dialog">${html}</div></div>`; }
+function closeModal() { $('modalHost').innerHTML = ''; }
+
+// ---------------------------------------------------------------------
+// Play setup
+// ---------------------------------------------------------------------
+let chosenOpponent = null;
+function renderPlayView() {
+    const sel = $('playDeck');
+    const prev = sel.value;
+    sel.innerHTML = profile.decks.length
+        ? profile.decks.map((d, i) => `<option value="${i}">${esc(d.name)} · ${FORMATS[d.format].name}</option>`).join('')
+        : '<option value="">No decks yet</option>';
+    if (prev && profile.decks[prev]) sel.value = prev;
+    renderOpponents();
+}
+
+async function renderOpponents() {
+    const deck = profile.decks[$('playDeck').value];
+    const list = $('oppList');
+    $('startBtn').disabled = !deck;
+    if (!deck) {
+        $('playDeckNote').innerHTML = '';
+        list.innerHTML = '<p class="note">Make a deck first: build one in Collection &amp; Decks, or <button class="btn small gold" onclick="starterPicker()">🎁 get a starter deck</button>.</p>';
+        return;
+    }
+    const probs = deckProblems(deck);
+    $('playDeckNote').innerHTML = probs.length ? `<span class="warn">⚠ ${esc(probs[0])}${probs.length > 1 ? ` (+${probs.length - 1} more)` : ''}</span>` : '<span class="ok">✓ Ready</span>';
+    if (deck.format === 'modern') {
+        list.innerHTML = `<p class="note" style="margin-bottom:8px;">Themed decks built live from Scryfall: the most-played Modern-legal cards for each theme that the game can run (not tournament lists).</p>
+            <div class="opp-grid">${MODERN_THEMES.map(t => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === t.key}" onclick="chooseOpponent({ type: 'theme', key: '${t.key}' })">
+                <strong>${t.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(t.name)}</strong><small>${esc(t.desc)}</small></button>`).join('')}</div>`;
+    } else {
+        list.innerHTML = '<div class="loading">Loading this week\'s trending commanders from EDHREC...</div>';
+        try {
+            const cmds = await loadTrendingCommanders();
+            list.innerHTML = `<p class="note" style="margin-bottom:8px;">This week's trending commanders on EDHREC, each playing its EDHREC average deck (cards the game can't run yet are swapped for basic lands).</p>
+                <div class="opp-grid">${cmds.map(c => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === c.slug}" onclick="chooseOpponent({ type: 'commander', key: '${esc(c.slug)}' })">
+                    <strong>👑 ${esc(c.name)}</strong><small>${c.decks ? `${c.decks.toLocaleString()} decks on EDHREC` : ''}</small></button>`).join('')}</div>`;
+        } catch (e) {
+            list.innerHTML = '<p class="warn">EDHREC is unavailable right now, so there are no Commander opponents. Try again later.</p>';
+        }
+    }
+    if (chosenOpponent && ((deck.format === 'modern') !== (chosenOpponent.type === 'theme'))) chosenOpponent = null;
+    $('startNote').textContent = chosenOpponent ? '' : 'Pick an opponent.';
+}
+function chooseOpponent(o) {
+    chosenOpponent = o;
+    renderOpponents();
+}
+
+// =====================================================================
+// The game. Players are G.players[0] (you) and [1] (the opponent).
+// Objects ("o") are cards in play or in a zone: { uid, card, owner, ... }.
+// Simplifications for this base model: no stack (spells resolve at once),
+// instants can be cast in your main phases, after blocks on your attack,
+// and while blocking; triggered abilities other than "when this enters"
+// aren't automated.
+// =====================================================================
+let G = null;
+let uidSeq = 1;
+const AUTOPLAY = new URLSearchParams(location.search).has('autoplay'); // testing: the game plays both sides
+
+function makeObj(card, owner, extra) {
+    return Object.assign({ uid: uidSeq++, card, owner, tapped: false, sick: true, dmg: 0, counters: 0, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, token: false, isCommander: false }, extra || {});
+}
+const Rx = o => rulesFor(o.card);
+const me = () => G.players[0];
+const foe = () => G.players[1];
+const opp = P => G.players[1 - P.i];
+const allPerms = () => [...G.players[0].bf, ...G.players[1].bf];
+const onBf = uid => allPerms().find(o => o.uid === uid) || null;
+function findObj(uid) {
+    for (const P of G.players) for (const z of ['bf', 'hand', 'command', 'gy', 'exile']) { const o = P[z].find(x => x.uid === uid); if (o) return o; }
+    return null;
+}
+const ctrl = o => G.players[o.owner];
+const isCreature = o => Rx(o).kind === 'creature';
+function buffsOn(o) {
+    const b = { p: 0, q: 0, kw: [] };
+    allPerms().forEach(a => { if (a.attachedTo === o.uid && Rx(a).buff) { b.p += Rx(a).buff.p; b.q += Rx(a).buff.q; b.kw.push(...Rx(a).buff.kw); } });
+    return b;
+}
+const pow = o => (Number(o.card.power) || 0) + o.counters + o.tp + buffsOn(o).p;
+const tou = o => (Number(o.card.toughness) || 0) + o.counters + o.tq + buffsOn(o).q;
+const has = (o, k) => Rx(o).kw.has(k) || o.tkw.includes(k) || buffsOn(o).kw.includes(k);
+const canAttackWith = o => isCreature(o) && !o.tapped && (!o.sick || has(o, 'haste')) && !has(o, 'defender');
+
+function log(msg) {
+    G.log.push(msg);
+    if (G.log.length > 80) G.log.shift();
+    const el = $('log');
+    if (el) { el.innerHTML = G.log.slice(-40).map(l => `<div>${esc(l)}</div>`).join(''); el.scrollTop = el.scrollHeight; }
+}
+const pause = ms => sleep(AUTOPLAY ? 0 : ms);
+
+// ---- Setup ----
+function makePlayer(i, name, deck, isAI) {
+    const P = { i, name, isAI, life: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
+        landsPlayed: 0, tax: 0, cmdDmg: 0, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0 };
+    deck.entries.forEach(e => { for (let k = 0; k < e.n; k++) P.library.push(makeObj(e.card, i)); });
+    shuffle(P.library);
+    if (deck.commander) {
+        const c = makeObj(deck.commander, i, { isCommander: true });
+        P.command.push(c);
+        P.commanderUid = c.uid;
+    }
+    return P;
+}
+
+function deckToEntries(deck) {
+    return {
+        name: deck.name, format: deck.format, commander: deck.commander ? CARDS.get(deck.commander) : null,
+        entries: Object.entries(deck.cards).map(([id, n]) => ({ card: CARDS.get(id), n })).filter(e => e.card)
+    };
+}
+
+async function startMatch(again) {
+    const deck = profile.decks[$('playDeck').value];
+    if (!deck) { toast('Pick a deck first.'); return; }
+    if (!chosenOpponent) { toast('Pick an opponent first.'); return; }
+    const probs = deckProblems(deck);
+    if (probs.length && !again && !startMatch.forced) {
+        showModal(`<h2>This deck has things to fix</h2><p class="note">${probs.slice(0, 6).map(esc).join('<br>')}</p>
+            <div class="row" style="justify-content:center; margin-top:12px;"><button class="btn primary" onclick="startMatch.forced = true; closeModal(); startMatch();">Play anyway</button><button class="btn" onclick="closeModal()">Go back</button></div>`);
+        return;
+    }
+    startMatch.forced = false;
+    showModal('<h2>Shuffling up...</h2><p class="loading">Building your opponent\'s deck from live card data...</p>');
+    try {
+        await cardsByIds([...Object.keys(deck.cards), deck.commander].filter(Boolean));
+        let oppDeck;
+        if (chosenOpponent.type === 'theme') {
+            const theme = MODERN_THEMES.find(t => t.key === chosenOpponent.key);
+            oppDeck = await buildThemeDeck(theme);
+            oppDeck.source = 'Scryfall theme deck';
+        } else {
+            oppDeck = await buildCommanderDeck(chosenOpponent.key);
+            oppDeck.source = `EDHREC average deck${oppDeck.swapped ? `, ${oppDeck.swapped} cards swapped for lands` : ''}`;
+        }
+        closeModal();
+        newGame(deckToEntries(deck), oppDeck);
+    } catch (e) {
+        console.error(e);
+        showModal(`<h2>Couldn't start</h2><p class="warn">${esc(e.message)}</p><div class="row" style="justify-content:center; margin-top:12px;"><button class="btn" onclick="closeModal()">OK</button></div>`);
+    }
+}
+
+async function newGame(myDeck, oppDeck) {
+    uidSeq = 1;
+    G = { format: myDeck.format, players: [], active: 0, turn: 1, phase: 'setup', log: [], attackers: [], blocks: {}, mode: null, over: false, busy: true, fromCommand: false };
+    G.players = [makePlayer(0, 'You', myDeck, AUTOPLAY), makePlayer(1, oppDeck.commander ? oppDeck.commander.name : oppDeck.name, oppDeck, true)];
+    $('game').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    log(`${FORMATS[G.format].name} game: ${myDeck.name} vs ${oppDeck.name} (${oppDeck.source}).`);
+    G.players.forEach(P => drawCards(P, 7, true));
+    renderGame();
+    await mulligan(me());
+    await mulligan(foe());
+    G.active = rand(2);
+    log(`${G.players[G.active].name} ${G.active === 0 ? 'go' : 'goes'} first (coin flip).`);
+    G.firstTurn = true;
+    beginTurn();
+}
+
+// London mulligan: draw seven, then put one card on the bottom for each mulligan.
+async function mulligan(P) {
+    if (P.isAI) {
+        let lands = P.hand.filter(o => Rx(o).kind === 'land').length;
+        if ((lands < 2 || lands > 5) && P.mulligans === 0) {
+            P.mulligans = 1;
+            P.library.push(...P.hand.splice(0));
+            shuffle(P.library);
+            drawCards(P, 7, true);
+            const nonland = P.hand.filter(o => Rx(o).kind !== 'land').sort((a, b) => b.card.cmc - a.card.cmc);
+            const bottom = nonland[0] || P.hand[0];
+            P.hand.splice(P.hand.indexOf(bottom), 1);
+            P.library.unshift(bottom);
+            log(`${P.name} mulligans to 6.`);
+        }
+        return;
+    }
+    while (true) {
+        const choice = await new Promise(resolve => {
+            showModal(`<h2>Your opening hand</h2>
+                <p class="note">${P.mulligans ? `Mulligan ${P.mulligans}: you'll put ${P.mulligans} card${P.mulligans === 1 ? '' : 's'} on the bottom if you keep.` : 'Keep these seven, or shuffle and draw a new seven (and put one on the bottom).'}</p>
+                <div class="hand">${P.hand.map(o => `<span class="hc">${o.card.imgS || o.card.img ? `<img src="${o.card.imgS || o.card.img}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</span>`).join('')}</div>
+                <div class="row" style="justify-content:center;"><button class="btn primary" id="keepBtn">Keep</button><button class="btn" id="mullBtn" ${P.mulligans >= 4 ? 'disabled' : ''}>Mulligan</button></div>`);
+            $('keepBtn').onclick = () => resolve('keep');
+            $('mullBtn').onclick = () => resolve('mull');
+        });
+        if (choice === 'keep') break;
+        P.mulligans++;
+        P.library.push(...P.hand.splice(0));
+        shuffle(P.library);
+        drawCards(P, 7, true);
+    }
+    if (P.mulligans) {
+        const picked = new Set();
+        await new Promise(resolve => {
+            const draw = () => {
+                showModal(`<h2>Put ${P.mulligans} on the bottom</h2><p class="note">Tap cards to choose (${picked.size}/${P.mulligans}).</p>
+                    <div class="hand">${P.hand.map(o => `<button class="hc${picked.has(o.uid) ? ' chosen' : ''}" data-uid="${o.uid}">${o.card.imgS || o.card.img ? `<img src="${o.card.imgS || o.card.img}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</button>`).join('')}</div>
+                    <div class="row" style="justify-content:center;"><button class="btn primary" id="bottomBtn" ${picked.size === P.mulligans ? '' : 'disabled'}>Done</button></div>`);
+                document.querySelectorAll('#modalHost .hc').forEach(b => b.onclick = () => {
+                    const u = Number(b.dataset.uid);
+                    if (picked.has(u)) picked.delete(u); else if (picked.size < P.mulligans) picked.add(u);
+                    draw();
+                });
+                $('bottomBtn').onclick = resolve;
+            };
+            draw();
+        });
+        P.hand.filter(o => picked.has(o.uid)).forEach(o => { P.hand.splice(P.hand.indexOf(o), 1); P.library.unshift(o); });
+        log(`You mulligan to ${P.hand.length}.`);
+    }
+    closeModal();
+}
+
+// ---- Zones ----
+function drawCards(P, n, quiet) {
+    for (let k = 0; k < n; k++) {
+        const o = P.library.pop();
+        if (!o) { P.drewEmpty = true; log(`${P.name} can't draw - the library is empty!`); break; }
+        P.hand.push(o);
+    }
+    if (!quiet) log(`${P.name} ${P.i === 0 ? 'draw' : 'draws'} ${n === 1 ? 'a card' : `${n} cards`}.`);
+}
+function removeFromZones(o) {
+    for (const P of G.players) for (const z of ['bf', 'hand', 'command', 'gy', 'exile', 'library']) {
+        const i = P[z].indexOf(o);
+        if (i >= 0) { P[z].splice(i, 1); return; }
+    }
+}
+function resetObj(o) { Object.assign(o, { tapped: false, sick: true, dmg: 0, counters: 0, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false }); }
+// A commander that would go to the graveyard or exile goes back to the command zone.
+function leaveBattlefield(o, zone) {
+    removeFromZones(o);
+    resetObj(o);
+    const P = G.players[o.owner];
+    if (o.token) return;
+    if (o.isCommander && zone !== 'hand') { P.command.push(o); log(`${o.card.name} returns to the command zone.`); return; }
+    P[zone].push(o);
+}
+function destroy(o, why) {
+    if (has(o, 'indestructible')) { log(`${o.card.name} is indestructible.`); return; }
+    log(`${o.card.name} ${why || 'is destroyed'}.`);
+    leaveBattlefield(o, 'gy');
+}
+
+function damage(target, n, src) {
+    if (n <= 0) return;
+    if (target.life !== undefined) {
+        target.life -= n;
+        if (src && src.isCommander && G.format === 'commander' && isCreature(src)) target.cmdDmg += n;
+    } else {
+        target.dmg += n;
+        if (src && src.card && has(src, 'deathtouch')) target.dt = true;
+    }
+    if (src && src.card && isCreature(src) && has(src, 'lifelink')) ctrl(src).life += n;
+}
+
+// State-based actions: lethal damage, 0 toughness, loose Auras, losing.
+function sba() {
+    if (!G || G.over) return;
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const o of allPerms()) {
+            if (isCreature(o)) {
+                const t = tou(o);
+                if (t <= 0) { log(`${o.card.name} dies (0 toughness).`); leaveBattlefield(o, 'gy'); changed = true; continue; }
+                if ((o.dmg >= t || (o.dt && o.dmg > 0)) && !has(o, 'indestructible')) { log(`${o.card.name} dies.`); leaveBattlefield(o, 'gy'); changed = true; continue; }
+            }
+            if (Rx(o).isAura && !onBf(o.attachedTo)) { log(`${o.card.name} goes to the graveyard.`); leaveBattlefield(o, 'gy'); changed = true; }
+            if (Rx(o).isEquipment && o.attachedTo && !onBf(o.attachedTo)) o.attachedTo = null;
+        }
+    }
+    const lost = G.players.filter(P => P.life <= 0 || P.drewEmpty || (G.format === 'commander' && P.cmdDmg >= 21));
+    if (lost.length) {
+        const P = lost[0];
+        const you = P.i === 0;
+        const reason = P.life <= 0 ? `${you ? 'You are' : `${P.name} is`} at ${P.life} life.`
+            : P.drewEmpty ? `${you ? 'You have' : `${P.name} has`} no cards left to draw.`
+            : `${you ? 'You' : P.name} took 21 commander damage.`;
+        endGame(lost.length === 2 ? null : 1 - P.i, lost.length === 2 ? 'Both players lost at the same time.' : reason);
+    }
+}
+
+// ---- Mana ----
+function manaSources(P) {
+    return P.bf.filter(o => !o.tapped && Rx(o).mana && !(isCreature(o) && o.sick && !has(o, 'haste')));
+}
+function availableMana(P) { return manaSources(P).reduce((a, o) => a + Rx(o).mana.n, 0); }
+// Which sources to tap for a cost: colored symbols first (scarcest color
+// first, least flexible source first), then generic from what's left.
+function planPayment(P, cost, extra = 0) {
+    const srcs = manaSources(P).map(o => ({ o, colors: Rx(o).mana.colors, n: Rx(o).mana.n }));
+    const need = [];
+    ['W', 'U', 'B', 'R', 'G', 'C'].forEach(c => { for (let i = 0; i < cost[c]; i++) need.push(c); });
+    need.sort((a, b) => srcs.filter(s => s.colors.includes(a)).length - srcs.filter(s => s.colors.includes(b)).length);
+    const used = [];
+    const assign = k => {
+        if (k === need.length) return true;
+        const cands = srcs.filter(s => !used.includes(s) && s.colors.includes(need[k])).sort((a, b) => a.colors.length - b.colors.length);
+        for (const s of cands) { used.push(s); if (assign(k + 1)) return true; used.pop(); }
+        return false;
+    };
+    if (!assign(0)) return null;
+    let generic = cost.generic + extra;
+    // Colored symbols paid by a source that makes 2+ mana leave the rest for generic
+    used.forEach(s => { if (s.n > 1) generic -= (s.n - 1); });
+    const rest = srcs.filter(s => !used.includes(s)).sort((a, b) => (b.n - a.n) || (a.colors.length - b.colors.length));
+    const chosen = [...used];
+    for (const s of rest) { if (generic <= 0) break; chosen.push(s); generic -= s.n; }
+    return generic > 0 ? null : chosen.map(s => s.o);
+}
+function extraCost(P, o) { return o.isCommander && P.command.includes(o) ? P.tax * 2 : 0; }
+function canPay(P, o) { return !!planPayment(P, Rx(o).cost, extraCost(P, o)); }
+function payFor(P, o) {
+    const plan = planPayment(P, Rx(o).cost, extraCost(P, o));
+    if (!plan) return false;
+    plan.forEach(s => { s.tapped = true; if (Rx(s).mana.life) { P.life -= Rx(s).mana.life; log(`${P.name} ${P.i === 0 ? 'pay' : 'pays'} ${Rx(s).mana.life} life for ${s.card.name}.`); } });
+    return true;
+}
+
+// ---- Timing ----
+const MAIN = ['main1', 'main2'];
+function canCastNow(P, o) {
+    const r = Rx(o);
+    if (G.over || r.support === 'none' || r.kind === 'land') return false;
+    if (!P.hand.includes(o) && !P.command.includes(o)) return false;
+    if (r.kind === 'instant' || r.flash) {
+        if (G.active === P.i) return [...MAIN, 'afterBlocks'].includes(G.phase);
+        return G.phase === 'declareBlocks';
+    }
+    return G.active === P.i && MAIN.includes(G.phase);
+}
+function canPlayLand(P, o) { return Rx(o).kind === 'land' && G.active === P.i && MAIN.includes(G.phase) && P.landsPlayed < 1 && P.hand.includes(o) && !G.over; }
+
+// ---- Targets ----
+const TARGETED = ['any', 'creature', 'player'];
+function needsTarget(e) { return TARGETED.includes(e.target); }
+function firstTargetEffect(o) {
+    const r = Rx(o);
+    if (r.isAura) return { t: 'aura', target: 'creature', good: (r.buff.p + r.buff.q) >= 0 };
+    return (r.spell || []).find(needsTarget) || null;
+}
+function validTargets(P, e) {
+    const out = [];
+    const creatures = allPerms().filter(isCreature).filter(c => !has(c, 'shroud') && !(has(c, 'hexproof') && c.owner !== P.i));
+    if (e.target === 'any' || e.target === 'creature') out.push(...creatures.map(o => ({ o })));
+    if (e.target === 'any' || e.target === 'player') out.push(...G.players.map(p => ({ p })));
+    return out;
+}
+function sameTarget(a, b) { return a && b && (a.o ? b.o && a.o.uid === b.o.uid : b.p && a.p.i === b.p.i); }
+function targetStillOk(t) { return t.p ? true : !!onBf(t.o.uid); }
+
+function chooseTarget(P, e, source, cancelable) {
+    const valid = validTargets(P, e);
+    if (!valid.length) return Promise.resolve(null);
+    if (P.isAI) return Promise.resolve(aiPickTarget(P, e, source, valid) || (cancelable ? null : valid[0]));
+    return new Promise(resolve => {
+        G.mode = { type: 'target', e, source, valid, cancelable, resolve };
+        renderGame();
+    });
+}
+function pickTarget(t) {
+    const m = G.mode;
+    if (!m || m.type !== 'target') return;
+    if (!m.valid.some(v => sameTarget(v, t))) { toast('That isn\'t a legal target.'); return; }
+    G.mode = null;
+    m.resolve(t);
+}
+function cancelTarget() {
+    const m = G.mode;
+    if (!m || m.type !== 'target' || !m.cancelable) return;
+    G.mode = null;
+    m.resolve(null);
+    renderGame();
+}
+
+// ---- Casting and playing ----
+function playLand(P, o) {
+    P.hand.splice(P.hand.indexOf(o), 1);
+    P.landsPlayed++;
+    resetObj(o);
+    o.tapped = !!Rx(o).entersTapped;
+    P.bf.push(o);
+    log(`${P.name} ${P.i === 0 ? 'play' : 'plays'} ${o.card.name}${o.tapped ? ' (tapped)' : ''}.`);
+}
+
+async function castSpell(P, o, presetTarget) {
+    const fromCommand = P.command.includes(o);
+    if (!payFor(P, o)) return false;
+    removeFromZones(o);
+    const r = Rx(o);
+    log(`${P.name} ${P.i === 0 ? 'cast' : 'casts'} ${o.card.name}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax ? ` (commander tax ${P.tax * 2})` : ''}.`);
+    if (fromCommand) P.tax++;
+    if (r.kind === 'instant' || r.kind === 'sorcery') {
+        await resolveEffects(P, r.spell, presetTarget, o);
+        if (!o.token) G.players[o.owner].gy.push(o);
+    } else {
+        resetObj(o);
+        P.bf.push(o);
+        if (r.isAura && presetTarget && presetTarget.o) o.attachedTo = presetTarget.o.uid;
+        if (r.etb.length) await resolveEffects(P, r.etb, null, o);
+    }
+    sba();
+    renderGame();
+    return true;
+}
+
+function targetName(t) { return t.p ? (t.p.i === 0 ? 'you' : t.p.name) : t.o.card.name; }
+
+async function resolveEffects(P, effects, presetTarget, source) {
+    for (const e of effects) {
+        if (G.over) return;
+        let target = null;
+        if (needsTarget(e)) {
+            target = presetTarget;
+            if (!target) target = await chooseTarget(P, e, source, false);
+            if (!target) { log(`${source.card.name}: no legal target.`); continue; }
+            if (!targetStillOk(target)) { log(`${source.card.name}'s target is gone.`); continue; }
+        }
+        applyEffect(P, e, target, source);
+        sba();
+        renderGame();
+    }
+}
+
+function applyEffect(P, e, t, src) {
+    const O = opp(P);
+    const name = src.card.name;
+    switch (e.t) {
+        case 'dmg':
+            if (e.target === 'opponents') { damage(O, e.n, src); log(`${name} deals ${e.n} to ${O.name}.`); }
+            else if (e.target === 'allCreatures' || e.target === 'oppCreatures') {
+                allPerms().filter(isCreature).filter(c => e.target === 'allCreatures' || c.owner !== P.i).forEach(c => damage(c, e.n, src));
+                log(`${name} deals ${e.n} to each ${e.target === 'allCreatures' ? '' : 'opposing '}creature.`);
+            } else { damage(t.p || t.o, e.n, src); log(`${name} deals ${e.n} to ${targetName(t)}.`); }
+            break;
+        case 'destroy': destroy(t.o); break;
+        case 'exile': log(`${t.o.card.name} is exiled.`); leaveBattlefield(t.o, 'exile'); break;
+        case 'bounce': log(`${t.o.card.name} returns to its owner's hand.`); leaveBattlefield(t.o, 'hand'); break;
+        case 'draw': drawCards(P, e.n); break;
+        case 'gain': P.life += e.n; log(`${P.name} ${P.i === 0 ? 'gain' : 'gains'} ${e.n} life.`); break;
+        case 'loseSelf': P.life -= e.n; log(`${P.name} ${P.i === 0 ? 'lose' : 'loses'} ${e.n} life.`); break;
+        case 'drain': O.life -= e.n; log(`${O.name} ${O.i === 0 ? 'lose' : 'loses'} ${e.n} life.`); break;
+        case 'discard':
+            for (let k = 0; k < e.n && O.hand.length; k++) { const d = O.hand.splice(rand(O.hand.length), 1)[0]; O.gy.push(d); log(`${O.name} ${O.i === 0 ? 'discard' : 'discards'} ${d.card.name} (at random).`); }
+            break;
+        case 'pump':
+            t.o.tp += e.p; t.o.tq += e.q; t.o.tkw.push(...e.kw);
+            log(`${t.o.card.name} gets ${e.p >= 0 ? '+' : ''}${e.p}/${e.q >= 0 ? '+' : ''}${e.q}${e.kw.length ? ` and ${e.kw.join(', ')}` : ''} until end of turn.`);
+            break;
+        case 'token':
+            for (let k = 0; k < e.n; k++) {
+                const words = e.name.split(' ');
+                const colors = words.filter(w => Object.values(COLOR_NAMES).includes(w)).map(w => Object.keys(COLOR_NAMES).find(k2 => COLOR_NAMES[k2] === w));
+                const sub = words.filter(w => !Object.values(COLOR_NAMES).includes(w) && w !== 'and').map(w => w[0].toUpperCase() + w.slice(1)).join(' ') || 'Creature';
+                const card = { id: `token-${uidSeq}`, name: `${sub} token`, fullName: `${sub} token`, cost: '', cmc: 0, type: `Token Creature — ${sub}`, text: e.kw.map(k2 => k2[0].toUpperCase() + k2.slice(1)).join(', '), power: String(e.p), toughness: String(e.q), colors, ci: colors, img: null, imgS: null, legal: {} };
+                P.bf.push(makeObj(card, P.i, { token: true }));
+            }
+            log(`${P.name} ${P.i === 0 ? 'create' : 'creates'} ${e.n} ${e.p}/${e.q} ${e.name} token${e.n === 1 ? '' : 's'}.`);
+            break;
+        case 'counters': {
+            const target = e.target === 'self' ? src : t.o;
+            if (!onBf(target.uid)) break;
+            target.counters += e.n;
+            log(`${target.card.name} gets ${e.n} +1/+1 counter${e.n === 1 ? '' : 's'}.`);
+            break;
+        }
+        case 'tap': t.o.tapped = true; log(`${t.o.card.name} is tapped.`); break;
+        case 'scry': log(`${P.name} ${P.i === 0 ? 'scry' : 'scries'} ${e.n} (looked at, kept on top).`); break;
+    }
+}
+
+// Equip: sorcery speed, pay the Equip cost, attach to your creature.
+async function equip(P, eq, creature) {
+    const cost = { generic: Rx(eq).equip, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+    const plan = planPayment(P, cost);
+    if (!plan) return false;
+    plan.forEach(s => { s.tapped = true; });
+    eq.attachedTo = creature.uid;
+    log(`${P.name} ${P.i === 0 ? 'equip' : 'equips'} ${eq.card.name} to ${creature.card.name}.`);
+    renderGame();
+    return true;
+}
+
+// ---- Combat ----
+function canBlock(b, atk) {
+    if (!isCreature(b) || b.tapped) return false;
+    if (has(atk, 'flying') && !has(b, 'flying') && !has(b, 'reach')) return false;
+    return true;
+}
+function declareAttackers(P, list) {
+    G.attackers = list.map(o => o.uid);
+    list.forEach(o => { if (!has(o, 'vigilance')) o.tapped = true; });
+    G.blocks = {};
+    log(`${P.name} ${P.i === 0 ? 'attack' : 'attacks'} with ${list.map(o => o.card.name).join(', ')}.`);
+}
+function fixMenace() {
+    Object.entries(G.blocks).forEach(([a, bs]) => {
+        const atk = onBf(Number(a));
+        if (atk && has(atk, 'menace') && bs.length === 1) { delete G.blocks[a]; log(`${atk.card.name} has menace - it can't be blocked by just one creature.`); }
+    });
+}
+function combatDamage(A) {
+    const D = opp(A);
+    const atks = G.attackers.map(onBf).filter(Boolean);
+    const blockersOf = atk => (G.blocks[atk.uid] || []).map(onBf).filter(Boolean);
+    const everyone = [...atks, ...atks.flatMap(blockersOf)];
+    const firstStep = everyone.some(o => has(o, 'first strike') || has(o, 'double strike'));
+    for (const step of firstStep ? ['first', 'regular'] : ['regular']) {
+        const deals = o => !firstStep || (step === 'first' ? (has(o, 'first strike') || has(o, 'double strike')) : (!has(o, 'first strike') || has(o, 'double strike')));
+        const events = [];
+        for (const atk of atks) {
+            if (!onBf(atk.uid)) continue;
+            const blocked = (G.blocks[atk.uid] || []).length > 0;
+            const blks = blockersOf(atk);
+            if (deals(atk)) {
+                let dmg = pow(atk);
+                if (dmg > 0) {
+                    if (!blocked) events.push([atk, D, dmg]);
+                    else {
+                        blks.forEach((b, i) => {
+                            if (dmg <= 0) return;
+                            const lethal = has(atk, 'deathtouch') ? 1 : Math.max(0, tou(b) - b.dmg);
+                            const give = (i === blks.length - 1 && !has(atk, 'trample')) ? dmg : Math.min(dmg, lethal);
+                            if (give > 0) events.push([atk, b, give]);
+                            dmg -= give;
+                        });
+                        if (dmg > 0 && has(atk, 'trample')) events.push([atk, D, dmg]);
+                    }
+                }
+            }
+            blks.forEach(b => { if (deals(b) && pow(b) > 0) events.push([b, atk, pow(b)]); });
+        }
+        const toPlayer = events.filter(([, t]) => t.life !== undefined).reduce((a, [, , n]) => a + n, 0);
+        events.forEach(([src, t, n]) => damage(t, n, src));
+        if (toPlayer) log(`${D.name} ${D.i === 0 ? 'take' : 'takes'} ${toPlayer} combat damage.`);
+        sba();
+        if (G.over) return;
+    }
+    G.attackers = [];
+    G.blocks = {};
+}
+
+// ---- Turns ----
+async function beginTurn() {
+    if (G.over) return;
+    const P = G.players[G.active];
+    G.phase = 'beginning';
+    P.landsPlayed = 0;
+    P.bf.forEach(o => { o.tapped = false; o.sick = false; });
+    log(`— Turn ${G.turn}: ${P.i === 0 ? 'your' : `${P.name}'s`} turn —`);
+    if (!G.firstTurn) drawCards(P, 1, P.i === 1);
+    G.firstTurn = false;
+    sba();
+    if (G.over) return;
+    G.phase = 'main1';
+    G.busy = P.isAI;
+    renderGame();
+    if (P.isAI) await aiTurn(P);
+}
+
+async function endTurn(P) {
+    if (G.over || G.active !== P.i) return;
+    G.mode = null;
+    G.phase = 'end';
+    while (P.hand.length > 7) {
+        const d = P.hand.slice().sort((a, b) => b.card.cmc - a.card.cmc)[0];
+        P.hand.splice(P.hand.indexOf(d), 1);
+        P.gy.push(d);
+        log(`${P.name} ${P.i === 0 ? 'discard' : 'discards'} ${d.card.name} (hand size).`);
+    }
+    allPerms().forEach(o => { o.dmg = 0; o.dt = false; o.tp = 0; o.tq = 0; o.tkw = []; });
+    G.active = 1 - G.active;
+    G.turn++;
+    await pause(250);
+    beginTurn();
+}
+
+// ---- Your actions ----
+async function humanCast(uid) {
+    const P = me();
+    const o = findObj(uid);
+    closeSheet();
+    if (!o || G.busy && !(G.mode && G.mode.type === 'block')) return;
+    if (!canCastNow(P, o)) { toast('You can\'t cast that right now.'); return; }
+    if (!canPay(P, o)) { toast('Not enough mana.'); return; }
+    let target = null;
+    const te = firstTargetEffect(o);
+    if (te) {
+        if (!validTargets(P, te).length) { toast('There\'s nothing to target.'); return; }
+        const savedMode = G.mode;
+        target = await chooseTarget(P, te, o, true);
+        G.mode = savedMode && savedMode.type === 'block' ? savedMode : null;
+        if (!target) { renderGame(); return; }
+        if (Rx(o).isAura && !target.o) { toast('Auras go on creatures.'); renderGame(); return; }
+    }
+    G.busy = true;
+    await castSpell(P, o, target);
+    G.busy = G.active !== 0 && !(G.mode && G.mode.type === 'block');
+    renderGame();
+}
+function humanPlayLand(uid) {
+    const o = findObj(uid);
+    closeSheet();
+    if (!o || !canPlayLand(me(), o)) { toast('You can only play one land a turn, in your main phase.'); return; }
+    playLand(me(), o);
+    renderGame();
+}
+async function humanEquip(uid) {
+    closeSheet();
+    const eq = onBf(uid);
+    const P = me();
+    if (!eq || G.active !== 0 || !MAIN.includes(G.phase)) { toast('Equip at sorcery speed: in your main phase.'); return; }
+    const mine = P.bf.filter(isCreature);
+    if (!mine.length) { toast('You have no creature to equip.'); return; }
+    if (!planPayment(P, { generic: Rx(eq).equip, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 })) { toast('Not enough mana to equip.'); return; }
+    const t = await chooseTarget(P, { target: 'creature' }, eq, true);
+    if (!t || !t.o || t.o.owner !== 0) { if (t) toast('Equip your own creature.'); renderGame(); return; }
+    await equip(P, eq, t.o);
+}
+function goToCombat() {
+    if (G.active !== 0 || G.phase !== 'main1' || G.busy) return;
+    if (!me().bf.some(canAttackWith)) { toast('None of your creatures can attack (summoning sickness, tapped or defender).'); return; }
+    G.phase = 'declareAttackers';
+    G.mode = { type: 'attack', sel: new Set() };
+    renderGame();
+}
+function cancelAttack() { G.mode = null; G.phase = 'main1'; renderGame(); }
+async function confirmAttack() {
+    const sel = [...G.mode.sel].map(onBf).filter(o => o && canAttackWith(o));
+    G.mode = null;
+    if (!sel.length) { G.phase = 'main1'; renderGame(); return; }
+    G.busy = true;
+    declareAttackers(me(), sel);
+    G.phase = 'declareBlocks';
+    renderGame();
+    await pause(400);
+    G.blocks = aiChooseBlocks(foe(), me());
+    fixMenace();
+    logBlocks();
+    G.phase = 'afterBlocks';
+    G.busy = false;
+    renderGame();
+}
+function logBlocks() {
+    const lines = Object.entries(G.blocks).filter(([a, bs]) => onBf(Number(a)) && bs.every(onBf))
+        .map(([a, bs]) => `${bs.map(u => onBf(u).card.name).join(' and ')} ${bs.length > 1 ? 'block' : 'blocks'} ${onBf(Number(a)).card.name}`);
+    log(lines.length ? `Blocks: ${lines.join('; ')}.` : 'No blocks.');
+}
+async function dealDamage() {
+    if (G.phase !== 'afterBlocks' || G.active !== 0) return;
+    G.busy = true;
+    combatDamage(me());
+    G.phase = 'main2';
+    G.busy = false;
+    renderGame();
+}
+function endMyTurn() {
+    if (G.active !== 0 || G.busy || G.over) return;
+    if (G.phase === 'afterBlocks') { toast('Deal combat damage first.'); return; }
+    endTurn(me());
+}
+function concede() {
+    if (!G || G.over) return;
+    if (!G.confirmConcede) { G.confirmConcede = true; toast('Click Concede again to concede the game.'); setTimeout(() => { if (G) G.confirmConcede = false; }, 4000); return; }
+    log('You concede.');
+    endGame(1, 'You conceded.');
+}
+// Blocking: tap one of your creatures, then the attacker it blocks.
+function confirmBlocks() {
+    if (!G.mode || G.mode.type !== 'block') return;
+    const resolve = G.mode.resolve;
+    G.mode = null;
+    resolve();
+}
+
+function permClick(uid) {
+    if (!G || G.over) return;
+    const o = onBf(uid);
+    if (!o) return;
+    const m = G.mode;
+    if (m && m.type === 'target') { pickTarget({ o }); return; }
+    if (m && m.type === 'attack') {
+        if (o.owner !== 0 || !canAttackWith(o)) { if (o.owner === 0) toast(`${o.card.name} can't attack now.`); return; }
+        if (m.sel.has(uid)) m.sel.delete(uid); else m.sel.add(uid);
+        renderGame();
+        return;
+    }
+    if (m && m.type === 'block') {
+        if (o.owner === 0 && isCreature(o)) {
+            const existing = Object.entries(G.blocks).find(([, bs]) => bs.includes(uid));
+            if (existing) { G.blocks[existing[0]] = existing[1].filter(u => u !== uid); if (!G.blocks[existing[0]].length) delete G.blocks[existing[0]]; m.picked = null; renderGame(); return; }
+            if (o.tapped) { toast(`${o.card.name} is tapped.`); return; }
+            m.picked = m.picked === uid ? null : uid;
+            renderGame();
+            return;
+        }
+        if (o.owner === 1 && G.attackers.includes(uid) && m.picked) {
+            const b = onBf(m.picked);
+            if (!canBlock(b, o)) { toast(`${b.card.name} can't block ${o.card.name}${has(o, 'flying') ? ' (it has flying)' : ''}.`); return; }
+            (G.blocks[uid] = G.blocks[uid] || []).push(m.picked);
+            m.picked = null;
+            renderGame();
+            return;
+        }
+    }
+    showGameCard(uid);
+}
+
+function showGameCard(uid) {
+    const o = findObj(uid);
+    if (!o) return;
+    const P = me();
+    const r = Rx(o);
+    let actions = '';
+    if (P.hand.includes(o) || P.command.includes(o)) {
+        if (r.kind === 'land') actions = `<button class="btn primary" ${canPlayLand(P, o) ? '' : 'disabled'} onclick="humanPlayLand(${uid})">Play land</button>`;
+        else {
+            const ok = canCastNow(P, o) && canPay(P, o);
+            const extra = extraCost(P, o);
+            const why = r.support === 'none' ? r.why : !canCastNow(P, o) ? (r.kind === 'instant' || r.flash ? 'Instants: your main phases, after blocks on your attack, or while blocking.' : 'Cast this in your main phase.') : !canPay(P, o) ? 'Not enough mana.' : '';
+            actions = `<button class="btn primary" ${ok ? '' : 'disabled'} onclick="humanCast(${uid})">Cast ${esc(o.card.cost)}${extra ? ` + {${extra}} tax` : ''}</button>${why ? `<span class="note">${esc(why)}</span>` : ''}`;
+        }
+    } else if (P.bf.includes(o) && r.isEquipment && r.equip !== null) {
+        actions = `<button class="btn primary" onclick="humanEquip(${uid})">Equip {${r.equip}}</button>`;
+    }
+    const stats = isCreature(o) && onBf(uid) ? `<div class="note">Now: ${pow(o)}/${tou(o)}${o.dmg ? `, ${o.dmg} damage` : ''}${o.counters ? `, ${o.counters} +1/+1 counter${o.counters === 1 ? '' : 's'}` : ''}${o.sick && !has(o, 'haste') && o.owner === G.active ? ', summoning sick' : ''}</div>` : '';
+    $('sheetHost').innerHTML = `
+        <div class="sheet-bg" onclick="if (event.target === this) closeSheet()">
+            <div class="sheet" role="dialog" aria-label="${esc(o.card.name)}">
+                <div>${o.card.img ? `<img src="${o.card.img}" alt="${esc(o.card.name)}">` : `<div class="otext">${esc(o.card.name)}</div>`}</div>
+                <div><h3>${esc(o.card.fullName || o.card.name)}</h3>${cardTextHTML(o.card)}${stats}
+                    <div>${o.token ? '<span class="note">Token</span>' : supportBadge(o.card)} <span class="note">${esc(r.why || '')}</span></div>
+                    <div class="actions">${actions}<button class="btn" onclick="closeSheet()">Close</button></div></div>
+            </div>
+        </div>`;
+}
+
+// ---- Game over ----
+function endGame(winner, reason) {
+    if (G.over) return;
+    G.over = true;
+    G.busy = true;
+    G.mode = null;
+    const won = winner === 0;
+    let reward = 0;
+    if (!AUTOPLAY) {
+        if (won) { reward = G.format === 'commander' ? REWARDS.winCommander : REWARDS.win; profile.wins++; }
+        else { reward = REWARDS.loss; profile.losses++; }
+        profile.coins += reward;
+        saveProfile();
+    }
+    log(`Game over: ${reason}`);
+    window.lastResult = { winner, reason, turns: G.turn };
+    renderGame();
+    if (AUTOPLAY) return;
+    showModal(`<h2>${winner === null ? '🤝 Draw' : won ? '🏆 You win!' : '💀 You lose'}</h2>
+        <p>${esc(reason)}</p><p class="note">${G.turn} turns · 🪙 +${reward} coins</p>
+        <div class="row" style="justify-content:center; margin-top:14px;">
+            <button class="btn primary" onclick="closeModal(); leaveGame(); startMatch(true);">Play again</button>
+            <button class="btn gold" onclick="closeModal(); leaveGame(); showView('packs');">🎴 Open packs</button>
+            <button class="btn" onclick="closeModal(); leaveGame();">Back</button>
+        </div>`);
+}
+function leaveGame() {
+    $('game').classList.add('hidden');
+    document.body.style.overflow = '';
+    closeSheet();
+    renderCoins();
+}
+
+// =====================================================================
+// The opponent. Simple, readable heuristics: play a land, spend mana on
+// the best play it can afford, attack when it's safe or lethal, and
+// block to survive or to make good trades.
+// =====================================================================
+function creatureValue(o) {
+    return pow(o) * 1.5 + tou(o) + (has(o, 'flying') ? 2 : 0) + (has(o, 'deathtouch') ? 2 : 0) + (has(o, 'lifelink') ? 1 : 0)
+        + (has(o, 'first strike') || has(o, 'double strike') ? 1.5 : 0) + (has(o, 'trample') ? 1 : 0) + (o.card.cmc || 0) * 0.3 + (o.isCommander ? 3 : 0);
+}
+
+function aiPickTarget(P, e, source, valid) {
+    valid = valid || validTargets(P, e);
+    const O = opp(P);
+    const theirs = valid.filter(v => v.o && v.o.owner !== P.i);
+    const mine = valid.filter(v => v.o && v.o.owner === P.i);
+    const byValue = list => list.slice().sort((a, b) => creatureValue(b.o) - creatureValue(a.o));
+    switch (e.t) {
+        case 'dmg': {
+            if (e.target === 'player') return { p: O };
+            const killable = byValue(theirs.filter(v => tou(v.o) - v.o.dmg <= e.n && !has(v.o, 'indestructible')));
+            if (e.target === 'any' && O.life <= e.n) return { p: O };
+            if (killable.length && creatureValue(killable[0].o) >= 3) return killable[0];
+            if (e.target === 'any') return { p: O };
+            return killable[0] || null;
+        }
+        case 'destroy': case 'exile': case 'bounce': case 'tap':
+            return byValue(theirs.filter(v => e.t !== 'destroy' || !has(v.o, 'indestructible')))[0] || null;
+        case 'pump':
+            if (e.good) return byValue(mine)[0] || null;
+            return byValue(theirs.filter(v => tou(v.o) + e.q - v.o.dmg <= 0))[0] || byValue(theirs)[0] || null;
+        case 'counters':
+            return byValue(mine)[0] || null;
+        case 'aura':
+            return e.good ? (byValue(mine)[0] || null) : (byValue(theirs)[0] || null);
+        default:
+            return valid[0] || null;
+    }
+}
+
+// How much a play is worth right now (0 = don't).
+function aiScore(P, o, target) {
+    const r = Rx(o);
+    const O = opp(P);
+    if (r.kind === 'creature') return 10 + (o.card.cmc || 0) * 2 + creatureValue(o) * 0.5;
+    if (r.isAura) return target ? 6 + r.buff.p + r.buff.q : 0;
+    if (r.isEquipment) return P.bf.some(isCreature) ? 5 : 1;
+    if (r.kind === 'artifact' || r.kind === 'enchantment') return r.mana ? 9 : 4;
+    let score = 0;
+    for (const e of r.spell || []) {
+        const t = needsTarget(e) ? target : null;
+        if (needsTarget(e) && !t) return 0;
+        switch (e.t) {
+            case 'dmg':
+                if (e.target === 'opponents' || (t && t.p)) score += O.life <= e.n ? 1000 : (G.phase === 'main2' && !O.bf.some(isCreature) ? 4 : 1);
+                else if (e.target === 'allCreatures' || e.target === 'oppCreatures') {
+                    const kill = c => tou(c) - c.dmg <= e.n && !has(c, 'indestructible');
+                    const theirs = O.bf.filter(isCreature).filter(kill).reduce((a, c) => a + creatureValue(c), 0);
+                    const ours = e.target === 'allCreatures' ? P.bf.filter(isCreature).filter(kill).reduce((a, c) => a + creatureValue(c), 0) : 0;
+                    score += theirs - ours > 5 ? theirs - ours : 0;
+                } else if (t && t.o) score += t.o.owner !== P.i && tou(t.o) - t.o.dmg <= e.n ? 6 + creatureValue(t.o) : 0;
+                break;
+            case 'destroy': case 'exile': score += t && t.o.owner !== P.i && creatureValue(t.o) >= 4 ? 7 + creatureValue(t.o) : 0; break;
+            case 'bounce': score += t && t.o.owner !== P.i && creatureValue(t.o) >= 6 ? 4 + creatureValue(t.o) / 2 : 0; break;
+            case 'draw': score += 5 + e.n; break;
+            case 'gain': score += P.life < 10 ? 4 : 1; break;
+            case 'drain': score += O.life <= e.n ? 1000 : 4; break;
+            case 'discard': score += O.hand.length ? 3 : 0; break;
+            case 'token': score += 5 + e.n * 2; break;
+            case 'counters': score += t ? 4 : 0; break;
+            case 'pump': score += e.good ? 0 : (t && t.o.owner !== P.i && tou(t.o) + e.q - t.o.dmg <= 0 ? 6 + creatureValue(t.o) : 0); break;
+            case 'tap': score += 0; break;
+            case 'loseSelf': score -= e.n; break;
+            case 'scry': score += 0.5; break;
+        }
+    }
+    return score;
+}
+
+function aiBestPlay(P) {
+    let best = null;
+    for (const o of [...P.hand, ...P.command]) {
+        const r = Rx(o);
+        if (r.kind === 'land' || !canCastNow(P, o) || !canPay(P, o)) continue;
+        const te = firstTargetEffect(o);
+        const target = te ? aiPickTarget(P, te, o) : null;
+        if (te && !target) continue;
+        const s = aiScore(P, o, target);
+        if (s > 0 && (!best || s > best.s)) best = { o, target, s };
+    }
+    return best;
+}
+
+function aiPlayLand(P) {
+    if (P.landsPlayed >= 1) return;
+    const lands = P.hand.filter(o => Rx(o).kind === 'land');
+    if (!lands.length) return;
+    // The colors the hand still needs and the lands don't make
+    const have = new Set(P.bf.filter(o => Rx(o).mana).flatMap(o => Rx(o).mana.colors));
+    const want = new Set(P.hand.filter(o => Rx(o).kind !== 'land').flatMap(o => COLORS.filter(c => Rx(o).cost[c] > 0)));
+    const score = l => (Rx(l).mana ? Rx(l).mana.colors.filter(c => want.has(c) && !have.has(c)).length * 3 + Rx(l).mana.colors.filter(c => want.has(c)).length : 0) - (Rx(l).entersTapped ? 1 : 0);
+    const land = lands.sort((a, b) => score(b) - score(a))[0];
+    playLand(P, land);
+}
+
+async function aiMain(P) {
+    aiPlayLand(P);
+    renderGame();
+    for (let guard = 0; guard < 15 && !G.over; guard++) {
+        const play = aiBestPlay(P);
+        if (!play) break;
+        await pause(500);
+        const ok = await castSpell(P, play.o, play.target);
+        if (!ok) break;
+    }
+    // Equip unattached equipment to the best creature
+    for (const eq of P.bf.filter(o => Rx(o).isEquipment && Rx(o).equip !== null && !o.attachedTo)) {
+        const best = P.bf.filter(isCreature).sort((a, b) => creatureValue(b) - creatureValue(a))[0];
+        if (best && await equip(P, eq, best)) await pause(300);
+    }
+}
+
+function aiChooseAttackers(P) {
+    const D = opp(P);
+    const cands = P.bf.filter(o => canAttackWith(o) && pow(o) > 0);
+    if (!cands.length) return [];
+    const blockers = D.bf.filter(o => isCreature(o) && !o.tapped);
+    const canBeBlocked = a => blockers.some(b => canBlock(b, a));
+    // Lethal on board? Assume they block our biggest blockable attackers.
+    const unblockable = cands.filter(a => !canBeBlocked(a));
+    const blockable = cands.filter(a => canBeBlocked(a)).sort((a, b) => pow(b) - pow(a));
+    const through = unblockable.reduce((s, a) => s + pow(a), 0) + blockable.slice(blockers.length).reduce((s, a) => s + pow(a), 0);
+    if (through >= D.life) return cands;
+    return cands.filter(a => {
+        if (!canBeBlocked(a)) return true;
+        const threats = blockers.filter(b => canBlock(b, a) && (pow(b) >= tou(a) - a.dmg || has(b, 'deathtouch')));
+        if (!threats.length) return true;
+        // Even or better trades: our attacker kills every creature that could kill it
+        if (threats.every(b => pow(a) >= tou(b) - b.dmg && creatureValue(a) <= creatureValue(b) + 0.5)) return true;
+        // Push when they're low and we have more creatures, or when the
+        // board has stalled and our side is clearly bigger
+        if (D.life <= 6 && cands.length > blockers.length) return true;
+        const ourPow = P.bf.filter(isCreature).reduce((s, o) => s + pow(o), 0);
+        const theirPow = D.bf.filter(isCreature).reduce((s, o) => s + pow(o), 0);
+        return G.turn >= 14 && ourPow >= theirPow * 1.4 && cands.length >= blockers.length;
+    });
+}
+
+function aiChooseBlocks(D, A) {
+    const atks = G.attackers.map(onBf).filter(Boolean).sort((a, b) => pow(b) - pow(a));
+    const free = D.bf.filter(o => isCreature(o) && !o.tapped);
+    const blocks = {};
+    const take = b => free.splice(free.indexOf(b), 1);
+    let incoming = atks.reduce((s, a) => s + pow(a), 0);
+    for (const atk of atks) {
+        let options = free.filter(b => canBlock(b, atk));
+        if (!options.length) continue;
+        const atkKills = b => pow(atk) >= tou(b) - b.dmg || has(atk, 'deathtouch');
+        const blockerKills = b => pow(b) >= tou(atk) - atk.dmg || has(b, 'deathtouch');
+        if (has(atk, 'menace')) {
+            if (incoming >= D.life && options.length >= 2) { const two = options.sort((a, b) => creatureValue(a) - creatureValue(b)).slice(0, 2); two.forEach(take); blocks[atk.uid] = two.map(b => b.uid); incoming -= pow(atk); }
+            continue;
+        }
+        const safeKill = options.filter(b => !atkKills(b) && blockerKills(b));
+        const safe = options.filter(b => !atkKills(b));
+        const trade = options.filter(b => blockerKills(b) && creatureValue(b) <= creatureValue(atk) + 1);
+        let pick = safeKill[0] || safe.sort((a, b) => creatureValue(a) - creatureValue(b))[0] || trade.sort((a, b) => creatureValue(a) - creatureValue(b))[0];
+        if (!pick && incoming >= D.life) pick = options.sort((a, b) => creatureValue(a) - creatureValue(b))[0]; // chump to survive
+        if (pick) {
+            take(pick);
+            blocks[atk.uid] = [pick.uid];
+            if (!has(atk, 'trample')) incoming -= pow(atk);
+        }
+    }
+    return blocks;
+}
+
+async function aiTurn(P) {
+    G.busy = true;
+    await pause(500);
+    await aiMain(P);
+    if (G.over) return;
+    const attackers = aiChooseAttackers(P);
+    if (attackers.length) {
+        G.phase = 'declareAttackers';
+        declareAttackers(P, attackers);
+        G.phase = 'declareBlocks';
+        renderGame();
+        const D = opp(P);
+        const canDoAnything = D.bf.some(o => isCreature(o) && !o.tapped) || D.hand.some(o => canCastNow(D, o) && canPay(D, o));
+        if (D.isAI) {
+            await pause(400);
+            G.blocks = aiChooseBlocks(D, P);
+        } else if (canDoAnything) {
+            G.busy = false;
+            await new Promise(resolve => { G.mode = { type: 'block', picked: null, resolve }; renderGame(); });
+            G.busy = true;
+        } else {
+            await pause(700);
+        }
+        if (G.over) return;
+        fixMenace();
+        logBlocks();
+        renderGame();
+        await pause(500);
+        G.phase = 'combatDamage';
+        combatDamage(P);
+        renderGame();
+        if (G.over) return;
+        await pause(400);
+    }
+    G.phase = 'main2';
+    await aiMain(P);
+    if (G.over) return;
+    await pause(300);
+    endTurn(P);
+}
+
+// =====================================================================
+// Drawing the table
+// =====================================================================
+const PHASE_LABEL = { setup: 'Setting up', beginning: 'Beginning', main1: 'Main phase', declareAttackers: 'Declare attackers', declareBlocks: 'Declare blockers', afterBlocks: 'Combat', combatDamage: 'Combat damage', main2: 'Second main phase', end: 'End step' };
+
+function cardImg(card, big) {
+    const src = big ? (card.img || card.imgS) : (card.imgS || card.img);
+    return src ? `<img src="${src}" alt="${esc(card.name)}" loading="lazy">`
+        : `<span class="noimg">${esc(card.name)}${card.power !== undefined ? `<br>${esc(card.power)}/${esc(card.toughness)}` : ''}</span>`;
+}
+
+function permHTML(o) {
+    const r = Rx(o);
+    const m = G.mode;
+    const cls = ['perm'];
+    if (r.kind === 'land') cls.push('land');
+    if (o.tapped) cls.push('tapped');
+    if (G.attackers.includes(o.uid)) cls.push('attacking');
+    const blocking = Object.entries(G.blocks).find(([, bs]) => bs.includes(o.uid));
+    if (blocking) cls.push('blocking');
+    let selectable = false;
+    if (m && m.type === 'target') selectable = m.valid.some(v => v.o && v.o.uid === o.uid);
+    if (m && m.type === 'attack') { selectable = o.owner === 0 && canAttackWith(o); if (m.sel.has(o.uid)) cls.push('attacking'); }
+    if (m && m.type === 'block') selectable = (o.owner === 0 && isCreature(o) && !o.tapped) || (o.owner === 1 && G.attackers.includes(o.uid) && !!m.picked);
+    if (selectable) cls.push('selectable');
+    if (m && m.type === 'block' && m.picked === o.uid) cls.push('picked');
+    const chips = [];
+    if (o.isCommander) chips.push('<span class="chip">👑</span>');
+    if (o.counters) chips.push(`<span class="chip">+${o.counters}</span>`);
+    if (isCreature(o) && o.sick && !has(o, 'haste') && o.owner === G.active) chips.push('<span class="chip sick" title="Summoning sick">💤</span>');
+    if (allPerms().some(a => a.attachedTo === o.uid)) chips.push(`<span class="chip" title="${esc(allPerms().filter(a => a.attachedTo === o.uid).map(a => a.card.name).join(', '))}">🛡️</span>`);
+    if (o.attachedTo) chips.push(`<span class="chip">on ${esc((onBf(o.attachedTo) || { card: { name: '?' } }).card.name.split(',')[0])}</span>`);
+    let pt = '';
+    if (isCreature(o)) {
+        const p = pow(o), t = tou(o);
+        const up = p > Number(o.card.power) || t > Number(o.card.toughness);
+        pt = `<span class="pt${o.dmg ? ' hurt' : up ? ' up' : ''}">${p}/${t - o.dmg}</span>`;
+    }
+    const blockedAtk = blocking && onBf(Number(blocking[0]));
+    const blockLabel = blockedAtk ? `<span class="blocklabel">blocks ${esc(blockedAtk.card.name.split(',')[0])}</span>` : '';
+    return `<button type="button" class="${cls.join(' ')}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}">${cardImg(o.card)}<span class="chips">${chips.join('')}</span>${pt}${blockLabel}</button>`;
+}
+
+function sideHTML(P) {
+    const lands = P.bf.filter(o => Rx(o).kind === 'land');
+    const creatures = P.bf.filter(isCreature);
+    const other = P.bf.filter(o => !isCreature(o) && Rx(o).kind !== 'land');
+    const lane = (list, extra = '') => `<div class="lane ${extra}">${list.map(permHTML).join('')}</div>`;
+    const left = `<div class="col">${creatures.length ? lane(creatures) : '<span class="note muted">No creatures</span>'}</div>`;
+    const right = `<div class="col right">${other.length ? lane(other, 'stack') : ''}${lane(lands, 'lands')}</div>`;
+    return left + right;
+}
+
+function manaSummary(P) {
+    const srcs = manaSources(P);
+    const counts = {};
+    srcs.forEach(o => { const m = Rx(o).mana; const key = m.colors.length > 1 ? 'any' : m.colors[0]; counts[key] = (counts[key] || 0) + m.n; });
+    const total = availableMana(P);
+    return `<span class="pool" title="Untapped mana">⚡ ${total}${Object.entries(counts).map(([c, n]) => c === 'any' ? ` · ${n} multi` : ` · ${n}<span class="pip ${c}"></span>`).join('')}</span>`;
+}
+
+function barHTML(P) {
+    const m = G.mode;
+    const targetable = m && m.type === 'target' && m.valid.some(v => v.p && v.p.i === P.i);
+    const cmd = P.command.map(o => `<button type="button" class="btn small" onclick="showGameCard(${o.uid})">👑 ${esc(o.card.name.split(',')[0])}${P.tax ? ` (+${P.tax * 2})` : ''}</button>`).join('');
+    return `
+        <span class="who">${P.i === 0 ? '🧙 You' : `🤖 ${esc(P.name)}`}</span>
+        <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${P.i === 0 ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}">❤️ ${P.life}</button>
+        ${G.format === 'commander' ? `<span class="zone-count" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
+        <span class="zone-count" title="Library">📚 ${P.library.length}</span>
+        <span class="zone-count" title="Graveyard">🪦 ${P.gy.length}</span>
+        ${P.i === 1 ? `<span class="zone-count">✋ ${P.hand.length}</span><span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
+        <span class="cmd-zone">${cmd}</span>
+        ${P.i === 1 ? `<span class="note" style="margin-left:auto;">${esc(P.deckName)} · ${esc(P.source)}</span>` : `<span style="margin-left:auto;" class="row"><button class="btn small danger" onclick="concede()">Concede</button></span>`}`;
+}
+
+function midHTML() {
+    if (G.over) return `<span class="phase">Game over</span><button class="btn primary" onclick="leaveGame()">Leave the table</button>`;
+    const m = G.mode;
+    const phase = `<span class="phase">${G.active === 0 ? 'Your turn' : `${esc(foe().name)}'s turn`} · ${PHASE_LABEL[G.phase] || G.phase}</span>`;
+    if (m && m.type === 'target') {
+        return `${phase}<span class="prompt">🎯 Choose a target for ${esc(m.source.card.name)}</span>${m.cancelable ? '<button class="btn" onclick="cancelTarget()">Cancel</button>' : ''}`;
+    }
+    if (m && m.type === 'attack') {
+        return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button><button class="btn" onclick="cancelAttack()">Back</button>`;
+    }
+    if (m && m.type === 'block') {
+        return `${phase}<span class="prompt">🛡️ ${m.picked && onBf(m.picked) ? `Now tap the attacker ${esc(onBf(m.picked).card.name.split(',')[0])} should block` : 'Tap one of your creatures, then the attacker it blocks. You can cast instants now.'}</span><button class="btn primary" onclick="confirmBlocks()">✔ Done blocking</button>`;
+    }
+    if (G.active === 0 && !G.busy) {
+        if (G.phase === 'main1') return `${phase}<button class="btn primary" onclick="goToCombat()">⚔️ Go to combat</button><button class="btn" onclick="endMyTurn()">End turn ⏭</button>`;
+        if (G.phase === 'afterBlocks') return `${phase}<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary" onclick="dealDamage()">💥 Deal damage</button>`;
+        if (G.phase === 'main2') return `${phase}<button class="btn primary" onclick="endMyTurn()">End turn ⏭</button>`;
+    }
+    return `${phase}<span class="note">${G.active === 1 ? 'Thinking...' : ''}</span>`;
+}
+
+function handHTML() {
+    const P = me();
+    return P.hand.map(o => {
+        const r = Rx(o);
+        const playable = r.kind === 'land' ? canPlayLand(P, o) : (canCastNow(P, o) && canPay(P, o));
+        return `<button type="button" class="hc${playable ? ' playable' : ''}" onclick="showGameCard(${o.uid})" title="${esc(o.card.name)}">${cardImg(o.card, true)}${r.support !== 'full' ? `<span class="sup badge sup-${r.support}">${r.support === 'none' ? '!' : '~'}</span>` : ''}</button>`;
+    }).join('') || '<span class="note">No cards in hand.</span>';
+}
+
+function renderGame() {
+    if (!G || $('game').classList.contains('hidden')) return;
+    $('oppBar').innerHTML = barHTML(foe());
+    $('meBar').innerHTML = barHTML(me());
+    $('oppSide').innerHTML = sideHTML(foe());
+    $('meSide').innerHTML = sideHTML(me());
+    $('midBar').innerHTML = midHTML();
+    $('hand').innerHTML = handHTML();
+}
+
+// =====================================================================
+// Start-up
+// =====================================================================
+async function init() {
+    ensureProfile();
+    const v = (location.hash || '').slice(1);
+    showView(VIEWS.includes(v) ? v : 'home');
+    window.addEventListener('beforeunload', persistCards);
+    loadBasics().catch(() => {});
+    if (AUTOPLAY) autoTest();
+}
+
+// Testing hook (?autoplay&a=burn&b=stompy, or b=<commander slug> with
+// format=commander): builds both decks and lets the AI play both sides.
+async function autoTest() {
+    const q = new URLSearchParams(location.search);
+    const format = q.get('format') || 'modern';
+    try {
+        let A, B;
+        if (format === 'commander') {
+            A = await buildCommanderDeck(q.get('a'));
+            B = await buildCommanderDeck(q.get('b'));
+        } else {
+            A = await buildThemeDeck(MODERN_THEMES.find(t => t.key === (q.get('a') || 'burn')));
+            B = await buildThemeDeck(MODERN_THEMES.find(t => t.key === (q.get('b') || 'stompy')));
+        }
+        B.source = 'test';
+        window.autoDecks = { A, B };
+        newGame(A, B);
+    } catch (e) {
+        window.lastResult = { error: String(e && e.stack || e) };
+    }
+}
+
+init();
+</script>
+</body>
+</html>
