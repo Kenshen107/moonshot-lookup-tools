@@ -2,12 +2,12 @@
 
 Card-lookup and reference tools for Magic: The Gathering and Pokémon, made for use at Moonshot Games (Noblesville, IN and Plainfield, IN). This is an independent project, not an official Moonshot Games tool.
 
-Each tool is a single HTML file with no build step and no backend. It calls public data sources straight from the browser: Scryfall for cards and prices, MTGJSON for sealed products and price history, and EDHREC for Commander play data.
+Each tool is a single HTML file with no build step and no backend. It calls public data sources straight from the browser: Scryfall for cards and prices, MTGJSON for sealed products and price history, and EDHREC for Commander play data; the Pokémon tool uses TCGdex.
 
 ## Live site
 
 - MTG tools: https://kenshen107.github.io/moonshot-lookup-tools/MTG_Lookup_Tool.html
-- Pokémon lookup: https://kenshen107.github.io/moonshot-lookup-tools/Pokemon_Lookup_Tool.html
+- Pokémon tools: https://kenshen107.github.io/moonshot-lookup-tools/Pokemon_Lookup_Tool.html
 - Archenemy simulator: https://kenshen107.github.io/moonshot-lookup-tools/Archenemy_Simulator.html
 - Planechase simulator: https://kenshen107.github.io/moonshot-lookup-tools/Planechase_Simulator.html
 - Beginner guides & handouts: https://kenshen107.github.io/moonshot-lookup-tools/Beginner_Guides.html
@@ -18,6 +18,12 @@ Each tool is a single HTML file with no build step and no backend. It calls publ
 - **At the counter:** Buyer's Guide (card finder, land finder, full-art basics, price a deck), Products (what's in each sealed product, precon decklists and values, box value and pull rates), Buylist calculator, Market Watch (price spikes, ban changes, trending commanders, new-set demand), Pull List and the hotlist Case Map.
 - **Rules & events:** Format Rules, Commander Brackets, Prerelease toolkit, Value Vintage and a Judge quick reference.
 - **Learn & train:** Set Primer, Grading & Spotting Fakes, and a Card Quiz.
+
+## What's in the Pokémon tool
+
+- **Card Lookup:** search by name, or by what's printed in a card's corner (`OBF 125`, `125/197`); prices for each finish, legality, every printing, and "Where it lives" (era › set › A–Z neighbors, the way the stores file singles). A set code alone (`OBF`) opens the whole set.
+- **Sets & Symbols:** every set by era, with its symbol or printed code.
+- **Learn to Play, Rarity Guide, Deck Checker and Staff Quiz** for teaching the game and training staff.
 
 The **Beginner Guides** page has printable how-to-play and starter-checklist cards for Magic, Pokémon, Disney Lorcana, Riftbound and the Gundam Card Game, the Magic prerelease handouts, and a guide to the accessories a new player needs.
 
