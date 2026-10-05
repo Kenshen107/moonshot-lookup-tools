@@ -14,6 +14,8 @@ Fan-made tools, used at Moonshot Games' two stores (Noblesville and Plainfield).
   - Live site (fresh copy): the live-site link plus `?v=<date and time, e.g. 202609231245>`. Use a new value every reply so the browser can't serve a cached copy.
   - Beginner Guides: https://kenshen107.github.io/moonshot-lookup-tools/Beginner_Guides.html
   - Beginner Guides (fresh copy): the Beginner Guides link plus the same `?v=` value.
+  - Spellslinger Duels: https://kenshen107.github.io/moonshot-lookup-tools/Spellslinger_Duels.html
+  - Spellslinger Duels (fresh copy): the Spellslinger Duels link plus the same `?v=` value.
 
 ## Working in this repo
 
