@@ -395,6 +395,18 @@
         .cust-offer { margin-bottom: 8px; }
         .cust-offer .offer { color: var(--color-success); }
         .counter-in, .ask-in { width: 82px; padding: 4px 6px !important; }
+        .grade-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 0.9rem; }
+        .grade-list li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .cust.seller { border-color: color-mix(in srgb, var(--color-link) 50%, var(--border)); }
+        .cust-say { position: relative; margin: 8px 0; padding: 7px 10px; border-radius: var(--radius-md); background: var(--bg-inset); border: 1px solid var(--border-subtle); font-size: 0.9rem; color: var(--text-soft); }
+        .cust-say::before { content: ''; position: absolute; left: 14px; top: -6px; width: 10px; height: 10px; background: var(--bg-inset); border-left: 1px solid var(--border-subtle); border-top: 1px solid var(--border-subtle); transform: rotate(45deg); }
+        .quick { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 6px; }
+        .quick .btn { min-width: 0; padding: 4px 8px; font-size: 0.8rem; }
+        .quick .btn.down { border-color: color-mix(in srgb, var(--color-link) 50%, var(--border)); }
+        .quick .btn.up { border-color: color-mix(in srgb, var(--color-success) 50%, var(--border)); }
+        .quick > .note { flex-basis: 100%; }
+        .quick small { display: block; font-size: 0.72rem; color: var(--text-secondary); }
+        .day-clock { font-variant-numeric: tabular-nums; }
         .patience { height: 3px; background: var(--border-subtle); border-radius: 2px; margin-top: 8px; overflow: hidden; }
         .patience span { display: block; height: 100%; background: var(--gold); transition: width 0.4s linear; }
         .pos-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
@@ -483,6 +495,75 @@
         .wrap.shake { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97); }
         @keyframes shake { 10%, 90% { transform: translate(-2px, 1px); } 20%, 80% { transform: translate(4px, -2px); } 30%, 50%, 70% { transform: translate(-7px, 2px); } 40%, 60% { transform: translate(7px, -1px); } }
         @media (prefers-reduced-motion: reduce) { .pack3d, .pk-body::after, .fcard, .fcard.hit .fc-front, .wrap.shake { animation: none; } .pull-announce.show { animation: none; } }
+
+        /* ---- Pack reveal, stacked (2026-10-06): the top card flies off to show the next; the big ones celebrate by price ---- */
+        .stack-stage { display: grid; gap: 12px; justify-items: center; padding: 6px 0 4px; }
+        .pstack { position: relative; width: min(250px, 64vw); aspect-ratio: 63 / 88; cursor: pointer; isolation: isolate; border: 0; padding: 0; background: none; }
+        .pstack:focus-visible { outline: 2px solid var(--brand-light); outline-offset: 8px; border-radius: var(--radius-md); }
+        .scard { position: absolute; inset: 0; border-radius: 4.75% / 3.5%; overflow: hidden; background: var(--bg-inset); border: 1px solid var(--border);
+            transform: translate(var(--dx, 0), var(--dy, 0)) rotate(var(--rot, 0deg)); box-shadow: 0 8px 20px color-mix(in srgb, var(--bg-canvas) 70%, transparent);
+            transition: transform 0.45s cubic-bezier(.3, .1, .2, 1), opacity 0.45s ease, box-shadow 0.4s ease; animation: stackIn 0.5s cubic-bezier(.2, .8, .3, 1) backwards; animation-delay: calc(var(--i) * 45ms); }
+        @keyframes stackIn { from { opacity: 0; transform: translateY(-70px) rotate(-10deg) scale(0.9); } }
+        .scard img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .scard .noimg { display: flex; height: 100%; align-items: center; justify-content: center; padding: 8px; text-align: center; }
+        .scard.top { transform: none; }
+        .scard.fly-r { transform: translate(150%, -35%) rotate(32deg); opacity: 0; }
+        .scard.fly-l { transform: translate(-150%, -35%) rotate(-32deg); opacity: 0; }
+        .scard.serial::after { content: ''; position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: 0.55; pointer-events: none;
+            background: linear-gradient(115deg, var(--mana-R), var(--gold), var(--mana-G), var(--mana-U), var(--mana-B), var(--mana-R)); background-size: 300% 300%; animation: serialShift 3s linear infinite; }
+        .scard.foil::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: overlay; opacity: 0.6;
+            background: linear-gradient(115deg, transparent 25%, color-mix(in srgb, var(--text-heading) 70%, transparent) 45%, transparent 60%); background-size: 250% 100%; animation: packGlint 2.4s linear infinite; }
+        .pstack .rays { position: absolute; inset: -70%; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 0.4s ease;
+            background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--gold) 50%, transparent) 0 7deg, transparent 7deg 18deg);
+            -webkit-mask: radial-gradient(circle, var(--text-heading) 18%, transparent 62%); mask: radial-gradient(circle, var(--text-heading) 18%, transparent 62%); animation: raySpin 9s linear infinite; }
+        @keyframes raySpin { to { rotate: 360deg; } }
+        .pstack.t-nice .scard.top { box-shadow: 0 0 26px 2px var(--gold); }
+        .pstack.t-big .scard.top { box-shadow: 0 0 42px 8px var(--gold); animation: hitGlow 1.1s ease-in-out 2; }
+        .pstack.t-huge .scard.top { box-shadow: 0 0 64px 16px var(--mythic); animation: bigPulse 0.9s ease-in-out 3; }
+        .pstack.t-big .rays, .pstack.t-huge .rays, .pstack.t-jackpot .rays { opacity: 1; }
+        .pstack.t-huge .rays { background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--mythic) 55%, transparent) 0 7deg, transparent 7deg 18deg); }
+        @keyframes bigPulse { 50% { scale: 1.06; filter: brightness(1.2) saturate(1.25); } }
+        .stack-info { text-align: center; min-height: 3.2em; }
+        .stack-info strong { font-family: var(--font-display); font-size: 1.1rem; color: var(--text-heading); }
+        .stack-info .si-val { font-family: var(--font-display); font-size: 1.2rem; color: var(--color-success); margin-left: 6px; }
+        .stack-info .si-val.hot { color: var(--gold); text-shadow: 0 0 12px var(--gold); }
+        .pulled { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; width: 100%; }
+        .pulled button { width: 58px; aspect-ratio: 63 / 88; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-inset); animation: landIn 0.35s ease backwards; }
+        .pulled button img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .pulled button.t-big, .pulled button.t-nice { border-color: var(--gold); box-shadow: 0 0 10px -2px var(--gold); }
+        .pulled button.t-huge, .pulled button.t-jackpot { border-color: var(--mythic); box-shadow: 0 0 14px 0 var(--mythic); }
+        @keyframes landIn { from { opacity: 0; transform: translateY(-30px) scale(1.4); } }
+        .float-val { position: absolute; left: 50%; top: 10%; z-index: 3; translate: -50% 0; pointer-events: none; font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; color: var(--gold); text-shadow: 0 2px 10px var(--bg-canvas); animation: floatUp 1.6s ease-out forwards; }
+        @keyframes floatUp { from { opacity: 0; transform: translateY(20px) scale(0.7); } 20% { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-60px); } }
+        /* Confetti and the jackpot / grading spotlight */
+        .confetti { position: fixed; inset: 0; z-index: 95; pointer-events: none; overflow: hidden; }
+        .confetti i { position: absolute; top: -16px; left: var(--x); width: var(--w, 8px); height: calc(var(--w, 8px) * 1.7); background: var(--c); border-radius: 2px; transform: rotate(var(--r));
+            animation: confettiFall var(--t) cubic-bezier(.25, .6, .4, 1) var(--d) forwards; }
+        @keyframes confettiFall { to { transform: translate(var(--drift), 112vh) rotate(calc(var(--r) + 900deg)); } }
+        .spotlight { position: fixed; inset: 0; z-index: 92; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, var(--bg-canvas) 90%, transparent); animation: fadeIn 0.3s ease; overflow: hidden; }
+        @keyframes fadeIn { from { opacity: 0; } }
+        .spotlight .sl-rays { position: absolute; left: 50%; top: 45%; width: 220vmax; height: 220vmax; translate: -50% -50%; pointer-events: none;
+            background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--gold) 35%, transparent) 0 6deg, transparent 6deg 15deg);
+            -webkit-mask: radial-gradient(circle, var(--text-heading) 8%, transparent 40%); mask: radial-gradient(circle, var(--text-heading) 8%, transparent 40%); animation: raySpin 14s linear infinite; }
+        .sl-box { position: relative; display: grid; gap: 10px; justify-items: center; text-align: center; max-width: 92vw; }
+        .sl-title { font-family: var(--font-display); font-weight: 800; letter-spacing: 2px; font-size: clamp(2rem, 8vw, 3.8rem); line-height: 1; color: var(--gold);
+            text-shadow: 0 0 22px var(--gold), 0 4px 0 color-mix(in srgb, var(--mythic) 70%, var(--bg-canvas)); animation: slTitle 0.9s cubic-bezier(.2, 1.4, .4, 1) backwards; }
+        @keyframes slTitle { from { opacity: 0; transform: scale(2.6) rotate(-6deg); } }
+        .sl-card { position: relative; width: min(300px, 64vw); aspect-ratio: 63 / 88; border-radius: 4.75% / 3.5%; overflow: hidden; box-shadow: 0 0 70px 16px var(--gold); animation: slCard 1s cubic-bezier(.2, 1.2, .3, 1) 0.15s backwards; }
+        .sl-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .sl-card::after { content: ''; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: color-dodge; opacity: 0.45;
+            background: linear-gradient(115deg, transparent 20%, var(--mana-R) 32%, var(--gold) 40%, var(--mana-G) 48%, var(--mana-U) 56%, transparent 70%); background-size: 260% 100%; animation: packGlint 2.2s linear infinite; }
+        @keyframes slCard { from { opacity: 0; transform: translateY(80px) rotateY(180deg) scale(0.5); } }
+        .sl-name { font-size: 1.2rem; color: var(--text-heading); }
+        .sl-val { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.8rem, 7vw, 3rem); color: var(--color-success); text-shadow: 0 0 18px color-mix(in srgb, var(--color-success) 60%, transparent); }
+        .sl-sub { color: var(--text-soft); font-size: 0.95rem; }
+        /* A graded slab: the card in a clear case with a label */
+        .slab-case { display: grid; gap: 6px; padding: 10px; border-radius: var(--radius-md); background: color-mix(in srgb, var(--text-heading) 10%, transparent); border: 2px solid color-mix(in srgb, var(--text-heading) 35%, transparent); }
+        .slab-label { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 6px 10px; border-radius: var(--radius-sm); background: var(--bg-panel-raised); border: 1px solid var(--gold); font-family: var(--font-display); }
+        .slab-label .g { font-size: 1.8rem; font-weight: 800; color: var(--gold); }
+        .slab-case .sl-card { width: min(240px, 56vw); animation-delay: 0.25s; }
+        .slab { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--gold); color: var(--gold); white-space: nowrap; }
+        @media (prefers-reduced-motion: reduce) { .scard, .pulled button, .pstack .rays, .float-val, .spotlight .sl-rays, .sl-title, .sl-card, .sl-card::after, .scard.foil::before, .pstack.t-big .scard.top, .pstack.t-huge .scard.top { animation: none; } .scard { transition: none; } .confetti { display: none; } }
 
         /* ---- Campaign map ---- */
         .camp-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 14px; align-items: start; }
@@ -658,6 +739,8 @@
                         <div id="shopBulk"></div>
                         <h3 style="margin-top:14px;">Vault</h3>
                         <div id="shopVault" class="vault"></div>
+                        <h3 style="margin-top:14px;">🔍 Grading</h3>
+                        <div id="shopGrading"></div>
                     </div>
                 </div>
                 <div class="pos">
@@ -4644,7 +4727,10 @@ const SHOP_START_USD = 50;
 const SHOP_RENT = 12;            // taken when you close the shop each day
 const SHOP_MAX_QUEUE = 3;        // customers waiting at once
 const SHOP_TICK_MS = 3000;       // how often a customer might walk in
-const SHOP_PATIENCE_TICKS = 14;  // about 40 seconds before a customer gives up
+const SHOP_DAY_MS = 10 * 60 * 1000; // a shop day lasts 10 minutes of open time (owner, 2026-10-06)
+const SHOP_PATIENCE_TICKS = 30;  // about 90 seconds before a customer gives up
+const SHOP_SELLER_CHANCE = 0.3;  // share of walk-ins who come to sell you cards
+const QUICK_PCTS = [10, 20, 30]; // the quick counteroffer buttons, up and down
 function profileDefaults() {
     return {
         usd: SHOP_START_USD, shopDay: 1, shopReputation: 0,
@@ -4661,7 +4747,8 @@ function profileDefaults() {
         sealed: {},        // 'code|kind' -> { code, kind, name, type, released, n } sealed packs in the stockroom
         distStock: null,   // today's distributor offers { day, offers }
         campaignNodes: {}, // ladder stop -> its precon opponent { file, name, type, code }
-        campaignDiscount: 0 // permanent distributor discount from Regional wins
+        campaignDiscount: 0, // permanent distributor discount from Regional wins
+        grading: []        // cards out for grading { id, copy, tier, sent, due }
     };
 }
 function upgradeProfile(p) {
@@ -4706,7 +4793,7 @@ function addCopy(id, copy) {
 // Take one copy matching `match` (a copy object) out of the collection
 function takeCopy(id, match) {
     const list = ownedCopies(id);
-    const i = list.findIndex(c => c.c === match.c && !!c.f === !!match.f && !!c.s === !!match.s);
+    const i = list.findIndex(c => c.c === match.c && !!c.f === !!match.f && !!c.s === !!match.s && (c.g || 0) === (match.g || 0));
     if (i < 0) return null;
     const [copy] = list.splice(i, 1);
     profile.collection[id] = list.length;
@@ -4714,18 +4801,22 @@ function takeCopy(id, match) {
     else { delete profile.collection[id]; delete profile.copies[id]; }
     return copy;
 }
-function copyKey(c) { return `${c.c}${c.f ? 'f' : ''}${c.s ? 's' : ''}`; }
-function copyLabel(c) { return `${CONDITIONS[c.c].label}${c.f ? ' foil' : ''}${c.s ? ' · SERIALIZED' : ''}`; }
+function copyKey(c) { return `${c.c}${c.f ? 'f' : ''}${c.s ? 's' : ''}${c.g ? `g${c.g}` : ''}`; }
+function copyLabel(c) { return `${c.g ? `Graded ${c.g} (${gradeWord(c.g)})` : CONDITIONS[c.c].label}${c.f ? ' foil' : ''}${c.s ? ' · SERIALIZED' : ''}`; }
 function condBadge(c) {
+    if (c.g) return `<span class="slab" title="${esc(copyLabel(c))}">🔖 ${c.g}${c.f ? ' ✨' : ''}</span>${c.s ? '<span class="serial-tag">#/500</span>' : ''}`;
     return `<span class="cond cond-${c.c}" title="${esc(copyLabel(c))}">${CONDITIONS[c.c].short}${c.f ? ' ✨' : ''}</span>${c.s ? '<span class="serial-tag">#/500</span>' : ''}`;
 }
+// A listing in the case or bin <-> a copy
+function listingCopy(l) { const c = { c: l.condition }; if (l.foil) c.f = 1; if (l.serial) c.s = 1; if (l.grade) c.g = l.grade; return c; }
 
 // ---- Values: Scryfall's TCGplayer price x condition x serialized x today's market ----
 function baseUsd(card, foil) { return parseFloat((foil && card.usdFoil) || card.usd) || 0; }
 function copyValue(card, copy, ignoreCondition) {
     if (!card) return 0;
     let v = baseUsd(card, copy.f);
-    if (!ignoreCondition) v *= CONDITIONS[copy.c].mult;
+    if (copy.g) v *= gradeMult(card, copy.g); // a graded slab: the grade replaces the condition
+    else if (!ignoreCondition) v *= CONDITIONS[copy.c].mult;
     if (copy.s) v *= SERIAL_MULT;
     return Math.round(v * eventMult(card) * 100) / 100;
 }
@@ -4804,8 +4895,8 @@ const PERSONALITIES = {
     arthur: {
         name: 'Arthur', archetype: 'Whale', emoji: '🐋',
         duel: { theme: 'power', style: 'control', desc: 'Vintage with the Power 9' },
-        shop: { desc: 'Glass-case cards worth more than $50. Pays 150%.', conditions: ['M', 'LP'], pay: () => 1.5, tolerance: 0.2, best: true,
-            wants: (card, copy) => copyValue(card, copy) > 50 }
+        shop: { desc: 'Glass-case cards worth more than $50, or slabs graded 9+ worth $15+. Pays 150%.', conditions: ['M', 'LP'], pay: () => 1.5, tolerance: 0.2, best: true,
+            wants: (card, copy) => copyValue(card, copy) > 50 || (copy.g >= 9 && copyValue(card, copy) >= 15) }
     },
     brenda: {
         name: 'Brenda', archetype: 'Budget', emoji: '🧺',
@@ -4823,12 +4914,14 @@ const PERSONALITIES = {
 
 // ---- The shop day ----
 const SHOP = { open: false, timer: null, queue: [], seq: 1, log: [] };
-function shopVisitsFor(rep) { return Math.min(20, 6 + Math.floor(rep / 4)); }
+function shopVisitsFor(rep) { return Math.min(36, 14 + Math.floor(rep / 3)); }
 function ensureShopDay() {
     if (!profile.marketEvent) rollMarketEvent();
     if (!profile.shopToday || profile.shopToday.day !== profile.shopDay)
-        profile.shopToday = { day: profile.shopDay, visitsLeft: shopVisitsFor(profile.shopReputation), sales: [], revenue: 0 };
+        profile.shopToday = { day: profile.shopDay, visitsLeft: shopVisitsFor(profile.shopReputation), sales: [], revenue: 0, timeLeft: SHOP_DAY_MS, bought: 0 };
+    if (profile.shopToday.timeLeft === undefined) profile.shopToday.timeLeft = SHOP_DAY_MS;
 }
+function clockText(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
 function vaultBonus() {
     // Trophies draw a crowd: up to +15% customer chance
     const total = profile.vault.reduce((a, id) => a + baseUsd(CARDS.get(id) || {}, false), 0);
@@ -4838,7 +4931,7 @@ function shopLog(msg) { SHOP.log.unshift(msg); SHOP.log.length = Math.min(SHOP.l
 
 function openShop() {
     ensureShopDay();
-    if (profile.shopToday.visitsLeft <= 0) { toast('No more customers today - close up to start a new day.'); return; }
+    if (profile.shopToday.visitsLeft <= 0 || profile.shopToday.timeLeft <= 0) { toast('The day is over - close up to start a new day.'); return; }
     SHOP.open = true;
     clearInterval(SHOP.timer);
     SHOP.timer = setInterval(shopTick, SHOP_TICK_MS);
@@ -4857,18 +4950,22 @@ function shopTick() {
     SHOP.queue.filter(c => c.patience <= 0).forEach(c => shopLog(`⌛ ${c.p.name} got tired of waiting and left.`));
     SHOP.queue = SHOP.queue.filter(c => c.patience > 0);
     const T = profile.shopToday;
-    if (T.visitsLeft > 0 && SHOP.queue.length < SHOP_MAX_QUEUE) {
-        const chance = 0.35 + Math.min(profile.shopReputation, 40) * 0.01 + vaultBonus();
+    if (SHOP.open) T.timeLeft = Math.max(0, T.timeLeft - SHOP_TICK_MS);
+    if (SHOP.open && T.timeLeft > 0 && T.visitsLeft > 0 && SHOP.queue.length < SHOP_MAX_QUEUE) {
+        // Spread the day's customers over its 10 minutes; reputation and trophies bring them sooner
+        const ticksLeft = Math.max(1, T.timeLeft / SHOP_TICK_MS);
+        const chance = Math.min(0.7, (T.visitsLeft / ticksLeft) * 1.6 * (1 + Math.min(profile.shopReputation, 40) * 0.01 + vaultBonus()));
         if (Math.random() < chance) {
             T.visitsLeft--;
             spawnCustomer();
             saveProfile();
         }
     }
-    if (T.visitsLeft <= 0 && !SHOP.queue.length && SHOP.open) {
+    if ((T.visitsLeft <= 0 || T.timeLeft <= 0) && !SHOP.queue.length && SHOP.open) {
         pauseShop();
-        shopLog('🚪 That was the last customer today. Close the shop to start a new day.');
+        shopLog('🚪 Closing time - that was the last customer today. Close the shop to start a new day.');
     }
+    if (SHOP.open && T.timeLeft % 30000 < SHOP_TICK_MS) saveProfile();
     renderShopFloor();
 }
 
@@ -4878,7 +4975,7 @@ function buildBasket(P) {
     const ok = (l, inBulk) => {
         const card = CARDS.get(l.id);
         if (!card || !S.conditions.includes(l.condition)) return false;
-        const copy = { c: l.condition, f: l.foil, s: l.serial };
+        const copy = listingCopy(l);
         return S.wants(card, copy) && (inBulk || !S.bulkOnly);
     };
     if (S.bulkOnly) {
@@ -4896,13 +4993,14 @@ function buildBasket(P) {
     if (S.best) return { from: 'case', items: [all.sort((a, b) => listingValue(b.l) - listingValue(a.l))[0]] };
     return { from: 'case', items: [all[rand(all.length)]] };
 }
-function listingValue(l, ignoreCondition) { if (l.sealed) return packMarket(l.meta); return copyValue(CARDS.get(l.id), { c: l.condition, f: l.foil, s: l.serial }, ignoreCondition); }
+function listingValue(l, ignoreCondition) { if (l.sealed) return packMarket(l.meta); return copyValue(CARDS.get(l.id), listingCopy(l), ignoreCondition); }
 function listingAsk(l, from) { return from === 'bulk' ? profile.bulkPrice : l.askingPrice; }
 
 function spawnCustomer() {
     const keys = Object.keys(PERSONALITIES).filter(k => !SHOP.queue.some(c => c.p === PERSONALITIES[k])); // one of each at a time
     if (!keys.length) return;
     const P = PERSONALITIES[keys[rand(keys.length)]];
+    if (Math.random() < SHOP_SELLER_CHANCE && spawnSeller(P)) return;
     const basket = buildBasket(P);
     if (!basket && sellSealedTo(P)) return;
     if (!basket) { shopLog(`👀 ${P.emoji} ${P.name} looked for ${P.shop.desc.charAt(0).toLowerCase()}${P.shop.desc.slice(1, 60).replace(/\.$/, '')}${P.shop.desc.length > 60 ? '...' : ''} and found nothing.`); return; }
@@ -4914,8 +5012,32 @@ function spawnCustomer() {
     else if (asking <= maxPay) offer = asking;                                   // happy to pay your price
     else offer = maxPay * (0.85 + Math.random() * 0.1);                          // offers a bit under their limit
     offer = Math.round(offer * 100) / 100;
-    SHOP.queue.push({ id: SHOP.seq++, p: P, basket, value, asking, maxPay, offer, patience: SHOP_PATIENCE_TICKS, countered: false });
+    const say = offer >= asking ? `I'll take ${basket.items.length > 1 ? 'these' : 'it'} at your price!` : P.shop.noHaggle ? `${usd(offer)}. That's my offer - I don't haggle.` : `Would you take ${usd(offer)}?`;
+    SHOP.queue.push({ id: SHOP.seq++, kind: 'buy', p: P, basket, value, asking, maxPay, offer, patience: SHOP_PATIENCE_TICKS, rounds: 0, say });
     shopLog(`🔔 ${P.emoji} ${P.name} walked in.`);
+}
+// Walk-in sellers: a customer brings cards they want cash for (cards of the
+// kind they like, from cards the game has seen). They ask 60-75% of what the
+// cards are worth and take as little as 42-52%.
+function spawnSeller(P) {
+    const pool = [];
+    for (const card of CARDS.values()) {
+        const v = baseUsd(card);
+        if (!card || isBasic(card) || !(v >= 0.5 && v <= 400) || !card.img) continue;
+        const copy = rollCopy(false);
+        try { if (P.shop.wants(card, copy)) pool.push({ card, copy }); } catch (e) { /* skip */ }
+        if (pool.length > 400) break;
+    }
+    if (!pool.length) return false;
+    const items = shuffle(pool).slice(0, 1 + rand(3)).map(x => ({ id: x.card.id, copy: Math.random() < 0.15 && x.card.usdFoil ? { ...x.copy, f: 1 } : x.copy }));
+    const value = round2(items.reduce((a, x) => a + copyValue(CARDS.get(x.id), x.copy), 0));
+    if (value < 0.5) return false;
+    const asking = round2(Math.max(0.25, value * (0.6 + Math.random() * 0.15)));
+    const minTake = round2(value * (0.42 + Math.random() * 0.1));
+    const lines = ['I\'m cashing out a few cards.', 'Cleaning out my binder - interested?', 'Need some cash for the prerelease.', 'Got some doubles to sell.'];
+    SHOP.queue.push({ id: SHOP.seq++, kind: 'sell', p: P, items, value, asking, minTake, patience: SHOP_PATIENCE_TICKS, rounds: 0, say: `${lines[rand(lines.length)]} ${usd(asking)} for ${items.length > 1 ? 'the lot' : 'it'}?` });
+    shopLog(`🔔 ${P.emoji} ${P.name} walked in with cards to sell.`);
+    return true;
 }
 
 // Sealed packs are the safe flip: a customer who finds no single they want
@@ -4955,39 +5077,95 @@ function completeSale(c, price) {
 function acceptOffer(id) {
     const c = findCustomer(id);
     if (!c) return;
-    completeSale(c, c.offer);
+    if (c.kind === 'sell') buyFromCustomer(c, c.asking);
+    else completeSale(c, c.offer);
     renderShop();
 }
 function declineOffer(id) {
     const c = findCustomer(id);
     if (!c) return;
     removeCustomer(c);
-    shopLog(`👋 You turned down ${c.p.name}.`);
+    shopLog(`👋 You passed on ${c.p.name}'s ${c.kind === 'sell' ? 'cards' : 'offer'}. They said thanks anyway.`);
     renderShopFloor();
+}
+// Buying from a walk-in seller
+function buyFromCustomer(c, price) {
+    if (profile.usd < price) { toast(`You need ${usd(price)} in shop cash (you have ${usd(profile.usd)}).`); return false; }
+    profile.usd = round2(profile.usd - price);
+    c.items.forEach(x => addCopy(x.id, x.copy));
+    const T = profile.shopToday;
+    T.bought = round2((T.bought || 0) + price);
+    (T.buys = T.buys || []).push({ who: c.p.name, cards: c.items.map(x => CARDS.get(x.id)?.name || '?'), price });
+    if (price >= c.value * 0.5) profile.shopReputation++; // a fair buy gets around
+    removeCustomer(c);
+    shopLog(`🛒 Bought ${c.items.length > 1 ? `${c.items.length} cards` : esc(CARDS.get(c.items[0].id)?.name || 'a card')} from ${c.p.name} for ${usd(price)} (worth ${usd(c.value)}). They're in your collection.`);
+    saveProfile();
+    return true;
+}
+// Your counteroffer, typed or from the quick buttons. Customers are friendly:
+// they meet you partway up to twice before they politely move on.
+function counterAt(c, price) {
+    price = round2(price);
+    if (!(price > 0)) { toast('Type a price first.'); return; }
+    if (c.kind === 'sell') {
+        if (price >= c.asking) { if (buyFromCustomer(c, price) && price > c.asking) { shopLog(`😊 ${c.p.name} didn't expect that much - they'll tell their friends.`); } }
+        else if (price >= c.minTake) { if (buyFromCustomer(c, price)) shopLog(`🤝 ${c.p.name} took your offer.`); }
+        else if (c.rounds < 2) { c.rounds++; c.asking = round2(Math.max(c.minTake, (c.asking + price) / 2)); c.say = `Hmm, that's a bit low. Could you do ${usd(c.asking)}?`; }
+        else { removeCustomer(c); shopLog(`🙂 ${c.p.name} decided to hang on to their cards. Maybe next time.`); }
+        renderShop();
+        return;
+    }
+    const limit = c.maxPay * (1 + c.p.shop.tolerance);
+    if (price <= c.offer || price <= limit) { completeSale(c, price); shopLog(`🤝 ${c.p.name}: "Deal!"`); }
+    else if (c.p.shop.noHaggle) c.say = `Sorry, I don't haggle. ${usd(c.offer)} is my offer.`;
+    else if (c.rounds < 2) { c.rounds++; c.offer = round2(Math.min(limit, (price + c.offer) / 2)); c.say = `That's a little steep for me. How about ${usd(c.offer)}?`; }
+    else {
+        removeCustomer(c);
+        if (price > c.value * 1.5) { profile.shopReputation = Math.max(0, profile.shopReputation - 1); saveProfile(); }
+        shopLog(`🙂 ${c.p.name} couldn't quite make the price work and said they'd come back another day.`);
+    }
+    renderShop();
 }
 function counterOffer(id) {
     const c = findCustomer(id);
     if (!c) return;
     const input = $(`counter-${id}`);
-    const price = Math.round(parseFloat(String(input && input.value || '').replace(/[$,]/g, '')) * 100) / 100;
-    if (!(price > 0)) { toast('Type a price first.'); return; }
-    if (c.p.shop.noHaggle) {
-        removeCustomer(c);
-        shopLog(`😤 ${c.p.name} doesn't haggle. They left.`);
-    } else if (price <= c.maxPay * (1 + c.p.shop.tolerance)) {
-        completeSale(c, price);
-        shopLog(`🤝 ${c.p.name} took your counteroffer.`);
-    } else if (!c.countered) {
-        // One more try: they meet you partway, up to their limit
-        c.countered = true;
-        c.offer = Math.round(Math.min(c.maxPay * (1 + c.p.shop.tolerance), (price + c.offer) / 2) * 100) / 100;
-        shopLog(`🤔 ${c.p.name} came up to ${usd(c.offer)}.`);
-    } else {
-        removeCustomer(c);
-        if (price > c.value * 1.5) { profile.shopReputation = Math.max(0, profile.shopReputation - 1); saveProfile(); }
-        shopLog(`🚶 ${c.p.name} walked out over the price.`);
+    counterAt(c, parseFloat(String(input && input.value || '').replace(/[$,]/g, '')));
+}
+// Quick buttons: up or down 10/20/30% from your price (selling) or their ask (buying)
+function quickBase(c) { return c.kind === 'sell' ? c.asking : c.asking; }
+function quickCounter(id, pct) {
+    const c = findCustomer(id);
+    if (!c) return;
+    counterAt(c, quickBase(c) * (1 + pct / 100));
+}
+function quickHTML(c) {
+    if (c.kind !== 'sell' && c.p.shop.noHaggle) return '';
+    const base = quickBase(c);
+    const pcts = [...QUICK_PCTS.slice().reverse().map(x => -x), ...QUICK_PCTS];
+    return `<div class="quick" role="group" aria-label="Quick counteroffers"><span class="note">${c.kind === 'sell' ? 'Offer from their ask' : 'Counter from your price'}:</span>${pcts.map(pct => {
+        const v = round2(base * (1 + pct / 100));
+        const pointless = c.kind !== 'sell' && v <= c.offer; // their offer is already higher: just accept
+        return `<button class="btn small ${pct < 0 ? 'down' : 'up'}" onclick="quickCounter(${c.id}, ${pct})" ${pointless ? 'disabled title="Their offer is already higher - press Accept"' : ''}>${pct > 0 ? '+' : '−'}${Math.abs(pct)}%<small>${usd(v)}</small></button>`;
+    }).join('')}</div>`;
+}
+function customerHTML(c) {
+    const head = `<div class="cust-head"><span class="cust-face" aria-hidden="true">${c.p.emoji}</span><div><strong>${esc(c.p.name)}</strong> <span class="note">the ${esc(c.p.archetype)}${c.kind === 'sell' ? ' · selling' : ''}</span>${c.kind === 'sell' ? '' : `<div class="note">${esc(c.p.shop.desc)}</div>`}</div></div>`;
+    const say = `<div class="cust-say">💬 ${esc(c.say || '')}</div>`;
+    const custom = `<details class="note" id="oth-${c.id}" style="margin-top:4px;"><summary>Other amount</summary><div class="row" style="margin-top:4px;"><input type="text" inputmode="decimal" id="counter-${c.id}" placeholder="$" aria-label="Your price" class="counter-in"><button class="btn small" onclick="counterOffer(${c.id})">↔ Offer</button></div></details>`;
+    const bar = `<div class="patience" aria-hidden="true"><span style="width:${Math.max(0, c.patience / SHOP_PATIENCE_TICKS * 100)}%"></span></div>`;
+    if (c.kind === 'sell') {
+        const items = c.items.map(x => { const card = CARDS.get(x.id); return `<li><button class="linkish" onclick="showCardSheet('${x.id}')">${esc(card ? card.name : '?')}</button> ${condBadge(x.copy)} <span class="note">worth ${usd(copyValue(card, x.copy))}</span></li>`; }).join('');
+        return `<div class="cust seller">${head}${say}<ul class="cust-items">${items}</ul>
+            <div class="cust-offer">Worth <strong>${usd(c.value)}</strong> · They ask: <strong class="offer">${usd(c.asking)}</strong> <span class="note">(${Math.round(c.asking / c.value * 100)}% of value)</span></div>
+            <div class="row"><button class="btn primary small" onclick="acceptOffer(${c.id})" ${profile.usd < c.asking ? 'disabled title="Not enough shop cash"' : ''}>✔ Buy for ${usd(c.asking)}</button><button class="btn small" onclick="declineOffer(${c.id})">✖ Pass</button></div>
+            ${quickHTML(c)}${custom}${bar}</div>`;
     }
-    renderShop();
+    const items = c.basket.items.map(x => { const card = CARDS.get(x.l.id); return `<li>${esc(card ? card.name : '?')} ${condBadge(listingCopy(x.l))} <span class="note">worth ${usd(listingValue(x.l, c.p.shop.ignoreCondition))}</span></li>`; }).join('');
+    return `<div class="cust">${head}${say}<ul class="cust-items">${items}</ul>
+        <div class="cust-offer">${c.basket.from === 'bulk' ? 'Bulk bin' : 'Your price'}: <strong>${usd(c.asking)}</strong> · Offers: <strong class="offer">${usd(c.offer)}</strong></div>
+        <div class="row"><button class="btn primary small" onclick="acceptOffer(${c.id})">✔ Accept ${usd(c.offer)}</button><button class="btn small" onclick="declineOffer(${c.id})">✖ Decline</button></div>
+        ${quickHTML(c)}${c.p.shop.noHaggle ? '' : custom}${bar}</div>`;
 }
 
 function closeShop() {
@@ -4997,9 +5175,9 @@ function closeShop() {
     SHOP.queue.forEach(c => shopLog(`🚪 ${c.p.name} left at closing.`));
     SHOP.queue = [];
     profile.usd = Math.round((profile.usd - SHOP_RENT) * 100) / 100;
-    profile.shopLedger.unshift({ day: profile.shopDay, revenue: T.revenue, rent: SHOP_RENT, sales: T.sales.length, event: profile.marketEvent && profile.marketEvent.key });
+    profile.shopLedger.unshift({ day: profile.shopDay, revenue: T.revenue, bought: T.bought || 0, rent: SHOP_RENT, sales: T.sales.length, event: profile.marketEvent && profile.marketEvent.key });
     profile.shopLedger.length = Math.min(profile.shopLedger.length, 14);
-    shopLog(`🔒 Closed day ${profile.shopDay}: ${T.sales.length} sale${T.sales.length === 1 ? '' : 's'}, ${usd(T.revenue)} in, ${usd(SHOP_RENT)} rent.`);
+    shopLog(`🔒 Closed day ${profile.shopDay}: ${T.sales.length} sale${T.sales.length === 1 ? '' : 's'}, ${usd(T.revenue)} in${T.bought ? `, ${usd(T.bought)} spent buying cards` : ''}, ${usd(SHOP_RENT)} rent.`);
     profile.shopDay++;
     rollMarketEvent();
     profile.shopToday = null;
@@ -5009,6 +5187,88 @@ function closeShop() {
     const e = todayEvent();
     toast(`Day ${profile.shopDay}: ${e.icon} ${e.title}`);
     renderShop();
+}
+
+// =====================================================================
+// Grading (2026-10-06, owner's request). Send a copy off with a fee; it
+// comes back after some shop days in a slab with a grade from 1 to 10.
+// The grade follows the copy's condition (a game choice, not real data)
+// and replaces the condition in its value: a 10 is worth 3x (6x for cards
+// from before 2003), a 9 1.5x, a 5 about half. The grader is made up.
+// =====================================================================
+const GRADE_TIERS = [
+    { key: 'economy', label: 'Economy', fee: 5, days: 5 },
+    { key: 'standard', label: 'Standard', fee: 15, days: 2 },
+    { key: 'express', label: 'Express', fee: 40, days: 1 }
+];
+const GRADE_ODDS = {
+    M: [[10, 12], [9.5, 18], [9, 35], [8.5, 15], [8, 12], [7, 8]],
+    LP: [[8, 15], [7, 35], [6, 30], [5, 15], [4, 5]],
+    MP: [[6, 10], [5, 30], [4, 35], [3, 20], [2, 5]],
+    D: [[3, 20], [2, 40], [1, 40]]
+};
+const GRADE_MULT = { 10: 3, 9.5: 2, 9: 1.5, 8.5: 1.25, 8: 1.1, 7: 0.85, 6: 0.7, 5: 0.55, 4: 0.45, 3: 0.35, 2: 0.25, 1: 0.2 };
+const GRADE_WORDS = { 10: 'Gem Mint', 9.5: 'Mint+', 9: 'Mint', 8.5: 'Near Mint-Mint+', 8: 'Near Mint-Mint', 7: 'Near Mint', 6: 'Excellent-Mint', 5: 'Excellent', 4: 'Very Good-Excellent', 3: 'Very Good', 2: 'Good', 1: 'Poor' };
+function gradeWord(g) { return GRADE_WORDS[g] || ''; }
+function gradeMult(card, g) { return g === 10 && card && card.released && card.released < '2003-01-01' ? 6 : (GRADE_MULT[g] || 1); }
+function gradeRange(c) { const g = GRADE_ODDS[c].map(x => x[0]); return `${Math.min(...g)}-${Math.max(...g)}`; }
+function openGradeDialog(id, key) {
+    const card = CARDS.get(id);
+    const copy = ownedCopies(id).find(c => copyKey(c) === key);
+    if (!card || !copy) return;
+    if (copy.g) { toast('That copy is already graded.'); return; }
+    const now = copyValue(card, copy), mint = copyValue(card, { ...copy, c: 'M' }, true);
+    showModal(`<h2>🔍 Send ${esc(card.name)} for grading</h2>
+        <p>${esc(copyLabel(copy))} · worth ${usd(now)} now. ${esc(CONDITIONS[copy.c].label)} copies usually grade <strong>${gradeRange(copy.c)}</strong>.</p>
+        <p class="note">If it comes back a 10 it's worth about <strong>${usd(mint * gradeMult(card, 10))}</strong>; a 9, ${usd(mint * gradeMult(card, 9))}; an 8, ${usd(mint * gradeMult(card, 8))}. The card leaves your collection (and decks) while it's away.</p>
+        <div class="row" style="justify-content:center; gap:8px;">${GRADE_TIERS.map(t => `<button class="btn${t.key === 'standard' ? ' primary' : ''}" onclick="sendToGrading('${id}', '${key}', '${t.key}')" ${profile.usd < t.fee ? 'disabled' : ''}>${esc(t.label)} · ${usd(t.fee)}<br><small>back in ${t.days} day${t.days === 1 ? '' : 's'}</small></button>`).join('')}</div>
+        <p class="note">Days are shop days: close the shop to move to the next one. Shop cash: ${usd(profile.usd)}.</p>
+        <div class="row" style="justify-content:center; margin-top:8px;"><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+}
+function sendToGrading(id, key, tierKey) {
+    const t = GRADE_TIERS.find(x => x.key === tierKey);
+    const copy = ownedCopies(id).find(c => copyKey(c) === key);
+    if (!t || !copy || copy.g) return;
+    if (profile.usd < t.fee) { toast('Not enough shop cash.'); return; }
+    takeCopy(id, copy);
+    profile.usd = round2(profile.usd - t.fee);
+    profile.grading.push({ id, copy, tier: t.key, sent: profile.shopDay, due: profile.shopDay + t.days });
+    shopLog(`📮 Sent ${esc(CARDS.get(id)?.name || 'a card')} for ${t.label.toLowerCase()} grading (${usd(t.fee)}), back on day ${profile.shopDay + t.days}.`);
+    saveProfile();
+    closeModal();
+    renderShop();
+}
+function openGradedCard(i) {
+    const g = profile.grading[i];
+    if (!g || g.due > profile.shopDay) return;
+    const card = CARDS.get(g.id);
+    const odds = GRADE_ODDS[g.copy.c] || GRADE_ODDS.M;
+    const grade = odds[pickWeighted(odds)][0];
+    const copy = { ...g.copy, g: grade };
+    profile.grading.splice(i, 1);
+    addCopy(g.id, copy);
+    saveProfile();
+    renderShop();
+    if (!card) return;
+    const v = copyValue(card, copy);
+    shopLog(`🔖 ${esc(card.name)} came back a <strong>${grade}</strong> (${gradeWord(grade)}), worth ${usd(v)}.`);
+    const title = grade === 10 ? '💎 GEM MINT 10!' : grade >= 9 ? `🔥 GRADE ${grade}!` : grade >= 7 ? `🔖 Grade ${grade}` : `Grade ${grade}`;
+    if (grade >= 9) spotlight({ title, card, value: v, slab: { grade, word: gradeWord(grade) }, sub: `${copyLabel(copy)} · was ${usd(copyValue(card, g.copy))} raw` });
+    else {
+        showModal(`<h2>${title}</h2><div class="slab-case" style="margin:0 auto; width:max-content;"><div class="slab-label"><span>${esc(card.name)}<br><small class="note">${esc(gradeWord(grade))}</small></span><span class="g">${grade}</span></div>
+            <div class="sl-card" style="animation:none; box-shadow:none;">${card.img ? `<img src="${card.img}" alt="${esc(card.name)}">` : esc(card.name)}</div></div>
+            <p>Worth <strong>${usd(v)}</strong> now (was ${usd(copyValue(card, g.copy))} raw).</p><button class="btn primary" onclick="closeModal()">OK</button>`);
+    }
+}
+function renderGrading() {
+    const el = $('shopGrading');
+    if (!el) return;
+    const list = profile.grading.map((g, i) => ({ g, i }));
+    el.innerHTML = list.length ? `<ul class="grade-list">${list.map(({ g, i }) => {
+        const card = CARDS.get(g.id), ready = g.due <= profile.shopDay;
+        return `<li>${esc(card ? card.name : '?')} ${condBadge(g.copy)} <span class="note">${esc((GRADE_TIERS.find(t => t.key === g.tier) || {}).label || '')}</span>
+            ${ready ? `<button class="btn small gold" onclick="openGradedCard(${i})">📬 Open the slab</button>` : `<span class="note">back on day ${g.due}</span>`}</li>`;
+    }).join('')}</ul>` : '<p class="note">Nothing out for grading. Use 🔍 Grade on a card in your collection below.</p>';
 }
 
 // ---- Moving cards: collection <-> case, bulk bin, vault ----
@@ -5021,13 +5281,14 @@ function listCopy(id, key) {
     const card = CARDS.get(id);
     if (!copy || !card) return;
     takeCopy(id, copy);
-    profile.displayCase.push({ id, condition: copy.c, foil: copy.f ? 1 : 0, serial: copy.s ? 1 : 0, askingPrice: suggestedAsk(card, copy) });
+    profile.displayCase.push({ id, condition: copy.c, foil: copy.f ? 1 : 0, serial: copy.s ? 1 : 0, ...(copy.g ? { grade: copy.g } : {}), askingPrice: suggestedAsk(card, copy) });
     saveProfile();
     renderShop();
 }
 function bulkCopy(id, key) {
     const copy = ownedCopies(id).find(c => copyKey(c) === key);
     if (!copy) return;
+    if (copy.g) { toast('Graded slabs go in the case, not the bulk bin.'); return; }
     takeCopy(id, copy);
     profile.bulkBox.push({ id, condition: copy.c, foil: copy.f ? 1 : 0 });
     saveProfile();
@@ -5038,7 +5299,7 @@ function unlist(i) {
     if (!l) return;
     profile.displayCase.splice(i, 1);
     if (l.sealed) { addSealed(l.meta, 1); saveProfile(); renderShop(); return; }
-    addCopy(l.id, { c: l.condition, ...(l.foil ? { f: 1 } : {}), ...(l.serial ? { s: 1 } : {}) });
+    addCopy(l.id, listingCopy(l));
     saveProfile();
     renderShop();
 }
@@ -5122,37 +5383,27 @@ function renderShopFloor() {
             <div><span class="pos-k">Day</span><strong>${profile.shopDay}</strong></div>
             <div><span class="pos-k">Shop cash</span><strong class="${profile.usd < 0 ? 'neg' : ''}">💵 ${usd(profile.usd)}</strong></div>
             <div><span class="pos-k">Reputation</span><strong>⭐ ${profile.shopReputation}</strong></div>
-            <div><span class="pos-k">Today</span><strong>${T.sales.length} sale${T.sales.length === 1 ? '' : 's'} · ${usd(T.revenue)}</strong></div>
-            <div><span class="pos-k">Customers left</span><strong>${T.visitsLeft}</strong></div>
+            <div><span class="pos-k">Today</span><strong>${T.sales.length} sale${T.sales.length === 1 ? '' : 's'} · ${usd(T.revenue)}</strong>${T.bought ? `<span class="note">bought ${usd(T.bought)}</span>` : ''}</div>
+            <div><span class="pos-k">Day ends in</span><strong class="day-clock">⏱ ${clockText(T.timeLeft)}</strong></div>
+            <div><span class="pos-k">Customers due</span><strong>${T.timeLeft > 0 ? T.visitsLeft : 0}</strong></div>
         </div>
         ${e ? `<div class="pos-event"><span aria-hidden="true">${e.icon}</span> <strong>${esc(e.title)}:</strong> ${esc(e.text)}</div>` : ''}
         <div class="row">
-            ${SHOP.open ? '<button class="btn" onclick="pauseShop(); renderShopFloor();">⏸ Pause</button>' : `<button class="btn primary" onclick="openShop()" ${T.visitsLeft <= 0 ? 'disabled' : ''}>🔓 Open the shop</button>`}
+            ${SHOP.open ? '<button class="btn" onclick="pauseShop(); renderShopFloor();">⏸ Pause</button>' : `<button class="btn primary" onclick="openShop()" ${T.visitsLeft <= 0 || T.timeLeft <= 0 ? 'disabled' : ''}>🔓 Open the shop</button>`}
             <button class="btn" onclick="closeShop()">🔒 Close shop (rent ${usd(SHOP_RENT)}) → day ${profile.shopDay + 1}</button>
             <button class="btn small" onclick="addTestCash()" title="Test build: add free shop cash">＋💵 Add cash</button>
-            <span class="note">${SHOP.open ? 'Open: customers walk in while you\'re on this tab.' : 'Closed: open up to let customers in.'}</span>
+            <span class="note">${SHOP.open ? 'Open: a day is 10 minutes; the clock runs while you\'re on this tab. Some customers come to sell you cards.' : 'Closed: open up to let customers in.'}</span>
         </div>`;
-    $('shopCustomers').innerHTML = SHOP.queue.length ? SHOP.queue.map(c => {
-        const items = c.basket.items.map(x => { const card = CARDS.get(x.l.id); return `<li>${esc(card ? card.name : '?')} ${condBadge({ c: x.l.condition, f: x.l.foil, s: x.l.serial })} <span class="note">worth ${usd(listingValue(x.l, c.p.shop.ignoreCondition))}</span></li>`; }).join('');
-        return `<div class="cust">
-            <div class="cust-head"><span class="cust-face" aria-hidden="true">${c.p.emoji}</span><div><strong>${esc(c.p.name)}</strong> <span class="note">the ${esc(c.p.archetype)}</span><div class="note">${esc(c.p.shop.desc)}</div></div></div>
-            <ul class="cust-items">${items}</ul>
-            <div class="cust-offer">${c.basket.from === 'bulk' ? 'Bulk bin' : 'Your price'}: <strong>${usd(c.asking)}</strong> · Offers: <strong class="offer">${usd(c.offer)}</strong></div>
-            <div class="row">
-                <button class="btn primary small" onclick="acceptOffer(${c.id})">✔ Accept</button>
-                ${c.p.shop.noHaggle ? '' : `<input type="text" inputmode="decimal" id="counter-${c.id}" placeholder="$" aria-label="Counteroffer" class="counter-in"><button class="btn small" onclick="counterOffer(${c.id})">↔ Counter</button>`}
-                <button class="btn small" onclick="declineOffer(${c.id})">✖ Decline</button>
-            </div>
-            <div class="patience" aria-hidden="true"><span style="width:${Math.max(0, c.patience / SHOP_PATIENCE_TICKS * 100)}%"></span></div>
-        </div>`;
-    }).join('') : `<p class="note">${SHOP.open ? 'Waiting for customers...' : 'No one here. Open the shop.'}</p>`;
+    // The floor redraws every few seconds: keep a half-typed counteroffer (and its open box) as it was
+    const keep = [...document.querySelectorAll('#shopCustomers .counter-in')].map(i => ({ id: i.id, v: i.value, focus: document.activeElement === i, open: i.closest('details') && i.closest('details').open }));
+    $('shopCustomers').innerHTML = SHOP.queue.length ? SHOP.queue.map(c => customerHTML(c)).join('') : `<p class="note">${SHOP.open ? 'Waiting for customers...' : 'No one here. Open the shop.'}</p>`;
     $('shopCase').innerHTML = profile.displayCase.length ? `<table class="pos-table"><thead><tr><th>Card</th><th>Worth today</th><th>Your price</th><th></th></tr></thead><tbody>${profile.displayCase.map((l, i) => {
         if (l.sealed) return `<tr><td>📦 <strong>${esc(l.meta.name)}</strong> <span class="note">${kindLabel(l.meta)} pack</span></td>
             <td>${usd(packMarket(l.meta))}</td>
             <td><input type="text" inputmode="decimal" value="${l.askingPrice.toFixed(2)}" onchange="setAsk(${i}, this.value)" aria-label="Asking price" class="ask-in"></td>
             <td><button class="btn small" onclick="unlist(${i})" title="Back to your stockroom">↩</button></td></tr>`;
         const card = CARDS.get(l.id);
-        return `<tr class="${l.serial ? 'serial-row' : ''}"><td><button class="linkish" onclick="showCardSheet('${l.id}')">${esc(card ? card.name : '?')}</button> ${condBadge({ c: l.condition, f: l.foil, s: l.serial })}</td>
+        return `<tr class="${l.serial ? 'serial-row' : ''}"><td><button class="linkish" onclick="showCardSheet('${l.id}')">${esc(card ? card.name : '?')}</button> ${condBadge(listingCopy(l))}</td>
             <td>${usd(listingValue(l))}</td>
             <td><input type="text" inputmode="decimal" value="${l.askingPrice.toFixed(2)}" onchange="setAsk(${i}, this.value)" aria-label="Asking price" class="ask-in"></td>
             <td><button class="btn small" onclick="unlist(${i})" title="Back to your collection">↩</button></td></tr>`;
@@ -5167,6 +5418,8 @@ function renderShopFloor() {
         return card ? `<button class="vault-slot" onclick="showCardSheet('${id}')" title="${esc(card.name)} · ${usd(baseUsd(card))}">${card.imgS ? `<img src="${card.imgS}" alt="${esc(card.name)}">` : esc(card.name)}</button>`
             : '<div class="vault-slot empty">🏆<span class="note">empty</span></div>';
     }).join('') + `<p class="note" style="grid-column:1/-1;">Trophies aren't for sale; they draw a crowd (up to +15% customers).${vaultBonus() ? ` Now: +${Math.round(vaultBonus() * 100)}%.` : ''}</p>`;
+    keep.forEach(k => { const i = $(k.id); if (!i) return; i.value = k.v; if (k.open) i.closest('details').open = true; if (k.focus) i.focus(); });
+    renderGrading();
     $('shopLog').innerHTML = SHOP.log.length ? SHOP.log.map(m => `<li>${m}</li>`).join('') : '<li class="note">Nothing yet today.</li>';
 }
 function renderShopStock() {
@@ -5182,6 +5435,7 @@ function renderShopStock() {
         return `<tr><td><button class="linkish" onclick="showCardSheet('${card.id}')">${esc(card.name)}</button> <span class="note">${esc((card.set || '').toUpperCase())} · ${card.rarity}</span></td><td>${sel}</td>
             <td class="pos-actions"><button class="btn small primary" onclick="listCopy('${card.id}', $('cp-${card.id}').value)">＋ Case</button>
             <button class="btn small" onclick="bulkCopy('${card.id}', $('cp-${card.id}').value)">→ Bulk</button>
+            <button class="btn small" onclick="openGradeDialog('${card.id}', $('cp-${card.id}').value)" title="Send this copy to be graded">🔍 Grade</button>
             <button class="btn small" onclick="toggleVault('${card.id}')" aria-pressed="${inVault}">${inVault ? '🏆 Out' : '🏆 Vault'}</button></td></tr>`;
     }).join('')}</tbody></table>${Object.keys(profile.collection).length > 60 && !q ? '<p class="note">Showing your 60 most valuable cards. Search to find others.</p>' : ''}`
         : `<p class="note">${q ? 'No cards match.' : 'No cards yet. Open some packs first.'}</p>`;
@@ -5361,27 +5615,55 @@ function renderStockroom() {
 }
 
 // ---------------------------------------------------------------------
-// Pack reveal: the wrapper peels open in 3D, the cards are dealt face
-// down, and you flip each one. Mythics, foils and serialized cards shake
-// the screen, glow and announce their value.
+// Pack reveal (stacked, 2026-10-06): the wrapper peels open in 3D, the
+// cards land in one stack, cheapest on top, and each tap sends the top
+// card flying to show the next. The better the pull, the bigger the show
+// (PULL_TIERS, by the copy's value): a glow, light rays and a banner,
+// confetti and a shake, and for the really expensive ones a full-screen
+// jackpot with the price counting up.
 // ---------------------------------------------------------------------
 const REVEALS = {};
-function isBigPull(p) { return p.card.rarity === 'mythic' || p.foil || (p.copy && p.copy.s); }
+const PULL_TIERS = [
+    { key: 'jackpot', min: 250, label: '💎 JACKPOT!' },
+    { key: 'huge', min: 50, label: '🔥 HUGE PULL!' },
+    { key: 'big', min: 10, label: '💰 BIG HIT!' },
+    { key: 'nice', min: 2, label: '✨ Nice pull' }
+];
+function pullValue(p) { return p.copy ? copyValue(p.card, p.copy) : baseUsd(p.card, p.foil); }
+function pullTier(p) {
+    if (p.copy && p.copy.s) return PULL_TIERS[0]; // serialized is always a jackpot
+    const v = pullValue(p);
+    return PULL_TIERS.find(t => v >= t.min) || null;
+}
+const reducedMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 function renderPackReveal(pack, areaId = 'packArea') {
-    REVEALS[areaId] = { pack, flipped: new Set() };
+    // Cheapest first, the best pull last (basics first of all)
+    const order = pack.cards.map((p, i) => i).sort((a, b) => {
+        const A = pack.cards[a], B = pack.cards[b];
+        return (isBasic(B.card) - isBasic(A.card)) || (pullValue(A) - pullValue(B)) || (a - b);
+    });
+    REVEALS[areaId] = { pack, order, pos: 0, busy: false };
     const code = (pack.set.code || '').toUpperCase();
+    const n = order.length;
     $(areaId).innerHTML = `
         <div class="crack-stage">
             <div class="pack3d" id="p3d-${areaId}" role="button" tabindex="0" aria-label="Tear the pack open" onclick="peelPack('${areaId}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); peelPack('${areaId}'); }">
                 <div class="pk-flap"><span>${esc(code)}</span></div>
                 <div class="pk-body"><span class="pk-spark" aria-hidden="true">✨</span><strong>${esc(pack.set.name)}</strong><small>${esc(pack.name || '')}</small><em>Tap to tear open</em></div>
             </div>
-            <div class="crack-cards hidden" id="cc-${areaId}">${pack.cards.map((p, i) => `
-                <button type="button" class="fcard${p.copy && p.copy.s ? ' serial' : ''}" style="--i:${i}" data-r="${p.card.rarity}" onclick="flipPackCard('${areaId}', ${i})" aria-label="Card ${i + 1}, face down: tap to flip">
-                    <span class="fc-inner"><span class="fc-back"></span><span class="fc-front">${p.card.img ? `<img src="${p.card.img}" alt="${esc(p.card.name)}" loading="lazy">` : `<span class="noimg">${esc(p.card.name)}</span>`}</span></span>
-                    <span class="meta"><strong>${esc(p.card.name)}</strong>${p.copy ? ` ${condBadge(p.copy)}` : ''}<br>${p.card.rarity} · ${usd(p.copy ? copyValue(p.card, p.copy) : baseUsd(p.card, p.foil))} · ${supportBadge(p.card)}</span>
-                </button>`).join('')}</div>
-            <div class="row hidden" id="ccbar-${areaId}"><button class="btn small" onclick="flipAllPack('${areaId}')">Flip all</button><span class="note">Tap a card to flip it; tap again for details.</span></div>
+            <div class="stack-stage hidden" id="ss-${areaId}">
+                <button type="button" class="pstack" id="ps-${areaId}" onclick="nextPackCard('${areaId}')" aria-label="Next card">
+                    <span class="rays" aria-hidden="true"></span>
+                    ${order.map((ci, k) => { const p = pack.cards[ci]; return `<span class="scard${p.foil ? ' foil' : ''}${p.copy && p.copy.s ? ' serial' : ''}" data-k="${k}" style="--i:${n - k}; z-index:${n - k}; --rot:${((k * 37) % 9) - 4}deg; --dx:${((k * 53) % 7) - 3}px; --dy:${Math.min(k, 6) * 2}px;">${p.card.img ? `<img src="${p.card.img}" alt="${esc(p.card.name)}" loading="${k < 3 ? 'eager' : 'lazy'}">` : `<span class="noimg">${esc(p.card.name)}</span>`}</span>`; }).join('')}
+                </button>
+                <div class="stack-info" id="si-${areaId}" aria-live="polite"></div>
+                <div class="row" style="justify-content:center;">
+                    <button class="btn primary" id="snext-${areaId}" onclick="nextPackCard('${areaId}')">Next card ▶</button>
+                    <button class="btn" onclick="revealAllPack('${areaId}')">⏩ Reveal all</button>
+                    <span class="note" id="sleft-${areaId}"></span>
+                </div>
+                <div class="pulled" id="pl-${areaId}" aria-label="Cards pulled so far"></div>
+            </div>
             <div class="pull-announce" id="ann-${areaId}" aria-live="polite"></div>
             <p class="note hidden" id="sum-${areaId}"></p>
         </div>`;
@@ -5393,45 +5675,150 @@ function peelPack(areaId) {
     setTimeout(() => el.classList.add('opened'), 650);
     setTimeout(() => {
         el.classList.add('hidden');
-        $(`cc-${areaId}`).classList.remove('hidden');
-        $(`ccbar-${areaId}`).classList.remove('hidden');
+        $(`ss-${areaId}`).classList.remove('hidden');
+        showTopCard(areaId);
     }, 1150);
 }
-function flipPackCard(areaId, i) {
+function topEl(areaId) { const R = REVEALS[areaId]; return document.querySelector(`#ps-${areaId} .scard[data-k="${R.pos}"]`); }
+// The card now on top of the stack: name, value and its celebration
+function showTopCard(areaId) {
+    const R = REVEALS[areaId];
+    const n = R.order.length;
+    $(`sleft-${areaId}`).textContent = R.pos < n ? `${n - R.pos} of ${n} left` : '';
+    if (R.pos >= n) return;
+    const p = R.pack.cards[R.order[R.pos]];
+    const el = topEl(areaId);
+    if (el) el.classList.add('top');
+    const t = pullTier(p);
+    const stack = $(`ps-${areaId}`);
+    stack.className = `pstack${t ? ` t-${t.key}` : ''}`;
+    const v = pullValue(p);
+    $(`si-${areaId}`).innerHTML = `<strong>${esc(p.card.name)}</strong> ${p.copy ? condBadge(p.copy) : ''}<span class="si-val${t && t.key !== 'nice' ? ' hot' : ''}">${usd(v)}</span><br><span class="note">${esc(p.card.rarity)}${p.foil ? ' · foil' : ''} · ${supportBadge(p.card)}</span>`;
+    stack.setAttribute('aria-label', `${p.card.name}, ${usd(v)}. Tap for the next card`);
+    if (t) celebratePull(areaId, p, t, v);
+    else if (p.card.rarity === 'mythic' || p.foil) floatValue(stack, p.card.rarity === 'mythic' ? '🌟 Mythic' : '✨ Foil');
+}
+function nextPackCard(areaId) {
+    const R = REVEALS[areaId];
+    if (!R || R.busy || $('spotlight')) return;
+    if (R.pos >= R.order.length) return;
+    const el = topEl(areaId);
+    const p = R.pack.cards[R.order[R.pos]];
+    const t = pullTier(p);
+    R.busy = true;
+    if (el) { el.classList.remove('top'); el.classList.add(R.pos % 2 ? 'fly-l' : 'fly-r'); }
+    const done = () => {
+        if (el) el.remove();
+        const thumb = document.createElement('button');
+        thumb.type = 'button';
+        if (t) thumb.className = `t-${t.key}`;
+        thumb.title = `${p.card.name} · ${usd(pullValue(p))}`;
+        thumb.innerHTML = p.card.imgS || p.card.img ? `<img src="${p.card.imgS || p.card.img}" alt="${esc(p.card.name)}">` : `<span class="noimg">${esc(p.card.name)}</span>`;
+        thumb.onclick = () => showCardSheet(p.card.id);
+        $(`pl-${areaId}`).appendChild(thumb);
+        R.pos++;
+        R.busy = false;
+        if (R.pos >= R.order.length) { $(`ps-${areaId}`).classList.add('hidden'); $(`si-${areaId}`).innerHTML = ''; $(`snext-${areaId}`).disabled = true; packSummary(areaId); }
+        showTopCard(areaId);
+        if (R.auto && R.pos < R.order.length) setTimeout(() => nextPackCard(areaId), pullTier(R.pack.cards[R.order[R.pos]]) ? 1600 : 260);
+    };
+    if (reducedMotion()) done(); else setTimeout(done, 380);
+}
+function revealAllPack(areaId) {
     const R = REVEALS[areaId];
     if (!R) return;
-    const p = R.pack.cards[i];
-    if (R.flipped.has(i)) { showCardSheet(p.card.id); return; }
-    R.flipped.add(i);
-    const btn = document.querySelectorAll(`#cc-${areaId} .fcard`)[i];
-    btn.classList.add('flipped');
-    btn.setAttribute('aria-label', `${p.card.name}: tap for details`);
-    if (isBigPull(p)) {
-        btn.classList.add('hit');
-        const value = p.copy ? copyValue(p.card, p.copy) : baseUsd(p.card, p.foil);
-        const what = p.copy && p.copy.s ? '🌈 SERIALIZED!' : p.card.rarity === 'mythic' ? (p.foil ? '🌟 FOIL MYTHIC!' : '🌟 MYTHIC!') : '✨ FOIL!';
-        const ann = $(`ann-${areaId}`);
-        ann.innerHTML = `<span class="ann-what">${what}</span><span class="ann-name">${esc(p.card.name)}</span><span class="ann-val">${usd(value)}</span>`;
-        ann.classList.remove('show'); void ann.offsetWidth; ann.classList.add('show');
-        clearTimeout(ann._t); ann._t = setTimeout(() => ann.classList.remove('show'), 2500);
-        const wrap = document.querySelector('.wrap');
-        wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
-        setTimeout(() => wrap.classList.remove('shake'), 600);
-    }
-    if (R.flipped.size === R.pack.cards.length) packSummary(areaId);
+    R.auto = true;
+    nextPackCard(areaId);
 }
-function flipAllPack(areaId) {
-    const R = REVEALS[areaId];
-    if (!R) return;
-    R.pack.cards.forEach((p, i) => { if (!R.flipped.has(i)) setTimeout(() => flipPackCard(areaId, i), 90 * i); });
+// ---- Celebrations, bigger with the price ----
+function floatValue(host, text) {
+    const f = document.createElement('span');
+    f.className = 'float-val';
+    f.textContent = text;
+    host.appendChild(f);
+    setTimeout(() => f.remove(), 1700);
 }
+function confettiBurst(n) {
+    if (reducedMotion()) return;
+    const box = document.createElement('div');
+    box.className = 'confetti';
+    const colors = ['var(--gold)', 'var(--mana-R)', 'var(--mana-U)', 'var(--mana-G)', 'var(--mana-W)', 'var(--mana-B)', 'var(--brand-light)', 'var(--mythic)'];
+    box.innerHTML = Array.from({ length: n }, () => `<i style="--x:${Math.random() * 100}vw; --c:${colors[rand(colors.length)]}; --r:${rand(360)}deg; --drift:${Math.round((Math.random() - 0.5) * 240)}px; --t:${(1.8 + Math.random() * 1.8).toFixed(2)}s; --d:${(Math.random() * 0.6).toFixed(2)}s; --w:${6 + rand(6)}px"></i>`).join('');
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 4600);
+}
+function shakePage() {
+    if (reducedMotion()) return;
+    const wrap = document.querySelector('.wrap');
+    if (!wrap) return;
+    wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+    setTimeout(() => wrap.classList.remove('shake'), 600);
+}
+// Count a price up from $0 (the plain value is set at the end, for copying and screen readers)
+function rollPrice(el, value, ms = 1800) {
+    if (!el) return;
+    if (reducedMotion()) { el.textContent = usd(value); return; }
+    const t0 = performance.now();
+    const step = now => {
+        const k = Math.min(1, (now - t0) / ms), eased = 1 - Math.pow(1 - k, 3);
+        el.textContent = usd(value * eased);
+        if (k < 1) requestAnimationFrame(step); else el.textContent = usd(value);
+    };
+    requestAnimationFrame(step);
+}
+function announce(areaId, what, name, value) {
+    const ann = $(`ann-${areaId}`);
+    if (!ann) return;
+    ann.innerHTML = `<span class="ann-what">${what}</span><span class="ann-name">${esc(name)}</span><span class="ann-val">${usd(value)}</span>`;
+    ann.classList.remove('show'); void ann.offsetWidth; ann.classList.add('show');
+    clearTimeout(ann._t); ann._t = setTimeout(() => ann.classList.remove('show'), 2500);
+    rollPrice(ann.querySelector('.ann-val'), value, 1200);
+}
+function celebratePull(areaId, p, t, v) {
+    const stack = $(`ps-${areaId}`);
+    if (t.key === 'nice') { floatValue(stack, `+${usd(v)}`); return; }
+    if (t.key === 'big') { announce(areaId, t.label, p.card.name, v); confettiBurst(24); return; }
+    if (t.key === 'huge') { announce(areaId, t.label, p.card.name, v); confettiBurst(70); shakePage(); return; }
+    spotlight({ title: p.copy && p.copy.s ? '🌈 SERIALIZED!' : t.label, card: p.card, value: v, sub: `${p.copy ? `${copyLabel(p.copy)} · ` : ''}one of the best pulls you can get` });
+}
+// Full-screen moment: jackpots and graded slabs
+function spotlight({ title, card, value, sub, slab }) {
+    closeSpotlight();
+    const el = document.createElement('div');
+    el.className = 'spotlight';
+    el.id = 'spotlight';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-label', title);
+    const pic = `<div class="sl-card">${card.img ? `<img src="${card.img}" alt="${esc(card.name)}">` : `<span class="noimg">${esc(card.name)}</span>`}</div>`;
+    el.innerHTML = `<div class="sl-rays" aria-hidden="true"></div><div class="sl-box">
+        <div class="sl-title">${title}</div>
+        ${slab ? `<div class="slab-case"><div class="slab-label"><span>${esc(card.name)}<br><small class="note">${esc(slab.word)}</small></span><span class="g">${slab.grade}</span></div>${pic}</div>` : pic}
+        <div class="sl-name">${esc(card.name)}</div>
+        <div class="sl-val" id="slVal">${usd(0)}</div>
+        ${sub ? `<div class="sl-sub">${sub}</div>` : ''}
+        <button class="btn primary" onclick="closeSpotlight()">${slab ? 'Nice!' : 'Keep it ✨'}</button></div>`;
+    el.onclick = e => { if (e.target === el) closeSpotlight(); };
+    document.body.appendChild(el);
+    el.querySelector('.btn').focus();
+    rollPrice($('slVal'), value, 2200);
+    confettiBurst(120);
+    setTimeout(() => confettiBurst(60), 900);
+    shakePage();
+}
+function closeSpotlight() {
+    const el = $('spotlight');
+    if (!el) return;
+    el.remove();
+    // A "reveal all" run carries on
+    Object.keys(REVEALS).forEach(a => { const R = REVEALS[a]; if (R.auto && !R.busy && R.pos < R.order.length) setTimeout(() => nextPackCard(a), 500); });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('spotlight')) closeSpotlight(); });
 function packSummary(areaId) {
     const cards = REVEALS[areaId].pack.cards;
-    const val = p => p.copy ? copyValue(p.card, p.copy) : baseUsd(p.card, p.foil);
-    const total = cards.reduce((a, p) => a + val(p), 0);
-    const best = cards.slice().sort((a, b) => val(b) - val(a))[0];
+    const total = cards.reduce((a, p) => a + pullValue(p), 0);
+    const best = cards.slice().sort((a, b) => pullValue(b) - pullValue(a))[0];
     const sum = $(`sum-${areaId}`);
-    sum.innerHTML = `${cards.length} cards added to your collection${best ? ` · best pull: <strong>${esc(best.card.name)}</strong> (${usd(val(best))})` : ''} · pack total about ${usd(total)} (Scryfall's TCGplayer prices × condition × today's market).`;
+    sum.innerHTML = `${cards.length} cards added to your collection${best ? ` · best pull: <strong>${esc(best.card.name)}</strong> (${usd(pullValue(best))})` : ''} · pack total about ${usd(total)} (Scryfall's TCGplayer prices × condition × today's market). Tap a card above for details.`;
     sum.classList.remove('hidden');
 }
 
