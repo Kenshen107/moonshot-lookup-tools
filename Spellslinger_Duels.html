@@ -5496,6 +5496,7 @@ async function renderShop() {
     if (missing.length) await cardsByIds(missing).catch(() => {});
     renderShopFloor();
     renderShopStock();
+    ensurePackEVs(profile.displayCase.filter(l => l.sealed).map(l => l.meta), () => { if (!$('view-shop').classList.contains('hidden')) renderShopFloor(); });
 }
 function renderShopFloor() {
     const T = profile.shopToday;
@@ -5578,18 +5579,89 @@ const WHOLESALE_PACK = 0.8;   // a loose pack costs 80%
 const POWER_SETS = ['lea', 'leb'];
 const EARLY_SETS = ['2ed', 'arn', 'atq', 'leg']; // Unlimited, Arabian Nights, Antiquities, Legends: power, duals and Reserved List cards
 const PACK_TIERS = [
-    { key: 'power', label: 'Alpha / Beta', mult: 500, coins: 50000, test: b => POWER_SETS.includes(b.code) },
-    { key: 'early', label: 'Unlimited era', mult: 150, coins: 15000, test: b => EARLY_SETS.includes(b.code) },
-    { key: 'vintage', label: 'Early vintage', mult: 50, coins: 4000, test: b => b.released < '2000-01-01' },
+    { key: 'power', label: 'Alpha / Beta', mult: 500, coins: 50000, premium: 25, test: b => POWER_SETS.includes(b.code) },
+    { key: 'early', label: 'Unlimited era', mult: 150, coins: 15000, premium: 12, test: b => EARLY_SETS.includes(b.code) },
+    { key: 'vintage', label: 'Early vintage', mult: 50, coins: 4000, premium: 4, test: b => b.released < '2000-01-01' },
     { key: 'collector', label: 'Collector', mult: 6, coins: 600, test: b => b.kind === 'collector' },
-    { key: 'classic', label: 'Classic (2000-2008)', mult: 3, coins: 300, test: b => b.released < '2009-01-01' },
+    { key: 'classic', label: 'Classic (2000-2008)', mult: 3, coins: 300, premium: 1.5, test: b => b.released < '2009-01-01' },
     { key: 'masters', label: 'Masters', mult: 3, coins: 300, test: b => b.type === 'masters' },
     { key: 'standard', label: 'Standard', mult: 1, coins: 100, test: () => true }
 ];
 const COIN_BOX_DISCOUNT = 0.2;
 const COLLECTOR_FROM = '2019-10-04';
 function packTier(b) { return PACK_TIERS.find(t => t.test(b)); }
-function packMarket(b) { return PACK_BASE_USD * packTier(b).mult; }
+// ---------------------------------------------------------------------
+// Cash pack prices (2026-10-06, owner's request: "what they are worth plus
+// normal TCG prices"). There's no free source for sealed pack prices, so a
+// pack is priced from its cards: each card's TCGplayer price (Scryfall),
+// weighted by MTGJSON's real pull odds and the game's condition odds, is the
+// pack's expected value; the shop price is that x PACK_EV_MARKUP x the
+// tier's sealed premium (old sealed packs sell far above their cards: about
+// 25x for Alpha/Beta, 12x Unlimited era, 4x other pre-2000, 1.5x 2000-2008).
+// Until a set's value is worked out, the tier price shows.
+// ---------------------------------------------------------------------
+const PACK_EV_MARKUP = 1.15;
+const PACK_EV_DAYS = 3;            // values are kept this long (duels:packev)
+const PACK_EV = store.get('packev', {}); // 'code|kind' -> { ev, at }
+function tierPrice(b) { return PACK_BASE_USD * packTier(b).mult; }
+function packEVKnown(b) { const e = PACK_EV[sealedKey(b)]; return e && Date.now() - e.at < PACK_EV_DAYS * 864e5 ? e.ev : null; }
+function packMarket(b) {
+    const ev = packEVKnown(b);
+    if (ev === null) return tierPrice(b);
+    return round2(Math.max(0.5, ev * PACK_EV_MARKUP * (packTier(b).premium || 1)));
+}
+const AVG_CONDITION = CONDITION_ODDS.reduce((a, [c, w]) => a + CONDITIONS[c].mult * w, 0) / CONDITION_ODDS.reduce((a, [, w]) => a + w, 0);
+// Prices only (not kept in the card cache, which would fill browser storage)
+async function sfPrices(ids) {
+    const out = new Map();
+    for (let i = 0; i < ids.length; i += 75) {
+        const res = await sfJSON(`${SF}/cards/collection`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: ids.slice(i, i + 75).map(id => ({ id })) }) });
+        ((res && res.data) || []).forEach(c => out.set(c.id, { usd: parseFloat(c.prices && c.prices.usd) || 0, foil: parseFloat(c.prices && (c.prices.usd_foil || c.prices.usd_etched)) || 0 }));
+    }
+    return out;
+}
+// Expected value of one pack: sum over layouts (by weight) of each slot's average card price
+const evPending = {};
+const EV_FAILED = new Set();
+function packEV(b) {
+    const k = sealedKey(b);
+    if (packEVKnown(b) !== null) return Promise.resolve(packEVKnown(b));
+    if (!evPending[k]) evPending[k] = (async () => {
+        const src = await packSource(b.code, b.kind);
+        const { booster, byUuid } = src;
+        const idOf = uuid => { const c = byUuid.get(uuid); return c && c.identifiers && c.identifiers.scryfallId && !(c.types || []).includes('Token') ? c.identifiers.scryfallId : null; };
+        const ids = new Set();
+        Object.values(booster.sheets).forEach(sh => Object.keys(sh.cards).forEach(u => { const id = idOf(u); if (id) ids.add(id); }));
+        const prices = await sfPrices([...ids]);
+        const sheetAvg = {};
+        Object.entries(booster.sheets).forEach(([name, sh]) => {
+            let tw = 0, tv = 0;
+            Object.entries(sh.cards).forEach(([u, w]) => { const pr = prices.get(idOf(u)) || { usd: 0, foil: 0 }; tw += w; tv += w * (sh.foil ? (pr.foil || pr.usd) : (pr.usd || pr.foil)); });
+            sheetAvg[name] = tw ? tv / tw : 0;
+        });
+        const W = booster.boosters.reduce((a, l) => a + l.weight, 0);
+        const ev = booster.boosters.reduce((a, l) => a + (l.weight / W) * Object.entries(l.contents).reduce((x, [sh, n]) => x + n * (sheetAvg[sh] || 0), 0), 0) * AVG_CONDITION;
+        PACK_EV[k] = { ev: round2(ev), at: Date.now() };
+        store.set('packev', PACK_EV);
+        return PACK_EV[k].ev;
+    })().finally(() => { delete evPending[k]; });
+    return evPending[k];
+}
+// Work out any missing values for these products, then call back once
+async function ensurePackEVs(list, then) {
+    const need = list.filter(b => b && packEVKnown(b) === null && !EV_FAILED.has(sealedKey(b)));
+    if (!need.length) return;
+    for (const b of need) {
+        try { await packEV(b); if (then) then(); }
+        catch (e) { EV_FAILED.add(sealedKey(b)); } // no pack data or Scryfall busy: the tier price stays until the next visit
+    }
+}
+function packPriceNote(b) {
+    const ev = packEVKnown(b);
+    if (ev === null) return 'tier price (cards being priced...)';
+    const prem = packTier(b).premium || 1;
+    return `cards inside ≈ ${usd(ev)} a pack (TCGplayer via Scryfall) × ${PACK_EV_MARKUP}${prem > 1 ? ` × ${prem} sealed ${packTier(b).label.toLowerCase()} premium` : ''}`;
+}
 function wholesaleDiscount() { return Math.min(CAMPAIGN_DISCOUNT_MAX, profile.campaignDiscount || 0); } // + set binder rewards (phase 4)
 const round2 = n => Math.round(n * 100) / 100;
 function boxPrice(b) { return round2(b.packs * packMarket(b) * WHOLESALE_BOX * (1 - wholesaleDiscount())); }
@@ -5711,7 +5783,7 @@ async function renderDist() {
             <div><span class="pos-k">Shop cash</span><strong class="${profile.usd < 0 ? 'neg' : ''}">💵 ${usd(profile.usd)}</strong></div>
             <div><span class="pos-k">Sealed packs</span><strong>📦 ${Object.values(profile.sealed).reduce((a, s) => a + s.n, 0)}</strong></div>
         </div>
-        <p class="note">Boxes and pack counts are real products from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>. Pack prices are game prices: $${PACK_BASE_USD} × the set's tier (${PACK_TIERS.slice().reverse().map(t => `${t.label} ×${t.mult}`).join(', ')}). Boxes cost ${Math.round(WHOLESALE_BOX * 100)}% of their packs' shop price, loose packs ${Math.round(WHOLESALE_PACK * 100)}%. New offers come each shop day.</p>`;
+        <p class="note">Boxes and pack counts are real products from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>. A pack's shop price is what its cards are worth on average (each card's TCGplayer price from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>, weighted by the set's real pull odds and card condition) × ${PACK_EV_MARKUP}, times a sealed premium for older packs (${PACK_TIERS.filter(t => t.premium).map(t => `${t.label} ×${t.premium}`).join(', ')}), since unopened old packs sell for far more than their cards. Card values are refreshed every ${PACK_EV_DAYS} days. Boxes cost ${Math.round(WHOLESALE_BOX * 100)}% of their packs' shop price, loose packs ${Math.round(WHOLESALE_PACK * 100)}%. New offers come each shop day.</p>`;
     renderStockroom();
     const box = $('distOffers');
     if (!profile.distStock || profile.distStock.day !== profile.shopDay) box.innerHTML = '<div class="loading">Calling the distributor...</div>';
@@ -5728,6 +5800,7 @@ async function renderDist() {
             <strong>${esc(o.name)}</strong>
             <div class="note">${esc(o.box || `${o.name} box`)} · ${o.packs} packs</div>
             <div class="note">Shop price ${usd(packMarket(o))} a pack</div>
+            <div class="note">${esc(packPriceNote(o))}</div>
             <div class="row">
                 <button class="btn gold small" onclick="buyBox(${i})" ${o.boxesLeft <= 0 || profile.usd < boxPrice(o) ? 'disabled' : ''}>Box ${usd(boxPrice(o))}</button>
                 <button class="btn small" onclick="buyLoosePack(${i})" ${profile.usd < loosePackPrice(o) ? 'disabled' : ''}>1 pack ${usd(loosePackPrice(o))}</button>
@@ -5735,11 +5808,13 @@ async function renderDist() {
             <div class="note">${o.boxesLeft > 0 ? `${o.boxesLeft} box${o.boxesLeft === 1 ? '' : 'es'} left today` : 'Boxes sold out today'}</div>
         </div>`;
     }).join('');
+    // Price anything not yet valued, then redraw once
+    ensurePackEVs([...profile.distStock.offers, ...Object.values(profile.sealed)], () => { if (!$('view-dist').classList.contains('hidden')) renderDist(); });
 }
 function renderStockroom() {
     const list = Object.entries(profile.sealed).sort((a, b) => packMarket(b[1]) - packMarket(a[1]));
     $('stockroom').innerHTML = list.length ? `<table class="pos-table"><thead><tr><th>Sealed</th><th>Packs</th><th>Shop price</th><th></th></tr></thead><tbody>${list.map(([k, s]) => `
-        <tr><td><strong>${esc(s.name)}</strong> <span class="note">${kindLabel(s)} · ${esc(packTier(s).label)}</span></td><td>${s.n}</td><td>${usd(packMarket(s))}</td>
+        <tr><td><strong>${esc(s.name)}</strong> <span class="note">${kindLabel(s)} · ${esc(packTier(s).label)}</span></td><td>${s.n}</td><td title="${esc(packPriceNote(s))}">${usd(packMarket(s))}</td>
         <td class="pos-actions"><button class="btn small primary" onclick="crackSealed('${k}')">✂️ Crack one</button>
         ${s.n > 1 ? `<button class="btn small gold" onclick="openWholeBox('${k}')" title="Open up to one box's worth and see the best hits">🎉 Open ${Math.min(s.n, coinBoxSize(s))}</button>` : ''}
         <button class="btn small" onclick="listSealed('${k}')" title="Sell it sealed at its shop price: customers who don't find a single they want often grab a pack (they pay up to 10% over the shop price)">＋ Case</button></td></tr>`).join('')}</tbody></table>`
