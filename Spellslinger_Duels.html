@@ -5601,7 +5601,7 @@ function showGameCard(uid) {
         actions = `<button class="btn primary" onclick="humanEquip(${uid})">Equip ${esc(r.equipText)}</button>`;
     }
     if (P.bf.includes(o) && manaSources(P).includes(o)) {
-        const mm = Rx(o).mana, cols = landColorsOf(o);
+        const mm = manaOf(o), cols = landColorsOf(o);
         actions += mm.fixed ? `<button class="btn" onclick="tapForMana(${uid})">💧 Tap for ${pipsHTML(cols.length === mm.n ? cols : Array(mm.n).fill(cols[0]))}</button>`
             : cols.map(c => `<button class="btn" onclick="tapForMana(${uid}, '${c}')">💧 Tap for ${pipsHTML(Array(mm.n).fill(c))}</button>`).join('');
     }
