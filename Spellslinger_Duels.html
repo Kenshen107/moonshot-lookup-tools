@@ -206,6 +206,30 @@
         .lane-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); }
         .midbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; padding: 6px 12px; background: color-mix(in srgb, var(--bg-canvas) 80%, transparent); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); }
         .phase { font-family: var(--font-display); font-weight: 700; color: var(--gold); }
+        #game .midbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; }
+        .mid-main { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+        .mid-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; }
+        .phase-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; list-style: none; margin: 0; padding: 0; font-size: 0.8em; }
+        .phase-strip li { padding: 2px 8px; border-radius: var(--radius-sm); color: var(--text-muted); background: color-mix(in srgb, var(--bg-panel) 60%, transparent); }
+        .phase-strip li.whose { max-width: 14em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-weight: 700; color: var(--text-heading); background: transparent; }
+        .phase-strip.mine li.now { background: var(--gold); color: var(--bg-canvas); font-weight: 700; }
+        .phase-strip.theirs li.now { background: var(--color-error); color: var(--bg-canvas); font-weight: 700; }
+        .hint { color: var(--text-soft); font-size: 0.9em; }
+        .prompt .need { font-family: var(--font-display); color: var(--gold); }
+        .turn-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 118px; min-height: 52px; padding: 6px 14px; border-radius: var(--radius-lg); border: 2px solid var(--border); background: var(--bg-panel-raised); color: var(--text-secondary); font: inherit; cursor: not-allowed; }
+        .turn-btn .tb-label { font-family: var(--font-display); font-weight: 700; font-size: 1.05em; }
+        .turn-btn .tb-sub { font-size: 0.72em; opacity: 0.85; }
+        .turn-btn.ready { cursor: pointer; border-color: var(--gold); background: color-mix(in srgb, var(--gold) 22%, var(--bg-panel-raised)); color: var(--text-heading); box-shadow: 0 0 14px color-mix(in srgb, var(--gold) 40%, transparent); }
+        .turn-btn.ready:hover { background: color-mix(in srgb, var(--gold) 35%, var(--bg-panel-raised)); }
+        .floating { display: inline-flex; gap: 3px; align-items: center; padding: 1px 8px; border-radius: var(--radius-sm); border: 1px solid var(--gold); font-size: 0.85em; }
+        @media (max-width: 700px) {
+            #game .midbar { padding: 4px 8px; gap: 4px 8px; }
+            .turn-btn { min-width: 86px; min-height: 44px; padding: 4px 8px; }
+            .phase-strip { font-size: 0.72em; }
+            .phase-strip li { padding: 1px 5px; }
+            .hint { display: none; }
+            .mm-word { display: none; }
+        }
         .prompt { color: var(--text-heading); font-weight: 600; }
         .perm { position: relative; width: var(--card-w); flex: none; border: 0; background: none; padding: 0; transition: transform 0.25s; border-radius: 6px; }
         .perm.land { width: var(--land-w); }
@@ -835,7 +859,8 @@
     <div class="dock">
         <div class="hand-wrap">
             <div class="hand-tools"><span class="lane-label" id="handCount">Hand</span>
-                <span class="seg" role="group" aria-label="Hand size"><button type="button" data-hs="s" onclick="setHandSize('s')">S</button><button type="button" data-hs="m" onclick="setHandSize('m')">M</button><button type="button" data-hs="l" onclick="setHandSize('l')">L</button></span></div>
+                <span class="seg" role="group" aria-label="Hand size"><button type="button" data-hs="s" onclick="setHandSize('s')">S</button><button type="button" data-hs="m" onclick="setHandSize('m')">M</button><button type="button" data-hs="l" onclick="setHandSize('l')">L</button></span>
+                <span class="seg" role="group" aria-label="Paying mana" title="Manual: you tap the lands you want when you pay. Auto: the game picks."><button type="button" data-mm="manual" onclick="setManaMode('manual')">🖐<span class="mm-word"> Tap lands</span></button><button type="button" data-mm="auto" onclick="setManaMode('auto')">⚡<span class="mm-word"> Auto-pay</span></button></span></div>
             <div class="hand" id="hand" aria-label="Your hand"></div>
         </div>
         <details class="logwrap" id="logWrap" open><summary class="lane-label">Game log</summary><div class="log" id="log" aria-live="polite"></div></details>
@@ -2963,11 +2988,11 @@ function landColorsOf(o) {
     return aura ? [Rx(aura).landBecomes] : Rx(o).mana.colors;
 }
 function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
-    const real = manaSources(P).filter(o => o !== exclude);
+    const real = opts.poolOnly ? [] : manaSources(P).filter(o => o !== exclude);
     const srcs = [
         ...(P.pool || []).filter(c => !c.includes(':') || (opts.forType && new RegExp(`\\b${c.split(':')[1]}\\b`).test(opts.forType))).map(c => ({ o: { pool: true, color: c }, colors: [c[0]], n: 1, rank: -2 })),
         ...real.filter(o => !Rx(o).mana.only || (opts.spellKind && Rx(o).mana.only.split(' or ').includes(opts.spellKind))).map(o => ({ o, colors: landColorsOf(o), n: Rx(o).mana.n, pain: Rx(o).mana.pain, rank: 0 })),
-        ...(opts.convoke ? P.bf.filter(c => isCreature(c) && !c.tapped && !real.includes(c)).map(c => ({ o: c, colors: (c.card.colors || []).filter(x => COLORS.includes(x)), n: 1, rank: 2 })) : [])
+        ...(opts.convoke && !opts.poolOnly ? P.bf.filter(c => isCreature(c) && !c.tapped && !real.includes(c)).map(c => ({ o: c, colors: (c.card.colors || []).filter(x => COLORS.includes(x)), n: 1, rank: 2 })) : [])
     ];
     const need = [];
     ['W', 'U', 'B', 'R', 'G', 'C'].forEach(c => { for (let i = 0; i < cost[c]; i++) need.push(c); });
@@ -3079,6 +3104,88 @@ function payFor(P, o) {
         log(`${P.name} ${P.i === 0 ? 'exile' : 'exiles'} ${gone.length} card${gone.length === 1 ? '' : 's'} from the graveyard (delve).`);
     }
     return true;
+}
+
+// ---- Tapping your own mana (owner's request, 2026-10-06) ----
+// Manual (the default): when you cast or activate, you tap the lands and
+// other mana sources you want; their mana goes to your mana pool and pays
+// the cost (rule 601.2g-h). "Auto-pay the rest" picks for you. Auto mode is
+// the old behavior. Mana you tap outside a payment floats until the step ends.
+let manaMode = store.get('manaMode', 'manual');
+function setManaMode(v) { manaMode = v; store.set('manaMode', v); applyManaMode(); renderGame(); }
+function applyManaMode() { document.querySelectorAll('.seg [data-mm]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mm === manaMode))); }
+const manual = P => !P.isAI && !AUTOPLAY && manaMode === 'manual';
+function poolCovers(P, cost, extra, opts) { return !!planPayment(P, cost, extra, null, { ...opts, poolOnly: true }); }
+// What the pool still lacks: colored symbols first, then generic
+function stillNeeded(P, cost, extra, opts = {}) {
+    const pool = (P.pool || []).filter(c => !c.includes(':') || (opts.forType && new RegExp(`\\b(?:${c.split(':')[1]})\\b`).test(opts.forType))).map(c => c[0]);
+    const out = { generic: 0, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+    ['W', 'U', 'B', 'R', 'G', 'C'].forEach(c => { for (let i = 0; i < (cost[c] || 0); i++) { const k = pool.indexOf(c); if (k >= 0) pool.splice(k, 1); else out[c]++; } });
+    out.generic = Math.max(0, (cost.generic || 0) + (extra || 0) - pool.length);
+    return out;
+}
+function costSymbols(c) {
+    const s = (c.generic ? `{${c.generic}}` : '') + ['W', 'U', 'B', 'R', 'G', 'C'].map(k => `{${k}}`.repeat(c[k] || 0)).join('');
+    return s || '{0}';
+}
+function pipsHTML(syms) { return syms.map(c => `<span class="pip ${c[0]}" title="${c[0]}"></span>`).join(''); }
+// Can this source help with what's still needed?
+function helpsPay(P, o) {
+    const m = G.mode;
+    if (!m || m.type !== 'pay' || o === m.exclude || !manaSources(P).includes(o)) return false;
+    const need = stillNeeded(P, m.cost, m.extra, m.opts);
+    return need.generic > 0 || landColorsOf(o).some(c => need[c] > 0);
+}
+// Tap one of your mana sources for one color (asks which, when it makes several)
+function tapForMana(uid, color) {
+    const P = me(), o = onBf(uid);
+    closeSheet();
+    if (!G || G.over || !o || o.owner !== 0 || !manaSources(P).includes(o)) return;
+    const m = Rx(o).mana, cols = landColorsOf(o);
+    if (!color && !m.fixed && cols.length > 1) { pickManaColor(o, cols); return; }
+    const pick = color || cols[0];
+    const added = m.fixed ? (cols.length === m.n ? cols.slice() : Array(m.n).fill(cols[0])) : Array(m.n).fill(pick);
+    const tag = m.only ? `:${m.only.split(' or ').map(w => w[0].toUpperCase() + w.slice(1)).join('|')}` : '';
+    const lifeBefore = P.life;
+    o._payColor = pick;
+    tapSource(P, o);
+    const pool = added.map(c => c + tag);
+    P.pool = (P.pool || []).concat(pool);
+    const pay = G.mode && G.mode.type === 'pay' ? G.mode : null;
+    if (pay) pay.taps.push({ o, pool, life: lifeBefore - P.life, sac: !onBf(o.uid) });
+    else log(`You tap ${o.card.name} for ${added.map(c => `{${c}}`).join('')} (it stays in your mana pool until the step ends).`);
+    if (pay && poolCovers(P, pay.cost, pay.extra, pay.opts)) { pay.done(true); return; }
+    renderGame();
+}
+function pickManaColor(o, cols) {
+    const NAMES = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', C: 'Colorless' };
+    const pay = G.mode && G.mode.type === 'pay' ? G.mode : null;
+    const need = pay ? stillNeeded(me(), pay.cost, pay.extra, pay.opts) : null;
+    showModal(`<h2>Tap ${esc(o.card.name)} for…</h2><div class="row" style="justify-content:center; gap:8px; flex-wrap:wrap;">${cols.map(c => `<button class="btn${need && need[c] ? ' primary' : ''}" onclick="closeModal(); tapForMana(${o.uid}, '${c}')"><span class="pip ${c}"></span> ${NAMES[c]}</button>`).join('')}</div>
+        ${need ? `<p class="note" style="text-align:center;">Still needed: ${esc(costSymbols(need))}</p>` : ''}<div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+}
+// Wait for the player to tap enough mana. Resolves true to go on (the
+// pool then pays first), false if they cancel (their taps are undone).
+function humanPay(P, cost, extra, opts, label) {
+    if (!manual(P) || poolCovers(P, cost, extra, opts)) return Promise.resolve(true);
+    if (!planPayment(P, cost, extra, opts.exclude || null, opts)) return Promise.resolve(true); // the payment step reports it
+    const prev = G.mode;
+    return new Promise(resolve => {
+        G.mode = { type: 'pay', cost, extra: extra || 0, opts, label, exclude: opts.exclude || null, taps: [], done: ok => { if (G.mode && G.mode.type === 'pay') G.mode = prev; renderGame(); resolve(ok); } };
+        renderGame();
+    });
+}
+function autoPayRest() { const m = G.mode; if (m && m.type === 'pay') m.done(true); }
+function cancelPay() {
+    const m = G.mode, P = me();
+    if (!m || m.type !== 'pay') return;
+    m.taps.forEach(t => {
+        if (t.sac) return; // a sacrificed source can't come back; its mana stays in your pool
+        t.pool.forEach(c => { const i = P.pool.indexOf(c); if (i >= 0) P.pool.splice(i, 1); });
+        if (onBf(t.o.uid)) t.o.tapped = false;
+        P.life += t.life;
+    });
+    m.done(false);
 }
 
 // ---- Timing ----
@@ -4283,6 +4390,7 @@ async function humanCast(uid) {
     const P = me();
     const o = findObj(uid);
     closeSheet();
+    if (G.mode && G.mode.type === 'pay') { toast('Finish paying first (or Cancel).'); return; }
     const responding = G.mode && G.mode.type === 'respond' ? G.mode : null;
     if (!o || G.busy && !(G.mode && (G.mode.type === 'block' || responding))) return;
     if (!canCastNow(P, o)) { toast(G.stack.length ? 'Only instants (and flash) while something is on the stack.' : 'You can\'t cast that right now.'); return; }
@@ -4313,6 +4421,12 @@ async function humanCast(uid) {
         if (!target) { renderGame(); return; }
         if (Rx(o).isAura && !target.o) { toast('Auras go on creatures.'); renderGame(); return; }
     }
+    // You tap the mana yourself (manual mode); the target counts for cost reductions
+    o._tgt = target;
+    const paid = await humanPay(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? (o.xVal || 0) : 0), payOpts(o), o.card.name);
+    o._tgt = null;
+    G.mode = savedMode;
+    if (!paid) { renderGame(); return; }
     if (responding) {
         // Our response goes on the stack; the stack loop carries on from there
         G.mode = null;
@@ -4362,6 +4476,7 @@ async function humanEquip(uid) {
     if (!planPayment(P, Rx(eq).equip)) { toast('Not enough mana to equip.'); return; }
     const t = await chooseTarget(P, { target: 'creature' }, eq, true);
     if (!t || !t.o || t.o.owner !== 0) { if (t) toast('Equip your own creature.'); renderGame(); return; }
+    if (!(await humanPay(P, Rx(eq).equip, 0, { forType: eq.card.type }, `Equip ${eq.card.name}`))) return;
     await equip(P, eq, t.o);
 }
 async function goToCombat() {
@@ -4423,9 +4538,13 @@ async function dealDamage() {
     G.busy = false;
     renderGame();
 }
-function endMyTurn() {
-    if (G.active !== 0 || G.busy || G.over) return;
-    if (G.phase === 'afterBlocks') { toast('Deal combat damage first.'); return; }
+// End turn works from any point of your turn where nothing is waiting on a
+// choice: it skips an attack you're setting up, or deals combat damage first.
+async function endMyTurn() {
+    if (!G || G.active !== 0 || G.over) return;
+    if (G.mode && G.mode.type === 'attack') { G.mode = null; G.phase = 'main1'; }
+    if (G.busy || G.mode) { toast(G.mode ? 'Finish what you\'re choosing first.' : 'Wait for the current action to finish.'); return; }
+    if (G.phase === 'afterBlocks') { await dealDamage(); if (G.over || G.active !== 0) return; }
     endTurn(me());
 }
 function concede() {
@@ -4448,6 +4567,11 @@ function permClick(uid) {
     if (!o) return;
     const m = G.mode;
     if (m && m.type === 'target') { pickTarget({ o }); return; }
+    if (m && m.type === 'pay') {
+        if (o.owner === 0 && o !== m.exclude && manaSources(me()).includes(o)) tapForMana(uid);
+        else toast(o.owner === 0 && o === m.exclude ? `${o.card.name} taps as part of this cost.` : 'Tap your untapped lands or other mana sources to pay.');
+        return;
+    }
     if (m && m.type === 'attack') {
         if (o.owner !== 0 || !canAttackWith(o)) { if (o.owner === 0) toast(`${o.card.name} can't attack now.`); return; }
         if (m.sel.has(uid)) m.sel.delete(uid); else m.sel.add(uid);
@@ -4492,6 +4616,11 @@ function showGameCard(uid) {
         }
     } else if (P.bf.includes(o) && r.isEquipment && r.equip !== null) {
         actions = `<button class="btn primary" onclick="humanEquip(${uid})">Equip ${esc(r.equipText)}</button>`;
+    }
+    if (P.bf.includes(o) && manaSources(P).includes(o)) {
+        const mm = Rx(o).mana, cols = landColorsOf(o);
+        actions += mm.fixed ? `<button class="btn" onclick="tapForMana(${uid})">💧 Tap for ${pipsHTML(cols.length === mm.n ? cols : Array(mm.n).fill(cols[0]))}</button>`
+            : cols.map(c => `<button class="btn" onclick="tapForMana(${uid}, '${c}')">💧 Tap for ${pipsHTML(Array(mm.n).fill(c))}</button>`).join('');
     }
     actions += abilityButtonsHTML(P, o);
     if (P.hand.includes(o) && o.front && o.front.back && ['modal_dfc', 'adventure', 'split'].includes(o.front.layout) && o.card === o.front) {
@@ -4997,6 +5126,7 @@ function permHTML(o, count = 1) {
     if (m && m.type === 'target') selectable = m.valid.some(v => v.o && v.o.uid === o.uid);
     if (m && m.type === 'attack') { selectable = o.owner === 0 && canAttackWith(o); if (m.sel.has(o.uid)) cls.push('attacking'); }
     if (m && m.type === 'block') selectable = (o.owner === 0 && isCreature(o) && !o.tapped) || (o.owner === 1 && G.attackers.includes(o.uid) && !!m.picked);
+    if (m && m.type === 'pay' && o.owner === 0) selectable = helpsPay(me(), o);
     if (selectable) cls.push('selectable');
     if (m && m.type === 'block' && m.picked === o.uid) cls.push('picked');
     const chips = [];
@@ -5060,6 +5190,10 @@ function permWrapHTML(o, count) {
 }
 
 function manaSummary(P) {
+    const floating = (P.pool || []).length ? `<span class="floating" title="Mana in your pool: it empties at the end of the step">Pool ${pipsHTML(P.pool.map(c => c[0]))}</span>` : '';
+    return manaSourcesSummary(P) + floating;
+}
+function manaSourcesSummary(P) {
     const srcs = manaSources(P);
     const counts = {};
     srcs.forEach(o => { const m = Rx(o).mana; const key = m.colors.length > 1 ? 'any' : m.colors[0]; counts[key] = (counts[key] || 0) + m.n; });
@@ -5100,14 +5234,50 @@ function stackClick(id) {
     showGameCard(it.o.uid);
 }
 
+// The mid bar: the phase strip, what you can do now, and the turn button,
+// which stays in the same spot on every phase and both players' turns.
 function midHTML() {
-    return stackHTML() + midControlsHTML();
+    return `<div class="mid-main">${phaseStripHTML()}${stackHTML()}<div class="mid-controls">${midControlsHTML()}</div></div>${turnButtonHTML()}`;
+}
+const PHASE_STEPS = [['Upkeep', ['beginning', 'upkeep']], ['Main 1', ['main1']], ['Combat', ['declareAttackers', 'declareBlocks', 'afterBlocks', 'combatDamage']], ['Main 2', ['main2']], ['End', ['end']]];
+function phaseStripHTML() {
+    if (G.over || G.phase === 'setup') return '';
+    return `<ol class="phase-strip ${G.active === 0 ? 'mine' : 'theirs'}" aria-label="Turn ${G.turn}: ${G.active === 0 ? 'your turn' : `${esc(foe().name)}'s turn`}">
+        <li class="whose">${G.active === 0 ? 'Your turn' : `${esc(foe().name)}'s turn`}</li>${PHASE_STEPS.map(([label, ids]) => `<li${ids.includes(G.phase) ? ' class="now" aria-current="step"' : ''}>${label}</li>`).join('')}</ol>`;
+}
+function turnButtonHTML() {
+    if (G.over) return '';
+    const m = G.mode;
+    let label = 'End turn', sub = '', dis = false, title = 'End your turn';
+    if (G.active !== 0) { label = 'Their turn'; sub = m && m.type === 'block' ? 'Block, then Done' : m && m.type === 'respond' ? 'Respond or let it resolve' : 'Opponent is playing'; dis = true; title = `${foe().name} is taking their turn`; }
+    else if (m && ['target', 'pay', 'block', 'respond'].includes(m.type)) { dis = true; sub = m.type === 'pay' ? 'Finish paying first' : 'Finish choosing first'; title = 'Finish or cancel what you are choosing first'; }
+    else if (G.busy) { dis = true; sub = 'Resolving…'; }
+    else if (m && m.type === 'attack') sub = 'Skips combat';
+    else if (G.phase === 'afterBlocks') sub = 'Deals damage first';
+    else if (G.phase === 'main1') sub = 'Skips combat';
+    return `<button type="button" id="turnBtn" class="turn-btn${dis ? '' : ' ready'}" ${dis ? 'disabled' : ''} onclick="endMyTurn()" title="${esc(title)}"><span class="tb-label">${label}${G.active === 0 ? ' ⏭' : ''}</span>${sub ? `<span class="tb-sub">${esc(sub)}</span>` : ''}</button>`;
+}
+// A short hint about what you can do right now
+function nextStepHint() {
+    const P = me();
+    if (G.active !== 0 || G.busy || G.mode || !MAIN.includes(G.phase)) return '';
+    const land = P.hand.some(o => canPlayLand(P, o));
+    const cast = [...P.hand, ...P.command].some(o => Rx(o).kind !== 'land' && canCastNow(P, o) && canPay(P, o));
+    if (land && cast) return 'Play a land, or tap a glowing card to cast it.';
+    if (land) return 'You can play a land this turn.';
+    if (cast) return 'Tap a glowing card in your hand to cast it.';
+    return G.phase === 'main1' && P.bf.some(canAttackWith) ? 'Nothing left to cast - go to combat or end your turn.' : '';
 }
 
 function midControlsHTML() {
     if (G.over) return `<span class="phase">Game over</span><button class="btn primary" onclick="leaveGame()">Leave the table</button>`;
     const m = G.mode;
-    const phase = `<span class="phase">${G.active === 0 ? 'Your turn' : `${esc(foe().name)}'s turn`} · ${PHASE_LABEL[G.phase] || G.phase}</span>`;
+    const phase = '';
+    if (m && m.type === 'pay') {
+        const P = me(), need = stillNeeded(P, m.cost, m.extra, m.opts);
+        const pool = (P.pool || []).map(c => c[0]);
+        return `<span class="prompt">💧 Pay for ${esc(m.label)}: tap your glowing lands. Still needed <strong class="need">${esc(costSymbols(need))}</strong>${pool.length ? ` · in pool ${pipsHTML(pool)}` : ''}</span><button class="btn primary" onclick="autoPayRest()" title="Let the game pick the sources for the rest">⚡ Auto-pay the rest</button><button class="btn" onclick="cancelPay()">Cancel</button>`;
+    }
     if (m && m.type === 'target') {
         return `${phase}<span class="prompt">🎯 Choose a target for ${esc(m.source.card.name)}</span>${m.cancelable ? '<button class="btn" onclick="cancelTarget()">Cancel</button>' : ''}`;
     }
@@ -5122,11 +5292,13 @@ function midControlsHTML() {
         return `${phase}<span class="prompt">🛡️ ${m.picked && onBf(m.picked) ? `Now tap the attacker ${esc(onBf(m.picked).card.name.split(',')[0])} should block` : 'Tap one of your creatures, then the attacker it blocks. You can cast instants now.'}</span><button class="btn primary" onclick="confirmBlocks()">✔ Done blocking</button>`;
     }
     if (G.active === 0 && !G.busy) {
-        if (G.phase === 'main1') return `${phase}<button class="btn primary" onclick="goToCombat()">⚔️ Go to combat</button><button class="btn" onclick="endMyTurn()">End turn ⏭</button>`;
-        if (G.phase === 'afterBlocks') return `${phase}<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary" onclick="dealDamage()">💥 Deal damage</button>`;
-        if (G.phase === 'main2') return `${phase}<button class="btn primary" onclick="endMyTurn()">End turn ⏭</button>`;
+        const hint = nextStepHint();
+        const hintHTML = hint ? `<span class="hint">${esc(hint)}</span>` : '';
+        if (G.phase === 'main1') return `${hintHTML}<button class="btn primary" onclick="goToCombat()">⚔️ Go to combat</button>`;
+        if (G.phase === 'afterBlocks') return `<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary" onclick="dealDamage()">💥 Deal damage</button>`;
+        if (G.phase === 'main2') return hintHTML || '<span class="hint">Second main phase: cast anything else, then end your turn.</span>';
     }
-    return `${phase}<span class="note">${G.active === 1 ? 'Thinking...' : ''}</span>`;
+    return `<span class="note">${G.active === 1 ? `${esc(foe().name)} is thinking…` : ''}</span>`;
 }
 
 function handHTML() {
@@ -5162,6 +5334,7 @@ function setHandSize(sz) {
     fitTable();
 }
 function applyHandSize() {
+    applyManaMode();
     $('game').dataset.hand = handSize;
     document.querySelectorAll('.seg [data-hs]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.hs === handSize)));
 }
@@ -5171,7 +5344,9 @@ function fitSide(side) {
     const H = side.clientHeight - 14;
     const phone = innerWidth < 700;
     // Back row: lands and other permanents, about a quarter of the side
-    side.style.setProperty('--land-w', `${Math.max(32, Math.min(70, Math.round(H * 0.27 * 63 / 88)))}px`);
+    // While you're paying, your lands grow so they're easy to tap
+    const paying = G && G.mode && G.mode.type === 'pay' && side.id === 'meSide';
+    side.style.setProperty('--land-w', `${Math.max(paying ? 44 : 32, Math.min(paying ? 84 : 70, Math.round(H * (paying ? 0.4 : 0.27) * 63 / 88)))}px`);
     if (!front) return;
     front.classList.remove('crowded');
     const items = [...front.children];
@@ -7655,6 +7830,7 @@ async function activate(P, o, a, presetTarget) {
     }
     if (a.loyalty !== undefined) { o.ctr.loyalty = (o.ctr.loyalty || 0) + a.loyalty; o.loyaltyTurn = G.turn; }
     else {
+        if (manual(P) && !(await humanPay(P, actCost(o, a), 0, { forType: o.card.type, exclude: a.cost && a.cost.tap ? o : null }, o.card.name))) { renderGame(); return false; }
         const plan = actPlan(P, o, a);
         if (!plan) return false;
         plan.forEach(s => tapSource(P, s));
@@ -7717,11 +7893,11 @@ async function landcycle(P, o) {
     renderGame();
     return true;
 }
-async function humanLandcycle(uid) { const o = findObj(uid); closeSheet(); if (o) { G.busy = true; await landcycle(me(), o); G.busy = false; renderGame(); } }
+async function humanLandcycle(uid) { const o = findObj(uid); closeSheet(); if (o && canLandcycle(me(), o) && await humanPay(me(), Rx(o).landcycle.cost, 0, {}, `${o.card.name} (landcycling)`)) { G.busy = true; await landcycle(me(), o); G.busy = false; renderGame(); } }
 async function humanCycle(uid) {
     const o = findObj(uid);
     closeSheet();
-    if (o) await cycle(me(), o);
+    if (o && canCycle(me(), o) && await humanPay(me(), Rx(o).cycling, 0, {}, `${o.card.name} (cycling)`)) await cycle(me(), o);
 }
 // Buttons for the card popup
 function abilityButtonsHTML(P, o) {
