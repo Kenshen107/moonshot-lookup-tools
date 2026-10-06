@@ -395,6 +395,11 @@
         .cust-offer { margin-bottom: 8px; }
         .cust-offer .offer { color: var(--color-success); }
         .counter-in, .ask-in { width: 82px; padding: 4px 6px !important; }
+        .box-result h3 { margin-bottom: 8px; }
+        .box-stats { margin-bottom: 8px; }
+        .box-stats .money { color: var(--color-success); }
+        .box-all { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 3px; max-height: 320px; overflow: auto; font-size: 0.9rem; }
+        .box-bought { padding: 10px 0; }
         .grade-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 0.9rem; }
         .grade-list li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
         .cust.seller { border-color: color-mix(in srgb, var(--color-link) 50%, var(--border)); }
@@ -665,9 +670,14 @@
                 <p class="note">Any Magic set that came in booster packs, from Alpha (1993) to today. Packs follow each set's real pack layouts and odds from MTGJSON. Coins are free and in-game only - there's nothing to buy with real money.</p>
                 <div class="row" style="margin-top:10px;">
                     <label for="packSet" class="note">Set</label>
-                    <select id="packSet"><option>Loading sets...</option></select>
-                    <button class="btn gold" id="buyPlay" onclick="buyPack('play')">Play booster · 🪙 100</button>
-                    <button class="btn gold" id="buyCollector" onclick="buyPack('collector')">Collector booster · 🪙 400</button>
+                    <select id="packSet" onchange="updatePackButtons()"><option>Loading sets...</option></select>
+                    <button class="btn gold" id="buyPlay" onclick="buyPack('play')">Play booster</button>
+                    <button class="btn gold" id="buyCollector" onclick="buyPack('collector')">Collector booster</button>
+                </div>
+                <div class="row" style="margin-top:8px;">
+                    <button class="btn" id="buyPlayBox" onclick="buyCoinBox('play')">📦 Play box</button>
+                    <button class="btn" id="buyCollectorBox" onclick="buyCoinBox('collector')">📦 Collector box</button>
+                    <span class="note" id="packTierNote"></span>
                 </div>
                 <div id="packArea"></div>
             </div>
@@ -857,7 +867,7 @@ const EDH = 'https://json.edhrec.com/pages';
 const COLORS = ['W', 'U', 'B', 'R', 'G'];
 const COLOR_NAMES = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green', C: 'colorless' };
 const BASIC_FOR = { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' };
-const PACK_PRICES = { play: 100, collector: 400 };
+// Coin prices come from PACK_TIERS (packCoins / boxCoins), by set and kind
 const REWARDS = { win: 150, winCommander: 200, loss: 40 };
 const START_COINS = 500;
 
@@ -1733,12 +1743,106 @@ async function renderPacksView() {
         sel.innerHTML = '<option value="">Couldn\'t load sets - open this tab again to retry</option>';
         return;
     }
+    updatePackButtons();
+    loadBoxCatalog().then(updatePackButtons).catch(() => {}); // real box sizes, when MTGJSON answers
+}
+// The selected set as a priced product: { code, kind, type, released, name }
+function packMetaFor(code, kind) {
+    const s = packSets.find(x => x.code === code);
+    return s ? { code, kind, type: s.set_type, released: s.released_at, name: s.name } : null;
+}
+function packCoins(meta) { return packTier(meta).coins; }
+function coinBoxSize(meta) {
+    const b = boxCatalog && boxCatalog.list && boxCatalog.list.find(x => x.code === meta.code && x.kind === meta.kind);
+    return b ? b.packs : (meta.kind === 'collector' ? 12 : 36);
+}
+function boxCoins(meta) { return Math.round(coinBoxSize(meta) * packCoins(meta) * (1 - COIN_BOX_DISCOUNT) / 10) * 10; }
+const coins = n => `🪙 ${n.toLocaleString()}`;
+function updatePackButtons() {
+    const play = packMetaFor($('packSet').value, 'play'), col = packMetaFor($('packSet').value, 'collector');
+    if (!play) return;
     const free = profile.freePacks > 0;
-    $('buyPlay').textContent = free ? `Play booster · 🎁 free (${profile.freePacks} left)` : `Play booster · 🪙 ${PACK_PRICES.play}`;
-    $('buyPlay').disabled = !free && profile.coins < PACK_PRICES.play;
-    $('buyCollector').disabled = profile.coins < PACK_PRICES.collector;
+    $('buyPlay').textContent = free ? `Play booster · 🎁 free (${profile.freePacks} left)` : `Play booster · ${coins(packCoins(play))}`;
+    $('buyPlay').disabled = !free && profile.coins < packCoins(play);
+    const noCol = col.released < COLLECTOR_FROM; // collector boosters began with Throne of Eldraine (2019)
+    $('buyCollector').textContent = noCol ? 'Collector booster · none for this set' : `Collector booster · ${coins(packCoins(col))}`;
+    $('buyCollector').disabled = noCol || profile.coins < packCoins(col);
+    $('buyPlayBox').textContent = `📦 Box of ${coinBoxSize(play)} · ${coins(boxCoins(play))}`;
+    $('buyPlayBox').disabled = profile.coins < boxCoins(play);
+    $('buyCollectorBox').textContent = noCol ? '📦 Collector box · none for this set' : `📦 Collector box of ${coinBoxSize(col)} · ${coins(boxCoins(col))}`;
+    $('buyCollectorBox').disabled = noCol || profile.coins < boxCoins(col);
+    const t = packTier(play);
+    $('packTierNote').textContent = `${t.label} pricing. Boxes are ${Math.round(COIN_BOX_DISCOUNT * 100)}% off their packs and go to your stockroom (📦 Distributor tab), or open them all right away. Not every set had collector boosters.`;
 }
 
+// Buy a box with coins: its packs go to the stockroom (shared with the shop), and you can open them all now
+async function buyCoinBox(kind) {
+    const meta = packMetaFor($('packSet').value, kind);
+    if (!meta) return;
+    const price = boxCoins(meta), n = coinBoxSize(meta);
+    if (profile.coins < price) { toast('Not enough coins - win games to earn more.'); return; }
+    const area = $('packArea');
+    area.innerHTML = '<div class="loading">Checking the box...</div>';
+    try { await packSource(meta.code, kind); } // make sure the set has this kind of pack before charging
+    catch (e) { area.innerHTML = `<p class="warn">${esc(e.message)}</p>`; return; }
+    profile.coins -= price;
+    addSealed(meta, n);
+    saveProfile();
+    renderCoins();
+    updatePackButtons();
+    area.innerHTML = `<div class="box-bought"><p><strong>📦 ${esc(meta.name)} ${kind === 'collector' ? 'collector ' : ''}box</strong>: ${n} packs for ${coins(price)}. They're in your stockroom (📦 Distributor tab).</p>
+        <div class="row"><button class="btn gold" onclick="openWholeBox('${sealedKey(meta)}', 'packArea')">🎉 Open the whole box</button><button class="btn" onclick="showView('dist')">Keep it sealed (go to the stockroom)</button></div></div>`;
+}
+// Open every pack in a box (up to one box's worth from the stockroom) and show the best hits
+async function openWholeBox(k, areaId = 'crackArea') {
+    const s = profile.sealed[k];
+    if (!s || !s.n) return;
+    const n = Math.min(s.n, coinBoxSize(s));
+    const area = $(areaId);
+    area.innerHTML = `<div class="loading">Opening ${n} packs of ${esc(s.name)}...</div>`;
+    area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    let packs;
+    try { packs = await drawPacks(s.code, s.kind, n); }
+    catch (e) { area.innerHTML = `<p class="warn">Couldn't open them: ${esc(e.message)} The packs are still sealed.</p>`; return; }
+    s.n -= n;
+    if (!s.n) delete profile.sealed[k];
+    const cards = packs.flatMap(p => p.cards);
+    cards.forEach(p => { p.copy = rollCopy(p.foil, packs[0].set.releaseDate); addCopy(p.id, p.copy); });
+    profile.packs += n;
+    saveProfile();
+    if ($('stockroom')) renderStockroom();
+    if (areaId === 'packArea') updatePackButtons();
+    renderBoxResult(packs, cards, s, areaId);
+}
+function renderBoxResult(packs, cards, s, areaId) {
+    const total = cards.reduce((a, p) => a + pullValue(p), 0);
+    const byVal = cards.slice().sort((a, b) => pullValue(b) - pullValue(a));
+    // The hits: everything worth $2+ (or serialized), at least the best 5, at most 24
+    let hits = byVal.filter(p => pullTier(p));
+    if (hits.length < 5) hits = byVal.slice(0, 5);
+    hits = hits.slice(0, 24);
+    const count = f => cards.filter(f).length;
+    const packVals = packs.map(p => p.cards.reduce((a, c) => a + pullValue(c), 0));
+    const best = packVals.indexOf(Math.max(...packVals));
+    const id = `${areaId}-hits`;
+    $(areaId).innerHTML = `<div class="box-result">
+        <h3>🎉 ${packs.length} packs of ${esc(s.name)} opened</h3>
+        <div class="pos-stats box-stats">
+            <div><span class="pos-k">Cards</span><strong>${cards.length}</strong></div>
+            <div><span class="pos-k">Box value</span><strong class="money">${usd(total)}</strong></div>
+            <div><span class="pos-k">Mythics · rares</span><strong>${count(p => p.card.rarity === 'mythic')} · ${count(p => p.card.rarity === 'rare')}</strong></div>
+            <div><span class="pos-k">Foils</span><strong>${count(p => p.foil)}</strong></div>
+            <div><span class="pos-k">Hits ($2+)</span><strong>${count(p => pullTier(p))}</strong></div>
+            <div><span class="pos-k">Best pack</span><strong>#${best + 1} · ${usd(packVals[best])}</strong></div>
+        </div>
+        <p class="note">Prices: Scryfall's TCGplayer price × condition × today's market. Every card is in your collection. Below: the ${hits.length} best hits, cheapest first, as a stack - tap to send each one flying.</p>
+        <div id="${id}"></div>
+        <details class="note" style="margin-top:10px;"><summary>All ${cards.length} cards, most valuable first</summary>
+            <ul class="box-all">${byVal.map(p => `<li><button class="linkish" onclick="showCardSheet('${p.card.id}')">${esc(p.card.name)}</button> ${p.copy ? condBadge(p.copy) : ''} <span class="note">${p.card.rarity}${p.foil ? ' · foil' : ''}</span> <strong>${usd(pullValue(p))}</strong></li>`).join('')}</ul>
+        </details>
+    </div>`;
+    renderPackReveal({ isHits: true, name: `The ${hits.length} best hits`, set: { code: packs[0].set.code, name: `${s.name}: best of ${packs.length} packs` }, cards: hits }, id);
+}
 function pickWeighted(entries) {
     const total = entries.reduce((a, [, w]) => a + w, 0);
     let x = Math.random() * total;
@@ -1746,7 +1850,8 @@ function pickWeighted(entries) {
     return i < 0 ? entries.length - 1 : i;
 }
 
-async function drawPack(code, kind) {
+// One pack's card picks (Scryfall ids + foil) from a set's MTGJSON booster data
+async function packSource(code, kind) {
     const setData = await mtgjsonSet(code);
     const boosters = setData.booster || {};
     const key = kind === 'collector' ? (boosters.collector ? 'collector' : null)
@@ -1756,6 +1861,10 @@ async function drawPack(code, kind) {
     const sources = [setData, ...await Promise.all((booster.sourceSetCodes || []).filter(c => c !== setData.code).map(c => mtgjsonSet(c).catch(() => null)))];
     const byUuid = new Map();
     sources.filter(Boolean).forEach(src => [...(src.cards || []), ...(src.tokens || [])].forEach(c => byUuid.set(c.uuid, c)));
+    return { setData, booster, byUuid };
+}
+function rollPicks(src) {
+    const { booster, byUuid } = src;
     const cfg = booster.boosters[pickWeighted(booster.boosters.map(b => [b, b.weight]))];
     const picks = [];
     Object.entries(cfg.contents).forEach(([sheetName, count]) => {
@@ -1769,23 +1878,36 @@ async function drawPack(code, kind) {
             if (id && !(c.types || []).includes('Token') && c.layout !== 'token' && c.layout !== 'art_series') picks.push({ id, foil: !!sheet.foil });
         }
     });
-    const cards = await cardsByIds(picks.map(p => p.id));
-    const byId = new Map(cards.map(c => [c.id, c]));
-    const order = { common: 0, uncommon: 1, rare: 2, mythic: 3, special: 2, bonus: 3 };
-    return { name: booster.name || `${setData.name} booster`, set: setData,
+    return picks;
+}
+const RARITY_ORDER = { common: 0, uncommon: 1, rare: 2, mythic: 3, special: 2, bonus: 3 };
+function buildPack(src, picks, byId) {
+    return { name: src.booster.name || `${src.setData.name} booster`, set: src.setData,
         cards: picks.map(p => ({ ...p, card: byId.get(p.id) })).filter(p => p.card)
-            .sort((a, b) => (a.foil - b.foil) || ((isBasic(a.card) ? -1 : order[a.card.rarity] ?? 1) - (isBasic(b.card) ? -1 : order[b.card.rarity] ?? 1))) };
+            .sort((a, b) => (a.foil - b.foil) || ((isBasic(a.card) ? -1 : RARITY_ORDER[a.card.rarity] ?? 1) - (isBasic(b.card) ? -1 : RARITY_ORDER[b.card.rarity] ?? 1))) };
+}
+async function drawPack(code, kind) { return (await drawPacks(code, kind, 1))[0]; }
+// Several packs at once: the cards are fetched in one go (75 per Scryfall request)
+async function drawPacks(code, kind, n) {
+    const src = await packSource(code, kind);
+    const all = Array.from({ length: n }, () => rollPicks(src));
+    const cards = await cardsByIds([...new Set(all.flat().map(p => p.id))]);
+    const byId = new Map(cards.map(c => [c.id, c]));
+    return all.map(picks => buildPack(src, picks, byId));
 }
 
 async function buyPack(kind) {
     const code = $('packSet').value;
     const free = kind === 'play' && profile.freePacks > 0;
-    const price = free ? 0 : PACK_PRICES[kind];
+    const meta = packMetaFor(code, kind);
+    if (!meta) return;
+    const price = free ? 0 : packCoins(meta);
     if (profile.coins < price) { toast('Not enough coins - win a game to earn more.'); return; }
     const area = $('packArea');
     area.innerHTML = '<div class="loading">Shuffling the sheets...</div>';
     $('buyPlay').disabled = $('buyCollector').disabled = true;
     try {
+        if (free && packTier(meta).coins > 100) throw new Error('Free packs are for sets at standard prices - pick a newer set.');
         const pack = await drawPack(code, kind);
         if (free) profile.freePacks--; else profile.coins -= price;
         profile.packs++;
@@ -5374,6 +5496,7 @@ async function renderShop() {
     if (missing.length) await cardsByIds(missing).catch(() => {});
     renderShopFloor();
     renderShopStock();
+    ensurePackEVs(profile.displayCase.filter(l => l.sealed).map(l => l.meta), () => { if (!$('view-shop').classList.contains('hidden')) renderShopFloor(); });
 }
 function renderShopFloor() {
     const T = profile.shopToday;
@@ -5450,15 +5573,95 @@ function renderShopStock() {
 const PACK_BASE_USD = 4;
 const WHOLESALE_BOX = 0.65;   // a box costs 65% of its packs' shop price
 const WHOLESALE_PACK = 0.8;   // a loose pack costs 80%
+// One table prices packs in shop cash (mult x $4) and in coins (2026-10-06,
+// owner's request: 100 coins for an Alpha pack was "busted"). The older and
+// rarer the pack, the more it costs; a box is 20% off its packs in coins.
+const POWER_SETS = ['lea', 'leb'];
+const EARLY_SETS = ['2ed', 'arn', 'atq', 'leg']; // Unlimited, Arabian Nights, Antiquities, Legends: power, duals and Reserved List cards
 const PACK_TIERS = [
-    { key: 'power', label: 'Alpha / Beta', mult: 500, test: b => ['lea', 'leb'].includes(b.code) },
-    { key: 'vintage', label: 'Early vintage', mult: 50, test: b => b.released < '2000-01-01' },
-    { key: 'collector', label: 'Collector', mult: 6, test: b => b.kind === 'collector' },
-    { key: 'masters', label: 'Masters', mult: 3, test: b => b.type === 'masters' },
-    { key: 'standard', label: 'Standard', mult: 1, test: () => true }
+    { key: 'power', label: 'Alpha / Beta', mult: 500, coins: 50000, premium: 25, test: b => POWER_SETS.includes(b.code) },
+    { key: 'early', label: 'Unlimited era', mult: 150, coins: 15000, premium: 12, test: b => EARLY_SETS.includes(b.code) },
+    { key: 'vintage', label: 'Early vintage', mult: 50, coins: 4000, premium: 4, test: b => b.released < '2000-01-01' },
+    { key: 'collector', label: 'Collector', mult: 6, coins: 600, test: b => b.kind === 'collector' },
+    { key: 'classic', label: 'Classic (2000-2008)', mult: 3, coins: 300, premium: 1.5, test: b => b.released < '2009-01-01' },
+    { key: 'masters', label: 'Masters', mult: 3, coins: 300, test: b => b.type === 'masters' },
+    { key: 'standard', label: 'Standard', mult: 1, coins: 100, test: () => true }
 ];
+const COIN_BOX_DISCOUNT = 0.2;
+const COLLECTOR_FROM = '2019-10-04';
 function packTier(b) { return PACK_TIERS.find(t => t.test(b)); }
-function packMarket(b) { return PACK_BASE_USD * packTier(b).mult; }
+// ---------------------------------------------------------------------
+// Cash pack prices (2026-10-06, owner's request: "what they are worth plus
+// normal TCG prices"). There's no free source for sealed pack prices, so a
+// pack is priced from its cards: each card's TCGplayer price (Scryfall),
+// weighted by MTGJSON's real pull odds and the game's condition odds, is the
+// pack's expected value; the shop price is that x PACK_EV_MARKUP x the
+// tier's sealed premium (old sealed packs sell far above their cards: about
+// 25x for Alpha/Beta, 12x Unlimited era, 4x other pre-2000, 1.5x 2000-2008).
+// Until a set's value is worked out, the tier price shows.
+// ---------------------------------------------------------------------
+const PACK_EV_MARKUP = 1.15;
+const PACK_EV_DAYS = 3;            // values are kept this long (duels:packev)
+const PACK_EV = store.get('packev', {}); // 'code|kind' -> { ev, at }
+function tierPrice(b) { return PACK_BASE_USD * packTier(b).mult; }
+function packEVKnown(b) { const e = PACK_EV[sealedKey(b)]; return e && Date.now() - e.at < PACK_EV_DAYS * 864e5 ? e.ev : null; }
+function packMarket(b) {
+    const ev = packEVKnown(b);
+    if (ev === null) return tierPrice(b);
+    return round2(Math.max(0.5, ev * PACK_EV_MARKUP * (packTier(b).premium || 1)));
+}
+const AVG_CONDITION = CONDITION_ODDS.reduce((a, [c, w]) => a + CONDITIONS[c].mult * w, 0) / CONDITION_ODDS.reduce((a, [, w]) => a + w, 0);
+// Prices only (not kept in the card cache, which would fill browser storage)
+async function sfPrices(ids) {
+    const out = new Map();
+    for (let i = 0; i < ids.length; i += 75) {
+        const res = await sfJSON(`${SF}/cards/collection`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: ids.slice(i, i + 75).map(id => ({ id })) }) });
+        ((res && res.data) || []).forEach(c => out.set(c.id, { usd: parseFloat(c.prices && c.prices.usd) || 0, foil: parseFloat(c.prices && (c.prices.usd_foil || c.prices.usd_etched)) || 0 }));
+    }
+    return out;
+}
+// Expected value of one pack: sum over layouts (by weight) of each slot's average card price
+const evPending = {};
+const EV_FAILED = new Set();
+function packEV(b) {
+    const k = sealedKey(b);
+    if (packEVKnown(b) !== null) return Promise.resolve(packEVKnown(b));
+    if (!evPending[k]) evPending[k] = (async () => {
+        const src = await packSource(b.code, b.kind);
+        const { booster, byUuid } = src;
+        const idOf = uuid => { const c = byUuid.get(uuid); return c && c.identifiers && c.identifiers.scryfallId && !(c.types || []).includes('Token') ? c.identifiers.scryfallId : null; };
+        const ids = new Set();
+        Object.values(booster.sheets).forEach(sh => Object.keys(sh.cards).forEach(u => { const id = idOf(u); if (id) ids.add(id); }));
+        const prices = await sfPrices([...ids]);
+        const sheetAvg = {};
+        Object.entries(booster.sheets).forEach(([name, sh]) => {
+            let tw = 0, tv = 0;
+            Object.entries(sh.cards).forEach(([u, w]) => { const pr = prices.get(idOf(u)) || { usd: 0, foil: 0 }; tw += w; tv += w * (sh.foil ? (pr.foil || pr.usd) : (pr.usd || pr.foil)); });
+            sheetAvg[name] = tw ? tv / tw : 0;
+        });
+        const W = booster.boosters.reduce((a, l) => a + l.weight, 0);
+        const ev = booster.boosters.reduce((a, l) => a + (l.weight / W) * Object.entries(l.contents).reduce((x, [sh, n]) => x + n * (sheetAvg[sh] || 0), 0), 0) * AVG_CONDITION;
+        PACK_EV[k] = { ev: round2(ev), at: Date.now() };
+        store.set('packev', PACK_EV);
+        return PACK_EV[k].ev;
+    })().finally(() => { delete evPending[k]; });
+    return evPending[k];
+}
+// Work out any missing values for these products, then call back once
+async function ensurePackEVs(list, then) {
+    const need = list.filter(b => b && packEVKnown(b) === null && !EV_FAILED.has(sealedKey(b)));
+    if (!need.length) return;
+    for (const b of need) {
+        try { await packEV(b); if (then) then(); }
+        catch (e) { EV_FAILED.add(sealedKey(b)); } // no pack data or Scryfall busy: the tier price stays until the next visit
+    }
+}
+function packPriceNote(b) {
+    const ev = packEVKnown(b);
+    if (ev === null) return 'tier price (cards being priced...)';
+    const prem = packTier(b).premium || 1;
+    return `cards inside ≈ ${usd(ev)} a pack (TCGplayer via Scryfall) × ${PACK_EV_MARKUP}${prem > 1 ? ` × ${prem} sealed ${packTier(b).label.toLowerCase()} premium` : ''}`;
+}
 function wholesaleDiscount() { return Math.min(CAMPAIGN_DISCOUNT_MAX, profile.campaignDiscount || 0); } // + set binder rewards (phase 4)
 const round2 = n => Math.round(n * 100) / 100;
 function boxPrice(b) { return round2(b.packs * packMarket(b) * WHOLESALE_BOX * (1 - wholesaleDiscount())); }
@@ -5580,7 +5783,7 @@ async function renderDist() {
             <div><span class="pos-k">Shop cash</span><strong class="${profile.usd < 0 ? 'neg' : ''}">💵 ${usd(profile.usd)}</strong></div>
             <div><span class="pos-k">Sealed packs</span><strong>📦 ${Object.values(profile.sealed).reduce((a, s) => a + s.n, 0)}</strong></div>
         </div>
-        <p class="note">Boxes and pack counts are real products from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>. Pack prices are game prices: $${PACK_BASE_USD} × the set's tier (${PACK_TIERS.slice().reverse().map(t => `${t.label} ×${t.mult}`).join(', ')}). Boxes cost ${Math.round(WHOLESALE_BOX * 100)}% of their packs' shop price, loose packs ${Math.round(WHOLESALE_PACK * 100)}%. New offers come each shop day.</p>`;
+        <p class="note">Boxes and pack counts are real products from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>. A pack's shop price is what its cards are worth on average (each card's TCGplayer price from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>, weighted by the set's real pull odds and card condition) × ${PACK_EV_MARKUP}, times a sealed premium for older packs (${PACK_TIERS.filter(t => t.premium).map(t => `${t.label} ×${t.premium}`).join(', ')}), since unopened old packs sell for far more than their cards. Card values are refreshed every ${PACK_EV_DAYS} days. Boxes cost ${Math.round(WHOLESALE_BOX * 100)}% of their packs' shop price, loose packs ${Math.round(WHOLESALE_PACK * 100)}%. New offers come each shop day.</p>`;
     renderStockroom();
     const box = $('distOffers');
     if (!profile.distStock || profile.distStock.day !== profile.shopDay) box.innerHTML = '<div class="loading">Calling the distributor...</div>';
@@ -5597,6 +5800,7 @@ async function renderDist() {
             <strong>${esc(o.name)}</strong>
             <div class="note">${esc(o.box || `${o.name} box`)} · ${o.packs} packs</div>
             <div class="note">Shop price ${usd(packMarket(o))} a pack</div>
+            <div class="note">${esc(packPriceNote(o))}</div>
             <div class="row">
                 <button class="btn gold small" onclick="buyBox(${i})" ${o.boxesLeft <= 0 || profile.usd < boxPrice(o) ? 'disabled' : ''}>Box ${usd(boxPrice(o))}</button>
                 <button class="btn small" onclick="buyLoosePack(${i})" ${profile.usd < loosePackPrice(o) ? 'disabled' : ''}>1 pack ${usd(loosePackPrice(o))}</button>
@@ -5604,12 +5808,15 @@ async function renderDist() {
             <div class="note">${o.boxesLeft > 0 ? `${o.boxesLeft} box${o.boxesLeft === 1 ? '' : 'es'} left today` : 'Boxes sold out today'}</div>
         </div>`;
     }).join('');
+    // Price anything not yet valued, then redraw once
+    ensurePackEVs([...profile.distStock.offers, ...Object.values(profile.sealed)], () => { if (!$('view-dist').classList.contains('hidden')) renderDist(); });
 }
 function renderStockroom() {
     const list = Object.entries(profile.sealed).sort((a, b) => packMarket(b[1]) - packMarket(a[1]));
     $('stockroom').innerHTML = list.length ? `<table class="pos-table"><thead><tr><th>Sealed</th><th>Packs</th><th>Shop price</th><th></th></tr></thead><tbody>${list.map(([k, s]) => `
-        <tr><td><strong>${esc(s.name)}</strong> <span class="note">${kindLabel(s)} · ${esc(packTier(s).label)}</span></td><td>${s.n}</td><td>${usd(packMarket(s))}</td>
+        <tr><td><strong>${esc(s.name)}</strong> <span class="note">${kindLabel(s)} · ${esc(packTier(s).label)}</span></td><td>${s.n}</td><td title="${esc(packPriceNote(s))}">${usd(packMarket(s))}</td>
         <td class="pos-actions"><button class="btn small primary" onclick="crackSealed('${k}')">✂️ Crack one</button>
+        ${s.n > 1 ? `<button class="btn small gold" onclick="openWholeBox('${k}')" title="Open up to one box's worth and see the best hits">🎉 Open ${Math.min(s.n, coinBoxSize(s))}</button>` : ''}
         <button class="btn small" onclick="listSealed('${k}')" title="Sell it sealed at its shop price: customers who don't find a single they want often grab a pack (they pay up to 10% over the shop price)">＋ Case</button></td></tr>`).join('')}</tbody></table>`
         : '<p class="note">No sealed product yet. Order a box or a pack above.</p>';
 }
@@ -5818,6 +6025,7 @@ function packSummary(areaId) {
     const total = cards.reduce((a, p) => a + pullValue(p), 0);
     const best = cards.slice().sort((a, b) => pullValue(b) - pullValue(a))[0];
     const sum = $(`sum-${areaId}`);
+    if (REVEALS[areaId].pack.isHits) { sum.innerHTML = `That's the best of the box: ${cards.length} hits worth about ${usd(total)} together. Tap any card above for details.`; sum.classList.remove('hidden'); return; }
     sum.innerHTML = `${cards.length} cards added to your collection${best ? ` · best pull: <strong>${esc(best.card.name)}</strong> (${usd(pullValue(best))})` : ''} · pack total about ${usd(total)} (Scryfall's TCGplayer prices × condition × today's market). Tap a card above for details.`;
     sum.classList.remove('hidden');
 }
