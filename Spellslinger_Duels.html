@@ -36,6 +36,7 @@
             --color-error: #ff9b94;
             --gold: #e8c25a;
             --chart-bar: #2f93c2; /* mana curve; passes the dataviz lightness and 3:1 contrast checks on --bg-panel */
+            --chart-bar-2: #cc7a30; /* curve's instants & sorceries; the pair passes the dataviz validator (CVD ΔE 19.7) on --bg-panel */
             --mythic: #ff6a2a;
             --felt-1: #0f2a33;
             --felt-2: #0b1d24;
@@ -145,13 +146,108 @@
         .reveal.shown .meta { visibility: visible; }
 
         /* ---- Deck builder ---- */
-        .builder { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
-        @media (max-width: 900px) { .builder { grid-template-columns: minmax(0, 1fr); } }
-        .decklist { position: sticky; top: 10px; max-height: calc(100vh - 20px); overflow: auto; }
-        .dl-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--border-subtle); font-size: 0.9rem; }
-        .dl-row .n { width: 22px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-soft); }
-        .dl-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
-        .dl-row button { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-soft); border-radius: var(--radius-sm); width: 24px; height: 24px; line-height: 1; }
+        /* ---- Deck builder, laid out like Moxfield (2026-10-06) ---- */
+        .mx { display: flex; flex-direction: column; gap: 14px; }
+        .mx .panel + .panel { margin-top: 0; }
+        .mx-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; }
+        .mx-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+        .mx-title input { flex: 1 1 220px; min-width: 0; font-family: var(--font-display); font-size: 1.2em; font-weight: 700; }
+        .mx-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+        .mx-find { position: relative; grid-column: 1 / -1; }
+        .mx-find input { width: 100%; font-size: 1em; padding: 10px 12px; }
+        .mx-find-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px); background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: 0 10px 30px color-mix(in srgb, var(--bg-canvas) 70%, transparent); max-height: 60vh; overflow: auto; padding: 4px; }
+        .mx-find-row { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; color: var(--text-primary); padding: 7px 8px; border-radius: var(--radius-sm); text-align: left; }
+        .mx-find-row:hover, .mx-find-row.first { background: color-mix(in srgb, var(--brand) 25%, transparent); }
+        .mx-find-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .mx-find-row .mx-add { color: var(--brand-light); font-weight: 700; }
+        .mx-find-none { padding: 6px 8px; }
+        #mxAutoNote { grid-column: 1 / -1; }
+        .mx-main { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 14px; align-items: start; }
+        .mx-preview { position: sticky; top: 10px; }
+        .mx-preview img, .mx-preview .noimg { width: 100%; aspect-ratio: 63 / 88; border-radius: 4.75% / 3.5%; display: block; background: var(--bg-inset); object-fit: cover; }
+        .mx-preview .noimg { display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; border: 1px solid var(--border); }
+        .mx-pv-meta { margin-top: 8px; display: grid; gap: 3px; }
+        .mx-pv-price { font-family: var(--font-display); font-size: 1.1em; color: var(--gold); }
+        .mx-tools { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 10px; }
+        .mx-tools select { padding: 4px 8px; margin-left: 4px; }
+        .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+        .seg button { background: var(--bg-inset); border: 0; color: var(--text-soft); padding: 5px 12px; font-size: 0.85em; }
+        .seg button + button { border-left: 1px solid var(--border); }
+        .seg button[aria-pressed="true"] { background: var(--brand); color: var(--text-heading); }
+        .mx-probs { margin-bottom: 10px; font-size: 0.9em; }
+        .mx-probs ul { margin: 6px 0 0 20px; color: var(--text-soft); }
+        .mx-cols { columns: 3 230px; column-gap: 18px; }
+        .mx-cols.visual { columns: 5 140px; column-gap: 12px; }
+        .mx-group { break-inside: avoid; margin-bottom: 14px; }
+        .mx-group h3 { font-size: 0.95em; display: flex; align-items: baseline; gap: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); margin-bottom: 2px; }
+        .mx-gn { color: var(--text-secondary); font-weight: 400; }
+        .mx-gv { margin-left: auto; font-size: 0.85em; font-weight: 400; color: var(--text-secondary); font-family: var(--font-body); }
+        .mx-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; font-size: 0.9em; min-height: 28px; border-radius: var(--radius-sm); }
+        .mx-row:hover { background: color-mix(in srgb, var(--brand) 14%, transparent); }
+        .mx-row .n { width: 20px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-soft); flex: none; }
+        .mx-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: none; border: 0; color: var(--text-primary); text-align: left; padding: 0; }
+        .mx-row .nm:hover { color: var(--brand-light); }
+        .mx-q { display: none; gap: 2px; }
+        .mx-row:hover .mx-q, .mx-row:focus-within .mx-q { display: inline-flex; }
+        .mx-q button, .mx-menu { background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-soft); border-radius: var(--radius-sm); width: 24px; height: 24px; line-height: 1; padding: 0; flex: none; }
+        .mx-menu { border-color: transparent; background: none; }
+        .mx-row:hover .mx-menu { border-color: var(--border); }
+        .mx-token .note { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+        .mx-cost { display: inline-flex; gap: 1px; flex: none; }
+        .mx-cost .ms { width: 15px; height: 15px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-style: normal; font-size: 0.72em; font-weight: 700; color: var(--bg-canvas); background: var(--mana-C); }
+        .mx-cost .ms.W { background: var(--mana-W); } .mx-cost .ms.U { background: var(--mana-U); } .mx-cost .ms.B { background: var(--mana-B); }
+        .mx-cost .ms.R { background: var(--mana-R); } .mx-cost .ms.G { background: var(--mana-G); }
+        /* Visual: cards stacked so each name shows, the last one whole */
+        .mx-stack { display: flex; flex-direction: column; padding-top: 4px; }
+        .mx-vc { position: relative; padding: 0; border: 0; background: none; width: 100%; display: block; transition: transform 0.15s ease; }
+        .mx-vc + .mx-vc { margin-top: -118%; }
+        .mx-vc img, .mx-vc .noimg { width: 100%; aspect-ratio: 63 / 88; border-radius: 4.75% / 3.5%; display: block; object-fit: cover; background: var(--bg-inset); box-shadow: 0 -2px 6px color-mix(in srgb, var(--bg-canvas) 60%, transparent); }
+        .mx-vc .noimg { display: flex; align-items: flex-start; justify-content: center; padding: 8px; font-size: 0.8em; border: 1px solid var(--border); }
+        .mx-vc:hover { transform: translateY(-6px); z-index: 2; }
+        .mx-vq { position: absolute; top: 6%; right: 6%; background: var(--bg-canvas); color: var(--gold); border: 1px solid var(--gold); border-radius: 999px; padding: 0 7px; font-size: 0.8em; font-weight: 700; }
+        .mx-vs { position: absolute; top: 6%; left: 6%; background: var(--bg-canvas); }
+        /* Stats */
+        .mx-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        .mx-stat h3 { font-size: 1em; margin-bottom: 8px; }
+        .mx-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 4px 0; }
+        .mx-legend .lg { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+        .lg.cv1 { background: var(--chart-bar); } .lg.cv2 { background: var(--chart-bar-2); }
+        .cv-bar2 { fill: var(--chart-bar-2); }
+        .cv-hit { fill: transparent; cursor: pointer; }
+        .cv-col { outline: none; }
+        .cv-col:hover .cv-bar, .cv-col:hover .cv-bar2, .cv-col:focus-visible .cv-bar, .cv-col:focus-visible .cv-bar2 { filter: brightness(1.2); }
+        .cv-col.sel .cv-hit { fill: color-mix(in srgb, var(--brand) 18%, transparent); }
+        .mx-curve-pick { margin-top: 8px; border-top: 1px solid var(--border-subtle); padding-top: 6px; }
+        .mx-color { margin-bottom: 10px; }
+        .mx-cl { font-weight: 600; margin-bottom: 3px; }
+        .mx-cbar { display: grid; grid-template-columns: 62px minmax(0, 1fr) 40px; gap: 8px; align-items: center; font-size: 0.85em; color: var(--text-soft); }
+        .mx-cbar .track { height: 8px; background: var(--bg-inset); border-radius: 999px; overflow: hidden; }
+        .mx-cbar .track i { display: block; height: 100%; border-radius: 999px; }
+        .mx-cbar .v { text-align: right; font-variant-numeric: tabular-nums; }
+        .m-W { background: var(--mana-W); } .m-U { background: var(--mana-U); } .m-B { background: var(--mana-B); } .m-R { background: var(--mana-R); } .m-G { background: var(--mana-G); }
+        .mx-hand { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 4px; }
+        .mx-hand .th-card { width: auto; }
+        /* The bar along the bottom */
+        .mx-bar { position: sticky; bottom: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 10px 14px; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; box-shadow: 0 -6px 18px color-mix(in srgb, var(--bg-canvas) 60%, transparent); }
+        .mx-price { font-family: var(--font-display); color: var(--gold); font-weight: 700; }
+        .mx-kinds { flex: 1 1 200px; }
+        .mx-bar-end { display: inline-flex; gap: 10px; align-items: center; margin-left: auto; }
+        #bulkText { width: 100%; background: var(--bg-inset); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; font: 0.9em/1.4 ui-monospace, Consolas, monospace; }
+        @media (max-width: 1000px) { .mx-stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .mx-main { grid-template-columns: 190px minmax(0, 1fr); } }
+        @media (max-width: 700px) {
+            .mx-head { grid-template-columns: minmax(0, 1fr); }
+            .mx-actions { justify-content: flex-start; }
+            .mx-main { grid-template-columns: minmax(0, 1fr); }
+            .mx-preview { display: none; }
+            .mx-stats { grid-template-columns: minmax(0, 1fr); }
+            .mx-cols.visual { columns: 3 96px; column-gap: 8px; }
+            .mx-q { display: inline-flex; }
+            .mx-row { min-height: 36px; }
+            .mx-q button, .mx-menu { width: 30px; height: 30px; }
+            .mx-bar { gap: 4px 10px; padding: 8px 10px; font-size: 0.9em; }
+            .mx-kinds { display: none; }
+        }
+        @media (max-width: 600px) { .mx-bar { bottom: calc(55px + env(safe-area-inset-bottom)); } }
         .warn { color: var(--color-warning); font-size: 0.85rem; }
         .ok { color: var(--color-success); font-size: 0.85rem; }
         .curve { display: flex; align-items: flex-end; gap: 4px; height: 60px; margin: 8px 0 2px; }
@@ -779,32 +875,31 @@
         <!-- ============ COLLECTION & DECKS ============ -->
         <section id="view-decks" class="hidden">
             <div class="panel" id="deckPicker"></div>
-            <div class="builder hidden" id="builder">
-                <div class="panel">
+            <div class="builder mx hidden" id="builder">
+                <div class="panel mx-head" id="mxHead"></div>
+                <div class="mx-main">
+                    <aside class="mx-preview" id="mxPreview" aria-label="Card preview"></aside>
+                    <div class="panel mx-deck" id="deckPanel"></div>
+                </div>
+                <div class="mx-stats" id="mxStats"></div>
+                <div class="panel" id="mxBrowse">
+                    <h2>Browse your collection</h2>
                     <div class="filters">
                         <input type="search" id="fName" placeholder="Search your collection" oninput="renderCollection()" aria-label="Search your collection">
                         <select id="fColor" onchange="renderCollection()" aria-label="Color">
                             <option value="">Any color</option><option value="W">White</option><option value="U">Blue</option><option value="B">Black</option><option value="R">Red</option><option value="G">Green</option><option value="C">Colorless</option><option value="M">Multicolor</option>
                         </select>
                         <select id="fType" onchange="renderCollection()" aria-label="Type">
-                            <option value="">Any type</option><option>Creature</option><option>Instant</option><option>Sorcery</option><option>Artifact</option><option>Enchantment</option><option>Land</option>
+                            <option value="">Any type</option><option>Creature</option><option>Instant</option><option>Sorcery</option><option>Artifact</option><option>Enchantment</option><option>Planeswalker</option><option>Land</option>
                         </select>
-                        <select id="fSupport" onchange="renderCollection()" aria-label="Automation">
-                            <option value="">Any automation</option><option value="full">Automated</option><option value="partial">Partly</option><option value="none">Not yet</option>
+                        <select id="fSupport" onchange="setAutoFilter(this.value)" aria-label="Automation">
+                            <option value="full" selected>Automated only</option><option value="">Any automation</option><option value="partial">Partly</option><option value="none">Not yet</option>
                         </select>
                         <label class="note"><input type="checkbox" id="fLegal" checked onchange="renderCollection()"> Only cards this deck can use</label>
                     </div>
-                    <div class="row" style="margin-bottom:10px;">
-                        <span class="note">Free basic lands:</span>
-                        <button class="btn small" onclick="addBasic('W')"><span class="pip W"></span> Plains</button>
-                        <button class="btn small" onclick="addBasic('U')"><span class="pip U"></span> Island</button>
-                        <button class="btn small" onclick="addBasic('B')"><span class="pip B"></span> Swamp</button>
-                        <button class="btn small" onclick="addBasic('R')"><span class="pip R"></span> Mountain</button>
-                        <button class="btn small" onclick="addBasic('G')"><span class="pip G"></span> Forest</button>
-                    </div>
                     <div class="cards" id="collectionGrid"></div>
                 </div>
-                <div class="panel decklist" id="deckPanel"></div>
+                <div class="mx-bar" id="mxBar"></div>
             </div>
         </section>
 
@@ -1004,6 +1099,9 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rand = n => Math.floor(Math.random() * n);
+// Takes x out of the list (an empty list back if it isn't there; splice(-1) would
+// remove the last item instead - audit, 2026-10-06)
+function pull(a, x) { const i = a.indexOf(x); return i >= 0 ? a.splice(i, 1) : []; }
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function todayISO() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 
@@ -1033,7 +1131,23 @@ if (!accounts) {
     store.set('accounts', accounts);
 }
 let profile = store.get('profile:' + accounts.current, null);
-function saveProfile() { store.set('profile:' + accounts.current, profile); renderCoins(); }
+// The card cache shares browser storage with every player's profile. If a
+// save doesn't fit, the cache is cut to the cards this player uses and the
+// save is tried again; if it still fails, the player is told (audit, 2026-10-06).
+function saveProfile() {
+    if (!store.set('profile:' + accounts.current, profile)) {
+        trimCardCache();
+        if (!store.set('profile:' + accounts.current, profile)) toast('⚠ Browser storage is full: your progress couldn\'t be saved.');
+    }
+    renderCoins();
+}
+function trimCardCache() {
+    const keep = new Set(Object.keys(profile.collection));
+    profile.decks.forEach(d => { Object.keys(d.cards).forEach(id => keep.add(id)); if (d.commander) keep.add(d.commander); });
+    try { Object.values(BASIC_IDS).forEach(id => keep.add(id)); } catch (e) { /* not loaded yet */ }
+    try { localStorage.removeItem('duels:cards'); } catch (e) { /* fine */ }
+    store.set('cards', Object.fromEntries([...CARDS].filter(([id]) => keep.has(id))));
+}
 // Phones: one sheet for the rest of the tabs, one for the player and test buttons
 const isPhone = () => window.matchMedia('(max-width: 600px)').matches;
 function menuSheet(title, inner) { $('sheetHost').innerHTML = `<div class="sheet-bg" onclick="if (event.target === this) closeSheet()"><div class="sheet one" role="dialog" aria-label="${esc(title)}"><div><h3>${esc(title)}</h3>${inner}<div class="actions"><button class="btn" onclick="closeSheet()">Close</button></div></div></div></div>`; }
@@ -1125,12 +1239,8 @@ function persistCards() {
     if (!cardsDirty) return;
     cardsDirty = false;
     const obj = Object.fromEntries(CARDS);
-    if (!store.set('cards', obj)) {
-        // Browser storage full: keep the cards the collection and decks use
-        const keep = new Set(Object.keys(profile.collection));
-        profile.decks.forEach(d => Object.keys(d.cards).forEach(id => keep.add(id)));
-        store.set('cards', Object.fromEntries([...CARDS].filter(([id]) => keep.has(id))));
-    }
+    // Browser storage full: keep the cards the collection and decks use
+    if (!store.set('cards', obj)) trimCardCache();
 }
 
 // The mana value of one face's cost ("{2}{R}" -> 3)
@@ -1291,6 +1401,8 @@ function parseManaProduce(s) {
 const EFFECTS = [
     // ---- Landfall (2026-10-06) ----
     [/^(?:you may )?return ~ from your graveyard to the battlefield(?: tapped)?$/, m => ({ t: 'returnSelfGy', bf: true, tapped: /tapped/.test(m[0]) })],
+    // Krenko, Mob Boss: "create X 1/1 red Goblin creature tokens, where X is the number of Goblins you control" (audit, 2026-10-06)
+    [/^create x (\d+)\/(\d+) ([a-z ]+?) (artifact )?creature tokens?(?: with ([a-z ,]+))?, where x is (the number of .+)$/i, m => (countFn(m[6]) ? { t: 'token', n: 0, nCount: m[6], p: +m[1], q: +m[2], name: m[3], artifact: !!m[4], kw: m[5] ? splitKw(m[5]) : [] } : null)],
     [/^create a (\d+)\/(\d+) ([a-z ]+?) (artifact )?creature token(?: with ([a-z ,]+))? for each (.+)$/, m => (countFn(`the number of ${m[6]}`) ? { t: 'token', n: 0, nCount: `the number of ${m[6]}`, p: +m[1], q: +m[2], name: m[3], artifact: !!m[4], kw: m[5] ? splitKw(m[5]) : [] } : null)],
     [/^(?:you may )?put a \+1\/\+1 counter on each ([a-z]+) creature you control$/, m => ({ t: 'teamCounters', n: 1, type: m[1][0].toUpperCase() + m[1].slice(1) })],
     [/^create a token that's a copy of ~$/, () => ({ t: 'tokenCopySelf' })],
@@ -1940,7 +2052,8 @@ function rulesFor(card) {
     const first = card.name.split(/[ ,]/)[0];
     const two = card.name.split(/[ ,]/).slice(0, 2).join(' ');
     const names = [card.name, card.name.split(',')[0], ...(/Legendary/.test(card.type || '') && / of /.test(card.name) && two !== card.name ? [two] : []), ...(/Legendary/.test(card.type || '') && first.length > 3 && !/^(?:The|Lord|Lady|King|Queen|Sir|Doctor|Captain)$/.test(first) ? [first] : [])].filter((v, i, a) => v && a.indexOf(v) === i);
-    names.forEach(n => { text = text.split(n).join('~'); });
+    // Whole words only, so a short name can't match inside another word (audit, 2026-10-06)
+    names.filter(Boolean).forEach(n => { text = text.replace(new RegExp(`(?<![A-Za-z])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z])`, 'g'), '~'); });
     text = text.replace(/\bthis (?:creature|spell|land|artifact|enchantment|card|permanent|Aura|Equipment|Vehicle|Saga|planeswalker|token|Class|Room|Case|Spacecraft)\b/gi, '~');
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     // Starter kits (2026-10-06): "... and is a Cleric in addition to its other types" adds a creature type;
@@ -2822,14 +2935,29 @@ function deleteDeck(i) {
     renderDeckPicker();
 }
 
+// ---- The builder, laid out like Moxfield (2026-10-06, owner's request) ----
+// A head with Playtest / Bulk edit / Save and a "Find and add cards" box, a
+// sticky preview of the card under the pointer, the deck in type groups
+// (or by mana value, color or automation) in columns or as picture stacks,
+// then the mana curve, color stats and a sample hand, and a summary bar.
+const BX_GROUPS = { type: 'Type', mv: 'Mana value', color: 'Color', support: 'Automation' };
+const BX_SORTS = { name: 'Name', mv: 'Mana value', price: 'Price' };
+let BX = Object.assign({ view: 'text', group: 'type', sort: 'name' }, store.get('builderPrefs', {}));
+let BXS = { hover: null, curveSel: null, hand: [], lib: [] };
+function bxPref(k, v) { BX[k] = v; store.set('builderPrefs', { view: BX.view, group: BX.group, sort: BX.sort }); renderDeckPanel(); }
+
 async function openBuilder() {
     $('deckPicker').classList.add('hidden');
     $('builder').classList.remove('hidden');
     $('collectionGrid').innerHTML = '<div class="loading">Loading cards...</div>';
+    $('fSupport').value = 'full'; // only Automated cards by default (owner, 2026-10-06)
+    BXS = { hover: null, curveSel: null, hand: [], lib: [] };
+    renderBuilderHead();
     await loadBasics().catch(() => {});
     await cardsByIds([...Object.keys(profile.collection), ...Object.keys(editing.cards), editing.commander].filter(Boolean));
     renderCollection();
     renderDeckPanel();
+    if (bxPool().length >= 7) bxDeal();
 }
 
 function cardColorsKey(c) { return c.colors.length > 1 ? 'M' : (c.colors[0] || 'C'); }
@@ -2840,28 +2968,45 @@ function usableIn(deck, c) {
     if (cmd && c.ci.some(col => !cmd.ci.includes(col))) return false;
     return true;
 }
+// The cards you can add: your collection (a starter deck: its own cards), plus the free basics
+function builderPool() {
+    const ids = editing.starter ? Object.keys(editing.cards) : Object.keys(profile.collection);
+    const out = new Map();
+    [...ids, ...Object.values(BASIC_IDS)].forEach(id => { const c = CARDS.get(id); if (c) out.set(id, c); });
+    return [...out.values()];
+}
+function autoOk(c) { const sup = $('fSupport').value; return !sup || isBasic(c) || rulesFor(c).support === sup; }
+function setAutoFilter(v) { $('fSupport').value = v; renderCollection(); mxFindRender(true); }
+function autoNoteHTML() {
+    return $('fSupport').value === 'full'
+        ? 'Showing only cards the game fully automates. <button type="button" class="linkish" onclick="setAutoFilter(\'\')">Show all cards</button>'
+        : `Showing ${$('fSupport').value === '' ? 'all cards' : $('fSupport').selectedOptions[0].textContent.toLowerCase() + ' cards'}. <button type="button" class="linkish" onclick="setAutoFilter('full')">Automated only</button>`;
+}
+function inDeckCount(id) { return (editing.cards[id] || 0) + (editing.commander === id ? 1 : 0); }
 
 function renderCollection() {
     if (!editing) return;
     const q = $('fName').value.trim().toLowerCase();
-    const col = $('fColor').value, type = $('fType').value, sup = $('fSupport').value, legal = $('fLegal').checked;
-    const ids = editing.starter ? Object.keys(editing.cards) : Object.keys(profile.collection);
-    const list = ids.map(id => CARDS.get(id)).filter(Boolean)
+    const col = $('fColor').value, type = $('fType').value, legal = $('fLegal').checked;
+    const all = editing.starter ? Object.keys(editing.cards).map(id => CARDS.get(id)).filter(Boolean) : Object.keys(profile.collection).map(id => CARDS.get(id)).filter(Boolean);
+    const base = all
         .filter(c => !q || c.fullName.toLowerCase().includes(q))
         .filter(c => !col || cardColorsKey(c) === col)
         .filter(c => !type || c.type.includes(type))
-        .filter(c => !sup || rulesFor(c).support === sup)
-        .filter(c => !legal || usableIn(editing, c))
-        .sort((a, b) => a.cmc - b.cmc || a.name.localeCompare(b.name));
-    $('collectionGrid').innerHTML = list.length ? list.map(c => {
+        .filter(c => !legal || usableIn(editing, c));
+    const list = base.filter(autoOk).sort((a, b) => a.cmc - b.cmc || a.name.localeCompare(b.name));
+    const hidden = base.length - list.length;
+    if ($('mxAutoNote')) $('mxAutoNote').innerHTML = autoNoteHTML();
+    $('collectionGrid').innerHTML = (list.length ? list.map(c => {
         const owned = editing.starter ? '' : profile.collection[c.id] || 0;
-        const used = (editing.cards[c.id] || 0) + (editing.commander === c.id ? 1 : 0);
-        return `<button type="button" class="ctile${owned !== '' && used >= owned ? ' dim' : ''}" onclick="collectionClick('${c.id}')" title="${esc(c.name)}">
+        const used = inDeckCount(c.id);
+        return `<button type="button" class="ctile${owned !== '' && used >= owned ? ' dim' : ''}" onclick="collectionClick('${c.id}')" onmouseenter="mxHover('${c.id}')" title="${esc(c.name)}">
             ${c.imgS || c.img ? `<img src="${c.img || c.imgS}" alt="${esc(c.name)}" loading="lazy">` : `<div class="noimg">${esc(c.name)}</div>`}
             ${owned !== '' ? `<span class="cnt">${used}/${owned}</span>` : ''}
             <span class="meta">${esc(c.name)}<br>${supportBadge(c)}</span>
         </button>`;
-    }).join('') : `<p class="note">${ids.length ? 'No cards match these filters.' : 'No cards yet - open packs to fill your collection.'}</p>`;
+    }).join('') : `<p class="note">${all.length ? 'No cards match these filters.' : 'No cards yet - open packs to fill your collection.'}</p>`)
+        + (hidden ? `<p class="note" style="grid-column:1/-1;">${hidden} more card${hidden === 1 ? '' : 's'} the game doesn't fully automate yet. <button type="button" class="linkish" onclick="setAutoFilter('')">Show them</button></p>` : '');
 }
 
 function collectionClick(id) {
@@ -2874,71 +3019,420 @@ function collectionClick(id) {
         ${canCmd ? `<button class="btn gold" onclick="setCommander('${id}'); closeSheet();">👑 Make commander</button>` : ''}`);
 }
 
-function addToDeck(id) {
+// Adds one copy; false (with a toast) when the format or your collection says no
+function addToDeck(id, quiet) {
     const c = CARDS.get(id);
     const F = FORMATS[editing.format];
     const n = editing.cards[id] || 0;
     if (!isBasic(c)) {
-        if (n >= F.copies) { toast(`${F.name} allows ${F.copies === 1 ? 'one copy' : `${F.copies} copies`} of ${c.name}.`); return; }
+        if (n >= F.copies) { if (!quiet) toast(`${F.name} allows ${F.copies === 1 ? 'one copy' : `${F.copies} copies`} of ${c.name}.`); return false; }
         const owned = profile.collection[id] || 0;
-        if (!editing.starter && n + (editing.commander === id ? 1 : 0) >= owned) { toast(`You only own ${owned} ${c.name}.`); return; }
-        if (editing.format === 'commander' && editing.commander === id) { toast(`${c.name} is already your commander.`); return; }
+        if (!editing.starter && n + (editing.commander === id ? 1 : 0) >= owned) { if (!quiet) toast(`You only own ${owned} ${c.name}.`); return false; }
+        if (editing.format === 'commander' && editing.commander === id) { if (!quiet) toast(`${c.name} is already your commander.`); return false; }
     }
+    if (editing.commander && c.ci.some(col => !CARDS.get(editing.commander).ci.includes(col))) { if (!quiet) toast(`${c.name} is outside your commander's colors.`); return false; }
     editing.cards[id] = n + 1;
-    renderDeckPanel();
-    renderCollection();
+    if (!quiet) builderChanged();
+    return true;
 }
-function removeFromDeck(id) {
+function removeFromDeck(id, all) {
     if (!editing.cards[id]) return;
-    editing.cards[id]--;
+    editing.cards[id] = all ? 0 : editing.cards[id] - 1;
     if (!editing.cards[id]) delete editing.cards[id];
-    renderDeckPanel();
-    renderCollection();
+    builderChanged();
 }
 function setCommander(id) {
     if (editing.cards[id]) { editing.cards[id]--; if (!editing.cards[id]) delete editing.cards[id]; }
+    if (editing.commander && editing.commander !== id) editing.cards[editing.commander] = (editing.cards[editing.commander] || 0) + 1;
     editing.commander = id;
-    renderDeckPanel();
-    renderCollection();
+    builderChanged();
 }
-async function addBasic(color) {
+function unsetCommander() {
+    const id = editing.commander;
+    if (!id) return;
+    editing.commander = null;
+    editing.cards[id] = (editing.cards[id] || 0) + 1;
+    builderChanged();
+}
+async function addBasic(color, n = 1) {
     if (!editing) return;
     await loadBasics();
     const id = BASIC_IDS[color];
     if (!id) { toast('Couldn\'t load basic lands.'); return; }
     if (editing.commander && !CARDS.get(editing.commander).ci.includes(color)) { toast(`${BASIC_FOR[color]} is outside your commander's colors.`); return; }
-    editing.cards[id] = (editing.cards[id] || 0) + 1;
-    renderDeckPanel();
+    editing.cards[id] = (editing.cards[id] || 0) + n;
+    builderChanged();
+}
+function builderChanged() { renderDeckPanel(); renderCollection(); mxFindRender(true); }
+
+// ---- Head: name, actions, find and add ----
+function renderBuilderHead() {
+    const d = editing;
+    $('mxHead').innerHTML = `
+        <div class="mx-title">
+            <input type="text" id="deckName" value="${esc(d.name)}" aria-label="Deck name" oninput="editing.name = this.value">
+            <span class="badge">${FORMATS[d.format].name}</span>${d.starter ? '<span class="note">Starter deck</span>' : ''}
+        </div>
+        <div class="mx-actions">
+            <button class="btn gold" onclick="playtestDeck()">🧪 Playtest</button>
+            <button class="btn" onclick="bulkEdit()">✏️ Bulk edit</button>
+            <button class="btn primary" onclick="saveDeck()">💾 Save</button>
+            <button class="btn" onclick="closeBuilder()">← Back</button>
+        </div>
+        <div class="mx-find">
+            <input type="search" id="mxFind" placeholder="🔍 Find and add cards" autocomplete="off" aria-label="Find and add cards"
+                oninput="mxFindRender()" onfocus="mxFindRender()" onkeydown="mxFindKey(event)" onblur="setTimeout(() => $('mxFindList') && $('mxFindList').classList.add('hidden'), 150)">
+            <div class="mx-find-list hidden" id="mxFindList" role="listbox" aria-label="Matching cards"></div>
+        </div>
+        <div class="note" id="mxAutoNote">${autoNoteHTML()}</div>`;
+}
+let mxFindHits = [];
+function mxFindRender(keepClosed) {
+    const inp = $('mxFind'), el = $('mxFindList');
+    if (!inp || !el || !editing) return;
+    const q = inp.value.trim().toLowerCase();
+    if (!q) { el.classList.add('hidden'); el.innerHTML = ''; mxFindHits = []; return; }
+    const base = builderPool().filter(c => c.fullName.toLowerCase().includes(q) && usableIn(editing, c));
+    const list = base.filter(autoOk).sort((a, b) => b.fullName.toLowerCase().startsWith(q) - a.fullName.toLowerCase().startsWith(q) || a.name.localeCompare(b.name)).slice(0, 12);
+    const hidden = base.length - base.filter(autoOk).length;
+    mxFindHits = list.map(c => c.id);
+    el.innerHTML = (list.length ? list.map((c, i) => {
+        const owned = editing.starter || isBasic(c) ? '' : `${inDeckCount(c.id)}/${profile.collection[c.id] || 0}`;
+        return `<button type="button" class="mx-find-row${i === 0 ? ' first' : ''}" role="option" onmousedown="event.preventDefault()" onclick="mxFindAdd('${c.id}')" onmouseenter="mxHover('${c.id}')">
+            <span class="nm">${esc(c.fullName)}</span>${costHTML(c.cost)}${rulesFor(c).support !== 'full' && !isBasic(c) ? supportBadge(c) : ''}<span class="note">${owned}</span><span class="mx-add">＋</span></button>`;
+    }).join('') : `<div class="note mx-find-none">No match in ${editing.starter ? 'this deck' : 'your collection'}.</div>`)
+        + (hidden ? `<div class="note mx-find-none">${hidden} more not fully automated - <button type="button" class="linkish" onmousedown="event.preventDefault()" onclick="setAutoFilter('')">show all</button></div>` : '');
+    if (!keepClosed || document.activeElement === inp) el.classList.remove('hidden');
+}
+function mxFindKey(e) {
+    if (e.key === 'Enter' && mxFindHits[0]) { e.preventDefault(); mxFindAdd(mxFindHits[0]); }
+    if (e.key === 'Escape') { e.target.value = ''; mxFindRender(); }
+}
+function mxFindAdd(id) { if (addToDeck(id)) toast(`Added ${CARDS.get(id).name}.`); }
+
+// ---- Mana symbols and the preview ----
+function costHTML(cost) {
+    if (!cost) return '';
+    return `<span class="mx-cost" aria-label="${esc(cost)}" title="${esc(cost)}">${(cost.match(/\{[^}]+\}/g) || []).map(t => {
+        const s = t.slice(1, -1), col = (s.match(/[WUBRGC]/) || [''])[0];
+        return `<i class="ms${col ? ` ${col}` : ''}">${/^[WUBRGC]$/.test(s) ? '' : esc(s.replace('/', '').replace(/[WUBRG]/g, ''))}</i>`;
+    }).join('')}</span>`;
+}
+function mxHover(id) { if (BXS.hover === id) return; BXS.hover = id; renderPreview(); }
+function renderPreview() {
+    const el = $('mxPreview');
+    if (!el || !editing) return;
+    const first = Object.keys(editing.cards).map(id => CARDS.get(id)).find(c => c && !isBasic(c));
+    const c = CARDS.get(BXS.hover) || CARDS.get(editing.commander) || first;
+    if (!c) { el.innerHTML = '<div class="note">Point at a card to see it here.</div>'; return; }
+    const R = rulesFor(c);
+    el.innerHTML = `${c.img ? `<img src="${c.img}" alt="${esc(c.fullName)}">` : `<div class="noimg">${esc(c.fullName)}</div>`}
+        <div class="mx-pv-meta"><strong>${esc(c.fullName)}</strong>
+            <div class="note">${esc(c.setName || '')}${c.rarity ? ` · ${esc(c.rarity)}` : ''}</div>
+            <div class="mx-pv-price">${c.usd ? usd(+c.usd) : '<span class="note">No price</span>'} ${isBasic(c) ? '' : supportBadge(c)}</div>
+            ${R.why && !isBasic(c) ? `<div class="note">${esc(R.why)}</div>` : ''}</div>`;
 }
 
-const TYPE_GROUPS = [['creature', 'Creatures'], ['instant', 'Instants'], ['sorcery', 'Sorceries'], ['artifact', 'Artifacts'], ['enchantment', 'Enchantments'], ['planeswalker', 'Planeswalkers'], ['battle', 'Battles'], ['land', 'Lands'], ['other', 'Other']];
+// ---- The deck ----
+const BX_COLOR_NAMES = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', M: 'Multicolor', C: 'Colorless' };
+function bxGroupOf(c) {
+    const R = rulesFor(c);
+    if (BX.group === 'support') return isBasic(c) ? 'full' : R.support;
+    if (R.kind === 'land' && BX.group !== 'type') return 'land';
+    if (BX.group === 'mv') return `mv${Math.min(7, Math.round(c.cmc))}`;
+    if (BX.group === 'color') return cardColorsKey(c);
+    return TYPE_GROUPS.some(([k]) => k === R.kind) ? R.kind : 'other';
+}
+function bxGroups() {
+    if (BX.group === 'mv') return [...[0, 1, 2, 3, 4, 5, 6].map(i => [`mv${i}`, `${i} mana`]), ['mv7', '7+ mana'], ['land', 'Lands']];
+    if (BX.group === 'color') return [...['W', 'U', 'B', 'R', 'G', 'M', 'C'].map(k => [k, BX_COLOR_NAMES[k]]), ['land', 'Lands']];
+    if (BX.group === 'support') return [['full', 'Automated'], ['partial', 'Partly automated'], ['none', 'Not yet castable']];
+    return TYPE_GROUPS;
+}
+function bxSort(a, b) {
+    if (BX.sort === 'mv') return a.c.cmc - b.c.cmc || a.c.name.localeCompare(b.c.name);
+    if (BX.sort === 'price') return (+b.c.usd || 0) - (+a.c.usd || 0) || a.c.name.localeCompare(b.c.name);
+    return a.c.name.localeCompare(b.c.name);
+}
+function bxRowHTML(c, n, isCmd) {
+    const sup = isBasic(c) ? 'full' : rulesFor(c).support;
+    if (BX.view === 'visual') return `<button type="button" class="mx-vc" onmouseenter="mxHover('${c.id}')" onclick="mxRowMenu('${c.id}')" aria-label="${n} ${esc(c.fullName)}">
+        ${c.img || c.imgS ? `<img src="${c.img || c.imgS}" alt="" loading="lazy">` : `<span class="noimg">${esc(c.fullName)}</span>`}${n > 1 ? `<span class="mx-vq">×${n}</span>` : ''}${sup !== 'full' ? `<span class="badge sup-${sup} mx-vs">${sup === 'none' ? '!' : '~'}</span>` : ''}</button>`;
+    return `<div class="mx-row" onmouseenter="mxHover('${c.id}')">
+        <span class="n">${n}</span>
+        <button type="button" class="nm" onclick="mxRowMenu('${c.id}')">${esc(c.fullName)}</button>
+        ${sup !== 'full' ? `<span class="badge sup-${sup}" title="${sup === 'none' ? 'Not yet castable' : 'Partly automated'}">${sup === 'none' ? '!' : '~'}</span>` : ''}
+        ${costHTML(c.cost)}
+        ${isCmd ? '' : `<span class="mx-q"><button type="button" onclick="removeFromDeck('${c.id}')" aria-label="Remove one ${esc(c.name)}">−</button><button type="button" onclick="addToDeck('${c.id}')" aria-label="Add one ${esc(c.name)}">+</button></span>`}
+        <button type="button" class="mx-menu" onclick="mxRowMenu('${c.id}')" aria-label="More for ${esc(c.name)}">▾</button>
+    </div>`;
+}
+function mxRowMenu(id) {
+    const c = CARDS.get(id);
+    if (!c) return;
+    const R = rulesFor(c);
+    const isCmd = editing.commander === id;
+    const canCmd = editing.format === 'commander' && R.legendary && R.kind === 'creature' && !isCmd;
+    showCardSheet(id, isCmd
+        ? `<button class="btn" onclick="unsetCommander(); closeSheet();">↩ Move to the main deck</button>`
+        : `<button class="btn primary" onclick="addToDeck('${id}'); closeSheet();">＋ Add one</button>
+           ${editing.cards[id] ? `<button class="btn" onclick="removeFromDeck('${id}'); closeSheet();">− Remove one</button>` : ''}
+           ${editing.cards[id] > 1 ? `<button class="btn danger" onclick="removeFromDeck('${id}', true); closeSheet();">✖ Remove all ${editing.cards[id]}</button>` : ''}
+           ${canCmd ? `<button class="btn gold" onclick="setCommander('${id}'); closeSheet();">👑 Make commander</button>` : ''}`);
+}
+// Tokens the deck's cards make, read from their text
+function deckTokens(entries) {
+    const map = new Map();
+    entries.forEach(({ c }) => {
+        const t = [c.text, c.back && c.back.text].filter(Boolean).join(' ');
+        const found = new Set();
+        for (const m of t.matchAll(/\b(\d+\/\d+|X\/X) ((?:(?:white|blue|black|red|green|colorless|and) )*)((?:[A-Z][a-z]+ )*[A-Z][a-z]+) (?:artifact )?(?:enchantment )?creature tokens?/g)) found.add(`${m[1]} ${m[2]}${m[3]}`.replace(/\s+/g, ' '));
+        for (const m of t.matchAll(/\b(Treasure|Food|Clue|Blood|Map|Powerstone|Gold|Junk|Incubator|Shard|Lander|Mutagen) tokens?\b/g)) found.add(m[1]);
+        found.forEach(k => { if (!map.has(k)) map.set(k, []); map.get(k).push(c.name); });
+    });
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+}
 
 function renderDeckPanel() {
     const d = editing;
+    if (!d) return;
     const entries = Object.entries(d.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c);
     const probs = deckProblems(d);
     const cmd = d.commander && CARDS.get(d.commander);
-    const uncastable = deckUncastable(d);
+    const groups = bxGroups().map(([k, label]) => {
+        const rows = entries.filter(e => bxGroupOf(e.c) === k).sort(bxSort);
+        if (!rows.length) return '';
+        const n = rows.reduce((a, r) => a + r.n, 0);
+        const value = rows.reduce((a, r) => a + (+r.c.usd || 0) * r.n, 0);
+        return `<section class="mx-group"><h3>${label} <span class="mx-gn">(${n})</span><span class="mx-gv">${value ? usd(value) : ''}</span></h3><div class="${BX.view === 'visual' ? 'mx-stack' : 'mx-rows'}">${rows.map(({ c, n }) => bxRowHTML(c, n)).join('')}</div></section>`;
+    }).join('');
+    const tokens = deckTokens([...entries, ...(cmd ? [{ c: cmd, n: 1 }] : [])]);
     $('deckPanel').innerHTML = `
-        <input type="text" id="deckName" value="${esc(d.name)}" aria-label="Deck name" style="width:100%; font-weight:700; margin-bottom:6px;" oninput="editing.name = this.value">
-        <div class="note">${FORMATS[d.format].name} · <strong>${deckCount(d)}</strong>/${FORMATS[d.format].size} cards${d.starter ? ' · starter deck' : ''}</div>
-        ${d.format === 'commander' ? `<div style="margin:8px 0;">👑 Commander: ${cmd ? `<strong style="cursor:pointer;" onclick="showCardSheet('${cmd.id}')">${esc(cmd.name)}</strong> ${cmd.ci.map(x => `<span class="pip ${x}"></span>`).join('')}` : '<span class="warn">none yet - open a legendary creature and pick "Make commander"</span>'}</div>` : ''}
-        ${deckAnalyticsHTML(d)}
-        ${probs.length ? `<div class="warn" style="margin:8px 0;">${probs.slice(0, 6).map(p => `⚠ ${esc(p)}`).join('<br>')}${probs.length > 6 ? `<br>...and ${probs.length - 6} more` : ''}</div>` : '<div class="ok" style="margin:8px 0;">✓ Ready to play</div>'}
-        ${uncastable ? `<div class="note" style="margin-bottom:6px;">${uncastable} card${uncastable === 1 ? '' : 's'} can't be cast yet (marked "Not yet").</div>` : ''}
-        ${TYPE_GROUPS.map(([k, label]) => {
-            const rows = entries.filter(e => rulesFor(e.c).kind === k).sort((a, b) => a.c.cmc - b.c.cmc || a.c.name.localeCompare(b.c.name));
-            if (!rows.length) return '';
-            return `<div style="margin-top:8px;"><div class="lane-label">${label} (${rows.reduce((a, r) => a + r.n, 0)})</div>${rows.map(({ c, n }) => `
-                <div class="dl-row"><span class="n">${n}</span><span class="nm" onclick="showCardSheet('${c.id}')">${esc(c.name)}</span>${rulesFor(c).support !== 'full' ? `<span class="badge sup-${rulesFor(c).support}">${rulesFor(c).support === 'none' ? '!' : '~'}</span>` : ''}
-                <button onclick="removeFromDeck('${c.id}')" aria-label="Remove one ${esc(c.name)}">−</button><button onclick="addToDeck('${c.id}')" aria-label="Add one ${esc(c.name)}">+</button></div>`).join('')}</div>`;
-        }).join('')}
-        <div class="row" style="margin-top:12px;">
-            <button class="btn primary" onclick="saveDeck()">💾 Save deck</button>
-            <button class="btn gold" onclick="playtestDeck()">🧪 Playtest</button>
-            <button class="btn" onclick="closeBuilder()">Back</button>
+        <div class="mx-tools">
+            <div class="seg" role="group" aria-label="View">
+                <button type="button" aria-pressed="${BX.view === 'text'}" onclick="bxPref('view', 'text')">☰ Text</button>
+                <button type="button" aria-pressed="${BX.view === 'visual'}" onclick="bxPref('view', 'visual')">🂠 Visual</button>
+            </div>
+            <label class="note">Group by <select onchange="bxPref('group', this.value)">${Object.entries(BX_GROUPS).map(([k, v]) => `<option value="${k}"${BX.group === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+            <label class="note">Sort by <select onchange="bxPref('sort', this.value)">${Object.entries(BX_SORTS).map(([k, v]) => `<option value="${k}"${BX.sort === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+        </div>
+        ${probs.length ? `<details class="mx-probs"><summary class="warn">⚠ ${probs.length} thing${probs.length === 1 ? '' : 's'} to fix before this deck can play</summary><ul>${probs.map(p => `<li>${esc(p)}</li>`).join('')}</ul></details>` : ''}
+        <div class="mx-cols${BX.view === 'visual' ? ' visual' : ''}">
+            ${d.format === 'commander' ? `<section class="mx-group mx-cmd"><h3>Commander <span class="mx-gn">(${cmd ? 1 : 0})</span></h3>${cmd ? `<div class="${BX.view === 'visual' ? 'mx-stack' : 'mx-rows'}">${bxRowHTML(cmd, 1, true)}</div>` : '<p class="note">None yet. Open a legendary creature and choose 👑 Make commander.</p>'}</section>` : ''}
+            ${groups || (d.format === 'commander' ? '' : '<p class="note">No cards yet. Use "Find and add cards" above, or browse your collection below.</p>')}
+            ${tokens.length ? `<section class="mx-group"><h3>Tokens <span class="mx-gn">(${tokens.length})</span></h3><div class="mx-rows">${tokens.map(([t, from]) => `<div class="mx-row mx-token" title="Made by ${esc(from.join(', '))}"><span class="n"></span><span class="nm">${esc(t)}</span><span class="note">${esc(from.length === 1 ? from[0] : `${from.length} cards`)}</span></div>`).join('')}</div></section>` : ''}
         </div>`;
+    renderPreview();
+    renderBuilderStats(entries, cmd);
+    renderBuilderBar(entries, cmd, probs);
 }
+
+// ---- Stats: mana curve, colors, sample hand ----
+function renderBuilderStats(entries, cmd) {
+    const all = [...entries, ...(cmd ? [{ c: cmd, n: 1 }] : [])];
+    $('mxStats').innerHTML = `
+        <div class="panel mx-stat"><h3>Mana curve</h3>${mxCurveHTML(all)}</div>
+        <div class="panel mx-stat"><h3>Colors</h3>${mxColorsHTML(all)}</div>
+        <div class="panel mx-stat"><h3>Sample hand</h3><div id="mxHand">${mxHandHTML()}</div></div>`;
+}
+function mxCurveHTML(all) {
+    const perm = Array(8).fill(0), spl = Array(8).fill(0);
+    let n = 0, mv = 0;
+    all.forEach(({ c, n: q }) => {
+        const k = rulesFor(c).kind;
+        if (k === 'land') return;
+        const i = Math.min(7, Math.round(c.cmc));
+        (['instant', 'sorcery'].includes(k) ? spl : perm)[i] += q;
+        n += q; mv += c.cmc * q;
+    });
+    const W = 300, H = 150, padB = 18, padT = 16, slot = W / 8, bw = Math.min(26, slot - 8);
+    const max = Math.max(1, ...perm.map((v, i) => v + spl[i]));
+    const sy = v => (v / max) * (H - padB - padT);
+    const seg = (x, yBase, h, round, cls) => {
+        if (h <= 0) return '';
+        const top = yBase - h, r = round ? Math.min(4, h / 2) : 0;
+        return `<path class="${cls}" d="M${x},${yBase} V${top + r} ${r ? `Q${x},${top} ${x + r},${top}` : ''} H${x + bw - r} ${r ? `Q${x + bw},${top} ${x + bw},${top + r}` : ''} V${yBase} Z"></path>`;
+    };
+    const cols = perm.map((p, i) => {
+        const s = spl[i], x = i * slot + (slot - bw) / 2, base = H - padB;
+        const hp = sy(p), hs = sy(s), gap = p && s ? 2 : 0;
+        const label = i === 7 ? '7+' : String(i);
+        const sel = BXS.curveSel === i;
+        return `<g class="cv-col${sel ? ' sel' : ''}" onclick="bxCurvePick(${i})" role="button" tabindex="0" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); bxCurvePick(${i}); }" aria-label="Mana value ${label}: ${p} permanent${p === 1 ? '' : 's'}, ${s} spell${s === 1 ? '' : 's'}">
+            <title>Mana value ${label}: ${p} permanent${p === 1 ? '' : 's'}, ${s} instant${s === 1 ? '' : 's'}/sorcer${s === 1 ? 'y' : 'ies'}</title>
+            <rect x="${i * slot}" y="0" width="${slot}" height="${H}" class="cv-hit"></rect>
+            ${seg(x, base, hp, !s, 'cv-bar')}${seg(x, base - hp - gap, hs - (gap && hs > gap ? 0 : 0), true, 'cv-bar2')}
+            ${p + s ? `<text x="${x + bw / 2}" y="${base - hp - hs - gap - 4}" class="cv-val">${p + s}</text>` : ''}
+            <text x="${x + bw / 2}" y="${H - 4}" class="cv-axis">${label}</text></g>`;
+    }).join('');
+    const pick = BXS.curveSel;
+    const picked = pick === null ? [] : all.filter(({ c }) => rulesFor(c).kind !== 'land' && Math.min(7, Math.round(c.cmc)) === pick).sort((a, b) => a.c.name.localeCompare(b.c.name));
+    return `<div class="mx-curve">
+        <svg viewBox="0 0 ${W} ${H}" class="curve-svg" role="img" aria-label="Mana curve">
+            <line x1="0" x2="${W}" y1="${H - padB}" y2="${H - padB}" class="cv-base"></line>${cols}</svg>
+        <div class="mx-legend note"><span><i class="lg cv1"></i>Permanents</span><span><i class="lg cv2"></i>Instants &amp; sorceries</span></div>
+        <div class="note">Average mana value <strong>${n ? (mv / n).toFixed(2) : '0'}</strong> (nonland cards). ${pick === null ? 'Tap a bar to list its cards.' : ''}</div>
+        ${pick !== null ? `<div class="mx-curve-pick"><div class="lane-label">Mana value ${pick === 7 ? '7+' : pick} (${picked.reduce((a, e) => a + e.n, 0)}) <button type="button" class="linkish" onclick="bxCurvePick(null)">close</button></div>
+            ${picked.length ? picked.map(({ c, n }) => `<div class="mx-row" onmouseenter="mxHover('${c.id}')"><span class="n">${n}</span><button type="button" class="nm" onclick="mxRowMenu('${c.id}')">${esc(c.fullName)}</button>${costHTML(c.cost)}</div>`).join('') : '<p class="note">No cards.</p>'}</div>` : ''}
+        <details class="note"><summary>Curve as a table</summary><table class="pos-table"><tr><th></th>${perm.map((_, i) => `<th>${i === 7 ? '7+' : i}</th>`).join('')}</tr><tr><th>Permanents</th>${perm.map(v => `<td>${v}</td>`).join('')}</tr><tr><th>Spells</th>${spl.map(v => `<td>${v}</td>`).join('')}</tr></table></details>
+    </div>`;
+}
+function bxCurvePick(i) { BXS.curveSel = BXS.curveSel === i ? null : i; renderDeckPanel(); }
+
+// Cost symbols per color (nonland cards) against the colors the lands and mana sources make
+function deckColorStats(all) {
+    const sym = { W: 0, U: 0, B: 0, R: 0, G: 0 }, prod = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+    all.forEach(({ c, n }) => {
+        const R = rulesFor(c);
+        if (R.kind !== 'land') (c.cost.match(/\{[^}]+\}/g) || []).forEach(t => COLORS.forEach(col => { if (t.includes(col)) sym[col] += n; }));
+        if (R.mana) COLORS.forEach(col => { if (R.mana.colors.includes(col)) prod[col] += n; });
+    });
+    return { sym, prod };
+}
+function mxColorsHTML(all) {
+    const { sym, prod } = deckColorStats(all);
+    const cmd = editing.commander && CARDS.get(editing.commander);
+    // The deck's colors: the commander's, else the colors in its costs (else what its lands make)
+    const cols = cmd ? COLORS.filter(c => cmd.ci.includes(c)) : COLORS.some(c => sym[c]) ? COLORS.filter(c => sym[c]) : COLORS.filter(c => prod[c]);
+    const ts = cols.reduce((a, c) => a + sym[c], 0), tp = cols.reduce((a, c) => a + prod[c], 0);
+    const pct = (v, t) => t ? Math.round(100 * v / t) : 0;
+    const target = editing.format === 'casual' ? 40 : FORMATS[editing.format].size;
+    const fill = Math.max(0, target - deckCount(editing));
+    const allowed = cmd ? COLORS.filter(c => cmd.ci.includes(c)) : COLORS;
+    return `${cols.length ? cols.map(c => {
+        const ps = pct(sym[c], ts), pp = pct(prod[c], tp), short = ts && pp + 10 < ps;
+        return `<div class="mx-color">
+            <div class="mx-cl"><span class="pip ${c}"></span> ${BX_COLOR_NAMES[c]}${short ? ' <span class="warn" title="Fewer sources than this color\'s share of your costs">⚠ low on sources</span>' : ''}</div>
+            <div class="mx-cbar" title="${sym[c]} ${BX_COLOR_NAMES[c].toLowerCase()} symbol${sym[c] === 1 ? '' : 's'} in mana costs"><span class="lbl">Symbols</span><span class="track"><i class="m-${c}" style="width:${ps}%"></i></span><span class="v">${ps}%</span></div>
+            <div class="mx-cbar" title="${prod[c]} land${prod[c] === 1 ? '' : 's'} and mana source${prod[c] === 1 ? '' : 's'} that make ${BX_COLOR_NAMES[c].toLowerCase()}"><span class="lbl">Mana</span><span class="track"><i class="m-${c}" style="width:${pp}%"></i></span><span class="v">${pp}%</span></div>
+        </div>`;
+    }).join('') : '<p class="note">Add some colored cards to see how your mana lines up.</p>'}
+        <div class="lane-label" style="margin-top:10px;">Quick add basics</div>
+        <div class="row">${allowed.map(c => `<button type="button" class="btn small" onclick="addBasic('${c}')"><span class="pip ${c}"></span> ${BASIC_FOR[c]}</button>`).join('')}</div>
+        <div class="row" style="margin-top:6px;"><button type="button" class="btn small" onclick="fillBasics()"${fill && ts ? '' : ' disabled'}>Fill to ${target} with basics${fill ? ` (+${fill})` : ''}</button><span class="note">split by your cost symbols</span></div>`;
+}
+async function fillBasics() {
+    const target = editing.format === 'casual' ? 40 : FORMATS[editing.format].size;
+    const need = target - deckCount(editing);
+    if (need <= 0) return;
+    await loadBasics();
+    const all = Object.entries(editing.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c);
+    if (editing.commander) all.push({ c: CARDS.get(editing.commander), n: 1 });
+    const { sym } = deckColorStats(all);
+    const cmd = editing.commander && CARDS.get(editing.commander);
+    const cols = COLORS.filter(c => sym[c] && (!cmd || cmd.ci.includes(c)));
+    if (!cols.length) { toast('Add colored cards first, so the split has something to follow.'); return; }
+    const split = landSplit(cols.map(c => ({ card: { cost: `{${c}}`.repeat(sym[c]) }, n: 1 })), cols, need);
+    Object.entries(split).forEach(([c, k]) => { if (k > 0 && BASIC_IDS[c]) editing.cards[BASIC_IDS[c]] = (editing.cards[BASIC_IDS[c]] || 0) + k; });
+    toast(`Added ${need} basic land${need === 1 ? '' : 's'}: ${Object.entries(split).filter(([, k]) => k > 0).map(([c, k]) => `${k} ${BASIC_FOR[c]}`).join(', ')}.`);
+    builderChanged();
+}
+
+// Sample hand: 7 from the shuffled deck, Draw, Deal another hand
+function bxPool() {
+    const pool = [];
+    Object.entries(editing.cards).forEach(([id, n]) => { const c = CARDS.get(id); if (c) for (let i = 0; i < n; i++) pool.push(c); });
+    return pool;
+}
+function bxDeal() {
+    const lib = shuffle(bxPool());
+    BXS.hand = lib.splice(0, 7);
+    BXS.lib = lib;
+    if ($('mxHand')) $('mxHand').innerHTML = mxHandHTML();
+}
+function bxDraw() {
+    if (!BXS.lib.length) { toast('No cards left to draw.'); return; }
+    BXS.hand.push(BXS.lib.shift());
+    $('mxHand').innerHTML = mxHandHTML();
+}
+function hyperC(n, k) { if (k < 0 || k > n) return 0; let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }
+function mxHandHTML() {
+    const pool = bxPool();
+    const N = pool.length, L = pool.filter(c => rulesFor(c).kind === 'land').length;
+    if (N < 7) return '<p class="note">Add at least 7 cards to deal a sample hand.</p>';
+    const hand = BXS.hand;
+    const lands = hand.filter(c => rulesFor(c).kind === 'land').length;
+    const p24 = [2, 3, 4].reduce((a, k) => a + hyperC(L, k) * hyperC(N - L, 7 - k), 0) / hyperC(N, 7);
+    return `<div class="mx-hand">${hand.map((c, i) => `<button type="button" class="th-card" style="--i:${i}" onclick="showCardSheet('${c.id}')" onmouseenter="mxHover('${c.id}')" title="${esc(c.name)}">${c.imgS || c.img ? `<img src="${c.img || c.imgS}" alt="${esc(c.name)}">` : `<span class="noimg">${esc(c.name)}</span>`}</button>`).join('')}</div>
+        <div class="row" style="margin-top:8px;">
+            <button type="button" class="btn small gold" onclick="playtestDeck()">🧪 Playtest</button>
+            <button type="button" class="btn small" onclick="bxDraw()"${BXS.lib.length ? '' : ' disabled'}>Draw</button>
+            <button type="button" class="btn small" onclick="bxDeal()">Deal another hand</button>
+        </div>
+        <div class="note" style="margin-top:6px;">${hand.length ? `This hand: ${lands} land${lands === 1 ? '' : 's'} of ${hand.length}. ` : ''}Average lands in an opening hand: <strong>${(7 * L / N).toFixed(1)}</strong> (${L} lands in ${N} cards). ${Math.round(p24 * 100)}% of opening hands have 2-4 lands.</div>`;
+}
+
+// ---- The bar along the bottom ----
+function renderBuilderBar(entries, cmd, probs) {
+    const d = editing;
+    const main = entries.reduce((a, e) => a + e.n, 0);
+    const value = [...entries, ...(cmd ? [{ c: cmd, n: 1 }] : [])].reduce((a, e) => a + (+e.c.usd || 0) * e.n, 0);
+    const kinds = {};
+    entries.forEach(({ c, n }) => { const k = rulesFor(c).kind; kinds[k] = (kinds[k] || 0) + n; });
+    const F = FORMATS[d.format];
+    $('mxBar').innerHTML = `
+        <span><strong>${deckCount(d)}</strong>${d.format === 'commander' ? '/100' : ''} ${d.format === 'commander' ? 'cards' : 'main deck'}</span>
+        ${d.format === 'commander' ? `<span class="${cmd ? 'ok' : 'warn'}">Commander ${cmd ? '✓' : '✗'}</span>` : `<span class="note">${F.name} · ${F.size}+</span>`}
+        <span class="mx-price" title="TCGplayer market prices from Scryfall">${usd(value)}</span>
+        <span class="mx-kinds note">${TYPE_GROUPS.filter(([k]) => kinds[k]).map(([k, l]) => `${l} ${kinds[k]}`).join(' · ')}</span>
+        <span class="mx-bar-end">${probs.length ? `<span class="warn" title="${esc(probs.join('\n'))}">⚠ ${probs.length} to fix</span>` : '<span class="ok">✓ Ready</span>'}
+        <button type="button" class="btn small primary" onclick="saveDeck()">💾 Save</button></span>`;
+}
+
+// ---- Bulk edit: the whole list as text ----
+function bulkEdit() {
+    const d = editing;
+    const lines = [];
+    if (d.commander && CARDS.get(d.commander)) lines.push(`1 ${CARDS.get(d.commander).fullName} *CMDR*`);
+    Object.entries(d.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c).sort((a, b) => a.c.name.localeCompare(b.c.name)).forEach(({ c, n }) => lines.push(`${n} ${c.fullName}`));
+    menuSheet('Bulk edit', `<p class="note">One card per line, like "4 Lightning Bolt".${d.format === 'commander' ? ' Put *CMDR* after your commander.' : ''} ${d.starter ? '' : 'Only cards you own (and basic lands) can go in.'}</p>
+        <textarea id="bulkText" rows="16" spellcheck="false" aria-label="Deck list">${esc(lines.join('\n'))}</textarea>
+        <div class="row" style="margin-top:8px;"><button class="btn primary" onclick="applyBulkEdit()">Apply</button></div>
+        <div id="bulkNote" class="note" style="margin-top:6px;"></div>`);
+}
+async function applyBulkEdit() {
+    const d = editing;
+    const lines = $('bulkText').value.split('\n').map(l => l.trim()).filter(l => l && !/^(\/\/|#)/.test(l) && !/^(deck|sideboard|commander|maybeboard)$/i.test(l));
+    const parsed = lines.map(l => {
+        const m = l.match(/^(\d+)\s*x?\s+(.+?)$/i) || [null, '1', l];
+        let name = m[2], cmdr = false;
+        if (/\*CMDR\*/i.test(name)) { cmdr = true; name = name.replace(/\*CMDR\*/ig, ''); }
+        name = name.replace(/\s*\([A-Z0-9]+\)\s*[\w-]*\s*$/, '').replace(/\s*\*F\*\s*$/i, '').trim();
+        return { n: Math.max(1, parseInt(m[1], 10) || 1), name, cmdr };
+    });
+    const byName = new Map();
+    const index = c => { [c.fullName, c.name].forEach(nm => { const k = nm.toLowerCase(); const prev = byName.get(k); if (!prev || (!profile.collection[prev.id] && profile.collection[c.id])) byName.set(k, c); }); };
+    builderPool().forEach(index);
+    Object.keys(d.cards).forEach(id => CARDS.get(id) && index(CARDS.get(id)));
+    if (d.commander && CARDS.get(d.commander)) index(CARDS.get(d.commander));
+    if (d.starter) {
+        const missing = parsed.filter(p => !byName.has(p.name.toLowerCase())).map(p => p.name);
+        if (missing.length) { $('bulkNote').textContent = 'Looking up cards...'; (await cardsByNames(missing)).forEach(index); }
+    }
+    const F = FORMATS[d.format];
+    const cards = {}, notes = [];
+    let commander = null;
+    for (const p of parsed) {
+        const c = byName.get(p.name.toLowerCase());
+        if (!c) { notes.push(`"${p.name}": ${d.starter ? 'not found' : 'not in your collection'}.`); continue; }
+        if (p.cmdr && d.format === 'commander') { commander = c.id; continue; }
+        let n = p.n;
+        if (!isBasic(c)) {
+            const owned = d.starter ? Infinity : profile.collection[c.id] || 0;
+            const cap = Math.min(F.copies, owned) - (cards[c.id] || 0);
+            if (n > cap) { notes.push(`${c.name}: ${Math.max(0, cap)} instead of ${n} (${owned < F.copies ? `you own ${owned}` : `${F.copies} max`}).`); n = Math.max(0, cap); }
+        }
+        if (n) cards[c.id] = (cards[c.id] || 0) + n;
+    }
+    if (commander && cards[commander]) { cards[commander]--; if (!cards[commander]) delete cards[commander]; }
+    d.cards = cards;
+    if (d.format === 'commander') d.commander = commander || (d.commander && parsed.some(p => p.cmdr) ? null : d.commander);
+    builderChanged();
+    if (notes.length) $('bulkNote').innerHTML = `Applied, with changes:<br>${notes.map(esc).join('<br>')}`;
+    else { closeSheet(); toast('Deck list updated.'); }
+}
+
+const TYPE_GROUPS = [['creature', 'Creatures'], ['instant', 'Instants'], ['sorcery', 'Sorceries'], ['artifact', 'Artifacts'], ['enchantment', 'Enchantments'], ['planeswalker', 'Planeswalkers'], ['battle', 'Battles'], ['land', 'Lands'], ['other', 'Other']];
 
 function saveDeck() {
     const d = { ...editing };
@@ -3357,7 +3851,7 @@ async function mulligan(P) {
             drawCards(P, 7, true);
             const nonland = P.hand.filter(o => Rx(o).kind !== 'land').sort((a, b) => b.card.cmc - a.card.cmc);
             const bottom = nonland[0] || P.hand[0];
-            P.hand.splice(P.hand.indexOf(bottom), 1);
+            pull(P.hand, bottom);
             P.library.unshift(bottom);
             log(`${P.name} mulligans to 6.`);
         }
@@ -3394,7 +3888,7 @@ async function mulligan(P) {
             };
             draw();
         });
-        P.hand.filter(o => picked.has(o.uid)).forEach(o => { P.hand.splice(P.hand.indexOf(o), 1); P.library.unshift(o); });
+        P.hand.filter(o => picked.has(o.uid)).forEach(o => { pull(P.hand, o); P.library.unshift(o); });
         log(`You mulligan to ${P.hand.length}.`);
     }
     closeModal();
@@ -3475,7 +3969,7 @@ function leaveBattlefield(o, zone) {
         G.players.forEach(X => X.exile.filter(x => x.playWhile === o.uid).forEach(x => { x.playUntil = -1; delete x.playWhile; }));
         allPerms().filter(x => x.stolenBy === o.uid).forEach(x => {
             const from = G.players[x.owner], back = G.players[x.realOwner ?? x.owner];
-            from.bf.splice(from.bf.indexOf(x), 1); x.owner = back.i; delete x.realOwner; delete x.stolenBy; back.bf.push(x);
+            pull(from.bf, x); x.owner = back.i; delete x.realOwner; delete x.stolenBy; back.bf.push(x);
             log(`${x.card.name} goes back to ${you(back) ? 'you' : back.name}.`);
         });
     }
@@ -3483,7 +3977,7 @@ function leaveBattlefield(o, zone) {
     if (wasOn) { o.lastCounters = Math.max(0, o.counters); if ((Rx(o).trig || []).some(t => t.ev === 'leaves')) fire('leaves', { o }); }
     // Cards it exiled "until it leaves the battlefield" come back (610.3)
     if (wasOn) G.players.forEach(X => X.exile.filter(x => x.exiledBy === o.uid).forEach(x => {
-        X.exile.splice(X.exile.indexOf(x), 1); delete x.exiledBy; resetObj(x); X.bf.push(x);
+        pull(X.exile, x); delete x.exiledBy; resetObj(x); X.bf.push(x);
         log(`${x.card.name} returns to the battlefield.`); fire('enters', { o: x });
         if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P: X, o: x, effects: Rx(x).etb });
     }));
@@ -3544,8 +4038,8 @@ function damage(target, n, src) {
 // State-based actions: lethal damage, 0 toughness, loose Auras, losing.
 function sba() {
     if (!G || G.over) return;
-    let changed = true;
-    while (changed) {
+    let changed = true, rounds = 0;
+    while (changed && rounds++ < 100) { // a guard against a loop of deaths and returns
         changed = false;
         for (const o of allPerms()) {
             if (isCreature(o)) {
@@ -3560,6 +4054,18 @@ function sba() {
             if (o.sagaDone && !G.stack.some(it => it.o === o) && !(G.trigQ || []).some(q => q.o === o)) { log(`${o.card.name} is sacrificed - its last chapter is done (rule 714.4).`); leaveBattlefield(o, 'gy'); changed = true; continue; }
             if (Rx(o).isAura && !onBf(o.attachedTo)) { log(`${o.card.name} goes to the graveyard.`); leaveBattlefield(o, 'gy'); changed = true; }
             if (Rx(o).isEquipment && o.attachedTo && !onBf(o.attachedTo)) o.attachedTo = null;
+        }
+        // 704.5j the legend rule: two legendary permanents with the same name under one
+        // player - one goes to the graveyard. The game keeps the newest (your commander first).
+        for (const P of G.players) {
+            const byName = new Map();
+            P.bf.filter(o => Rx(o).legendary).forEach(o => { const k = o.card.name; if (!byName.has(k)) byName.set(k, []); byName.get(k).push(o); });
+            for (const [name, list] of byName) {
+                if (list.length < 2) continue;
+                const keep = list.find(o => o.isCommander) || list[list.length - 1];
+                list.filter(o => o !== keep).forEach(o => { log(`${name}: legend rule - ${P.name} ${you(P) ? 'keep' : 'keeps'} one, the other goes to the graveyard (rule 704.5j).`); dieOrLeave(o, 'gy'); });
+                changed = true;
+            }
         }
     }
     const lost = G.players.filter(P => P.life <= 0 || P.drewEmpty || P.poison >= 10 || (G.format === 'commander' && P.cmdDmg >= 21));
@@ -3709,22 +4215,27 @@ function addCostOk(P, o) {
     if (a.life) return P.life > a.life;
     return true;
 }
+// Yes/no and number questions asked inside an effect. The engine resolves
+// effects in one go, so these are the browser's own dialogs for now; in a
+// game on one device they name the player who has to answer.
+function askYes(P, msg) { return confirm(G && G.hotseat && P ? `${P.name}: ${msg}` : msg); }
+function askFor(P, msg, def) { return prompt(G && G.hotseat && P ? `${P.name}: ${msg}` : msg, def); }
 function payAddCost(P, o) {
     const a = Rx(o).addCost;
     if (!a) return;
     if (a.returnLand) { const l = P.bf.filter(x => /\bLand\b/.test(x.card.type)).sort((x, y) => (y.tapped - x.tapped))[0]; leaveBattlefield(l, 'hand'); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${l.card.name} to hand to cast ${o.card.name}.`); return; }
     if (a.sac && a.orPay) {
         const f = sacFodder(P, o, a.sac), plan = planPayment(P, a.orPay);
-        const sac = f && (!plan || (P.isAI ? f.token || permValue(f) < 3 : confirm(`${o.card.name}: sacrifice ${f.card.name}? (Cancel = pay the extra mana instead)`)));
+        const sac = f && (!plan || (P.isAI ? f.token || permValue(f) < 3 : askYes(P, `${o.card.name}: sacrifice ${f.card.name}? (Cancel = pay the extra mana instead)`)));
         if (!sac && plan) { plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} the extra cost for ${o.card.name}.`); return; }
     }
     if (a.sac && a.orDiscard) {
         const f = sacFodder(P, o, a.sac), others = P.hand.filter(x => x !== o);
-        const sac = f && (!others.length || (P.isAI ? f.token || permValue(f) < 2 : confirm(`${o.card.name}: sacrifice ${f.card.name}? (Cancel = discard a card instead)`)));
-        if (!sac) { const d = others.sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0]; P.hand.splice(P.hand.indexOf(d), 1); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} to cast ${o.card.name}.`); return; }
+        const sac = f && (!others.length || (P.isAI ? f.token || permValue(f) < 2 : askYes(P, `${o.card.name}: sacrifice ${f.card.name}? (Cancel = discard a card instead)`)));
+        if (!sac) { const d = others.sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} to cast ${o.card.name}.`); return; }
     }
     if (a.sac) { const f = sacFodder(P, o, a.sac); G.lastSacPow = Math.max(0, pow(f)); G.lastSacLegend = /Legendary/.test(f.card.type); fire('sacrificed', { o: f }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name} to cast ${o.card.name}.`); dieOrLeave(f, 'gy'); }
-    if (a.discard) { const d = P.hand.filter(x => x !== o).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0]; P.hand.splice(P.hand.indexOf(d), 1); P.gy.push(d); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} to cast ${o.card.name}.`); }
+    if (a.discard) { const d = P.hand.filter(x => x !== o).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0]; pull(P.hand, d); P.gy.push(d); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} to cast ${o.card.name}.`); }
     if (a.life) { P.life -= a.life; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${a.life} life to cast ${o.card.name}.`); }
 }
 const xMult = o => Rx(o).cost.xn || 1;
@@ -3743,7 +4254,7 @@ function payFor(P, o) {
     plan.forEach(s => tapSource(P, s));
     if (o._delve) {
         const gone = P.gy.filter(x => x !== o).sort((a, b) => (a.card.cmc || 0) - (b.card.cmc || 0)).slice(0, o._delve);
-        gone.forEach(x => { P.gy.splice(P.gy.indexOf(x), 1); P.exile.push(x); });
+        gone.forEach(x => { pull(P.gy, x); P.exile.push(x); });
         log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${gone.length} card${gone.length === 1 ? '' : 's'} from the graveyard (delve).`);
     }
     return true;
@@ -3951,7 +4462,7 @@ function playLand(P, o) {
         let pay = false;
         if (P.life > sl) {
             if (P.isAI) { const lands = P.bf.filter(x => Rx(x).kind === 'land').length + 1; pay = P.life > sl + 4 && P.hand.some(h => Rx(h).kind !== 'land' && Rx(h).support !== 'none' && (h.card.cmc || 0) === lands); }
-            else pay = confirm(`${o.card.name}: pay ${sl} life so it enters untapped? (Cancel = it enters tapped.)`);
+            else pay = askYes(P, `${o.card.name}: pay ${sl} life so it enters untapped? (Cancel = it enters tapped.)`);
         }
         if (pay) { P.life -= sl; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${sl} life for ${o.card.name}.`); } else o.tapped = true;
     }
@@ -3997,7 +4508,7 @@ async function castSpell(P, o, presetTarget) {
         const gc = Rx(o).gyCast;
         P.life -= gc.life;
         const d = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0];
-        if (d) { P.hand.splice(P.hand.indexOf(d), 1); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); }
+        if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); }
         log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${gc.life} life${d ? ` and ${you(P) ? 'discard' : 'discards'} ${d.card.name}` : ''} to cast ${o.card.name} from the graveyard.`);
     }
     if (fromExile && o.playDmg) { const n = o.playDmg; delete o.playDmg; G.players.forEach(X => damage(X, n, onBf(o.playDmgSrc) || o)); log(`${o.card.name} was played from exile: ${n} damage to each player.`); }
@@ -4007,7 +4518,7 @@ async function castSpell(P, o, presetTarget) {
     const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x ? (o.xVal || 0) : undefined, kicked: !!o.kicked };
     G.stack.push(item);
     log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name}${item.kicked ? ' (kicked)' : ''}${o._free ? ' without paying its mana cost' : ''}${item.x !== undefined ? ` (X=${item.x})` : ''}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax > 1 ? ` (commander tax ${(P.tax - 1) * 2})` : ''}.`);
-    if (!wardCheck(P, presetTarget, o.card.name)) { G.stack.splice(G.stack.indexOf(item), 1); moveSpellCard(o, 'gy'); renderGame(); return true; }
+    if (!wardCheck(P, presetTarget, o.card.name)) { pull(G.stack, item); moveSpellCard(o, 'gy'); renderGame(); return true; }
     G.castThisTurn = (G.castThisTurn || 0) + 1;
     (G.castBy = G.castBy || [0, 0])[P.i]++;
     // "When you cast ~" triggers go on the stack above the spell (Hydroid Krasis)
@@ -4051,11 +4562,13 @@ async function runStack() {
         // players pass in a row; after it resolves, the active player gets
         // priority first. Like Arena, a player auto-passes on their own spell
         // or ability, so in practice the other player is asked.
-        let holder = null, passes = 0;
+        let holder = null, passes = 0, offers = 0;
         while (G.stack.length && !G.over) {
             const top = G.stack[G.stack.length - 1];
             if (holder === null) { holder = top.P; passes = 0; } // 117.3c: the caster first
-            if (await offerPriority(holder, top)) { holder = null; continue; } // they responded: the new top goes first
+            // A loop guard: after 200 responses in one go, everyone passes
+            if (++offers === 200) log('That\'s a lot of responses - the stack now resolves without more.');
+            if (offers < 200 && await offerPriority(holder, top)) { holder = null; continue; } // they responded: the new top goes first
             if (++passes < 2) { holder = opp(holder); continue; }
             await resolveTop();
             await flushTriggers();
@@ -4165,7 +4678,7 @@ async function resolveTop() {
             if (o.hasteOnEnter === G.turn) { o.tkw.push('haste'); log(`${o.card.name} gains haste (Dragon mana).`); }
             if (r.chooseColor) { const cnt = {}; [...item.P.bf, ...item.P.hand, ...item.P.library].forEach(x => (x.card.colors || []).forEach(c => { cnt[c] = (cnt[c] || 0) + 1; })); o.chosenColor = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] || 'W'; log(`${o.card.name}: chosen color ${COLOR_NAMES[o.chosenColor]}.`); }
             if (r.etbNamed) { const n = countFn(r.etbNamed.what)(o); o.ctr[r.etbNamed.kind] = n; log(`${o.card.name} enters with ${n} ${r.etbNamed.kind} counter${n === 1 ? '' : 's'}.`); }
-            if (r.kw.has('unleash') && (item.P.isAI ? item.P.aiStyle !== 'control' : confirm(`Unleash ${o.card.name}? It enters with a +1/+1 counter but can't block while it has one.`))) { o.counters += 1; log(`${o.card.name} is unleashed (+1/+1 counter; it can't block).`); }
+            if (r.kw.has('unleash') && (item.P.isAI ? item.P.aiStyle !== 'control' : askYes(item.P, `Unleash ${o.card.name}? It enters with a +1/+1 counter but can't block while it has one.`))) { o.counters += 1; log(`${o.card.name} is unleashed (+1/+1 counter; it can't block).`); }
             if (r.kind === 'planeswalker') { o.ctr.loyalty = Number(o.card.loyalty) || 0; o.pwReady = true; }
             log(`${o.card.name} enters the battlefield${o.counters > 0 ? ` with ${o.counters} +1/+1 counter${o.counters === 1 ? '' : 's'}` : ''}.`);
             fire('enters', { o });
@@ -4261,7 +4774,7 @@ async function resolveEffects(P, effects, presetTarget, source) {
         if (e.unless) {
             const un = e.unless === 'pow' ? Math.max(0, source && onBf(source.uid) ? pow(source) : Number(source.card.power) || 0) : e.unless;
             const Q = G.players[1 - P.i], cost = { ...parseCost(''), generic: un }, plan = planPayment(Q, cost);
-            if (plan && (Q.isAI ? Q.hand.length < 3 || un <= 1 : confirm(`${source.card.name}: pay {${un}} to stop it?`))) { plan.forEach(x => tapSource(Q, x)); if (un) log(`${Q.name} ${you(Q) ? 'pay' : 'pays'} {${un}}.`); continue; }
+            if (plan && (Q.isAI ? Q.hand.length < 3 || un <= 1 : askYes(Q, `${source.card.name}: pay {${un}} to stop it?`))) { plan.forEach(x => tapSource(Q, x)); if (un) log(`${Q.name} ${you(Q) ? 'pay' : 'pays'} {${un}}.`); continue; }
         }
         if (e.t === 'modal') { const i = await pickModes(P, { modeN: { min: e.min ?? 1, max: e.n || 1 } }, e.modes, source); if (i !== null) await resolveEffects(P, [].concat(i).flatMap(k => e.modes[k]), null, source); continue; }
         if (e.kickedP && source && source.kicked) e = { ...e, p: e.kickedP.p, q: e.kickedP.q };
@@ -4349,7 +4862,7 @@ async function splitDamage(P, n, targets, what = 'Damage') {
     }
     for (let i = 0; i < targets.length - 1; i++) {
         const most = left + 1;
-        const v = Math.floor(Number(prompt(`${what} for ${targetName(targets[i])}? (1 to ${most}; the rest goes to the next target)`, '1')));
+        const v = Math.floor(Number(askFor(P, `${what} for ${targetName(targets[i])}? (1 to ${most}; the rest goes to the next target)`, '1')));
         const got = v >= 1 && v <= most ? v : 1;
         amts[i] = got; left -= got - 1;
     }
@@ -4432,7 +4945,7 @@ async function applyChoiceEffect(P, e, src, t) {
         const top = P.library[P.library.length - 1];
         if (!top) return;
         if (/\bLand\b/.test(top.card.type)) {
-            if (P.isAI || confirm(`${src.card.name}: put ${top.card.name} onto the battlefield tapped? (Cancel = leave it on top.)`)) { P.library.pop(); resetObj(top); top.tapped = true; P.bf.push(top); fire('landfall', { o: top }); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${top.card.name} onto the battlefield tapped.`); }
+            if (P.isAI || askYes(P, `${src.card.name}: put ${top.card.name} onto the battlefield tapped? (Cancel = leave it on top.)`)) { P.library.pop(); resetObj(top); top.tapped = true; P.bf.push(top); fire('landfall', { o: top }); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${top.card.name} onto the battlefield tapped.`); }
         } else { P.library.pop(); P.hand.push(top); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${you(P) ? top.card.name : 'the top card'} into ${you(P) ? 'your' : 'their'} hand.`); }
         return;
     }
@@ -4441,7 +4954,7 @@ async function applyChoiceEffect(P, e, src, t) {
         const zones = e.gy ? [P.gy, P.library] : [P.library];
         let found = null, zone = null;
         for (const z of zones) { found = z.find(x => x.card.name === want); if (found) { zone = z; break; } }
-        if (found) { zone.splice(zone.indexOf(found), 1); P.hand.push(found); log(`${P.name} ${you(P) ? 'find' : 'finds'} ${want} and ${you(P) ? 'put' : 'puts'} it into ${you(P) ? 'your' : 'their'} hand.`); }
+        if (found) { pull(zone, found); P.hand.push(found); log(`${P.name} ${you(P) ? 'find' : 'finds'} ${want} and ${you(P) ? 'put' : 'puts'} it into ${you(P) ? 'your' : 'their'} hand.`); }
         else log(`${P.name} ${you(P) ? 'find' : 'finds'} no ${want}.`);
         if (zone === P.library || !found) shuffle(P.library);
         return;
@@ -4465,7 +4978,7 @@ async function applyChoiceEffect(P, e, src, t) {
     if (e.t === 'becomeCopy') {
         const x = G.ctxObj;
         if (!x || !onBf(src.uid) || !onBf(x.uid) || x === src) return;
-        if (!(P.isAI || confirm(`${src.card.name}: become a copy of ${x.card.name} until end of turn?`))) return;
+        if (!(P.isAI || askYes(P, `${src.card.name}: become a copy of ${x.card.name} until end of turn?`))) return;
         src.copyOf = src.copyOf || src.card; src.copyTurn = G.turn;
         src.card = { ...x.card, id: `${x.card.id}-copy${uidSeq}`, name: src.copyOf.name, type: /Legendary/.test(x.card.type) ? x.card.type : `Legendary ${x.card.type}` };
         log(`${src.copyOf.name} becomes a copy of ${x.card.name} until end of turn.`);
@@ -4492,8 +5005,8 @@ async function applyChoiceEffect(P, e, src, t) {
         const O = opp(P), top2 = P.library.slice(-2).reverse();
         if (!top2.length || !onBf(src.uid)) return;
         const isLand = x => /\bLand\b/.test(x.card.type);
-        const kind = P.isAI ? (isLand(top2[0]) ? 'land' : 'nonland') : (confirm(`${src.card.name}: the top card is ${top2[0].card.name}${top2[1] ? ` (then ${top2[1].card.name})` : ''}. Choose LAND? (Cancel = nonland)`) ? 'land' : 'nonland');
-        const guess = O.isAI ? (Math.random() < 0.4 ? 'land' : 'nonland') : (confirm(`${P.name} chose land or nonland for the top card of their library. Guess LAND? (Cancel = nonland)`) ? 'land' : 'nonland');
+        const kind = P.isAI ? (isLand(top2[0]) ? 'land' : 'nonland') : (askYes(P, `${src.card.name}: the top card is ${top2[0].card.name}${top2[1] ? ` (then ${top2[1].card.name})` : ''}. Choose LAND? (Cancel = nonland)`) ? 'land' : 'nonland');
+        const guess = O.isAI ? (Math.random() < 0.4 ? 'land' : 'nonland') : (askYes(O, `${P.name} chose land or nonland for the top card of their library. Guess LAND? (Cancel = nonland)`) ? 'land' : 'nonland');
         const top = P.library[P.library.length - 1];
         const actual = isLand(top) ? 'land' : 'nonland';
         log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${top.card.name} (${actual}); ${O.name} guessed ${guess}.`);
@@ -4508,8 +5021,8 @@ async function applyChoiceEffect(P, e, src, t) {
         for (const x of exiled) {
             const r = Rx(x);
             if (r.kind === 'land' || r.support === 'none') continue;
-            if (!(P.isAI ? aiScore(P, x, firstTargetEffect(x) ? aiPickTarget(P, firstTargetEffect(x), x) : null) > 0 || r.kind === 'creature' : confirm(`${src.card.name}: cast ${x.card.name} without paying its mana cost?`))) continue;
-            const X = G.players.find(Y => Y.exile.includes(x)); X.exile.splice(X.exile.indexOf(x), 1);
+            if (!(P.isAI ? aiScore(P, x, firstTargetEffect(x) ? aiPickTarget(P, firstTargetEffect(x), x) : null) > 0 || r.kind === 'creature' : askYes(P, `${src.card.name}: cast ${x.card.name} without paying its mana cost?`))) continue;
+            const X = G.players.find(Y => Y.exile.includes(x)); pull(X.exile, x);
             if (X !== P) { x.realOwner = x.owner; x.owner = P.i; }
             if (r.modes) x.mode = (await pickModes(P, r, r.modes, x)) ?? 0;
             const te = firstTargetEffect(x);
@@ -4526,7 +5039,7 @@ async function applyChoiceEffect(P, e, src, t) {
         const owner = who ? G.players[who.owner] : P;
         drawCards(owner, 1);
         const d = owner.isAI ? owner.hand.slice().sort((a, b) => aiKeepValue(owner, a) - aiKeepValue(owner, b))[0] : await pickCard(owner, owner.hand, `${who ? who.card.name : src.card.name} connives: choose a card to discard`) || owner.hand[0];
-        if (d) { owner.hand.splice(owner.hand.indexOf(d), 1); owner.gy.push(d); noteDiscard(owner, 1); d.discardTurn = G.turn; log(`${owner.name} ${you(owner) ? 'discard' : 'discards'} ${d.card.name}.`); }
+        if (d) { pull(owner.hand, d); owner.gy.push(d); noteDiscard(owner, 1); d.discardTurn = G.turn; log(`${owner.name} ${you(owner) ? 'discard' : 'discards'} ${d.card.name}.`); }
         if (who && d && Rx(d).kind !== 'land' && onBf(who.uid)) { who.counters++; log(`${who.card.name} connives and gets a +1/+1 counter.`); }
         return;
     }
@@ -4535,7 +5048,7 @@ async function applyChoiceEffect(P, e, src, t) {
         P.gy.push(...milled);
         log(`${P.name} ${you(P) ? 'mill' : 'mills'} ${milled.length}${milled.length ? `: ${milled.map(x => x.card.name).join(', ')}` : ''}.`);
         const pick = await pickCard(P, milled.filter(x => cardFits(x, e.what)), `${src.card.name}: you may put a ${e.what} card into your hand`);
-        if (pick) { P.gy.splice(P.gy.indexOf(pick), 1); P.hand.push(pick); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${pick.card.name} into ${you(P) ? 'your' : 'their'} hand.`); }
+        if (pick) { pull(P.gy, pick); P.hand.push(pick); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${pick.card.name} into ${you(P) ? 'your' : 'their'} hand.`); }
         return;
     }
     if (e.t === 'keepTop') {
@@ -4563,7 +5076,7 @@ async function applyChoiceEffect(P, e, src, t) {
         const fits = x => e.what.split(' ').filter(w => w !== 'or').every(w => w.startsWith('mv') ? (x.card.cmc || 0) <= Number(w.slice(2)) : w.startsWith('non') ? !cardFits(x, w.slice(3)) : cardFits(x, w));
         log(`${O.name} ${you(O) ? 'reveal' : 'reveals'} ${you(O) ? 'your' : 'their'} hand: ${O.hand.map(x => x.card.name).join(', ') || 'nothing'}.`);
         const pick = await pickCard(P, O.hand.filter(fits), `${src.card.name}: choose a card for ${O.name === 'You' ? 'you' : O.name} to discard`);
-        if (pick) { O.hand.splice(O.hand.indexOf(pick), 1); O.gy.push(pick); log(`${O.name} ${you(O) ? 'discard' : 'discards'} ${pick.card.name}.`); }
+        if (pick) { pull(O.hand, pick); O.gy.push(pick); log(`${O.name} ${you(O) ? 'discard' : 'discards'} ${pick.card.name}.`); }
         return;
     }
     if (e.t === 'scry' || e.t === 'surveil') {
@@ -4571,7 +5084,7 @@ async function applyChoiceEffect(P, e, src, t) {
         if (!top.length) return;
         if (e.t === 'scry') fire('scry', { P, n: top.length });
         const keep = await pickScry(P, top, e.t === 'surveil', src);
-        top.forEach(o => P.library.splice(P.library.indexOf(o), 1));
+        top.forEach(o => pull(P.library, o));
         const kept = top.filter((o, i) => keep[i]), away = top.filter((o, i) => !keep[i]);
         if (e.t === 'surveil') P.gy.push(...away); else P.library.unshift(...away);
         P.library.push(...kept.reverse());
@@ -4590,7 +5103,7 @@ async function applyChoiceEffect(P, e, src, t) {
         drawCards(P, 3);
         for (let k = 0; k < 2 && P.hand.length; k++) {
             const pick = P.isAI ? P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0] : await pickCard(P, P.hand, `${src.card.name}: put a card back on top (${k + 1} of 2)`) || P.hand[0];
-            P.hand.splice(P.hand.indexOf(pick), 1);
+            pull(P.hand, pick);
             P.library.push(pick); // the top of the library is the end of the array
         }
         log(`${P.name} ${you(P) ? 'put' : 'puts'} two cards back on top.`);
@@ -4601,7 +5114,7 @@ async function applyChoiceEffect(P, e, src, t) {
             const pool = P.library.filter(x => landFits(x, 'basic land'));
             const pick = await pickCard(P, pool, `${src.card.name}: choose a basic land ${toBf ? 'for the battlefield (tapped)' : 'for your hand'}`);
             if (!pick) break;
-            P.library.splice(P.library.indexOf(pick), 1);
+            pull(P.library, pick);
             resetObj(pick);
             if (toBf) { pick.tapped = true; P.bf.push(pick); fire('landfall', { o: pick }); } else P.hand.push(pick);
             log(`${P.name} ${you(P) ? 'search' : 'searches'} for ${pick.card.name} (${toBf ? 'battlefield, tapped' : 'hand'}).`);
@@ -4614,7 +5127,7 @@ async function applyChoiceEffect(P, e, src, t) {
             const pool = P.library.filter(x => landFits(x, e.what));
             const pick = await pickCard(P, pool, `${src.card.name}: choose a land`);
             if (!pick) break;
-            P.library.splice(P.library.indexOf(pick), 1);
+            pull(P.library, pick);
             resetObj(pick);
             if (e.bf) { pick.tapped = !!e.tapped || !!Rx(pick).entersTapped; P.bf.push(pick); fire('landfall', { o: pick }); }
             else if (e.top) { shuffle(P.library); P.library.push(pick); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${pick.card.name} on top of the library.`); return; }
@@ -4644,11 +5157,13 @@ async function applyChoiceEffect(P, e, src, t) {
         const pick = await pickCard(P, pool, `${src.card.name}: choose a card from ${e.anyGy ? 'a' : 'your'} graveyard${e.count > 1 ? ` (${k + 1} of ${e.count}; skip to stop)` : ''}`);
         if (!pick) break;
         G.lastCardPow = Number(pick.card.power) || 0;
-        if (e.anyGy && !e.bf && !P.gy.includes(pick)) { const X = G.players[pick.owner]; X.gy.splice(X.gy.indexOf(pick), 1); X.hand.push(pick); log(`${pick.card.name} returns to ${X.name === 'You' ? 'your' : `${X.name}'s`} hand.`); continue; }
-        if (pick && e.top) { P.gy.splice(P.gy.indexOf(pick), 1); P.library.push(pick); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${pick.card.name} on top of ${you(P) ? 'your' : 'their'} library.`); continue; }
+        if (e.anyGy && !e.bf && !P.gy.includes(pick)) { const X = G.players[pick.owner]; pull(X.gy, pick); X.hand.push(pick); log(`${pick.card.name} returns to ${X.name === 'You' ? 'your' : `${X.name}'s`} hand.`); continue; }
+        if (pick && e.top) { pull(P.gy, pick); P.library.push(pick); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${pick.card.name} on top of ${you(P) ? 'your' : 'their'} library.`); continue; }
         if (pick) {
-            P.gy.splice(P.gy.indexOf(pick), 1);
-            if ((e.bf || (e.bfIf && condOk(e.bfIf, P, src))) && !['instant', 'sorcery'].includes(Rx(pick).kind)) { G.lastMv = pick.card.cmc || 0; if (e.anyGy && !P.gy.includes(pick)) { const X = G.players[pick.owner]; X.gy.splice(X.gy.indexOf(pick), 1); pick.realOwner = pick.owner; pick.owner = P.i; P.gy.push(pick); } resetObj(pick); P.bf.push(pick); G.lastReturned = pick; if (e.counters) pick.counters += e.counters; log(`${pick.card.name} returns to the battlefield${e.counters ? ` with ${e.counters} additional +1/+1 counters` : ''}.`); fire('enters', { o: pick }); if (Rx(pick).etb.length) await putTriggers(P, pick, Rx(pick).etb); }
+            // From whichever graveyard holds it (an opponent's too)
+            const from = gys.find(X => X.gy.includes(pick)) || P;
+            pull(from.gy, pick);
+            if ((e.bf || (e.bfIf && condOk(e.bfIf, P, src))) && !['instant', 'sorcery'].includes(Rx(pick).kind)) { G.lastMv = pick.card.cmc || 0; if (from !== P) { pick.realOwner = pick.owner; pick.owner = P.i; } resetObj(pick); P.bf.push(pick); G.lastReturned = pick; if (e.counters) pick.counters += e.counters; log(`${pick.card.name} returns to the battlefield${e.counters ? ` with ${e.counters} additional +1/+1 counters` : ''}.`); fire('enters', { o: pick }); if (Rx(pick).etb.length) await putTriggers(P, pick, Rx(pick).etb); }
             else { P.hand.push(pick); log(`${pick.card.name} returns to ${you(P) ? 'your' : `${P.name}'s`} hand.`); }
         }
       }
@@ -4693,9 +5208,9 @@ function applyEffect(P, e, t, src) {
             break;
         }
         case 'lifeFromPower': if (G.lastPower) { G.lastPower.P.life += G.lastPower.n; log(`${G.lastPower.P.name} ${you(G.lastPower.P) ? 'gain' : 'gains'} ${G.lastPower.n} life.`); } break;
-        case 'discardSelf': noteDiscard(P, Math.min(e.n, P.hand.length)); for (let k = 0; k < e.n && P.hand.length; k++) { const d = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0]; P.hand.splice(P.hand.indexOf(d), 1); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
+        case 'discardSelf': noteDiscard(P, Math.min(e.n, P.hand.length)); for (let k = 0; k < e.n && P.hand.length; k++) { const d = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
         case 'bounce':
-            if (e.topIfAttacking && G.attackers.includes(t.o.uid) && (P.isAI || confirm(`Put ${t.o.card.name} on top of its owner's library instead?`))) { leaveBattlefield(t.o, 'library'); log(`${t.o.card.name} is put on top of its owner's library.`); break; }
+            if (e.topIfAttacking && G.attackers.includes(t.o.uid) && (P.isAI || askYes(P, `Put ${t.o.card.name} on top of its owner's library instead?`))) { leaveBattlefield(t.o, 'library'); log(`${t.o.card.name} is put on top of its owner's library.`); break; }
             G.lastBounced = t.o.owner; G.lastMv = t.o.card.cmc || 0;
             log(`${t.o.card.name} returns to its owner's hand.`); leaveBattlefield(t.o, 'hand'); break;
         case 'topdeck': log(`${t.o.card.name} is put on top of its owner's library.`); leaveBattlefield(t.o, 'library'); break;
@@ -4706,14 +5221,14 @@ function applyEffect(P, e, t, src) {
         case 'lastCtrlFetch': {
             const X = G.lastPower ? G.lastPower.P : O;
             const land = X.library.find(x => /\bBasic\b/.test(x.card.type) && /\bLand\b/.test(x.card.type));
-            if (land && (X.isAI || confirm(`Search your library for a basic land (${land.card.name}) and put it onto the battlefield${e.tapped ? ' tapped' : ''}?`))) {
-                X.library.splice(X.library.indexOf(land), 1); resetObj(land); land.tapped = !!e.tapped; X.bf.push(land); fire('landfall', { o: land });
+            if (land && (X.isAI || askYes(X, `Search your library for a basic land (${land.card.name}) and put it onto the battlefield${e.tapped ? ' tapped' : ''}?`))) {
+                pull(X.library, land); resetObj(land); land.tapped = !!e.tapped; X.bf.push(land); fire('landfall', { o: land });
                 log(`${X.name} ${you(X) ? 'search' : 'searches'} for ${land.card.name}${e.tapped ? ' (tapped)' : ''}.`);
             }
             shuffle(X.library);
             break;
         }
-        case 'eachFetchBasic': G.players.forEach(X => { const land = X.library.find(x => /\bBasic\b/.test(x.card.type) && /\bLand\b/.test(x.card.type)); if (land) { X.library.splice(X.library.indexOf(land), 1); resetObj(land); X.bf.push(land); fire('landfall', { o: land }); log(`${X.name} ${you(X) ? 'search' : 'searches'} for ${land.card.name}.`); } shuffle(X.library); }); break;
+        case 'eachFetchBasic': G.players.forEach(X => { const land = X.library.find(x => /\bBasic\b/.test(x.card.type) && /\bLand\b/.test(x.card.type)); if (land) { pull(X.library, land); resetObj(land); X.bf.push(land); fire('landfall', { o: land }); log(`${X.name} ${you(X) ? 'search' : 'searches'} for ${land.card.name}.`); } shuffle(X.library); }); break;
         case 'lastCtrlGain': { const X = G.lastPower ? G.lastPower.P : O; X.life += e.n; log(`${X.name} ${you(X) ? 'gain' : 'gains'} ${e.n} life.`); fire('gainLife', { P: X, n: e.n }); break; }
         case 'delayedManaDrain': (G.delayed = G.delayed || []).push({ at: 'main', P, after: G.turn, effects: [{ t: 'addMana', mana: Array(G.lastMv || 0).fill('C') }], src, label: `${name}: add {C} equal to the countered spell's mana value` }); break;
         case 'delayedDraw': { const X = e.who === 'lastCtrl' ? (G.lastPower ? G.lastPower.P : O) : P; (G.delayed = G.delayed || []).push({ at: 'upkeep', P: X, after: G.turn, effects: [{ t: 'draw', n: e.n }], src, label: `${name}: ${X.name} ${you(X) ? 'draw' : 'draws'} ${e.n}` }); break; }
@@ -4726,7 +5241,7 @@ function applyEffect(P, e, t, src) {
             break;
         }
         case 'noMaxHandForever': P.noMaxHand = true; log(`${P.name} ${you(P) ? 'have' : 'has'} no maximum hand size for the rest of the game.`); break;
-        case 'putLandFromHand': { const l = P.hand.find(x => Rx(x).kind === 'land'); if (l && (P.isAI || confirm(`${name}: put ${l.card.name} onto the battlefield?`))) { P.hand.splice(P.hand.indexOf(l), 1); resetObj(l); l.tapped = !!Rx(l).entersTapped; P.bf.push(l); fire('landfall', { o: l }); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${l.card.name} onto the battlefield.`); } break; }
+        case 'putLandFromHand': { const l = P.hand.find(x => Rx(x).kind === 'land'); if (l && (P.isAI || askYes(P, `${name}: put ${l.card.name} onto the battlefield?`))) { pull(P.hand, l); resetObj(l); l.tapped = !!Rx(l).entersTapped; P.bf.push(l); fire('landfall', { o: l }); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${l.card.name} onto the battlefield.`); } break; }
         case 'oppDraws': drawCards(O, e.n); break;
         case 'wipeNotType': {
             const ty = commonType(P);
@@ -4736,19 +5251,19 @@ function applyEffect(P, e, t, src) {
             break;
         }
         case 'livingDeath': {
-            const back = G.players.map(X => { const cs = X.gy.filter(x => /Creature/.test(x.card.type)); cs.forEach(x => { X.gy.splice(X.gy.indexOf(x), 1); X.exile.push(x); }); return cs; });
+            const back = G.players.map(X => { const cs = X.gy.filter(x => /Creature/.test(x.card.type)); cs.forEach(x => { pull(X.gy, x); X.exile.push(x); }); return cs; });
             G.players.forEach(X => X.bf.filter(isCreature).forEach(x => dieOrLeave(x, 'gy')));
-            G.players.forEach((X, i) => back[i].forEach(x => { X.exile.splice(X.exile.indexOf(x), 1); resetObj(x); X.bf.push(x); fire('enters', { o: x }); if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P: X, o: x, effects: Rx(x).etb }); }));
+            G.players.forEach((X, i) => back[i].forEach(x => { pull(X.exile, x); resetObj(x); X.bf.push(x); fire('enters', { o: x }); if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P: X, o: x, effects: Rx(x).etb }); }));
             log(`${name}: ${back[0].length + back[1].length} creature card${back[0].length + back[1].length === 1 ? '' : 's'} return to the battlefield.`);
             break;
         }
         case 'riseDark': {
             const got = G.players.flatMap(X => X.gy.filter(x => /Creature/.test(x.card.type)).map(x => [X, x]));
-            got.forEach(([X, x]) => { X.gy.splice(X.gy.indexOf(x), 1); resetObj(x); if (X !== P) { x.realOwner = x.owner; x.owner = P.i; } P.bf.push(x); fire('enters', { o: x }); if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P, o: x, effects: Rx(x).etb }); });
+            got.forEach(([X, x]) => { pull(X.gy, x); resetObj(x); if (X !== P) { x.realOwner = x.owner; x.owner = P.i; } P.bf.push(x); fire('enters', { o: x }); if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P, o: x, effects: Rx(x).etb }); });
             log(`${name}: ${got.length} creature${got.length === 1 ? '' : 's'} enter under ${you(P) ? 'your' : `${P.name}'s`} control.`);
             break;
         }
-        case 'landsFromGy': { const ls = P.gy.filter(x => /\bLand\b/.test(x.card.type)); ls.forEach(x => { P.gy.splice(P.gy.indexOf(x), 1); resetObj(x); x.tapped = true; P.bf.push(x); fire('landfall', { o: x }); }); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${ls.length} land${ls.length === 1 ? '' : 's'} to the battlefield tapped.`); break; }
+        case 'landsFromGy': { const ls = P.gy.filter(x => /\bLand\b/.test(x.card.type)); ls.forEach(x => { pull(P.gy, x); resetObj(x); x.tapped = true; P.bf.push(x); fire('landfall', { o: x }); }); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${ls.length} land${ls.length === 1 ? '' : 's'} to the battlefield tapped.`); break; }
         case 'untapNonland': P.bf.filter(x => !/\bLand\b/.test(x.card.type)).forEach(x => { x.tapped = false; }); log(`${P.name} ${you(P) ? 'untap' : 'untaps'} all nonland permanents.`); break;
         case 'ignition': { const x = t.o; if (!x || !onBf(x.uid)) break; const n = Math.max(0, pow(x)); allPerms().filter(c => isCreature(c) && c !== x).forEach(c => damage(c, n, x)); damage(O, n, x); log(`${x.card.name} deals ${n} damage to each other creature and ${O.name}.`); break; }
         case 'flicker': {
@@ -4756,7 +5271,7 @@ function applyEffect(P, e, t, src) {
             const X = G.players[x.realOwner ?? x.owner];
             leaveBattlefield(x, 'exile');
             if (!X.exile.includes(x)) break; // a token is gone
-            X.exile.splice(X.exile.indexOf(x), 1); resetObj(x); x.sick = true; X.bf.push(x); G.lastTargets = [{ o: x }];
+            pull(X.exile, x); resetObj(x); x.sick = true; X.bf.push(x); G.lastTargets = [{ o: x }];
             log(`${x.card.name} is exiled and returns to the battlefield.`);
             fire('enters', { o: x });
             if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P: X, o: x, effects: Rx(x).etb });
@@ -4795,18 +5310,18 @@ function applyEffect(P, e, t, src) {
         case 'exileGyMine': {
             const pool = P.gy.filter(x => cardFits(x, e.what)).sort((a, b) => creatureValueCard(b) - creatureValueCard(a));
             const x = pool[0];
-            if (x) { P.gy.splice(P.gy.indexOf(x), 1); x.exiledBy3 = src.uid; P.exile.push(x); log(`${name} exiles ${x.card.name} from the graveyard.`); }
+            if (x) { pull(P.gy, x); x.exiledBy3 = src.uid; P.exile.push(x); log(`${name} exiles ${x.card.name} from the graveyard.`); }
             break;
         }
         case 'returnExiledByMe': {
             const back = P.exile.filter(x => x.exiledBy3 === src.uid);
-            back.forEach(x => { P.exile.splice(P.exile.indexOf(x), 1); delete x.exiledBy3; resetObj(x); if (!['instant', 'sorcery'].includes(Rx(x).kind)) { P.bf.push(x); fire('enters', { o: x }); if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P, o: x, effects: Rx(x).etb }); } else P.gy.push(x); });
+            back.forEach(x => { pull(P.exile, x); delete x.exiledBy3; resetObj(x); if (!['instant', 'sorcery'].includes(Rx(x).kind)) { P.bf.push(x); fire('enters', { o: x }); if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P, o: x, effects: Rx(x).etb }); } else P.gy.push(x); });
             log(`${back.length ? back.map(x => x.card.name).join(', ') : 'Nothing'} ${back.length === 1 ? 'returns' : 'return'} to the battlefield.`);
             break;
         }
         case 'asmoReturn': {
             const back = P.exile.filter(x => x.exiledBy2 === src.uid);
-            back.forEach(x => { P.exile.splice(P.exile.indexOf(x), 1); delete x.exiledBy2; P.hand.push(x); });
+            back.forEach(x => { pull(P.exile, x); delete x.exiledBy2; P.hand.push(x); });
             P.life -= back.length;
             log(`${P.name} ${you(P) ? 'put' : 'puts'} ${back.length} card${back.length === 1 ? '' : 's'} into ${you(P) ? 'your' : 'their'} hand and ${you(P) ? 'lose' : 'loses'} ${back.length} life.`);
             break;
@@ -4815,7 +5330,7 @@ function applyEffect(P, e, t, src) {
             const X = G.players[src.owner];
             const zone = onBf(src.uid) ? null : X.gy.includes(src) ? 'gy' : null;
             if (onBf(src.uid)) leaveBattlefield(src, 'library');
-            else if (zone) X.gy.splice(X.gy.indexOf(src), 1);
+            else if (zone) pull(X.gy, src);
             else break;
             const li = X.library.indexOf(src); if (li >= 0) X.library.splice(li, 1);
             if (e.pos === 'bottom') X.library.unshift(src); else X.library.splice(Math.max(0, X.library.length - (e.pos - 1)), 0, src);
@@ -4838,7 +5353,7 @@ function applyEffect(P, e, t, src) {
         case 'stealWhile': {
             const x = t.o;
             if (!x || x.owner === P.i || !onBf(src.uid)) break;
-            G.players[x.owner].bf.splice(G.players[x.owner].bf.indexOf(x), 1);
+            pull(G.players[x.owner].bf, x);
             x.realOwner = x.realOwner ?? x.owner; x.owner = P.i; x.stolenBy = src.uid; x.sick = true;
             P.bf.push(x);
             log(`${P.name} ${you(P) ? 'gain' : 'gains'} control of ${x.card.name} for as long as ${you(P) ? 'you control' : `${P.name} controls`} ${name}.`);
@@ -4855,7 +5370,7 @@ function applyEffect(P, e, t, src) {
         case 'unearth': {
             const X = G.players[src.owner];
             if (!X.gy.includes(src)) break;
-            X.gy.splice(X.gy.indexOf(src), 1); resetObj(src); X.bf.push(src);
+            pull(X.gy, src); resetObj(src); X.bf.push(src);
             src.tkw.push('haste'); src.unearthed = true; src.exileAtEnd = G.turn;
             log(`${name} returns to the battlefield with haste (unearth).`);
             fire('enters', { o: src });
@@ -4884,7 +5399,7 @@ function applyEffect(P, e, t, src) {
         case 'attachAllEquip': {
             if (!t.o || !onBf(t.o.uid)) break;
             const eqs = P.bf.filter(x => Rx(x).isEquipment && x.attachedTo !== t.o.uid);
-            if (!eqs.length || !(P.isAI || confirm(`${name}: attach ${eqs.length === 1 ? eqs[0].card.name : `all ${eqs.length} Equipment`} to ${t.o.card.name}?`))) break;
+            if (!eqs.length || !(P.isAI || askYes(P, `${name}: attach ${eqs.length === 1 ? eqs[0].card.name : `all ${eqs.length} Equipment`} to ${t.o.card.name}?`))) break;
             eqs.forEach(x => { x.attachedTo = t.o.uid; });
             log(`${eqs.map(x => x.card.name).join(', ')} ${eqs.length === 1 ? 'is' : 'are'} attached to ${t.o.card.name}.`);
             break;
@@ -4894,7 +5409,7 @@ function applyEffect(P, e, t, src) {
         case 'permAnimate': if (onBf(src.uid)) { src.permAnimated = { what: e.what }; log(`${name} becomes a creature with power and toughness equal to ${e.what.replace(/^the number of /, 'the number of ')}.`); } break;
         case 'exileGyCreaturesCastable': {
             const got = O.gy.filter(x => /Creature/.test(x.card.type));
-            got.forEach(x => { O.gy.splice(O.gy.indexOf(x), 1); x.realOwner = x.owner; x.owner = P.i; x.playUntil = 1e9; x.anyMana = true; P.exile.push(x); });
+            got.forEach(x => { pull(O.gy, x); x.realOwner = x.owner; x.owner = P.i; x.playUntil = 1e9; x.anyMana = true; P.exile.push(x); });
             log(`${name} exiles ${got.length} creature card${got.length === 1 ? '' : 's'} from ${O.name === 'You' ? 'your' : `${O.name}'s`} graveyard - ${P.name === 'You' ? 'you' : P.name} may cast them.`);
             break;
         }
@@ -4905,12 +5420,12 @@ function applyEffect(P, e, t, src) {
         case 'animateTarget': t.o.animated = { turn: G.turn, p: e.p, q: e.q, kw: e.kw }; log(`${t.o.card.name} becomes a ${e.p}/${e.q} creature until end of turn.`); break;
         case 'punisherSac': {
             const fod = O.bf.filter(isCreature).sort((a, b) => permValue(a) - permValue(b))[0];
-            const sac = fod && (O.isAI ? permValue(fod) < e.n || O.life <= e.n : confirm(`${name}: sacrifice ${fod.card.name}? (Cancel = take ${e.n} damage)`));
+            const sac = fod && (O.isAI ? permValue(fod) < e.n || O.life <= e.n : askYes(O, `${name}: sacrifice ${fod.card.name}? (Cancel = take ${e.n} damage)`));
             if (sac) { log(`${O.name} ${you(O) ? 'sacrifice' : 'sacrifices'} ${fod.card.name}.`); dieOrLeave(fod, 'gy'); } else { damage(O, e.n, src); log(`${name} deals ${e.n} to ${O.name}.`); }
             break;
         }
         case 'smallHitDraw': P.drawOnSmallHit = G.turn; log(`This turn, ${you(P) ? 'your' : `${P.name}'s`} creatures with power 2 or less draw a card when they hit a player.`); break;
-        case 'handToBottom': if (P.hand.length) { const d = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0]; P.hand.splice(P.hand.indexOf(d), 1); P.library.unshift(d); log(`${P.name} ${you(P) ? 'put' : 'puts'} a card on the bottom of the library.`); } break;
+        case 'handToBottom': if (P.hand.length) { const d = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0]; pull(P.hand, d); P.library.unshift(d); log(`${P.name} ${you(P) ? 'put' : 'puts'} a card on the bottom of the library.`); } break;
         case 'removeNamed': if (onBf(src.uid) && (src.ctr[e.kind] || 0) > 0) { src.ctr[e.kind]--; G.lastDo = true; log(`${name}: a ${e.kind} counter is removed.`); } else G.lastDo = false; break;
         case 'removeAnyCounter': { const x = P.bf.find(c => c.counters > 0 || Object.values(c.ctr || {}).some(v => v > 0)); if (x) { if (x.counters > 0) x.counters--; else { const k = Object.keys(x.ctr).find(k2 => x.ctr[k2] > 0); x.ctr[k]--; } G.lastDo = true; log(`A counter is removed from ${x.card.name}.`); } else G.lastDo = false; break; }
         case 'revealTop': { const top = P.library[P.library.length - 1]; G.revealed = top || null; if (top) log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${top.card.name}.`); break; }
@@ -4919,7 +5434,7 @@ function applyEffect(P, e, t, src) {
         case 'tapTypeDraw': {
             const ty = PLURAL_TYPES[e.type] || e.type;
             const cands = P.bf.filter(x => isCreature(x) && !x.tapped && hasType(x, ty) && !G.attackers.includes(x.uid));
-            const n = cands.length && (P.isAI || confirm(`${name}: tap ${cands.length} untapped ${e.type}${cands.length === 1 ? '' : 's'} to draw ${cands.length}?`)) ? cands.length : 0;
+            const n = cands.length && (P.isAI || askYes(P, `${name}: tap ${cands.length} untapped ${e.type}${cands.length === 1 ? '' : 's'} to draw ${cands.length}?`)) ? cands.length : 0;
             cands.slice(0, n).forEach(x => { x.tapped = true; });
             if (n) drawCards(P, n);
             break;
@@ -4937,7 +5452,7 @@ function applyEffect(P, e, t, src) {
             const share = ['Artifact', 'Creature', 'Enchantment', 'Land', 'Planeswalker'].some(k => mine.card.type.includes(k) && theirs.card.type.includes(k));
             if (!share) { log('They don\'t share a card type - nothing happens.'); break; }
             const A = ctrl(mine), B = ctrl(theirs);
-            A.bf.splice(A.bf.indexOf(mine), 1); B.bf.splice(B.bf.indexOf(theirs), 1);
+            pull(A.bf, mine); pull(B.bf, theirs);
             mine.owner = B.i; theirs.owner = A.i; A.bf.push(theirs); B.bf.push(mine);
             log(`${A.name} and ${B.name} exchange control of ${mine.card.name} and ${theirs.card.name}.`);
             break;
@@ -4945,7 +5460,7 @@ function applyEffect(P, e, t, src) {
         case 'extort': {
             // Extort (702.101): pay {W/B} - each opponent loses 1 life and you gain 1
             const plan = planPayment(P, { ...parseCost(''), W: 1 }) || planPayment(P, { ...parseCost(''), B: 1 });
-            if (!plan || !(P.isAI ? P.hand.filter(x => canPay(P, x)).length === 0 || plan.length > 0 && G.phase !== 'main1' : confirm(`${name}: extort - pay {W/B} to drain 1?`))) break;
+            if (!plan || !(P.isAI ? P.hand.filter(x => canPay(P, x)).length === 0 || plan.length > 0 && G.phase !== 'main1' : askYes(P, `${name}: extort - pay {W/B} to drain 1?`))) break;
             plan.forEach(x => tapSource(P, x));
             O.life -= 1; P.life += 1; fire('gainLife', { P, n: 1 });
             log(`${name} extorts: ${O.name} ${you(O) ? 'lose' : 'loses'} 1 life and ${P.name} ${you(P) ? 'gain' : 'gains'} 1.`);
@@ -4960,7 +5475,7 @@ function applyEffect(P, e, t, src) {
         case 'returnSelfGy': {
             const X = G.players[src.owner];
             if (!X.gy.includes(src)) break;
-            X.gy.splice(X.gy.indexOf(src), 1);
+            pull(X.gy, src);
             if (e.bf) { resetObj(src); src.tapped = !!e.tapped; X.bf.push(src); log(`${name} returns to the battlefield${e.tapped ? ' tapped' : ''}.`); fire('enters', { o: src }); if (Rx(src).etb.length) (G.trigQ = G.trigQ || []).push({ P: X, o: src, effects: Rx(src).etb }); }
             else { X.hand.push(src); log(`${name} returns to ${you(X) ? 'your' : `${X.name}'s`} hand.`); }
             break;
@@ -5069,7 +5584,7 @@ function applyEffect(P, e, t, src) {
             if (!onBf(src.uid) || !src.front || !src.front.back) break;
             leaveBattlefield(src, 'exile');
             const X = G.players[src.owner];
-            X.exile.splice(X.exile.indexOf(src), 1);
+            pull(X.exile, src);
             resetObj(src);
             src.card = src.front.back;
             X.bf.push(src);
@@ -5111,7 +5626,7 @@ function applyEffect(P, e, t, src) {
             // Threaten effects: you control it until end of turn, untapped and with haste
             const x = t.o;
             if (x.owner === P.i) break;
-            G.players[x.owner].bf.splice(G.players[x.owner].bf.indexOf(x), 1);
+            pull(G.players[x.owner].bf, x);
             x.realOwner = x.realOwner ?? x.owner;
             x.owner = P.i; x.tapped = false; x.tkw.push('haste'); x.stolenTurn = G.turn;
             P.bf.push(x);
@@ -5164,7 +5679,7 @@ function applyEffect(P, e, t, src) {
         case 'loot': {
             drawCards(P, e.n);
             noteDiscard(P, Math.min(e.d, P.hand.length));
-            for (let k = 0; k < e.d && P.hand.length; k++) { const d = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0]; P.hand.splice(P.hand.indexOf(d), 1); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
+            for (let k = 0; k < e.d && P.hand.length; k++) { const d = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
             break;
         }
         case 'drawAll': G.players.forEach(X => drawCards(X, e.n)); break;
@@ -5179,7 +5694,7 @@ function applyEffect(P, e, t, src) {
         case 'baseSelf': if (onBf(src.uid)) { src.baseSet = { turn: G.turn, p: e.p, q: e.q }; log(`${src.card.name} is ${e.p}/${e.q} until end of turn.`); } break;
         case 'energy': P.energy = (P.energy || 0) + e.n; log(`${P.name} ${you(P) ? 'get' : 'gets'} ${e.n} energy (${P.energy}).`); break;
         case 'exileMadeAtEnd': if (G.lastMade) G.lastMade.exileAtEnd = G.turn; break;
-        case 'topCreatureElseGy': { const top = P.library[P.library.length - 1]; if (!top) break; if (/Creature/.test(top.card.type)) { P.library.pop(); P.hand.push(top); log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${top.card.name} and ${you(P) ? 'put' : 'puts'} it in hand.`); } else if (P.isAI || AUTOPLAY ? Rx(top).kind !== 'land' : confirm(`${name}: put ${top.card.name} into your graveyard? (Cancel = leave it on top.)`)) { P.library.pop(); P.gy.push(top); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${top.card.name} into the graveyard.`); } break; }
+        case 'topCreatureElseGy': { const top = P.library[P.library.length - 1]; if (!top) break; if (/Creature/.test(top.card.type)) { P.library.pop(); P.hand.push(top); log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${top.card.name} and ${you(P) ? 'put' : 'puts'} it in hand.`); } else if (P.isAI || AUTOPLAY ? Rx(top).kind !== 'land' : askYes(P, `${name}: put ${top.card.name} into your graveyard? (Cancel = leave it on top.)`)) { P.library.pop(); P.gy.push(top); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${top.card.name} into the graveyard.`); } break; }
         case 'massReanimate': { const back = P.gy.filter(x => cardFits(x, e.what)); back.forEach(x => putOntoBattlefield(P, x, false)); log(`${back.length} card${back.length === 1 ? '' : 's'} return to the battlefield.`); break; }
         case 'millAll': G.players.forEach(X => { const milled = X.library.splice(-e.n).reverse(); X.gy.push(...milled); log(`${X.name} ${you(X) ? 'mill' : 'mills'} ${milled.length}.`); }); break;
         case 'edictN': for (let k = 0; k < e.n; k++) applyEffect(P, { t: 'edict', who: 'each player', what: 'creature' }, null, src); break;
@@ -5191,22 +5706,22 @@ function applyEffect(P, e, t, src) {
             break;
         }
         case 'minusEach': allPerms().filter(isCreature).forEach(c => { c.counters -= e.n; }); log(`Each creature gets ${e.n} -1/-1 counter${e.n === 1 ? '' : 's'}.`); break;
-        case 'stealPerm': { const from = G.players[t.o.owner]; if (from === P) break; from.bf.splice(from.bf.indexOf(t.o), 1); t.o.realOwner = t.o.realOwner ?? t.o.owner; t.o.owner = P.i; t.o.sick = true; P.bf.push(t.o); log(`${P.name} ${you(P) ? 'gain' : 'gains'} control of ${t.o.card.name}.`); break; }
+        case 'stealPerm': { const from = G.players[t.o.owner]; if (from === P) break; pull(from.bf, t.o); t.o.realOwner = t.o.realOwner ?? t.o.owner; t.o.owner = P.i; t.o.sick = true; P.bf.push(t.o); log(`${P.name} ${you(P) ? 'gain' : 'gains'} control of ${t.o.card.name}.`); break; }
         // ---- Top-1000 round (2026-10-06) ----
-        case 'discardIfNoSac': G.players.forEach(X => { if ((G.edictDid || [true, true])[X.i] || !X.hand.length) return; const d = X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0]; X.hand.splice(X.hand.indexOf(d), 1); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} couldn't sacrifice, so ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); }); break;
-        case 'lootAll': G.players.forEach(X => { drawCards(X, 1); if (!X.hand.length) return; const d = X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0]; X.hand.splice(X.hand.indexOf(d), 1); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); }); break;
+        case 'discardIfNoSac': G.players.forEach(X => { if ((G.edictDid || [true, true])[X.i] || !X.hand.length) return; const d = X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0]; pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} couldn't sacrifice, so ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); }); break;
+        case 'lootAll': G.players.forEach(X => { drawCards(X, 1); if (!X.hand.length) return; const d = X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0]; pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); }); break;
         case 'ctxPowDmg': { const from = G.ctxObj && onBf(G.ctxObj.uid) ? G.ctxObj : src; const n = Math.max(0, pow(from)); if (!n || !t) break; damage(t.p || t.o, n, from); log(`${from.card.name} deals ${n} damage to ${targetName(t)}.`); break; }
-        case 'cmdToHand': { const c = P.command.find(x => x.isCommander); if (c) { P.command.splice(P.command.indexOf(c), 1); P.hand.push(c); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${c.card.name} into ${you(P) ? 'your' : 'their'} hand from the command zone.`); } break; }
-        case 'foodOrTreasure': { const needMana = P.hand.some(h => Rx(h).kind !== 'land' && !canPay(P, h)); const kind = P.isAI || AUTOPLAY ? (needMana || P.life > 12 ? 'treasure' : 'food') : (confirm(`${name}: create a Treasure token? (Cancel = a Food token.)`) ? 'treasure' : 'food'); applyEffect(P, { t: 'artToken', n: 1, kind }, null, src); break; }
+        case 'cmdToHand': { const c = P.command.find(x => x.isCommander); if (c) { pull(P.command, c); P.hand.push(c); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${c.card.name} into ${you(P) ? 'your' : 'their'} hand from the command zone.`); } break; }
+        case 'foodOrTreasure': { const needMana = P.hand.some(h => Rx(h).kind !== 'land' && !canPay(P, h)); const kind = P.isAI || AUTOPLAY ? (needMana || P.life > 12 ? 'treasure' : 'food') : (askYes(P, `${name}: create a Treasure token? (Cancel = a Food token.)`) ? 'treasure' : 'food'); applyEffect(P, { t: 'artToken', n: 1, kind }, null, src); break; }
         case 'activeDraws': drawCards(G.players[G.active], e.n); break;
-        case 'enduring': { const X = G.players[src.owner]; if (!X.gy.includes(src)) break; X.gy.splice(X.gy.indexOf(src), 1); resetObj(src); src.enchOnly = true; X.bf.push(src); log(`${src.card.name} returns to the battlefield as an enchantment (it's not a creature).`); fire('enters', { o: src }); break; }
+        case 'enduring': { const X = G.players[src.owner]; if (!X.gy.includes(src)) break; pull(X.gy, src); resetObj(src); src.enchOnly = true; X.bf.push(src); log(`${src.card.name} returns to the battlefield as an enchantment (it's not a creature).`); fire('enters', { o: src }); break; }
         case 'loseAll': G.players.forEach(X => { X.life -= e.n; }); log(`Each player loses ${e.n} life.`); break;
         case 'discardAll': G.players.forEach(X => { for (let k = 0; k < e.n && X.hand.length; k++) { const d = X.hand.splice(rand(X.hand.length), 1)[0]; X.gy.push(d); log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${d.card.name} (at random).`); } }); break;
         case 'artToken': if (e.forLastCtrl) { applyEffect(G.lastPower ? G.lastPower.P : O, { ...e, forLastCtrl: false }, null, src); break; } if (e.n <= 0) break;
             if (!e.doubled && (tokenMult(P) > 1 || (e.kind === 'treasure' && P.bf.some(a => Rx(a).extraTreasure)))) { applyEffect(P, { ...e, n: e.n * tokenMult(P) + (e.kind === 'treasure' ? P.bf.filter(a => Rx(a).extraTreasure && !lostAbilities(a)).length : 0), doubled: true }, t, src); break; } for (let k = 0; k < e.n; k++) { G.lastMade = makeArtifactToken(P, e.kind); if (e.tapped) G.lastMade.tapped = true; } log(`${P.name} ${you(P) ? 'create' : 'creates'} ${e.n} ${ART_TOKENS[e.kind].name} token${e.n === 1 ? '' : 's'}.`); tokenMade(P); break;
         case 'selfBounce':
             if (onBf(src.uid)) { log(`${src.card.name} returns to its owner's hand.`); leaveBattlefield(src, 'hand'); }
-            else { const owner = G.players[src.owner]; if (owner.gy.includes(src)) { owner.gy.splice(owner.gy.indexOf(src), 1); owner.hand.push(src); log(`${src.card.name} returns to ${you(owner) ? 'your' : `${owner.name}'s`} hand.`); } }
+            else { const owner = G.players[src.owner]; if (owner.gy.includes(src)) { pull(owner.gy, src); owner.hand.push(src); log(`${src.card.name} returns to ${you(owner) ? 'your' : `${owner.name}'s`} hand.`); } }
             break;
         case 'sacSelf': if (onBf(src.uid)) { log(`${src.card.name} is sacrificed.`); dieOrLeave(src, 'gy'); } break;
         case 'fight': {
@@ -5248,7 +5763,7 @@ function applyEffect(P, e, t, src) {
             log(`${it.name} is countered (rule 701.6a).`);
             if (it.kind === 'spell' && e.exileCast && !['instant', 'sorcery'].includes(Rx(it.o).kind)) {
                 const x = it.o; moveSpellCard(x, 'exile');
-                const X = G.players[x.owner]; X.exile.splice(X.exile.indexOf(x), 1);
+                const X = G.players[x.owner]; pull(X.exile, x);
                 x.realOwner = x.owner; x.owner = P.i; x.playUntil = 1e9; x.freeCast = true; P.exile.push(x);
                 log(`${x.card.name} is exiled - ${P.name === 'You' ? 'you' : P.name} may cast it free.`);
             } else if (it.kind === 'spell') moveSpellCard(it.o, e.exileIt ? 'exile' : 'gy');
@@ -5454,7 +5969,7 @@ async function beginTurn() {
     for (const o of P.bf.filter(x => x.echoDue && Rx(x).echo)) {
         o.echoDue = false;
         const plan = planPayment(P, Rx(o).echo);
-        const pay = plan && (P.isAI || AUTOPLAY ? P.hand.filter(h => Rx(h).kind !== 'land').length <= 2 || creatureValue(o) >= 4 : confirm(`Echo: pay ${costSymbols(Rx(o).echo)} to keep ${o.card.name}? (Cancel = sacrifice it.)`));
+        const pay = plan && (P.isAI || AUTOPLAY ? P.hand.filter(h => Rx(h).kind !== 'land').length <= 2 || creatureValue(o) >= 4 : askYes(P, `Echo: pay ${costSymbols(Rx(o).echo)} to keep ${o.card.name}? (Cancel = sacrifice it.)`));
         if (pay) { plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} the echo for ${o.card.name}.`); }
         else { log(`${P.name} ${you(P) ? "don't" : "doesn't"} pay the echo - ${o.card.name} is sacrificed.`); fire('sacrificed', { o }); dieOrLeave(o, 'gy'); }
     }
@@ -5500,14 +6015,14 @@ async function endTurn(P) {
     allPerms().filter(o => o.copyOf && o.copyTurn === G.turn).forEach(o => { o.card = o.copyOf; delete o.copyOf; delete o.copyTurn; log(`${o.card.name} is itself again.`); });
     while (P.hand.length > 7 && !P.noMaxHand && !P.bf.some(x => Rx(x).noMaxHand)) {
         const d = P.hand.slice().sort((a, b) => b.card.cmc - a.card.cmc)[0];
-        P.hand.splice(P.hand.indexOf(d), 1);
+        pull(P.hand, d);
         P.gy.push(d); d.discardTurn = G.turn;
         log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} (hand size).`);
     }
     allPerms().forEach(o => { o.dmg = 0; o.dt = false; o.tp = 0; o.tq = 0; o.tkw = []; o.regen = 0; });
     // Stolen creatures go back (threaten effects end, 514.2)
     allPerms().filter(o => o.realOwner !== undefined && o.stolenTurn !== undefined).forEach(o => {
-        G.players[o.owner].bf.splice(G.players[o.owner].bf.indexOf(o), 1);
+        pull(G.players[o.owner].bf, o);
         o.owner = o.realOwner; delete o.realOwner; delete o.stolenTurn;
         G.players[o.owner].bf.push(o);
         log(`${o.card.name} goes back to ${you(G.players[o.owner]) ? 'you' : G.players[o.owner].name}.`);
@@ -5532,7 +6047,7 @@ async function humanCast(uid) {
     if (!canPay(P, o)) { toast('Not enough mana.'); return; }
     const savedMode = G.mode;
     o.teamworked = false;
-    if (Rx(o).teamwork && teamworkCrew(P, o)) o.teamworked = confirm(`${o.card.name}: use teamwork (tap creatures with total power ${Rx(o).teamwork}) to choose both modes?`);
+    if (Rx(o).teamwork && teamworkCrew(P, o)) o.teamworked = askYes(P, `${o.card.name}: use teamwork (tap creatures with total power ${Rx(o).teamwork}) to choose both modes?`);
     if (Rx(o).modes) {
         const i = await pickModes(P, Rx(o), Rx(o).modes, o);
         G.mode = savedMode;
@@ -5540,10 +6055,10 @@ async function humanCast(uid) {
         o.mode = i;
     }
     o.kicked = false;
-    if (Rx(o).kicker && canKick(P, o)) o.kicked = confirm(Rx(o).offspring ? `Pay offspring for ${o.card.name}? (A 1/1 token copy of it enters too.)` : `Pay the kicker cost for ${o.card.name}?`);
+    if (Rx(o).kicker && canKick(P, o)) o.kicked = askYes(P, Rx(o).offspring ? `Pay offspring for ${o.card.name}? (A 1/1 token copy of it enters too.)` : `Pay the kicker cost for ${o.card.name}?`);
     if (Rx(o).cost.x) {
         const mx = maxX(P, o);
-        const v = Math.floor(Number(prompt(`Choose X for ${o.card.name} (1 to ${mx}):`, String(mx))));
+        const v = Math.floor(Number(askFor(P, `Choose X for ${o.card.name} (1 to ${mx}):`, String(mx))));
         if (!(v >= 1 && v <= mx)) { renderGame(); return; }
         o.xVal = v;
     }
@@ -5926,6 +6441,7 @@ function aiPickTarget(P, e, source, valid) {
 function aiScore(P, o, target) {
     const r = Rx(o);
     const O = opp(P);
+    if (r.legendary && P.bf.some(x => x.card.name === o.card.name)) return 0; // the legend rule would bin one
     if (r.kind === 'creature') return 10 + (o.card.cmc || 0) * 2 + creatureValue(o) * 0.5;
     if (r.isAura) return target ? 6 + r.buff.p + r.buff.q : 0;
     if (r.isEquipment) return P.bf.some(isCreature) ? 5 : 1;
@@ -6180,7 +6696,7 @@ function aiAimAtPlaneswalkers(P, list) {
         const team = [];
         for (const a of free) { if (need <= 0) break; team.push(a); need -= pow(a); }
         if (need > 0) break;
-        team.forEach(a => { a.attackPW = w.uid; free.splice(free.indexOf(a), 1); });
+        team.forEach(a => { a.attackPW = w.uid; pull(free, a); });
     }
 }
 function aiChooseAttackersFree(P) {
@@ -6197,10 +6713,10 @@ function aiChooseAttackersFree(P) {
     if (P.aiLevel === 'easy') return cands.filter(a => !canBeBlocked(a) || Math.random() < 0.5);
     return cands.filter(a => {
         if (!canBeBlocked(a)) return true;
-        const threats = blockers.filter(b => canBlock(b, a) && (pow(b) >= tou(a) - a.dmg || has(b, 'deathtouch')));
+        const threats = blockers.filter(b => canBlock(b, a) && combatKills(b, a));
         if (!threats.length) return true;
         // Even or better trades: our attacker kills every creature that could kill it
-        if (threats.every(b => pow(a) >= tou(b) - b.dmg && creatureValue(a) <= creatureValue(b) + 0.5)) return true;
+        if (threats.every(b => combatKills(a, b) && creatureValue(a) <= creatureValue(b) + 0.5)) return true;
         // Push when they're low and we have more creatures, or when the
         // board has stalled and our side is clearly bigger
         if (D.life <= 6 && cands.length > blockers.length) return true;
@@ -6210,17 +6726,32 @@ function aiChooseAttackersFree(P) {
     });
 }
 
+// Would a's combat damage kill b, when the two fight? Counts first and double
+// strike (the faster one may kill the other before it deals damage),
+// deathtouch, indestructible and protection (audit, 2026-10-06).
+const firstStriker = o => has(o, 'first strike') || has(o, 'double strike');
+function rawKills(a, b) {
+    if (pow(a) <= 0 || protFrom(b, a) || has(b, 'indestructible')) return false;
+    const dmg = has(a, 'double strike') && !firstStriker(b) ? pow(a) * 2 : pow(a);
+    return has(a, 'deathtouch') || dmg >= tou(b) - b.dmg;
+}
+function combatKills(a, b) {
+    if (!rawKills(a, b)) return false;
+    // b strikes first and kills a: a never deals its damage
+    if (firstStriker(b) && !firstStriker(a) && rawKills(b, a)) return false;
+    return true;
+}
 function aiChooseBlocks(D, A) {
     const atks = G.attackers.map(onBf).filter(Boolean).sort((a, b) => pow(b) - pow(a));
     const free = D.bf.filter(o => isCreature(o) && !o.tapped);
     const blocks = {};
-    const take = b => free.splice(free.indexOf(b), 1);
+    const take = b => pull(free, b);
     let incoming = atks.reduce((s, a) => s + pow(a), 0);
     for (const atk of atks) {
         let options = free.filter(b => canBlock(b, atk));
         if (!options.length) continue;
-        const atkKills = b => pow(atk) >= tou(b) - b.dmg || has(atk, 'deathtouch');
-        const blockerKills = b => pow(b) >= tou(atk) - atk.dmg || has(b, 'deathtouch');
+        const atkKills = b => combatKills(atk, b);
+        const blockerKills = b => combatKills(b, atk);
         if (has(atk, 'menace')) {
             if (incoming >= D.life && options.length >= 2) { const two = options.sort((a, b) => creatureValue(a) - creatureValue(b)).slice(0, 2); two.forEach(take); blocks[atk.uid] = two.map(b => b.uid); incoming -= pow(atk); }
             continue;
@@ -6229,6 +6760,19 @@ function aiChooseBlocks(D, A) {
         const safe = options.filter(b => !atkKills(b));
         const trade = options.filter(b => blockerKills(b) && creatureValue(b) <= creatureValue(atk) + 1);
         let pick = safeKill[0] || safe.sort((a, b) => creatureValue(a) - creatureValue(b))[0] || trade.sort((a, b) => creatureValue(a) - creatureValue(b))[0];
+        // A double block: two creatures that kill it together, when it can only kill one of them
+        if (!pick && D.aiLevel !== 'easy' && options.length >= 2 && !has(atk, 'indestructible') && !firstStriker(atk) && creatureValue(atk) >= 3) {
+            const pool = options.filter(b => !protFrom(atk, b)).sort((a, b) => pow(b) - pow(a));
+            for (let i = 0; i < pool.length && !blocks[atk.uid]; i++) for (let j = i + 1; j < pool.length; j++) {
+                const [b1, b2] = [pool[i], pool[j]];
+                const together = has(b1, 'deathtouch') || has(b2, 'deathtouch') || pow(b1) + pow(b2) >= tou(atk) - atk.dmg;
+                const killsBoth = !has(atk, 'deathtouch') ? pow(atk) >= (tou(b1) - b1.dmg) + (tou(b2) - b2.dmg) : pow(atk) >= 2;
+                if (together && !killsBoth && !has(atk, 'trample') && Math.max(creatureValue(b1), creatureValue(b2)) <= creatureValue(atk)) {
+                    take(b1); take(b2); blocks[atk.uid] = [b1.uid, b2.uid]; incoming -= pow(atk); break;
+                }
+            }
+            if (blocks[atk.uid]) continue;
+        }
         if (!pick && incoming >= D.life) pick = options.sort((a, b) => creatureValue(a) - creatureValue(b))[0]; // chump to survive
         if (pick && D.aiLevel === 'easy' && incoming < D.life && Math.random() < 0.5) pick = null; // misses blocks
         if (pick) {
@@ -7254,7 +7798,7 @@ function sellSealedTo(P) {
     const packs = profile.displayCase.filter(l => l.sealed && l.askingPrice <= packMarket(l.meta) * 1.1);
     if (!packs.length || Math.random() > 0.7) return false;
     const l = packs.sort((a, b) => a.askingPrice - b.askingPrice)[0];
-    profile.displayCase.splice(profile.displayCase.indexOf(l), 1);
+    pull(profile.displayCase, l);
     profile.usd = round2(profile.usd + l.askingPrice);
     const T = profile.shopToday;
     T.revenue = round2(T.revenue + l.askingPrice);
@@ -8531,63 +9075,6 @@ async function grantPrizePacks(play, collector) {
     }
 }
 
-// ---- Deck analytics in the builder: mana curve and a test hand ----
-function curveSVG(curve) {
-    const W = 260, H = 120, padL = 4, padB = 18, padT = 16;
-    const max = Math.max(1, ...curve);
-    const slot = (W - padL) / curve.length;
-    const bw = Math.min(24, slot - 6);
-    const peak = curve.indexOf(Math.max(...curve));
-    const y = v => H - padB - (v / max) * (H - padB - padT);
-    const bar = (v, i) => {
-        const x = padL + i * slot + (slot - bw) / 2;
-        const top = y(v), h = H - padB - top;
-        const r = Math.min(4, h / 2);
-        const path = h > 0 ? `M${x},${H - padB} V${top + r} Q${x},${top} ${x + r},${top} H${x + bw - r} Q${x + bw},${top} ${x + bw},${top + r} V${H - padB} Z` : '';
-        const label = i === curve.length - 1 ? '7+' : String(i);
-        return `<g class="cv-col"><title>Mana value ${label}: ${v} card${v === 1 ? '' : 's'}</title>
-            <rect x="${padL + i * slot}" y="0" width="${slot}" height="${H}" fill="transparent"></rect>
-            ${path ? `<path d="${path}" class="cv-bar"></path>` : ''}
-            ${i === peak && v ? `<text x="${x + bw / 2}" y="${top - 4}" class="cv-val">${v}</text>` : ''}
-            <text x="${x + bw / 2}" y="${H - 4}" class="cv-axis">${label}</text></g>`;
-    };
-    return `<svg viewBox="0 0 ${W} ${H}" class="curve-svg" role="img" aria-label="Mana curve: ${curve.map((v, i) => `${i === curve.length - 1 ? '7+' : i}: ${v}`).join(', ')}">
-        <line x1="${padL}" x2="${W}" y1="${H - padB}" y2="${H - padB}" class="cv-base"></line>${curve.map(bar).join('')}</svg>`;
-}
-function deckAnalyticsHTML(d) {
-    const entries = Object.entries(d.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c);
-    const curve = Array(8).fill(0);
-    let spells = 0, mvSum = 0, lands = 0, creatures = 0;
-    entries.forEach(({ c, n }) => {
-        const k = rulesFor(c).kind;
-        if (k === 'land') { lands += n; return; }
-        curve[Math.min(7, Math.round(c.cmc))] += n;
-        spells += n; mvSum += c.cmc * n;
-        if (k === 'creature') creatures += n;
-    });
-    return `<div class="analytics">
-        <div class="lane-label">Mana curve (nonland cards)</div>
-        ${curveSVG(curve)}
-        <div class="note">Average mana value <strong>${spells ? (mvSum / spells).toFixed(2) : '0'}</strong> · ${creatures} creatures · ${spells - creatures} other spells · ${lands} lands</div>
-        <details class="note"><summary>Curve as a table</summary><table class="pos-table"><tr>${curve.map((_, i) => `<th>${i === 7 ? '7+' : i}</th>`).join('')}</tr><tr>${curve.map(v => `<td>${v}</td>`).join('')}</tr></table></details>
-        <div class="row" style="margin-top:8px;"><button class="btn small" onclick="drawTestHand()">🃏 Draw test hand</button><span class="note" id="testHandNote"></span></div>
-        <div id="testHand" class="test-hand"></div>
-    </div>`;
-}
-function drawTestHand() {
-    const d = editing;
-    if (!d) return;
-    const pool = [];
-    Object.entries(d.cards).forEach(([id, n]) => { const c = CARDS.get(id); if (c) for (let i = 0; i < n; i++) pool.push(c); });
-    if (pool.length < 7) { $('testHandNote').textContent = 'Add at least 7 cards first.'; return; }
-    const hand = shuffle(pool).slice(0, 7);
-    const lands = hand.filter(c => rulesFor(c).kind === 'land').length;
-    const cheap = hand.filter(c => rulesFor(c).kind !== 'land' && c.cmc <= 2).length;
-    const verdict = lands <= 1 ? 'Risky: too few lands - most players would mulligan.' : lands >= 6 ? 'Flood: too many lands - most players would mulligan.' : lands === 2 && !cheap ? 'Two lands and nothing cheap: a borderline keep.' : 'A keepable hand.';
-    $('testHandNote').innerHTML = `${lands} land${lands === 1 ? '' : 's'}, ${cheap} play${cheap === 1 ? '' : 's'} at 2 or less. ${verdict}`;
-    $('testHand').innerHTML = hand.map((c, i) => `<button type="button" class="th-card" style="--i:${i}" onclick="showCardSheet('${c.id}')" title="${esc(c.name)}">${c.imgS || c.img ? `<img src="${c.imgS || c.img}" alt="${esc(c.name)}">` : `<span class="noimg">${esc(c.name)}</span>`}</button>`).join('');
-}
-
 // =====================================================================
 // Rules round 2 (2026-10-05): triggered abilities, activated abilities
 // (including Crew, Cycling and planeswalker loyalty), lords and anthems,
@@ -8980,14 +9467,14 @@ function sagaChapter(P, o) {
 async function optionalCost(P, e, src) {
     if (e.t === 'optOppDraw') {
         const O = opp(P);
-        const yes = P.isAI ? true : confirm(`${src.card.name}: let ${O.name} draw a card to copy the spell?`);
+        const yes = P.isAI ? true : askYes(P, `${src.card.name}: let ${O.name} draw a card to copy the spell?`);
         if (yes) drawCards(O, 1);
         return yes;
     }
     const what = e.t === 'optPay' ? `pay ${['W', 'U', 'B', 'R', 'G', 'C'].map(c => `{${c}}`.repeat(e.cost[c])).join('')}${e.cost.generic ? `{${e.cost.generic}}` : ''}` : e.t === 'optLife' ? `pay ${e.n} life` : e.t === 'optSac' ? `sacrifice a${e.what === 'artifact' ? 'n' : ''} ${e.what}` : 'discard a card';
     const can = e.t === 'optPay' ? !!planPayment(P, e.cost) : e.t === 'optLife' ? P.life > e.n : e.t === 'optSac' ? !!sacFodder(P, src, e.what) : P.hand.length > 0;
     if (!can) return false;
-    const yes = P.isAI ? true : confirm(`${src.card.name}: ${what}?`);
+    const yes = P.isAI ? true : askYes(P, `${src.card.name}: ${what}?`);
     if (!yes) return false;
     if (e.t === 'optPay') planPayment(P, e.cost).forEach(x => tapSource(P, x));
     if (e.t === 'optLife') P.life -= e.n;
@@ -9281,7 +9768,7 @@ async function activate(P, o, a, presetTarget, presetX) {
     if (a.cost && a.cost.mana && a.cost.mana.x) {
         const mx = maxActX(P, o, a);
         let x = presetX ?? mx;
-        if (!P.isAI && !AUTOPLAY && presetX === undefined) { x = Math.floor(Number(prompt(`Choose X for ${o.card.name} (0 to ${mx}):`, String(mx)))); if (!(x >= 0 && x <= mx)) return false; }
+        if (!P.isAI && !AUTOPLAY && presetX === undefined) { x = Math.floor(Number(askFor(P, `Choose X for ${o.card.name} (0 to ${mx}):`, String(mx)))); if (!(x >= 0 && x <= mx)) return false; }
         xExtra = x * (a.cost.mana.xn || 1);
         a = { ...a, effects: withX(a.effects, x) };
     }
@@ -9311,16 +9798,16 @@ async function activate(P, o, a, presetTarget, presetX) {
         plan.forEach(s => tapSource(P, s));
         if (a.cost.tap) { o.tapped = true; fire('tapped', { o }); }
         if (a.cost.life) { P.life -= a.cost.life; }
-        if (a.cost.discard) { const d = P.hand.slice().sort((x, y) => (x.card.cmc || 0) - (y.card.cmc || 0))[0]; P.hand.splice(P.hand.indexOf(d), 1); P.gy.push(d); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
+        if (a.cost.discard) { const d = P.hand.slice().sort((x, y) => (x.card.cmc || 0) - (y.card.cmc || 0))[0]; pull(P.hand, d); P.gy.push(d); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
         if (a.once) { o.actTurn = o.actTurn || {}; o.actTurn[a.text] = G.turn; }
         if (a.onceEver || a.powerUp) { o.usedOnce = o.usedOnce || {}; o.usedOnce[a.text] = true; }
         if (a.whelp) { o.whelpN = o.whelpTurn === G.turn ? (o.whelpN || 0) + 1 : 1; o.whelpTurn = G.turn; if (o.whelpN >= a.whelp) o.sacAtEnd = G.turn; }
         if (a.cost.discardHand) { const n = P.hand.length; P.hand.forEach(c => { c.discardTurn = G.turn; }); P.gy.push(...P.hand.splice(0)); noteDiscard(P, n); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${n === 1 ? 'a card' : `${n} cards`} (the whole hand).`); }
-        if (a.cost.discardSelf) { P.hand.splice(P.hand.indexOf(o), 1); P.gy.push(o); o.discardTurn = G.turn; noteDiscard(P, 1); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${o.card.name}.`); }
-        if (a.cost.exileSelfHand) { P.hand.splice(P.hand.indexOf(o), 1); P.exile.push(o); log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${o.card.name} from ${you(P) ? 'your' : 'their'} hand.`); }
+        if (a.cost.discardSelf) { pull(P.hand, o); P.gy.push(o); o.discardTurn = G.turn; noteDiscard(P, 1); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${o.card.name}.`); }
+        if (a.cost.exileSelfHand) { pull(P.hand, o); P.exile.push(o); log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${o.card.name} from ${you(P) ? 'your' : 'their'} hand.`); }
         if (a.cost.energy) { P.energy -= a.cost.energy; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${a.cost.energy} energy.`); }
         if (a.cost.removeCounter) { o.counters -= a.cost.removeCounter; log(`${o.card.name}: a +1/+1 counter is removed.`); }
-        if (a.cost.exileSelfGy) { P.gy.splice(P.gy.indexOf(o), 1); P.exile.push(o); log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${o.card.name} from the graveyard.`); }
+        if (a.cost.exileSelfGy) { pull(P.gy, o); P.exile.push(o); log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${o.card.name} from the graveyard.`); }
         for (const kind of [a.cost.sacCreature && 'creature', a.cost.sacPerm].filter(Boolean)) { const f = sacFodder(P, o, kind); if (isCreature(f)) G.lastSacPow = Math.max(0, pow(f)); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }
         if (a.cost.sacN) { const fs = P.bf.filter(x => new RegExp(`\\b${a.cost.sacN.kind}\\b`).test(x.card.type)).sort((x, y) => permValue(x) - permValue(y)).slice(0, a.cost.sacN.n); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(', ')}.`); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); }
     }
@@ -9338,7 +9825,7 @@ function canCycle(P, o) { const c = Rx(o).cycling; return !!c && P.hand.includes
 async function cycle(P, o) {
     if (!canCycle(P, o)) return false;
     planPayment(P, Rx(o).cycling).forEach(s => tapSource(P, s));
-    P.hand.splice(P.hand.indexOf(o), 1);
+    pull(P.hand, o);
     P.gy.push(o);
     log(`${P.name} ${you(P) ? 'cycle' : 'cycles'} ${o.card.name}.`);
     drawCards(P, 1);
@@ -9366,7 +9853,7 @@ async function landcycle(P, o) {
     if (!canLandcycle(P, o)) return false;
     const c = Rx(o).landcycle;
     planPayment(P, c.cost).forEach(s => tapSource(P, s));
-    P.hand.splice(P.hand.indexOf(o), 1); P.gy.push(o); o.discardTurn = G.turn; noteDiscard(P, 1);
+    pull(P.hand, o); P.gy.push(o); o.discardTurn = G.turn; noteDiscard(P, 1);
     log(`${P.name} ${you(P) ? 'cycle' : 'cycles'} ${o.card.name} (landcycling).`);
     await applyChoiceEffect(P, { t: 'fetchLand', n: 1, what: c.what === 'basic land' ? 'basic land' : c.what }, o);
     renderGame();
@@ -9629,7 +10116,7 @@ function dieOrLeave(o, zone) {
     // Persist / undying (702.79, 702.93): it comes back with a -1/-1 or +1/+1 counter
     if (back && G.players[o.owner].gy.includes(o)) {
         const P = G.players[o.owner];
-        P.gy.splice(P.gy.indexOf(o), 1);
+        pull(P.gy, o);
         resetObj(o);
         o.counters = Math.round(back);
         P.bf.push(o);
