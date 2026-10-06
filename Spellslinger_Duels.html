@@ -79,6 +79,7 @@
         .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
         .brand h1 { font-size: 1.5rem; }
         .brand .tag { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--color-warning); color: var(--color-warning); }
+        .coins.cash { border-color: var(--color-success); color: var(--color-success); font: inherit; font-weight: 700; cursor: pointer; }
         .coins { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--bg-panel); border: 1px solid var(--gold); color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
         .acct { display: inline-flex; align-items: center; gap: 6px; color: var(--text-soft); }
         .acct select { padding: 5px 8px; }
@@ -786,7 +787,13 @@
             .topbar { flex-wrap: nowrap; gap: 8px; }
             .topbar .brand h1 { font-size: 1.15rem; white-space: nowrap; }
             .topbar .tag, .topbar .acct, .topbar > .btn.small { display: none; }
-            .topbar .coins { margin-left: auto; }
+            .topbar #coinPill { margin-left: auto; }
+            .topbar .coins { padding: 4px 7px; gap: 3px; font-size: 0.85rem; flex: none; }
+            .topbar .brand { min-width: 0; flex: 0 1 auto; }
+            .topbar .brand h1 { font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; }
+            .topbar .brand-ico { display: none; }
+            #acctBtn { flex: none; }
+            #acctBtn { padding: 3px 8px; }
             nav.tabs { display: none; }
             body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
             .bottom-nav.phone-only { display: grid !important; }
@@ -827,11 +834,12 @@
 <div class="wrap">
     <header class="topbar">
         <div class="brand">
-            <h1>🪄 Spellslinger Duels</h1>
+            <h1><span class="brand-ico" aria-hidden="true">🪄 </span>Spellslinger Duels</h1>
             <span class="tag">Test build</span>
         </div>
         <label class="acct" title="Each player has their own coins, collection, decks and record (saved in this browser)">👤 <select id="acctSel" onchange="pickAccount(this.value)" aria-label="Player"></select></label>
         <span class="coins" id="coinPill" title="Coins: free, in-game only. Win games to earn more.">🪙 <span id="coinCount">0</span></span>
+        <button type="button" class="coins cash" id="cashPill" onclick="showView('shop')" title="Shop cash: in-game money. Earn it in the Shop; spend it at the Distributor and on imported decks. Tap to open the Shop.">💵 <span id="cashCount">$0.00</span></button>
         <button class="btn small" onclick="addTestCoins()" title="Test build: add free coins to this player">＋🪙 Add coins</button>
         <button class="btn small" onclick="restartPlayer()" title="Test build: wipe this player's coins, cards, decks and record and start fresh">↺ Start over</button>
         <button type="button" class="btn small phone-only" id="acctBtn" onclick="accountSheet()" aria-label="Player and test options">👤 <span id="acctName"></span></button>
@@ -1239,7 +1247,20 @@ function addTestCoins() {
     if (!$('view-packs').classList.contains('hidden')) renderPacksView();
     toast(`🪙 +${Math.min(n, 1e7).toLocaleString()} coins for ${accounts.current}.`);
 }
-function renderCoins() { $('coinCount').textContent = (profile ? profile.coins : 0).toLocaleString(); }
+// Phones show big amounts short (12.5k, $1.2k) so the header stays one row
+const shortNum = n => n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}M` : n >= 1e4 ? `${(n / 1e3).toFixed(n >= 1e5 ? 0 : 1)}k` : Math.round(n).toLocaleString();
+function renderCoins() {
+    const coins = profile ? profile.coins : 0, usdAmt = profile ? profile.usd || 0 : 0;
+    const phone = isPhone();
+    const c = phone ? shortNum(coins) : coins.toLocaleString();
+    if ($('coinCount').textContent !== c) $('coinCount').textContent = c;
+    // Shop cash next to the coins (2026-10-07, owner's request)
+    const full = `$${usdAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const cash = phone && usdAmt >= 1000 ? `$${usdAmt >= 1e4 ? shortNum(usdAmt) : `${(usdAmt / 1e3).toFixed(1)}k`}` : phone ? `$${Math.round(usdAmt)}` : full;
+    if ($('cashCount') && $('cashCount').textContent !== cash) { $('cashCount').textContent = cash; $('cashPill').setAttribute('aria-label', `Shop cash ${full}. Open the Shop`); }
+}
+// Cash changes in many places (sales, rent, grading...): keep the pill current
+setInterval(() => { try { if (profile) renderCoins(); } catch (e) { /* not ready yet */ } }, 1000);
 
 // ---- Scryfall: requests spaced out, as Scryfall asks (50-100ms apart) ----
 let sfQueue = Promise.resolve();
