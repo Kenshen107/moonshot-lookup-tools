@@ -232,6 +232,14 @@
         .mx-price { font-family: var(--font-display); color: var(--gold); font-weight: 700; }
         .mx-kinds { flex: 1 1 200px; }
         .mx-bar-end { display: inline-flex; gap: 10px; align-items: center; margin-left: auto; }
+        #impText, #oppText { width: 100%; background: var(--bg-inset); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; font: 0.9em/1.4 ui-monospace, Consolas, monospace; }
+        .sheet.one.wide { max-width: 760px; }
+        .imp-sum { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+        .imp-sum > div { background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px 10px; display: grid; }
+        .imp-table { width: 100%; margin-top: 6px; }
+        .imp-table td:not(:first-child), .imp-table th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+        .opp-h { font-size: 1rem; margin: 10px 0 6px; }
+        .opp-custom { margin-bottom: 10px; max-width: 320px; }
         #bulkText { width: 100%; background: var(--bg-inset); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; font: 0.9em/1.4 ui-monospace, Consolas, monospace; }
         @media (max-width: 1000px) { .mx-stats { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .mx-main { grid-template-columns: 190px minmax(0, 1fr); } }
         @media (max-width: 700px) {
@@ -1286,7 +1294,7 @@ function slimFace(c, face, n) {
         cmc: ['split', 'adventure', 'modal_dfc'].includes(c.layout) ? manaValueOf(face.mana_cost) : (c.cmc || 0),
         type: face.type_line || c.type_line || '', text: face.oracle_text || '', power: face.power, toughness: face.toughness,
         colors: face.colors || c.colors || [], ci: c.color_identity || [], img: img.normal || null, imgS: img.small || null,
-        rarity: c.rarity, set: c.set, setName: c.set_name, layout: c.layout, loyalty: face.loyalty ?? c.loyalty,
+        rarity: c.rarity, set: c.set, num: c.collector_number, setName: c.set_name, layout: c.layout, loyalty: face.loyalty ?? c.loyalty,
         legal: { modern: L.modern, commander: L.commander },
         usd: (c.prices && (c.prices.usd || c.prices.usd_foil)) || null,
         usdFoil: (c.prices && c.prices.usd_foil) || null,
@@ -2931,6 +2939,7 @@ async function renderDeckPicker() {
             <button class="btn primary" onclick="newDeck('commander')">➕ New Commander deck</button>
             <button class="btn primary" onclick="newDeck('casual')">➕ New Casual deck</button>
             <button class="btn gold" onclick="starterPicker()">🎁 Get a starter deck</button>
+            <button class="btn" onclick="importDialog()">📥 Import a decklist (Moxfield)</button>
         </div>
         <p class="note" style="margin-top:8px;">Starter decks are ready to play and don't use your collection. Decks you build use cards you've pulled from packs (basic lands are free).</p>
         <h2 style="margin-top:16px;">Your collection</h2>
@@ -3400,7 +3409,7 @@ function renderBuilderBar(entries, cmd, probs) {
         ${d.format === 'commander' ? `<span class="${cmd ? 'ok' : 'warn'}">Commander ${cmd ? '✓' : '✗'}</span>` : `<span class="note">${F.name} · ${F.size}+</span>`}
         <span class="mx-price" title="TCGplayer market prices from Scryfall">${usd(value)}</span>
         <span class="mx-kinds note">${TYPE_GROUPS.filter(([k]) => kinds[k]).map(([k, l]) => `${l} ${kinds[k]}`).join(' · ')}</span>
-        <span class="mx-bar-end">${probs.length ? `<span class="warn" title="${esc(probs.join('\n'))}">⚠ ${probs.length} to fix</span>` : '<span class="ok">✓ Ready</span>'}
+        <span class="mx-bar-end">${(() => { const m = d.starter ? { need: [] } : deckMissing(d); const k = m.need.reduce((a, x) => a + x.n, 0); return k ? `<button type="button" class="btn small gold" onclick="buyMissing()" title="Buy the ${k} cards this deck uses that you don't own, with shop cash (you have ${usd(profile.usd || 0)})">🛒 Buy missing (${k} · ${usd(m.cost)})</button>` : ''; })()}${probs.length ? `<span class="warn" title="${esc(probs.join('\n'))}">⚠ ${probs.length} to fix</span>` : '<span class="ok">✓ Ready</span>'}
         <button type="button" class="btn small primary" onclick="saveDeck()">💾 Save</button></span>`;
 }
 
@@ -3468,6 +3477,297 @@ function saveDeck() {
     toast(`Saved "${d.name}".`);
 }
 function closeBuilder() { editing = null; renderDeckPicker(); }
+
+// ---------------------------------------------------------------------
+// Decklists from Moxfield (2026-10-07, owner's request): paste a list,
+// buy the cards you don't own with in-game shop cash, or face it.
+// Moxfield's API doesn't let other sites read it, so lists are pasted
+// (Moxfield: Export -> Copy for Moxfield / MTGA / plain text).
+// ---------------------------------------------------------------------
+const IMPORT_NO_PRICE = 0.25; // a card Scryfall has no price for costs this much
+// "1 Sol Ring (CMR) 263 *F*", "4x Lightning Bolt", section headers, *CMDR*
+function parseDeckText(text) {
+    const out = { commander: [], main: [], side: [], unread: [] };
+    let section = 'main', blocks = [[]];
+    const HEAD = { commander: 'commander', commanders: 'commander', deck: 'main', main: 'main', mainboard: 'main', maindeck: 'main', sideboard: 'side', maybeboard: 'side', considering: 'side', companion: 'side', tokens: 'side', attractions: 'side', stickers: 'side' };
+    for (let raw of String(text || '').split(/\r?\n/)) {
+        const line = raw.trim();
+        if (!line) { if (blocks[blocks.length - 1].length) blocks.push([]); continue; }
+        const head = line.replace(/^\/\/\s*|^#\s*/, '').replace(/[:\s]*(\(\d+\))?$/, '').toLowerCase();
+        if (HEAD[head] && !/^\d/.test(line)) { section = HEAD[head]; blocks.push([]); continue; }
+        if (/^(\/\/|#)/.test(line)) continue;
+        const m = line.match(/^(?:SB:\s*)?(\d+)\s*x?\s+(.+?)$/i) || [null, '1', line];
+        let name = m[2], set = null, num = null, cmdr = false, foil = false;
+        if (/\*CMDR\*/i.test(name)) { cmdr = true; name = name.replace(/\*CMDR\*/ig, ''); }
+        if (/\*[FE]\*/.test(name)) { foil = true; name = name.replace(/\*[FE]\*/g, ''); }
+        name = name.replace(/\s+#\S.*$/, '').replace(/\s+\^[^^]*\^/g, '').trim();
+        const sm = name.match(/^(.+?)\s+\(([A-Za-z0-9]{2,6})\)(?:\s+([A-Za-z0-9★\-]+))?$/) || name.match(/^(.+?)\s+\[([A-Za-z0-9]{2,6})(?::([A-Za-z0-9★\-]+))?\]$/);
+        if (sm) { name = sm[1].trim(); set = sm[2].toLowerCase(); num = sm[3] || null; }
+        name = name.replace(/\s+\/\s+/g, ' // ');
+        if (!name) { out.unread.push(line); continue; }
+        const e = { n: Math.max(1, parseInt(m[1], 10) || 1), name, set, num, foil, line };
+        const where = cmdr ? 'commander' : /^SB:/i.test(line) ? 'side' : section;
+        out[where].push(e);
+        blocks[blocks.length - 1].push({ e, where });
+    }
+    // MTGO / Moxfield plain exports put the commander in a last short block after a blank line
+    blocks = blocks.filter(b => b.length);
+    if (!out.commander.length && blocks.length > 1) {
+        const last = blocks[blocks.length - 1];
+        const mainCount = out.main.reduce((a, e) => a + e.n, 0);
+        if (last.length <= 2 && last.every(x => x.e.n === 1 && x.where !== 'commander') && mainCount - last.length >= 97 && mainCount <= 101) {
+            last.forEach(x => { const arr = out[x.where]; arr.splice(arr.indexOf(x.e), 1); out.commander.push(x.e); });
+        }
+    }
+    return out;
+}
+// The cards for a parsed list: the printing named in the list when Scryfall has it, else any printing
+async function resolveDeckCards(entries) {
+    const want = entries.filter(e => e.set && e.num);
+    const bySetNum = new Map();
+    if (want.length) {
+        const { found } = await fetchCollection(want.map(e => ({ set: e.set, collector_number: e.num })));
+        // Only when the printing is the card named (a wrong number falls back to the name)
+        const named = new Set(want.map(e => `${e.set}:${e.num}:${e.name.toLowerCase()}`));
+        found.forEach(c => { if (named.has(`${c.set}:${c.num}:${c.fullName.toLowerCase()}`) || named.has(`${c.set}:${c.num}:${c.name.toLowerCase()}`)) bySetNum.set(`${c.set}:${c.num}`, c); });
+    }
+    const byName = await cardsByNames(entries.filter(e => !bySetNum.has(`${e.set}:${e.num}`)).map(e => e.name));
+    return entries.map(e => ({ ...e, card: bySetNum.get(`${e.set}:${e.num}`) || byName.get(e.name.toLowerCase()) || byName.get(e.name.split(' // ')[0].toLowerCase()) || null }));
+}
+const importPrice = card => parseFloat(card.usd || card.usdFoil) || IMPORT_NO_PRICE;
+// Your owned printings of a card, by name
+function ownedByName() {
+    const map = new Map();
+    Object.keys(profile.collection).forEach(id => { const c = CARDS.get(id); if (c && profile.collection[id] > 0) { const k = c.fullName.toLowerCase(); if (!map.has(k)) map.set(k, []); map.get(k).push(id); } });
+    return map;
+}
+
+let IMP = null; // the list being imported
+function importDialog() {
+    menuSheet('📥 Import a decklist', `
+        <p class="note">Paste a list from Moxfield (<strong>Export → Copy</strong>; the Moxfield, MTGA and plain text formats all work), Archidekt or MTG Arena. Cards you own are used first; the rest are bought at Scryfall's TCGplayer price with your shop cash (<strong>${usd(profile.usd || 0)}</strong>). Basic lands are free. Earn more cash in the 🏪 Shop.</p>
+        <textarea id="impText" rows="12" spellcheck="false" placeholder="1 Atraxa, Praetors' Voice (2X2) 190&#10;1 Sol Ring&#10;..." aria-label="Decklist">${esc(IMP ? IMP.text : '')}</textarea>
+        <div class="row" style="margin-top:8px;">
+            <input type="text" id="impName" placeholder="Deck name" value="${esc(IMP ? IMP.name : '')}" aria-label="Deck name" style="flex:1 1 180px;">
+            <select id="impFormat" aria-label="Format"><option value="auto">Format: work it out</option><option value="commander">Commander</option><option value="modern">Modern</option><option value="casual">Casual</option></select>
+            <button class="btn primary" onclick="checkImport()">Check prices</button>
+        </div>
+        <div id="impOut" style="margin-top:10px;"></div>`);
+    $('sheetHost').querySelector('.sheet').classList.add('wide');
+}
+async function checkImport() {
+    const text = $('impText').value;
+    const parsed = parseDeckText(text);
+    const all = [...parsed.commander, ...parsed.main];
+    if (!all.length) { $('impOut').innerHTML = '<p class="warn">No cards found in that text.</p>'; return; }
+    $('impOut').innerHTML = '<div class="loading">Looking up the cards and prices on Scryfall...</div>';
+    await loadBasics().catch(() => {});
+    await cardsByIds(Object.keys(profile.collection));
+    const rows = await resolveDeckCards(all);
+    const total = all.reduce((a, e) => a + e.n, 0);
+    let fmt = $('impFormat').value;
+    if (fmt === 'auto') fmt = parsed.commander.length || (total >= 98 && total <= 101) ? 'commander' : total >= 60 ? 'modern' : 'casual';
+    // The commander: the list's, else a legendary creature the player picks
+    let cmd = null;
+    if (fmt === 'commander') {
+        const marked = rows.filter(r => parsed.commander.includes(all[rows.indexOf(r)]) && r.card);
+        cmd = (marked[0] || rows.find(r => r.card && rulesFor(r.card).legendary && rulesFor(r.card).kind === 'creature')) || null;
+    }
+    IMP = { text, name: $('impName').value.trim(), fmt, rows, cmdRow: cmd, partners: fmt === 'commander' ? rows.filter(r => parsed.commander.includes(all[rows.indexOf(r)]) && r !== cmd).length : 0 };
+    renderImport();
+}
+// Which copies come from your collection, and what's left to buy
+function importPlan(rows, cmdRow) {
+    const owned = ownedByName();
+    const use = new Map(); // id -> copies used so far
+    const plan = rows.filter(r => r.card).map(r => {
+        const free = isBasic(r.card);
+        let need = r.n;
+        const from = [];
+        if (!free) for (const id of owned.get(r.card.fullName.toLowerCase()) || []) {
+            const left = (profile.collection[id] || 0) - (use.get(id) || 0);
+            const k = Math.min(left, need);
+            if (k > 0) { from.push([id, k]); use.set(id, (use.get(id) || 0) + k); need -= k; }
+            if (!need) break;
+        }
+        return { r, free, from, buy: free ? 0 : need, price: importPrice(r.card), isCmd: r === cmdRow };
+    });
+    const cost = plan.reduce((a, p) => a + p.buy * p.price, 0);
+    return { plan, cost: Math.round(cost * 100) / 100 };
+}
+function renderImport() {
+    const { rows, fmt, cmdRow } = IMP;
+    const { plan, cost } = importPlan(rows, cmdRow);
+    const missing = rows.filter(r => !r.card);
+    const cash = profile.usd || 0;
+    const count = rows.filter(r => r.card).reduce((a, r) => a + r.n, 0);
+    const toBuy = plan.reduce((a, p) => a + p.buy, 0);
+    const notYet = plan.filter(p => !p.free && rulesFor(p.r.card).support === 'none');
+    const legends = rows.filter(r => r.card && rulesFor(r.card).legendary && rulesFor(r.card).kind === 'creature');
+    const short = Math.max(0, cost - cash);
+    $('impOut').innerHTML = `
+        <div class="imp-sum">
+            <div><span class="pos-k">Cards</span><strong>${count}</strong></div>
+            <div><span class="pos-k">Format</span><strong>${FORMATS[fmt].name}</strong></div>
+            <div><span class="pos-k">You own</span><strong>${count - toBuy - plan.filter(p => p.free).reduce((a, p) => a + p.r.n, 0)}</strong></div>
+            <div><span class="pos-k">To buy</span><strong>${toBuy}</strong></div>
+            <div><span class="pos-k">Cost</span><strong class="money">${usd(cost)}</strong></div>
+            <div><span class="pos-k">Your cash</span><strong class="${short ? 'warn' : 'ok'}">${usd(cash)}</strong></div>
+        </div>
+        ${fmt === 'commander' ? `<div class="row" style="margin:8px 0;"><label class="note" for="impCmd">👑 Commander</label><select id="impCmd" onchange="IMP.cmdRow = IMP.rows[this.value]; renderImport();">${legends.length ? legends.map(r => `<option value="${rows.indexOf(r)}"${r === cmdRow ? ' selected' : ''}>${esc(r.card.fullName)}</option>`).join('') : '<option>No legendary creature in the list</option>'}</select>${IMP.partners ? '<span class="note">This game has one commander: the other one plays in the deck.</span>' : ''}</div>` : ''}
+        ${missing.length ? `<p class="warn">Not found on Scryfall (left out): ${missing.map(r => esc(r.name)).join(', ')}</p>` : ''}
+        ${notYet.length ? `<p class="note">⚠ ${notYet.length} card${notYet.length === 1 ? '' : 's'} can't be cast in the game yet (marked "Not yet"): ${notYet.slice(0, 8).map(p => esc(p.r.card.name)).join(', ')}${notYet.length > 8 ? '…' : ''}.</p>` : ''}
+        <details class="note" ${toBuy && toBuy <= 30 ? 'open' : ''}><summary>What you'd buy (${toBuy} card${toBuy === 1 ? '' : 's'}, most expensive first)</summary>
+            <table class="pos-table imp-table"><tr><th>Card</th><th>Own</th><th>Buy</th><th>Each</th><th>Total</th></tr>
+            ${plan.filter(p => p.buy).sort((a, b) => b.buy * b.price - a.buy * a.price).map(p => `<tr><td>${esc(p.r.card.fullName)}${p.isCmd ? ' 👑' : ''} ${supportBadge(p.r.card)}</td><td>${p.from.reduce((a, [, k]) => a + k, 0)}</td><td>${p.buy}</td><td>${p.r.card.usd || p.r.card.usdFoil ? usd(p.price) : `<span title="No price on Scryfall">~${usd(p.price)}</span>`}</td><td>${usd(p.buy * p.price)}</td></tr>`).join('')}</table></details>
+        <div class="row" style="margin-top:10px;">
+            <button class="btn gold" onclick="finishImport(true)" ${short || !toBuy ? 'disabled' : ''}>🛒 Buy ${toBuy} for ${usd(cost)} and save</button>
+            <button class="btn${toBuy ? '' : ' primary'}" onclick="finishImport(false)">${toBuy ? 'Save without buying' : '💾 Save the deck'}</button>
+        </div>
+        <p class="note">${short ? `You need <strong>${usd(short)}</strong> more. Earn it in the 🏪 Shop, then buy the missing cards from the deck builder (🛒 Buy missing). ` : ''}Prices are Scryfall's TCGplayer market price for that printing (cards with no price cost ${usd(IMPORT_NO_PRICE)}). Bought cards arrive Mint.</p>`;
+}
+function finishImport(buy) {
+    const { rows, fmt, cmdRow } = IMP;
+    const { plan, cost } = importPlan(rows, cmdRow);
+    if (buy && cost > (profile.usd || 0)) { toast('Not enough shop cash.'); return; }
+    const cards = {};
+    let commander = null;
+    plan.forEach(p => {
+        // Owned printings first, then the list's printing (bought or missing)
+        p.from.forEach(([id, k]) => { cards[id] = (cards[id] || 0) + k; });
+        if (p.free) cards[p.r.card.id] = (cards[p.r.card.id] || 0) + p.r.n;
+        if (p.buy) {
+            if (buy) for (let k = 0; k < p.buy; k++) addCopy(p.r.card.id, { c: 'M' });
+            cards[p.r.card.id] = (cards[p.r.card.id] || 0) + p.buy;
+        }
+        if (p.isCmd) { const id = p.from.length ? p.from[0][0] : p.r.card.id; commander = id; cards[id]--; if (!cards[id]) delete cards[id]; }
+    });
+    if (buy) {
+        profile.usd = Math.round(((profile.usd || 0) - cost) * 100) / 100;
+        (profile.shopLedger = profile.shopLedger || []).push({ day: profile.shopDay || 1, note: `Bought ${plan.reduce((a, p) => a + p.buy, 0)} cards for an imported deck`, usd: -cost });
+    }
+    const deck = { id: `d${Date.now()}`, name: IMP.name || (commander ? CARDS.get(commander).name : 'Imported deck'), format: fmt, cards, commander, starter: false, imported: true };
+    profile.decks.push(deck);
+    saveProfile();
+    renderCoins();
+    closeSheet();
+    IMP = null;
+    toast(buy ? `Bought the cards for ${usd(cost)} and saved "${deck.name}".` : `Saved "${deck.name}".`);
+    renderDeckPicker();
+}
+// Cards a deck uses that you don't own, and what they'd cost
+function deckMissing(deck) {
+    const need = [];
+    const use = { ...deck.cards };
+    if (deck.commander) use[deck.commander] = (use[deck.commander] || 0) + 1;
+    Object.entries(use).forEach(([id, n]) => {
+        const c = CARDS.get(id);
+        if (!c || isBasic(c)) return;
+        const k = n - (profile.collection[id] || 0);
+        if (k > 0) need.push({ id, card: c, n: k, price: importPrice(c) });
+    });
+    return { need, cost: Math.round(need.reduce((a, x) => a + x.n * x.price, 0) * 100) / 100 };
+}
+function buyMissing() {
+    const d = editing;
+    if (!d) return;
+    const { need, cost } = deckMissing(d);
+    if (!need.length) return;
+    if (cost > (profile.usd || 0)) { toast(`You need ${usd(cost - (profile.usd || 0))} more shop cash. Earn it in the 🏪 Shop.`); return; }
+    need.forEach(x => { for (let k = 0; k < x.n; k++) addCopy(x.id, { c: 'M' }); });
+    profile.usd = Math.round(((profile.usd || 0) - cost) * 100) / 100;
+    (profile.shopLedger = profile.shopLedger || []).push({ day: profile.shopDay || 1, note: `Bought ${need.reduce((a, x) => a + x.n, 0)} missing cards for "${d.name}"`, usd: -cost });
+    saveProfile();
+    renderCoins();
+    toast(`Bought ${need.reduce((a, x) => a + x.n, 0)} cards for ${usd(cost)}.`);
+    builderChanged();
+}
+
+// ---- Opponents from a pasted list (free: it's the other side of the table) ----
+async function listToOppDeck(text, wantFormat) {
+    await loadBasics();
+    const parsed = parseDeckText(text);
+    const all = [...parsed.commander, ...parsed.main];
+    if (!all.length) throw new Error('No cards found in that list.');
+    const rows = await resolveDeckCards(all);
+    const total = all.reduce((a, e) => a + e.n, 0);
+    const format = wantFormat === 'commander' || parsed.commander.length || (total >= 98 && total <= 101) ? 'commander' : 'casual';
+    let commander = null;
+    if (format === 'commander') {
+        const c = rows.find(r => parsed.commander.includes(all[rows.indexOf(r)]) && r.card) || rows.find(r => r.card && rulesFor(r.card).legendary && rulesFor(r.card).kind === 'creature');
+        if (!c) throw new Error('That list has no commander (a legendary creature).');
+        commander = c.card;
+    }
+    const ci = (commander ? commander.ci : [...new Set(rows.filter(r => r.card).flatMap(r => r.card.ci))]).filter(c => BASIC_IDS[c]);
+    const entries = [];
+    let swapped = 0, used = false;
+    rows.forEach(r => {
+        if (!r.card) { swapped += r.n; return; }
+        let n = r.n;
+        if (commander && r.card.id === commander.id && !used) { used = true; n--; }
+        if (!n) return;
+        if (rulesFor(r.card).support === 'none' && !isBasic(r.card)) { swapped += n; return; }
+        entries.push({ card: r.card, n });
+    });
+    // Swapped and missing cards become basic lands of its colors (so it keeps its size)
+    for (let i = 0; i < swapped; i++) {
+        const id = BASIC_IDS[ci.length ? ci[i % ci.length] : 'W'];
+        const e = entries.find(x => x.card.id === id);
+        if (e) e.n++; else entries.push({ card: CARDS.get(id), n: 1 });
+    }
+    return { name: commander ? commander.name : 'Pasted deck', format, commander, entries, swapped, source: `pasted decklist${swapped ? `, ${swapped} cards swapped for lands` : ''}` };
+}
+function pasteOpponentDialog() {
+    menuSheet('📋 Face a pasted decklist', `
+        <p class="note">Paste any list (Moxfield <strong>Export → Copy</strong>, MTGA or plain text). It's the opponent's deck, so it's free. Cards the game can't run yet become basic lands of its colors.</p>
+        <textarea id="oppText" rows="12" spellcheck="false" aria-label="Opponent's decklist">${esc(chosenOpponent && chosenOpponent.type === 'list' ? chosenOpponent.text : '')}</textarea>
+        <div class="row" style="margin-top:8px;"><button class="btn primary" onclick="useOppList()">Use this deck</button><span class="note" id="oppTextNote"></span></div>`);
+    $('sheetHost').querySelector('.sheet').classList.add('wide');
+}
+async function useOppList() {
+    const text = $('oppText').value;
+    $('oppTextNote').textContent = 'Reading the list...';
+    try {
+        const deck = profile.decks[$('playDeck').value];
+        const gen = await listToOppDeck(text, deck && deck.format === 'commander' ? 'commander' : null);
+        chosenOpponent = { type: 'list', key: 'list', text, gen, name: gen.name };
+        closeSheet();
+        renderOpponents();
+        toast(`Opponent: ${gen.name}${gen.swapped ? ` (${gen.swapped} cards swapped for lands)` : ''}.`);
+    } catch (e) { $('oppTextNote').textContent = e.message; }
+}
+
+// ---- Face any commander: EDHREC's average deck for it ----
+// EDHREC's page name: "Atraxa, Praetors' Voice" -> atraxa-praetors-voice
+function edhrecSlug(name) {
+    return String(name).split(' // ')[0].normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+        .replace(/['’",.!?:]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+let cmdSuggestTimer = null;
+function suggestCommanders(q) {
+    clearTimeout(cmdSuggestTimer);
+    if (q.trim().length < 2) return;
+    cmdSuggestTimer = setTimeout(async () => {
+        try {
+            const res = await sfJSON(`${SF}/cards/search?q=${encodeURIComponent(`is:commander game:paper ${q}`)}&order=edhrec&unique=cards`);
+            const names = ((res && res.data) || []).slice(0, 12).map(c => c.name);
+            if ($('cmdSuggest')) $('cmdSuggest').innerHTML = names.map(n => `<option value="${esc(n)}">`).join('');
+        } catch (e) { /* suggestions are optional */ }
+    }, 250);
+}
+async function faceCommander() {
+    const name = $('cmdFind').value.trim();
+    if (!name) return;
+    $('cmdFindNote').textContent = 'Looking for its EDHREC deck...';
+    const slug = edhrecSlug(name);
+    try {
+        const res = await fetch(`${EDH}/average-decks/${slug}.json`);
+        if (!res.ok) throw new Error();
+        chosenOpponent = { type: 'commander', key: slug, name };
+        $('cmdFindNote').textContent = '';
+        renderOpponents();
+    } catch (e) { $('cmdFindNote').textContent = `EDHREC has no deck for "${name}". Check the spelling (pick from the suggestions).`; }
+}
 
 // ---------------------------------------------------------------------
 // Theme decks (Modern) and Commander decks, for opponents and starters
@@ -3694,22 +3994,32 @@ async function renderOpponents() {
     }
     const probs = deckProblems(deck);
     $('playDeckNote').innerHTML = probs.length ? `<span class="warn">⚠ ${esc(probs[0])}${probs.length > 1 ? ` (+${probs.length - 1} more)` : ''}</span>` : '<span class="ok">✓ Ready</span>';
+    const pasted = chosenOpponent && chosenOpponent.type === 'list' ? `<div class="opp-custom"><button type="button" class="opp" aria-pressed="true" onclick="pasteOpponentDialog()"><strong>📋 ${esc(chosenOpponent.name)}</strong><small>Your pasted list${chosenOpponent.gen.swapped ? ` · ${chosenOpponent.gen.swapped} cards swapped for lands` : ''} · tap to change</small></button></div>` : '';
+    const pasteBtn = `<button type="button" class="btn small" onclick="pasteOpponentDialog()">📋 Face a pasted decklist (Moxfield)</button>`;
     if (deck.format !== 'commander') {
-        list.innerHTML = `<p class="note" style="margin-bottom:8px;">Themed decks built live from Scryfall: the most-played Modern-legal cards for each theme that the game can run (not tournament lists).</p>
+        list.innerHTML = `${pasted}<div class="row" style="margin-bottom:10px;">${pasteBtn}</div><p class="note" style="margin-bottom:8px;">Themed decks built live from Scryfall: the most-played Modern-legal cards for each theme that the game can run (not tournament lists).</p>
             <div class="opp-grid">${MODERN_THEMES.map(t => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === t.key}" onclick="chooseOpponent({ type: 'theme', key: '${t.key}' })">
                 <strong>${t.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(t.name)}</strong><small>${esc(t.desc)}</small></button>`).join('')}</div>`;
     } else {
         list.innerHTML = '<div class="loading">Loading this week\'s trending commanders from EDHREC...</div>';
         try {
             const cmds = await loadTrendingCommanders();
-            list.innerHTML = `<p class="note" style="margin-bottom:8px;">This week's trending commanders on EDHREC, each playing its EDHREC average deck (cards the game can't run yet are swapped for basic lands).</p>
+            const custom = chosenOpponent && chosenOpponent.type === 'commander' && !cmds.some(c => c.slug === chosenOpponent.key) ? `<div class="opp-custom"><button type="button" class="opp" aria-pressed="true"><strong>👑 ${esc(chosenOpponent.name || chosenOpponent.key)}</strong><small>EDHREC average deck</small></button></div>` : '';
+            list.innerHTML = `<h3 class="opp-h">Face any commander</h3>
+                <div class="row" style="margin-bottom:6px;"><input type="search" id="cmdFind" list="cmdSuggest" placeholder="Type a commander's name" aria-label="Commander to face" oninput="suggestCommanders(this.value)" onkeydown="if (event.key === 'Enter') faceCommander()" style="flex:1 1 220px;"><datalist id="cmdSuggest"></datalist>
+                <button class="btn" onclick="faceCommander()">👑 Face this commander</button>${pasteBtn}</div>
+                <div class="note" id="cmdFindNote" style="margin-bottom:8px;">Any commander EDHREC has decks for, playing its average deck. Or paste a real list.</div>
+                ${custom}${pasted}
+                <h3 class="opp-h">Trending this week</h3>
+                <p class="note" style="margin-bottom:8px;">This week's trending commanders on EDHREC, each playing its EDHREC average deck (cards the game can't run yet are swapped for basic lands).</p>
                 <div class="opp-grid">${cmds.map(c => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === c.slug}" onclick="chooseOpponent({ type: 'commander', key: '${esc(c.slug)}' })">
                     <strong>👑 ${esc(c.name)}</strong><small>${c.decks ? `${c.decks.toLocaleString()} decks on EDHREC` : ''}</small></button>`).join('')}</div>`;
         } catch (e) {
             list.innerHTML = '<p class="warn">EDHREC is unavailable right now, so there are no Commander opponents. Try again later.</p>';
         }
     }
-    if (chosenOpponent && ((deck.format !== 'commander') !== (chosenOpponent.type === 'theme'))) chosenOpponent = null;
+    const oppIsCmd = chosenOpponent && (chosenOpponent.type === 'commander' || (chosenOpponent.type === 'list' && chosenOpponent.gen.format === 'commander'));
+    if (chosenOpponent && (deck.format === 'commander') !== !!oppIsCmd) chosenOpponent = null;
     $('startNote').textContent = chosenOpponent ? '' : 'Pick an opponent.';
 }
 function chooseOpponent(o) {
@@ -3834,6 +4144,8 @@ async function startMatch(again) {
             const theme = MODERN_THEMES.find(t => t.key === chosenOpponent.key);
             oppDeck = await buildThemeDeck(theme);
             oppDeck.source = 'Scryfall theme deck';
+        } else if (chosenOpponent.type === 'list') {
+            oppDeck = chosenOpponent.gen;
         } else {
             oppDeck = await buildCommanderDeck(chosenOpponent.key);
             oppDeck.source = `EDHREC average deck${oppDeck.swapped ? `, ${oppDeck.swapped} cards swapped for lands` : ''}`;
