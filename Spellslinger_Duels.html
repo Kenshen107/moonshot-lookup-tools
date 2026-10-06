@@ -667,6 +667,13 @@
         .pstack.t-huge .rays { background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--mythic) 55%, transparent) 0 7deg, transparent 7deg 18deg); }
         @keyframes bigPulse { 50% { scale: 1.06; filter: brightness(1.2) saturate(1.25); } }
         .stack-info { text-align: center; min-height: 3.2em; }
+        /* The cards under the top one are turned and nudged, so their corners and glow
+           reach below the stack: keep the name, price and buttons above them, with room */
+        .stack-stage > :not(.pstack) { position: relative; z-index: 2; }
+        .stack-stage > .pstack + .stack-info { margin-top: 22px; }
+        /* The rays behind a big pull reach well past the stack: keep the text around it on top */
+        .crack-stage { position: relative; z-index: 0; }
+        .box-result > :not([id$="-hits"]), :is(.panel, .pos):has(> #packArea, > #crackArea) > :not(#packArea):not(#crackArea) { position: relative; z-index: 1; }
         .stack-info strong { font-family: var(--font-display); font-size: 1.1rem; color: var(--text-heading); }
         .stack-info .si-val { font-family: var(--font-display); font-size: 1.2rem; color: var(--color-success); margin-left: 6px; }
         .stack-info .si-val.hot { color: var(--gold); text-shadow: 0 0 12px var(--gold); }
