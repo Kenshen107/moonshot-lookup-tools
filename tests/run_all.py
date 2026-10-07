@@ -4,7 +4,7 @@
     python3 tests/run_all.py             the usual run (about 10 minutes)
     python3 tests/run_all.py --quick     a smoke test (about 3 minutes)
     python3 tests/run_all.py --full      everything, including the Welcome Decks, Starter Kits and ~100 games (about 40 minutes)
-    python3 tests/run_all.py engine cards     only the named suites (engine, cards, coverage, games)
+    python3 tests/run_all.py engine cards     only the named suites (engine, storage, cards, coverage, games)
 
 Needs: node, Playwright for Node, the Chromium at /opt/pw-browsers (see tests/README.md).
 GAME_ROOT=/path/to/another/checkout runs the same tests against an older copy of the game.
@@ -21,7 +21,7 @@ SUITES = os.path.join(HERE, 'suites')
 
 def plan(mode, only):
     have_cards = os.path.exists(os.path.join(HERE, 'data', 'cards_all.json'))
-    steps = [('engine', ['engine.js'], 300)]
+    steps = [('engine', ['engine.js'], 300), ('storage', ['storage.js'], 300)]
     if mode == 'quick':
         steps.append(('cards (verified decks)', ['cards.js', '--quick'], 600))
         steps.append(('games (quick)', ['games.js', '--quick'], 900))

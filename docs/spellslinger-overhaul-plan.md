@@ -1,6 +1,6 @@
 # Spellslinger Duels overhaul plan
 
-Status: **Phases 0 and 1a done (2026-10-08); 1b onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
+Status: **Phases 0, 1a and 1b done (2026-10-08); 1c onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
 
 ## Owner's goals
 
@@ -94,6 +94,8 @@ The game reads the profile instantly in hundreds of places, so don't make every 
 - Keep the current save-failure handling (`saveProfile`, `trimCardCache`) as a fallback when IndexedDB isn't available, such as some private windows.
 
 **Done when:** an old save loads correctly, a large collection saves and reloads, and the tests pass.
+
+**Phase 1b result (2026-10-08):** `spellslinger/00-storage.js` replaces the `store` object. All saved values (profiles, accounts, the card cache and the MTGJSON caches, settings) are in IndexedDB, loaded into memory once before the game's scripts run (`loadGame` in the HTML adds them after the load), so every `store.get` is still synchronous. Writes are queued and sent in the background. On the first run the old `duels:*` localStorage keys are copied across and left as a backup; if IndexedDB is unavailable the game uses localStorage as before. The card cache was not moved first, because every key moved together. New suite `tests/suites/storage.js` (18 checks): migration from a real old-style save, no second migration, the localStorage backup untouched, a 12MB save, removal, a save made right before a reload, and the fallback. Not done: deleting the old localStorage keys (a later cleanup), and syncing two open tabs.
 
 ### 1c: Faster redraws (only where it matters)
 

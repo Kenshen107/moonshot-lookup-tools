@@ -318,21 +318,10 @@
 <div id="sheetHost"></div>
 <div id="modalHost"></div>
 <div class="toast" id="toast"></div>
-<script src="spellslinger/01-core.js"></script>
-<script src="spellslinger/02-card-reader.js"></script>
-<script src="spellslinger/03-comp-rules.js"></script>
-<script src="spellslinger/04-views-decks.js"></script>
-<script src="spellslinger/05-draft.js"></script>
-<script src="spellslinger/06-engine.js"></script>
-<script src="spellslinger/07-ai.js"></script>
-<script src="spellslinger/08-table.js"></script>
-<script src="spellslinger/09-playtest.js"></script>
-<script src="spellslinger/10-shop.js"></script>
-<script src="spellslinger/11-grading.js"></script>
-<script src="spellslinger/12-distributor.js"></script>
-<script src="spellslinger/13-campaign.js"></script>
-<script src="spellslinger/14-rules-abilities.js"></script>
-<script src="spellslinger/15-rules-conditions.js"></script>
-<script src="spellslinger/16-startup.js"></script>
+<script src="spellslinger/00-storage.js"></script>
+<script>
+// The saved data is read from IndexedDB first; then these load one after another, in this order (they share one global scope)
+loadGame(["01-core.js", "02-card-reader.js", "03-comp-rules.js", "04-views-decks.js", "05-draft.js", "06-engine.js", "07-ai.js", "08-table.js", "09-playtest.js", "10-shop.js", "11-grading.js", "12-distributor.js", "13-campaign.js", "14-rules-abilities.js", "15-rules-conditions.js", "16-startup.js"]);
+</script>
 </body>
 </html>

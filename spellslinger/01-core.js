@@ -30,11 +30,7 @@ function toast(msg) {
     toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
-// ---- Saved data (this browser only) ----
-const store = {
-    get(k, d) { try { const v = localStorage.getItem('duels:' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem('duels:' + k, JSON.stringify(v)); return true; } catch (e) { return false; } }
-};
+// ---- Saved data: `store` lives in 00-storage.js (IndexedDB, loaded into memory before this file runs) ----
 // Players: each has their own profile (duels:profile:<name>). A profile
 // saved before players existed (duels:profile) moves to the first one
 // signed in (Ovid, 2026-10-05).
@@ -43,11 +39,12 @@ let accounts = store.get('accounts', null);
 if (!accounts) {
     accounts = { list: DEFAULT_ACCOUNTS.slice(), current: 'Ovid' };
     const old = store.get('profile', null);
-    if (old) { store.set('profile:Ovid', old); try { localStorage.removeItem('duels:profile'); } catch (e) { /* fine */ } }
+    if (old) { store.set('profile:Ovid', old); store.remove('profile'); }
     store.set('accounts', accounts);
 }
 let profile = store.get('profile:' + accounts.current, null);
-// The card cache shares browser storage with every player's profile. If a
+// The card cache shares browser storage with every player's profile (with IndexedDB the limit is far larger than
+// localStorage's 5MB, but the same handling stays for browsers that fall back to localStorage). If a
 // save doesn't fit, the cache is cut to the cards this player uses and the
 // save is tried again; if it still fails, the player is told (audit, 2026-10-06).
 function saveProfile() {
@@ -61,7 +58,7 @@ function trimCardCache() {
     const keep = new Set(Object.keys(profile.collection));
     profile.decks.forEach(d => { Object.keys(d.cards).forEach(id => keep.add(id)); if (d.commander) keep.add(d.commander); });
     try { Object.values(BASIC_IDS).forEach(id => keep.add(id)); } catch (e) { /* not loaded yet */ }
-    try { localStorage.removeItem('duels:cards'); } catch (e) { /* fine */ }
+    store.remove('cards');
     store.set('cards', Object.fromEntries([...CARDS].filter(([id]) => keep.has(id))));
 }
 // Phones: one sheet for the rest of the tabs, one for the player and test buttons

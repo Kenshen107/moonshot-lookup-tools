@@ -6,7 +6,7 @@ Run these before every commit that touches `Spellslinger_Duels.html`. **Nothing 
 python3 tests/run_all.py            # the usual run, about 10 minutes
 python3 tests/run_all.py --quick    # a smoke test, about 3 minutes
 python3 tests/run_all.py --full     # everything (Welcome Decks, Starter Kits, ~100 games), about 40 minutes
-python3 tests/run_all.py engine     # only one suite (engine, cards, coverage, games)
+python3 tests/run_all.py engine     # only one suite (engine, storage, cards, coverage, games)
 ```
 
 Results are also written to `tests/.out/*.json` (not committed).
@@ -16,6 +16,7 @@ Results are also written to `tests/.out/*.json` (not committed).
 | File | What it checks |
 |---|---|
 | `suites/engine.js` | About 60 rule checks on a hand-built board: combat (first strike, double strike, deathtouch, trample, lifelink, menace, flying), state-based actions (0 toughness, damage, legend rule, poison, commander damage, empty library), casting and paying, commander tax, equipment, targeting (hexproof, protection), and the Tyrox deck's special cards (exert, extra combat, Rabblemaster, Goblin Guide, Embercleave, spectacle, Temur Battle Rage). Every check starts a brand-new game. |
+| `suites/storage.js` | Saved data: an old localStorage save is copied into IndexedDB (and left as a backup, and not copied again), a 12MB save works, a save made just before a reload is kept, and without IndexedDB the game falls back to localStorage. |
 | `suites/cards.js` | Card by card: for each card in a group it puts the card in hand, lets the AI play two turns, and checks that nothing throws, no card is in two zones and nothing is NaN. It also checks that the card reads as fully Automated. Groups: `verified` (every deck in `VERIFIED_DECKS`), `mirrodin`, `m10`, `welcome`, `starter`. |
 | `suites/coverage.js` | Reads every paper card from `tests/data/cards_all.json` and counts Automated / Partly / Not yet, also for the 1,000 most-played Commander cards. Fails if any card that was fully Automated in `baseline_full_cards.txt` no longer is, and lists which ones. |
 | `suites/games.js` | Whole AI-vs-AI games (`?autoplay`): Modern themes, boss decks at each AI level, Commander (EDHREC average decks), Welcome Decks and Starter Kits, the verified Commander decks, and 8-seat drafts. Checks every game ends and nothing is broken at the end. |
