@@ -61,6 +61,15 @@ function trimCardCache() {
     store.remove('cards');
     store.set('cards', Object.fromEntries([...CARDS].filter(([id]) => keep.has(id))));
 }
+// Redraws that happen often (the game table, the shop floor): only touch the page when the HTML really changed.
+// Keeps hover, scroll, a half-typed price and an open <details> as they were, and skips the layout work.
+// Use it only for containers that nothing else writes to (it remembers the last HTML it set).
+function setHTML(el, html) {
+    if (!el || el._html === html) return false;
+    el.innerHTML = html;
+    el._html = html;
+    return true;
+}
 // Phones: one sheet for the rest of the tabs, one for the player and test buttons
 const isPhone = () => window.matchMedia('(max-width: 600px)').matches;
 function menuSheet(title, inner) { $('sheetHost').innerHTML = `<div class="sheet-bg" onclick="if (event.target === this) closeSheet()"><div class="sheet one" role="dialog" aria-label="${esc(title)}"><div><h3>${esc(title)}</h3>${inner}<div class="actions"><button class="btn" onclick="closeSheet()">Close</button></div></div></div></div>`; }

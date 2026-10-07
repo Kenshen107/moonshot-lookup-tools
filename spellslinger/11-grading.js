@@ -73,11 +73,11 @@ function renderGrading() {
     const el = $('shopGrading');
     if (!el) return;
     const list = profile.grading.map((g, i) => ({ g, i }));
-    el.innerHTML = list.length ? `<ul class="grade-list">${list.map(({ g, i }) => {
+    setHTML(el, list.length ? `<ul class="grade-list">${list.map(({ g, i }) => {
         const card = CARDS.get(g.id), ready = g.due <= profile.shopDay;
         return `<li>${esc(card ? card.name : '?')} ${condBadge(g.copy)} <span class="note">${esc((GRADE_TIERS.find(t => t.key === g.tier) || {}).label || '')}</span>
             ${ready ? `<button class="btn small gold" onclick="openGradedCard(${i})">📬 Open the slab</button>` : `<span class="note">back on day ${g.due}</span>`}</li>`;
-    }).join('')}</ul>` : '<p class="note">Nothing out for grading. Use 🔍 Grade on a card in your collection below.</p>';
+    }).join('')}</ul>` : '<p class="note">Nothing out for grading. Use 🔍 Grade on a card in your collection below.</p>');
 }
 
 // ---- Moving cards: collection <-> case, bulk bin, vault ----
@@ -188,7 +188,7 @@ async function renderShop() {
 function renderShopFloor() {
     const T = profile.shopToday;
     const e = todayEvent();
-    $('shopHead').innerHTML = `
+    setHTML($('shopHead'), `
         <div class="pos-stats">
             <div><span class="pos-k">Day</span><strong>${profile.shopDay}</strong></div>
             <div><span class="pos-k">Shop cash</span><strong class="${profile.usd < 0 ? 'neg' : ''}">💵 ${usd(profile.usd)}</strong></div>
@@ -203,11 +203,13 @@ function renderShopFloor() {
             <button class="btn" onclick="closeShop()">🔒 Close shop (rent ${usd(SHOP_RENT)}) → day ${profile.shopDay + 1}</button>
             <button class="btn small" onclick="addTestCash()" title="Test build: add free shop cash">＋💵 Add cash</button>
             <span class="note">${SHOP.open ? 'Open: a day is 10 minutes; the clock runs while you\'re on this tab. Some customers come to sell you cards.' : 'Closed: open up to let customers in.'}</span>
-        </div>`;
+        </div>`);
     // The floor redraws every few seconds: keep a half-typed counteroffer (and its open box) as it was
-    const keep = [...document.querySelectorAll('#shopCustomers .counter-in')].map(i => ({ id: i.id, v: i.value, focus: document.activeElement === i, open: i.closest('details') && i.closest('details').open }));
-    $('shopCustomers').innerHTML = SHOP.queue.length ? SHOP.queue.map(c => customerHTML(c)).join('') : `<p class="note">${SHOP.open ? 'Waiting for customers...' : 'No one here. Open the shop.'}</p>`;
-    $('shopCase').innerHTML = profile.displayCase.length ? `<table class="pos-table"><thead><tr><th>Card</th><th>Worth today</th><th>Your price</th><th></th></tr></thead><tbody>${profile.displayCase.map((l, i) => {
+    // (Phase 1c: each panel is only rebuilt when its HTML changed, so usually nothing is touched at all)
+    const customersHtml = SHOP.queue.length ? SHOP.queue.map(c => customerHTML(c)).join('') : `<p class="note">${SHOP.open ? 'Waiting for customers...' : 'No one here. Open the shop.'}</p>`;
+    const keep = $('shopCustomers')._html === customersHtml ? [] : [...document.querySelectorAll('#shopCustomers .counter-in')].map(i => ({ id: i.id, v: i.value, focus: document.activeElement === i, open: i.closest('details') && i.closest('details').open }));
+    setHTML($('shopCustomers'), customersHtml);
+    setHTML($('shopCase'), profile.displayCase.length ? `<table class="pos-table"><thead><tr><th>Card</th><th>Worth today</th><th>Your price</th><th></th></tr></thead><tbody>${profile.displayCase.map((l, i) => {
         if (l.sealed) return `<tr><td>📦 <strong>${esc(l.meta.name)}</strong> <span class="note">${kindLabel(l.meta)} pack</span></td>
             <td>${usd(packMarket(l.meta))}</td>
             <td><input type="text" inputmode="decimal" value="${l.askingPrice.toFixed(2)}" onchange="setAsk(${i}, this.value)" aria-label="Asking price" class="ask-in"></td>
@@ -217,20 +219,20 @@ function renderShopFloor() {
             <td>${usd(listingValue(l))}</td>
             <td><input type="text" inputmode="decimal" value="${l.askingPrice.toFixed(2)}" onchange="setAsk(${i}, this.value)" aria-label="Asking price" class="ask-in"></td>
             <td><button class="btn small" onclick="unlist(${i})" title="Back to your collection">↩</button></td></tr>`;
-    }).join('')}</tbody></table>` : '<p class="note">The case is empty. Add cards from your collection below.</p>';
-    $('shopBulk').innerHTML = `<div class="row"><span>🧺 <strong>${profile.bulkBox.length}</strong> card${profile.bulkBox.length === 1 ? '' : 's'} in the bin</span>
+    }).join('')}</tbody></table>` : '<p class="note">The case is empty. Add cards from your collection below.</p>');
+    setHTML($('shopBulk'), `<div class="row"><span>🧺 <strong>${profile.bulkBox.length}</strong> card${profile.bulkBox.length === 1 ? '' : 's'} in the bin</span>
         <label class="note">Price each: <input type="text" inputmode="decimal" value="${profile.bulkPrice.toFixed(2)}" onchange="setBulkPrice(this.value)" class="ask-in" aria-label="Bulk price per card"></label>
         <button class="btn small" onclick="sweepBulk()" title="Spare commons and uncommons under $0.50 (copies your decks use stay)">🧹 Sweep bulk in</button>
-        ${profile.bulkBox.length ? '<button class="btn small" onclick="emptyBulkBin()">↩ Empty the bin</button>' : ''}</div>`;
-    $('shopVault').innerHTML = [0, 1, 2].map(i => {
+        ${profile.bulkBox.length ? '<button class="btn small" onclick="emptyBulkBin()">↩ Empty the bin</button>' : ''}</div>`);
+    setHTML($('shopVault'), [0, 1, 2].map(i => {
         const id = profile.vault[i];
         const card = id && CARDS.get(id);
         return card ? `<button class="vault-slot" onclick="showCardSheet('${id}')" title="${esc(card.name)} · ${usd(baseUsd(card))}">${card.imgS ? `<img src="${card.imgS}" alt="${esc(card.name)}">` : esc(card.name)}</button>`
             : '<div class="vault-slot empty">🏆<span class="note">empty</span></div>';
-    }).join('') + `<p class="note" style="grid-column:1/-1;">Trophies aren't for sale; they draw a crowd (up to +15% customers).${vaultBonus() ? ` Now: +${Math.round(vaultBonus() * 100)}%.` : ''}</p>`;
+    }).join('') + `<p class="note" style="grid-column:1/-1;">Trophies aren't for sale; they draw a crowd (up to +15% customers).${vaultBonus() ? ` Now: +${Math.round(vaultBonus() * 100)}%.` : ''}</p>`);
     keep.forEach(k => { const i = $(k.id); if (!i) return; i.value = k.v; if (k.open) i.closest('details').open = true; if (k.focus) i.focus(); });
     renderGrading();
-    $('shopLog').innerHTML = SHOP.log.length ? SHOP.log.map(m => `<li>${m}</li>`).join('') : '<li class="note">Nothing yet today.</li>';
+    setHTML($('shopLog'), SHOP.log.length ? SHOP.log.map(m => `<li>${m}</li>`).join('') : '<li class="note">Nothing yet today.</li>');
 }
 function renderShopStock() {
     const q = shopFilter.trim().toLowerCase();

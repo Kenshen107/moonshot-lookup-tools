@@ -341,14 +341,18 @@ function handHTML() {
 function renderGame() {
     if (!G || $('game').classList.contains('hidden')) return;
     if (G.hotseat && !G.over) { const d = decider(); if (d !== null && d !== G.view) handTo(G.players[d]); }
-    $('oppBar').innerHTML = barHTML(foe());
-    $('meBar').innerHTML = barHTML(me());
-    $('oppSide').innerHTML = sideHTML(foe());
-    $('meSide').innerHTML = sideHTML(me());
-    $('midBar').innerHTML = midHTML();
-    $('hand').innerHTML = handHTML();
-    $('handCount').textContent = `Hand · ${me().hand.length}`;
-    fitTable();
+    // Each zone is rebuilt only if its HTML changed (Phase 1c); the fitting below runs only if something did, or the window changed
+    let changed = false;
+    changed = setHTML($('oppBar'), barHTML(foe())) || changed;
+    changed = setHTML($('meBar'), barHTML(me())) || changed;
+    changed = setHTML($('oppSide'), sideHTML(foe())) || changed;
+    changed = setHTML($('meSide'), sideHTML(me())) || changed;
+    changed = setHTML($('midBar'), midHTML()) || changed;
+    changed = setHTML($('hand'), handHTML()) || changed;
+    const handLabel = `Hand · ${me().hand.length}`;
+    if ($('handCount').textContent !== handLabel) $('handCount').textContent = handLabel;
+    const fitKey = `${innerWidth}x${innerHeight}|${handSize}|${G.mode ? G.mode.type : ''}|${isPhone()}`;
+    if (changed || renderGame.fitKey !== fitKey) { renderGame.fitKey = fitKey; fitTable(); }
 }
 
 // ---- Fitting the table: battlefield cards shrink to fit; the hand fans out ----

@@ -1,6 +1,6 @@
 # Spellslinger Duels overhaul plan
 
-Status: **Phases 0, 1a and 1b done (2026-10-08); 1c onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
+Status: **Phases 0, 1a, 1b and 1c done (2026-10-08); Phase 2 onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
 
 ## Owner's goals
 
@@ -104,6 +104,8 @@ Don't rewrite all the `.innerHTML` code; it's safe as long as text goes through 
 - the shop floor's one-second refresh
 
 **Done when:** the tests pass, and a long game and a shop day feel no slower.
+
+**Phase 1c result (2026-10-08):** `setHTML` (skip a redraw whose HTML is unchanged) is used for the game table's six zones and the shop floor's panels, and `fitTable` runs only when something changed or the window changed. Measured with `tests/perf.js` (24 creatures, 14 lands and 12 cards in hand a side; a case of 40 cards): table redraw 17 ms to 8 ms, shop floor 12.6 ms to 0.2 ms. A side effect is that a half-typed price in the shop no longer loses focus. The remaining 8 ms of a table redraw is building the HTML (the hand's "can I cast this" checks are the biggest part); it wasn't changed, because caching those checks risks showing a card as castable when it isn't. New suite `tests/suites/redraw.js` (13 checks).
 
 ## Phase 2: Card reader, migrated gradually
 
