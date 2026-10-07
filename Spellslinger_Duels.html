@@ -5662,7 +5662,7 @@ function askNumber(P, msg, min, max, def, opts = {}) {
     });
 }
 async function payAddCost(P, o) {
-    if (o.kicked && Rx(o).kickSac) { const ks = Rx(o).kickSac; const ls = P.bf.filter(x => /\bLand\b/.test(x.card.type)).sort((a, b) => (b.tapped - a.tapped) || (permValue(a) - permValue(b))).slice(0, ks.n); ls.forEach(l => { fire('sacrificed', { o: l }); dieOrLeave(l, 'gy'); }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${ls.length} lands (entwine).`); }
+    if (o.kicked && Rx(o).kickSac) { const ks = Rx(o).kickSac; const ls = await chooseSacN(P, P.bf.filter(x => /\bLand\b/.test(x.card.type)), ks.n, `${o.card.name} (entwine)`); ls.forEach(l => { fire('sacrificed', { o: l }); dieOrLeave(l, 'gy'); }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${ls.length} lands (entwine).`); }
     if (o.altCast && Rx(o).alt) {
         const al = Rx(o).alt, x = al.exile ? altExileCard(P, o) : null;
         if (al.life) P.life -= al.life;
@@ -5675,15 +5675,15 @@ async function payAddCost(P, o) {
     if (a.returnLand) { const l = P.bf.filter(x => /\bLand\b/.test(x.card.type)).sort((x, y) => (y.tapped - x.tapped))[0]; leaveBattlefield(l, 'hand'); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${l.card.name} to hand to cast ${o.card.name}.`); return; }
     if (a.sac && a.orPay) {
         const f = sacFodder(P, o, a.sac), plan = planPayment(P, a.orPay);
-        const sac = f && (!plan || (P.isAI ? f.token || permValue(f) < 3 : await askYes(P, `${o.card.name}: sacrifice ${f.card.name}? (Cancel = pay the extra mana instead)`, { card: o.card })));
+        const sac = f && (!plan || (P.isAI ? f.token || permValue(f) < 3 : await askYes(P, `${o.card.name}: sacrifice ${/^[aeiou]/.test(a.sac) ? 'an' : 'a'} ${a.sac}? (Cancel = pay the extra mana instead)`, { card: o.card, yes: 'Sacrifice', no: 'Pay the mana' })));
         if (!sac && plan) { plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} the extra cost for ${o.card.name}.`); return; }
     }
     if (a.sac && a.orDiscard) {
         const f = sacFodder(P, o, a.sac), others = P.hand.filter(x => x !== o);
-        const sac = f && (!others.length || (P.isAI ? f.token || permValue(f) < 2 : await askYes(P, `${o.card.name}: sacrifice ${f.card.name}? (Cancel = discard a card instead)`, { card: o.card })));
-        if (!sac) { const d = others.sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} to cast ${o.card.name}.`); return; }
+        const sac = f && (!others.length || (P.isAI ? f.token || permValue(f) < 2 : await askYes(P, `${o.card.name}: sacrifice ${/^[aeiou]/.test(a.sac) ? 'an' : 'a'} ${a.sac}? (Cancel = discard a card instead)`, { card: o.card, yes: 'Sacrifice', no: 'Discard a card' })));
+        if (!sac) { const d = (P.isAI || AUTOPLAY ? null : await pickCard(P, others, `${o.card.name}: discard a card`)) || others.sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} to cast ${o.card.name}.`); return; }
     }
-    if (a.sac) { const f = sacFodder(P, o, a.sac); G.lastSacMv = f.card.cmc || 0; G.lastSacPow = Math.max(0, pow(f)); G.lastSacTou = Math.max(0, tou(f)); G.lastSacLegend = /Legendary/.test(f.card.type); fire('sacrificed', { o: f }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name} to cast ${o.card.name}.`); dieOrLeave(f, 'gy'); }
+    if (a.sac) { const f = await chooseSac(P, o, a.sac, o.card.name); G.lastSacMv = f.card.cmc || 0; G.lastSacPow = Math.max(0, pow(f)); G.lastSacTou = Math.max(0, tou(f)); G.lastSacLegend = /Legendary/.test(f.card.type); fire('sacrificed', { o: f }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name} to cast ${o.card.name}.`); dieOrLeave(f, 'gy'); }
     if (a.discard && a.orLife) {
         const others = P.hand.filter(x => x !== o);
         const life = !others.length || (P.life > a.orLife && (P.isAI ? P.life > 10 : !(await askYes(P, `${o.card.name}: discard a card? (Cancel = pay ${a.orLife} life instead)`, { card: o.card, yes: 'Discard a card', no: `Pay ${a.orLife} life` }))));
@@ -7196,7 +7196,7 @@ async function applyEffect(P, e, t, src) {
         case 'adapt': if (src && onBf(src.uid) && src.counters <= 0) { putCounters(src, e.n, P); log(`${src.card.name} adapts: ${e.n} +1/+1 counters.`); } else log(`${name}: it already has +1/+1 counters, so adapt does nothing.`); break;
         case 'eachLoses': G.players.forEach(X => { X.life -= e.n; }); log(`Each player loses ${e.n} life.`); break;
         case 'selfToTop': if (src && onBf(src.uid)) { leaveBattlefield(src, 'library'); log(`${src.card.name} is put on top of ${you(P) ? 'your' : `${P.name}'s`} library.`); } break;
-        case 'sacLands': { const ls = P.bf.filter(x => /\bLand\b/.test(x.card.type) && x !== src).sort((a, b) => (b.tapped - a.tapped) || (isBasic(b.card) - isBasic(a.card))).slice(0, e.n); const pick = ls.length < e.n && src && /\bLand\b/.test(src.card.type) ? [...ls, src] : ls; if (pick.length) log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${pick.map(x => x.card.name).join(', ')}.`); pick.forEach(x => { fire('sacrificed', { o: x }); dieOrLeave(x, 'gy'); }); break; }
+        case 'sacLands': { const ls = await chooseSacN(P, P.bf.filter(x => /\bLand\b/.test(x.card.type) && x !== src), e.n, name); const pick = ls.length < e.n && src && /\bLand\b/.test(src.card.type) ? [...ls, src] : ls; if (pick.length) log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${pick.map(x => x.card.name).join(', ')}.`); pick.forEach(x => { fire('sacrificed', { o: x }); dieOrLeave(x, 'gy'); }); break; }
         case 'roll': { const rolls = Array.from({ length: e.dice || 1 }, () => 1 + rand(e.sides)); G.lastRoll = rolls.reduce((a, b) => a + b, 0); log(`${P.name} ${you(P) ? 'roll' : 'rolls'} ${e.dice ? `${e.dice}d${e.sides}: ${rolls.join(' + ')} = ${G.lastRoll}` : `a d${e.sides}: ${G.lastRoll}`}.`); break; }
         case 'fightSelf': { const x = t && t.o; if (!x || !src || !onBf(src.uid) || !onBf(x.uid)) break; const a = Math.max(0, pow(src)), b = Math.max(0, pow(x)); damage(x, a, src); damage(src, b, x); log(`${src.card.name} fights ${x.card.name}.`); break; }
         case 'attachCtx': { const eq = G.ctxObj, x = t && t.o; if (!eq || !x || !onBf(eq.uid) || !Rx(eq).isEquipment) break; eq.attachedTo = x.uid; log(`${eq.card.name} is attached to ${x.card.name}.`); break; }
@@ -7362,12 +7362,15 @@ async function applyEffect(P, e, t, src) {
             const victims = e.who === 'each player' ? G.players : [O];
             G.lastEdictN = 0;
             G.edictDid = [true, true];
-            victims.forEach(V => {
+            for (const V of victims) {
                 G.edictDid[V.i] = false;
                 let pool = V.bf.filter(x => e.what === 'creature' || e.what === 'creature or planeswalker' ? isCreature(x) || Rx(x).kind === 'planeswalker' : permMatches(x, e.what, V)).sort((a, b) => permValue(a) - permValue(b));
                 if (e.leastPow && pool.length) { const lo = Math.min(...pool.filter(isCreature).map(pow)); pool = pool.filter(x => isCreature(x) && pow(x) === lo); }
-                if (pool.length) { G.edictDid[V.i] = true; log(`${V.name} ${you(V) ? 'sacrifice' : 'sacrifices'} ${pool[0].card.name}.`); G.lastEdictN++; fire('sacrificed', { o: pool[0] }); dieOrLeave(pool[0], 'gy'); }
-            });
+                if (!pool.length) continue;
+                // Each player chooses what they sacrifice (701.21a)
+                const f = (V.isAI || AUTOPLAY || pool.length === 1 ? null : await pickCard(V, pool, `${name}: choose what to sacrifice`)) || pool[0];
+                G.edictDid[V.i] = true; log(`${V.name} ${you(V) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); G.lastEdictN++; fire('sacrificed', { o: f }); dieOrLeave(f, 'gy');
+            }
             break;
         }
         case 'loot': {
@@ -12290,7 +12293,7 @@ async function optionalCost(P, e, src) {
     if (!yes) return false;
     if (e.t === 'optPay') planPayment(P, e.cost).forEach(x => tapSource(P, x));
     if (e.t === 'optLife') P.life -= e.n;
-    if (e.t === 'optSac') { const f = sacFodder(P, src, e.what); G.lastSacPow = Math.max(0, pow(f)); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); dieOrLeave(f, 'gy'); }
+    if (e.t === 'optSac') { const f = await chooseSac(P, src, e.what, src.card.name); G.lastSacPow = Math.max(0, pow(f)); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); dieOrLeave(f, 'gy'); }
     if (e.t === 'discardSelf') { await applyEffect(P, e, null, src); return true; }
     log(`${P.name} ${you(P) ? 'choose' : 'chooses'} to ${what}.`);
     return true;
@@ -12632,6 +12635,30 @@ function sacFodder(P, src, kind) {
     const fits = x => kind === 'creature' ? isCreature(x) : kind === 'artifact' ? /Artifact/.test(x.card.type) : kind === 'land' ? /\bLand\b/.test(x.card.type) : new RegExp(`\\b${kind}\\b`).test(x.card.type);
     return P.bf.filter(x => fits(x) && !(kind === 'creature' && x === src && false)).sort((a, b) => (a.token ? -5 : 0) + permValue(a) - ((b.token ? -5 : 0) + permValue(b)))[0] || null;
 }
+// Everything that could pay "sacrifice a <kind>" (sacFodder picks the least valuable of these)
+function sacCandidates(P, src, kind) {
+    if (/ or /.test(kind)) return [...new Set(kind.split(' or ').flatMap(k => sacCandidates(P, src, k)))];
+    if (kind === 'token') return P.bf.filter(x => x.token && x !== src);
+    if (/^creature:[WUBRG]$/.test(kind)) return P.bf.filter(x => isCreature(x) && x !== src && (x.card.colors || []).includes(kind.slice(9)));
+    const fits = x => kind === 'creature' ? isCreature(x) : kind === 'artifact' ? /Artifact/.test(x.card.type) : kind === 'land' ? /\bLand\b/.test(x.card.type) : new RegExp(`\\b${kind}\\b`).test(x.card.type);
+    return P.bf.filter(fits);
+}
+// The player chooses what to sacrifice (rule 701.21a); the computer takes its least valuable
+async function chooseSac(P, src, kind, label) {
+    const best = sacFodder(P, src, kind);
+    if (!best || P.isAI || AUTOPLAY) return best;
+    const pool = sacCandidates(P, src, kind);
+    if (pool.length <= 1) return best;
+    return (await pickCard(P, pool, `${label || (src && src.card ? src.card.name : 'Sacrifice')}: choose ${/^[aeiou]/.test(kind) ? 'an' : 'a'} ${kind.replace(/:.*/, '')} to sacrifice`)) || best;
+}
+// Several at once ("Sacrifice three lands", "Sacrifice two artifacts")
+async function chooseSacN(P, pool, n, label) {
+    const auto = pool.slice().sort((a, b) => (b.tapped - a.tapped) || (a.token ? -5 : 0) + permValue(a) - ((b.token ? -5 : 0) + permValue(b))).slice(0, n);
+    if (P.isAI || AUTOPLAY || pool.length <= n) return auto;
+    const out = [];
+    for (let k = 0; k < n; k++) { const left = pool.filter(x => !out.includes(x)); const c = await pickCard(P, left, `${label}: choose what to sacrifice (${k + 1} of ${n})`); out.push(c || left.sort((a, b) => permValue(a) - permValue(b))[0]); }
+    return out;
+}
 function canActivate(P, o, a) { return !G.over && actTimingOk(P, a) && !!actPlan(P, o, a); }
 // Crew N: tap untapped creatures with total power N or more (the weakest that do it)
 function crewPick(P, v, n) {
@@ -12707,8 +12734,8 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (a.cost.returnArt) { const ar = P.bf.filter(x => /\bArtifact\b/.test(x.card.type) && x !== o).sort((x, y) => (Rx(y).etb.length - Rx(x).etb.length) || (permValue(x) - permValue(y)))[0]; leaveBattlefield(ar, 'hand'); if (ar.token) pull(P.hand, ar); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${ar.card.name} to hand.`); }
         if (a.cost.returnLands) { const ls = P.bf.filter(x => /\bLand\b/.test(x.card.type)).sort((x, y) => (y.tapped - x.tapped) || (permValue(x) - permValue(y))).slice(0, a.cost.returnLands); ls.forEach(l => leaveBattlefield(l, 'hand')); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${ls.map(l => l.card.name).join(' and ')} to hand.`); }
         if (a.cost.tapOther) { const f = tapFodder(P, o, a.cost.tapOther); f.tapped = true; fire('tapped', { o: f }); log(`${P.name} ${you(P) ? 'tap' : 'taps'} ${f.card.name} for ${o.card.name}.`); }
-        for (const kind of [a.cost.sacCreature && 'creature', a.cost.sacPerm].filter(Boolean)) { const f = sacFodder(P, o, kind); if (isCreature(f)) G.lastSacPow = Math.max(0, pow(f)); G.lastSacMv = f.card.cmc || 0; log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }
-        if (a.cost.sacN) { const fs = P.bf.filter(x => new RegExp(`\\b${a.cost.sacN.kind}\\b`).test(x.card.type)).sort((x, y) => permValue(x) - permValue(y)).slice(0, a.cost.sacN.n); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(', ')}.`); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); }
+        for (const kind of [a.cost.sacCreature && 'creature', a.cost.sacPerm].filter(Boolean)) { const f = await chooseSac(P, o, kind, o.card.name); if (isCreature(f)) G.lastSacPow = Math.max(0, pow(f)); G.lastSacMv = f.card.cmc || 0; log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }
+        if (a.cost.sacN) { const fs = await chooseSacN(P, P.bf.filter(x => new RegExp(`\\b${a.cost.sacN.kind}\\b`).test(x.card.type)), a.cost.sacN.n, o.card.name); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(', ')}.`); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); }
     }
     // Mana abilities don't use the stack (605.3)
     if (a.effects.every(e => e.t === 'addMana')) { for (const e of a.effects) await applyEffect(P, e, null, o); if (a.cost && a.cost.sacSelf) { fire('sacrificed', { o }); dieOrLeave(o, 'gy'); } renderGame(); return true; }
