@@ -4160,10 +4160,41 @@ function generatedToDeck(gen, name) {
     return { id: `d${Date.now()}`, name, format: gen.format, cards, commander: gen.commander ? gen.commander.id : null, starter: true };
 }
 
+// Decks checked card by card (every card Automated, rule checks and AI games; owner's decks, 2026-10-07).
+// Offered as starter decks and as Commander opponents. Plain-text lists; the last block is the commander.
+const VERIFIED_DECKS = [
+    { key: 'sandman', name: 'Sandman, Shifting Scoundrel', colors: ['G'], desc: 'Mono-green lands: ramp, landfall and big creatures that grow with your lands', checked: '2026-10-07', text: "1 Altar of Dementia\n1 Ash Barrens\n1 Bala Ged Recovery\n1 Beast Within\n1 Biosynthic Burst\n1 Blighted Woodland\n1 Braulios of Pheres Band\n1 Bridgeworks Battle\n1 Bugenhagen, Wise Elder\n1 Bushwhack\n1 Collector's Vault\n1 Conduit of Worlds\n1 Contest of Claws\n1 Cultivator Colossus\n1 Damage Control Crew\n1 Demolition Field\n1 Disciple of Freyalise\n1 Druid of Purification\n1 Dryad's Revival\n1 Eternal Witness\n1 Evolution Charm\n1 Evolving Wilds\n1 Feed the Pack\n25 Forest\n1 Gaea's Gift\n1 Gaea's Touch\n1 Garruk's Uprising\n1 Genesis Wave\n1 Ghalta, Primal Hunger\n1 Ghost Quarter\n1 Greensleeves, Maro-Sorcerer\n1 Groundchuck & Dirtbag\n1 Harmonious Grovestrider\n1 Healing Technique\n1 Horizon Explorer\n1 Jubilation\n1 Khalni Ambush\n1 Lazotep Quarry\n1 Life's Legacy\n1 Lifestream's Blessing\n1 Lumbering Worldwagon\n1 Matzalantli, the Great Door\n1 Michelangelo, On the Scene\n1 Molimo, Maro-Sorcerer\n1 Momentous Fall\n1 Multani, Yavimaya's Avatar\n1 Myriad Landscape\n1 Nature's Lore\n1 Naya Panorama\n1 Old One Eye\n1 Overprotect\n1 Pair o' Dice Lost\n1 Primeval Herald\n1 Pulse of Murasa\n1 Rampant Frogantua\n1 Return of the Wildspeaker\n1 Rishkar's Expertise\n1 Rude Awakening\n1 Soul's Majesty\n1 Spelunking\n1 Splendid Reclamation\n1 Spry and Mighty\n1 Summon: Fenrir\n1 Summon: Titan\n1 Swampbenders\n1 Tamiyo's Safekeeping\n1 Terramorphic Expanse\n1 Three Visits\n1 Timeless Witness\n1 Travel Through Caradhras\n1 Traverse the Outlands\n1 Ulvenwald Hydra\n1 Vibrant Cityscape\n1 Wilderness Reclamation\n1 Zanarkand, Ancient Metropolis\n\n1 Sandman, Shifting Scoundrel" },
+    { key: 'brudiclad', name: 'Brudiclad, Telchor Engineer', colors: ['U', 'R'], desc: 'Izzet artifacts and tokens: Treasures, copies and Myr', checked: '2026-10-07', text: "1 Academy Manufactor\n1 Academy Ruins\n1 Audacious Reshapers\n1 Buried Ruin\n1 Burn Down the House\n1 Cascade Bluffs\n1 Chaos Warp\n1 Chief of the Foundry\n1 Combustible Gearhulk\n1 Command Tower\n1 Confirm Suspicions\n1 Curiosity Crafter\n1 Cyclonic Rift\n1 Daretti, Scrap Savant\n1 Darksteel Citadel\n1 Darksteel Forge\n1 Darksteel Juggernaut\n1 Dockside Extortionist\n1 Emry, Lurker of the Loch\n1 Fact or Fiction\n1 Fathom Fleet Swordjack\n1 Flameshadow Conjuring\n1 Frostboil Snarl\n1 Goldspan Dragon\n1 Great Furnace\n1 Hellkite Tyrant\n1 Impulsive Pilferer\n11 Island\n1 Izzet Boilerworks\n1 Izzet Signet\n1 Jeska's Will\n1 Jhoira, Weatherlight Captain\n1 Leadership Vacuum\n1 Loyal Apprentice\n1 Magmaquake\n1 Master of Etherium\n1 Master Transmuter\n1 Mimic Vat\n1 Mirrorworks\n9 Mountain\n1 Mox Opal\n1 Myr Battlesphere\n1 Myriad Landscape\n1 Mystic Reflection\n1 Phyrexian Triniform\n1 Pongify\n1 Prototype Portal\n1 Pull from Tomorrow\n1 Quasiduplicate\n1 Reef Worm\n1 Replication Technique\n1 Retrofitter Foundry\n1 River's Rebuke\n1 Ruin Grinder\n1 Saheeli, the Gifted\n1 Saheeli's Artistry\n1 Seat of the Synod\n1 Sharding Sphinx\n1 Sol Ring\n1 Solemn Simulacrum\n1 Soul of New Phyrexia\n1 Spell Swindle\n1 Steam Vents\n1 Steel Hellkite\n1 Storm the Vault // Vault of Catlacan\n1 Stormcarved Coast\n1 Swiftfoot Boots\n1 Talisman of Creativity\n1 Tamiyo's Journal\n1 Temple of Epiphany\n1 Tempt with Reflections\n1 Thopter Assembly\n1 Thopter Spy Network\n1 Thought Vessel\n1 Trading Post\n1 Training Center\n1 Treasure Map // Treasure Cove\n1 Treasure Nabber\n1 Treasure Vault\n1 Triplicate Titan\n1 Unwinding Clock\n\n1 Brudiclad, Telchor Engineer" }
+];
+function verifiedDecksHTML(onclick, pressedKey) {
+    return `<div class="opp-grid">${VERIFIED_DECKS.map(v => `<button type="button" class="opp" aria-pressed="${pressedKey === v.key}" onclick="${onclick}('${v.key}')">
+        <strong>✅ ${v.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(v.name)}</strong><small>${esc(v.desc)}</small></button>`).join('')}</div>`;
+}
+async function makeVerifiedStarter(key) {
+    const v = VERIFIED_DECKS.find(x => x.key === key);
+    const status = $('starterStatus');
+    if (status) status.innerHTML = '<span class="loading">Building the deck from live card data...</span>';
+    try {
+        const gen = await listToOppDeck(v.text, 'commander');
+        const deck = generatedToDeck(gen, `${v.name} (starter)`);
+        profile.decks.push(deck);
+        saveProfile();
+        closeModal();
+        toast(`Added "${deck.name}" to your decks.`);
+        renderDeckPicker();
+        renderPlayView();
+    } catch (e) {
+        console.error(e);
+        if (status) status.innerHTML = `<span class="warn">Couldn't build that deck: ${esc(e.message)}</span>`;
+    }
+}
 async function starterPicker() {
     let cmdOptions = '<option disabled>Loading trending commanders...</option>';
     showModal(`<h2>🎁 Starter decks</h2>
         <p class="note">Ready-made decks to play right away. They don't use your collection.</p>
+        <div style="text-align:left; margin-top:12px;"><h3 style="font-size:1rem;">✅ Fully working Commander decks</h3>
+            <p class="note" style="margin-bottom:6px;">Every card in these decks is automated and was checked one by one.</p>
+            ${verifiedDecksHTML('makeVerifiedStarter', null)}</div>
         <div class="grid-2" style="text-align:left; margin-top:12px;">
             <div><h3 style="font-size:1rem;">Modern (60 cards)</h3>
                 <select id="starterTheme" style="width:100%; margin:6px 0;">${MODERN_THEMES.map(t => `<option value="${t.key}">${esc(t.name)} - ${esc(t.desc)}</option>`).join('')}</select>
@@ -4284,7 +4315,7 @@ async function renderOpponents() {
         try {
             const cmds = await loadTrendingCommanders();
             const custom = chosenOpponent && chosenOpponent.type === 'commander' && !cmds.some(c => c.slug === chosenOpponent.key) ? `<div class="opp-custom"><button type="button" class="opp" aria-pressed="true"><strong>👑 ${esc(chosenOpponent.name || chosenOpponent.key)}</strong><small>EDHREC average deck</small></button></div>` : '';
-            list.innerHTML = `<h3 class="opp-h">Face any commander</h3>
+            list.innerHTML = `${verifiedOppHTML()}<h3 class="opp-h">Face any commander</h3>
                 <div class="row" style="margin-bottom:6px;"><input type="search" id="cmdFind" list="cmdSuggest" placeholder="Type a commander's name" aria-label="Commander to face" oninput="suggestCommanders(this.value)" onkeydown="if (event.key === 'Enter') faceCommander()" style="flex:1 1 220px;"><datalist id="cmdSuggest"></datalist>
                 <button class="btn" onclick="faceCommander()">👑 Face this commander</button>${pasteBtn}</div>
                 <div class="note" id="cmdFindNote" style="margin-bottom:8px;">Any commander EDHREC has decks for, playing its average deck. Or paste a real list.</div>
@@ -4294,13 +4325,17 @@ async function renderOpponents() {
                 <div class="opp-grid">${cmds.map(c => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === c.slug}" onclick="chooseOpponent({ type: 'commander', key: '${esc(c.slug)}' })">
                     <strong>👑 ${esc(c.name)}</strong><small>${c.decks ? `${c.decks.toLocaleString()} decks on EDHREC` : ''}</small></button>`).join('')}</div>`;
         } catch (e) {
-            list.innerHTML = '<p class="warn">EDHREC is unavailable right now, so there are no Commander opponents. Try again later.</p>';
+            list.innerHTML = `${verifiedOppHTML()}<p class="warn">EDHREC is unavailable right now, so its commanders aren't listed. Try again later.</p>`;
         }
     }
-    const oppIsCmd = chosenOpponent && (chosenOpponent.type === 'commander' || (chosenOpponent.type === 'list' && chosenOpponent.gen.format === 'commander'));
+    const oppIsCmd = chosenOpponent && (chosenOpponent.type === 'commander' || chosenOpponent.type === 'verified' || (chosenOpponent.type === 'list' && chosenOpponent.gen.format === 'commander'));
     if (chosenOpponent && (deck.format === 'commander') !== !!oppIsCmd) chosenOpponent = null;
     $('startNote').textContent = chosenOpponent ? '' : 'Pick an opponent.';
 }
+function verifiedOppHTML() {
+    return `<h3 class="opp-h">✅ Fully working decks</h3><p class="note" style="margin-bottom:8px;">Every card in these decks is automated and was checked one by one.</p>${verifiedDecksHTML('chooseVerifiedOpp', chosenOpponent && chosenOpponent.type === 'verified' ? chosenOpponent.key : null)}`;
+}
+function chooseVerifiedOpp(key) { chooseOpponent({ type: 'verified', key, name: VERIFIED_DECKS.find(v => v.key === key).name }); }
 function chooseOpponent(o) {
     chosenOpponent = o;
     renderOpponents();
@@ -4425,6 +4460,10 @@ async function startMatch(again) {
             oppDeck.source = 'Scryfall theme deck';
         } else if (chosenOpponent.type === 'list') {
             oppDeck = chosenOpponent.gen;
+        } else if (chosenOpponent.type === 'verified') {
+            const v = VERIFIED_DECKS.find(x => x.key === chosenOpponent.key);
+            oppDeck = await listToOppDeck(v.text, 'commander');
+            oppDeck.source = `fully working deck (checked ${v.checked})`;
         } else {
             oppDeck = await buildCommanderDeck(chosenOpponent.key);
             oppDeck.source = `EDHREC average deck${oppDeck.swapped ? `, ${oppDeck.swapped} cards swapped for lands` : ''}`;
