@@ -1,6 +1,6 @@
 # Spellslinger Duels overhaul plan
 
-Status: **Phase 0 done (2026-10-08); Phases 1-4 not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
+Status: **Phases 0 and 1a done (2026-10-08); 1b onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
 
 ## Owner's goals
 
@@ -15,7 +15,7 @@ The owner also asked for the single file to be split into modules, and for the c
 
 Ask about any that are still open before starting a step that depends on it. Record the answers here.
 
-1. **Splitting the file.** CLAUDE.md says every tool is "a single self-contained `.html` file". Plain multiple files work on GitHub Pages with no build step and no framework, so the split is allowed only with the owner's OK. Update CLAUDE.md when it happens. Keep `Spellslinger_Duels.html` as the page address so links and bookmarks still work. *Answer:*
+1. **Splitting the file.** CLAUDE.md says every tool is "a single self-contained `.html` file". Plain multiple files work on GitHub Pages with no build step and no framework, so the split is allowed only with the owner's OK. Update CLAUDE.md when it happens. Keep `Spellslinger_Duels.html` as the page address so links and bookmarks still work. *Answer: yes, split into several files (owner, 2026-10-08).*
 2. **The card reader is migrated step by step, not rewritten in one go.** About 37% of all cards, and every finished set, deck and draft, depend on the current reader. *Answer:*
 3. **What "Shop is separate from Campaign decks" means.** Pick one. *Answer:*
    - (a) One collection; only coins and win/loss records are kept per mode.
@@ -81,6 +81,8 @@ Cut the existing script into files in the order it runs now, as plain `<script s
 - an existing save still loads
 
 Update the test harness if it loads the page differently.
+
+**Phase 1a result (2026-10-08):** done as a pure cut, with no code moved or edited. `Spellslinger_Duels.html` keeps the markup (338 lines); `spellslinger/styles.css` has the CSS; the script became `spellslinger/01-core.js` to `16-startup.js`, cut at the section banners the code already had and kept in its original order (the joined files are byte for byte the old script). The files are therefore named by what each section holds, not by the plan's list (`api`, `state`, `parser`, `engine`, `ai`, `draft`, `shop`, `app`): the old script mixes those topics (for example the trigger code sits after the shop), and regrouping them means moving code, which is for Phase 2a and later. Checked: `tests/run_all.py` passes, the page loads with no errors at 1280px and 390px, and a save made by the old single-file version loads with the same coins, cash and decks.
 
 ### 1b: IndexedDB storage
 
