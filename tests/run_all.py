@@ -4,7 +4,7 @@
     python3 tests/run_all.py             the usual run (about 10 minutes)
     python3 tests/run_all.py --quick     a smoke test (about 3 minutes)
     python3 tests/run_all.py --full      everything, including the Welcome Decks, Starter Kits and ~100 games (about 40 minutes)
-    python3 tests/run_all.py engine cards     only the named suites (engine, storage, redraw, cards, coverage, games)
+    python3 tests/run_all.py engine cards     only the named suites (engine, storage, redraw, cards, coverage, rules, games)
 
 Needs: node, Playwright for Node, the Chromium at /opt/pw-browsers (see tests/README.md).
 GAME_ROOT=/path/to/another/checkout runs the same tests against an older copy of the game.
@@ -29,11 +29,13 @@ def plan(mode, only):
         steps.append(('cards (all groups)', ['cards.js', 'all'], 3600))
         if have_cards:
             steps.append(('coverage', ['coverage.js'], 900))
+            steps.append(('rules snapshot', ['rules-snapshot.js'], 900))
         steps.append(('games (full)', ['games.js', '--full'], 3600))
     else:
         steps.append(('cards (verified, Mirrodin, Magic 2010)', ['cards.js'], 900))
         if have_cards:
             steps.append(('coverage', ['coverage.js'], 900))
+            steps.append(('rules snapshot', ['rules-snapshot.js'], 900))
         steps.append(('games', ['games.js'], 1800))
     if only:
         steps = [s for s in steps if any(o in s[0] for o in only)]
