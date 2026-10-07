@@ -791,13 +791,23 @@
         .bottom-nav button[aria-current="page"] { color: var(--text-heading); background: color-mix(in srgb, var(--brand) 22%, transparent); box-shadow: inset 0 2px 0 var(--brand-light); }
         .menu-list { display: grid; gap: 8px; margin-top: 10px; }
         .menu-list .btn { justify-content: flex-start; text-align: left; min-height: 48px; font-size: 1rem; }
-        .act-banner { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) scale(0.96); z-index: 30; max-width: min(92vw, 520px); display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--bg-panel) 94%, transparent); border: 1px solid var(--gold); box-shadow: 0 8px 30px var(--bg-canvas); color: var(--text-heading); font-weight: 600; font-size: 0.95rem; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; }
+        .act-banner { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%) scale(0.96); z-index: 60; width: max-content; max-width: min(92vw, 560px); display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--bg-panel) 96%, transparent); border: 1px solid var(--gold); box-shadow: 0 10px 34px var(--bg-canvas); color: var(--text-heading); font-size: 0.95rem; opacity: 0; pointer-events: none; cursor: pointer; transition: opacity 0.2s, transform 0.2s; }
+        .act-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+        .act-banner.turn { border-color: var(--brand-light, var(--gold)); }
+        .act-cards { display: flex; gap: 6px; flex: none; }
+        .act-cards img, .act-cards .noimg { width: 64px; border-radius: 5px; display: block; }
+        .act-cards.one img, .act-cards.one .noimg { width: 132px; border-radius: 7px; }
+        .act-cards .noimg { aspect-ratio: 63 / 88; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.72rem; padding: 4px; background: var(--bg-inset); border: 1px solid var(--border); }
+        .act-text { display: grid; gap: 4px; min-width: 0; }
+        .act-text strong { font-size: 1.05rem; line-height: 1.3; }
+        .act-text div { color: var(--text-soft, var(--text-secondary)); font-size: 0.9rem; line-height: 1.3; }
+        .act-text small { color: var(--text-muted); font-size: 0.72rem; margin-top: 2px; }
+        @media (max-width: 600px) { .act-banner { flex-direction: column; text-align: center; gap: 8px; padding: 10px 12px; } .act-cards.one img, .act-cards.one .noimg { width: 104px; } .act-cards img, .act-cards .noimg { width: 56px; } }
+        @media (prefers-reduced-motion: reduce) { .act-banner { transition: none; } }
         .hs-cover { position: fixed; inset: 0; z-index: 95; background: radial-gradient(ellipse at center, var(--felt-1), var(--bg-canvas) 75%); display: flex; align-items: center; justify-content: center; padding: 20px; }
         .hs-box { text-align: center; max-width: 420px; display: grid; gap: 12px; justify-items: center; }
         .hs-ico { font-size: 3rem; }
         .hs-box .btn { min-height: 52px; font-size: 1.05rem; padding: 0 22px; }
-        .act-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        .act-banner img { width: 40px; border-radius: 4px; flex: none; }
         .mull-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; overflow: visible; background: none; padding: 6px 0 10px; }
         .mull-hand .hc { width: clamp(70px, 12vw, 110px); }
         .mull-actions { display: flex; justify-content: center; gap: 10px; }
@@ -1141,7 +1151,7 @@
         <details class="logwrap" id="logWrap" open><summary class="lane-label">Game log</summary><div class="log" id="log" aria-live="polite"></div></details>
     </div>
     <div class="card-peek hidden" id="cardPeek" aria-hidden="true"></div>
-    <div class="act-banner" id="actBanner" aria-hidden="true"></div>
+    <div class="act-banner" id="actBanner" role="status" aria-live="polite" onclick="actSkip()"></div>
     <div class="hs-cover hidden" id="hsCover" role="dialog" aria-label="Pass the device"></div>
 </section>
 
@@ -5131,6 +5141,7 @@ async function startMatch(again) {
 
 async function newGame(myDeck, oppDeck, friend) {
     uidSeq = 1;
+    actReset();
     G = { format: myDeck.format, players: [], active: 0, turn: 1, phase: 'setup', log: [], attackers: [], blocks: {}, mode: null, over: false, busy: true,
         stack: [], stackRunning: false, priority: null, campaign: oppDeck.campaign || null, view: 0, hotseat: friend || null, draftRound: oppDeck.draftRound };
     G.players = friend ? [makePlayer(0, friend.accounts[0], myDeck, false), makePlayer(1, friend.accounts[1], oppDeck, false)]
@@ -5630,6 +5641,7 @@ function choiceCardHTML(card) { return card && (card.imgS || card.img) ? `<img c
 function askYes(P, msg, opts = {}) {
     if (AUTOPLAY && !G?.hotseat) return Promise.resolve(opts.auto ?? true);
     if (G && G.hotseat && P && G.view !== P.i) return handTo(P).then(() => askYes(P, msg, opts));
+    if (actBusy()) return actDrain().then(() => askYes(P, msg, opts));
     // "... (Cancel = it enters tapped.)" names the No answer
     const m = msg.match(/^(.*?)\s*\(Cancel = ([^)]+?)\.?\)\s*$/);
     const q = m ? m[1] : msg;
@@ -5646,6 +5658,7 @@ function askYes(P, msg, opts = {}) {
 function askNumber(P, msg, min, max, def, opts = {}) {
     if (AUTOPLAY && !G?.hotseat) return Promise.resolve(def);
     if (G && G.hotseat && P && G.view !== P.i) return handTo(P).then(() => askNumber(P, msg, min, max, def, opts));
+    if (actBusy()) return actDrain().then(() => askNumber(P, msg, min, max, def, opts));
     let v = Math.max(min, Math.min(max, def ?? max));
     return new Promise(resolve => {
         const show = () => { $('askNum').textContent = v; $('askMinus').disabled = v <= min; $('askPlus').disabled = v >= max; };
@@ -6149,6 +6162,7 @@ async function offerPriority(P, top) {
     }
     const prevMode = G.mode && G.mode.type !== 'respond' ? G.mode : null;
     const prevBusy = G.busy;
+    await actDrain();
     G.busy = false;
     const acted = await new Promise(resolve => { G.mode = { type: 'respond', who: P.i, item: top, resolve }; renderGame(); });
     G.mode = prevMode;
@@ -8875,6 +8889,7 @@ function endGame(winner, reason) {
     if (G.over) return;
     G.over = true;
     G.busy = true;
+    actReset();
     G.mode = null;
     const won = winner === 0;
     let reward = 0;
@@ -9332,19 +9347,22 @@ async function aiMain(P) {
     for (let k = 0; k < 3 && P.landsPlayed < landLimit(P); k++) { const before = P.landsPlayed; aiPlayLand(P); if (P.landsPlayed === before) break; }
     await settle();
     renderGame();
+    await actDrain();
     for (let guard = 0; guard < 15 && !G.over; guard++) {
         const play = aiBestPlay(P);
         if (!play) break;
         await pause(500);
         const ok = await castSpell(P, play.o, play.target);
+        await actDrain();
         if (!ok) break;
     }
     await aiUseAbilities(P);
+    await actDrain();
     // Equip unattached equipment to the best creature
     for (const eq of P.bf.filter(o => Rx(o).isEquipment && Rx(o).equip !== null && !o.attachedTo)) {
         const cheap = Rx(eq).equipCheap, fits = P.bf.filter(c => isCreature(c) && equipOk(eq, c));
         const best = (cheap && fits.find(c => equipFits(c, cheap.type) && planPayment(P, equipCost(P, eq, c), 0, null, { forType: eq.card.type }))) || fits.sort((a, b) => creatureValue(b) - creatureValue(a))[0];
-        if (best && await equip(P, eq, best)) await pause(300);
+        if (best && await equip(P, eq, best)) { await pause(300); await actDrain(); }
     }
 }
 
@@ -9464,6 +9482,7 @@ function aiChooseBlocks(D, A) {
 async function aiTurn(P) {
     G.busy = true;
     await pause(500);
+    await actDrain();
     await aiMain(P);
     if (G.over) return;
     aiSaddle(P);
@@ -9479,6 +9498,8 @@ async function aiTurn(P) {
         declareAttackers(P, attackers);
         await settle();
         if (G.over) return;
+        renderGame();
+        await actDrain();
         G.phase = 'declareBlocks';
         renderGame();
         const D = opp(P);
@@ -9506,11 +9527,13 @@ async function aiTurn(P) {
         renderGame();
         if (G.over) return;
         await pause(400);
+        await actDrain();
     }
     G.phase = 'main2';
     await aiMain(P);
     if (G.over) return;
     await pause(300);
+    await actDrain();
     endTurn(P);
 }
 
@@ -9647,19 +9670,88 @@ function logSheet() {
     menuSheet('Game log', `<div class="log" id="logSheetBody" style="max-height:60vh; font-size:0.9rem;">${G.log.map(l => `<div>${esc(l)}</div>`).join('')}</div>`);
     const b = $('logSheetBody'); if (b) b.scrollTop = b.scrollHeight;
 }
-// Phones: what just happened, for a moment, in the middle of the table (the log is in the menu)
-let actBannerTimer = null;
-function showActBanner(msg) {
-    const el = $('actBanner');
-    if (!el || AUTOPLAY || !isPhone() || !G || $('game').classList.contains('hidden')) return;
-    if (/^You (?:draw|tap|add)\b/.test(msg) || /^You /.test(msg) && !/\b(?:take|lose|are)\b/.test(msg)) return;
-    const name = (msg.match(/(?:casts|plays|activates|attacks with) ([^.,(]+)/) || [])[1];
-    const card = name && [...foe().bf, ...foe().gy, ...G.stack.map(it => it.o)].find(o => o && o.card && o.card.name === name.trim());
-    el.innerHTML = `${card && card.card.imgS ? `<img src="${card.card.imgS}" alt="">` : ''}<span>${esc(msg)}</span>`;
-    el.classList.add('show');
-    clearTimeout(actBannerTimer);
-    actBannerTimer = setTimeout(() => el.classList.remove('show'), 2600);
+// ---- Play-by-play (owner's request 2026-10-07: the opponent did everything at once) ----
+// What the opponent does is shown one step at a time in the middle of the table,
+// with the card: a cast, land, ability, attack or block starts a step, and what
+// follows from it (enters, dies, damage) is added under it. The computer waits
+// for each step (actDrain) before its next action, and every question to you
+// waits until the steps so far have been shown. Tap the panel to skip ahead.
+const ACT_MAJOR = /'s turn —|\b(?:casts?|plays?|activates?|attacks? with|equips?|crews?|cycles?|saddles?|foretells?|counters?)\b|^Blocks:|^No blocks/;
+const ACT_MS = 1700, ACT_QUICK_MS = 1200, ACT_SUB_MS = 900, ACT_MAX_SUBS = 5;
+let actQ = [], actCur = null, actTimer = null, actWaiters = [];
+function actOn() { return !AUTOPLAY && !!G && G.players.length === 2 && !G.hotseat && !G.over && !$('game').classList.contains('hidden'); }
+const actBusy = () => actOn() && (!!actCur || actQ.length > 0);
+// The cards a line names, from every zone the players can see (longest names first)
+function actCards(msg) {
+    const seen = new Map();
+    G.players.forEach(P => [P.bf, P.gy, P.exile, P.command, P.isAI ? P.hand : []].forEach(z => z.forEach(o => { if (o && o.card && !seen.has(o.card.name)) seen.set(o.card.name, o.card); })));
+    G.stack.forEach(it => { if (it.o && it.o.card && !seen.has(it.o.card.name)) seen.set(it.o.card.name, it.o.card); });
+    let rest = msg;
+    const found = [];
+    [...seen.keys()].sort((a, b) => b.length - a.length).forEach(n => {
+        const at = rest.indexOf(n);
+        if (at < 0) return;
+        found.push({ at, card: seen.get(n) });
+        rest = rest.split(n).join(' '.repeat(n.length));
+    });
+    return found.sort((a, b) => a.at - b.at).map(f => f.card).slice(0, 4);
 }
+function showActBanner(msg) {
+    if (!actOn()) return;
+    if (/^You (?:draw|tap|add)\b/.test(msg) || /^You /.test(msg) && !/\b(?:take|lose|are|discard|sacrifice)\b/.test(msg)) return;
+    const theirs = G.players[G.active] && G.players[G.active].isAI;
+    const cards = actCards(msg);
+    // On your own turn, only what the opponent does and what happens to you
+    if (!theirs && !(msg.includes(foe().name) || /^(?:Blocks:|You )/.test(msg) || cards.some(c => foe().bf.concat(foe().gy, foe().exile, foe().command).some(o => o.card === c) && !me().bf.some(o => o.card === c)))) return;
+    const major = ACT_MAJOR.test(msg);
+    const last = actQ.length ? actQ[actQ.length - 1] : actCur;
+    if (!major && last && last.subs.length < ACT_MAX_SUBS) {
+        last.subs.push(msg);
+        cards.forEach(c => { if (last.cards.length < 4 && !last.cards.includes(c)) last.cards.push(c); });
+        last.ms += ACT_SUB_MS / 2;
+        if (last === actCur) { renderAct(); actSchedule(ACT_SUB_MS); }
+        return;
+    }
+    actQ.push({ msg, subs: [], cards, ms: !major ? ACT_SUB_MS : /'s turn —| plays? /.test(msg) ? ACT_QUICK_MS : ACT_MS, turn: /'s turn —/.test(msg) });
+    if (!actCur) actNext();
+}
+function actSchedule(minLeft) {
+    const left = Math.max(minLeft || 0, actCur.end - Date.now());
+    actCur.end = Date.now() + left;
+    clearTimeout(actTimer);
+    actTimer = setTimeout(actNext, left);
+}
+function renderAct() {
+    const el = $('actBanner');
+    if (!el || !actCur) return;
+    const a = actCur, big = a.cards.length === 1;
+    el.classList.toggle('turn', a.turn);
+    el.innerHTML = `${a.cards.length ? `<div class="act-cards${big ? ' one' : ''}">${a.cards.map(c => (c.img || c.imgS) ? `<img src="${big ? (c.img || c.imgS) : (c.imgS || c.img)}" alt="${esc(c.name)}">` : `<span class="noimg">${esc(c.name)}</span>`).join('')}</div>` : ''}
+        <div class="act-text"><strong>${esc(a.msg.replace(/^— | —$/g, ''))}</strong>${a.subs.map(s => `<div>${esc(s)}</div>`).join('')}
+        <small>${actQ.length ? `${actQ.length} more · tap to skip` : 'tap to close'}</small></div>`;
+}
+function actNext() {
+    clearTimeout(actTimer);
+    const el = $('actBanner');
+    actCur = actOn() ? actQ.shift() || null : null;
+    if (!actCur) {
+        actQ = [];
+        if (el) el.classList.remove('show', 'turn');
+        actWaiters.splice(0).forEach(r => r());
+        return;
+    }
+    actCur.end = Date.now() + actCur.ms;
+    renderAct();
+    if (el) { el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
+    actSchedule(0);
+}
+function actSkip() { if (actCur) actNext(); }
+// Wait until everything queued so far has been shown (at most 20 seconds)
+function actDrain() {
+    if (!actBusy()) return Promise.resolve();
+    return new Promise(r => { actWaiters.push(r); setTimeout(r, 20000); });
+}
+function actReset() { actQ = []; actCur = null; clearTimeout(actTimer); const el = $('actBanner'); if (el) el.classList.remove('show', 'turn'); actWaiters.splice(0).forEach(r => r()); }
 // ---- Pass and play (owner's request 2026-10-06): two accounts on one device ----
 // The table always shows the player holding the device (G.view). When a decision
 // belongs to the other player, a cover hides the table until they take over.
@@ -12867,6 +12959,7 @@ function pickCard(P, list, title, opts = {}) {
     const best = () => list.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0];
     if (P.isAI) return Promise.resolve(best());
     if (G && G.hotseat && G.view !== P.i) return handTo(P).then(() => pickCard(P, list, title, opts));
+    if (actBusy()) return actDrain().then(() => pickCard(P, list, title, opts));
     return new Promise(resolve => {
         window.__pick = i => { closeModal(); resolve(list[i] || null); };
         showModal(`<h2>${esc(title)}</h2><div class="pick-grid">${list.slice(0, 60).map((o, i) => `<button type="button" class="pick-card" onclick="__pick(${i})" title="${esc(o.card.name)}">${o.card.imgS ? `<img src="${o.card.imgS}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</button>`).join('')}</div>
