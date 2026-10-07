@@ -7368,7 +7368,7 @@ async function applyEffect(P, e, t, src) {
                 if (e.leastPow && pool.length) { const lo = Math.min(...pool.filter(isCreature).map(pow)); pool = pool.filter(x => isCreature(x) && pow(x) === lo); }
                 if (!pool.length) continue;
                 // Each player chooses what they sacrifice (701.21a)
-                const f = (V.isAI || AUTOPLAY || pool.length === 1 ? null : await pickCard(V, pool, `${name}: choose what to sacrifice`)) || pool[0];
+                const f = (V.isAI || AUTOPLAY || pool.length === 1 ? null : await pickCard(V, pool, `${name}: choose what to sacrifice`, { required: true })) || pool[0];
                 G.edictDid[V.i] = true; log(`${V.name} ${you(V) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); G.lastEdictN++; fire('sacrificed', { o: f }); dieOrLeave(f, 'gy');
             }
             break;
@@ -12649,14 +12649,14 @@ async function chooseSac(P, src, kind, label) {
     if (!best || P.isAI || AUTOPLAY) return best;
     const pool = sacCandidates(P, src, kind);
     if (pool.length <= 1) return best;
-    return (await pickCard(P, pool, `${label || (src && src.card ? src.card.name : 'Sacrifice')}: choose ${/^[aeiou]/.test(kind) ? 'an' : 'a'} ${kind.replace(/:.*/, '')} to sacrifice`)) || best;
+    return (await pickCard(P, pool, `${label || (src && src.card ? src.card.name : 'Sacrifice')}: choose ${/^[aeiou]/.test(kind) ? 'an' : 'a'} ${kind.replace(/:.*/, '')} to sacrifice`, { required: true })) || best;
 }
 // Several at once ("Sacrifice three lands", "Sacrifice two artifacts")
 async function chooseSacN(P, pool, n, label) {
     const auto = pool.slice().sort((a, b) => (b.tapped - a.tapped) || (a.token ? -5 : 0) + permValue(a) - ((b.token ? -5 : 0) + permValue(b))).slice(0, n);
     if (P.isAI || AUTOPLAY || pool.length <= n) return auto;
     const out = [];
-    for (let k = 0; k < n; k++) { const left = pool.filter(x => !out.includes(x)); const c = await pickCard(P, left, `${label}: choose what to sacrifice (${k + 1} of ${n})`); out.push(c || left.sort((a, b) => permValue(a) - permValue(b))[0]); }
+    for (let k = 0; k < n; k++) { const left = pool.filter(x => !out.includes(x)); const c = await pickCard(P, left, `${label}: choose what to sacrifice (${k + 1} of ${n})`, { required: true }); out.push(c || left.sort((a, b) => permValue(a) - permValue(b))[0]); }
     return out;
 }
 function canActivate(P, o, a) { return !G.over && actTimingOk(P, a) && !!actPlan(P, o, a); }
@@ -12862,15 +12862,15 @@ function aiCrew(P) {
 }
 
 // ---- Choices from a list (tutors, regrowth): you pick, the AI takes its best ----
-function pickCard(P, list, title) {
+function pickCard(P, list, title, opts = {}) {
     if (!list.length) return Promise.resolve(null);
     const best = () => list.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0];
     if (P.isAI) return Promise.resolve(best());
-    if (G && G.hotseat && G.view !== P.i) return handTo(P).then(() => pickCard(P, list, title));
+    if (G && G.hotseat && G.view !== P.i) return handTo(P).then(() => pickCard(P, list, title, opts));
     return new Promise(resolve => {
         window.__pick = i => { closeModal(); resolve(list[i] || null); };
         showModal(`<h2>${esc(title)}</h2><div class="pick-grid">${list.slice(0, 60).map((o, i) => `<button type="button" class="pick-card" onclick="__pick(${i})" title="${esc(o.card.name)}">${o.card.imgS ? `<img src="${o.card.imgS}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</button>`).join('')}</div>
-            ${list.length > 60 ? '<p class="note">Showing the first 60.</p>' : ''}<div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="__pick(-1)">None</button></div>`);
+            ${list.length > 60 ? '<p class="note">Showing the first 60.</p>' : ''}${opts.required ? '<p class="note" style="text-align:center;">This is required - pick one.</p>' : '<div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="__pick(-1)">None</button></div>'}`);
     });
 }
 // Mode choice for "Choose one —"
