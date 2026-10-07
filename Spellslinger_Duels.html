@@ -124,6 +124,15 @@
         .ctile .meta { font-size: 0.8rem; color: var(--text-soft); line-height: 1.25; }
         .ctile:hover img { outline: 2px solid var(--brand-light); }
         .ctile.dim img { opacity: 0.4; }
+        /* Card coverage on Home */
+        .coverage { margin: 10px 0 4px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-inset); display: grid; gap: 6px; }
+        .cov-bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--border); gap: 2px; }
+        .cov-seg { display: block; height: 100%; }
+        .cov-full { background: var(--color-success); }
+        .cov-part { background: var(--color-warning); }
+        .cov-none { background: var(--color-error); }
+        .cov-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+        .cov-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
         /* Booster draft */
         .draft-sets { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
         .draft-set h3 { font-size: 1.05rem; margin-bottom: 4px; }
@@ -880,6 +889,7 @@
         <section id="view-home">
             <div class="panel">
                 <h2>Welcome to Spellslinger Duels</h2>
+                <div class="coverage" id="homeCoverage"></div>
                 <p>A test game: open packs with free coins, build a deck, and play Magic against an opponent playing a real deck theme.</p>
                 <div class="grid-2" style="margin-top:12px;">
                     <div>
@@ -3204,7 +3214,19 @@ function ensureProfile() {
     renderCoins();
 }
 
+// How much of Magic the game can run: every paper card (one per name, from Scryfall) through rulesFor.
+// Measured after each rules round with the coverage test; update these numbers when it's rerun.
+const CARD_COVERAGE = { measured: '2026-10-07', total: 33225, full: 12025, partial: 16840, none: 4360, top1000: { full: 819, partial: 132, none: 49 } };
+function coverageHTML() {
+    const c = CARD_COVERAGE, pct = n => Math.round(100 * n / c.total), play = c.full + c.partial;
+    const seg = (n, cls, label) => `<span class="cov-seg ${cls}" style="width:${(100 * n / c.total).toFixed(2)}%" title="${label}: ${n.toLocaleString()} cards (${pct(n)}%)"></span>`;
+    return `<div class="cov-head"><strong>🃏 ${play.toLocaleString()} of ${c.total.toLocaleString()} Magic cards are playable</strong> <span class="note">(${pct(play)}%)</span></div>
+        <div class="cov-bar" role="img" aria-label="${c.full.toLocaleString()} cards fully automated, ${c.partial.toLocaleString()} partly, ${c.none.toLocaleString()} not yet">${seg(c.full, 'cov-full', 'Automated')}${seg(c.partial, 'cov-part', 'Partly')}${seg(c.none, 'cov-none', 'Not yet')}</div>
+        <div class="cov-legend note"><span><span class="cov-dot cov-full"></span>Automated <strong>${c.full.toLocaleString()}</strong> (${pct(c.full)}%)</span><span><span class="cov-dot cov-part"></span>Partly <strong>${c.partial.toLocaleString()}</strong> (${pct(c.partial)}%)</span><span><span class="cov-dot cov-none"></span>Not yet <strong>${c.none.toLocaleString()}</strong> (${pct(c.none)}%)</span></div>
+        <div class="note">Of the 1,000 most-played Commander cards, <strong>${c.top1000.full}</strong> are fully automated and <strong>${c.top1000.full + c.top1000.partial}</strong> are playable. Counted over every paper card on ${c.measured}.</div>`;
+}
 function renderHome() {
+    $('homeCoverage').innerHTML = coverageHTML();
     $('homePrecon').classList.toggle('hidden', !!profile.starterDeck);
     const owned = Object.values(profile.collection).reduce((a, b) => a + b, 0);
     $('homeStats').innerHTML = `
