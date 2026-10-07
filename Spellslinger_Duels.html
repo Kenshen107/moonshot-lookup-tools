@@ -1745,6 +1745,11 @@ const EFFECTS = [
     [/^§spry$/, () => ({ t: 'spry' })],
     [/^§genesis (\d+)$/, m => ({ t: 'genesis', n: +m[1] })],
     [/^§druidpurify$/, () => ({ t: 'druidPurify' })],
+    // ---- Tyrox deck (2026-10-08) ----
+    [/^§guide$/, () => ({ t: 'goblinGuide' })],
+    [/^§celebrant$/, () => ({ t: 'celebrant' })],
+    [/^§rabble$/, () => ({ t: 'rabble' })],
+    [/^~ deals (\d+) damage to target non-([A-Z][a-z]+) creature an opponent controls$/, m => ({ t: 'dmg', n: +m[1], target: 'creature', theirs: true, only: `non-${m[2]} creature` })],
     [/^§feedpack$/, () => ({ t: 'feedPack' })],
     [/^§colossus$/, () => ({ t: 'colossus' })],
     [/^§millLands$/, () => ({ t: 'millLands' })],
@@ -2397,6 +2402,10 @@ function parseEffects(text) {
         .replace(/Reveal the top (\d+) cards of your library\. You may put any number of permanent cards with mana value \1 or less from among them onto the battlefield\. Then put all cards revealed this way that weren't put onto the battlefield into your graveyard\./gi, (all, n) => `§genesis ${n}.`)
         .replace(/[Ss]tarting with you, each player may choose an artifact or enchantment you don't control\. Destroy each permanent chosen this way\./g, '§druidpurify.')
         .replace(/[Yy]ou may sacrifice a nontoken creature\. If you do, create X 2\/2 green Wolf creature tokens, where X is the sacrificed creature's toughness\./g, '§feedpack.')
+        // Tyrox deck (2026-10-08)
+        .replace(/[Dd]efending player reveals the top card of their library\. If it's a land card, that player puts it into their hand\./g, '§guide.')
+        .replace(/it gets \+1\/\+0 until end of turn for each other attacking Goblin\./g, '§rabble.')
+        .replace(/That creature also gains trample until end of turn if you control a creature with power 4 or greater\./g, 'If you control a creature with power 4 or greater, that creature gains trample until end of turn.')
         .replace(/[Yy]ou may put a land card from your hand onto the battlefield tapped\. If you do, draw a card and repeat this process\./g, '§colossus.')
         .replace(/[Yy]ou may mill that many cards\. Put any number of land cards from among them onto the battlefield tapped\./g, '§millLands.')
         .replace(/Exile target creature card with mana value (\d+) from your graveyard\. Create a token that's a copy of it, except it's a 4\/4 black Zombie\./g, (all, n) => `§zombiecopy ${n}.`)
@@ -2836,6 +2845,7 @@ function rulesFor(card) {
         // Costs
         if ((m = line.match(/^~ costs \{(\d+)\} less to cast if it targets (.+)\.$/))) { R.costLessTgt = { n: +m[1], what: m[2] }; continue; }
         if ((m = line.match(/^~ costs \{(\d+)\} less to cast if (.+)\.$/)) && parseCond(m[2])) { R.costLessIf = { n: +m[1], cond: m[2] }; continue; }
+        if ((m = line.match(/^~ costs \{(\d+)\} less to cast for each attacking creature you control\.$/))) { R.costLess = { n: +m[1], what: 'the number of attacking creatures you control' }; continue; }
         if ((m = line.match(/^~ costs \{(\d+)\} less to cast for each (creature that attacked this turn|creature you attacked with this turn)\.$/))) { R.costLess = { n: +m[1], what: 'the number of creatures that attacked this turn' }; continue; }
         if ((m = line.match(/^(Instant and sorcery|Creature|Artifact|Enchantment|[A-Z][a-z]+) spells you cast (?:with power (\w+) or greater )?cost \{(\d+)\} less to cast\.$/))) { R.reducer = { what: m[1], minPow: m[2] ? num(m[2]) : 0, n: +m[3] }; continue; }
         // Auras
@@ -3035,6 +3045,14 @@ function rulesFor(card) {
             if (fx) { R.saga = R.saga || {}; m[1].split(', ').forEach(r => { R.saga[ROMAN[r]] = fx; }); continue; }
         }
         if (/^~ attacks each combat if able\.$/.test(line)) { R.mustAttack = true; continue; }
+        // ---- Tyrox deck (2026-10-08) ----
+        if (/^Other Goblin creatures you control attack each combat if able\.$/.test(line)) { R.forceGoblins = true; continue; }
+        if ((m = line.match(/^Spectacle ((?:\{[^}]+\})+)$/)) && !parseCost(m[1]).odd) { R.alt = { mana: parseCost(m[1]), life: 0, exile: null, cond: 'an opponent lost life this turn', text: `pay ${m[1]} (spectacle: an opponent lost life this turn)` }; continue; }
+        if ((m = line.match(/^(?:If ~ hasn't been exerted this turn, )?[Yy]ou may exert (?:~|it) as it attacks\. When you do, (.+)$/))) {
+            const body = m[1].replace(/^it deals/, '~ deals').replace(/ and after this phase, there is an additional combat phase\.?$/, ' and §celebrant.').replace(/^untap all other creatures you control and §celebrant\.$/, '§celebrant.');
+            const fx = parseEffects(body);
+            if (fx) { R.exert = true; R.trig.push({ ev: 'exerted', effects: fx }); continue; }
+        }
         if ((m = line.match(/^Flashback ((?:\{[^}]+\})+)$/))) { R.flashback = parseCost(m[1]); continue; }
         // Overload (702.96): "target" becomes "each" - read the spell again with that wording
         if ((m = line.match(/^Overload ((?:\{[^}]+\})+)$/))) {
@@ -4603,6 +4621,7 @@ const VERIFIED_DECKS = [
     { key: 'sandman', name: 'Sandman, Shifting Scoundrel', colors: ['G'], desc: 'Mono-green lands: ramp, landfall and big creatures that grow with your lands', checked: '2026-10-07', text: "1 Altar of Dementia\n1 Ash Barrens\n1 Bala Ged Recovery\n1 Beast Within\n1 Biosynthic Burst\n1 Blighted Woodland\n1 Braulios of Pheres Band\n1 Bridgeworks Battle\n1 Bugenhagen, Wise Elder\n1 Bushwhack\n1 Collector's Vault\n1 Conduit of Worlds\n1 Contest of Claws\n1 Cultivator Colossus\n1 Damage Control Crew\n1 Demolition Field\n1 Disciple of Freyalise\n1 Druid of Purification\n1 Dryad's Revival\n1 Eternal Witness\n1 Evolution Charm\n1 Evolving Wilds\n1 Feed the Pack\n25 Forest\n1 Gaea's Gift\n1 Gaea's Touch\n1 Garruk's Uprising\n1 Genesis Wave\n1 Ghalta, Primal Hunger\n1 Ghost Quarter\n1 Greensleeves, Maro-Sorcerer\n1 Groundchuck & Dirtbag\n1 Harmonious Grovestrider\n1 Healing Technique\n1 Horizon Explorer\n1 Jubilation\n1 Khalni Ambush\n1 Lazotep Quarry\n1 Life's Legacy\n1 Lifestream's Blessing\n1 Lumbering Worldwagon\n1 Matzalantli, the Great Door\n1 Michelangelo, On the Scene\n1 Molimo, Maro-Sorcerer\n1 Momentous Fall\n1 Multani, Yavimaya's Avatar\n1 Myriad Landscape\n1 Nature's Lore\n1 Naya Panorama\n1 Old One Eye\n1 Overprotect\n1 Pair o' Dice Lost\n1 Primeval Herald\n1 Pulse of Murasa\n1 Rampant Frogantua\n1 Return of the Wildspeaker\n1 Rishkar's Expertise\n1 Rude Awakening\n1 Soul's Majesty\n1 Spelunking\n1 Splendid Reclamation\n1 Spry and Mighty\n1 Summon: Fenrir\n1 Summon: Titan\n1 Swampbenders\n1 Tamiyo's Safekeeping\n1 Terramorphic Expanse\n1 Three Visits\n1 Timeless Witness\n1 Travel Through Caradhras\n1 Traverse the Outlands\n1 Ulvenwald Hydra\n1 Vibrant Cityscape\n1 Wilderness Reclamation\n1 Zanarkand, Ancient Metropolis\n\n1 Sandman, Shifting Scoundrel" },
     { key: 'brudiclad', name: 'Brudiclad, Telchor Engineer', colors: ['U', 'R'], desc: 'Izzet artifacts and tokens: Treasures, copies and Myr', checked: '2026-10-07', text: "1 Academy Manufactor\n1 Academy Ruins\n1 Audacious Reshapers\n1 Buried Ruin\n1 Burn Down the House\n1 Cascade Bluffs\n1 Chaos Warp\n1 Chief of the Foundry\n1 Combustible Gearhulk\n1 Command Tower\n1 Confirm Suspicions\n1 Curiosity Crafter\n1 Cyclonic Rift\n1 Daretti, Scrap Savant\n1 Darksteel Citadel\n1 Darksteel Forge\n1 Darksteel Juggernaut\n1 Dockside Extortionist\n1 Emry, Lurker of the Loch\n1 Fact or Fiction\n1 Fathom Fleet Swordjack\n1 Flameshadow Conjuring\n1 Frostboil Snarl\n1 Goldspan Dragon\n1 Great Furnace\n1 Hellkite Tyrant\n1 Impulsive Pilferer\n11 Island\n1 Izzet Boilerworks\n1 Izzet Signet\n1 Jeska's Will\n1 Jhoira, Weatherlight Captain\n1 Leadership Vacuum\n1 Loyal Apprentice\n1 Magmaquake\n1 Master of Etherium\n1 Master Transmuter\n1 Mimic Vat\n1 Mirrorworks\n9 Mountain\n1 Mox Opal\n1 Myr Battlesphere\n1 Myriad Landscape\n1 Mystic Reflection\n1 Phyrexian Triniform\n1 Pongify\n1 Prototype Portal\n1 Pull from Tomorrow\n1 Quasiduplicate\n1 Reef Worm\n1 Replication Technique\n1 Retrofitter Foundry\n1 River's Rebuke\n1 Ruin Grinder\n1 Saheeli, the Gifted\n1 Saheeli's Artistry\n1 Seat of the Synod\n1 Sharding Sphinx\n1 Sol Ring\n1 Solemn Simulacrum\n1 Soul of New Phyrexia\n1 Spell Swindle\n1 Steam Vents\n1 Steel Hellkite\n1 Storm the Vault // Vault of Catlacan\n1 Stormcarved Coast\n1 Swiftfoot Boots\n1 Talisman of Creativity\n1 Tamiyo's Journal\n1 Temple of Epiphany\n1 Tempt with Reflections\n1 Thopter Assembly\n1 Thopter Spy Network\n1 Thought Vessel\n1 Trading Post\n1 Training Center\n1 Treasure Map // Treasure Cove\n1 Treasure Nabber\n1 Treasure Vault\n1 Triplicate Titan\n1 Unwinding Clock\n\n1 Brudiclad, Telchor Engineer" },
     { key: 'gitrog', name: 'The Gitrog, Ravenous Ride', colors: ['B', 'G'], desc: 'Golgari graveyard and lands: sacrifice, reanimation and big trampling creatures', checked: '2026-10-08', text: "1 Arcane Signet\n1 Beanstalk Giant\n1 Biosynthic Burst\n1 Braulios of Pheres Band\n1 Bridgeworks Battle\n1 Broodguard Elite\n1 Bygone Colossus\n1 Command Tower\n1 Daemogoth Titan\n1 Damage Control Crew\n1 Day of Black Sun\n1 Dryad's Revival\n1 Emissary Green\n1 Espers to Magicite\n1 Eternal Witness\n1 Evolution Charm\n1 Exotic Orchard\n1 Exponential Growth\n1 Festering Gulch\n1 Final Act\n1 Flopsie, Bumi's Buddy\n22 Forest\n1 Goreclaw, Terror of Qal Sisma\n1 Hagra Mauling\n1 Harmonious Grovestrider\n1 Infested Thrinax\n1 Into the Pit\n1 Invasion of Fiora\n1 Invasion of Zendikar\n1 Khalni Ambush\n1 Life/Death\n1 Lifestream's Blessing\n1 Lounge\n1 Lumbering Worldwagon\n1 Malboro\n1 Monstrous Vortex\n1 Morlun, Devourer of Spiders\n1 Nightshade Dryad\n1 Nissa, Worldsoul Speaker\n1 Nullpriest of Oblivion\n1 Nurgle's Conscription\n1 Nyxborn Hydra\n1 Old Man Willow\n1 Once and Future\n1 Pelakka Predation\n1 Polygoyf\n1 Primeval Herald\n1 Rampant Frogantua\n1 Rampant Growth\n1 Regrowth\n1 Rejoin the Fight\n1 Return of the Wildspeaker\n1 Revitalizing Repast\n1 Sandman, Shifting Scoundrel\n1 Shadow, Mysterious Assassin\n1 Sol Ring\n1 Stormkeld Vanguard\n8 Swamp\n1 Tenacious Underdog\n1 Tend the Pests\n1 The Earth King\n1 The Falcon, Airship Restored\n1 The Grim Captain's Locker\n1 Thought Vessel\n1 Timeless Witness\n1 Titania's Command\n1 Trickster's Elk\n1 Ulvenwald Hydra\n1 Undercity Upheaval\n1 Victimize\n1 Yargle, Glutton of Urborg\n\n1 The Gitrog, Ravenous Ride" },
+    { key: 'tyrox', name: 'Tyrox, Saurid Tyrant', colors: ['R'], desc: 'Mono-red aggro: cheap haste creatures, equipment and burn, with a 2-mana commander to recast', checked: '2026-10-07', text: "1 Abrade\n1 Ancient Tomb\n1 Anger of the Gods\n1 Arcane Signet\n1 Big Score\n1 Blasphemous Act\n1 Bonesplitter\n1 Burning-Tree Emissary\n1 Castle Embereth\n1 Chain Reaction\n1 Chaos Warp\n1 Colossus Hammer\n1 Combat Celebrant\n1 Commander's Plate\n1 Dockside Extortionist\n1 Embercleave\n1 Embereth Shieldbreaker\n1 Etali, Primal Storm\n1 Faithless Looting\n1 Fire Diamond\n1 Flamewake Phoenix\n1 Forgotten Cave\n1 Glorybringer\n1 Goblin Bombardment\n1 Goblin Chieftain\n1 Goblin Guide\n1 Goblin Rabblemaster\n1 Goblin Warchief\n1 Goldspan Dragon\n1 Hanweir Garrison\n1 Hazoret the Fervent\n1 Hellkite Tyrant\n1 Hellrider\n1 Hordeling Outburst\n1 Inferno Titan\n1 Jeska's Will\n1 Krenko, Mob Boss\n1 Light Up the Stage\n1 Lightning Bolt\n1 Lightning Greaves\n1 Lightning Strike\n1 Mind Stone\n1 Mizzium Mortars\n1 Monastery Swiftspear\n28 Mountain\n1 Mutavault\n1 Professional Face-Breaker\n1 Purphoros, God of the Forge\n1 Rograkh, Son of Rohgahh\n1 Samut, Hazoret's Champion\n1 Searing Spear\n1 Shinka, the Bloodsoaked Keep\n1 Siege-Gang Commander\n1 Skullclamp\n1 Skyknight Vanguard\n1 Slagstorm\n1 Sol Ring\n1 Storm-Kiln Artist\n1 Swiftfoot Boots\n1 Sword of Fire and Ice\n1 Talisman of Impulse\n1 Temur Battle Rage\n1 Terror of the Peaks\n1 Thought Vessel\n1 Thrill of Possibility\n1 Torbran, Thane of Red Fell\n1 Tormenting Voice\n1 Unexpected Windfall\n1 Vandalblast\n1 Walking Ballista\n1 Wheel of Fortune\n1 Wild Slash\n\n1 Tyrox, Saurid Tyrant" },
 ];
 function verifiedDecksHTML(onclick, pressedKey) {
     return `<div class="opp-grid">${VERIFIED_DECKS.map(v => `<button type="button" class="opp" aria-pressed="${pressedKey === v.key}" onclick="${onclick}('${v.key}')">
@@ -8445,6 +8464,26 @@ async function applyEffect(P, e, t, src) {
             log(`${put.length} permanent${put.length === 1 ? '' : 's'} enter the battlefield; ${top.length - put.length} go to the graveyard.`);
             break;
         }
+        // ---- Tyrox deck (2026-10-08) ----
+        case 'goblinGuide': { // Goblin Guide: the defending player reveals their top card and takes it if it's a land
+            const top = O.library[O.library.length - 1];
+            if (!top) { log(`${name}: ${O.name} ${you(O) ? 'have' : 'has'} no cards in the library.`); break; }
+            log(`${O.name} ${you(O) ? 'reveal' : 'reveals'} ${top.card.name}.`);
+            if (/\bLand\b/.test(top.card.type)) { O.library.pop(); O.hand.push(top); log(`It's a land: ${O.name} puts it into ${you(O) ? 'your' : 'their'} hand.`); }
+            break;
+        }
+        case 'celebrant': { // Combat Celebrant: untap the other creatures, then an additional combat phase
+            const ut = P.bf.filter(x => isCreature(x) && x !== src && x.tapped);
+            ut.forEach(x => { x.tapped = false; });
+            G.extraCombat = (G.extraCombat || 0) + 1;
+            log(`${P.name} untap${you(P) ? '' : 's'} ${ut.length} other creature${ut.length === 1 ? '' : 's'}; there will be an additional combat phase after this one.`);
+            break;
+        }
+        case 'rabble': { // Goblin Rabblemaster: +1/+0 for each other attacking Goblin
+            const n = (G.attackers || []).map(onBf).filter(x => x && x !== src && x.owner === src.owner && hasType(x, 'Goblin')).length;
+            if (n) { src.tp += n; log(`${name} gets +${n}/+0 until end of turn.`); }
+            break;
+        }
         case 'druidPurify': {
             const pool = O.bf.filter(x => /\b(?:Artifact|Enchantment)\b/.test(x.card.type));
             const pick = P.isAI ? pool.sort((a, b) => permValue(b) - permValue(a))[0] : await pickCard(P, pool, `${name}: choose an artifact or enchantment you don't control to destroy (or None)`);
@@ -8774,7 +8813,7 @@ async function beginTurn() {
     // Mindslaver: this turn is played by its controller (the computer plays it against this player's interest)
     if (P.slavedTurn && P.slavedTurn.from < G.turn) { P.slaved = P.slavedTurn; delete P.slavedTurn; log(`${G.players[P.slaved.by].name} ${you(G.players[P.slaved.by]) ? 'control' : 'controls'} ${P.name}'s turn (Mindslaver).`); }
     G.trigCount = 0;
-    G.combatFired = false;
+    G.combatFired = false; G.extraCombat = 0; G.extraCombatOn = false;
     G.castThisTurn = 0;
     G.lastCastBy = G.castBy || [0, 0];
     G.castBy = [0, 0];
@@ -9041,6 +9080,10 @@ async function humanEquip(uid) {
     if (!(await humanPay(P, equipCost(P, eq, t.o), 0, { forType: eq.card.type }, `Equip ${eq.card.name}`))) return;
     await equip(P, eq, t.o);
 }
+// Creatures that must attack if able: "attacks each combat", a one-turn order, or Goblin Rabblemaster's Goblins
+function forcedAttack(o) {
+    return !!(Rx(o).mustAttack || o.mustAttackTurn === G.turn || (hasType(o, 'Goblin') && G.players[o.owner].bf.some(l => l !== o && Rx(l).forceGoblins && !lostAbilities(l))));
+}
 async function goToCombat() {
     if (G.active !== G.view || G.phase !== 'main1' || G.busy) return;
     if (me().skip && me().skip.turn === G.turn && me().skip.what === 'combat') { toast('You skip combat this turn (Fatespinner).'); return; }
@@ -9048,7 +9091,7 @@ async function goToCombat() {
     if (!G.combatFired) { G.combatFired = true; fire('combat'); G.busy = true; await settle(); G.busy = false; }
     if (!me().bf.some(canAttackWith)) { toast('None of your creatures can attack (summoning sickness, tapped or defender).'); return; }
     G.phase = 'declareAttackers';
-    G.mode = { type: 'attack', sel: new Set(me().bf.filter(o => canAttackWith(o) && (Rx(o).mustAttack || me().mustAttackTurn === G.turn)).map(o => o.uid)) };
+    G.mode = { type: 'attack', sel: new Set(me().bf.filter(o => canAttackWith(o) && (forcedAttack(o) || me().mustAttackTurn === G.turn)).map(o => o.uid)) };
     renderGame();
 }
 // Each attacker attacks the player or one of their planeswalkers (508.1b)
@@ -9063,15 +9106,17 @@ function chooseAttackTargets(sel, pws) {
             <div class="row" style="justify-content:center; margin-top:10px; gap:8px;"><button class="btn" onclick="__atkOk(false)">Cancel</button><button class="btn primary" onclick="__atkOk(true)">Attack</button></div>`);
     });
 }
-function cancelAttack() { G.mode = null; G.phase = 'main1'; renderGame(); }
+function cancelAttack() { G.mode = null; G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame(); }
 async function confirmAttack() {
     const sel = [...G.mode.sel].map(onBf).filter(o => o && canAttackWith(o));
+    me().bf.filter(o => canAttackWith(o) && forcedAttack(o) && !sel.includes(o)).forEach(o => sel.push(o)); // they must attack if able
     G.mode = null;
-    if (!sel.length) { G.phase = 'main1'; renderGame(); return; }
+    if (!sel.length) { G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame(); return; }
     const pws = [...foe().bf.filter(isPlaneswalker), ...me().bf.filter(isBattle)];
     if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
     G.busy = true;
     declareAttackers(me(), sel);
+    await exertChoices(me(), sel);
     G.phase = 'declareBlocks';
     renderGame();
     await pause(400);
@@ -9104,8 +9149,40 @@ async function dealDamage() {
     G.busy = true;
     combatDamage(me());
     await settle();
+    if (!G.over && G.extraCombat > 0) { await startExtraCombat(); return; }
     G.phase = 'main2';
     G.busy = false;
+    renderGame();
+}
+// Exert (701.43): you may exert a creature as it attacks; it won't untap during your next untap step
+async function exertChoices(P, list) {
+    for (const o of list) {
+        if (!Rx(o).exert || lostAbilities(o) || !onBf(o.uid) || o.exertedTurn === G.turn || !(Rx(o).trig || []).some(t => t.ev === 'exerted')) continue;
+        const yes = P.isAI || AUTOPLAY ? aiWantsExert(P, o) : await askYes(P, `Exert ${o.card.name}? It won't untap during your next untap step.`, { card: o.card, yes: 'Exert', no: "Don't" });
+        if (!yes) continue;
+        o.exertedTurn = G.turn; o.skipUntap = true;
+        log(`${P.name} ${you(P) ? 'exert' : 'exerts'} ${o.card.name}.`);
+        fire('exerted', { o });
+    }
+}
+function aiWantsExert(P, o) {
+    const eff = ((Rx(o).trig || []).find(t => t.ev === 'exerted') || { effects: [] }).effects[0];
+    if (!eff) return false;
+    if (eff.t === 'celebrant') return (G.attackers || []).map(onBf).some(x => x && x !== o && x.owner === o.owner);
+    if (needsTarget(eff)) { const t = aiPickTarget(P, eff, o); return !!(t && t.o && creatureValue(t.o) >= 3); }
+    return true;
+}
+// An additional combat phase (Combat Celebrant): beginning of combat triggers again, then attackers
+async function startExtraCombat() {
+    G.extraCombat--; G.extraCombatOn = true;
+    log(`${me().name} ${G.hotseat ? 'gets' : 'get'} an additional combat phase.`);
+    emptyPools();
+    fire('combat'); await settle();
+    G.busy = false;
+    if (G.over) return;
+    if (!me().bf.some(canAttackWith)) { toast('None of your creatures can attack in the additional combat.'); G.phase = 'main2'; renderGame(); return; }
+    G.phase = 'declareAttackers';
+    G.mode = { type: 'attack', sel: new Set(me().bf.filter(o => canAttackWith(o) && (forcedAttack(o) || me().mustAttackTurn === G.turn)).map(o => o.uid)) };
     renderGame();
 }
 // End turn works from any point of your turn where nothing is waiting on a
@@ -9737,7 +9814,7 @@ async function aiMain(P) {
 }
 
 function aiChooseAttackers(P) {
-    const must = P.bf.filter(o => canAttackWith(o) && (Rx(o).mustAttack || o.mustAttackTurn === G.turn));
+    const must = P.bf.filter(o => canAttackWith(o) && forcedAttack(o));
     const chosen = [...new Set([...aiChooseAttackersFree(P), ...must])];
     aiAimAtPlaneswalkers(P, chosen);
     return chosen;
@@ -9863,9 +9940,10 @@ async function aiTurn(P) {
     aiCrew(P);
     let attackers = P.skip && P.skip.turn === G.turn && P.skip.what === 'combat' ? [] : aiChooseAttackers(P);
     if (P.mustAttackTurn === G.turn && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...P.bf.filter(canAttackWith)])];
-    if (attackers.length) {
+    for (let round = 0; round < 4 && attackers.length && !G.over; round++) {
         G.phase = 'declareAttackers';
         declareAttackers(P, attackers);
+        await exertChoices(P, attackers);
         await settle();
         if (G.over) return;
         renderGame();
@@ -9898,6 +9976,13 @@ async function aiTurn(P) {
         if (G.over) return;
         await pause(400);
         await actDrain();
+        if (G.extraCombat > 0) { // Combat Celebrant: an additional combat phase
+            G.extraCombat--;
+            log(`${P.name} gets an additional combat phase.`);
+            fire('combat'); await settle();
+            if (G.over) return;
+            attackers = aiChooseAttackers(P);
+        } else attackers = [];
     }
     G.phase = 'main2';
     await aiMain(P);
@@ -12644,6 +12729,7 @@ function countFn(phrase) {
     if (/^charge counters? on ~$/.test(p)) return o => (o.ctr && o.ctr.charge) || 0;
     let mm;
     if ((mm = p.match(/^basic ([A-Z][a-z]+)s? you control$/))) { const ty = mm[1]; return o => ctl(o).bf.filter(x => /\bBasic\b/.test(x.card.type) && new RegExp(`\\b${ty}\\b`).test(x.card.type)).length; }
+    if (/^attacking creatures? you control$/.test(p)) return o => (G.attackers || []).map(onBf).filter(x => x && x.owner === o.owner).length; // Embercleave
     if (/^(?:creatures? that attacked|creatures? you attacked with) this turn$/.test(p)) return o => (G.attackedN && G.attackedN.turn === G.turn && G.attackedN.p === o.owner ? G.attackedN.n : 0);
     if (/^attacking creatures?$/.test(p)) return o => G.attackers.filter(u => !(other && u === o.uid)).length;
     if ((mm = p.match(/^creatures? you control with power (\w+) or greater$/))) { const n = num(mm[1]); return o => ctl(o).bf.filter(x => isCreature(x) && pow(x) >= n).length; }
@@ -12953,6 +13039,7 @@ function trigMatches(tr, ev, o, ctx) {
         return ctx.o.owner === o.owner && hasType(ctx.o, tr.type) && !(tr.another && ctx.o === o) && !(tr.nontoken && ctx.o.token);
     }
     if (ev === 'tapped') return tr.host ? ctx.o.uid === o.attachedTo : ctx.o === o;
+    if (ev === 'exerted') return ctx.o === o;
     const mine = x => x && x.owner === o.owner;
     switch (ev) {
         case 'upkeep': case 'end': return tr.who === 'each' || G.active === o.owner;
@@ -13476,6 +13563,7 @@ function permMatches(o, f, P) {
     if ((m = f.match(/^nonland permanent with mana value (\w+) or less$/))) return !/\bLand\b/.test(t) && (o.card.cmc || 0) <= num(m[1]);
     if ((m = f.match(/mana value (\w+) or less/))) return isCreature(o) && (o.card.cmc || 0) <= num(m[1]);
     if ((m = f.match(/^creature with mana value (\d+)$/))) return isCreature(o) && (o.card.cmc || 0) === +m[1];
+    if ((m = f.match(/^non-([A-Z][a-z]+) creature$/))) return isCreature(o) && !hasType(o, m[1]); // Glorybringer
     if (LAND_COLOR[f]) return hasType(o, f);
     if (/^types:/.test(f)) return f.slice(6).split('|').some(ty => hasType(o, ty)); // Undead Slayer
     switch (f) {
