@@ -5962,6 +5962,7 @@ const MAIN = ['main1', 'main2'];
 function canCastNow(P, o) {
     const r = Rx(o);
     if (G.over || r.support === 'none' || r.kind === 'land') return false;
+    if (gyTargetMissing(P, r.spell, o)) return false;
     // Silence and friends; Grand Abolisher-style "your opponents can't cast spells during your turn"
     if (P.noMoreSpellsTurn === G.turn) return false; // Conduit of Worlds
     if (r.kind === 'creature' && P.bf.some(x => Rx(x).noCreatureSpells && !lostAbilities(x))) return false; // Grid Monitor
@@ -6628,7 +6629,7 @@ function cardFits(o, what) {
     if ((m = what.match(/^(.+) mv(\d+)$/))) return cardFits(o, m[1]) && (o.card.cmc || 0) <= +m[2];
     if ((m = what.match(/^(white|blue|black|red|green) (.+)$/))) return (o.card.colors || []).includes(COLOR_WORDS[m[1]]) && cardFits(o, m[2]);
     if ((m = what.match(/^(.+) pow(\d+)$/))) return cardFits(o, m[1]) && (Number(o.card.power) || 0) <= +m[2];
-    if (/ or /.test(what) && !['instant or sorcery', 'artifact or enchantment', 'creature or planeswalker'].includes(what)) return what.split(' or ').some(w => cardFits(o, w));
+    if (/ or /.test(what) && !/, /.test(what) && !['instant or sorcery', 'artifact or enchantment', 'creature or planeswalker'].includes(what)) return what.split(' or ').some(w => cardFits(o, w));
     switch (what) {
         case 'card': return true;
         case 'nonland': return k !== 'land';
@@ -6647,8 +6648,20 @@ function cardFits(o, what) {
         case 'nonland permanent': return !['instant', 'sorcery', 'land'].includes(k);
         case 'creature or planeswalker': return /Creature|Planeswalker/.test(t);
     }
-    // A creature type ("Dragon", "Villain", "Elf")
-    return /^[a-z]+$/.test(what) && new RegExp(`\\b${what}\\b`, 'i').test(t.split(' — ')[1] || '');
+    // Two-word kinds (2026-10-08, owner's report: Skeleton Shard found no "artifact creature card"):
+    // "artifact creature", "legendary creature", "colorless creature", "dragon creature", "snow land"
+    if ((m = what.match(/^([a-z]+) (creature|land|artifact|enchantment|permanent|card)$/i)) && !/^non/i.test(m[1])) {
+        const q = m[1].toLowerCase();
+        if (!cardFits(o, m[2].toLowerCase())) return false;
+        if (['artifact', 'enchantment', 'legendary', 'snow', 'basic', 'land', 'creature', 'tribal', 'kindred'].includes(q)) return new RegExp(`\\b${q}\\b`, 'i').test(t);
+        if (q === 'colorless') return !(o.card.colors || []).length;
+        if (COLOR_WORDS[q]) return (o.card.colors || []).includes(COLOR_WORDS[q]);
+        return new RegExp(`\\b${q}\\b`, 'i').test(t.split(' — ')[1] || '');
+    }
+    // A list: "Aura, God or Demigod"
+    if (/, /.test(what)) return what.split(/,\s*(?:or\s+)?|\s+or\s+/).filter(Boolean).some(w => cardFits(o, w));
+    // A creature type ("Dragon", "Villain", "Elf", "Aura", "Spider Hero")
+    return /^[a-z]+(?: [a-z]+)?$/i.test(what) && what.split(' ').every(w => new RegExp(`\\b${w}\\b`, 'i').test(t.split(' — ')[1] || ''));
 }
 function wipeMatches(o, what, P) {
     if (/ you don't control$/.test(what) && what !== "creatures you don't control") return o.owner !== P.i && wipeMatches(o, what.replace(/ you don't control$/, ''), P);
@@ -6944,7 +6957,7 @@ async function applyChoiceEffect(P, e, src, t) {
       for (let k = 0; k < (e.count || 1); k++) {
         const gys = e.anyGy ? [P, opp(P)] : [P];
         const pool = gys.flatMap(X => X.gy).filter(x => cardFits(x, e.what) && !(e.notSelf && x === src));
-        const pick = await pickCard(P, pool, `${src.card.name}: choose a card from ${e.anyGy ? 'a' : 'your'} graveyard${e.count > 1 ? ` (${k + 1} of ${e.count}; skip to stop)` : ''}`);
+        const pick = await pickCard(P, pool, `${src.card.name}: choose a card from ${e.anyGy ? 'a' : 'your'} graveyard${e.count > 1 ? ` (${k + 1} of ${e.count}; skip to stop)` : ''}`, { required: !e.may && !(e.count > 1) });
         if (!pick) break;
         G.lastCardPow = Number(pick.card.power) || 0;
         G.lastCardMv = pick.card.cmc || 0;
@@ -13132,7 +13145,9 @@ async function chooseSacN(P, pool, n, label) {
     for (let k = 0; k < n; k++) { const left = pool.filter(x => !out.includes(x)); const c = await pickCard(P, left, `${label}: choose what to sacrifice (${k + 1} of ${n})`, { required: true }); out.push(c || left.sort((a, b) => permValue(a) - permValue(b))[0]); }
     return out;
 }
-function canActivate(P, o, a) { return !G.over && !needled(o, a) && actTimingOk(P, a) && !!actPlan(P, o, a); }
+// "Return target ... card from your graveyard": needs such a card to cast or activate (owner's report, Skeleton Shard)
+function gyTargetMissing(P, fx, self) { const e = fx && fx[0]; return !!e && e.t === 'regrow' && !e.may && !e.bfIf && !e.anyGy && !P.gy.some(x => x !== self && cardFits(x, e.what)); }
+function canActivate(P, o, a) { return !G.over && !needled(o, a) && !gyTargetMissing(P, a.effects, o) && actTimingOk(P, a) && !!actPlan(P, o, a); }
 // Crew N: tap untapped creatures with total power N or more (the weakest that do it)
 function crewPick(P, v, n) {
     const pool = P.bf.filter(c => c !== v && isCreature(c) && !c.tapped).sort((a, b) => creatureValue(a) - creatureValue(b));
