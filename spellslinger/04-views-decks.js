@@ -1,8 +1,8 @@
 // =====================================================================
 // Views, packs, collection and decks
 // =====================================================================
-const VIEWS = ['home', 'packs', 'decks', 'play', 'draft', 'welcome', 'campaign', 'shop', 'dist', 'rules'];
-const MORE_VIEWS = [['draft', '🃏 Draft'], ['welcome', '🎁 Welcome Decks'], ['campaign', '🗺️ Campaign'], ['shop', '🏪 Shop'], ['dist', '📦 Distributor'], ['rules', '📖 Rules']];
+const VIEWS = ['home', 'packs', 'decks', 'play', 'precons', 'draft', 'welcome', 'campaign', 'shop', 'dist', 'rules'];
+const MORE_VIEWS = [['precons', '📚 Precons'], ['draft', '🃏 Draft'], ['welcome', '🎁 Welcome Decks'], ['campaign', '🗺️ Campaign'], ['shop', '🏪 Shop'], ['dist', '📦 Distributor'], ['rules', '📖 Rules']];
 function showView(v) {
     closeSheet();
     if (profile && !modeAllows(v)) { toast(`${$(`tab-${v}`) ? $(`tab-${v}`).textContent.trim() : v} isn't in ${MODES[modeKey()].name} mode. Use the mode buttons at the top.`); v = 'home'; }
@@ -12,6 +12,7 @@ function showView(v) {
     });
     document.querySelectorAll('.bottom-nav [data-v]').forEach(b => { const on = b.dataset.v === v || (b.dataset.v === 'more' && MORE_VIEWS.some(([k]) => k === v)); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     if (v === 'welcome') renderWelcomeView();
+    if (v === 'precons') renderPreconLibrary();
     if (v === 'home') renderHome();
     if (v === 'packs') renderPacksView();
     if (v === 'decks') { if (!editing) renderDeckPicker(); }

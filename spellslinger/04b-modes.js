@@ -12,7 +12,7 @@
 // =====================================================================
 const MODE_FIELDS = ['coins', 'usd', 'wins', 'losses', 'freePacks'];
 const MODES = {
-    sandbox: { icon: '🧪', name: 'Sandbox', bucket: 'sandbox', views: ['home', 'packs', 'decks', 'play', 'draft', 'welcome', 'rules'],
+    sandbox: { icon: '🧪', name: 'Sandbox', bucket: 'sandbox', views: ['home', 'packs', 'decks', 'play', 'precons', 'draft', 'welcome', 'rules'],
         desc: 'Try anything: open packs, build decks, play any opponent, draft. Its coins and record are separate from Campaign and Shop.' },
     campaign: { icon: '🗺️', name: 'Campaign', bucket: 'main', views: ['home', 'packs', 'decks', 'campaign', 'rules'],
         desc: 'Climb the ladder from the Kitchen Table to the Regional Qualifier. Each tier has a deck-value limit.' },

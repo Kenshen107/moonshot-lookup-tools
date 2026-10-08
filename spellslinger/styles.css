@@ -857,3 +857,13 @@
         .mode-btn[aria-selected="true"] { background: var(--brand); border-color: var(--brand); color: var(--text-heading); font-weight: 700; }
         .mode-desc { flex: 1 1 220px; font-size: 0.85em; }
         @media (max-width: 600px) { .mode-desc { display: none; } .mode-btn { flex: 1 1 0; padding: 6px 4px; font-size: 0.8em; } }
+
+        /* Precon Library */
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .chip { background: var(--bg-panel); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 4px 10px; font: inherit; font-size: 0.85em; cursor: pointer; }
+        .chip.on { background: var(--brand); border-color: var(--brand); color: var(--text-heading); }
+        .pl-group { margin-top: 10px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 8px 12px; }
+        .pl-group > summary { cursor: pointer; padding: 4px 0; }
+        .pl-set-h { margin: 10px 0 4px; font-weight: 700; color: var(--text-heading); }
+        .pl-decks { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+        .pl-deck.pl-warn { opacity: 0.75; border-style: dashed; }

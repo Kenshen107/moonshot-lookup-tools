@@ -302,6 +302,7 @@ async function renderCampaign() {
         </div>`;
     }).join('');
     renderNodePanel();
+    renderCircuit();
 }
 function selectNode(id) { campaignSel = id; renderCampaign(); }
 function nodeInfo(id) {
@@ -382,6 +383,7 @@ async function startCampaignMatch() {
 }
 // Called from endGame for campaign games; returns a line for the result box
 function campaignResult(won) {
+    if (G.campaign.circuit) return circuitResult(won);
     const c = G.campaign;
     const t = CAMPAIGN_TIERS[c.tier - 1];
     const r = won ? t.reward : t.lossReward;

@@ -29,7 +29,7 @@ const BODY = async function () {
     ok('Campaign shows Home, Packs, Decks, Campaign, Rules', JSON.stringify(shown()) === JSON.stringify(['home', 'packs', 'decks', 'campaign', 'rules']), shown());
     setMode('sandbox', { quiet: true });
     ok('Sandbox starts fresh: 500 coins, no wins', profile.coins === START_COINS && profile.wins === 0 && profile.losses === 0, money());
-    ok('Sandbox shows Packs, Play, Draft, Welcome Decks, no Shop or Campaign', JSON.stringify(shown()) === JSON.stringify(['home', 'packs', 'decks', 'play', 'draft', 'welcome', 'rules']), shown());
+    ok('Sandbox shows Packs, Play, Precons, Draft, Welcome Decks, no Shop or Campaign', JSON.stringify(shown()) === JSON.stringify(['home', 'packs', 'decks', 'play', 'precons', 'draft', 'welcome', 'rules']), shown());
     ok('the collection and decks are shared', profile.collection.abc === 2 && profile.decks.length === 1);
     ok('the test buttons show only in Sandbox', !document.querySelector('[data-modes="sandbox"]').classList.contains('hidden'));
     profile.coins += 4000; profile.wins = 5; profile.usd = 999; saveProfile();
