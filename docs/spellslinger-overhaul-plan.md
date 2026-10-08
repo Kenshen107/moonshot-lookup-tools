@@ -1,6 +1,6 @@
 # Spellslinger Duels overhaul plan
 
-Status: **Phases 0, 1a, 1b, 1c, 2a (parse side) and 2b done (2026-10-08); 2c onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
+Status: **Phases 0, 1a, 1b, 1c, 2a (parse side), 2b and 2c done (2026-10-08); 3 onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
 
 ## Owner's goals
 
@@ -137,6 +137,8 @@ It runs before the old regex list, and the old list stays as the fallback.
 ### 2c: Measure after each batch
 
 Rerun the coverage measurement and the card-by-card tests. The Automated count must not drop. Remove a regex rule only when the new reader handles every card that used it; the coverage tool lists exactly which cards those are.
+
+**Phase 2c result (2026-10-08):** coverage and the card-by-card tests were rerun after each batch (12,250 -> 12,380 Automated, none lost; Home's `CARD_COVERAGE` now shows 12,380 of 34,142). A new tool, `node tests/reader_audit.js`, compares what the old regexes and the token reader make of each of 38,391 distinct sentences on paper cards. They overlap on only 266 sentences (the old list is far wider: 1,192 sentences only it reads, 63 only the token reader), and on those they agree on 264; the other 2 are old card-specific rewrites (Parting Gust, Teferi's Time Twist). 25 of the 27 overlapping regexes are fully covered. **Decision: no regex was removed.** The old regexes give creature targets as `target: 'creature'` while the token reader gives `'perm'` with a filter, and the AI's target scoring and the engine's picker treat those differently, so deleting them would change play for cards that read fine today. If the owner wants the old list thinned later, do it by making the token reader emit the same shapes first, then delete one regex at a time with the snapshot as proof.
 
 ## Phase 3: Table layout fixes
 
