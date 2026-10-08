@@ -602,10 +602,13 @@ function castAsOk(P, o, mode) {
     if (mode === 'warp') return !!R.warp && P.hand.includes(o);
     if (mode === 'bestow') return !!R.bestow && P.hand.includes(o);
     if (mode === 'blitz') return !!R.blitz && (P.hand.includes(o) || (R.blitzGy && P.gy.includes(o))) && P.life > R.blitz.life;
+    if (mode === 'madness') return !!R.madness && P.exile.includes(o) && o.madnessTurn === G.turn;
+    if (mode === 'dash') return !!R.dash && P.hand.includes(o) && R.kind === 'creature';
     if (mode === 'energy') return energyAltOk(P, o);
     if (mode === 'escape') return lockerOk(P, o);
     return false;
 }
+function dashCost(P, o) { const c = { ...Rx(o).dash }; const less = P.bf.filter(x => Rx(x).dashLess && !lostAbilities(x)).length * 2; if (less && typeof c.generic === 'number') c.generic = Math.max(0, c.generic - less); return c; }
 function costOf(P, o) {
     const R = Rx(o);
     if (o.castAs && castAsOk(P, o, o.castAs)) {
@@ -613,6 +616,8 @@ function costOf(P, o) {
         if (o.castAs === 'warp') return { ...R.warp };
         if (o.castAs === 'bestow') return { ...R.bestow };
         if (o.castAs === 'blitz') return { ...R.blitz.cost };
+        if (o.castAs === 'madness') return { ...R.madness };
+        if (o.castAs === 'dash') return dashCost(P, o);
         if (o.castAs === 'energy') return parseCost('');
         if (o.castAs === 'escape') return { ...P.lockerCost };
     }
@@ -672,6 +677,7 @@ function altOk(P, o) {
     return !!a && P.hand.includes(o) && (!a.cond || condOk(a.cond, P, o)) && (!a.life || P.life > a.life) && (!a.exile || !!altExileCard(P, o));
 }
 function canPay(P, o) { return (!o.altCast || altOk(P, o)) && addCostOk(P, o) && !!planPayment(P, costOf(P, o), extraCost(P, o) + (costOf(P, o).x ? xMult(o) : 0), null, payOpts(o)); }
+function maxKick(P, o) { const m = Rx(o).multikicker; if (!m) return 0; const was = o.kickN; let n = 0; while (n < 20) { o.kickN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: Rx(o).kw.has('convoke') })) break; n++; } o.kickN = was; return n; }
 function canBuyback(P, o) { const b = Rx(o).buyback; if (!b || Rx(o).kind === 'creature') return false; const was = o.buyback; o.buyback = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: Rx(o).kw.has('convoke') }); o.buyback = was; return ok; }
 function canKick(P, o) { const k = Rx(o).kicker; if (!k) return false; if (Rx(o).kickSac && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < Rx(o).kickSac.n + (P.isAI ? 2 : 0)) return false; const was = o.kicked; o.kicked = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: Rx(o).kw.has('convoke') }); o.kicked = was; return ok; }
 // "As an additional cost to cast ~, sacrifice a creature / discard a card / pay N life"
@@ -769,6 +775,7 @@ function maxX(P, o) {
 function totalCost(P, o) {
     const c = { ...costOf(P, o) };
     if (o.kicked && Rx(o).kicker) Object.keys(Rx(o).kicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).kicker[k]; });
+    if (o.kickN && Rx(o).multikicker) Object.keys(Rx(o).multikicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).multikicker[k] * o.kickN; });
     if (o.buyback && Rx(o).buyback) Object.keys(Rx(o).buyback).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).buyback[k]; });
     return c;
 }
@@ -894,6 +901,7 @@ function canCastNow(P, o) {
     const flash = !!r.flash || P.flashTurn === G.turn || P.bf.some(x => !lostAbilities(x) && (Rx(x).flashAll || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type)))));
     const fromTop = (r.kind === 'creature' && P.library[P.library.length - 1] === o && P.bf.some(x => Rx(x).castTopCreatures)) || pitTop(P) === o;
     if (o.castAs && !castAsOk(P, o, o.castAs)) return false;
+    if (o.castAs === 'madness') return true;
     const otherZone = (o.castAs === 'blitz' && P.gy.includes(o)) || o.castAs === 'escape' || (P.exile.includes(o) && o.warpedTurn && o.warpedTurn < G.turn);
     if (!fromTop && !emry && !otherZone && !P.hand.includes(o) && !P.command.includes(o) && !(P.gy.includes(o) && (r.flashback || mayhemOk(P, o) || gyCastOk(P, o) || (r.gyCast && P.life > r.gyCast.life && P.hand.length >= r.gyCast.discard))) && !(P.exile.includes(o) && (o.playUntil >= G.turn || (o.advReady && o.card === o.front) || (o.foretoldTurn && o.foretoldTurn < G.turn && r.foretell)))) return false;
     // While something is on the stack, only the player holding priority can
@@ -1124,7 +1132,7 @@ async function castSpell(P, o, presetTarget) {
     if (Rx(o).kind === 'creature' && P.nextCreatureCounter === G.turn) { o.extraEnterCounter = 1; P.nextCreatureCounter = 0; } // Summon: Fenrir II
     removeFromZones(o);
     if (fromCommand) P.tax++;
-    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x || (castAs === 'warp' && Rx(o).warp.x) || (castAs === 'bestow' && Rx(o).bestow.x) ? (o.xVal || 0) : undefined, kicked: !!o.kicked, buyback: !!o.buyback, castAs };
+    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x || (castAs === 'warp' && Rx(o).warp.x) || (castAs === 'bestow' && Rx(o).bestow.x) ? (o.xVal || 0) : undefined, kicked: !!o.kicked, kickN: o.kickN || 0, buyback: !!o.buyback, castAs };
     if (castAs) log(`(${o.card.name} is cast with ${castAs === 'energy' ? 'energy' : castAs}.)`);
     o.buyback = false;
     G.stack.push(item);
@@ -1282,18 +1290,20 @@ async function resolveTop() {
             resetObj(o);
             o.card = face;
             o.advReady = false;
-            o.kicked = item.kicked;
+            o.kicked = item.kicked; o.kickN = item.kickN || 0;
             item.P.bf.push(o);
             if (r.isAura && item.target && item.target.o) o.attachedTo = item.target.o.uid;
             if (r.auraSteal && item.target && item.target.o && item.target.o.owner !== item.P.i) { const x = item.target.o; pull(G.players[x.owner].bf, x); x.realOwner = x.realOwner ?? x.owner; x.owner = item.P.i; x.stolenBy = o.uid; x.sick = true; item.P.bf.push(x); log(`${item.P.name} ${you(item.P) ? 'gain' : 'gains'} control of ${x.card.name} (${o.card.name}).`); }
             if (item.castAs === 'bestow' && item.target && item.target.o) { o.bestowed = true; o.attachedTo = item.target.o.uid; log(`${o.card.name} enters as an Aura on ${item.target.o.card.name} (bestow).`); }
             if (item.castAs === 'warp') o.warpExile = G.turn;
+            if (item.castAs === 'dash') { o.tkw.push('haste'); o.dashTurn = G.turn; }
             if (item.castAs === 'blitz') { o.blitzed = true; o.tkw.push('haste'); o.sacAtEnd = G.turn; }
             if (r.kind === 'battle') { const d = Number(o.card.defense); o.ctr.defense = d >= 0 && !isNaN(d) ? d : 4; }
             if (r.alsoLand && !/\bLand\b/.test(o.card.type)) o.card = { ...o.card, type: `Land ${o.card.type}` };
             { const et = opp(item.P).bf.find(x => Rx(x).oppEnterTapped && !lostAbilities(x)); if (et && (r.kind === 'creature' || (Rx(et).oppEnterTapped !== 'creature' && /Artifact/.test(o.card.type)))) { o.tapped = true; log(`${o.card.name} enters tapped (${et.card.name}).`); } }
             if (r.etbCounters) o.counters += r.etbCounters === 'X' ? (item.x || 0) : r.etbCounters === 'spent' ? costTotal(r.cost) + (item.x || 0) * (r.cost.xn || 1) : r.etbCounters;
             if (r.etbNamedX) o.ctr[r.etbNamedX] = item.x || 0;
+            if (r.kickPer && o.kickN) { if (r.kickPer === 'plus') o.counters += o.kickN; else o.ctr[r.kickPer] = (o.ctr[r.kickPer] || 0) + o.kickN; }
             if (r.bloodthirst && opp(item.P).lostTurn === G.turn) { o.counters += r.bloodthirst; log(`${o.card.name} enters with ${r.bloodthirst} +1/+1 counters (bloodthirst).`); }
             // Ravenous: X +1/+1 counters, and a card if X is 5 or more
             if (r.ravenous && (item.x || 0) >= 5) (G.trigQ = G.trigQ || []).push({ P: item.P, o, effects: [{ t: 'draw', n: 1 }] });
@@ -3826,6 +3836,7 @@ async function endTurn(P) {
     fire('end');
     await settle();
     if (G.over) return;
+    allPerms().filter(o => o.dashTurn === G.turn).forEach(o => { o.dashTurn = 0; log(`${o.card.name} returns to its owner's hand (dash).`); leaveBattlefield(o, 'hand'); });
     allPerms().filter(o => o.sacAtEnd === G.turn).forEach(o => { log(`${o.card.name} is sacrificed at the end of the turn.`); dieOrLeave(o, 'gy'); });
     // Magic 2010: Stone Giant's flier is destroyed; Protean Hydra gets its counters back
     allPerms().filter(o => o.destroyAtEnd === G.turn).forEach(o => { delete o.destroyAtEnd; destroy(o, 'is destroyed (Stone Giant)'); });
@@ -3881,6 +3892,8 @@ async function humanCast(uid) {
     }
     o.kicked = false;
     if (Rx(o).kicker && canKick(P, o)) o.kicked = await askYes(P, Rx(o).offspring ? `Pay offspring for ${o.card.name}? (A 1/1 token copy of it enters too.)` : Rx(o).entwine ? `Pay the entwine cost ${costSymbols(Rx(o).kicker)} for ${o.card.name}? (You get both modes.)` : `Pay the kicker cost for ${o.card.name}?`, { card: o.card });
+    o.kickN = 0;
+    if (Rx(o).multikicker) { const mk = maxKick(P, o); if (mk > 0) { const v = await askNumber(P, `How many times do you pay the multikicker cost for ${o.card.name}?`, 0, mk, 0, { card: o.card, ok: 'Continue' }); o.kickN = v > 0 ? Math.min(v, mk) : 0; o.kicked = o.kickN > 0; } }
     o.buyback = false;
     if (Rx(o).buyback && canBuyback(P, o)) o.buyback = await askYes(P, `Pay the buyback cost for ${o.card.name}? (It returns to your hand when it resolves.)`, { card: o.card });
     if (Rx(o).cost.x && !Rx(o).xFromTarget) {
@@ -4193,7 +4206,7 @@ function showGameCard(uid) {
     if (P.hand.includes(o) && r.foretell && G.active === P.i && !G.stack.length && planPayment(P, parseCost('{2}'))) actions += `<button class="btn" onclick="humanForetell(${uid})" title="Foretell: pay {2} and exile it face down; cast it on a later turn for ${esc(costSymbols(r.foretell))} (rule 702.143)">Foretell {2}</button>`;
     if (P.hand.includes(o) && r.alt && altOk(P, o)) actions += `<button class="btn" onclick="humanCastAlt(${uid})" title="Alternative cost: cast it without paying its mana cost (rule 118.9)">Cast: ${esc(r.alt.text)}</button>`;
     if (P.hand.includes(o) && r.evoke) actions += `<button class="btn" onclick="humanCastEvoke(${uid})" title="Evoke: cast it for its evoke cost; it's sacrificed when it enters (rule 702.74)">Evoke ${esc(costSymbols(r.evoke))}</button>`;
-    for (const [md, label, tip] of [['warp', r.warp && `Warp ${costSymbols(r.warp)}`, 'Warp: cast it for its warp cost; it\'s exiled at the next end step and can be cast from exile on a later turn'], ['bestow', r.bestow && `Bestow ${costSymbols(r.bestow)}`, 'Bestow: cast it as an Aura on a creature; it becomes a creature again if that creature leaves (rule 702.103)'], ['blitz', r.blitz && `Blitz ${costSymbols(r.blitz.cost)}${r.blitz.life ? `, ${r.blitz.life} life` : ''}`, 'Blitz: haste, draw a card when it dies, sacrificed at the end step (rule 702.152)'], ['energy', `Pay ${energyAltN(P)} energy`, 'Cast it by paying energy instead of its mana cost'], ['escape', P.lockerCost && `Escape ${costSymbols(P.lockerCost)}, exile ${P.lockerN || 4}`, 'Escape: cast it from your graveyard (The Grim Captain\'s Locker)']]) {
+    for (const [md, label, tip] of [['warp', r.warp && `Warp ${costSymbols(r.warp)}`, 'Warp: cast it for its warp cost; it\'s exiled at the next end step and can be cast from exile on a later turn'], ['bestow', r.bestow && `Bestow ${costSymbols(r.bestow)}`, 'Bestow: cast it as an Aura on a creature; it becomes a creature again if that creature leaves (rule 702.103)'], ['blitz', r.blitz && `Blitz ${costSymbols(r.blitz.cost)}${r.blitz.life ? `, ${r.blitz.life} life` : ''}`, 'Blitz: haste, draw a card when it dies, sacrificed at the end step (rule 702.152)'], ['dash', r.dash && `Dash ${costSymbols(r.dash)}`, 'Dash: haste, and it returns to your hand at the next end step (rule 702.109)'], ['energy', `Pay ${energyAltN(P)} energy`, 'Cast it by paying energy instead of its mana cost'], ['escape', P.lockerCost && `Escape ${costSymbols(P.lockerCost)}, exile ${P.lockerN || 4}`, 'Escape: cast it from your graveyard (The Grim Captain\'s Locker)']]) {
         if (!label || !castAsOk(P, o, md)) continue;
         o.castAs = md; const ok = canCastNow(P, o) && canPay(P, o); o.castAs = null;
         actions += `<button class="btn" ${ok ? '' : 'disabled'} onclick="humanCastAs(${uid}, '${md}')" title="${esc(tip)}">${esc(label)}</button>`;

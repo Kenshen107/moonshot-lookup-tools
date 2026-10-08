@@ -207,6 +207,7 @@ function commonCardType(P) {
 // Alhammarret's Archive: you gain twice that much). Doing it here covers every way life changes.
 // Magic 2010 (Megrim): every card discarded this turn fires "discarded" once
 function discardWatch() {
+    G.players.forEach(X => X.gy.filter(c => c.discardTurn === G.turn && c.madnessSeen !== G.turn && Rx(c).madness).forEach(c => { c.madnessSeen = G.turn; fire('discarded', { P: X, o: c }); c.discardSeen = G.turn; pull(X.gy, c); X.exile.push(c); c.madnessTurn = G.turn; log(`${c.card.name} is discarded into exile (madness).`); (G.trigQ = G.trigQ || []).push({ P: X, o: c, effects: [{ t: 'madnessCast' }] }); }));
     G.players.forEach(X => X.gy.forEach(c => { if (c.discardTurn === G.turn && c.discardSeen !== G.turn) { c.discardSeen = G.turn; fire('discarded', { P: X, o: c }); } }));
     // Darksteel Colossus: it's shuffled into its owner's library instead of staying in a graveyard
     G.players.forEach(X => X.gy.filter(c => Rx(c).shuffleInstead).forEach(c => { pull(X.gy, c); const Y = G.players[c.realOwner ?? c.owner]; Y.library.push(c); shuffle(Y.library); log(`${c.card.name} is revealed and shuffled into its owner's library instead.`); }));

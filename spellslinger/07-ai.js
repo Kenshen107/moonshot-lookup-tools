@@ -362,7 +362,7 @@ function aiBestPlay(P) {
         if (P.hand.includes(o) && Rx(o).overload) faces.push([o, o.card, true]);
         if (P.hand.includes(o) && Rx(o).evoke && Rx(o).etb.length && !canPay(P, o)) faces.push([o, o.card, false, true]);
         if (Rx(o).alt && !canPay(P, o) && altOk(P, o)) faces.push([o, o.card, false, false, true]);
-        for (const md of ['warp', 'bestow', 'blitz', 'energy', 'escape']) if (castAsOk(P, o, md)) faces.push([o, o.card, false, false, false, md]);
+        for (const md of ['warp', 'bestow', 'blitz', 'dash', 'energy', 'escape']) if (castAsOk(P, o, md)) faces.push([o, o.card, false, false, false, md]);
     }
     for (const [o, face, ov, ev, alt, md] of faces) {
         o.card = face;
@@ -375,6 +375,7 @@ function aiBestPlay(P) {
         if (r.kind === 'land' || !canCastNow(P, o) || !canPay(P, o)) continue;
         if (reserve && r.kind !== 'instant' && (o.card.cmc || 0) > untapped - reserve) continue; // hold mana up
         if (r.kicker) o.kicked = canKick(P, o);
+        if (r.multikicker) { o.kickN = maxKick(P, o); o.kicked = o.kickN > 0; } else o.kickN = 0;
         o.buyback = !!r.buyback && canBuyback(P, o) && (untapped - (o.card.cmc || 0)) >= 3;
         if (r.cost.x) o.xVal = maxX(P, o);
         if (r.xFromTarget) { const te0 = firstTargetEffect(o), t0 = te0 ? aiPickTarget(P, te0, o) : null; if (!t0 || !t0.o || (t0.o.card.cmc || 0) > o.xVal) continue; o.xVal = t0.o.card.cmc || 0; }
@@ -388,7 +389,7 @@ function aiBestPlay(P) {
         if (P.aiLevel === 'hard' && target && target.o && target.o.owner !== P.i && ['destroy', 'exile', 'dmg'].includes(te.t) && creatureValue(target.o) < 5 && !(te.t === 'dmg' && target.p)) s = 0; // save it
         if (ev) s = s * 0.5 - 1;
         if (alt) s = s * 0.7 - 1;
-        if (md === 'warp' || md === 'blitz') { o.castAs = null; const full = canPay(P, o) && !P.gy.includes(o); o.castAs = md; s = full ? 0 : s * 0.6; } // the real thing when it can
+        if (md === 'warp' || md === 'blitz' || md === 'dash') { o.castAs = null; const full = canPay(P, o) && !P.gy.includes(o); o.castAs = md; s = full ? 0 : s * 0.6; } // the real thing when it can
         if (md === 'bestow') s = target ? 6 + (o.card.cmc || 0) : 0;
         if (md === 'energy') s = s * 1.1 + 2;
         if (s > 0) cands.push({ o, target, s, face, ov: !!ov, ev: !!ev, alt: !!alt, md });

@@ -9,6 +9,7 @@ Aang's Defense
 Aang, Air Nomad
 Aardvark Sloth
 Abandon Attachments
+Abandon Reason
 Abandon the Post
 Abandoned Air Temple
 Abandoned Campground
@@ -223,9 +224,11 @@ Alania, Divergent Storm
 Albino Troll
 Alchemax Slayer-Bots
 Alchemist's Apprentice
+Alchemist's Greeting
 Alchemist's Refuge
 Alert Shu Infantry
 Alesha's Legacy
+Alesha's Vanguard
 Alexi's Cloak
 Algae Gharial
 Alhammarret's Archive
@@ -243,6 +246,7 @@ Alloy Myr
 Alluring Scent
 Alluring Siren
 Almighty Brushwagg
+Alms of the Vein
 Alpha Authority
 Alpha Myr
 Alpha Tyrranax
@@ -394,6 +398,7 @@ Anvilwrought Raptor
 Apes of Rath
 Apex Altisaur
 Apex Devastator
+Apex Hawks
 Apex Witchstalker
 Apostle of Purifying Light
 Apothecary Geist
@@ -527,6 +532,7 @@ Arrest
 Arrogant Outlaw
 Arrogant Poet
 Arrogant Vampire
+Arrogant Wurm
 Arrow Storm
 Arrows of Justice
 Arterial Flow
@@ -826,6 +832,7 @@ Basilica Skullbomb
 Basilisk Collar
 Basim Ibn Ishaq
 Basking Broodscale
+Basking Rootwalla
 Basri
 Basri's Aegis
 Basri's Solidarity
@@ -976,6 +983,7 @@ Beyeen Veil // Beyeen Coast
 Bhaal's Invoker
 Biblioplex Assistant
 Big Bertha
+Big Game Hunter
 Big Play
 Big Score
 Big Wheel
@@ -1003,6 +1011,7 @@ Birthing Boughs
 Bishop of Rebirth
 Bishop's Soldier
 Bite Down
+Biting Rain
 Bitter Chill
 Bitter Downfall
 Bitter Reunion
@@ -1059,6 +1068,7 @@ Blazethorn Scarecrow
 Blazing Bomb
 Blazing Crescendo
 Blazing Hellhound
+Blazing Rootwalla
 Blazing Specter
 Blazing Volley
 Bleachbone Verge
@@ -1168,11 +1178,14 @@ Bloodfray Giant
 Bloodghast
 Bloodgift Demon
 Bloodhall Ooze
+Bloodhall Priest
 Bloodhaze Wolverine
 Bloodhunter Bat
+Bloodhusk Ritualist
 Bloodletter of Aclazotz
 Bloodline Keeper // Lord of Lineage
 Bloodlust Inciter
+Bloodmad Vampire
 Bloodmark Mentor
 Bloodmist Infiltrator
 Bloodpyre Elemental
@@ -1449,6 +1462,7 @@ Brittle Effigy
 Broadcast Rambler
 Broadside Barrage
 Broken Bond
+Broken Concentration
 Broken Dam
 Broken Wings
 Brokers Hideout
@@ -1875,6 +1889,7 @@ Child of Thorns
 Chill of the Grave
 Chillbringer
 Chilling Apparition
+Chilling Grasp
 Chilling Trap
 Chime of Night
 Chimeric Staff
@@ -2506,6 +2521,7 @@ Dark Privilege
 Dark Prophecy
 Dark Remedy
 Dark Ritual
+Dark Withering
 Dark-Dweller Oracle
 Darkbore Pathway // Slitherbore Pathway
 Darkling Stalker
@@ -2617,6 +2633,7 @@ Death in the Family
 Death's Approach
 Death's Caress
 Death's-Head Buzzard
+Death-Greeter's Champion
 Death-Hood Cobra
 Deathbellow Raider
 Deathbloom Gardener
@@ -2630,6 +2647,7 @@ Deathcap Marionette
 Deathcoil Wurm
 Deathcult Rogue
 Deathcurse Ogre
+Deathforge Shaman
 Deathgaze Cockatrice
 Deathgazer
 Deathgreeter
@@ -2899,6 +2917,7 @@ Dissenter's Deliverance
 Dissipate
 Dissolve
 Distant Melody
+Distemper of the Blood
 Distract the Guards
 Distress
 District Guide
@@ -3382,6 +3401,7 @@ Enchanted
 Enchanted Carriage
 Enchanted Prairie
 Enchantress's Presence
+Enclave Elite
 Encounter
 Encroach
 Encroaching Wastes
@@ -3524,6 +3544,7 @@ Evacuation
 Evanescent Intellect
 Evasive Maneuvers
 Everflame Eidolon
+Everflowing Chalice
 Evernight Shade
 Everythingamajig
 Evil Presence
@@ -3848,6 +3869,7 @@ Fiery Impulse
 Fiery Intervention
 Fiery Islet
 Fiery Mantle
+Fiery Temper
 Fight On!
 Fighting Drake
 Filigree Angel
@@ -3961,6 +3983,7 @@ Flameshadow Conjuring
 Flamespeaker Adept
 Flamespeaker's Will
 Flametongue Kavu
+Flametongue Yearling
 Flamewake Phoenix
 Flamewave Invoker
 Flaming Sword
@@ -4152,6 +4175,7 @@ Fractured Loyalty
 Fragmentize
 Franklin Richards, Ascendant
 Frantic Confrontation
+Frantic Purification
 Frantic Search
 Frantic Strength
 Free Borg Revolutionaries
@@ -4472,6 +4496,7 @@ Gin'tak Charge
 Gingerbread Cabin
 Gingerbread Hunter // Puny Snack
 Gird for Battle
+Gisa's Bidding
 Gitaxian Probe
 Githzerai Monk
 Give In to Violence
@@ -4551,6 +4576,7 @@ Glóin the Mighty // Easy Pickings
 Gnarled Effigy
 Gnarled Mass
 Gnarled Scarhide
+Gnarlid Pack
 Gnarlwood Dryad
 Gnashing of Teeth
 Gnathosaur
@@ -4609,6 +4635,7 @@ Goblin Gaveleer
 Goblin General
 Goblin Glider
 Goblin Guide
+Goblin Heelcutter
 Goblin Hero
 Goblin Instigator
 Goblin King
@@ -4729,6 +4756,7 @@ Gorehorn Raider
 Goremand
 Goretusk Firebeast
 Gorgon Flail
+Gorgon Recluse
 Gorgon's Head
 Gorilla Chieftain
 Gorilla Shaman
@@ -5143,6 +5171,7 @@ Heliod's Pilgrim
 Heliod, God of the Sun
 Helionaut
 Helitrooper
+Hell Mongrel
 Hell Swarm
 Hell's Caretaker
 Hell's Kitchen
@@ -5440,6 +5469,7 @@ Iceman and Firestar
 Iceridge Serpent
 Icetill Explorer
 Icewind Elemental
+Ichor Slick
 Ichor Wellspring
 Ichorclaw Myr
 Ichorspit Basilisk
@@ -5528,6 +5558,7 @@ Incendiary Sabotage
 Incinerate
 Incinerating Blast
 Incite War
+Incorrigible Youths
 Increasing Savagery
 Incredible
 Incremental Growth
@@ -5599,6 +5630,7 @@ Inquisitive Puppet
 Inquisitor Exarch
 Inquisitor Greyfax
 Inquisitor's Ox
+Insatiable Gorgers
 Insatiable Harpy
 Insatiable Souleater
 Insects
@@ -5874,6 +5906,7 @@ Juniper Order Druid
 Juniper Order Rootweaver
 Junk Diver
 Just Fate
+Just the Wind
 Justiciar's Portal
 Juvenile Gloomwidow
 Juzám Djinn
@@ -6027,6 +6060,7 @@ Kiss of Death
 Kiss of the Amesha
 Kitchen
 Kitchen Finks
+Kitchen Imp
 Kite Shield
 Kitesail
 Kitesail Apprentice
@@ -6089,7 +6123,9 @@ Kodama of the North Tree
 Kodama of the West Tree
 Kodama's Reach
 Kokusho, the Evening Star
+Kolaghan Forerunners
 Kolaghan Monument
+Kolaghan Skirmisher
 Kolaghan Warmonger
 Kolaghan's Command
 Kolinahr Priest
@@ -6345,8 +6381,10 @@ Light of Promise
 Light the Way
 Lightbringer
 Lightfoot Technique
+Lightkeeper of Emeria
 Lightning
 Lightning Angel
+Lightning Berserker
 Lightning Blast
 Lightning Bolt
 Lightning Cloud
@@ -6643,6 +6681,7 @@ Malamet War Scribe
 Malboro
 Malcator's Watcher
 Malevolent Awakening
+Malevolent Whispers
 Malfunctioning Holodeck
 Malicious Intent
 Mammoth Growth
@@ -6706,7 +6745,10 @@ Mardu Hordechief
 Mardu Monument
 Mardu Outrider
 Mardu Roughrider
+Mardu Scout
+Mardu Shadowspear
 Mardu Skullhunter
+Mardu Strike Leader
 Mardu Warshrieker
 Marionette Apprentice
 Marisi's Twinclaws
@@ -6719,6 +6761,7 @@ Marked by Honor
 Marker Beetles
 Marketback Walker
 Marketwatch Phantom
+Markov Baron
 Markov Blademaster
 Markov Crusader
 Markov Dreadknight
@@ -7237,6 +7280,7 @@ Murasa Brute
 Murasa Ranger
 Murder
 Murder of Crows
+Murderous Compulsion
 Murderous Cut
 Murderous Redcap
 Murdock's Crusade
@@ -7361,6 +7405,7 @@ Necrogen Censer
 Necrogen Mists
 Necrogen Scudder
 Necrogen Spellbomb
+Necrogoyf
 Necromancer's Assistant
 Necromantic Thirst
 Necromaster Dragon
@@ -7592,6 +7637,7 @@ Oboro, Palace in the Clouds
 Obscura Initiate
 Obscura Storefront
 Observant Alseid
+Obsessive Search
 Obsessive Skinner
 Obsessive Stitcher
 Obsianus Golem
@@ -8050,6 +8096,7 @@ Pitchburn Devils
 Pith Driller
 Pithing Needle
 Pitiless Gorgon
+Pitiless Horde
 Pitiless Plunderer
 Pitiless Pontiff
 Pixie Queen
@@ -8293,6 +8340,7 @@ Psychic Symbiont
 Psychic Whorl
 Psychogenic Probe
 Psychosis Crawler
+Psychotic Haze
 Pterafractyl
 Pterodon Knight
 Pteron Ghost
@@ -8357,6 +8405,7 @@ Python
 Qasali Pridemage
 Qilin's Blessing
 Qiqirn Merchant
+Quag Vampires
 Quagmire Druid
 Quake, Agent of S.H.I.E.L.D.
 Quakestrider Ceratops
@@ -8634,6 +8683,7 @@ Reckless Barbarian
 Reckless Brute
 Reckless Charge
 Reckless Fireweaver
+Reckless Imp
 Reckless Impulse
 Reckless Lackey
 Reckless Ogre
@@ -8644,6 +8694,7 @@ Reckless Ransacking
 Reckless Reveler
 Reckless Scholar
 Reckless Waif // Merciless Predator
+Reckless Wurm
 Reclaiming Vines
 Reclamation Sage
 Reclusive Taxidermist
@@ -8822,6 +8873,7 @@ Reviving Dose
 Reviving Melody
 Revoke Demise
 Revoke Existence
+Revolutionist
 Rewards of Diversity
 Rewind
 Reya Dawnbringer
@@ -8846,6 +8898,7 @@ Riddlemaster Sphinx
 Riddlesmith
 Ride's End
 Riders
+Riders of Rohan
 Ridge Rannet
 Ridged Kusite
 Ridgeline Rager
@@ -9073,6 +9126,7 @@ Runic Shot
 Ruric Thar, the Unbowed
 Rush of Adrenaline
 Rush of Vitality
+Rushing River
 Rushwood Dryad
 Rushwood Elemental
 Russet Wolves
@@ -9359,6 +9413,7 @@ Screaming Fury
 Screaming Phantom
 Screaming Seahawk
 Screaming Shield
+Screamreach Brawler
 Screams from Within
 Screeching Bat // Stalking Vampire
 Screeching Buzzard
@@ -9524,6 +9579,7 @@ Sengir Bats
 Sengir Connoisseur
 Sengir Vampire
 Sensei's Divining Top
+Senseless Rage
 Sensor Splicer
 Sensory Deprivation
 Sentinel Sliver
@@ -9932,9 +9988,11 @@ Skirsdag High Priest
 Skirsdag Supplicant
 Skithiryx, the Blight Dragon
 Skitter Eel
+Skitter of Lizards
 Skittering Heartstopper
 Skittering Surveyor
 Skitterskin
+Skophos Reaver
 Skorpekh Destroyer
 Skulking Fugitive
 Skulking Ghost
@@ -10436,6 +10494,7 @@ Springjaw Trap
 Springleaf Drum
 Springmane Cervin
 Springsage Ritual
+Sprinting Warbrute
 Sprite Dragon
 Sprout
 Sprout Swarm
@@ -10570,6 +10629,7 @@ Steeple Roc
 Stegron the Dinosaur Man
 Stenchskipper
 Stensia Bloodhall
+Stensia Masquerade
 Steppe Lynx
 Sterling Hound
 Sterling Supplier
@@ -10695,6 +10755,8 @@ Stream of Unconsciousness
 Street Level Villains
 Streetbreaker Wurm
 Strength of Arms
+Strength of Isolation
+Strength of Lunacy
 Strength of the Coalition
 Strength of the Pack
 Strider Harness
@@ -10712,6 +10774,7 @@ Stromgald Crusader
 Stromkirk Bloodthief
 Stromkirk Captain
 Stromkirk Condemned
+Stromkirk Occultist
 Stromkirk Patrol
 Strongarm Monk
 Strongarm Thug
@@ -11173,6 +11236,7 @@ Terashi's Cry
 Terashi's Verdict
 Tergrid's Shadow
 Termagant Swarm
+Terminal Agony
 Terminal Moraine
 Terminate
 Teroh's Faithful
@@ -11645,6 +11709,7 @@ Treefolk Harbinger
 Treefolk Healer
 Treeguard Duo
 Treeshaker Chimera
+Treetop Ambusher
 Treetop Defense
 Treetop Freedom Fighters
 Treetop Sentinel
@@ -11769,6 +11834,7 @@ Twincast
 Twinflame Tyrant
 Twining Twins // Swift Spiral
 Twinmaw Stormbrood // Charring Bite
+Twins of Maurer Estate
 Twinscroll Shaman
 Twinshot Sniper
 Twisted Abomination
@@ -12058,6 +12124,7 @@ Vault Skyward
 Vault of Champions
 Vault of Whispers
 Vault of the Archangel
+Vaultbreaker
 Vectis Agents
 Vectis Silencers
 Vector Asp
@@ -12211,6 +12278,7 @@ Vinereap Mentor
 Vines of the Recluse
 Vineshaper Prodigy
 Vineweft
+Violent Eruption
 Violent Impact
 Violent Outburst
 Violent Ultimatum
@@ -12431,6 +12499,7 @@ War Squeak
 War-Name Aspirant
 War-Spike Changeling
 War-Torch Goblin
+Warbringer
 Warchief Giant
 Warclamp Mastiff
 Warded Battlements
@@ -12542,6 +12611,7 @@ Wei Scout
 Wei Strike Force
 Weight of Memory
 Weight of the Underworld
+Weirded Vampire
 Weirding Shaman
 Weirding Wood
 Welcoming Vampire
@@ -12741,6 +12811,7 @@ Wolf Cove Villager
 Wolf Pack
 Wolf's Quarry
 Wolfbitten Captive // Krallenhorde Killer
+Wolfbriar Elemental
 Wolfir Avenger
 Wolfkin Bond
 Wolfsbane, Highland Hero
@@ -12969,5 +13040,6 @@ Zulaport Cutthroat
 Zuran Enchanter
 Zuran Orb
 Zuran Spellcaster
+Zurgo Bellstriker
 Zurgo Helmsmasher
 Zurgo's Vanguard

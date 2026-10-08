@@ -7,7 +7,7 @@ const NAMES = ['Mountain', 'Grizzly Bears', 'Hill Giant', 'Shivan Dragon', 'Ligh
     'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger',
     'Coercion', 'Incinerate', 'Path of Peace', 'Chastise', 'Condemn', 'Jagged Lightning', 'Kiss of the Amesha', 'Sleight of Hand', 'Telling Time', 'Ancestral Memories', 'Blessed Reversal', 'Whisk Away',
     'Furnace of Rath', "Urza's Armor", 'Cho-Manno, Revolutionary', 'Vigor', 'Pariah', 'Gravebane Zombie', 'Angelic Arbiter', 'Mole Worms', 'Deathgazer', 'Lure', 'Oppressive Rays', 'Angel of Vitality', "Hunter's Insight", 'Call of the Wild', 'Fertile Ground', 'Forest', 'Curfew', 'Esper Battlemage', 'Goblin Arsonist', 'Ascendant Evincar',
-    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate', 'Capsize', "Evincar's Justice", 'Blastoderm', 'Aven Riftwatcher', 'Nezumi Ronin', 'Burr Grafter', 'Benalish Cavalry'];
+    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate', 'Capsize', "Evincar's Justice", 'Blastoderm', 'Aven Riftwatcher', 'Nezumi Ronin', 'Burr Grafter', 'Benalish Cavalry', 'Fiery Temper', 'Wolfbriar Elemental', 'Lightning Berserker', 'Mountain'];
 
 const BODY = async function (NAMES, ONLY, SKIP) {
     const startTurnUntapForTest = P => { P.bf.forEach(o => { if (o.skipUntap) o.skipUntap = false; else if (!has(o, 'nountap') && !(o.lockedBy && onBf(o.lockedBy) && onBf(o.lockedBy).tapped) && !(Rx(o).mayNotUntap && o.tapped && allPerms().some(l => l.lockedBy === o.uid))) o.tapped = false; }); };
@@ -349,6 +349,21 @@ const BODY = async function (NAMES, ONLY, SKIP) {
         await applyEffect(P0, Rx(fl).trig.find(x => x.ev === 'blocked').effects[0], null, fl);
         ok('flanking: the blocker gets -1/-1', pow(fb) === 2, pow(fb)); G.blocks = {};
         ok('soulshift reads as a dies trigger', Rx(put(P0, 'Burr Grafter')).trig.some(x => x.ev === 'dies'));
+    });
+    await check('precon round 4: madness, multikicker, dash', async () => {
+        P1.isAI = true; P1.hand = []; P1.gy = []; P1.exile = []; P0.life = 40;
+        const ft = makeObj(C['Fiery Temper'], 1); P1.gy.push(ft); discardMark([ft]);
+        put(P1, 'Mountain');
+        discardWatch(); ok('madness: a discarded card goes to exile first', P1.exile.includes(ft) && !P1.gy.includes(ft), [P1.exile.length, P1.gy.length]);
+        await settle(); await resolveTop();
+        ok('madness: the AI casts it for {R} and it resolves', !P1.exile.includes(ft) && (P1.gy.includes(ft) || G.stack.length === 0) && P0.life < 40, [P0.life, P1.gy.length, G.stack.length]);
+        const wb = Rx(makeObj(C['Wolfbriar Elemental'], 0));
+        ok('multikicker reads {G}', wb.multikicker && wb.multikicker.G === 1, wb.multikicker);
+        const o2 = makeObj(C['Wolfbriar Elemental'], 0); o2.kickN = 3;
+        ok('times kicked counts', countFn('the number of times it was kicked')(o2) === 3 && countFn('twice the number of times it was kicked')(o2) === 6);
+        const lb = makeObj(C['Lightning Berserker'], 0); P0.hand = [lb]; lb.castAs = 'dash';
+        ok('dash: cast for the dash cost from hand', castAsOk(P0, lb, 'dash') && costOf(P0, lb).R === 1, costOf(P0, lb));
+        P1.isAI = false;
     });
     await check('precon round 2: spells', async () => {
         const c1 = put(P1, 'Hill Giant'), l1 = put(P1, 'Mountain'); c1.tapped = l1.tapped = true;

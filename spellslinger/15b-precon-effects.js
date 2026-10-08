@@ -162,6 +162,28 @@ async function preconEffect(P, e, t, src, O, name) {
         case 'preventSelf': P.prevent = { turn: G.turn, n: ((P.prevent && P.prevent.turn === G.turn) ? P.prevent.n : 0) + e.n }; log(`The next ${e.n} damage to ${P.name} this turn is prevented.`); break;
         case 'archon': P.archon = { turn: G.turn, n: ((P.archon && P.archon.turn === G.turn) ? P.archon.n : 0) + Math.max(0, e.n), src }; log(`${name}: the next ${e.n} damage to ${P.name} this turn is prevented and dealt to ${O.name}.`); break;
         case 'pumpCount': if (t && t.o) { const k = countFn(e.what)({ owner: P.i }); t.o.tp += k; t.o.tq += k; log(`${t.o.card.name} gets +${k}/+${k} until end of turn.`); } break;
+        case 'madnessCast': {
+            const x = src, X = G.players[x.owner];
+            if (!X.exile.includes(x)) break;
+            x.castAs = 'madness';
+            let go = canPay(X, x);
+            if (go && !X.isAI) go = await askYes(X, `Madness: cast ${x.card.name} for ${costSymbols(Rx(x).madness)}? (Otherwise it goes to your graveyard.)`, { card: x.card });
+            let ok = false;
+            if (go) {
+                if (Rx(x).modes) x.mode = (await pickModes(X, Rx(x), Rx(x).modes, x)) ?? 0;
+                const te = firstTargetEffect(x);
+                const target = te ? await chooseTarget(X, te, x, false) : null;
+                if (!(te && !target) && payFor(X, x)) {
+                    pull(X.exile, x); x.castFromHand = 0; x.kicked = false; x.kickN = 0;
+                    G.stack.push({ id: stackSeq++, kind: 'spell', o: x, P: X, target, name: x.card.name, x: 0 });
+                    log(`${X.name} ${you(X) ? 'cast' : 'casts'} ${x.card.name} for its madness cost.`);
+                    fire('cast', { o: x, P: X }); ok = true;
+                }
+            }
+            x.castAs = null;
+            if (!ok) { pull(X.exile, x); X.gy.push(x); log(`${x.card.name} is put into the graveyard.`); }
+            break;
+        }
         case 'flankingHit': {
             if (!onBf(src.uid)) break;
             for (const u of (G.blocks[src.uid] || [])) { const b = onBf(u); if (b && !has(b, 'flanking')) { b.tp -= 1; b.tq -= 1; log(`${b.card.name} gets -1/-1 until end of turn (flanking).`); } }
@@ -345,6 +367,7 @@ Object.assign(STATIC_FN, {
     black: o => (o.card.colors || []).includes('B'),
     nonblack: o => !(o.card.colors || []).includes('B')
 });
+COUNT_EXTRA.push([/^(twice )?the number of times (?:it|~|this creature) was kicked$/, m => o => (o.kickN || 0) * (m[1] ? 2 : 1)]);
 COUNT_EXTRA.push([/^(?:the number of )?(white|blue|black|red|green) permanents you control$/, m => o => G.players[o.owner].bf.filter(x => (x.card.colors || []).includes({ white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' }[m[1]])).length]);
 Object.assign(BLOCKER_FN, { noPow2: (b, atk) => pow(atk) < 2 });
 Object.assign(BLOCK_FN, {
