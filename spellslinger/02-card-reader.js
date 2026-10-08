@@ -436,6 +436,8 @@ function parseEffects(text) {
                 const m = p.match(re) || p.toLowerCase().match(re);
                 if (m) { const h = make(m); if (h) { hit = h; break; } }
             }
+            // Phase 2b: the token reader, only for sentences no pattern above read
+            if (!hit && typeof tokenReadSentence === 'function') hit = tokenReadSentence(p);
             // "Tap target creature. ... exile that creature" / "put a +1/+1 counter on it": the creature targeted earlier
             if (!hit && out.some(needsTarget) && /\b(?:that creature|that permanent|it)\b/i.test(p)) {
                 const p2 = p.replace(/\bthat creature\b|\bit\b(?! (?:gets|gains|deals|can't))/i, 'target creature').replace(/\bthat permanent\b/i, 'target permanent').replace(/^it (gets|gains)/i, 'target creature $1');

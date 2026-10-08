@@ -1,6 +1,6 @@
 # Spellslinger Duels overhaul plan
 
-Status: **Phases 0, 1a, 1b, 1c and 2a (parse side) done (2026-10-08); 2b onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
+Status: **Phases 0, 1a, 1b, 1c and 2a (parse side) and 2b (first slice) done (2026-10-08); 2c onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
 
 ## Owner's goals
 
@@ -119,6 +119,8 @@ The code already marks them with comments: "Mirrodin (2026-10-08)", "Magic 2010 
 **Done when:** coverage numbers and every test match exactly what they were before.
 
 **Phase 2a result (2026-10-08, the parse side):** the round-specific wordings moved out of the card reader into `spellslinger/rules/*.js` packs: 11 `EFFECTS` blocks and 5 `TRIGGERS` blocks (data entries) and 14 blocks of `rulesFor`'s line loop (converted to functions with a small context object, found with the TypeScript parser and checked mechanically). `02-card-reader.js` went from 1,772 to about 750 lines. A new safety net, `tests/suites/rules-snapshot.js`, fingerprints how all 34,142 paper cards are read; after the move not one card reads differently (a first attempt did change 168, and the snapshot named them: a `lines:` block had been attached to the wrong pack). **Not moved:** the `applyEffect` cases (about 270 of them), the AI scoring cases, the `parseCond` additions and the sentence rewrites at the top of `parseEffects`. They don't stand in the way of Phase 2b (that is about reading text), the comment markers for them aren't reliable about which round a case belongs to (the Tyrox marker, for one, covers cases of other rounds after it), and moving them is a long, mostly cosmetic change. Do it later if wanted, case by case, using the snapshot and the card-by-card tests.
+
+**Phase 2b result (2026-10-08, first slice):** `spellslinger/02b-token-reader.js` reads a "target ..." phrase by pieces (`parseTargetPhrase`: types, non-types, colors, attacking/blocking/tapped, you/opponent controls, power/toughness/mana value limits, with/without a keyword) into a filter object carried as the string `sf:<json>`, which `permMatches` hands to `structMatch`. Shapes: destroy / exile target X, return target X to its owner's hand, and ~ deals N damage to target creature X. It runs **only after every regex in `EFFECTS` failed** (hook in `parseEffects`), so no card that was read before reads differently: the snapshot showed 131 changed cards, all previously-unread ones, and coverage went 12,250 -> 12,350 Automated with none lost. Baselines updated; an engine check proves Cast Down only targets the nonlegendary creature. **Not done yet (2c):** draw / gain / lose N, create tokens, counters and pump shapes, and promoting the new reader ahead of the old regexes (then deleting regexes it fully covers).
 
 ### 2b: A token-based reader for the most common shapes
 

@@ -984,6 +984,7 @@ function withX(effects, x) { return hasXMark(effects) ? xFill(effects, x || 0) :
 function permMatches(o, f, P) {
     const k = Rx(o).kind, t = o.card.type, theirs = o.owner !== P.i;
     let m;
+    if (f.startsWith('sf:')) return structMatch(o, structFilter(f), P); // Phase 2b token reader
     if (/ you don't control$/.test(f) && f !== "nonland permanent you don't control") return theirs && permMatches(o, f.replace(/ you don't control$/, ''), P);
     if ((m = f.match(/^(non)?(white|blue|black|red|green|artifact) creature$/))) {
         if (!isCreature(o)) return false;

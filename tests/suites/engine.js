@@ -4,7 +4,7 @@
 const { launch, openTestPage, installHelpers, formatChecks, printResults, writeOut } = require('../lib/harness');
 
 const NAMES = ['Mountain', 'Grizzly Bears', 'Hill Giant', 'Shivan Dragon', 'Lightning Bolt', 'Raging Goblin', 'Bonesplitter', 'Goblin Guide', 'Goblin Rabblemaster',
-    'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear'];
+    'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger'];
 
 const BODY = async function (NAMES, ONLY, SKIP) {
     const out = [];
@@ -209,6 +209,17 @@ const BODY = async function (NAMES, ONLY, SKIP) {
             await castSpell(P0, tb, { o: t1 }); await runStack();
             ok(`Temur Battle Rage on power ${pow(t1)}: double strike${big ? ' and trample (ferocious)' : ' only'}`, has(t1, 'double strike') && has(t1, 'trample') === big, t1.tkw);
         }
+    });
+    await check('token reader: Cast Down', async () => {
+        const g = put(P1, 'Grizzly Bears'), k = put(P1, 'Kroxa, Titan of Death\'s Hunger');
+        const cd = makeObj(C['Cast Down'], 0); P0.hand.push(cd);
+        for (let i = 0; i < 2; i++) { const sw = makeObj(C['Swamp'], 0); putOntoBattlefield(P0, sw); sw.sick = false; }
+        const e = Rx(cd).spell && Rx(cd).spell[0];
+        ok('Cast Down reads as Automated with a structured filter', Rx(cd).support === 'full' && e && /^sf:/.test(e.filter), e);
+        const valid = validTargets(P0, e, cd).map(v => v.o && v.o.uid);
+        ok('only the nonlegendary creature is a target', valid.includes(g.uid) && !valid.includes(k.uid), valid);
+        await castSpell(P0, cd, { o: g }); await runStack();
+        ok('the nonlegendary creature is destroyed, the legend is not', !onBf(g.uid) && onBf(k.uid));
     });
     return out;
 };
