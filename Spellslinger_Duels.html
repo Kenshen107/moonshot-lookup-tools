@@ -276,12 +276,13 @@
             <div class="panel">
                 <h2>1. Your deck</h2>
                 <div class="row">
-                    <select id="playDeck" aria-label="Your deck" onchange="renderOpponents()"></select>
+                    <select id="playDeck" aria-label="Your deck" onchange="renderPlayView()" hidden></select>
+                    <div id="deckPick" style="flex:1 1 100%;"></div>
                     <span class="note" id="playDeckNote"></span>
                 </div>
             </div>
             <div class="panel">
-                <h2>2. Your opponent</h2>
+                <h2 id="oppHead">2. Your opponent</h2>
                 <div id="oppList"></div>
             </div>
             <div class="panel">

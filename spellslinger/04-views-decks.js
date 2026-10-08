@@ -1414,6 +1414,8 @@ function closeModal() { $('modalHost').innerHTML = ''; }
 // Play setup
 // ---------------------------------------------------------------------
 let chosenOpponent = null;
+const OPPSEL = { kind: 'all', q: '' };
+function oppSel(k, v) { OPPSEL[k] = v; renderOpponents(); }
 // Pass and play: your deck and another account's deck on this device
 function renderFriendPanel() {
     const others = accounts.list.filter(n => n !== accounts.current);
@@ -1450,14 +1452,35 @@ async function startFriendMatch() {
         showModal(`<h2>Couldn't start</h2><p class="warn">${esc(e.message)}</p><div class="row" style="justify-content:center; margin-top:12px;"><button class="btn" onclick="closeModal()">OK</button></div>`);
     }
 }
+// Step 1 of the Play tab: pick a TYPE of deck (Commander, Modern, Casual, Limited), then one of your decks of that type.
+// The hidden #playDeck select still holds the choice (value = index in profile.decks), so the rest of the game reads it as before.
+const PLAYSEL = { type: null, q: '' };
+const DECK_TYPE_ICONS = { commander: '👑', modern: '⚔️', casual: '🎴', limited: '🃏' };
+function playPickType(t) { PLAYSEL.type = t; PLAYSEL.q = ''; const first = profile.decks.findIndex(d => d.format === t); if (first >= 0 && profile.decks[$('playDeck').value] && profile.decks[$('playDeck').value].format !== t) $('playDeck').value = String(first); renderPlayView(); }
+function playPickDeck(i) { $('playDeck').value = String(i); renderPlayView(); }
+function playDeckSearch(v) { PLAYSEL.q = v; renderPlayView(); const el = $('playDeckQ'); if (el) { el.focus(); el.setSelectionRange(v.length, v.length); } }
 function renderPlayView() {
     renderFriendPanel();
     const sel = $('playDeck');
     const prev = sel.value;
-    sel.innerHTML = profile.decks.length
-        ? profile.decks.map((d, i) => `<option value="${i}">${esc(d.name)} · ${FORMATS[d.format].name}</option>`).join('')
-        : '<option value="">No decks yet</option>';
-    if (prev && profile.decks[prev]) sel.value = prev;
+    sel.innerHTML = profile.decks.map((d, i) => `<option value="${i}">${esc(d.name)} · ${FORMATS[d.format].name}</option>`).join('');
+    if (prev !== '' && profile.decks[prev]) sel.value = prev; else if (profile.decks.length) sel.value = '0';
+    const cur = profile.decks[sel.value];
+    const counts = {}; profile.decks.forEach(d => { counts[d.format] = (counts[d.format] || 0) + 1; });
+    const types = ['commander', 'modern', 'casual', 'limited'].filter(k => counts[k]);
+    if (!PLAYSEL.type || !counts[PLAYSEL.type]) PLAYSEL.type = cur ? cur.format : types[0] || null;
+    if (cur && cur.format !== PLAYSEL.type) { const i = profile.decks.findIndex(d => d.format === PLAYSEL.type); if (i >= 0) sel.value = String(i); }
+    const box = $('deckPick');
+    if (!profile.decks.length) box.innerHTML = '<p class="note">No decks yet.</p>';
+    else {
+        const q = PLAYSEL.q.trim().toLowerCase();
+        const mine = profile.decks.map((d, i) => [d, i]).filter(([d]) => d.format === PLAYSEL.type && (!q || d.name.toLowerCase().includes(q)));
+        const chosen = Number(sel.value);
+        box.innerHTML = `<div class="chips" style="margin:0 0 8px;" role="group" aria-label="Deck type">${types.map(k => `<button type="button" class="chip${PLAYSEL.type === k ? ' on' : ''}" aria-pressed="${PLAYSEL.type === k}" onclick="playPickType('${k}')">${DECK_TYPE_ICONS[k] || ''} ${esc(FORMATS[k].name)} (${counts[k]})</button>`).join('')}</div>
+            ${counts[PLAYSEL.type] > 6 ? `<input type="search" id="playDeckQ" value="${esc(PLAYSEL.q)}" placeholder="Find one of your ${esc(FORMATS[PLAYSEL.type].name)} decks" aria-label="Find a deck" oninput="playDeckSearch(this.value)" style="width:100%; margin-bottom:8px;">` : ''}
+            <div class="opp-grid deck-pick">${mine.map(([d, i]) => { const pr = deckProblems(d); return `<button type="button" class="opp" aria-pressed="${i === chosen}" onclick="playPickDeck(${i})"><strong>${esc(d.name)}</strong><small>${deckCount(d)} cards${pr.length ? ` · ⚠ ${pr.length} to fix` : ' · ✓ ready'}</small></button>`; }).join('') || '<p class="note">No deck matches.</p>'}</div>`;
+    }
+    $('oppHead').textContent = cur ? `2. Your opponent - ${FORMATS[PLAYSEL.type].name} decks, so it's a fair match` : '2. Your opponent';
     renderOpponents();
 }
 
@@ -1474,7 +1497,22 @@ async function renderOpponents() {
     $('playDeckNote').innerHTML = probs.length ? `<span class="warn">⚠ ${esc(probs[0])}${probs.length > 1 ? ` (+${probs.length - 1} more)` : ''}</span>` : '<span class="ok">✓ Ready</span>';
     const pasted = chosenOpponent && chosenOpponent.type === 'list' ? `<div class="opp-custom"><button type="button" class="opp" aria-pressed="true" onclick="pasteOpponentDialog()"><strong>📋 ${esc(chosenOpponent.name)}</strong><small>Your pasted list${chosenOpponent.gen.swapped ? ` · ${chosenOpponent.gen.swapped} cards swapped for lands` : ''} · tap to change</small></button></div>` : '';
     const pasteBtn = `<button type="button" class="btn small" onclick="pasteOpponentDialog()">📋 Face a pasted decklist (Moxfield)</button>`;
-    if (deck.format !== 'commander') {
+    if (deck.format === 'casual' || deck.format === 'limited') {
+        list.innerHTML = '<div class="loading">Loading precons...</div>';
+        try {
+            const pl = await loadPreconList(); await loadPreconReady(); const nm = await setNames();
+            if ($('playDeck').value !== String(profile.decks.indexOf(deck))) return;
+            const q = OPPSEL.q.trim().toLowerCase();
+            const kinds = PRECON_GROUPS.filter(g => pl.some(p => p.type === g[0] && preconIsReady(p)));
+            const shown = pl.filter(p => preconIsReady(p) && (OPPSEL.kind === 'all' || p.type === OPPSEL.kind) && (!q || `${p.name} ${nm[(p.code || '').toUpperCase()] || ''}`.toLowerCase().includes(q)));
+            list.innerHTML = `${pasted}<div class="row" style="margin-bottom:10px;">${pasteBtn}</div>
+                <p class="note" style="margin-bottom:8px;">Precons the game plays in full, the same kind of ${esc(FORMATS[deck.format].name)} game as yours. Pick a type, then a deck.</p>
+                <div class="chips" style="margin:0 0 8px;"><button type="button" class="chip${OPPSEL.kind === 'all' ? ' on' : ''}" onclick="oppSel('kind','all')">All</button>${kinds.map(g => `<button type="button" class="chip${OPPSEL.kind === g[0] ? ' on' : ''}" onclick="oppSel('kind','${g[0]}')">${esc(g[1])}</button>`).join('')}</div>
+                <input type="search" id="oppQ" value="${esc(OPPSEL.q)}" placeholder="Find a precon" aria-label="Find a precon" oninput="oppSel('q', this.value)" style="width:100%; margin-bottom:8px;">
+                <div class="opp-grid">${shown.map(p => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.type === 'precon' && chosenOpponent.key === p.file}" onclick="chooseOpponent({ type: 'precon', key: '${esc(p.file)}', name: '${esc(p.name).replace(/'/g, "\\'")}' })"><strong>${esc(p.name)}</strong><small>${esc(nm[(p.code || '').toUpperCase()] || p.code || '')} · ${esc((p.date || '').slice(0, 4))} · ${esc(p.type)}</small></button>`).join('') || '<p class="note">No precon matches.</p>'}</div>`;
+            if (OPPSEL.q) { const el = $('oppQ'); if (el) { el.focus(); el.setSelectionRange(OPPSEL.q.length, OPPSEL.q.length); } }
+        } catch (e) { list.innerHTML = `${pasted}<p class="warn">${esc(e.message)}</p>`; }
+    } else if (deck.format !== 'commander') {
         list.innerHTML = `${pasted}<div class="row" style="margin-bottom:10px;">${pasteBtn}</div><p class="note" style="margin-bottom:8px;">Themed decks built live from Scryfall: the most-played Modern-legal cards for each theme that the game can run (not tournament lists).</p>
             <div class="opp-grid">${MODERN_THEMES.map(t => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === t.key}" onclick="chooseOpponent({ type: 'theme', key: '${t.key}' })">
                 <strong>${t.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(t.name)}</strong><small>${esc(t.desc)}</small></button>`).join('')}</div>`;
@@ -1498,6 +1536,8 @@ async function renderOpponents() {
     }
     const oppIsCmd = chosenOpponent && (chosenOpponent.type === 'commander' || chosenOpponent.type === 'verified' || (chosenOpponent.type === 'list' && chosenOpponent.gen.format === 'commander'));
     if (chosenOpponent && (deck.format === 'commander') !== !!oppIsCmd) chosenOpponent = null;
+    if (chosenOpponent && ((chosenOpponent.type === 'precon') !== (deck.format === 'casual' || deck.format === 'limited') && chosenOpponent.type !== 'list')) chosenOpponent = null;
+    if (chosenOpponent && chosenOpponent.type === 'theme' && deck.format !== 'modern') chosenOpponent = null;
     $('startNote').textContent = chosenOpponent ? '' : 'Pick an opponent.';
 }
 function verifiedOppHTML() {
