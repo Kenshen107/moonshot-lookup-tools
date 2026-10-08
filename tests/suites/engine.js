@@ -4,7 +4,8 @@
 const { launch, openTestPage, installHelpers, formatChecks, printResults, writeOut } = require('../lib/harness');
 
 const NAMES = ['Mountain', 'Grizzly Bears', 'Hill Giant', 'Shivan Dragon', 'Lightning Bolt', 'Raging Goblin', 'Bonesplitter', 'Goblin Guide', 'Goblin Rabblemaster',
-    'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger'];
+    'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger',
+    'Coercion', 'Incinerate', 'Path of Peace', 'Chastise', 'Condemn', 'Jagged Lightning', 'Kiss of the Amesha', 'Sleight of Hand', 'Telling Time', 'Ancestral Memories', 'Blessed Reversal', 'Whisk Away'];
 
 const BODY = async function (NAMES, ONLY, SKIP) {
     const out = [];
@@ -220,6 +221,48 @@ const BODY = async function (NAMES, ONLY, SKIP) {
         ok('only the nonlegendary creature is a target', valid.includes(g.uid) && !valid.includes(k.uid), valid);
         await castSpell(P0, cd, { o: g }); await runStack();
         ok('the nonlegendary creature is destroyed, the legend is not', !onBf(g.uid) && onBf(k.uid));
+    });
+    // ---------- Precon round 1 (effects resolved directly: cost and casting are covered elsewhere) ----------
+    const run = async (name, target) => { const o = makeObj(C[name], 0); await resolveEffects(P0, Rx(o).spell, target, o); return o; };
+    const lib = (P, names) => { P.library.splice(0); names.forEach(n => P.library.push(makeObj(C[n], P.i))); };
+    await check('precon: Coercion', async () => {
+        P1.hand.push(makeObj(C['Mountain'], 1), makeObj(C['Hill Giant'], 1));
+        await run('Coercion', { p: P1 });
+        ok('the opponent discards the best nonland card', P1.hand.length === 1 && P1.hand[0].card.name === 'Mountain' && P1.gy.some(x => x.card.name === 'Hill Giant'), P1.hand.map(x => x.card.name));
+    });
+    await check('precon: removal with life', async () => {
+        const a = put(P1, 'Hill Giant'); await run('Path of Peace', { o: a });
+        ok('Path of Peace destroys and its owner gains 4', !onBf(a.uid) && P1.life === 44, P1.life);
+        const b = put(P1, 'Hill Giant'); G.attackers = [b.uid]; P0.life = 40; await run('Chastise', { o: b });
+        ok('Chastise destroys an attacker and you gain its power', !onBf(b.uid) && P0.life === 43, P0.life);
+        const c = put(P1, 'Hill Giant'); G.attackers = [c.uid]; P1.life = 40; await run('Condemn', { o: c });
+        ok('Condemn puts it on the bottom and its controller gains its toughness', !onBf(c.uid) && P1.library[0] === c && P1.life === 43, [P1.life, P1.library[0] && P1.library[0].card.name]);
+        const d = put(P1, 'Grizzly Bears'); G.attackers = [d.uid]; await run('Whisk Away', { o: d });
+        ok('Whisk Away puts an attacker on top', !onBf(d.uid) && P1.library[P1.library.length - 1] === d);
+    });
+    await check('precon: damage spells', async () => {
+        const a = put(P1, 'Hill Giant'), b = put(P1, 'Grizzly Bears');
+        const was = P0.isAI; P0.isAI = true; await run('Jagged Lightning'); P0.isAI = was;
+        ok('Jagged Lightning kills a 3/3 and a 2/2', !onBf(a.uid) && !onBf(b.uid), [onBf(a.uid), onBf(b.uid)]);
+        P1.life = 40; await run('Incinerate', { p: P1 });
+        ok('Incinerate deals 3', P1.life === 37, P1.life);
+    });
+    await check('precon: life and cards', async () => {
+        lib(P0, ['Mountain', 'Mountain', 'Mountain']); P0.hand.splice(0); P0.life = 40;
+        await run('Kiss of the Amesha', { p: P0 });
+        ok('Kiss of the Amesha: 7 life and 2 cards', P0.life === 47 && P0.hand.length === 2, [P0.life, P0.hand.length]);
+        lib(P0, ['Mountain', 'Hill Giant', 'Grizzly Bears']); P0.hand.splice(0);
+        await run('Sleight of Hand');
+        ok('Sleight of Hand: one card to hand, one to the bottom', P0.hand.length === 1 && P0.library.length === 2 && P0.library[0].card.name !== 'Mountain' && P0.library[0] !== P0.hand[0], [P0.hand.map(x => x.card.name), P0.library.map(x => x.card.name)]);
+        lib(P0, ['Mountain', 'Mountain', 'Hill Giant', 'Grizzly Bears']); P0.hand.splice(0);
+        await run('Telling Time');
+        ok('Telling Time: one in hand, one on top, one on the bottom', P0.hand.length === 1 && P0.library.length === 3, [P0.hand.length, P0.library.length]);
+        lib(P0, Array(8).fill('Mountain')); P0.hand.splice(0); P0.gy.splice(0);
+        await run('Ancestral Memories');
+        ok('Ancestral Memories: two in hand, five in the graveyard', P0.hand.length === 2 && P0.gy.length === 5 && P0.library.length === 1, [P0.hand.length, P0.gy.length, P0.library.length]);
+        P0.life = 40; G.attackers = [1, 2, 3].map(() => put(P1, 'Grizzly Bears').uid);
+        await run('Blessed Reversal');
+        ok('Blessed Reversal: 3 life per attacker', P0.life === 49, P0.life);
     });
     return out;
 };

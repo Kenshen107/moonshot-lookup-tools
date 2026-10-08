@@ -2,7 +2,7 @@
 // two turns (cast it, use its abilities, attack, run its triggers) and checks that:
 //   - nothing threw, no card is in two zones, no life/power is NaN
 //   - the card reads as fully Automated (groups marked "must be 100%")
-// Usage: node tests/suites/cards.js [group ...]      groups: verified, mirrodin, m10, welcome, starter, or all
+// Usage: node tests/suites/cards.js [group ...]      groups: verified, mirrodin, m10, welcome, starter, precon, or all
 // Default: verified mirrodin m10. `--quick` runs only the verified decks.
 'use strict';
 const fs = require('fs');
@@ -15,7 +15,8 @@ const GROUPS = {
     mirrodin: { must100: true, desc: 'Mirrodin booster cards (set:mrd is:booster)' },
     m10: { must100: true, desc: 'Magic 2010 booster cards (set:m10 is:booster)' },
     welcome: { must100: true, desc: 'MTGJSON Welcome Decks (55 decks)' },
-    starter: { must100: true, desc: 'MTGJSON Starter Kits (20 decks)' }
+    starter: { must100: true, desc: 'MTGJSON Starter Kits (20 decks)' },
+    precon: { must100: true, desc: 'every Ready precon that is not a Welcome Deck or Starter Kit (spellslinger/data/precon-ready.json)' }
 };
 
 const BODY = async function (group, mustBe100) {
@@ -29,6 +30,15 @@ const BODY = async function (group, mustBe100) {
         }
     } else if (group === 'mirrodin' || group === 'm10') {
         cards = await searchCards(`set:${group === 'm10' ? 'm10' : 'mrd'} is:booster`, 6, 'name');
+    } else if (group === 'precon') {
+        await loadPreconReady();
+        const list = (await loadPreconList()).filter(p => preconIsReady(p) && !['Welcome Deck', 'Starter Kit'].includes(p.type));
+        for (const p of list) {
+            let d = null;
+            for (let k = 0; k < 5 && !d; k++) { try { d = await loadPreconDeck(p); } catch (e) { await new Promise(r => setTimeout(r, 1500 * (k + 1))); } }
+            if (!d) throw new Error(`could not load ${p.name}`);
+            d.entries.forEach(e => cards.push(e.card));
+        }
     } else if (group === 'welcome' || group === 'starter') {
         const list = (await loadPreconList()).filter(p => p.type === (group === 'welcome' ? 'Welcome Deck' : 'Starter Kit'));
         for (const p of list) {

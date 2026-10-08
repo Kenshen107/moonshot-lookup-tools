@@ -331,6 +331,14 @@ function parseEffects(text) {
         .replace(/[Ee]ach player chooses a nonland permanent they control\. Return all nonland permanents not chosen this way to their owners' hands\. Then you draw a card for each opponent who has more cards in their hand than you\./g, '§tide.')
         .replace(/Target player draws cards equal to half the number of cards in their library and loses half their life\. Round up each time\./g, '§peer.')
         .replace(/look at the top two cards of your library, put them back in any order, then choose land or nonland\. An opponent guesses whether the top card of your library is the chosen kind\. Reveal that card\. If they guessed right, remove ~ from combat\. Otherwise, you draw a card and ~ can't be blocked this turn\./g, '§gollum.')
+        .replace(/Look at the top two cards of your library\. Put one of them into your hand and the other on the bottom of your library\./g, '§lookhand 2.')
+        .replace(/If you attacked this turn, instead ~ deals (\w+) damage to that permanent or player and the damage can't be prevented\./g, '~ deals $1 damage to that permanent instead if you attacked this turn.')
+        .replace(/Look at the top card of target player's library\. You may put that card into their graveyard\./g, '§eyespy.')
+        .replace(/Reveal the top five cards of your library\. You may put a creature or land card from among them into your hand\. Put the rest into your graveyard\./g, '§grisly.')
+        .replace(/look at the top (five|four|six|seven) cards of your library\. You may reveal an? (white|blue|black|red|green) card from among them and put it into your hand\. Put the rest on the bottom of your library in a random order\./gi, (all, n, c) => `§digcolor ${num(n)} ${c}.`)
+        .replace(/Untap all creatures that attacked this turn\. After this main phase, there is an additional combat phase followed by an additional main phase\./g, '§relentless.')
+        .replace(/Look at the top three cards of your library\. Put one of those cards into your hand, one on top of your library, and one on the bottom of your library\./g, '§tellingtime.')
+        .replace(/Look at the top seven cards of your library\. Put two of them into your hand and the rest into your graveyard\./g, '§ancmem.')
         .replace(/Sacrifice that token at end of combat\./g, '§sacendcombat.');
     // "When you do, ..." is a reflexive trigger: its target is chosen when it resolves (603.12)
     text = text.replace(/\. When you do, /g, '. If you do, §late ');

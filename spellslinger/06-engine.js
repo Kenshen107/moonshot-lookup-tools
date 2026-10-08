@@ -366,6 +366,7 @@ const isPlaneswalker = o => !!o && !!o.card && Rx(o).kind === 'planeswalker' && 
 const isBattle = o => !!o && !!o.card && Rx(o).kind === 'battle';
 function damage(target, n, src) {
     if (n <= 0) return;
+    n = preconDamage(target, n, src); if (n <= 0) return; // replacement and prevention effects of the precon rounds (15b-precon-effects.js)
     // ---- Magic 2010 (2026-10-08): Safe Passage, Harm's Way, Guardian Seraph, Magebane Armor, Protean Hydra ----
     const tgtP = target.life !== undefined ? target : (target.card && target.uid !== undefined && G.players[target.owner]) || null;
     const oppSrc = !!(src && src.card && src.uid !== undefined && G.players[src.owner] && tgtP && src.owner !== tgtP.i);
@@ -523,7 +524,7 @@ function manaOf(o) {
         allPerms().forEach(a => { const ty = Rx(a).landTypeAll; if (ty && !lostAbilities(a)) { const c = LAND_COLOR[ty]; if (c && !m.colors.includes(c)) m = { ...m, colors: [...m.colors.filter(x => x !== 'C'), c] }; } });
         // Crypt Ghast, Mana Reflection-style: an additional mana
         const extra = [];
-        X.bf.forEach(a => { const ex = Rx(a).extraMana; if (ex && !lostAbilities(a) && ((ex.host && a.attachedTo === o.uid) || (ex.type && hasType(o, ex.type)) || ex.all)) extra.push(ex.color); });
+        X.bf.forEach(a => { const ex = Rx(a).extraMana; if (ex && !lostAbilities(a) && ((ex.host && a.attachedTo === o.uid) || (ex.type && hasType(o, ex.type)) || ex.all)) extra.push(ex.color === 'any' ? m.colors[0] : ex.color); });
         if (extra.length) m = { ...m, n: m.n + extra.length, extra };
     }
     return m;
@@ -3499,6 +3500,7 @@ async function applyEffect(P, e, t, src) {
             } else if (it.kind === 'spell') moveSpellCard(it.o, e.exileIt ? 'exile' : 'gy');
             break;
         }
+        default: await preconEffect(P, e, t, src, O, name); // the precon rounds (15b-precon-effects.js)
     }
 }
 
@@ -3536,6 +3538,8 @@ function canBlock(b, atk) {
     if (b.detainedUntil > G.turn || lockedOut(b)) return false;
     if (has(b, 'unleash') && b.counters > 0) return false; // unleash (702.98)
     if (Rx(b).blockCond && !condOk(Rx(b).blockCond, ctrl(b), b)) return false;
+    if (G.onlyBlocker && G.onlyBlocker.turn === G.turn && b.uid !== G.onlyBlocker.uid && onBf(G.onlyBlocker.uid) && ctrl(onBf(G.onlyBlocker.uid)) === ctrl(b)) return false; // Mark for Death
+    for (const f of Rx(atk).blockFns || []) if (!lostAbilities(atk) && !BLOCK_FN[f](b, atk)) return false; // Elven Riders, Bog Rats
     if (has(b, 'blockflyonly') && !has(atk, 'flying')) return false;
     if (has(atk, 'blockflyreach') && !has(b, 'flying') && !has(b, 'reach')) return false;
     for (const k of [...Rx(atk).kw, ...atk.tkw]) {

@@ -25,6 +25,7 @@ function devotion(P, colors) {
 }
 function buildCond(t) {
     let m;
+    for (const [re, mk] of COND_EXTRA) { const mm = t.match(re); if (mm) return mk(mm, t); }
     const cmp = (a, rel, n) => (/more|greater/.test(rel) ? a >= n : a <= n);
     const opp = P => G.players[1 - P.i];
     if (t === 'you control a commander') return P => P.bf.some(x => x.isCommander);
@@ -147,6 +148,7 @@ function countFn(phrase) {
     if (/^cards? in your hand$/.test(p)) return o => ctl(o).hand.length;
     if (/^cards? in your graveyard$/.test(p)) return o => ctl(o).gy.length;
     if (/^creature cards? in your graveyard$/.test(p)) return o => ctl(o).gy.filter(x => /Creature/.test(x.card.type)).length;
+    { const mg = p.match(/^(sorcery|instant|artifact|land|enchantment|planeswalker) cards? in all graveyards$/); if (mg) return () => G.players.reduce((a, P) => a + P.gy.filter(x => new RegExp(`\\b${mg[1]}\\b`, 'i').test(x.card.type)).length, 0); }
     if (/^cards? in all graveyards$/.test(p)) return () => G.players.reduce((a, P) => a + P.gy.length, 0);
     if (/^creature cards? in all graveyards$/.test(p)) return () => G.players.reduce((a, P) => a + P.gy.filter(x => /Creature/.test(x.card.type)).length, 0);
     if (/^untapped permanents? your opponents control$/.test(p)) return o => G.players.filter(X => X.i !== o.owner).reduce((a, X) => a + X.bf.filter(x => !x.tapped).length, 0);
@@ -371,6 +373,7 @@ function staticBuffs(o) {
             if (s.type === '*chosen' ? !(a.chosenType && hasType(o, a.chosenType)) : (s.type && !hasType(o, s.type))) continue;
             if (s.types && !s.types.some(ty => hasType(o, ty))) continue;
             if (s.match && (staticDepth > 1 || !staticMatch(o, s.match))) continue;
+            if (s.fn && !STATIC_FN[s.fn](o, a)) continue;
             if (s.colorChosen && !(a.chosenColor && (o.card.colors || []).includes(a.chosenColor))) continue;
             if (s.cond && !condOk(s.cond, G.players[a.owner], a)) continue;
             b.p += s.p; b.q += s.q; b.kw.push(...s.kw);
@@ -530,6 +533,7 @@ function fire(ev, ctx = {}) {
     // Cards with abilities that work from the graveyard (Shambling Cie'th)
     G.players.forEach(X => X.gy.filter(o => Rx(o).gyTrig).forEach(o => Rx(o).gyTrig.forEach(tr => { if (trigMatches(tr, ev, o, ctx) && (!tr.cond || condOk(tr.cond, X, o))) (G.trigQ = G.trigQ || []).push({ P: X, o, effects: tr.effects }); })));
     if (ev === 'gainLife' && ctx.P) ctx.P.gainedTurn = G.turn;
+    if (ev === 'hitPlayer') preconHitWatch(ctx); // Hunter's Insight (15b-precon-effects.js)
     // Metallic Mimic: another creature of the chosen type enters with an extra +1/+1 counter (a replacement, not a trigger)
     if (ev === 'enters' && ctx.o && isCreature(ctx.o)) G.players[ctx.o.owner].bf.filter(a => a !== ctx.o && Rx(a).mimic && !lostAbilities(a) && a.chosenType && hasType(ctx.o, a.chosenType)).forEach(a => { ctx.o.counters += 1; log(`${ctx.o.card.name} enters with an additional +1/+1 counter (${a.card.name}).`); });
     if (ev === 'enters' && ctx.o) fire('selfEnters', { o: ctx.o });
@@ -587,6 +591,7 @@ function actPlan(P, o, a, xExtra = 0) {
     if (a.hand || a.gy) return planPayment(P, actCost(o, a), xExtra);
     if (a.cost && a.cost.tap && !sourceCanTap(o)) return null;
     if (a.once && o.actTurn && o.actTurn[a.text] === G.turn) return null;
+    if (a.maxTurn && o.actCount && o.actCount[a.text] && o.actCount[a.text].turn === G.turn && o.actCount[a.text].n >= a.maxTurn) return null;
     if (a.loyalty !== undefined) {
         if (o.loyaltyTurn === G.turn) return null;
         if ((o.ctr.loyalty || 0) + a.loyalty < 0) return null;
@@ -735,6 +740,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (a.cost.life) { P.life -= a.cost.life; }
         if (a.cost.discard) { const d = P.hand.slice().sort((x, y) => (x.card.cmc || 0) - (y.card.cmc || 0))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
         if (a.once) { o.actTurn = o.actTurn || {}; o.actTurn[a.text] = G.turn; }
+        if (a.maxTurn) { o.actCount = o.actCount || {}; const c = o.actCount[a.text]; o.actCount[a.text] = c && c.turn === G.turn ? { turn: G.turn, n: c.n + 1 } : { turn: G.turn, n: 1 }; }
         if (a.onceEver || a.powerUp) { o.usedOnce = o.usedOnce || {}; o.usedOnce[a.text] = true; }
         if (a.whelp) { o.whelpN = o.whelpTurn === G.turn ? (o.whelpN || 0) + 1 : 1; o.whelpTurn = G.turn; if (o.whelpN >= a.whelp) o.sacAtEnd = G.turn; }
         if (a.cost.discardHand) { const n = P.hand.length; P.hand.forEach(c => { c.discardTurn = G.turn; }); P.gy.push(...P.hand.splice(0)); noteDiscard(P, n); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${n === 1 ? 'a card' : `${n} cards`} (the whole hand).`); }
@@ -1119,7 +1125,7 @@ function dieOrLeave(o, zone) {
 function tapSource(P, s) {
     if (s.pool) { const i = (P.pool || []).indexOf(s.color); if (i >= 0) P.pool.splice(i, 1); return; }
     s.tapped = true;
-    fire('tapped', { o: s });
+    fire('tapped', { o: s, mana: true });
     if (/\bArtifact\b/.test(s.card.type) && manaOf(s)) fire('artifactMana', { o: s, P });
     if (/\bLand\b/.test(s.card.type)) allPerms().filter(b => Rx(b).manabarbs && !lostAbilities(b)).forEach(b => { damage(P, 1, b); log(`${b.card.name} deals 1 damage to ${P.name === 'You' ? 'you' : P.name}.`); }); // Manabarbs
     const m = manaOf(s);

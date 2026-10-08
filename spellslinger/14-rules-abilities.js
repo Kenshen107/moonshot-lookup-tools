@@ -109,6 +109,8 @@ function parseActivated(line, R) {
     const once = /Activate only (?:during your turn and only )?once each turn\.?/.test(body);
     const yourTurn = /Activate only during your turn/.test(body);
     const onceEver = /Activate only (?:as a sorcery and only )?once\.$/.test(body);
+    const maxM = body.match(/Activate no more than (once|twice|three times) each turn\.?/); const maxTurn = maxM ? { once: 1, twice: 2, 'three times': 3 }[maxM[1]] : 0;
+    body = body.replace(/\s*Activate no more than (?:once|twice|three times) each turn\.?/, '');
     const upkeepOnly = /Activate only during your upkeep\.?/.test(body); // Mirrodin: Grim Reminder, Nim Devourer
     body = body.replace(/\s*Activate only during your upkeep\.?/, '');
     const sorceryOnceTurn = /Activate only as a sorcery and only once each turn\.?/.test(body); // Gaea's Touch
@@ -172,6 +174,6 @@ function parseActivated(line, R) {
     let effects = gyEffect ? [{ t: 'returnSelfGy', bf: /battlefield/.test(body), tapped: /tapped/.test(body) }] : parseEffects(cost.mana.x ? xSub(body) : body);
     if (!effects) return null;
     if (cost.mana.x) { effects = xMarkDeep(effects); if (!hasXMark(effects)) return null; }
-    return { cost, effects, text: line, sorcery, once: once || sorceryOnceTurn, yourTurn, onceEver, onlyIf, lessIf, lessPer, whelp, upkeepOnly, hand: !!cost.discardSelf || !!cost.exileSelfHand, gy: !!cost.exileSelfGy || gyEffect || gyAlso || gyNim };
+    return { cost, effects, text: line, sorcery, once: once || sorceryOnceTurn, maxTurn, yourTurn, onceEver, onlyIf, lessIf, lessPer, whelp, upkeepOnly, hand: !!cost.discardSelf || !!cost.exileSelfHand, gy: !!cost.exileSelfGy || gyEffect || gyAlso || gyNim };
 }
 
