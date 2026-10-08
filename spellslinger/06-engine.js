@@ -672,6 +672,7 @@ function altOk(P, o) {
     return !!a && P.hand.includes(o) && (!a.cond || condOk(a.cond, P, o)) && (!a.life || P.life > a.life) && (!a.exile || !!altExileCard(P, o));
 }
 function canPay(P, o) { return (!o.altCast || altOk(P, o)) && addCostOk(P, o) && !!planPayment(P, costOf(P, o), extraCost(P, o) + (costOf(P, o).x ? xMult(o) : 0), null, payOpts(o)); }
+function canBuyback(P, o) { const b = Rx(o).buyback; if (!b || Rx(o).kind === 'creature') return false; const was = o.buyback; o.buyback = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: Rx(o).kw.has('convoke') }); o.buyback = was; return ok; }
 function canKick(P, o) { const k = Rx(o).kicker; if (!k) return false; if (Rx(o).kickSac && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < Rx(o).kickSac.n + (P.isAI ? 2 : 0)) return false; const was = o.kicked; o.kicked = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: Rx(o).kw.has('convoke') }); o.kicked = was; return ok; }
 // "As an additional cost to cast ~, sacrifice a creature / discard a card / pay N life"
 function addCostOk(P, o) {
@@ -768,6 +769,7 @@ function maxX(P, o) {
 function totalCost(P, o) {
     const c = { ...costOf(P, o) };
     if (o.kicked && Rx(o).kicker) Object.keys(Rx(o).kicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).kicker[k]; });
+    if (o.buyback && Rx(o).buyback) Object.keys(Rx(o).buyback).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).buyback[k]; });
     return c;
 }
 function payFor(P, o) {
@@ -1122,8 +1124,9 @@ async function castSpell(P, o, presetTarget) {
     if (Rx(o).kind === 'creature' && P.nextCreatureCounter === G.turn) { o.extraEnterCounter = 1; P.nextCreatureCounter = 0; } // Summon: Fenrir II
     removeFromZones(o);
     if (fromCommand) P.tax++;
-    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x || (castAs === 'warp' && Rx(o).warp.x) || (castAs === 'bestow' && Rx(o).bestow.x) ? (o.xVal || 0) : undefined, kicked: !!o.kicked, castAs };
+    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x || (castAs === 'warp' && Rx(o).warp.x) || (castAs === 'bestow' && Rx(o).bestow.x) ? (o.xVal || 0) : undefined, kicked: !!o.kicked, buyback: !!o.buyback, castAs };
     if (castAs) log(`(${o.card.name} is cast with ${castAs === 'energy' ? 'energy' : castAs}.)`);
+    o.buyback = false;
     G.stack.push(item);
     log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name}${item.kicked ? ' (kicked)' : ''}${o._free ? ' without paying its mana cost' : ''}${item.x !== undefined ? ` (X=${item.x})` : ''}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax > 1 ? ` (commander tax ${(P.tax - 1) * 2})` : ''}.`);
     if (!wardCheck(P, presetTarget, o.card.name)) { pull(G.stack, item); moveSpellCard(o, 'gy'); renderGame(); return true; }
@@ -1272,7 +1275,7 @@ async function resolveTop() {
                     : await pickCard(item.P, item.P.bf.filter(isCreature), `${o.card.name}: encode it on a creature (cipher), or skip`);
                 if (host) { host.ciphered = [...(host.ciphered || []), o.front || o.card]; o.card = o.front || o.card; resetObj(o); item.P.exile.push(o); log(`${o.card.name} is encoded on ${host.card.name} (cipher).`); }
                 else moveSpellCard(o, 'gy');
-            } else moveSpellCard(o, 'gy');
+            } else { if (item.buyback) log(`${o.card.name} returns to its owner's hand (buyback).`); moveSpellCard(o, item.buyback ? 'hand' : 'gy'); }
         } else {
             const mode = o.mode, face = o.card, evoked = o.evoked;
             delete o.evoked;
@@ -1291,6 +1294,7 @@ async function resolveTop() {
             { const et = opp(item.P).bf.find(x => Rx(x).oppEnterTapped && !lostAbilities(x)); if (et && (r.kind === 'creature' || (Rx(et).oppEnterTapped !== 'creature' && /Artifact/.test(o.card.type)))) { o.tapped = true; log(`${o.card.name} enters tapped (${et.card.name}).`); } }
             if (r.etbCounters) o.counters += r.etbCounters === 'X' ? (item.x || 0) : r.etbCounters === 'spent' ? costTotal(r.cost) + (item.x || 0) * (r.cost.xn || 1) : r.etbCounters;
             if (r.etbNamedX) o.ctr[r.etbNamedX] = item.x || 0;
+            if (r.bloodthirst && opp(item.P).lostTurn === G.turn) { o.counters += r.bloodthirst; log(`${o.card.name} enters with ${r.bloodthirst} +1/+1 counters (bloodthirst).`); }
             // Ravenous: X +1/+1 counters, and a card if X is 5 or more
             if (r.ravenous && (item.x || 0) >= 5) (G.trigQ = G.trigQ || []).push({ P: item.P, o, effects: [{ t: 'draw', n: 1 }] });
             if (r.kickCounters && o.kicked) o.counters += r.kickCounters;
@@ -3877,6 +3881,8 @@ async function humanCast(uid) {
     }
     o.kicked = false;
     if (Rx(o).kicker && canKick(P, o)) o.kicked = await askYes(P, Rx(o).offspring ? `Pay offspring for ${o.card.name}? (A 1/1 token copy of it enters too.)` : Rx(o).entwine ? `Pay the entwine cost ${costSymbols(Rx(o).kicker)} for ${o.card.name}? (You get both modes.)` : `Pay the kicker cost for ${o.card.name}?`, { card: o.card });
+    o.buyback = false;
+    if (Rx(o).buyback && canBuyback(P, o)) o.buyback = await askYes(P, `Pay the buyback cost for ${o.card.name}? (It returns to your hand when it resolves.)`, { card: o.card });
     if (Rx(o).cost.x && !Rx(o).xFromTarget) {
         const mx = maxX(P, o);
         const v = await askNumber(P, `Choose X for ${o.card.name}`, 1, mx, mx, { card: o.card, ok: 'Cast' });

@@ -8,8 +8,8 @@
   "coverage": {
     "measured": "2026-10-08",
     "total": 34142,
-    "full": 12840,
-    "partial": 16896,
+    "full": 12973,
+    "partial": 16763,
     "none": 4406,
     "top1000": {
       "full": 822,

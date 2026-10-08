@@ -162,6 +162,18 @@ async function preconEffect(P, e, t, src, O, name) {
         case 'preventSelf': P.prevent = { turn: G.turn, n: ((P.prevent && P.prevent.turn === G.turn) ? P.prevent.n : 0) + e.n }; log(`The next ${e.n} damage to ${P.name} this turn is prevented.`); break;
         case 'archon': P.archon = { turn: G.turn, n: ((P.archon && P.archon.turn === G.turn) ? P.archon.n : 0) + Math.max(0, e.n), src }; log(`${name}: the next ${e.n} damage to ${P.name} this turn is prevented and dealt to ${O.name}.`); break;
         case 'pumpCount': if (t && t.o) { const k = countFn(e.what)({ owner: P.i }); t.o.tp += k; t.o.tq += k; log(`${t.o.card.name} gets +${k}/+${k} until end of turn.`); } break;
+        case 'flankingHit': {
+            if (!onBf(src.uid)) break;
+            for (const u of (G.blocks[src.uid] || [])) { const b = onBf(u); if (b && !has(b, 'flanking')) { b.tp -= 1; b.tq -= 1; log(`${b.card.name} gets -1/-1 until end of turn (flanking).`); } }
+            break;
+        }
+        case 'fadeTick': {
+            if (!onBf(src.uid)) break;
+            const k = e.kind;
+            if ((src.ctr[k] || 0) > 0) { src.ctr[k]--; log(`${src.card.name}: a ${k} counter is removed (${src.ctr[k]} left).`); if (k === 'time' && src.ctr[k] === 0) { log(`${src.card.name} vanishes.`); dieOrLeave(src, 'gy'); } }
+            else { log(`${src.card.name} fades away.`); dieOrLeave(src, 'gy'); }
+            break;
+        }
         case 'regrowNonCN': {
             const pool = P.gy.filter(x => !isCreatureCard(x.card) && rulesFor(x.card).kind !== 'land'); if (!pool.length) break;
             const c = P.isAI ? pool.slice().sort((a, b) => aiKeepValue(P, b) - aiKeepValue(P, a))[0] : (await pickCard(P, pool, `${name}: return a noncreature, nonland card to your hand`, { required: true })) || pool[0];

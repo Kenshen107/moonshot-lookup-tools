@@ -375,6 +375,7 @@ function aiBestPlay(P) {
         if (r.kind === 'land' || !canCastNow(P, o) || !canPay(P, o)) continue;
         if (reserve && r.kind !== 'instant' && (o.card.cmc || 0) > untapped - reserve) continue; // hold mana up
         if (r.kicker) o.kicked = canKick(P, o);
+        o.buyback = !!r.buyback && canBuyback(P, o) && (untapped - (o.card.cmc || 0)) >= 3;
         if (r.cost.x) o.xVal = maxX(P, o);
         if (r.xFromTarget) { const te0 = firstTargetEffect(o), t0 = te0 ? aiPickTarget(P, te0, o) : null; if (!t0 || !t0.o || (t0.o.card.cmc || 0) > o.xVal) continue; o.xVal = t0.o.card.cmc || 0; }
         if (r.teamwork) o.teamworked = !!teamworkCrew(P, o) && P.bf.filter(canAttackWith).length <= 1;

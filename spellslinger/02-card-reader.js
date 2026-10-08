@@ -516,6 +516,13 @@ function rulesFor(card) {
     names.filter(Boolean).forEach(n => { text = text.replace(new RegExp(`(?<![A-Za-z])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z])`, 'g'), '~'); });
     text = text.replace(/\bthis (?:creature|spell|land|artifact|enchantment|card|permanent|Aura|Equipment|Vehicle|Saga|planeswalker|token|Class|Room|Case|Spacecraft|Siege|battle)\b/gi, '~');
     text = text.replace(/^((?:\{[^}]+\})+), \{T\} or ((?:\{[^}]+\})+), \{T\}: (.+)$/gm, '$1, {T}: $3\n$2, {T}: $3'); // Mirrodin's Shards
+    // Repeating keywords (precon round 3, 2026-10-09): written out as the sentences they stand for
+    text = text.replace(/^Bushido (\d+)[ \t]*$/gm, 'Whenever ~ blocks or becomes blocked, ~ gets +$1/+$1 until end of turn.')
+        .replace(/^Soulshift (\d+)[ \t]*$/gm, 'When ~ dies, you may return target Spirit card with mana value $1 or less from your graveyard to your hand.')
+        .replace(/^Bloodthirst (\d+)[ \t]*$/gm, 'If an opponent was dealt damage this turn, ~ enters with $1 +1/+1 counters on it.')
+        .replace(/^Fading (\d+)[ \t]*$/gm, '~ enters with $1 fade counters on it.\nAt the beginning of your upkeep, remove a fade counter from ~. If you can\'t, sacrifice ~.')
+        .replace(/^Vanishing (\d+)[ \t]*$/gm, '~ enters with $1 time counters on it.\nAt the beginning of your upkeep, remove a time counter from ~. When the last is removed, sacrifice ~.')
+        .replace(/^Living weapon[ \t]*$/gm, 'When ~ enters, create a 0/0 black Phyrexian Germ creature token, then attach ~ to it.');
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     // Starter kits (2026-10-06): "... and is a Cleric in addition to its other types" adds a creature type;
     // "gets +2/+2, has trample and haste" reads as "gets +2/+2 and has trample and haste"
@@ -608,6 +615,7 @@ function rulesFor(card) {
         // "If you control a commander, you may cast ~ without paying its mana cost."
         // The special-case lines each round of card-reader work added (spellslinger/rules/*.js), tried in the order they were added
         { const ctx = { R, card, lines, t, line, li }; if (runLinePacks(ctx)) { li = ctx.li; continue; } }
+        if ((m = line.match(/^Buyback ((?:\{[^}]+\})+)(?: \(.*)?$/))) { R.buyback = parseCost(m[1]); continue; }
         if ((m = line.match(/^Flashback ((?:\{[^}]+\})+)$/))) { R.flashback = parseCost(m[1]); continue; }
         // Overload (702.96): "target" becomes "each" - read the spell again with that wording
         if ((m = line.match(/^Overload ((?:\{[^}]+\})+)$/))) {

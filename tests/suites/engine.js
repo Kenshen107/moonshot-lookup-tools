@@ -7,7 +7,7 @@ const NAMES = ['Mountain', 'Grizzly Bears', 'Hill Giant', 'Shivan Dragon', 'Ligh
     'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger',
     'Coercion', 'Incinerate', 'Path of Peace', 'Chastise', 'Condemn', 'Jagged Lightning', 'Kiss of the Amesha', 'Sleight of Hand', 'Telling Time', 'Ancestral Memories', 'Blessed Reversal', 'Whisk Away',
     'Furnace of Rath', "Urza's Armor", 'Cho-Manno, Revolutionary', 'Vigor', 'Pariah', 'Gravebane Zombie', 'Angelic Arbiter', 'Mole Worms', 'Deathgazer', 'Lure', 'Oppressive Rays', 'Angel of Vitality', "Hunter's Insight", 'Call of the Wild', 'Fertile Ground', 'Forest', 'Curfew', 'Esper Battlemage', 'Goblin Arsonist', 'Ascendant Evincar',
-    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate'];
+    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate', 'Capsize', "Evincar's Justice", 'Blastoderm', 'Aven Riftwatcher', 'Nezumi Ronin', 'Burr Grafter', 'Benalish Cavalry'];
 
 const BODY = async function (NAMES, ONLY, SKIP) {
     const startTurnUntapForTest = P => { P.bf.forEach(o => { if (o.skipUntap) o.skipUntap = false; else if (!has(o, 'nountap') && !(o.lockedBy && onBf(o.lockedBy) && onBf(o.lockedBy).tapped) && !(Rx(o).mayNotUntap && o.tapped && allPerms().some(l => l.lockedBy === o.uid))) o.tapped = false; }); };
@@ -326,6 +326,29 @@ const BODY = async function (NAMES, ONLY, SKIP) {
         const c0 = put(P0, 'Grizzly Bears'), c1 = put(P1, 'Hill Giant'); const h0 = P0.hand.length, h1 = P1.hand.length;
         const was = [P0.isAI, P1.isAI]; P0.isAI = P1.isAI = true; await run('Curfew'); [P0.isAI, P1.isAI] = was;
         ok('Curfew returns a creature each player controls to hand', P0.hand.length === h0 + 1 && P1.hand.length === h1 + 1, [P0.hand.length - h0, P1.hand.length - h1]);
+    });
+    await check('precon round 3: buyback', async () => {
+        ok('Capsize reads buyback {3}', Rx(makeObj(C['Capsize'], 0)).buyback && Rx(makeObj(C['Capsize'], 0)).buyback.generic === 3, Rx(makeObj(C['Capsize'], 0)).buyback);
+        const sp = makeObj(C['Evincar\'s Justice'], 0); P0.hand = []; P0.gy = [];
+        G.stack.push({ id: 9999, kind: 'spell', o: sp, P: P0, target: null, name: sp.card.name, buyback: true });
+        await resolveTop();
+        ok('a spell cast with buyback returns to hand', P0.hand.includes(sp) && !P0.gy.includes(sp), [P0.hand.length, P0.gy.length]);
+        const sp2 = makeObj(C['Evincar\'s Justice'], 0);
+        G.stack.push({ id: 9998, kind: 'spell', o: sp2, P: P0, target: null, name: sp2.card.name, buyback: false });
+        await resolveTop();
+        ok('without buyback it goes to the graveyard', P0.gy.includes(sp2), P0.gy.length);
+        const bl = put(P0, 'Blastoderm'); bl.ctr.fade = 1;
+        const tick = () => applyEffect(P0, Rx(bl).trig.find(x => x.ev === 'upkeep').effects[0], null, bl);
+        await tick(); ok('fading: a counter is removed each upkeep', onBf(bl.uid) && !bl.ctr.fade, bl.ctr.fade);
+        await tick(); ok('fading: sacrificed when none can be removed', !onBf(bl.uid), onBf(bl.uid));
+        const rw = put(P0, 'Aven Riftwatcher'); rw.ctr.time = 1;
+        await applyEffect(P0, Rx(rw).trig.find(x => x.ev === 'upkeep').effects[0], null, rw);
+        ok('vanishing: sacrificed when the last counter is removed', !onBf(rw.uid), onBf(rw.uid));
+        ok('bushido triggers on block and on being blocked', ['blocks', 'blocked'].every(ev => Rx(put(P0, 'Nezumi Ronin')).trig.some(x => x.ev === ev)));
+        const fl = put(P0, 'Benalish Cavalry'), fb = put(P1, 'Hill Giant'); G.blocks = { [fl.uid]: [fb.uid] };
+        await applyEffect(P0, Rx(fl).trig.find(x => x.ev === 'blocked').effects[0], null, fl);
+        ok('flanking: the blocker gets -1/-1', pow(fb) === 2, pow(fb)); G.blocks = {};
+        ok('soulshift reads as a dies trigger', Rx(put(P0, 'Burr Grafter')).trig.some(x => x.ev === 'dies'));
     });
     await check('precon round 2: spells', async () => {
         const c1 = put(P1, 'Hill Giant'), l1 = put(P1, 'Mountain'); c1.tapped = l1.tapped = true;
