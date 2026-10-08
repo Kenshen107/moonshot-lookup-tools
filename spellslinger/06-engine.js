@@ -96,7 +96,7 @@ const pow = o => basePT(o, 'p') + o.counters + o.tp + buffsOn(o).p;
 const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q;
 const has = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
-const canAttackWith = o => isCreature(o) && !o.tapped && !(Rx(o).attackNeedsLand && !G.players[1 - ctrl(o).i].bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !has(o, 'defender') && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
+const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackNeedsLand && !G.players[1 - ctrl(o).i].bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !has(o, 'defender') && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
 function log(msg) {
     G.log.push(msg);
@@ -425,7 +425,7 @@ function damage(target, n, src) {
         if (infect || wither) target.counters -= n; else target.dmg += n;
         if (src && src.card && has(src, 'deathtouch')) target.dt = true;
     }
-    if (src && src.card && isCreature(src) && has(src, 'lifelink')) { ctrl(src).life += n; fire('gainLife', { P: ctrl(src), n }); }
+    if (src && src.card && isCreature(src) && has(src, 'lifelink')) { n += lifeGainBonus(ctrl(src)); ctrl(src).life += n; fire('gainLife', { P: ctrl(src), n }); }
 }
 
 // State-based actions: lethal damage, 0 toughness, loose Auras, losing.
@@ -878,6 +878,8 @@ function canCastNow(P, o) {
     const r = Rx(o);
     if (G.over || r.support === 'none' || r.kind === 'land') return false;
     if (gyTargetMissing(P, r.spell, o)) return false;
+    if (r.castCond && !condOk(r.castCond, P, o)) return false; // "Cast this spell only ..." (Defiant Stand, Feast of Blood)
+    if (preconCantCast(P)) return false; // Angelic Arbiter
     // Silence and friends; Grand Abolisher-style "your opponents can't cast spells during your turn"
     if (P.noMoreSpellsTurn === G.turn) return false; // Conduit of Worlds
     if (r.kind === 'creature' && P.bf.some(x => Rx(x).noCreatureSpells && !lostAbilities(x))) return false; // Grid Monitor
@@ -895,7 +897,7 @@ function canCastNow(P, o) {
     // While something is on the stack, only the player holding priority can
     // cast, and only instant-speed spells (CR 117.1a, 307.1).
     if (G.stack.length || G.priority !== null) return (r.kind === 'instant' || flash) && G.priority === P.i;
-    if (r.kind === 'instant' || flash) {
+    if (r.kind === 'instant' || flash || (r.kind === 'sorcery' && P.bf.some(x => Rx(x).sorceryFlash && !lostAbilities(x)))) { // Hypersonic Dragon: sorceries as though they had flash
         if (G.active === P.i) return [...MAIN, 'afterBlocks'].includes(G.phase);
         return G.phase === 'declareBlocks';
     }
@@ -937,7 +939,7 @@ function protFrom(o, src) {
 function validTargets(P, e, src) {
     const out = [];
     const creatures = allPerms().filter(isCreature).filter(c => !has(c, 'shroud') && !(has(c, 'hexproof') && c.owner !== P.i) && !protFrom(c, src));
-    if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.withCounters || o.counters > 0)).map(o => ({ o })));
+    if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.powLtSrc || pow(o) < pow(src)) && (!e.withCounters || o.counters > 0)).map(o => ({ o })));
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !(e.oppOnly && p === P)).map(p => ({ p })));
@@ -2278,7 +2280,7 @@ async function applyEffect(P, e, t, src) {
         case 'fogSelf': P.fogSelf = G.turn; log(`Combat damage that would be dealt to ${P.name === 'You' ? 'you' : P.name} this turn is prevented.`); break;
         case 'fogNoCounters': G.fogNoCounters = G.turn; log('Combat damage from creatures with no +1/+1 counters is prevented this turn.'); break;
         case 'draw': drawCards(P, e.n); break;
-        case 'gain': if (e.caveOnly && !(G.lastPutLand && hasType(G.lastPutLand, 'Cave'))) break; if (e.n <= 0) break; P.life += e.n; log(`${P.name} ${you(P) ? 'gain' : 'gains'} ${e.n} life.`); fire('gainLife', { P, n: e.n }); break;
+        case 'gain': if (e.caveOnly && !(G.lastPutLand && hasType(G.lastPutLand, 'Cave'))) break; if (e.n <= 0) break; e = { ...e, n: e.n + lifeGainBonus(P) }; P.life += e.n; log(`${P.name} ${you(P) ? 'gain' : 'gains'} ${e.n} life.`); fire('gainLife', { P, n: e.n }); break;
         // ---- Top-1000 round 2 (2026-10-07) ----
         case 'minusCounters': { const x = t && t.o; if (!x || !onBf(x.uid)) break; x.counters -= e.n; log(`${x.card.name} gets ${e.n === 1 ? 'a -1/-1 counter' : `${e.n} -1/-1 counters`}.`); break; }
         case 'doubleCountersAll': { const hit = P.bf.filter(c => isCreature(c) && c.counters > 0); hit.forEach(c => putCounters(c, c.counters, P)); log(`${name}: +1/+1 counters doubled on ${hit.length ? hit.map(c => c.card.name).join(', ') : 'nothing'}.`); break; }
@@ -2298,7 +2300,7 @@ async function applyEffect(P, e, t, src) {
         case 'loseSelf': P.life -= e.n; log(`${P.name} ${you(P) ? 'lose' : 'loses'} ${e.n} life.`); break;
         case 'drain': O.life -= e.n; G.lastLost = e.n; log(`${O.name} ${you(O) ? 'lose' : 'loses'} ${e.n} life.`); break;
         case 'discard':
-            for (let k = 0; k < e.n && O.hand.length; k++) { const d = O.hand.splice(rand(O.hand.length), 1)[0]; O.gy.push(d); d.discardTurn = G.turn; log(`${O.name} ${you(O) ? 'discard' : 'discards'} ${d.card.name} (at random).`); }
+            for (let k = 0; k < e.n && O.hand.length; k++) { const d = O.hand.splice(rand(O.hand.length), 1)[0]; O.gy.push(d); d.discardTurn = G.turn; discardByOpp(d, P); log(`${O.name} ${you(O) ? 'discard' : 'discards'} ${d.card.name} (at random).`); }
             break;
         case 'mill': {
             const milled = O.library.splice(-e.n).reverse();
@@ -3534,6 +3536,7 @@ async function equip(P, eq, creature) {
 function canBlock(b, atk) {
     if (!isCreature(b) || b.tapped || has(b, 'cantblock')) return false;
     if (Rx(atk).spy && !lostAbilities(atk) && ctrl(b).bf.some(x => /Artifact/.test(x.card.type))) return false; // Neurok Spy
+    if (auraTaxOn(b) && !planPayment(ctrl(b), parseCost(''), auraTaxOn(b))) return false; // Oppressive Rays: it can only block if its controller can pay
     if (Rx(b).protoTax && b.counters > 0 && !planPayment(ctrl(b), parseCost(''), b.counters)) return false; // Myr Prototype
     if (b.detainedUntil > G.turn || lockedOut(b)) return false;
     if (has(b, 'unleash') && b.counters > 0) return false; // unleash (702.98)
@@ -3578,6 +3581,7 @@ function declareAttackers(P, list) {
     }
     // Myr Prototype: pay {1} for each +1/+1 counter to attack
     list = list.filter(o => { if (!Rx(o).protoTax || o.counters <= 0) return true; const plan = planPayment(P, parseCost(''), o.counters); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${o.counters}}.`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${o.counters}} for ${o.card.name} to attack.`); return true; });
+    list = list.filter(o => { const t = auraTaxOn(o); if (!t) return true; const plan = planPayment(P, parseCost(''), t); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${t}}.`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${t}} for ${o.card.name} to attack.`); return true; });
     G.attackedN = { turn: G.turn, p: P.i, n: list.length };
     G.attackers = list.map(o => o.uid);
     list.forEach(o => { o.attackedTurn = G.turn; });
@@ -3598,6 +3602,7 @@ function fireBlocked() {
     G.attackers.map(onBf).filter(o => o && (G.blocks[o.uid] || []).length).forEach(o => fire('blocked', { o }));
 }
 function fixMenace() {
+    preconLure();
     Object.entries(G.blocks).forEach(([a, bs]) => {
         const atk = onBf(Number(a));
         if (atk && has(atk, 'menace') && bs.length === 1) { delete G.blocks[a]; log(`${atk.card.name} has menace - it can't be blocked by just one creature.`); }
@@ -3707,7 +3712,7 @@ async function beginTurn() {
     opp(P).bf.filter(a => Rx(a).untapOthers && !lostAbilities(a)).forEach(a => { const w = Rx(a).untapOthers; opp(P).bf.forEach(o => { if (w === '~' ? o === a : w === 'all artifacts' ? /Artifact/.test(o.card.type) : true) o.tapped = false; }); });
     P.handAtStart = P.hand.length;
     const wasTapped = P.bf.filter(o => o.tapped);
-    P.bf.forEach(o => { if (o.skipUntap) { o.skipUntap = false; } else if (o.tapped && (o.ctr.stun || 0) > 0) { o.ctr.stun--; log(`${o.card.name} stays tapped (a stun counter is removed).`); } else if (!has(o, 'nountap')) o.tapped = false; o.sick = false; });
+    P.bf.forEach(o => { if (o.skipUntap) { o.skipUntap = false; } else if (o.tapped && (o.ctr.stun || 0) > 0) { o.ctr.stun--; log(`${o.card.name} stays tapped (a stun counter is removed).`); } else if (!has(o, 'nountap') && !(o.lockedBy && onBf(o.lockedBy) && onBf(o.lockedBy).tapped) && !(Rx(o).mayNotUntap && o.tapped && allPerms().some(l => l.lockedBy === o.uid))) o.tapped = false; o.sick = false; });
     mesmeric(P, wasTapped.filter(o => !o.tapped).length);
     // Mindslaver: this turn is played by its controller (the computer plays it against this player's interest)
     if (P.slavedTurn && P.slavedTurn.from < G.turn) { P.slaved = P.slavedTurn; delete P.slavedTurn; log(`${G.players[P.slaved.by].name} ${you(G.players[P.slaved.by]) ? 'control' : 'controls'} ${P.name}'s turn (Mindslaver).`); }

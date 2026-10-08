@@ -149,6 +149,76 @@ async function preconEffect(P, e, t, src, O, name) {
             break;
         }
         case 'drawHostCtl': { const h = src.attachedTo && onBf(src.attachedTo); if (h) { const X = G.players[h.owner]; drawCards(X, 1); log(`${X.name} ${you(X) ? 'draw' : 'draws'} an additional card.`); } break; }
+        case 'lockLastLand': (G.lastTargets || []).forEach(x => { if (x.o && onBf(x.o.uid)) x.o.lockedBy = src.uid; }); break;
+        case 'callWild': {
+            const c = P.library[P.library.length - 1]; if (!c) break;
+            log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${c.card.name}.`);
+            if (isCreatureCard(c.card)) { P.library.pop(); putOntoBattlefield(P, c); log(`${c.card.name} enters the battlefield.`); }
+            else { P.library.pop(); P.gy.push(c); log(`${c.card.name} is put into the graveyard.`); }
+            break;
+        }
+        case 'revealTopTarget': { const X = (t && t.p) || O; const c = X.library[X.library.length - 1]; if (c) log(`${X.name} ${you(X) ? 'reveal' : 'reveals'} the top card of ${you(X) ? 'your' : 'their'} library: ${c.card.name}.`); break; }
+        case 'preventSelf': P.prevent = { turn: G.turn, n: ((P.prevent && P.prevent.turn === G.turn) ? P.prevent.n : 0) + e.n }; log(`The next ${e.n} damage to ${P.name} this turn is prevented.`); break;
+        case 'archon': P.archon = { turn: G.turn, n: ((P.archon && P.archon.turn === G.turn) ? P.archon.n : 0) + Math.max(0, e.n), src }; log(`${name}: the next ${e.n} damage to ${P.name} this turn is prevented and dealt to ${O.name}.`); break;
+        case 'pumpCount': if (t && t.o) { const k = countFn(e.what)({ owner: P.i }); t.o.tp += k; t.o.tq += k; log(`${t.o.card.name} gets +${k}/+${k} until end of turn.`); } break;
+        case 'regrowNonCN': {
+            const pool = P.gy.filter(x => !isCreatureCard(x.card) && rulesFor(x.card).kind !== 'land'); if (!pool.length) break;
+            const c = P.isAI ? pool.slice().sort((a, b) => aiKeepValue(P, b) - aiKeepValue(P, a))[0] : (await pickCard(P, pool, `${name}: return a noncreature, nonland card to your hand`, { required: true })) || pool[0];
+            pull(P.gy, c); P.hand.push(c); log(`${c.card.name} returns to ${you(P) ? 'your' : 'their'} hand.`);
+            break;
+        }
+        case 'lifeToToughness': {
+            const n = P.bf.filter(isCreature).reduce((a, x) => a + Math.max(0, tou(x)), 0);
+            const yes = P.isAI ? n > P.life : await askYes(P, `${name}: set your life total to ${n}?`, { card: src.card });
+            if (yes) { log(`${P.name}'s life total becomes ${n}.`); P.life = n; }
+            break;
+        }
+        case 'regenHost': { const h = src.attachedTo && onBf(src.attachedTo); if (h) { h.regen = (h.regen || 0) + 1; log(`${h.card.name} gets a regeneration shield.`); } break; }
+        case 'counterHost': { const h = src.attachedTo && onBf(src.attachedTo); const col = { red: 'R', black: 'B' }[e.color]; if (h && (h.card.colors || []).includes(col)) putCounters(h, 1, P); break; }
+        case 'beastmaster': { const k = Math.max(0, pow(src)); P.bf.filter(c => isCreature(c) && c !== src).forEach(c => { c.tp += k; c.tq += k; }); log(`${name}: each other creature gets +${k}/+${k} until end of turn.`); break; }
+        case 'untapType': { const xs = P.bf.filter(x => x !== src && hasType(x, e.type) && x.tapped); xs.forEach(x => { x.tapped = false; }); log(`${xs.length} other ${e.type}${xs.length === 1 ? '' : 's'} untap.`); break; }
+        case 'deathgaze': {
+            const hit = [];
+            if (G.blocks[src.uid]) hit.push(...G.blocks[src.uid].map(onBf).filter(Boolean));
+            Object.entries(G.blocks).forEach(([a, bs]) => { if (bs.includes(src.uid) && onBf(Number(a))) hit.push(onBf(Number(a))); });
+            hit.filter(x => !(x.card.colors || []).includes('B')).forEach(x => { x.doomEnd = G.turn; log(`${x.card.name} will be destroyed at end of combat.`); });
+            break;
+        }
+        case 'tabletChoose': {
+            const cnt = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+            [...P.hand, ...P.bf, ...P.library].forEach(c => (c.card.colors || []).forEach(k => { if (cnt[k] !== undefined) cnt[k]++; }));
+            src.chosenColors = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).slice(0, 2);
+            log(`${name}: the chosen colors are ${src.chosenColors.join(' and ')}.`);
+            break;
+        }
+        case 'tabletGain': { const c = G.lastCast; const n = c ? (src.chosenColors || []).filter(k => (c.card.colors || []).includes(k)).length : 0; gainLifeFor(P, n); break; }
+        case 'gutterGrime': {
+            src.ctr.slime = (src.ctr.slime || 0) + 1; const n = src.ctr.slime;
+            log(`${name} gets a slime counter (${n}).`);
+            await applyEffect(P, { t: 'token', n: 1, p: 0, q: 0, name: 'green Ooze', kw: [] }, null, src);
+            const mine = P.bf.filter(x => x.token && /Ooze/.test(x.card.type + x.card.name) && x.slimeOf === undefined);
+            mine.forEach(x => { x.slimeOf = src.uid; });
+            P.bf.filter(x => x.slimeOf === src.uid).forEach(x => { x.counters = n; });
+            break;
+        }
+        case 'pumpSelfLife': if (onBf(src.uid)) { const k = Math.max(0, P.life); src.tp += k; src.tq += k; log(`${name} gets +${k}/+${k} until end of turn.`); } break;
+        case 'thicket': {
+            const top = P.library.splice(-Math.min(5, P.library.length)).reverse(); if (!top.length) break;
+            const basics = top.filter(x => /\bBasic\b/.test(x.card.type) && /\bLand\b/.test(x.card.type));
+            const keep = basics.length ? (P.isAI ? basics[0] : (await pickCard(P, basics, `${name}: reveal a basic land to put on top (or none)`, { optional: true })) || null) : null;
+            if (keep) { pull(top, keep); log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${keep.card.name} and ${you(P) ? 'put' : 'puts'} it on top of the library.`); }
+            top.forEach(c => P.library.unshift(c));
+            if (keep) P.library.push(keep);
+            break;
+        }
+        case 'petrify': if (t && t.o && onBf(t.o.uid)) { t.o.ctr.petrification = (t.o.ctr.petrification || 0) + 1; log(`${t.o.card.name} gets a petrification counter: it has defender and its abilities can't be activated.`); } break;
+        case 'fetchWeb': {
+            const x = t && t.o; if (!x || !onBf(x.uid)) break;
+            const web = [...P.gy, ...P.library].find(c => c.card.name === 'Arachnus Web'); if (!web) { log(`${name}: no Arachnus Web to find.`); break; }
+            pull(P.gy, web); pull(P.library, web); putOntoBattlefield(P, web); web.attachedTo = x.uid;
+            log(`${web.card.name} is put onto the battlefield attached to ${x.card.name}.`);
+            break;
+        }
         case 'bloodReckoning': { const n = (G.attackers || []).length * e.n; if (n > 0) { O.life -= n; log(`${O.name} ${you(O) ? 'lose' : 'loses'} ${n} life for attacking.`); fire('loseLife', { P: O, n }); } break; }
         default: break;
     }
@@ -162,6 +232,13 @@ Object.assign(TRIG_FN, {
     castRed: (o, ctx) => !!ctx.o && ctx.P.i === o.owner && (ctx.o.card.colors || []).includes('R'),
     mountainEnters: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && /\bMountain\b/.test(ctx.o.card.type),
     selfManaTap: (o, ctx) => ctx.o === o && !!ctx.mana,
+    fromGyMine: (o, ctx) => !!ctx.fromGy && !!ctx.o && ctx.o.owner === o.owner && isCreature(ctx.o),
+    myNontokenDies: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && !ctx.o.token,
+    selfBlocked: (o, ctx) => ctx.o === o,
+    dgBlocks: (o, ctx) => (ctx.list || []).includes(o),
+    phoenix: (o, ctx) => !!ctx.P && ctx.P.i !== o.owner && !!ctx.src && ctx.src.owner === o.owner && (ctx.src.card.colors || []).includes('R') && (ctx.src.uid === undefined ? ['instant', 'sorcery'].includes(Rx(ctx.src).kind) : Rx(ctx.src).kind === 'planeswalker'),
+    webEnd: (o, ctx) => { const h = o.attachedTo && onBf(o.attachedTo); return !!h && pow(h) >= 4; },
+    tabletCast: (o, ctx) => !!ctx.o && ctx.P.i === o.owner && (o.chosenColors || []).some(c => (ctx.o.card.colors || []).includes(c)),
     selfToGy: (o, ctx) => ctx.o === o,
     ergRaiders: (o, ctx) => G.active === o.owner && !o.tapped && !o.sick // approximation: it didn't attack if it is still untapped
 });
@@ -211,6 +288,10 @@ function preconDamage(target, n, src) {
 }
 // ---- Extra conditions, static filters and block restrictions ----
 COND_EXTRA.push(
+    [/^it was kicked$/, () => (P, o) => !!o && !!o.kicked],
+    [/^you have been attacked this step$/, () => P => G.active !== P.i && G.phase === 'declareBlocks' && (G.attackers || []).length > 0],
+    [/^it is your main phase before combat$/, () => P => G.active === P.i && G.phase === 'main1' && !G.combatFired],
+    [/^you control two or more ([A-Z][a-z]+)s$/, m => P => P.bf.filter(x => hasType(x, m[1])).length >= 2],
     [/^you control an? ([A-Z][a-z]+) creature$/, m => P => P.bf.some(x => isCreature(x) && hasType(x, m[1]))],
     [/^~ is enchanted$/, () => (P, o) => !!o && allPerms().some(a => a.attachedTo === o.uid)],
     [/^an? (artifact|creature|land|instant|sorcery|enchantment) card is in your graveyard$/, m => P => P.gy.some(x => new RegExp(`\\b${m[1]}\\b`, 'i').test(x.card.type))]
@@ -223,3 +304,31 @@ Object.assign(BLOCK_FN, {
     wallOrFlying: b => hasType(b, 'Wall') || has(b, 'flying'),
     notWall: b => !hasType(b, 'Wall')
 });
+
+function preconCantCast(P) { return !!G && P.attackedTurn === G.turn && G.players[1 - P.i].bf.some(a => Rx(a).arbiter && !lostAbilities(a)); }
+function preconCantAttack(o) { if (!G) return false; if (o.ctr && o.ctr.petrification) return true; const P = G.players[o.owner]; return P.castTurn === G.turn && G.players[1 - P.i].bf.some(a => Rx(a).arbiter && !lostAbilities(a)); }
+function lifeGainBonus(P) { return G ? P.bf.filter(a => Rx(a).vitality && !lostAbilities(a)).length : 0; }
+// Guerrilla Tactics: a spell or ability an opponent controls makes you discard it
+function discardByOpp(d, byP) {
+    if (!d || !byP || byP === G.players[d.owner] || !Rx(d).discardPunish) return;
+    (G.trigQ = G.trigQ || []).push({ P: G.players[d.owner], o: d, effects: Rx(d).discardPunish });
+}
+// Deathgazer: destroyed at end of combat
+function preconEndCombat() {
+    allPerms().filter(x => x.doomEnd === G.turn && isCreature(x)).forEach(x => { x.doomEnd = null; destroy(x); });
+}
+{ const origCombatDamage = combatDamage; combatDamage = function (A) { const r = origCombatDamage.apply(this, arguments); preconEndCombat(); return r; }; }
+
+// Oppressive Rays: the {3} an enchanted creature must pay to attack or block
+function auraTaxOn(o) { return G ? allPerms().filter(a => a.attachedTo === o.uid && Rx(a).raysTax && !lostAbilities(a)).reduce((s, a) => s + Rx(a).raysTax, 0) : 0; }
+// Lure: every creature able to block the enchanted creature does
+function preconLure() {
+    G.attackers.map(onBf).filter(a => a && allPerms().some(x => x.attachedTo === a.uid && Rx(x).lure && !lostAbilities(x))).forEach(atk => {
+        const D = G.players[1 - atk.owner];
+        const must = D.bf.filter(b => isCreature(b) && canBlock(b, atk));
+        if (!must.length) return;
+        Object.keys(G.blocks).forEach(a => { G.blocks[a] = G.blocks[a].filter(u => !must.some(b => b.uid === u)); if (!G.blocks[a].length) delete G.blocks[a]; });
+        G.blocks[atk.uid] = [...new Set([...(G.blocks[atk.uid] || []), ...must.map(b => b.uid)])];
+        log(`${atk.card.name} is Lured: ${must.map(b => b.card.name).join(', ')} must block it.`);
+    });
+}

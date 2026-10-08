@@ -21,7 +21,7 @@ function parseTargetPhrase(phrase) {
     while ((m = s.match(/ with toughness (\d+) or (greater|less) /))) { F[m[2] === 'greater' ? 'touMin' : 'touMax'] = +m[1]; s = s.replace(m[0], ' '); }
     while ((m = s.match(/ with mana value (\d+) or (greater|less) /))) { F[m[2] === 'greater' ? 'mvMin' : 'mvMax'] = +m[1]; s = s.replace(m[0], ' '); }
     while ((m = s.match(/ with mana value (\d+) /))) { F.mvMin = F.mvMax = +m[1]; s = s.replace(m[0], ' '); }
-    while ((m = s.match(/ (with|without) (flying|reach|trample|haste|first strike|deathtouch|lifelink|vigilance|menace|defender) /))) { (m[1] === 'with' ? F.kw : F.notKw).push(m[2]); s = s.replace(m[0], ' '); }
+    while ((m = s.match(/ (with|without) (flying|reach|trample|haste|first strike|deathtouch|lifelink|vigilance|menace|defender|horsemanship) /))) { (m[1] === 'with' ? F.kw : F.notKw).push(m[2]); s = s.replace(m[0], ' '); }
     // modifiers before the noun: "attacking or blocking", "nonartifact, nonblack", "tapped red"
     const words = s.replace(/,/g, ' ').replace(/\band\/or\b/g, 'or').trim().split(/\s+/);
     const nouns = [];

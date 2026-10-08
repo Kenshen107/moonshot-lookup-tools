@@ -332,6 +332,8 @@ function parseEffects(text) {
         .replace(/Target player draws cards equal to half the number of cards in their library and loses half their life\. Round up each time\./g, '§peer.')
         .replace(/look at the top two cards of your library, put them back in any order, then choose land or nonland\. An opponent guesses whether the top card of your library is the chosen kind\. Reveal that card\. If they guessed right, remove ~ from combat\. Otherwise, you draw a card and ~ can't be blocked this turn\./g, '§gollum.')
         .replace(/Look at the top two cards of your library\. Put one of them into your hand and the other on the bottom of your library\./g, '§lookhand 2.')
+        .replace(/you may look at the top five cards of your library\. If you do, reveal up to one basic land card from among them, then put that card on top of your library and the rest on the bottom in any order/gi, '§thicket')
+        .replace(/Reveal the top card of your library\. If it's a creature card, put it onto the battlefield\. Otherwise, put it into your graveyard\./g, '§callwild.')
         .replace(/If you attacked this turn, instead ~ deals (\w+) damage to that permanent or player and the damage can't be prevented\./g, '~ deals $1 damage to that permanent instead if you attacked this turn.')
         .replace(/Look at the top card of target player's library\. You may put that card into their graveyard\./g, '§eyespy.')
         .replace(/Reveal the top five cards of your library\. You may put a creature or land card from among them into your hand\. Put the rest into your graveyard\./g, '§grisly.')
@@ -607,6 +609,7 @@ function rulesFor(card) {
         if ((m = line.match(/^Overload ((?:\{[^}]+\})+)$/))) {
             const body = lines.filter(l => l !== lines[li] && !/^Overload /.test(l)).join(' ')
                 .replace(/~ deals (\w+) damage to target creature/g, '~ deals $1 damage to each creature')
+                .replace(/Target creature you don't control gets ([^.]+?) until end of turn/g, "All creatures you don't control get $1 until end of turn")
                 .replace(/Target creature you control gets ([^.]+?) and gains /g, 'Creatures you control get $1 and gain ').replace(/Target creature you control gets /g, 'Creatures you control get ')
                 .replace(/\btarget ((?:nonland |noncreature )?(?:permanent|creature|artifact|enchantment|artifact or enchantment))( you don't control| your opponents control| an opponent controls)?/g, (all, w, ctl) => `all ${w.replace(/artifact or enchantment/, 'artifacts and enchantments').replace(/(permanent|creature|artifact|enchantment)$/, '$1s')}${ctl ? " you don't control" : ''}`)
                 .replace(/to its owner's hand/g, "to their owners' hands").replace(/\s*(?:It|They|A creature destroyed this way) can't be regenerated\./g, '');

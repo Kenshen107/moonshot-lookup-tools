@@ -158,6 +158,9 @@ function parseActivated(line, R) {
         // Top-1000 round 2 (2026-10-07)
         else if (/^Sacrifice (two|three) (artifacts|creatures)$/.test(part)) { const sm = part.match(/^Sacrifice (\w+) (\w+)s$/); cost.sacN = { n: num(sm[1]), kind: sm[2][0].toUpperCase() + sm[2].slice(1) }; }
         else if (part === 'Sacrifice a token') cost.sacPerm = 'token';
+        else if (part === 'Sacrifice a nontoken creature') cost.sacPerm = 'nontoken creature';
+        else if (part === 'Tap two untapped creatures you control') cost.tapOtherN = 2;
+        else if ((sm0 = part.match(/^Tap an untapped ([A-Z][a-z]+) you control$/))) cost.tapOther = sm0[1];
         else if ((sm0 = part.match(/^Sacrifice another (white|blue|black|red|green) creature$/))) cost.sacPerm = `creature:${COLOR_WORDS[sm0[1]]}`;
         else if ((sm0 = part.match(/^Exile (two|three|four) cards from your graveyard$/))) cost.exileGy = num(sm0[1]);
         else if (part === 'Put a -1/-1 counter on ~') cost.minusSelf = 1;

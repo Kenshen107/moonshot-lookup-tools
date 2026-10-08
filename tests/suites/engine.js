@@ -5,9 +5,11 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
 
 const NAMES = ['Mountain', 'Grizzly Bears', 'Hill Giant', 'Shivan Dragon', 'Lightning Bolt', 'Raging Goblin', 'Bonesplitter', 'Goblin Guide', 'Goblin Rabblemaster',
     'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger',
-    'Coercion', 'Incinerate', 'Path of Peace', 'Chastise', 'Condemn', 'Jagged Lightning', 'Kiss of the Amesha', 'Sleight of Hand', 'Telling Time', 'Ancestral Memories', 'Blessed Reversal', 'Whisk Away'];
+    'Coercion', 'Incinerate', 'Path of Peace', 'Chastise', 'Condemn', 'Jagged Lightning', 'Kiss of the Amesha', 'Sleight of Hand', 'Telling Time', 'Ancestral Memories', 'Blessed Reversal', 'Whisk Away',
+    'Furnace of Rath', "Urza's Armor", 'Cho-Manno, Revolutionary', 'Vigor', 'Pariah', 'Gravebane Zombie', 'Angelic Arbiter', 'Mole Worms', 'Deathgazer', 'Lure', 'Oppressive Rays', 'Angel of Vitality', "Hunter's Insight", 'Call of the Wild', 'Fertile Ground', 'Forest', 'Curfew', 'Esper Battlemage', 'Goblin Arsonist', 'Ascendant Evincar'];
 
 const BODY = async function (NAMES, ONLY, SKIP) {
+    const startTurnUntapForTest = P => { P.bf.forEach(o => { if (o.skipUntap) o.skipUntap = false; else if (!has(o, 'nountap') && !(o.lockedBy && onBf(o.lockedBy) && onBf(o.lockedBy).tapped) && !(Rx(o).mayNotUntap && o.tapped && allPerms().some(l => l.lockedBy === o.uid))) o.tapped = false; }); };
     const out = [];
     const ok = (label, cond, detail) => out.push([label, !!cond, detail]);
     const C = await T.cards(NAMES);
@@ -263,6 +265,66 @@ const BODY = async function (NAMES, ONLY, SKIP) {
         P0.life = 40; G.attackers = [1, 2, 3].map(() => put(P1, 'Grizzly Bears').uid);
         await run('Blessed Reversal');
         ok('Blessed Reversal: 3 life per attacker', P0.life === 49, P0.life);
+    });
+    await check('precon: replacement and prevention', async () => {
+        const f = put(P0, 'Furnace of Rath'); P1.life = 40; damage(P1, 3, f);
+        ok('Furnace of Rath doubles damage', P1.life === 34, P1.life);
+        onBf(f.uid) && leaveBattlefield(f, 'gy');
+        const ua = put(P1, "Urza's Armor"); P1.life = 40; damage(P1, 3, put(P0, 'Hill Giant'));
+        ok("Urza's Armor prevents 1", P1.life === 38, P1.life); leaveBattlefield(ua, 'gy');
+        const cm = put(P1, 'Cho-Manno, Revolutionary'); damage(cm, 5, put(P0, 'Hill Giant'));
+        ok('Cho-Manno takes no damage', cm.dmg === 0 && onBf(cm.uid), cm.dmg);
+        const vg = put(P1, 'Vigor'), bear = put(P1, 'Grizzly Bears'); damage(bear, 3, put(P0, 'Hill Giant'));
+        ok('Vigor: damage to another creature becomes +1/+1 counters', bear.dmg === 0 && bear.counters === 3, [bear.dmg, bear.counters]);
+        leaveBattlefield(vg, 'gy');
+        const host = put(P1, 'Hill Giant'), pa = put(P1, 'Pariah'); pa.attachedTo = host.uid; P1.life = 40; damage(P1, 2, put(P0, 'Grizzly Bears'));
+        ok('Pariah: damage to you goes to the enchanted creature', P1.life === 40 && host.dmg === 2, [P1.life, host.dmg]);
+    });
+    await check('precon: static and replacement effects', async () => {
+        const gz = put(P0, 'Gravebane Zombie'); P0.library.splice(0); destroy(gz);
+        ok('Gravebane Zombie goes on top of the library instead of dying', !onBf(gz.uid) && P0.library[P0.library.length - 1] === gz && !P0.gy.includes(gz));
+        const av = put(P0, 'Angel of Vitality'); P0.life = 20; gainLifeFor(P0, 3); await applyEffect(P0, { t: 'gain', n: 2 }, null, av);
+        ok('Angel of Vitality: each life gain is 1 more (the effect, not the helper)', P0.life === 20 + 3 + 3, P0.life);
+        const ev = put(P0, 'Ascendant Evincar'), bears = put(P1, 'Grizzly Bears');
+        ok('Ascendant Evincar: nonblack creatures get -1/-1', pow(bears) === 1 && pow(put(P0, 'Hill Giant')) === 2, [pow(bears)]);
+    });
+    await check('precon: Angelic Arbiter', async () => {
+        const arb = put(P0, 'Angelic Arbiter'); const atk = put(P1, 'Grizzly Bears'); atk.sick = false;
+        G.active = 1; P1.castTurn = G.turn;
+        ok('an opponent who cast a spell this turn cannot attack', !canAttackWith(atk));
+        P1.castTurn = 0; P1.attackedTurn = G.turn; const bolt = makeObj(C['Lightning Bolt'], 1); P1.hand.push(bolt); T.lands(P1, C, 2); G.phase = 'main1';
+        ok('an opponent who attacked this turn cannot cast spells', !canCastNow(P1, bolt));
+    });
+    await check('precon: auras and combat', async () => {
+        const host = put(P1, 'Grizzly Bears'), rays = put(P0, 'Oppressive Rays'); rays.attachedTo = host.uid; host.sick = false;
+        P1.hand.splice(0); P1.bf.filter(x => /Land/.test(x.card.type)).forEach(x => x.tapped = true);
+        G.active = 1; declareAttackers(P1, [host]);
+        ok('Oppressive Rays: cannot attack without {3}', G.attackers.length === 0, G.attackers);
+        const atk = put(P0, 'Hill Giant'), lure = put(P1, 'Lure'); lure.attachedTo = atk.uid;
+        const b1 = put(P1, 'Grizzly Bears'), b2 = put(P1, 'Hill Giant'); b1.tapped = b2.tapped = false;
+        G.active = 0; G.attackers = [atk.uid]; G.blocks = {}; fixMenace();
+        ok('Lure: every creature able to block must block', (G.blocks[atk.uid] || []).includes(b1.uid) && (G.blocks[atk.uid] || []).includes(b2.uid), G.blocks);
+        const dg = put(P1, 'Deathgazer'), atk2 = put(P0, 'Hill Giant'); G.attackers = [atk2.uid]; G.blocks = { [atk2.uid]: [dg.uid] };
+        fire('blocks', { list: [dg] }); await settle(); combatDamage(P0); await settle();
+        ok('Deathgazer destroys the nonblack creature it blocked at end of combat', !onBf(atk2.uid), onBf(atk2.uid) && atk2.card.name);
+    });
+    await check('precon: spells and abilities', async () => {
+        const worms = put(P0, 'Mole Worms'), land = put(P1, 'Mountain');
+        await applyEffect(P0, { t: 'tap', target: 'perm', filter: 'land' }, { o: land }, worms); G.lastTargets = [{ o: land }];
+        await applyEffect(P0, { t: 'lockLastLand' }, null, worms); worms.tapped = true; land.tapped = true;
+        startTurnUntapForTest(P1);
+        ok('Mole Worms keeps the land tapped while it stays tapped', land.tapped === true, land.tapped);
+        lib(P0, ['Mountain', 'Mountain', 'Mountain', 'Mountain', 'Hill Giant']);
+        const cw = put(P0, 'Call of the Wild'); const before = P0.bf.length; await applyEffect(P0, { t: 'callWild' }, null, cw);
+        ok('Call of the Wild puts a creature card from the top onto the battlefield', P0.bf.length === before + 1 && P0.bf.some(x => x.card.name === 'Hill Giant'));
+        await applyEffect(P0, { t: 'callWild' }, null, cw);
+        ok('and a noncreature card goes to the graveyard', P0.gy.some(x => x.card.name === 'Mountain'));
+        P0.life = 40; P0.hand.splice(0); lib(P0, ['Mountain', 'Mountain']);
+        const ag = makeObj(C['Goblin Arsonist'], 0); P0.bf.push(ag); ag.sick = false;
+        ok('Goblin Arsonist reads its death trigger', Rx(ag).trig.some(tr => tr.ev === 'dies'), Rx(ag).trig.map(t => t.ev));
+        const c0 = put(P0, 'Grizzly Bears'), c1 = put(P1, 'Hill Giant'); const h0 = P0.hand.length, h1 = P1.hand.length;
+        const was = [P0.isAI, P1.isAI]; P0.isAI = P1.isAI = true; await run('Curfew'); [P0.isAI, P1.isAI] = was;
+        ok('Curfew returns a creature each player controls to hand', P0.hand.length === h0 + 1 && P1.hand.length === h1 + 1, [P0.hand.length - h0, P1.hand.length - h1]);
     });
     return out;
 };
