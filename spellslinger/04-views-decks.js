@@ -5,6 +5,7 @@ const VIEWS = ['home', 'packs', 'decks', 'play', 'draft', 'welcome', 'campaign',
 const MORE_VIEWS = [['draft', '🃏 Draft'], ['welcome', '🎁 Welcome Decks'], ['campaign', '🗺️ Campaign'], ['shop', '🏪 Shop'], ['dist', '📦 Distributor'], ['rules', '📖 Rules']];
 function showView(v) {
     closeSheet();
+    if (profile && !modeAllows(v)) { toast(`${$(`tab-${v}`) ? $(`tab-${v}`).textContent.trim() : v} isn't in ${MODES[modeKey()].name} mode. Use the mode buttons at the top.`); v = 'home'; }
     VIEWS.forEach(k => {
         $(`view-${k}`).classList.toggle('hidden', k !== v);
         $(`tab-${k}`).setAttribute('aria-selected', String(k === v));
@@ -25,7 +26,7 @@ function showView(v) {
 
 function ensureProfile() {
     if (!profile) {
-        profile = { coins: START_COINS, freePacks: 3, collection: {}, decks: [], wins: 0, losses: 0, packs: 0, created: todayISO() };
+        profile = { coins: START_COINS, freePacks: 3, collection: {}, decks: [], wins: 0, losses: 0, packs: 0, created: todayISO(), mode: 'campaign', bucket: 'main', stash: { sandbox: sandboxStart() } };
     }
     upgradeProfile(profile);
     saveProfile();

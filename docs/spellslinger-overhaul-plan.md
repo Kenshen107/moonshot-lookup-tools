@@ -1,6 +1,6 @@
 # Spellslinger Duels overhaul plan
 
-Status: **Phases 0, 1a, 1b, 1c, 2a (parse side), 2b and 2c done, 3 partly done (2026-10-08); the rest of 3 and 4 not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
+Status: **Phases 0, 1a, 1b, 1c, 2a (parse side), 2b and 2c done, 3 partly done, 4 done (2026-10-08)** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
 
 ## Owner's goals
 
@@ -17,11 +17,11 @@ Ask about any that are still open before starting a step that depends on it. Rec
 
 1. **Splitting the file.** CLAUDE.md says every tool is "a single self-contained `.html` file". Plain multiple files work on GitHub Pages with no build step and no framework, so the split is allowed only with the owner's OK. Update CLAUDE.md when it happens. Keep `Spellslinger_Duels.html` as the page address so links and bookmarks still work. *Answer: yes, split into several files (owner, 2026-10-08).*
 2. **The card reader is migrated step by step, not rewritten in one go.** About 37% of all cards, and every finished set, deck and draft, depend on the current reader. *Answer:*
-3. **What "Shop is separate from Campaign decks" means.** Pick one. *Answer:*
+3. **What "Shop is separate from Campaign decks" means.** Pick one. *Answer: (a), one collection (owner, 2026-10-08).*
    - (a) One collection; only coins and win/loss records are kept per mode.
    - (b) Separate collections: a card opened in the Shop can't be played in the Campaign.
-4. **Existing saves.** Proposed: Dustyn's and Ovid's current coins, cards and decks become their Campaign/Shop save, and Sandbox starts fresh. *Answer:*
-5. **"Lock deck-building by campaign progress."** For example: only cards you own, only precons you've unlocked, or a deck-value cap per tier. The Campaign already has $50+ / $100+ value rules per tier. *Answer:*
+4. **Existing saves.** Proposed: Dustyn's and Ovid's current coins, cards and decks become their Campaign/Shop save, and Sandbox starts fresh. *Answer: yes, as proposed (owner, 2026-10-08).*
+5. **"Lock deck-building by campaign progress."** For example: only cards you own, only precons you've unlocked, or a deck-value cap per tier. The Campaign already has $50+ / $100+ value rules per tier. *Answer: deck-value cap per tier (owner, 2026-10-08).*
 
 ## Rules every step follows
 
@@ -181,6 +181,8 @@ Rerun the coverage measurement and the card-by-card tests. The Automated count m
 - **Saves:** apply decision 4 to existing players, in both IndexedDB and memory.
 
 **Done when:** a game or action in each mode changes only that mode's save. Test by comparing the saves before and after.
+
+**Phase 4 result (2026-10-08):** `spellslinger/04b-modes.js`. A mode bar under the header (Sandbox / Campaign / Shop Simulator, saved per player as `profile.mode`) decides which tabs show on the desktop tab row, the phone bottom bar and the More sheet (`MODES[..].views`); a view from another mode is refused and goes Home (`showView`). Sandbox: Packs, Decks, Play, Draft, Welcome Decks, Rules, and the test buttons (＋ Add coins, Start over), which show only there. Campaign: Packs, Decks, Campaign, Rules. Shop Simulator: Shop, Distributor, Decks, Rules. **Saves, following the owner's answers:** one shared collection and deck list; coins, cash, wins, losses and free packs (`MODE_FIELDS`) belong to a bucket. Sandbox has its own bucket and starts fresh (500 coins, $50, no record); today's values stay with Campaign / Shop (the `main` bucket). The code still reads `profile.coins` etc., which always hold the active bucket; switching parks them in `profile.stash` and loads the other (`swapBucket`). **Interpretation to confirm:** Campaign and Shop share the one `main` purse, because the Campaign already pays cash and costs entry fees that the Shop uses; they are separate in tabs and in their own data (`campaignProgress` vs the case, stockroom, shop day). If the owner wants them fully apart, give Shop its own bucket the same way. **Campaign deck limits:** Kitchen Table decks worth up to $50, Friday Night Magic $50 to $300, Regional Qualifier $100 and up (`maxValue` / `minValue`, `campaignDeckProblem`; numbers are mine, easy to change). The shop's ＋💵 Add cash button was left in the Shop (Sandbox has no Shop). Tests: `tests/suites/modes.js` (24 checks: migration of an old save, swapping and no leaking between Sandbox and Campaign/Shop, tab sets on desktop and phone, refused views, the saved mode, the deck limits).
 
 ## Ready-to-paste prompts (one session each)
 

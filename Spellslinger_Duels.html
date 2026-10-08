@@ -24,11 +24,13 @@
         </div>
         <label class="acct" title="Each player has their own coins, collection, decks and record (saved in this browser)">👤 <select id="acctSel" onchange="pickAccount(this.value)" aria-label="Player"></select></label>
         <span class="coins" id="coinPill" title="Coins: free, in-game only. Win games to earn more.">🪙 <span id="coinCount">0</span></span>
-        <button type="button" class="coins cash" id="cashPill" onclick="showView('shop')" title="Shop cash: in-game money. Earn it in the Shop; spend it at the Distributor and on imported decks. Tap to open the Shop.">💵 <span id="cashCount">$0.00</span></button>
-        <button class="btn small" onclick="addTestCoins()" title="Test build: add free coins to this player">＋🪙 Add coins</button>
-        <button class="btn small" onclick="restartPlayer()" title="Test build: wipe this player's coins, cards, decks and record and start fresh">↺ Start over</button>
+        <button type="button" class="coins cash" id="cashPill" onclick="cashPillClick()" title="Shop cash: in-game money. Earn it in the Shop; spend it at the Distributor and on imported decks. Tap to open the Shop.">💵 <span id="cashCount">$0.00</span></button>
+        <button class="btn small" data-modes="sandbox" onclick="addTestCoins()" title="Test build: add free coins to this player">＋🪙 Add coins</button>
+        <button class="btn small" data-modes="sandbox" onclick="restartPlayer()" title="Test build: wipe this player's coins, cards, decks and record and start fresh">↺ Start over</button>
         <button type="button" class="btn small phone-only" id="acctBtn" onclick="accountSheet()" aria-label="Player and test options">👤 <span id="acctName"></span></button>
     </header>
+
+    <div class="modebar" id="modeBar" role="tablist" aria-label="Game mode"></div>
 
     <nav class="tabs" role="tablist" aria-label="Spellslinger Duels">
         <button class="tab" role="tab" id="tab-home" aria-selected="true" onclick="showView('home')">🏠 Home</button>
@@ -65,10 +67,10 @@
                         <h3 style="font-size:1rem; margin-bottom:6px;">Your stats</h3>
                         <div id="homeStats" class="note"></div>
                         <div class="row" style="margin-top:10px;">
-                            <button class="btn primary" onclick="showView('play')">⚔️ Play a game</button>
-                            <button class="btn gold" onclick="showView('packs')">🎴 Open packs</button>
-                            <button class="btn" onclick="showView('welcome')">🎁 Welcome Deck Duels</button>
-                            <button class="btn" onclick="showView('draft')">🃏 Draft</button>
+                            <button class="btn primary" data-needs="play" onclick="showView('play')">⚔️ Play a game</button>
+                            <button class="btn gold" data-needs="packs" onclick="showView('packs')">🎴 Open packs</button>
+                            <button class="btn" data-needs="welcome" onclick="showView('welcome')">🎁 Welcome Deck Duels</button>
+                            <button class="btn" data-needs="draft" onclick="showView('draft')">🃏 Draft</button>
                             <button class="btn gold" id="homePrecon" onclick="preconPicker()">🎁 Free starter precon</button>
                         </div>
                     </div>
@@ -321,7 +323,7 @@
 <script src="spellslinger/00-storage.js"></script>
 <script>
 // The saved data is read from IndexedDB first; then these load one after another, in this order (they share one global scope)
-loadGame(["01-core.js", "rules/m10.js", "rules/mirrodin.js", "rules/gitrog.js", "rules/brudiclad.js", "rules/sandman.js", "rules/tyrox.js", "rules/top1000-r2.js", "rules/landfall.js", "rules/xspells.js", "rules/top1000.js", "rules/starter-kits.js", "rules/welcome.js", "02-card-reader.js","02b-token-reader.js", "03-comp-rules.js", "04-views-decks.js", "05-draft.js", "06-engine.js", "07-ai.js", "08-table.js", "09-playtest.js", "10-shop.js", "11-grading.js", "12-distributor.js", "13-campaign.js", "14-rules-abilities.js", "15-rules-conditions.js", "16-startup.js"]);
+loadGame(["01-core.js", "rules/m10.js", "rules/mirrodin.js", "rules/gitrog.js", "rules/brudiclad.js", "rules/sandman.js", "rules/tyrox.js", "rules/top1000-r2.js", "rules/landfall.js", "rules/xspells.js", "rules/top1000.js", "rules/starter-kits.js", "rules/welcome.js", "02-card-reader.js","02b-token-reader.js", "03-comp-rules.js", "04-views-decks.js", "04b-modes.js", "05-draft.js", "06-engine.js", "07-ai.js", "08-table.js", "09-playtest.js", "10-shop.js", "11-grading.js", "12-distributor.js", "13-campaign.js", "14-rules-abilities.js", "15-rules-conditions.js", "16-startup.js"]);
 </script>
 </body>
 </html>

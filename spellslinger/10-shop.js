@@ -18,6 +18,7 @@ const QUICK_PCTS = [10, 20, 30]; // the quick counteroffer buttons, up and down
 function profileDefaults() {
     return {
         usd: SHOP_START_USD, shopDay: 1, shopReputation: 0,
+        mode: 'campaign', bucket: 'main', stash: { sandbox: sandboxStart() }, // Phase 4: the three game modes (04b-modes.js)
         displayCase: [],   // { id, condition, foil, serial, askingPrice }
         bulkBox: [],       // { id, condition, foil } (the bulk bin)
         bulkPrice: 0.25,   // what the bulk bin charges per card

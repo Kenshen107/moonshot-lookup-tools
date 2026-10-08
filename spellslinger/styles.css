@@ -850,3 +850,10 @@
             .phase-strip { flex-wrap: nowrap; }
             .phase-strip li.whose { display: none; }
         }
+
+        /* Game modes (Phase 4) */
+        .modebar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 10px; }
+        .mode-btn { background: var(--bg-panel); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px 12px; font: inherit; font-size: 0.9em; cursor: pointer; }
+        .mode-btn[aria-selected="true"] { background: var(--brand); border-color: var(--brand); color: var(--text-heading); font-weight: 700; }
+        .mode-desc { flex: 1 1 220px; font-size: 0.85em; }
+        @media (max-width: 600px) { .mode-desc { display: none; } .mode-btn { flex: 1 1 0; padding: 6px 4px; font-size: 0.8em; } }

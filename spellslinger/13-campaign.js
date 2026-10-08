@@ -230,12 +230,12 @@ async function buildBossDeck(P) {
 
 // ---- The campaign ladder ----
 const CAMPAIGN_TIERS = [
-    { tier: 1, key: 'kitchen', icon: '🍕', name: 'Kitchen Table', level: 'easy', nodes: 5, entry: { coins: 0, usd: 0 }, minValue: 0, unlock: 0,
+    { tier: 1, key: 'kitchen', icon: '🍕', name: 'Kitchen Table', level: 'easy', nodes: 5, entry: { coins: 0, usd: 0 }, minValue: 0, maxValue: 50, unlock: 0,
         types: ['Welcome Deck', 'Theme Deck', 'Intro Pack', 'Starter Deck'], reward: { coins: 30 }, lossReward: { coins: 5 },
-        desc: 'Free. Casual opponents with classic precons, and they make mistakes. Good for testing a starter deck.' },
-    { tier: 2, key: 'fnm', icon: '🎉', name: 'Friday Night Magic', level: 'normal', nodes: 5, entry: { coins: 100, usd: 0 }, minValue: 50, unlock: 3,
+        desc: 'Free. Casual opponents with classic precons, and they make mistakes. Decks worth up to $50. Good for testing a starter deck.' },
+    { tier: 2, key: 'fnm', icon: '🎉', name: 'Friday Night Magic', level: 'normal', nodes: 5, entry: { coins: 100, usd: 0 }, minValue: 50, maxValue: 300, unlock: 3,
         types: ['Challenger Deck', 'Planeswalker Deck', 'Arena Starter Kit', 'Starter Kit', 'Pioneer Challenger Deck'], reward: { usd: 20, packs: 2 }, lossReward: {},
-        desc: 'Entry 🪙 100 and a deck worth $50+. Upgraded precons and Challenger Decks, played properly.' },
+        desc: 'Entry 🪙 100 and a deck worth $50 to $300. Upgraded precons and Challenger Decks, played properly.' },
     { tier: 3, key: 'rq', icon: '🏆', name: 'Regional Qualifier', level: 'hard', bosses: true, entry: { coins: 300, usd: 25 }, minValue: 100, unlock: 3,
         reward: { usd: 100, collector: 2, discount: 0.02 }, lossReward: {},
         desc: 'Entry 🪙 300 + $25 and a deck worth $100+. The personalities bring their own decks and play to win: they hold removal and counters for real threats.' }
@@ -341,7 +341,7 @@ function renderNodeDeckNote() {
     const { t } = nodeInfo(campaignSel);
     const v = deckValue(deck);
     const probs = deckProblems(deck);
-    el.innerHTML = `Deck value: ${usd(v)}${t.minValue && v < t.minValue ? ` <span class="warn">(needs ${usd(t.minValue)})</span>` : ''}${probs.length ? ` · <span class="warn">⚠ ${esc(probs[0])}</span>` : ''}`;
+    el.innerHTML = `Deck value: ${usd(v)}${campaignDeckProblem(t, v) ? ` <span class="warn">(${esc(campaignDeckProblem(t, v))})</span>` : ''}${probs.length ? ` · <span class="warn">⚠ ${esc(probs[0])}</span>` : ''}`;
 }
 async function startCampaignMatch() {
     const { t, n } = nodeInfo(campaignSel);
@@ -349,7 +349,7 @@ async function startCampaignMatch() {
     if (!deck) return;
     const probs = deckProblems(deck);
     if (probs.length) { toast(`Fix your deck first: ${probs[0]}`); return; }
-    if (t.minValue && deckValue(deck) < t.minValue) { toast(`This tier needs a deck worth ${usd(t.minValue)} or more.`); return; }
+    { const dp = campaignDeckProblem(t, deckValue(deck)); if (dp) { toast(dp); return; } }
     if (profile.coins < t.entry.coins || profile.usd < t.entry.usd) { toast('Not enough for the entry fee.'); return; }
     showModal('<h2>Shuffling up...</h2><p class="loading">Building your opponent\'s deck...</p>');
     try {

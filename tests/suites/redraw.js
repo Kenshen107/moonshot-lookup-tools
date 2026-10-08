@@ -43,7 +43,7 @@ const BODY = async function () {
 
     // ---- the shop ----
     $('game').classList.add('hidden');
-    showView('shop'); ensureShopDay();
+    ensureProfile(); profile.mode = 'shop'; applyModeUI(true); showView('shop'); ensureShopDay();
     const ids = [C['Lightning Bolt'].id, C['Hill Giant'].id];
     profile.displayCase = ids.map((id, i) => ({ id, condition: 'M', foil: 0, serial: 0, askingPrice: 2 + i }));
     renderShop();
