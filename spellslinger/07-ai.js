@@ -525,18 +525,20 @@ function combatKills(a, b) {
     return true;
 }
 function aiChooseBlocks(D, A) {
-    const atks = G.attackers.map(onBf).filter(Boolean).sort((a, b) => pow(b) - pow(a));
+    // Life each attacker would take if it isn't blocked: double strike hits twice, infect gives poison instead of damage
+    const dmgOf = a => has(a, 'infect') ? 0 : Math.max(0, pow(a)) * (has(a, 'double strike') ? 2 : 1);
+    const atks = G.attackers.map(onBf).filter(Boolean).sort((a, b) => dmgOf(b) - dmgOf(a));
     const free = D.bf.filter(o => isCreature(o) && !o.tapped);
     const blocks = {};
     const take = b => pull(free, b);
-    let incoming = atks.reduce((s, a) => s + pow(a), 0);
+    let incoming = atks.reduce((s, a) => s + dmgOf(a), 0);
     for (const atk of atks) {
         let options = free.filter(b => canBlock(b, atk));
         if (!options.length) continue;
         const atkKills = b => combatKills(atk, b);
         const blockerKills = b => combatKills(b, atk);
         if (has(atk, 'menace')) {
-            if (incoming >= D.life && options.length >= 2) { const two = options.sort((a, b) => creatureValue(a) - creatureValue(b)).slice(0, 2); two.forEach(take); blocks[atk.uid] = two.map(b => b.uid); incoming -= pow(atk); }
+            if (incoming >= D.life && options.length >= 2) { const two = options.sort((a, b) => creatureValue(a) - creatureValue(b)).slice(0, 2); two.forEach(take); blocks[atk.uid] = two.map(b => b.uid); incoming -= dmgOf(atk); }
             continue;
         }
         const safeKill = options.filter(b => !atkKills(b) && blockerKills(b));
@@ -551,17 +553,19 @@ function aiChooseBlocks(D, A) {
                 const together = has(b1, 'deathtouch') || has(b2, 'deathtouch') || pow(b1) + pow(b2) >= tou(atk) - atk.dmg;
                 const killsBoth = !has(atk, 'deathtouch') ? pow(atk) >= (tou(b1) - b1.dmg) + (tou(b2) - b2.dmg) : pow(atk) >= 2;
                 if (together && !killsBoth && !has(atk, 'trample') && Math.max(creatureValue(b1), creatureValue(b2)) <= creatureValue(atk)) {
-                    take(b1); take(b2); blocks[atk.uid] = [b1.uid, b2.uid]; incoming -= pow(atk); break;
+                    take(b1); take(b2); blocks[atk.uid] = [b1.uid, b2.uid]; incoming -= dmgOf(atk); break;
                 }
             }
             if (blocks[atk.uid]) continue;
         }
-        if (!pick && incoming >= D.life) pick = options.sort((a, b) => creatureValue(a) - creatureValue(b))[0]; // chump to survive
+        // Chump to survive: when the hit is lethal, or leaves 2 life or less and the blocker is a cheap one (a turn at 1 life is a turn from dying to anything)
+        const cheapest = options.slice().sort((a, b) => creatureValue(a) - creatureValue(b))[0];
+        if (!pick && (incoming >= D.life || (D.aiLevel !== 'easy' && incoming > 0 && D.life - incoming <= 2 && creatureValue(cheapest) <= 3))) pick = cheapest;
         if (pick && D.aiLevel === 'easy' && incoming < D.life && Math.random() < 0.5) pick = null; // misses blocks
         if (pick) {
             take(pick);
             blocks[atk.uid] = [pick.uid];
-            if (!has(atk, 'trample')) incoming -= pow(atk);
+            incoming -= has(atk, 'trample') ? Math.min(dmgOf(atk), Math.max(0, tou(pick) - pick.dmg)) : dmgOf(atk);
         }
     }
     return blocks;

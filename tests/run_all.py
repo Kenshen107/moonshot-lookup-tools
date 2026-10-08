@@ -21,7 +21,7 @@ SUITES = os.path.join(HERE, 'suites')
 
 def plan(mode, only):
     have_cards = os.path.exists(os.path.join(HERE, 'data', 'cards_all.json'))
-    steps = [('engine', ['engine.js'], 300), ('storage', ['storage.js'], 300), ('redraw', ['redraw.js'], 300), ('layout', ['layout.js'], 300), ('modes', ['modes.js'], 300), ('precons', ['precons.js'], 600), ('playpicker', ['playpicker.js'], 300)]
+    steps = [('engine', ['engine.js'], 300), ('storage', ['storage.js'], 300), ('redraw', ['redraw.js'], 300), ('layout', ['layout.js'], 300), ('modes', ['modes.js'], 300), ('precons', ['precons.js'], 600), ('playpicker', ['playpicker.js'], 300), ('aiblock', ['aiblock.js'], 300)]
     if mode == 'quick':
         steps.append(('cards (verified decks)', ['cards.js', '--quick'], 600))
         steps.append(('games (quick)', ['games.js', '--quick'], 900))
