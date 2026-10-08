@@ -6,7 +6,8 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
 const NAMES = ['Mountain', 'Grizzly Bears', 'Hill Giant', 'Shivan Dragon', 'Lightning Bolt', 'Raging Goblin', 'Bonesplitter', 'Goblin Guide', 'Goblin Rabblemaster',
     'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger',
     'Coercion', 'Incinerate', 'Path of Peace', 'Chastise', 'Condemn', 'Jagged Lightning', 'Kiss of the Amesha', 'Sleight of Hand', 'Telling Time', 'Ancestral Memories', 'Blessed Reversal', 'Whisk Away',
-    'Furnace of Rath', "Urza's Armor", 'Cho-Manno, Revolutionary', 'Vigor', 'Pariah', 'Gravebane Zombie', 'Angelic Arbiter', 'Mole Worms', 'Deathgazer', 'Lure', 'Oppressive Rays', 'Angel of Vitality', "Hunter's Insight", 'Call of the Wild', 'Fertile Ground', 'Forest', 'Curfew', 'Esper Battlemage', 'Goblin Arsonist', 'Ascendant Evincar'];
+    'Furnace of Rath', "Urza's Armor", 'Cho-Manno, Revolutionary', 'Vigor', 'Pariah', 'Gravebane Zombie', 'Angelic Arbiter', 'Mole Worms', 'Deathgazer', 'Lure', 'Oppressive Rays', 'Angel of Vitality', "Hunter's Insight", 'Call of the Wild', 'Fertile Ground', 'Forest', 'Curfew', 'Esper Battlemage', 'Goblin Arsonist', 'Ascendant Evincar',
+    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate'];
 
 const BODY = async function (NAMES, ONLY, SKIP) {
     const startTurnUntapForTest = P => { P.bf.forEach(o => { if (o.skipUntap) o.skipUntap = false; else if (!has(o, 'nountap') && !(o.lockedBy && onBf(o.lockedBy) && onBf(o.lockedBy).tapped) && !(Rx(o).mayNotUntap && o.tapped && allPerms().some(l => l.lockedBy === o.uid))) o.tapped = false; }); };
@@ -325,6 +326,38 @@ const BODY = async function (NAMES, ONLY, SKIP) {
         const c0 = put(P0, 'Grizzly Bears'), c1 = put(P1, 'Hill Giant'); const h0 = P0.hand.length, h1 = P1.hand.length;
         const was = [P0.isAI, P1.isAI]; P0.isAI = P1.isAI = true; await run('Curfew'); [P0.isAI, P1.isAI] = was;
         ok('Curfew returns a creature each player controls to hand', P0.hand.length === h0 + 1 && P1.hand.length === h1 + 1, [P0.hand.length - h0, P1.hand.length - h1]);
+    });
+    await check('precon round 2: spells', async () => {
+        const c1 = put(P1, 'Hill Giant'), l1 = put(P1, 'Mountain'); c1.tapped = l1.tapped = true;
+        await run('Exhaustion', { p: P1 });
+        startTurnUntapForTest(P1);
+        ok('Exhaustion: the opponent\'s creatures and lands stay tapped', c1.tapped && l1.tapped, [c1.tapped, l1.tapped]);
+        P1.hand.push(makeObj(C['Mountain'], 1), makeObj(C['Hill Giant'], 1), makeObj(C['Grizzly Bears'], 1)); P1.life = 40;
+        await run('Blightning', { p: P1 });
+        ok('Blightning: 3 damage and two cards discarded', P1.life === 37 && P1.hand.length === 1, [P1.life, P1.hand.length]);
+        const b = put(P1, 'Hill Giant'); P0.life = 40; await run('Sever Soul', { o: b });
+        ok('Sever Soul: destroys the creature and you gain its toughness', !onBf(b.uid) && P0.life === 43, P0.life);
+        const dd = put(P1, 'Hill Giant'); await resolveEffects(P0, [{ t: 'dmg', n: 3, target: 'creature', exileDies: true }], { o: dd }, makeObj(C['Disintegrate'], 0));
+        sba(); ok('exile-instead damage exiles the creature', !onBf(dd.uid) && P1.exile.some(x => x.card.name === 'Hill Giant') && !P1.gy.includes(dd), { bf: onBf(dd.uid), ex: P1.exile.map(x => x.card.name), gy: P1.gy.map(x => x.card.name), flag: dd.exileOnDeath, turn: G.turn });
+    });
+    await check('precon round 2: creatures', async () => {
+        const io = put(P1, 'Ironclaw Orcs'), big = put(P0, 'Hill Giant'), small = put(P0, 'Monastery Swiftspear');
+        ok('Ironclaw Orcs cannot block a creature with power 2 or more', !canBlock(io, big));
+        small.tp = -10; ok('but can block a smaller one', canBlock(io, small));
+        const sp = put(P0, 'Signal Pest'), other = put(P0, 'Hill Giant'); G.attackers = [sp.uid, other.uid]; other.tp = 0;
+        await applyEffect(P0, { t: 'battleCry' }, null, sp);
+        ok('battle cry gives each other attacker +1/+0', pow(other) === 4 && pow(sp) === 0 + 0, [pow(other), pow(sp)]);
+        const md = put(P0, 'Murk Dwellers'); G.attackers = [md.uid]; G.blocks = {}; let hit = 0;
+        const before = pow(md); fire('unblocked', { o: md }); await settle();
+        ok('Murk Dwellers gets +2/+0 when it attacks and is not blocked', pow(md) === before + 2, [before, pow(md)]);
+        const mg = put(P1, 'Meglonoth'), atk = put(P0, 'Hill Giant'); G.attackers = [atk.uid]; G.blocks = { [atk.uid]: [mg.uid] }; P0.life = 40;
+        await applyEffect(P1, { t: 'meglonoth' }, null, mg);
+        ok('Meglonoth deals damage equal to its power to the attacker\'s controller', P0.life === 40 - pow(mg), [P0.life, pow(mg)]);
+        const sh = put(P1, 'Spirit of the Hearth');
+        ok('Spirit of the Hearth: you have hexproof', !validTargets(P0, { target: 'player' }, makeObj(C['Lightning Bolt'], 0)).some(v => v.p === P1));
+        put(P0, 'Circle of Protection: Black'); await applyEffect(P0, { t: 'copShield', color: 'B' }, null, put(P0, 'Circle of Protection: Black')); P0.life = 40;
+        const blk = makeObj({ ...C['Grizzly Bears'], colors: ['B'] }, 1); P1.bf.push(blk); damage(P0, 2, blk);
+        ok('Circle of Protection: Black prevents the next black source\'s damage', P0.life === 40, P0.life);
     });
     return out;
 };

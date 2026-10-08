@@ -107,6 +107,8 @@ function parseActivated(line, R) {
     let body = m[2];
     const sorcery = /Activate only as a sorcery\.?/.test(body);
     const once = /Activate only (?:during your turn and only )?once each turn\.?/.test(body);
+    const beforeAtk = /Activate only during your turn, before attackers are declared\.?/.test(body);
+    body = body.replace(/\s*Activate only during your turn, before attackers are declared\.?/, ' Activate only during your turn.');
     const yourTurn = /Activate only during your turn/.test(body);
     const onceEver = /Activate only (?:as a sorcery and only )?once\.$/.test(body);
     const maxM = body.match(/Activate no more than (once|twice|three times) each turn\.?/); const maxTurn = maxM ? { once: 1, twice: 2, 'three times': 3 }[maxM[1]] : 0;
@@ -117,7 +119,7 @@ function parseActivated(line, R) {
     body = body.replace(/\s*Activate only as a sorcery and only once each turn\.?/, ' Activate only as a sorcery.');
     body = body.replace(/\s*Activate only as a sorcery and only once\.?/, ' Activate only as a sorcery.');
     body = body.replace(/\s*Activate only as an instant\.?$/, ''); // abilities can be activated any time you have priority (602.2)
-    let onlyIf = null, lessIf = null, whelp = 0;
+    let onlyIf = beforeAtk ? 'it is your main phase before combat' : null, lessIf = null, whelp = 0;
     let mm;
     if ((mm = body.match(/\s*Activate only if ([^.]+)\.?/)) && parseCond(mm[1])) { onlyIf = mm[1]; body = body.replace(mm[0], ''); }
     if ((mm = body.match(/\s*This ability costs \{(\d+)\} less to activate if ([^.]+)\.?/))) { lessIf = { n: +mm[1], cond: mm[2] }; body = body.replace(mm[0], ''); }

@@ -942,7 +942,7 @@ function validTargets(P, e, src) {
     if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.powLtSrc || pow(o) < pow(src)) && (!e.withCounters || o.counters > 0)).map(o => ({ o })));
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
-    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !(e.oppOnly && p === P)).map(p => ({ p })));
+    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a)))).map(p => ({ p })));
     if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P)).map(item => ({ item })));
     return out;
 }
@@ -952,6 +952,9 @@ function stackMatches(it, filter) {
     if (filter === 'spellOrAbility') return it.kind === 'trigger' || it.kind === 'spell';
     if (/^small\d+$/.test(filter)) { const n = +filter.slice(5); return it.kind === 'spell' && Rx(it.o).kind === 'creature' && (Number(it.o.card.power) <= n || Number(it.o.card.toughness) <= n); }
     if (filter === 'instant') return it.kind === 'spell' && Rx(it.o).kind === 'instant';
+    if (filter === 'sorcery') return it.kind === 'spell' && Rx(it.o).kind === 'sorcery';
+    if (filter === 'creature or sorcery') return it.kind === 'spell' && (Rx(it.o).kind === 'creature' || Rx(it.o).kind === 'sorcery');
+    if (filter === 'targetsCreature') return it.kind === 'spell' && !!it.target && !!it.target.o && isCreature(it.target.o);
     if (/^mv=\d+$/.test(filter)) return it.kind === 'spell' && (it.o.card.cmc || 0) === +filter.slice(3);
     if (filter === 'notMine') return it.kind === 'spell';
     if (filter === 'enchantment, instant, or sorcery') return it.kind === 'spell' && (/Enchantment/.test(it.o.card.type) || ['instant', 'sorcery'].includes(Rx(it.o).kind));
@@ -1964,7 +1967,7 @@ async function applyEffect(P, e, t, src) {
                 log(`${name} deals ${e.n} to each ${e.target === 'allCreatures' ? '' : 'opposing '}creature.`);
             } else { damage(t.p || t.o, e.n, src); log(`${name} deals ${e.n} to ${targetName(t)}.`); }
             break;
-        case 'destroy': { G.lastPower = { P: G.players[t.o.owner], n: Math.max(0, pow(t.o)) }; G.lastMv = t.o.card.cmc || 0; const ctl = G.players[t.o.owner], nb = /\bLand\b/.test(t.o.card.type) && !/\bBasic\b/.test(t.o.card.type); if (e.noRegen) t.o.regen = 0; destroy(t.o); if (e.nonbasicDmg && nb) { damage(ctl, e.nonbasicDmg, src); log(`${name} deals ${e.nonbasicDmg} damage to ${ctl.name === 'You' ? 'you' : ctl.name}.`); } break; }
+        case 'destroy': { G.lastTouN = Math.max(0, tou(t.o)); G.lastPower = { P: G.players[t.o.owner], n: Math.max(0, pow(t.o)) }; G.lastMv = t.o.card.cmc || 0; const ctl = G.players[t.o.owner], nb = /\bLand\b/.test(t.o.card.type) && !/\bBasic\b/.test(t.o.card.type); if (e.noRegen) t.o.regen = 0; destroy(t.o); if (e.nonbasicDmg && nb) { damage(ctl, e.nonbasicDmg, src); log(`${name} deals ${e.nonbasicDmg} damage to ${ctl.name === 'You' ? 'you' : ctl.name}.`); } break; }
         case 'exile': {
             G.lastPower = { P: G.players[t.o.owner], n: Math.max(0, pow(t.o)) };
             if (e.ctrlToken) await applyEffect(G.players[t.o.owner], { t: 'token', n: 1, p: e.ctrlToken.p, q: e.ctrlToken.q, name: e.ctrlToken.name, kw: [] }, null, src);
@@ -3542,6 +3545,7 @@ function canBlock(b, atk) {
     if (has(b, 'unleash') && b.counters > 0) return false; // unleash (702.98)
     if (Rx(b).blockCond && !condOk(Rx(b).blockCond, ctrl(b), b)) return false;
     if (G.onlyBlocker && G.onlyBlocker.turn === G.turn && b.uid !== G.onlyBlocker.uid && onBf(G.onlyBlocker.uid) && ctrl(onBf(G.onlyBlocker.uid)) === ctrl(b)) return false; // Mark for Death
+    for (const f of Rx(b).blockerFns || []) if (!lostAbilities(b) && !BLOCKER_FN[f](b, atk)) return false; // Ironclaw Orcs
     for (const f of Rx(atk).blockFns || []) if (!lostAbilities(atk) && !BLOCK_FN[f](b, atk)) return false; // Elven Riders, Bog Rats
     if (has(b, 'blockflyonly') && !has(atk, 'flying')) return false;
     if (has(atk, 'blockflyreach') && !has(b, 'flying') && !has(b, 'reach')) return false;
@@ -3600,6 +3604,7 @@ function fireBlocked() {
     G.combatPairs = (G.combatPairs || []).filter(x => x.turn === G.turn);
     Object.entries(G.blocks).forEach(([a, bs]) => bs.forEach(b => G.combatPairs.push({ turn: G.turn, a: Number(a), b })));
     G.attackers.map(onBf).filter(o => o && (G.blocks[o.uid] || []).length).forEach(o => fire('blocked', { o }));
+    G.attackers.map(onBf).filter(o => o && !(G.blocks[o.uid] || []).length).forEach(o => fire('unblocked', { o }));
 }
 function fixMenace() {
     preconLure();

@@ -45,7 +45,7 @@ registerRules({
         [/^return each other creature you control to its owner's hand$/i, () => ({ t: 'bounceOthers' })],
         [/^return a green creature you control to its owner's hand$/i, () => ({ t: 'returnGreenUpkeep' })],
         [/^return (?:it|~) to the battlefield tapped under its owner's control at the beginning of their next upkeep$/i, () => ({ t: 'returnNextUpkeep' })],
-        [/^shuffle (?:it|~) into its owner's library$/i, () => ({ t: 'shuffleSelfIn' })],
+        [/^shuffle (?:it|~) into (?:its owner's|your) library$/i, () => ({ t: 'shuffleSelfIn' })],
         [/^exile another target nonland permanent$/i, () => ({ t: 'exileUntilLeaves', target: 'perm', filter: 'nonland permanent', notSelf: true, good: false })],
         [/^that creature's controller loses (\w+) life$/i, m => ({ t: 'bloodReckoning', n: num(m[1]) })],
         [/^~ deals (\d+) damage to you$/i, m => ({ t: 'dmgYou', n: +m[1] })],

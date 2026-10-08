@@ -137,6 +137,7 @@ function buildCond(t) {
 const ROMAN = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6 };
 // What "the number of ..." counts, for */* creatures and "+1/+1 for each"
 function countFn(phrase) {
+    for (const [re, mk] of COUNT_EXTRA) { const mm = phrase.match(re); if (mm) return mk(mm); }
     // "the number of creatures you control plus the number of Equipment you control"
     const plus = phrase.split(/ plus the number of /);
     if (plus.length > 1) { const fs = plus.map((x, i) => countFn(i ? `the number of ${x}` : x)); return fs.every(Boolean) ? o => fs.reduce((a, f) => a + f(o), 0) : null; }

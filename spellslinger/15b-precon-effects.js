@@ -47,7 +47,7 @@ async function preconEffect(P, e, t, src, O, name) {
             const k = own.library.indexOf(x); if (k >= 0) { own.library.splice(k, 1); own.library.unshift(x); }
             break;
         }
-        case 'gainLastTou': if (G.lastPower) gainLifeFor(G.lastPower.P, G.lastTouN || 0); break;
+        case 'gainLastTou': if (e.you) gainLifeFor(P, G.lastTouN || 0); else if (G.lastPower) gainLifeFor(G.lastPower.P, G.lastTouN || 0); break;
         case 'dmgPlayerCreatures': {
             const X = (t && t.p) || O;
             damage(X, e.n, src); X.bf.filter(isCreature).forEach(c => damage(c, e.m, src));
@@ -87,12 +87,13 @@ async function preconEffect(P, e, t, src, O, name) {
         case 'digTake': {
             const top = P.library.splice(-Math.min(e.n, P.library.length)).reverse(); if (!top.length) break;
             const COL = { white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' };
-            const fits = x => (e.color ? (x.card.colors || []).includes(COL[e.color]) : (e.kinds || []).some(k => k === 'land' ? rulesFor(x.card).kind === 'land' : isCreatureCard(x.card)));
+            const fits = x => (e.color ? (x.card.colors || []).includes(COL[e.color]) : (e.kinds || []).some(k => k === 'land' ? rulesFor(x.card).kind === 'land' : isCreatureCard(x.card) && (e.maxPow === undefined || Number(x.card.power) <= e.maxPow)));
             const opts = top.filter(fits);
             log(`${P.name} ${you(P) ? 'look' : 'looks'} at the top ${top.length} cards${you(P) ? `: ${top.map(x => x.card.name).join(', ')}` : ''}.`);
             let take = null;
             if (opts.length) take = P.isAI ? opts.slice().sort((a, b) => aiKeepValue(P, b) - aiKeepValue(P, a))[0] : (await pickCard(P, opts, `${name}: take a card into your hand (or none)`, { optional: true })) || null;
             if (take) { pull(top, take); P.hand.push(take); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${take.card.name} into ${you(P) ? 'your' : 'their'} hand.`); }
+            if (e.both) { const land = top.find(x => rulesFor(x.card).kind === 'land'); if (land && (!take || isCreatureCard(take.card))) { pull(top, land); P.hand.push(land); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${land.card.name} into ${you(P) ? 'your' : 'their'} hand.`); } }
             if (e.rest === 'gy') P.gy.push(...top); else shuffle(top).forEach(c => P.library.unshift(c));
             break;
         }
@@ -219,6 +220,23 @@ async function preconEffect(P, e, t, src, O, name) {
             log(`${web.card.name} is put onto the battlefield attached to ${x.card.name}.`);
             break;
         }
+        case 'ctlDrawsCountered': { const it = G.lastCountered; if (it && it.P) { drawCards(it.P, 1); log(`${it.P.name} ${you(it.P) ? 'draw' : 'draws'} a card.`); } break; }
+        case 'exhaustion': { const X = (t && t.p) || O; X.bf.filter(x => isCreature(x) || /\bLand\b/.test(x.card.type)).forEach(x => { x.skipUntap = true; }); log(`${X.name}'s creatures and lands won't untap during their next untap step.`); break; }
+        case 'pumpFilter': { const col = e.filter === 'nonblack' ? x => !(x.card.colors || []).includes('B') : () => true; allPerms().filter(x => isCreature(x) && col(x)).forEach(x => { x.tp += e.p; x.tq += e.q; }); log(`${name}: nonblack creatures get ${e.p}/${e.q} until end of turn.`); break; }
+        case 'wipeFilter': { const hit = allPerms().filter(x => isCreature(x) && (e.filter === 'flying' ? has(x, 'flying') : !(x.card.colors || []).includes('W'))); log(`${name}: destroy all nonwhite creatures (${hit.length}).`); hit.forEach(x => destroy(x)); break; }
+        case 'edictDestroy': { const V = O, cs = V.bf.filter(isCreature); if (!cs.length) break; const c = V.isAI || AUTOPLAY || cs.length === 1 ? cs.slice().sort((a, b) => creatureValue(a) - creatureValue(b))[0] : (await pickCard(V, cs, `${name}: choose a creature to be destroyed`, { required: true })) || cs[0]; destroy(c); break; }
+        case 'regrowCreature': { const pool = P.gy.filter(x => isCreatureCard(x.card)); if (!pool.length) break; const c = P.isAI ? pool.slice().sort((a, b) => aiKeepValue(P, b) - aiKeepValue(P, a))[0] : (await pickCard(P, pool, `${name}: return a creature card to your hand`, { required: true })) || pool[0]; pull(P.gy, c); P.hand.push(c); log(`${c.card.name} returns to ${you(P) ? 'your' : 'their'} hand.`); break; }
+        case 'battleCry': { (G.attackers || []).map(onBf).filter(x => x && x !== src && x.owner === src.owner).forEach(x => { x.tp += 1; }); log(`${name}: each other attacking creature gets +1/+0 (battle cry).`); break; }
+        case 'counterAttackers': (G.attackers || []).map(onBf).filter(x => x && x.owner === P.i).forEach(x => putCounters(x, 1, P)); log(`${name}: each attacking creature gets a +1/+1 counter.`); break;
+        case 'meglonoth': { const k = Math.max(0, pow(src)); Object.entries(G.blocks).forEach(([a, bs]) => { const atk = onBf(Number(a)); if (atk && bs.includes(src.uid)) { const X = G.players[atk.owner]; damage(X, k, src); log(`${name} deals ${k} damage to ${X.name}.`); } }); break; }
+        case 'hostDiesLose': { const x = G.ctxObj || null; const k = x ? Math.max(0, tou(x)) : 0; const who = x ? G.players[x.owner] : O; if (k) { who.life -= k; log(`${who.name} ${you(who) ? 'lose' : 'loses'} ${k} life.`); fire('loseLife', { P: who, n: k }); } break; }
+        case 'millCaster': { const X = G.lastCast ? G.players[G.lastCast.owner] === undefined ? O : G.players[1 - P.i] : O; const m = X.library.splice(-e.n).reverse(); X.gy.push(...m); log(`${X.name} ${you(X) ? 'mill' : 'mills'} ${m.length}.`); break; }
+        case 'lootTarget': { const X = (t && t.p) || P; drawCards(X, 1); if (X.hand.length) { const d = X.isAI ? X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0] : (await pickCard(X, X.hand, `${name}: discard a card`, { required: true })) || X.hand[0]; pull(X.hand, d); X.gy.push(d); discardMark([d]); log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); } break; }
+        case 'sacUnlessForests': { const fs = P.bf.filter(x => /\bForest\b/.test(x.card.type) && x !== src); if (fs.length >= 3 && (P.isAI || await askYes(P, `${name}: sacrifice three Forests (or sacrifice it)?`, { card: src.card }))) { fs.slice(0, 3).forEach(x => { fire('sacrificed', { o: x }); dieOrLeave(x, 'gy'); }); log(`${P.name} sacrifices three Forests.`); } else if (onBf(src.uid)) { log(`${name} is sacrificed.`); fire('sacrificed', { o: src }); dieOrLeave(src, 'gy'); } break; }
+        case 'wumpus': { const X = O; const cs = X.hand.filter(x => isCreatureCard(x.card)); if (!cs.length) break; const c = X.isAI ? cs.slice().sort((a, b) => aiKeepValue(X, b) - aiKeepValue(X, a))[0] : await askYes(X, `${name}: put a creature card from your hand onto the battlefield?`, { card: src.card }) ? ((await pickCard(X, cs, `${name}: put a creature card onto the battlefield`, { required: true })) || cs[0]) : null; if (c) { pull(X.hand, c); putOntoBattlefield(X, c); log(`${X.name} puts ${c.card.name} onto the battlefield.`); } break; }
+        case 'singeMind': { const X = (t && t.p) || O; if (!X.hand.length) break; const c = X.hand[rand(X.hand.length)]; const k = c.card.cmc || 0; log(`${X.name} ${you(X) ? 'reveal' : 'reveals'} ${c.card.name} and ${you(X) ? 'lose' : 'loses'} ${k} life.`); X.life -= k; fire('loseLife', { P: X, n: k }); break; }
+        case 'copShield': P.cop = P.cop && P.cop.turn === G.turn ? P.cop : { turn: G.turn }; P.cop[e.color] = (P.cop[e.color] || 0) + 1; log(`${name}: the next ${e.color} source's damage to ${P.name} this turn is prevented.`); break;
+        case 'reaverBurn': { const n = (src.ctr && src.ctr.charge) || 0; if (n > 0) { damage(O, n, src); log(`${name} deals ${n} damage to ${O.name}.`); } break; }
         case 'bloodReckoning': { const n = (G.attackers || []).length * e.n; if (n > 0) { O.life -= n; log(`${O.name} ${you(O) ? 'lose' : 'loses'} ${n} life for attacking.`); fire('loseLife', { P: O, n }); } break; }
         default: break;
     }
@@ -239,6 +257,15 @@ Object.assign(TRIG_FN, {
     phoenix: (o, ctx) => !!ctx.P && ctx.P.i !== o.owner && !!ctx.src && ctx.src.owner === o.owner && (ctx.src.card.colors || []).includes('R') && (ctx.src.uid === undefined ? ['instant', 'sorcery'].includes(Rx(ctx.src).kind) : Rx(ctx.src).kind === 'planeswalker'),
     webEnd: (o, ctx) => { const h = o.attachedTo && onBf(o.attachedTo); return !!h && pow(h) >= 4; },
     tabletCast: (o, ctx) => !!ctx.o && ctx.P.i === o.owner && (o.chosenColors || []).some(c => (ctx.o.card.colors || []).includes(c)),
+    selfAttacks: (o, ctx) => (ctx.list || []).includes(o),
+    myAttack: (o, ctx) => (ctx.list || []).some(x => x.owner === o.owner),
+    anotherCreature: (o, ctx) => !!ctx.o && ctx.o !== o && isCreature(ctx.o),
+    oppCast: (o, ctx) => ctx.P.i !== o.owner,
+    hostDies: (o, ctx) => !!ctx.o && ctx.o.uid === o.attachedTo,
+    castColorG: (o, ctx) => !!ctx.o && ctx.P.i === o.owner && (ctx.o.card.colors || []).includes('G'),
+    castColorU: (o, ctx) => !!ctx.o && ctx.P.i === o.owner && (ctx.o.card.colors || []).includes('U'),
+    forestEnters: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && /\bForest\b/.test(ctx.o.card.type),
+    islandEnters: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && /\bIsland\b/.test(ctx.o.card.type),
     selfToGy: (o, ctx) => ctx.o === o,
     ergRaiders: (o, ctx) => G.active === o.owner && !o.tapped && !o.sick // approximation: it didn't attack if it is still untapped
 });
@@ -270,6 +297,7 @@ function preconDamage(target, n, src) {
             // Pariah: the damage is dealt to the enchanted creature instead
             const pa = allPerms().find(a => Rx(a).pariah && !lostAbilities(a) && a.owner === owner.i && a.attachedTo && onBf(a.attachedTo));
             if (pa) { const host = onBf(pa.attachedTo); log(`${pa.card.name}: the damage is dealt to ${host.card.name} instead.`); damage(host, n, src); return 0; }
+            if (owner.cop && owner.cop.turn === G.turn && src && src.card) { const k = Object.keys(owner.cop).find(c => c !== 'turn' && owner.cop[c] > 0 && (src.card.colors || []).includes(c)); if (k) { owner.cop[k]--; log(`Damage from ${src.card.name} to ${owner.name} is prevented.`); return 0; } }
             const ua = owner.bf.filter(a => Rx(a).urzaArmor && !lostAbilities(a)).length;
             if (ua) { n -= ua; log(`Urza's Armor prevents ${ua} damage.`); if (n <= 0) return 0; }
             // Vengeful Archon: {X}: prevent the next X damage to you; it deals that much to target player
@@ -288,6 +316,11 @@ function preconDamage(target, n, src) {
 }
 // ---- Extra conditions, static filters and block restrictions ----
 COND_EXTRA.push(
+    [/^you control a permanent named (.+?)(?: or a permanent named (.+))?$/, m => P => P.bf.some(x => x.card.name === m[1] || (m[2] && x.card.name === m[2]))],
+    [/^an opponent controls an? (Island|Swamp|Forest|Mountain|Plains)$/, m => P => G.players[1 - P.i].bf.some(x => hasType(x, m[1]))],
+    [/^a library has (\w+) or fewer cards in it$/, m => () => G.players.some(X => X.library.length <= num(m[1]))],
+    [/^you control an? ([A-Z][a-z]+) planeswalker$/, m => P => P.bf.some(x => isPlaneswalker(x) && hasType(x, m[1]))],
+    [/^there are two or more instant and\/or sorcery cards in your graveyard$/, () => P => P.gy.filter(x => /Instant|Sorcery/.test(x.card.type)).length >= 2],
     [/^it was kicked$/, () => (P, o) => !!o && !!o.kicked],
     [/^you have been attacked this step$/, () => P => G.active !== P.i && G.phase === 'declareBlocks' && (G.attackers || []).length > 0],
     [/^it is your main phase before combat$/, () => P => G.active === P.i && G.phase === 'main1' && !G.combatFired],
@@ -300,6 +333,8 @@ Object.assign(STATIC_FN, {
     black: o => (o.card.colors || []).includes('B'),
     nonblack: o => !(o.card.colors || []).includes('B')
 });
+COUNT_EXTRA.push([/^(?:the number of )?(white|blue|black|red|green) permanents you control$/, m => o => G.players[o.owner].bf.filter(x => (x.card.colors || []).includes({ white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' }[m[1]])).length]);
+Object.assign(BLOCKER_FN, { noPow2: (b, atk) => pow(atk) < 2 });
 Object.assign(BLOCK_FN, {
     wallOrFlying: b => hasType(b, 'Wall') || has(b, 'flying'),
     notWall: b => !hasType(b, 'Wall')
