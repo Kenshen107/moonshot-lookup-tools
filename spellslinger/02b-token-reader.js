@@ -93,5 +93,12 @@ function tokenReadSentence(p) {
     }
     if ((m = p.match(/^return target (.+?) to its owner's hand$/i)) && filt(m[1])) return { t: 'bounce', target: 'perm', filter: filt(m[1]) };
     if ((m = p.match(/^~ deals (\w+) damage to target (.+)$/i)) && num(m[1]) !== undefined && filt(m[2]) && creatureOnly()) return { t: 'dmg', n: num(m[1]), target: 'creature', only: filt(m[2]) };
+    // Phase 2b, second batch: pump, tap and +1/+1 counters on a described creature
+    if ((m = p.match(/^target (.+?) gets ([+-]\d+)\/([+-]\d+)(?: and gains ([a-z ,]+?))? until end of turn$/i)) && filt(m[1]) && creatureOnly()) {
+        const kw = m[4] ? splitKw(m[4]) : [];
+        return { t: 'pump', p: +m[2], q: +m[3], kw, target: 'creature', only: filt(m[1]), good: +m[2] + +m[3] >= 0 };
+    }
+    if ((m = p.match(/^tap target (.+)$/i)) && filt(m[1])) return creatureOnly() ? { t: 'tap', target: 'creature', only: filt(m[1]), good: false } : { t: 'tap', target: 'perm', filter: filt(m[1]), good: false };
+    if ((m = p.match(/^put (\w+) \+1\/\+1 counters? on target (.+)$/i)) && num(m[1]) !== undefined && filt(m[2]) && creatureOnly()) return { t: 'counters', n: num(m[1]), target: 'creature', only: filt(m[2]), good: true };
     return null;
 }

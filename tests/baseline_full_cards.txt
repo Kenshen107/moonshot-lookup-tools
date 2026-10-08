@@ -5,6 +5,7 @@ A.I.M. Labs
 A.I.M. Scientists
 A.I.M. Synthoids
 Aang
+Aang's Defense
 Aang, Air Nomad
 Aardvark Sloth
 Abandon Attachments
@@ -329,6 +330,7 @@ Angelic Destiny
 Angelic Edict
 Angelic Gift
 Angelic Overseer
+Angelic Page
 Angelic Shield
 Angelic Wall
 Angels
@@ -389,6 +391,7 @@ Aragorn, the Uniter
 Arashi, the Sky Asunder
 Arashin Cleric
 Arasta of the Endless Web
+Araña, Heart of the Spider
 Arbaaz Mir
 Arbor Armament
 Arbor Elf
@@ -654,6 +657,7 @@ Axgard Braggart
 Axgard Cavalry
 Ayara, First of Locthwain
 Aysen Abbey
+Aysen Bureaucrats
 Azimaet Drake
 Azorius Arrester
 Azorius Chancery
@@ -1183,6 +1187,7 @@ Bogstomper
 Bogwater Lumaret
 Boiling Rock Prison
 Bojuka Bog
+Bola Slinger
 Bola Warrior
 Bold Biochemist
 Bold Impaler
@@ -3234,6 +3239,7 @@ Enraged Ceratok
 Enraged Flamecaster
 Enraged Giant
 Enraged Killbot
+Enslaved Dwarf
 Enslaved Scout
 Ensouled Scimitar
 Entangling Vines
@@ -3248,6 +3254,7 @@ Environmental Scientist
 Envoy of Okinec Ahau
 Ephara's Dispersal
 Ephara's Radiance
+Ephara's Warden
 Ephemeral Shields
 Ephemerate
 Ephemeron
@@ -3272,6 +3279,7 @@ Erode
 Eroded Canyon
 Eron the Relentless
 Errand-Rider of Gondor
+Errant Doomsayers
 Erratic Portal
 Erratic Visionary
 Ertai, Wizard Adept
@@ -3328,6 +3336,7 @@ Eureka Moment
 Eusocial Engineering
 Evacuation
 Evanescent Intellect
+Evasive Maneuvers
 Everflame Eidolon
 Evernight Shade
 Everythingamajig
@@ -3796,6 +3805,7 @@ Flower // Flourish
 Flowering Field
 Flowering of the White Tree
 Flowstone Blade
+Flowstone Channeler
 Flowstone Charger
 Flowstone Crusher
 Flowstone Embrace
@@ -3807,6 +3817,7 @@ Flowstone Mauler
 Flowstone Overseer
 Flowstone Shambler
 Flowstone Slide
+Flowstone Strike
 Flowstone Thopter
 Flowstone Wall
 Flowstone Wyvern
@@ -4790,6 +4801,7 @@ Harvester Druid
 Harvestguard Alseids
 Hashep Oasis
 Hatching Plans
+Hate Weaver
 Haunt of the Dead Marshes
 Haunted Cloak
 Haunted Crossroads
@@ -5007,6 +5019,7 @@ Holy Justiciar
 Holy Mantle
 Holy Strength
 Homarid Explorer
+Homarid Shaman
 Homestead Courage
 Homunculus Horde
 Honden of Cleansing Fire
@@ -5024,6 +5037,7 @@ Honored Heirloom
 Hooded Brawler
 Hooded Kavu
 Hoodwink
+Hoof Skulkin
 Hookblade
 Hookblade Veteran
 Hooting Mandrills
@@ -5785,6 +5799,7 @@ Kor Celebrant
 Kor Firewalker
 Kor Halberd
 Kor Hookmaster
+Kor Line-Slinger
 Kor Sanctifiers
 Kor Scythemaster
 Kor Sky Climber
@@ -5824,6 +5839,7 @@ Krosan Adaptation
 Krosan Archer
 Krosan Avenger
 Krosan Beast
+Krosan Constrictor
 Krosan Druid
 Krosan Grip
 Krosan Restorer
@@ -5913,6 +5929,7 @@ Lavakin Brawler
 Lavalanche
 Lavastep Raider
 Law
+Law-Rune Enforcer
 Lawbringer
 Lawless Broker
 Lawmage's Binding
@@ -5987,6 +6004,7 @@ Ley Druid
 Leyline Prowler
 Lhurgoyf
 Liar's Pendulum
+Liberated Dwarf
 Liberating Combustion
 Librarian
 Library
@@ -7246,6 +7264,7 @@ Ojutai's Command
 Ojutai's Summons
 Oketra's Monument
 Okiba Reckoner Raid // Nezumi Road Captain
+Okina, Temple to the Grandfathers
 Oko's Accomplices
 Old Flitterfang
 Old Ghastbark
@@ -7948,6 +7967,7 @@ Qasali Pridemage
 Qilin's Blessing
 Qiqirn Merchant
 Quagmire Druid
+Quake, Agent of S.H.I.E.L.D.
 Quakestrider Ceratops
 Quaketusk Boar
 Quandrix Apprentice
@@ -7966,6 +7986,7 @@ Quest for the Goblin Lord
 Queza, Augur of Agonies
 Quick Study
 Quick-Draw Dagger
+Quicksand
 Quicksand Whirlpool
 Quicksilver Amulet
 Quicksilver Dagger
@@ -9087,6 +9108,7 @@ Serpent's Pass
 Serpent-Blade Assailant
 Serpentine Ambush
 Serpentine Kavu
+Serra Advocate
 Serra Angel
 Serra Ascendant
 Serra Disciple
@@ -9492,6 +9514,7 @@ Skyshaper
 Skyship Buccaneer
 Skyship Stalker
 Skyshooter
+Skyshroud Archer
 Skyshroud Claim
 Skyshroud Elf
 Skyshroud Falcon
@@ -9873,6 +9896,7 @@ Spirit
 Spirit Away
 Spirit Mantle
 Spirit Summoning
+Spirit Weaver
 Spirit of Malevolence
 Spirit of the Night
 Spirited Companion
@@ -10307,6 +10331,7 @@ Sunshower Druid
 Sunspire Gatekeepers
 Sunspire Griffin
 Sunstar Expansionist
+Sunstrike Legionnaire
 Suntail Hawk
 Super Strength
 Super Suit
@@ -10391,6 +10416,7 @@ Sword of Forge and Frontier
 Sword of Kaldra
 Sword of Vengeance
 Sword of the Animist
+Sword of the Chosen
 Swordmaster
 Swords to Plowshares
 Swordsman's Steel
@@ -10422,6 +10448,7 @@ Synapse Necromage
 Syncopate
 Syndic of Tithes
 Syndicate Enforcer
+Syndicate Guildmage
 Syndicate Liquidators
 Syndicate Trafficker
 Synod Sanctum
@@ -10986,6 +11013,7 @@ Toucan-Puffin
 Touch of Brilliance
 Touch of Invisibility
 Touch of the Void
+Touchstone
 Tourach, Dread Cantor
 Towashi Songshaper
 Tower Defense
@@ -12027,6 +12055,7 @@ Wild Slash
 Wild Wanderer
 Wild-Field Scarecrow
 Wilderland Scrounger
+Wilderness Hypnotist
 Wilderness Reclamation
 Wildfire Emissary
 Wildfire Wickerfolk
@@ -12255,6 +12284,7 @@ Yeva's Forcemage
 Yoked Ox
 Yoked Plowbeast
 Yorvo, Lord of Garenbrig
+Yoshimaru, Beloved Companion
 Yotian Dissident
 Yotian Frontliner
 Yotian Medic
