@@ -1,6 +1,6 @@
 # Spellslinger Duels overhaul plan
 
-Status: **Phases 0, 1a, 1b, 1c, 2a (parse side), 2b and 2c done (2026-10-08); 3 onward not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
+Status: **Phases 0, 1a, 1b, 1c, 2a (parse side), 2b and 2c done, 3 partly done (2026-10-08); the rest of 3 and 4 not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
 
 ## Owner's goals
 
@@ -161,6 +161,8 @@ Rerun the coverage measurement and the card-by-card tests. The Automated count m
 - the play-by-play running
 - a choice panel open
 - three items on the stack
+
+**Phase 3 result so far (2026-10-08):** (1) every global layer in `styles.css` now uses a `--z-*` token on `:root` (sticky, dropdown, nav, game, playtest, banner, lift, peek, menu, sheet, modal, jackpot, cover, toast) with the same values as before, so nothing moves; plain numbers 1-6 stay for stacking inside one component. (2, 3) A new suite `tests/suites/layout.js` renders a table with 20 creatures and 15 lands a side, an Equipment attached, and a hand of 7, 12 and 20 at 360, 768 and 1280px wide, saves screenshots to `tests/.out/layout-<width>-<hand>.png`, and checks: no sideways page scroll, every hand card inside the hand dock (desktop and tablet; the phone hand scrolls sideways by design), the hand never covers the turn bar, rows and their cards stay on screen. All 33 checks pass on the current `fitHand` / `fitTable`, and the screenshots show nothing clipped or overlapping, so **those two were not reworked** (nothing was broken to fix; the suite will catch it if they break). **Not done:** screenshots with the play-by-play running, a choice panel open and three items on the stack (the `Done when` list); the test cards have blocked pictures, so check card art on the live site.
 
 ## Phase 4: Three game modes (after the owner's decisions 3-5)
 
