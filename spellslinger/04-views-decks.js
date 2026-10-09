@@ -847,7 +847,7 @@ function renderBuilderBar(entries, cmd, probs) {
         ${d.format === 'commander' ? `<span class="${cmd ? 'ok' : 'warn'}">Commander ${cmd ? '✓' : '✗'}</span>` : `<span class="note">${F.name} · ${F.size}+</span>`}
         <span class="mx-price" title="TCGplayer market prices from Scryfall">${usd(value)}</span>
         <span class="mx-kinds note">${TYPE_GROUPS.filter(([k]) => kinds[k]).map(([k, l]) => `${l} ${kinds[k]}`).join(' · ')}</span>
-        <span class="mx-bar-end">${(() => { const m = d.starter ? { need: [] } : deckMissing(d); const k = m.need.reduce((a, x) => a + x.n, 0); return k ? `<button type="button" class="btn small gold" onclick="buyMissing()" title="Buy the ${k} cards this deck uses that you don't own, with shop cash (you have ${usd(profile.usd || 0)})">🛒 Buy missing (${k} · ${usd(m.cost)})</button>` : ''; })()}${probs.length ? `<span class="warn" title="${esc(probs.join('\n'))}">⚠ ${probs.length} to fix</span>` : '<span class="ok">✓ Ready</span>'}
+        <span class="mx-bar-end">${(() => { const m = d.starter ? { need: [] } : deckMissing(d); const k = m.need.reduce((a, x) => a + x.n, 0); return k ? `<button type="button" class="btn small gold" onclick="buyMissing()" title="${cashOn() ? `Buy the ${k} cards this deck uses that you don't own, with shop cash (you have ${usd(profile.usd || 0)})` : `Add the ${k} cards this deck uses that you don't own (free in Sandbox)`}">${cashOn() ? `🛒 Buy missing (${k} · ${usd(m.cost)})` : `➕ Add missing (${k})`}</button>` : ''; })()}${probs.length ? `<span class="warn" title="${esc(probs.join('\n'))}">⚠ ${probs.length} to fix</span>` : '<span class="ok">✓ Ready</span>'}
         <button type="button" class="btn small primary" onclick="saveDeck()">💾 Save</button></span>`;
 }
 
@@ -986,7 +986,7 @@ function ownedByName() {
 let IMP = null; // the list being imported
 function importDialog() {
     menuSheet('📥 Import a decklist', `
-        <p class="note">Paste a list from Moxfield (<strong>Export → Copy</strong>; the Moxfield, MTGA and plain text formats all work), Archidekt or MTG Arena. Cards you own are used first; the rest are bought at Scryfall's TCGplayer price with your shop cash (<strong>${usd(profile.usd || 0)}</strong>). Basic lands are free. Earn more cash in the 🏪 Shop.</p>
+        <p class="note">Paste a list from Moxfield (<strong>Export → Copy</strong>; the Moxfield, MTGA and plain text formats all work), Archidekt or MTG Arena. Cards you own are used first; ${cashOn() ? `the rest are bought at Scryfall's TCGplayer price with your shop cash (<strong>${usd(profile.usd || 0)}</strong>). Basic lands are free. Earn more cash in the 🏪 Shop.` : 'the rest are added to your collection for free (Sandbox has no shop cash).'}</p>
         <textarea id="impText" rows="12" spellcheck="false" placeholder="1 Atraxa, Praetors' Voice (2X2) 190&#10;1 Sol Ring&#10;..." aria-label="Decklist">${esc(IMP ? IMP.text : '')}</textarea>
         <div class="row" style="margin-top:8px;">
             <input type="text" id="impName" placeholder="Deck name" value="${esc(IMP ? IMP.name : '')}" aria-label="Deck name" style="flex:1 1 180px;">
@@ -1033,7 +1033,7 @@ function importPlan(rows, cmdRow) {
         }
         return { r, free, from, buy: free ? 0 : need, price: importPrice(r.card), isCmd: r === cmdRow };
     });
-    const cost = plan.reduce((a, p) => a + p.buy * p.price, 0);
+    const cost = cashOn() ? plan.reduce((a, p) => a + p.buy * p.price, 0) : 0;
     return { plan, cost: Math.round(cost * 100) / 100 };
 }
 function renderImport() {
@@ -1052,8 +1052,8 @@ function renderImport() {
             <div><span class="pos-k">Format</span><strong>${FORMATS[fmt].name}</strong></div>
             <div><span class="pos-k">You own</span><strong>${count - toBuy - plan.filter(p => p.free).reduce((a, p) => a + p.r.n, 0)}</strong></div>
             <div><span class="pos-k">To buy</span><strong>${toBuy}</strong></div>
-            <div><span class="pos-k">Cost</span><strong class="money">${usd(cost)}</strong></div>
-            <div><span class="pos-k">Your cash</span><strong class="${short ? 'warn' : 'ok'}">${usd(cash)}</strong></div>
+            ${cashOn() ? `<div><span class="pos-k">Cost</span><strong class="money">${usd(cost)}</strong></div>
+            <div><span class="pos-k">Your cash</span><strong class="${short ? 'warn' : 'ok'}">${usd(cash)}</strong></div>` : '<div><span class="pos-k">Cost</span><strong class="ok">Free</strong></div>'}
         </div>
         ${fmt === 'commander' ? `<div class="row" style="margin:8px 0;"><label class="note" for="impCmd">👑 Commander</label><select id="impCmd" onchange="IMP.cmdRow = IMP.rows[this.value]; renderImport();">${legends.length ? legends.map(r => `<option value="${rows.indexOf(r)}"${r === cmdRow ? ' selected' : ''}>${esc(r.card.fullName)}</option>`).join('') : '<option>No legendary creature in the list</option>'}</select>${IMP.partners ? '<span class="note">This game has one commander: the other one plays in the deck.</span>' : ''}</div>` : ''}
         ${missing.length ? `<p class="warn">Not found on Scryfall (left out): ${missing.map(r => esc(r.name)).join(', ')}</p>` : ''}
@@ -1062,10 +1062,10 @@ function renderImport() {
             <table class="pos-table imp-table"><tr><th>Card</th><th>Own</th><th>Buy</th><th>Each</th><th>Total</th></tr>
             ${plan.filter(p => p.buy).sort((a, b) => b.buy * b.price - a.buy * a.price).map(p => `<tr><td>${esc(p.r.card.fullName)}${p.isCmd ? ' 👑' : ''} ${supportBadge(p.r.card)}</td><td>${p.from.reduce((a, [, k]) => a + k, 0)}</td><td>${p.buy}</td><td>${p.r.card.usd || p.r.card.usdFoil ? usd(p.price) : `<span title="No price on Scryfall">~${usd(p.price)}</span>`}</td><td>${usd(p.buy * p.price)}</td></tr>`).join('')}</table></details>
         <div class="row" style="margin-top:10px;">
-            <button class="btn gold" onclick="finishImport(true)" ${short || !toBuy ? 'disabled' : ''}>🛒 Buy ${toBuy} for ${usd(cost)} and save</button>
-            <button class="btn${toBuy ? '' : ' primary'}" onclick="finishImport(false)">${toBuy ? 'Save without buying' : '💾 Save the deck'}</button>
+            <button class="btn gold" onclick="finishImport(true)" ${short || !toBuy ? 'disabled' : ''}>${cashOn() ? `🛒 Buy ${toBuy} for ${usd(cost)} and save` : `➕ Add the ${toBuy} cards you don't own and save`}</button>
+            <button class="btn${toBuy ? '' : ' primary'}" onclick="finishImport(false)">${toBuy ? (cashOn() ? 'Save without buying' : 'Save without adding them') : '💾 Save the deck'}</button>
         </div>
-        <p class="note">${short ? `You need <strong>${usd(short)}</strong> more. Earn it in the 🏪 Shop, then buy the missing cards from the deck builder (🛒 Buy missing). ` : ''}Prices are Scryfall's TCGplayer market price for that printing (cards with no price cost ${usd(IMPORT_NO_PRICE)}). Bought cards arrive Mint.</p>`;
+        <p class="note">${short ? `You need <strong>${usd(short)}</strong> more. Earn it in the 🏪 Shop, then buy the missing cards from the deck builder (🛒 Buy missing). ` : ''}${cashOn() ? `Prices are Scryfall's TCGplayer market price for that printing (cards with no price cost ${usd(IMPORT_NO_PRICE)}). Bought cards arrive Mint.` : 'Cards you add arrive Mint, at no cost.'}</p>`;
 }
 function finishImport(buy) {
     const { rows, fmt, cmdRow } = IMP;
@@ -1083,7 +1083,7 @@ function finishImport(buy) {
         }
         if (p.isCmd) { const id = p.from.length ? p.from[0][0] : p.r.card.id; commander = id; cards[id]--; if (!cards[id]) delete cards[id]; }
     });
-    if (buy) {
+    if (buy && cashOn()) {
         profile.usd = Math.round(((profile.usd || 0) - cost) * 100) / 100;
         (profile.shopLedger = profile.shopLedger || []).push({ day: profile.shopDay || 1, note: `Bought ${plan.reduce((a, p) => a + p.buy, 0)} cards for an imported deck`, usd: -cost });
     }
@@ -1093,7 +1093,7 @@ function finishImport(buy) {
     renderCoins();
     closeSheet();
     IMP = null;
-    toast(buy ? `Bought the cards for ${usd(cost)} and saved "${deck.name}".` : `Saved "${deck.name}".`);
+    toast(buy ? (cashOn() ? `Bought the cards for ${usd(cost)} and saved "${deck.name}".` : `Added the cards and saved "${deck.name}".`) : `Saved "${deck.name}".`);
     renderDeckPicker();
 }
 // Cards a deck uses that you don't own, and what they'd cost
@@ -1114,13 +1114,15 @@ function buyMissing() {
     if (!d) return;
     const { need, cost } = deckMissing(d);
     if (!need.length) return;
-    if (cost > (profile.usd || 0)) { toast(`You need ${usd(cost - (profile.usd || 0))} more shop cash. Earn it in the 🏪 Shop.`); return; }
+    if (cashOn() && cost > (profile.usd || 0)) { toast(`You need ${usd(cost - (profile.usd || 0))} more shop cash. Earn it in the 🏪 Shop.`); return; }
     need.forEach(x => { for (let k = 0; k < x.n; k++) addCopy(x.id, { c: 'M' }); });
-    profile.usd = Math.round(((profile.usd || 0) - cost) * 100) / 100;
-    (profile.shopLedger = profile.shopLedger || []).push({ day: profile.shopDay || 1, note: `Bought ${need.reduce((a, x) => a + x.n, 0)} missing cards for "${d.name}"`, usd: -cost });
+    if (cashOn()) {
+        profile.usd = Math.round(((profile.usd || 0) - cost) * 100) / 100;
+        (profile.shopLedger = profile.shopLedger || []).push({ day: profile.shopDay || 1, note: `Bought ${need.reduce((a, x) => a + x.n, 0)} missing cards for "${d.name}"`, usd: -cost });
+    }
     saveProfile();
     renderCoins();
-    toast(`Bought ${need.reduce((a, x) => a + x.n, 0)} cards for ${usd(cost)}.`);
+    toast(cashOn() ? `Bought ${need.reduce((a, x) => a + x.n, 0)} cards for ${usd(cost)}.` : `Added ${need.reduce((a, x) => a + x.n, 0)} cards.`);
     builderChanged();
 }
 

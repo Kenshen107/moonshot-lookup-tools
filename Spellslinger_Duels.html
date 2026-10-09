@@ -24,7 +24,7 @@
         </div>
         <label class="acct" title="Each player has their own coins, collection, decks and record (saved in this browser)">👤 <select id="acctSel" onchange="pickAccount(this.value)" aria-label="Player"></select></label>
         <span class="coins" id="coinPill" title="Coins: free, in-game only. Win games to earn more.">🪙 <span id="coinCount">0</span></span>
-        <button type="button" class="coins cash" id="cashPill" onclick="cashPillClick()" title="Shop cash: in-game money. Earn it in the Shop; spend it at the Distributor and on imported decks. Tap to open the Shop.">💵 <span id="cashCount">$0.00</span></button>
+        <button type="button" class="coins cash" id="cashPill" data-modes="campaign shop" onclick="cashPillClick()" title="Shop cash: in-game money. Earn it in the Shop; spend it at the Distributor and on imported decks. Tap to open the Shop.">💵 <span id="cashCount">$0.00</span></button>
         <button class="btn small" data-modes="sandbox" onclick="addTestCoins()" title="Test build: add free coins to this player">＋🪙 Add coins</button>
         <button class="btn small" data-modes="sandbox" onclick="restartPlayer()" title="Test build: wipe this player's coins, cards, decks and record and start fresh">↺ Start over</button>
         <button type="button" class="btn small phone-only" id="acctBtn" onclick="accountSheet()" aria-label="Player and test options">👤 <span id="acctName"></span></button>

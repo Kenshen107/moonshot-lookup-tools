@@ -44,6 +44,12 @@ const BODY = async function () {
     ok('Sandbox kept its own money and record', profile.coins === START_COINS + 4000 && profile.wins === 5 && profile.usd === 999, money());
     setMode('campaign', { quiet: true });
     ok('and Campaign\'s record is unchanged by Sandbox', profile.wins === 9 && profile.losses === 4, money());
+    setMode('sandbox', { quiet: true });
+    ok('Sandbox has no cash: the pill is hidden and cashOn() is false', !cashOn() && $('cashPill').classList.contains('hidden'));
+    setMode('shop', { quiet: true });
+    ok('Shop Simulator shows the cash pill', cashOn() && !$('cashPill').classList.contains('hidden'));
+    setMode('campaign', { quiet: true });
+    ok('Campaign shows the cash pill', cashOn() && !$('cashPill').classList.contains('hidden'));
     ok('the stash holds only the parked bucket', Object.keys(profile.stash).join() === 'sandbox', Object.keys(profile.stash));
 
     // ---- a save survives a reload in the right mode ----

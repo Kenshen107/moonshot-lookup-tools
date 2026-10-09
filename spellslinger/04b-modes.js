@@ -20,6 +20,8 @@ const MODES = {
         desc: 'Run the card shop: the case, the distributor, the stockroom and grading.' }
 };
 function modeKey() { return profile && MODES[profile.mode] ? profile.mode : 'campaign'; }
+// Sandbox has no shop cash at all (owner, 2026-10-09: "a true sandbox"): cards you import or add cost nothing there
+function cashOn() { return modeKey() !== 'sandbox'; }
 function modeAllows(view) { return MODES[modeKey()].views.includes(view); }
 function sandboxStart() { return { coins: START_COINS, usd: SHOP_START_USD, wins: 0, losses: 0, freePacks: 3 }; }
 function swapBucket(to) {
