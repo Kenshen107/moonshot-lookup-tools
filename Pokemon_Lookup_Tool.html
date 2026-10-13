@@ -3735,6 +3735,12 @@
             color: var(--brand-light);
         }
 
+
+        .pk-prod-h { margin-top: 8px; font-size: 0.8em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-soft); }
+        .pk-prod-tip { margin-top: 8px; font-size: 0.9em; color: var(--text-soft); }
+        .pk-prod-link { display: inline-block; margin-top: 10px; font-size: 0.9em; color: var(--color-link); }
+        #pkProdNote { max-width: 860px; margin: 16px auto 0; font-size: 0.85em; color: var(--text-soft); line-height: 1.5; text-align: center; }
+
         .pk-limit {
             display: inline-block;
             margin-left: 6px;
@@ -4372,6 +4378,23 @@
             <div id="pkRarityBody"></div>
         </div>
 
+        <!-- ============== PRODUCTS ============== -->
+        <div class="pk-view" id="productsView" hidden>
+            <div class="pk-intro">
+                What each kind of sealed Pokémon product is, what's usually inside, and who it's for - to help explain it at the counter.
+                Contents are <b>typical</b>: they change from set to set, so check the box or the store's listing for the exact count.
+            </div>
+            <div class="mkt-filterbar" style="max-width:640px;">
+                <label class="mkt-filter" style="flex:1;">
+                    <span>Find this set's products in the store</span>
+                    <select id="pkProdSet" onchange="pkProdSetId = this.value; renderPkProducts();"><option value="">Pick a set (optional)...</option></select>
+                </label>
+            </div>
+            <div class="pk-era-chips" id="pkProdChips"></div>
+            <div id="pkProdBody"></div>
+            <div class="pk-note" id="pkProdNote"></div>
+        </div>
+
         <!-- ============== DECK CHECKER ============== -->
         <div class="pk-view" id="deckView" hidden>
             <div class="pk-intro">Paste a deck list (the format Pokémon TCG Live exports - one card per line, like <code>4 Arven OBF 186</code>) to check it's a legal 60-card deck and which cards are allowed in Standard right now.</div>
@@ -4899,6 +4922,7 @@
             sets: { el: 'setsView', icon: '🗂️', label: 'Sets & Symbols', title: '🗂️ Pokémon Sets & Symbols', onShow: () => renderPkSetsGrid() },
             learn: { el: 'learnView', icon: '📘', label: 'Learn to Play', title: '📘 Learn to Play Pokémon', onShow: () => renderPkLearn() },
             rarity: { el: 'rarityView', icon: '✨', label: 'Rarity Guide', title: '✨ Pokémon Rarity Guide', onShow: () => renderPkRarity() },
+            products: { el: 'productsView', icon: '📦', label: 'Products', title: '📦 Pokémon Products', onShow: () => renderPkProducts() },
             deck: { el: 'deckView', icon: '✅', label: 'Deck Checker', title: '✅ Pokémon Deck Checker' },
             quiz: { el: 'quizView', icon: '🧠', label: 'Staff Quiz', title: '🧠 Pokémon Staff Quiz', onShow: () => startPkQuiz() }
         };
@@ -4916,6 +4940,7 @@
                 <button type="button" class="${pkCurrentView === 'lookup' ? 'active' : ''}" onclick="navigatePk('lookup')"><span>🔎</span>Lookup</button>
                 <button type="button" class="${pkCurrentView === 'sets' ? 'active' : ''}" onclick="navigatePk('sets')"><span>🗂️</span>Sets</button>
                 <button type="button" class="${inLearn ? 'active' : ''}" onclick="openNavSheet()"><span>📘</span>Learn</button>
+                <button type="button" class="${pkCurrentView === 'products' ? 'active' : ''}" onclick="navigatePk('products')"><span>📦</span>Products</button>
                 <button type="button" class="${pkCurrentView === 'deck' ? 'active' : ''}" onclick="navigatePk('deck')"><span>✅</span>Deck</button>
                 <button type="button" onclick="toggleQuickStock()"><span>📦</span>Stock</button>
             `;
@@ -6261,8 +6286,100 @@
             else if (pkQuiz.answered && (e.key === 'Enter' || e.key.toLowerCase() === 'n')) startPkQuiz();
         });
 
+
+        // ============== PRODUCTS ==============
+        // Sealed-product guide. There's no free data source for Pokémon sealed
+        // contents (TCGdex only has cards, and MTGJSON is Magic-only), so this is
+        // written by hand from how Scarlet & Violet / Mega Evolution era products
+        // are usually put together. Counts are typical, not checked product by
+        // product: they vary by set. 'q' is the words added to a set name for the
+        // store search.
+        const PK_PRODUCTS_AS_OF = '2026-10-13';
+        const PK_PRODUCT_GROUPS = [
+            { key: 'packs', label: '🎴 Packs & boxes' },
+            { key: 'kits', label: '🧰 Starter & kits' },
+            { key: 'extras', label: '🎁 Tins & collections' },
+            { key: 'play', label: '⚔️ Ready to play' }
+        ];
+        const PK_PRODUCTS = [
+            { g: 'packs', icon: '🎴', name: 'Booster Pack', q: 'Booster Pack',
+              inside: ['About 10 cards: mostly Commons and Uncommons, a reverse holo slot, and at least one Rare or better', 'Usually a code card for Pokémon TCG Live in some products, not in every pack'],
+              purpose: 'The basic way to open cards. Good for a small gift, trying a set, or chasing one specific card. Every card in a set can come out of a pack.',
+              tip: 'Rare, holo and ultra-rare slots differ by set, so the Rarity Guide helps explain what was pulled.' },
+            { g: 'packs', icon: '📚', name: 'Booster Bundle', q: 'Booster Bundle',
+              inside: ['6 booster packs in a plastic wrap (some sets differ)'],
+              purpose: 'A cheaper-per-pack way to open a bunch of packs without buying a box. Popular with players building a deck from a new set.',
+              tip: 'No extras in it: just packs.' },
+            { g: 'packs', icon: '📦', name: 'Booster Box', q: 'Booster Box',
+              inside: ['36 booster packs in a display box'],
+              purpose: 'The best value per pack for opening a lot or for shops and players who want a whole set. Gives the best odds of pulling the set\'s many different rarities.',
+              tip: 'Usually bought by collectors and by people hosting a draft or prerelease night.' },
+            { g: 'kits', icon: '🧳', name: 'Elite Trainer Box (ETB)', q: 'Elite Trainer Box',
+              inside: ['8-9 booster packs of the set', 'A full-art promo card', 'About 65 card sleeves and 45 Energy cards', 'Dice, damage counters and condition markers', 'A player\'s guide and a storage box that fits about 60 sleeved cards'],
+              purpose: 'The "everything to get going" box. Best gift for a new or returning player, and the usual pick for someone who wants packs plus supplies.',
+              tip: 'Different retailers carry exclusive ETB versions with extra promos.' },
+            { g: 'kits', icon: '🎟️', name: 'Build & Battle Box (Prerelease Kit)', q: 'Build & Battle Box',
+              inside: ['4 booster packs', 'A foil promo card', 'A 40-card deck made from a set of the cards', 'A play mat, damage counters and dice'],
+              purpose: 'Made for sealed events: open the packs, build a deck from what you get, and play. Also a good introduction to how deck building works.',
+              tip: 'Sold around a set\'s prerelease. The 40-card version is for event play and isn\'t a normal 60-card deck.' },
+            { g: 'extras', icon: '🥫', name: 'Tin', q: 'Tin',
+              inside: ['About 4-5 booster packs', 'One or two promo cards (often a foil of a featured Pokémon)', 'A tin with art on it'],
+              purpose: 'A good-looking gift with a guaranteed promo. Collectors like the tin; players like the promo.',
+              tip: 'Mini tins hold fewer packs (about 2) and one art card, and are a cheaper gift.' },
+            { g: 'extras', icon: '🗃️', name: 'Premium / Special Collection', q: 'Collection',
+              inside: ['A foil promo card, often one or more oversized cards', 'Booster packs (usually 4-8)', 'Often pins, a coin or other extras'],
+              purpose: 'Built around a single Pokémon or theme (Charizard, Pikachu, Eevee evolutions). The pick for fans of that Pokémon, and for gifts.',
+              tip: 'What\'s inside depends on the collection: read the box before promising something.' },
+            { g: 'extras', icon: '🪧', name: 'Blister Pack', q: 'Blister',
+              inside: ['1-3 booster packs', 'A promo card, sometimes a coin'],
+              purpose: 'A small, low-cost way to get a few packs plus a promo. Good for a reward or a first purchase.',
+              tip: 'Often sold at the register or in the aisle.' },
+            { g: 'play', icon: '🛡️', name: 'Battle Deck / Theme Deck', q: 'Battle Deck',
+              inside: ['A ready-to-play 60-card deck built around one featured Pokémon', 'Often an extra rule or reference card'],
+              purpose: 'The easiest way to start playing: two decks, one box, no building. Great for two people trying the game together.',
+              tip: 'Pair it with the Learn to Play tab to teach a first game.' },
+            { g: 'play', icon: '🎒', name: 'Accessories (sleeves, deck boxes, binders, playmats)', q: 'Sleeves',
+              inside: ['Standard-size card sleeves (about 66 x 91 mm), deck boxes, binders, playmats and similar'],
+              purpose: 'Protects cards and makes them easy to carry or store. Sleeves and a deck box are the first things a new player needs.',
+              tip: 'Cards are the same size across the major games, but check the sleeve size on the pack.' }
+        ];
+        let pkProdGroup = 'all';
+        let pkProdSetId = '';
+
+        function renderPkProducts() {
+            const chips = [{ key: 'all', label: 'All' }, ...PK_PRODUCT_GROUPS];
+            document.getElementById('pkProdChips').innerHTML = chips.map(c => `<button type="button" class="staples-sort-btn${pkProdGroup === c.key ? ' active' : ''}" onclick="pkProdGroup='${c.key}'; renderPkProducts();">${c.label}</button>`).join('');
+            // Set picker: recent main sets first (newest at the top)
+            const sel = document.getElementById('pkProdSet');
+            if (pkSets && sel.options.length <= 1) {
+                const list = pkSets.filter(s => !PK_MINOR_SERIES.includes(s.serie.id)).slice().reverse();
+                sel.innerHTML = '<option value="">Pick a set (optional)...</option>' + list.map(s => `<option value="${escapeAttr(s.id)}">${escapeHTML(s.name)}${s.code ? ' (' + escapeHTML(s.code) + ')' : ''}</option>`).join('');
+                sel.value = pkProdSetId;
+            } else if (!pkSets) {
+                loadPkSets().then(() => renderPkProducts()).catch(() => {});
+            }
+            const set = pkProdSetId && pkSetById.get(pkProdSetId);
+            const link = q => `${MOONSHOT_BASE}/search?q=${encodeURIComponent(q)}`;
+            const shown = PK_PRODUCTS.filter(p => pkProdGroup === 'all' || p.g === pkProdGroup);
+            document.getElementById('pkProdBody').innerHTML = `<div class="pk-learn-grid">${shown.map(p => {
+                const grp = PK_PRODUCT_GROUPS.find(g => g.key === p.g);
+                const query = set ? `${set.name} ${p.q}` : p.q;
+                return `<div class="pk-learn-card">
+                    <span class="pk-tag">${grp.label}</span>
+                    <h3>${p.icon} ${escapeHTML(p.name)}</h3>
+                    <div class="pk-prod-h">What's inside (typical)</div>
+                    <ul>${p.inside.map(i => `<li>${escapeHTML(i)}</li>`).join('')}</ul>
+                    <div class="pk-prod-h">What it's for</div>
+                    <div>${escapeHTML(p.purpose)}</div>
+                    <div class="pk-prod-tip">💡 ${escapeHTML(p.tip)}</div>
+                    <a class="pk-prod-link" href="${escapeAttr(link(query))}" target="_blank" rel="noopener">🛒 Search the store: ${escapeHTML(query)} →</a>
+                </div>`;
+            }).join('')}</div>`;
+            document.getElementById('pkProdNote').innerHTML = `Written by hand from how current Pokémon products are usually put together (checked ${PK_PRODUCTS_AS_OF}); counts and extras vary by set and by retailer, so treat them as approximate. Not read from a data source: none is free for Pokémon sealed products. The store link opens moonshotgamestore.com's own search, since stock isn't read live.`;
+        }
+
         // ============== START ==============
-        // #sets, #learn, #rarity, #deck, #quiz open a tool; #card=<id> and
+        // #sets, #learn, #rarity, #products, #deck, #quiz open a tool; #card=<id> and
         // #set=<id> open a card or a set.
         function pkStartFromHash() {
             const h = decodeURIComponent(location.hash.slice(1));
