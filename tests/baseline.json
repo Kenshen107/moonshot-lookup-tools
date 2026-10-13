@@ -1,0 +1,20 @@
+{
+  "_about": "What the tests expect today. Numbers may only go up. Update this file in the same commit that improves them.",
+  "knownNotFull": {
+    "mirrodin": [
+      "Chalice of the Void"
+    ]
+  },
+  "coverage": {
+    "measured": "2026-10-08",
+    "total": 34142,
+    "full": 13045,
+    "partial": 16691,
+    "none": 4406,
+    "top1000": {
+      "full": 823,
+      "partial": 128,
+      "none": 49
+    }
+  }
+}

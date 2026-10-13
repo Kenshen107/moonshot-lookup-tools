@@ -1,6 +1,6 @@
 # Spellslinger Duels overhaul plan
 
-Status: **planned, not started** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
+Status: **Phases 0, 1a, 1b, 1c, 2a (parse side), 2b and 2c done, 3 partly done, 4 done (2026-10-08)** (written 2026-10-08 from the owner's request). Each step is meant to be one Claude session. Read this whole file before starting a step, do only that step, and don't merge until the owner says so.
 
 ## Owner's goals
 
@@ -15,13 +15,13 @@ The owner also asked for the single file to be split into modules, and for the c
 
 Ask about any that are still open before starting a step that depends on it. Record the answers here.
 
-1. **Splitting the file.** CLAUDE.md says every tool is "a single self-contained `.html` file". Plain multiple files work on GitHub Pages with no build step and no framework, so the split is allowed only with the owner's OK. Update CLAUDE.md when it happens. Keep `Spellslinger_Duels.html` as the page address so links and bookmarks still work. *Answer:*
+1. **Splitting the file.** CLAUDE.md says every tool is "a single self-contained `.html` file". Plain multiple files work on GitHub Pages with no build step and no framework, so the split is allowed only with the owner's OK. Update CLAUDE.md when it happens. Keep `Spellslinger_Duels.html` as the page address so links and bookmarks still work. *Answer: yes, split into several files (owner, 2026-10-08).*
 2. **The card reader is migrated step by step, not rewritten in one go.** About 37% of all cards, and every finished set, deck and draft, depend on the current reader. *Answer:*
-3. **What "Shop is separate from Campaign decks" means.** Pick one. *Answer:*
+3. **What "Shop is separate from Campaign decks" means.** Pick one. *Answer: (a), one collection (owner, 2026-10-08).*
    - (a) One collection; only coins and win/loss records are kept per mode.
    - (b) Separate collections: a card opened in the Shop can't be played in the Campaign.
-4. **Existing saves.** Proposed: Dustyn's and Ovid's current coins, cards and decks become their Campaign/Shop save, and Sandbox starts fresh. *Answer:*
-5. **"Lock deck-building by campaign progress."** For example: only cards you own, only precons you've unlocked, or a deck-value cap per tier. The Campaign already has $50+ / $100+ value rules per tier. *Answer:*
+4. **Existing saves.** Proposed: Dustyn's and Ovid's current coins, cards and decks become their Campaign/Shop save, and Sandbox starts fresh. *Answer: yes, as proposed (owner, 2026-10-08).*
+5. **"Lock deck-building by campaign progress."** For example: only cards you own, only precons you've unlocked, or a deck-value cap per tier. The Campaign already has $50+ / $100+ value rules per tier. *Answer: deck-value cap per tier (owner, 2026-10-08).*
 
 ## Rules every step follows
 
@@ -38,6 +38,8 @@ Ask about any that are still open before starting a step that depends on it. Rec
 - **Notes:** update CLAUDE.md (or `docs/`) with what changed, in the same plain style.
 
 ## Phase 0: Set up so other sessions can work safely (first)
+
+**Phase 0 result (2026-10-08):** the old test scripts could not be added, because they were lost with the sessions that wrote them (they only lived in temporary folders). `tests/` was rebuilt from scratch instead: see `tests/README.md`. It has about 60 engine rule checks, a card-by-card test (verified decks, Mirrodin, Magic 2010, Welcome Decks, Starter Kits), a coverage measurement with a baseline of which cards read as Automated, AI-vs-AI games, `run_all.py`, `fetch_cards.py` and `card_status.js`. The numbers in the old suites (66, 40, 36 ...) no longer apply. The history sections were moved to `docs/spellslinger-history.md` and CLAUDE.md went from about 150KB to about 100KB. Findings: Chalice of the Void reads as Not yet although CLAUDE.md said all of Mirrodin was Automated (listed in `tests/baseline.json`); the older alternative-cost cards (Force of Negation, Snuff Out) never check their "if" condition (noted in the history file).
 
 Until now the test scripts lived only in a temporary scratch folder, not in the repo. A new session can't tell whether it broke something without them. They're Python and Playwright, with JS check files.
 
@@ -80,6 +82,8 @@ Cut the existing script into files in the order it runs now, as plain `<script s
 
 Update the test harness if it loads the page differently.
 
+**Phase 1a result (2026-10-08):** done as a pure cut, with no code moved or edited. `Spellslinger_Duels.html` keeps the markup (338 lines); `spellslinger/styles.css` has the CSS; the script became `spellslinger/01-core.js` to `16-startup.js`, cut at the section banners the code already had and kept in its original order (the joined files are byte for byte the old script). The files are therefore named by what each section holds, not by the plan's list (`api`, `state`, `parser`, `engine`, `ai`, `draft`, `shop`, `app`): the old script mixes those topics (for example the trigger code sits after the shop), and regrouping them means moving code, which is for Phase 2a and later. Checked: `tests/run_all.py` passes, the page loads with no errors at 1280px and 390px, and a save made by the old single-file version loads with the same coins, cash and decks.
+
 ### 1b: IndexedDB storage
 
 The game reads the profile instantly in hundreds of places, so don't make every read async.
@@ -91,6 +95,8 @@ The game reads the profile instantly in hundreds of places, so don't make every 
 
 **Done when:** an old save loads correctly, a large collection saves and reloads, and the tests pass.
 
+**Phase 1b result (2026-10-08):** `spellslinger/00-storage.js` replaces the `store` object. All saved values (profiles, accounts, the card cache and the MTGJSON caches, settings) are in IndexedDB, loaded into memory once before the game's scripts run (`loadGame` in the HTML adds them after the load), so every `store.get` is still synchronous. Writes are queued and sent in the background. On the first run the old `duels:*` localStorage keys are copied across and left as a backup; if IndexedDB is unavailable the game uses localStorage as before. The card cache was not moved first, because every key moved together. New suite `tests/suites/storage.js` (18 checks): migration from a real old-style save, no second migration, the localStorage backup untouched, a 12MB save, removal, a save made right before a reload, and the fallback. Not done: deleting the old localStorage keys (a later cleanup), and syncing two open tabs.
+
 ### 1c: Faster redraws (only where it matters)
 
 Don't rewrite all the `.innerHTML` code; it's safe as long as text goes through `esc()`. Change only the parts that redraw constantly, so they update just what changed:
@@ -98,6 +104,8 @@ Don't rewrite all the `.innerHTML` code; it's safe as long as text goes through 
 - the shop floor's one-second refresh
 
 **Done when:** the tests pass, and a long game and a shop day feel no slower.
+
+**Phase 1c result (2026-10-08):** `setHTML` (skip a redraw whose HTML is unchanged) is used for the game table's six zones and the shop floor's panels, and `fitTable` runs only when something changed or the window changed. Measured with `tests/perf.js` (24 creatures, 14 lands and 12 cards in hand a side; a case of 40 cards): table redraw 17 ms to 8 ms, shop floor 12.6 ms to 0.2 ms. A side effect is that a half-typed price in the shop no longer loses focus. The remaining 8 ms of a table redraw is building the HTML (the hand's "can I cast this" checks are the biggest part); it wasn't changed, because caching those checks risks showing a card as castable when it isn't. New suite `tests/suites/redraw.js` (13 checks).
 
 ## Phase 2: Card reader, migrated gradually
 
@@ -109,6 +117,10 @@ The code already marks them with comments: "Mirrodin (2026-10-08)", "Magic 2010 
 - The core reader keeps only the general rules.
 
 **Done when:** coverage numbers and every test match exactly what they were before.
+
+**Phase 2a result (2026-10-08, the parse side):** the round-specific wordings moved out of the card reader into `spellslinger/rules/*.js` packs: 11 `EFFECTS` blocks and 5 `TRIGGERS` blocks (data entries) and 14 blocks of `rulesFor`'s line loop (converted to functions with a small context object, found with the TypeScript parser and checked mechanically). `02-card-reader.js` went from 1,772 to about 750 lines. A new safety net, `tests/suites/rules-snapshot.js`, fingerprints how all 34,142 paper cards are read; after the move not one card reads differently (a first attempt did change 168, and the snapshot named them: a `lines:` block had been attached to the wrong pack). **Not moved:** the `applyEffect` cases (about 270 of them), the AI scoring cases, the `parseCond` additions and the sentence rewrites at the top of `parseEffects`. They don't stand in the way of Phase 2b (that is about reading text), the comment markers for them aren't reliable about which round a case belongs to (the Tyrox marker, for one, covers cases of other rounds after it), and moving them is a long, mostly cosmetic change. Do it later if wanted, case by case, using the snapshot and the card-by-card tests.
+
+**Phase 2b result (2026-10-08, first slice):** `spellslinger/02b-token-reader.js` reads a "target ..." phrase by pieces (`parseTargetPhrase`: types, non-types, colors, attacking/blocking/tapped, you/opponent controls, power/toughness/mana value limits, with/without a keyword) into a filter object carried as the string `sf:<json>`, which `permMatches` hands to `structMatch`. Shapes: destroy / exile target X, return target X to its owner's hand, and ~ deals N damage to target creature X. It runs **only after every regex in `EFFECTS` failed** (hook in `parseEffects`), so no card that was read before reads differently: the snapshot showed 131 changed cards, all previously-unread ones, and coverage went 12,250 -> 12,350 Automated with none lost. Baselines updated; an engine check proves Cast Down only targets the nonlegendary creature. **Not done yet (2c):** draw / gain / lose N, create tokens, counters and pump shapes, and promoting the new reader ahead of the old regexes (then deleting regexes it fully covers).
 
 ### 2b: A token-based reader for the most common shapes
 
@@ -125,6 +137,8 @@ It runs before the old regex list, and the old list stays as the fallback.
 ### 2c: Measure after each batch
 
 Rerun the coverage measurement and the card-by-card tests. The Automated count must not drop. Remove a regex rule only when the new reader handles every card that used it; the coverage tool lists exactly which cards those are.
+
+**Phase 2c result (2026-10-08):** coverage and the card-by-card tests were rerun after each batch (12,250 -> 12,380 Automated, none lost; Home's `CARD_COVERAGE` now shows 12,380 of 34,142). A new tool, `node tests/reader_audit.js`, compares what the old regexes and the token reader make of each of 38,391 distinct sentences on paper cards. They overlap on only 266 sentences (the old list is far wider: 1,192 sentences only it reads, 63 only the token reader), and on those they agree on 264; the other 2 are old card-specific rewrites (Parting Gust, Teferi's Time Twist). 25 of the 27 overlapping regexes are fully covered. **Decision: no regex was removed.** The old regexes give creature targets as `target: 'creature'` while the token reader gives `'perm'` with a filter, and the AI's target scoring and the engine's picker treat those differently, so deleting them would change play for cards that read fine today. If the owner wants the old list thinned later, do it by making the token reader emit the same shapes first, then delete one regex at a time with the snapshot as proof.
 
 ## Phase 3: Table layout fixes
 
@@ -148,6 +162,8 @@ Rerun the coverage measurement and the card-by-card tests. The Automated count m
 - a choice panel open
 - three items on the stack
 
+**Phase 3 result so far (2026-10-08):** (1) every global layer in `styles.css` now uses a `--z-*` token on `:root` (sticky, dropdown, nav, game, playtest, banner, lift, peek, menu, sheet, modal, jackpot, cover, toast) with the same values as before, so nothing moves; plain numbers 1-6 stay for stacking inside one component. (2, 3) A new suite `tests/suites/layout.js` renders a table with 20 creatures and 15 lands a side, an Equipment attached, and a hand of 7, 12 and 20 at 360, 768 and 1280px wide, saves screenshots to `tests/.out/layout-<width>-<hand>.png`, and checks: no sideways page scroll, every hand card inside the hand dock (desktop and tablet; the phone hand scrolls sideways by design), the hand never covers the turn bar, rows and their cards stay on screen. All 33 checks pass on the current `fitHand` / `fitTable`, and the screenshots show nothing clipped or overlapping, so **those two were not reworked** (nothing was broken to fix; the suite will catch it if they break). **Not done:** screenshots with the play-by-play running, a choice panel open and three items on the stack (the `Done when` list); the test cards have blocked pictures, so check card art on the live site.
+
 ## Phase 4: Three game modes (after the owner's decisions 3-5)
 
 - **Mode switch:** a top-level picker, Sandbox / Campaign / Shop Simulator, saved per player. Each mode shows only its own tabs on the desktop tab row and the phone bottom bar (`MORE_VIEWS` / the bottom nav).
@@ -165,6 +181,8 @@ Rerun the coverage measurement and the card-by-card tests. The Automated count m
 - **Saves:** apply decision 4 to existing players, in both IndexedDB and memory.
 
 **Done when:** a game or action in each mode changes only that mode's save. Test by comparing the saves before and after.
+
+**Phase 4 result (2026-10-08):** `spellslinger/04b-modes.js`. A mode bar under the header (Sandbox / Campaign / Shop Simulator, saved per player as `profile.mode`) decides which tabs show on the desktop tab row, the phone bottom bar and the More sheet (`MODES[..].views`); a view from another mode is refused and goes Home (`showView`). Sandbox: Packs, Decks, Play, Draft, Welcome Decks, Rules, and the test buttons (＋ Add coins, Start over), which show only there. Campaign: Packs, Decks, Campaign, Rules. Shop Simulator: Shop, Distributor, Decks, Rules. **Saves, following the owner's answers:** one shared collection and deck list; coins, cash, wins, losses and free packs (`MODE_FIELDS`) belong to a bucket. Sandbox has its own bucket and starts fresh (500 coins, $50, no record); today's values stay with Campaign / Shop (the `main` bucket). The code still reads `profile.coins` etc., which always hold the active bucket; switching parks them in `profile.stash` and loads the other (`swapBucket`). **Interpretation to confirm:** Campaign and Shop share the one `main` purse, because the Campaign already pays cash and costs entry fees that the Shop uses; they are separate in tabs and in their own data (`campaignProgress` vs the case, stockroom, shop day). If the owner wants them fully apart, give Shop its own bucket the same way. **Campaign deck limits:** Kitchen Table decks worth up to $50, Friday Night Magic $50 to $300, Regional Qualifier $100 and up (`maxValue` / `minValue`, `campaignDeckProblem`; numbers are mine, easy to change). The shop's ＋💵 Add cash button was left in the Shop (Sandbox has no Shop). Tests: `tests/suites/modes.js` (24 checks: migration of an old save, swapping and no leaking between Sandbox and Campaign/Shop, tab sets on desktop and phone, refused views, the saved mode, the deck limits).
 
 ## Ready-to-paste prompts (one session each)
 
