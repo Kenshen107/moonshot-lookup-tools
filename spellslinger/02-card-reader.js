@@ -205,6 +205,7 @@ const EFFECTS = [
 ];
 
 function parseEffects(text) {
+    if (typeof cmdRewrite === 'function') text = cmdRewrite(text); // the Commander precons' multi-sentence wordings (rules/cmdr.js)
     text = text.replace(/(Exile \d+ target creatures)\. (For each creature exiled this way, its controller creates)/g, '$1 §§ $2')
         .replace(/[Ll]ook at the top card of your library\. If it's a creature card, you may reveal it and put it into your hand\. If you don't put the card into your hand, you may put it into your graveyard\./g, 'Look at the top card of your library. If it\'s a creature card, you may reveal it and put it into your hand. If you don\'t put the card into your hand, you may put it into your graveyard'.replace(/\. /g, '§¶'));
     // Multi-sentence card-selection phrases become one token first ("look at the top N cards...")
@@ -394,7 +395,7 @@ function parseEffects(text) {
         s = s.replace(/^(?:it|he|she) deals /i, '~ deals ').replace(/^if you do, /i, '');
         if (!out.some(needsTarget)) s = s.replace(/^(?:it|he|she) (gets|gains|connives|can't be blocked)\b/i, '~ $1');
         if (!out.some(needsTarget) && !/with an? .+ on it$/i.test(s)) s = s.replace(/ on (?:it|him|her)$/i, ' on ~');
-        if (/^(?:you may )?choose new targets for the copy$/i.test(s)) continue;
+        if (/^(?:you may )?choose new targets for the cop(?:y|ies)$/i.test(s)) continue;
         s = s.replace(/ of their choice$/i, '').replace(/^each other player /i, 'each opponent ').replace(/ creature or planeswalker of their choice\./i, ' creature or planeswalker.');
         if (/^if that spell is countered this way, exile it instead of putting it into its owner's graveyard$/i.test(s)) { const pc = [...out].reverse().find(e => e.t === 'counter'); if (pc) { pc.exileIt = true; continue; } }
         let kicked = false;

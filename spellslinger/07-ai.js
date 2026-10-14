@@ -506,7 +506,7 @@ function aiChooseAttackers(P) {
 function aiAimAtPlaneswalkers(P, list) {
     const D = opp(P);
     list.forEach(o => { delete o.attackPW; });
-    const pws = D.bf.filter(isPlaneswalker).sort((a, b) => (a.ctr.loyalty || 0) - (b.ctr.loyalty || 0));
+    const pws = D.bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, P)).sort((a, b) => (a.ctr.loyalty || 0) - (b.ctr.loyalty || 0));
     if (list.reduce((s, a) => s + pow(a), 0) >= D.life) return;
     // Its own battles (Sieges it attacks to flip): spare attackers that can finish one
     for (const b of P.bf.filter(isBattle)) {

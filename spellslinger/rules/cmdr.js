@@ -1,10 +1,16 @@
 // Spellslinger Duels - rules pack: the Commander precons of the last four sets (2026-10-15): FDC, FRC, SOC and MSC.
 // Wordings only; the engine pieces are in 15d-cmdr-*.js (CMD functions run by the `cmd` effect, `fn: 'spec'` trigger filters, statics with `spec`).
+const CMD_REWRITES = [
+    [/Create two tokens that are copies of target permanent an opponent controls\. They gain haste\. At the beginning of the next end step, sacrifice them\./g, '§venserCopies.'],
+    [/Copy target instant or sorcery spell an opponent controls twice\. You may choose new targets for the copies\./g, '§venserSpell.']
+];
+function cmdRewrite(t) { for (const [re, to] of CMD_REWRITES) t = t.replace(re, to); return t; }
 const CL = []; // [regex, (R, m, ctx) => void] whole-line readers
 const cl = (re, fn) => CL.push([re, fn]);
 const SPEC = (ev, spec, extra) => ({ ev, fn: 'spec', spec, ...(extra || {}) });
 const cmd = (id, extra) => ({ t: 'cmd', id, ...(extra || {}) });
 const selfCond = (R, c) => (R.selfCond = R.selfCond || []).push(c);
+const mite = n => ({ t: 'token', n, p: 1, q: 1, name: 'colorless Phyrexian Mite', artifact: true, kw: [], text: 'Toxic 1\n~ can\'t block.' });
 const TOKEN = (n, p, q, name, kw) => ({ t: 'token', n, p, q, name, kw: kw || [] });
 
 // ===== FDC: Calling All Angels =====
@@ -164,9 +170,66 @@ clx('Whenever you cast a Zombie spell, create a tapped 2/2 black Zombie creature
 clx('Create thirteen tapped 2/2 black Zombie creature tokens.', R => { R.spell = [{ t: 'token', n: 13, p: 2, q: 2, name: 'black Zombie', kw: [], tapped: true }]; });
 clx('Whenever ~ or another nontoken Zombie you control dies, create a 2/2 black Zombie creature token.', R => { R.trig.push(SPEC('dies', { sub: 'Zombie', nontoken: true }, { effects: [{ t: 'token', n: 1, p: 2, q: 2, name: 'black Zombie', kw: [] }] })); });
 
+// ===== FRC: Multiverse Reforged =====
+clx('Landfall — Whenever a land you control enters, draw a card. Then if this is the first time this ability has resolved this turn, reveal cards from the top of your library until you reveal a creature card. Put that card onto the battlefield and the rest on the bottom of your library in a random order.', R => { R.trig.push({ ev: 'landfall', effects: [cmd('nissaLandfall')] }); });
+clx('Whenever a land you control enters, draw a card. Then if this is the first time this ability has resolved this turn, reveal cards from the top of your library until you reveal a creature card. Put that card onto the battlefield and the rest on the bottom of your library in a random order.', R => { R.trig.push({ ev: 'landfall', effects: [cmd('nissaLandfall')] }); });
+clx('If you would lose unspent mana, that mana becomes colorless instead.', R => { R.keepColorless = true; });
+clx('When ~ enters, reveal cards from the top of your library until you reveal X creature cards, where X is the number of opponents you have. Put those creature cards onto the battlefield, then shuffle. They\'re goaded for the rest of the game. For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they were chosen.', R => { R.etb.push(cmd('dackFayden')); });
+clx('When ~ enters, destroy all tapped creatures your opponents control. You gain 1 life for each creature destroyed this way.', R => { R.etb.push(cmd('obNixilis')); });
+clx('Choose target opponent. Until that player\'s next turn, they gain protection from everything and their life total can\'t change. All nonland permanents they control phase out.', R => { R.spell = [{ t: 'cmd', id: 'teferisReproach', target: 'player', oppOnly: true, good: false }]; });
+clx('Exile ~.', R => { if (R.spell && R.spell.some(e => e.id === 'teferisReproach')) R.spell.push({ t: 'exileSelf' }); else return false; });
+clx('Whenever ~ or another nontoken creature you control dies, return that card to the battlefield under your control at the beginning of the next end step.', R => { R.trig.push(SPEC('dies', { type: 'Creature', nontoken: true }, { effects: [cmd('returnAtEnd')] })); });
+clx('Whenever ~ enters or attacks, target opponent reveals cards from the top of their library until they reveal a historic permanent card. You put that card onto the battlefield under your control and lose life equal to that permanent\'s mana value. That player puts the rest of the revealed cards on the bottom of their library in a random order.', R => { const e = { t: 'cmd', id: 'jhoiraSteal', target: 'player', oppOnly: true, good: false }; R.etb.push(e); R.trig.push({ ev: 'attacks', effects: [e] }); });
+clx('Whenever you gain life, you may pay that much life. If you do, draw that many cards.', R => { R.trig.push({ ev: 'gainLife', effects: [cmd('nivDraw')] }); });
+clx('Whenever one or more creatures deal combat damage to you while you\'re the monarch, tap those creatures and put a stun counter on each of them.', R => { R.trig.push({ ev: 'hitPlayer', fn: 'hitMonarchMe', effects: [cmd('tamiyoStun')] }); });
+clx('Eminence — As long as ~ is in the command zone or on the battlefield, other Sphinx spells you cast cost {1} less to cast.', R => { R.reducer = { what: 'Sphinx', n: 1, eminence: true }; });
+clx('As long as ~ is in the command zone or on the battlefield, other Sphinx spells you cast cost {1} less to cast.', R => { R.reducer = { what: 'Sphinx', n: 1, eminence: true }; });
+clx('Whenever one or more Sphinxes you control attack, each player mills that many cards. For each player, you may cast a card that player milled this way without paying its mana cost.', R => { R.trig.push({ ev: 'attacks', fn: 'sphinxAttack', effects: [cmd('sphinxAttack')] }); });
+clx('You can\'t lose the game and your opponents can\'t win the game.', R => { R.cantLose = true; });
+clx('Creatures you control can\'t have -1/-1 counters put on them.', R => { R.noMinusCounters = true; });
+clx('At the beginning of each upkeep, if you\'re the monarch, create a Gingerbrute token.', R => { R.trig.push({ ev: 'upkeep', who: 'each', cond: 'you are the monarch', effects: [cmd('gingerbrute')] }); });
+clx('{1}: ~ can\'t be blocked this turn except by creatures with haste.', (R, m, ctx) => { act(R, ctx.line, '{1}', [cmd('gingerEvade')]); });
+clx('−7: You get an emblem with "Creatures you control get +2/+2 and have flying."', R => { R.acts.push({ loyalty: -7, effects: [cmd('emblemSun')], text: '−7: You get an emblem with "Creatures you control get +2/+2 and have flying."', sorcery: true }); });
+clx('As ~ enters, choose a card type.', R => { R.etb.push(cmd('emissaryChoose')); });
+clx('You and creatures you control have protection from the chosen card type.', R => { R.emissary = true; });
+clx('At the beginning of your upkeep, you lose 1 life and create a 1/1 colorless Phyrexian Mite artifact creature token with toxic 1 and "~ can\'t block."', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [{ t: 'loseSelf', n: 1 }, mite(1)] }); });
+clx('Corrupted — As long as an opponent has three or more poison counters, creatures you control with toxic have lifelink.', R => { R.statics.push({ fn: 'toxicCreature', p: 0, q: 0, kw: ['lifelink'], cond: 'an opponent has three or more poison counters' }); });
+clx('As long as an opponent has three or more poison counters, creatures you control with toxic have lifelink.', R => { R.statics.push({ fn: 'toxicCreature', p: 0, q: 0, kw: ['lifelink'], cond: 'an opponent has three or more poison counters' }); });
+clx('Whenever you create one or more creature tokens, put a story counter on ~.', R => { R.trig.push({ ev: 'creatureTokenMade', effects: [{ t: 'namedCounter', n: 1, kind: 'story' }] }); });
+clx('Exile all creatures. Incubate X, where X is the number of creatures exiled this way.', R => { R.spell = [{ t: 'wipe', how: 'exile', what: 'creatures' }, cmd('incubate')]; });
+clx('You gain X life. Create X 1/1 colorless Phyrexian Mite artifact creature tokens with toxic 1 and "~ can\'t block." If X is 5 or more, destroy all other creatures.', R => { R.spell = [{ t: 'cmd', id: 'whiteSunsTwilight', n: 'X' }]; });
+clx('You gain 97 life. Create 97 1/1 colorless Phyrexian Mite artifact creature tokens with toxic 1 and "~ can\'t block." If 97 is 5 or more, destroy all other creatures.', R => { R.spell = [{ t: 'cmd', id: 'whiteSunsTwilight', n: 'X' }]; });
+clx('Exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. Put all creature cards revealed this way onto the battlefield, then shuffle the rest of the revealed cards into your library.', R => { R.spell = [cmd('massPolymorph')]; });
+clx('Exile all creatures you control. At the beginning of the next end step, reveal cards from the top of your library until you reveal that many creature cards, put all creature cards revealed this way onto the battlefield, then shuffle the rest of the revealed cards into your library.', R => { R.spell = [cmd('syntheticDestiny')]; });
+clx('Draw X cards, then discard X cards. Create a 1/1 white Spirit creature token with flying for each card type among cards discarded this way.', R => { R.spell = [{ t: 'cmd', id: 'occultEpiphany', n: 'X' }]; });
+clx('Draw 97 cards, then discard 97 cards. Create a 1/1 white Spirit creature token with flying for each card type among cards discarded this way.', R => { R.spell = [{ t: 'cmd', id: 'occultEpiphany', n: 'X' }]; });
+clx('Whenever you cast a noncreature spell, create an X/X blue Shark creature token with flying, where X is that spell\'s mana value.', R => { R.trig.push({ ev: 'cast', filter: 'noncreature', effects: [cmd('sharkCast')] }); });
+clx('When you cycle ~, create an X/X blue Shark creature token with flying.', R => { R.cycleTrig = [cmd('sharkCycle')]; });
+clx('Your opponents can\'t gain life.', R => { R.noOppGain = true; });
+clx('At the beginning of each end step, each opponent loses life equal to the life that player lost this turn.', R => { R.trig.push({ ev: 'end', who: 'each', effects: [cmd('archfiendEnd')] }); });
+clx('Whenever ~ enters or attacks, target opponent sacrifices a creature or planeswalker of their choice, discards a card, and loses 3 life. You draw a card and gain 3 life.', R => { const e = { t: 'cmd', id: 'archonCruelty', target: 'player', oppOnly: true, good: false }; R.etb.push(e); R.trig.push({ ev: 'attacks', effects: [e] }); });
+clx('At the beginning of your upkeep, you lose 1 life and amass Zombies 1.', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [{ t: 'loseSelf', n: 1 }, { t: 'amass', n: 1, type: 'Zombie' }] }); });
+clx('Whenever a Zombie token you control with power 6 or greater attacks, it gains lifelink until end of turn.', R => { R.trig.push({ ev: 'attacks', fn: 'bigZombieTokens', once: 'dreadLL', effects: [cmd('zombieLifelink')] }); });
+clx('As ~ enters, choose Mardu or Jeskai.', R => { R.etb.push(cmd('chooseWord', { options: ['Mardu', 'Jeskai'] })); });
+clx('• Mardu — If a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.', R => { R.doubleAttackTrig = true; });
+clx('• Jeskai — At the beginning of your upkeep, create a 1/1 red Goblin creature token. It gains lifelink and haste until end of turn.', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [cmd('siegeJeskai')] }); });
+clx('{1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of ~.', (R, m, ctx) => { act(R, ctx.line, '{1}{R}, {T}', [{ t: 'token', n: 1, p: 0, q: 1, name: 'red Kobold', named: 'Kobolds of Kher Keep', kw: [] }]); });
+clx('{U}{R}: Until end of turn, ~ becomes a 2/1 blue and red Elemental creature with "During your turn, ~ has first strike." It\'s still a land.', (R, m, ctx) => { act(R, ctx.line, '{U}{R}', [cmd('restlessAnimate')]); });
+clx('When ~ enters, the owner of up to one other target nonland permanent puts it on their choice of the top or bottom of their library.', R => { R.etb.push({ t: 'cmd', id: 'topOrBottom', target: 'perm', filter: 'nonland permanent', notSelf: true, optional: true, good: false }); });
+clx('Whenever you cast your first noncreature spell each turn, empower Jace 1.', R => { R.trig.push({ ev: 'cast', filter: 'noncreature', once: 'firstNC', effects: [cmd('empower', { n: 1 })] }); });
+clx('At the beginning of combat on each opponent\'s turn, they may pay {2}. If they don\'t, creatures they control can\'t attack Jaces you control this turn.', R => { R.trig.push({ ev: 'combat', who: 'each', effects: [cmd('jaceTax')] }); });
+clx('+1: Draw two cards, then put a card from your hand on the bottom of your library.', R => { R.acts.push({ loyalty: 1, effects: [{ t: 'draw', n: 2 }, cmd('bottomFromHand')], text: '+1: Draw two cards, then put a card from your hand on the bottom of your library.', sorcery: true }); });
+clx('−3: Exile another target planeswalker or creature you control. Reveal cards from the top of your library until you reveal a creature or planeswalker card. Put that card onto the battlefield and the rest on the bottom of your library in a random order.', R => { R.acts.push({ loyalty: -3, effects: [{ t: 'cmd', id: 'jaceMinus3', target: 'perm', filter: 'creature or planeswalker you control', notSelf: true, good: true }], text: '−3: Exile another target planeswalker or creature you control. Reveal cards from the top of your library until you reveal a creature or planeswalker card. Put that card onto the battlefield and the rest on the bottom of your library in a random order.', sorcery: true }); });
+clx('~ can be your commander.', R => { R.canBeCommander = true; });
+
 registerRules({
     name: 'cmdr',
     effects: [
+        [/^§venserCopies$/, () => ({ t: 'cmd', id: 'venserCopies', target: 'perm', filter: 'permanent an opponent controls', good: false })],
+        [/^§venserSpell$/, () => ({ t: 'cmd', id: 'venserSpell', target: 'spell', filter: 'oppInstSorc', good: false })],
+        [/^empower jace (\d+)$/i, m => ({ t: 'cmd', id: 'empower', n: +m[1] })],
+        [/^return target spell or creature to its owner's hand$/i, () => ({ t: 'cmd', id: 'bounceSpellOrCreature', target: 'spellOrCreature', good: false })],
+        [/^draw four cards, then put two cards from your hand on top of your library in any order$/i, () => ({ t: 'brainstorm', draw: 4 })],
         [/^counter target creature or planeswalker spell$/i, () => ({ t: 'counter', target: 'spell', filter: 'creature or planeswalker' })],
         [/^~ deals (\w+) damage to each creature and each opponent$/i, m => ({ t: 'cmd', id: 'dmgCreaturesAndOpps', n: nw(m[1]) })],
         [/^discard any number of cards, then draw that many cards$/i, () => ({ t: 'cmd', id: 'wheelAny' })],
@@ -180,5 +243,5 @@ registerRules({
         [/^Whenever an Angel you control dies, (.+)$/, () => SPEC('dies', { sub: 'Angel' })],
         [/^Whenever an opponent casts their second spell each turn, (.+)$/, () => ({ ev: 'cast', filter: 'any', who: 'opp', nth: 2 })]
     ],
-    lines: [ctx => { for (const [re, fn] of CL) { const m = ctx.line.match(re); if (m) { fn(ctx.R, m, ctx); return true; } } return false; }]
+    lines: [ctx => { for (const [re, fn] of CL) { const m = ctx.line.match(re); if (m && fn(ctx.R, m, ctx) !== false) return true; } return false; }]
 });

@@ -437,6 +437,8 @@ const isPlaneswalker = o => !!o && !!o.card && Rx(o).kind === 'planeswalker' && 
 const isBattle = o => !!o && !!o.card && Rx(o).kind === 'battle';
 function damage(target, n, src) {
     if (n <= 0) return;
+    if (target.life !== undefined && target.protAll && G.turn < target.protAll) { log(`${target.name === 'You' ? 'You have' : `${target.name} has`} protection from everything: the damage is prevented.`); return; } // Teferi's Reproach
+    if (target.life !== undefined && src && src.card && typeof emissaryProtects === 'function' && emissaryProtects(target.i, src)) { log(`${target.name === 'You' ? 'You have' : `${target.name} has`} protection from ${src.card.name}'s card type: the damage is prevented.`); return; } // Serra's Emissary
     n = preconDamage(target, n, src); if (n <= 0) return;
     // The Mindskinner: damage a source you control would deal to an opponent is prevented; each opponent mills that many cards
     if (target.life !== undefined && src && src.card && src.uid !== undefined && G.players[src.owner] && src.owner !== target.i && G.players[src.owner].bf.some(a => Rx(a).mindskin && !lostAbilities(a))) { log(`${n} damage from ${src.card.name} is prevented (The Mindskinner).`); foes(G.players[src.owner]).forEach(F => doMill(F, n)); return; } // replacement and prevention effects of the precon rounds (15b-precon-effects.js)
@@ -645,7 +647,7 @@ function manaSources(P) {
     return P.bf.filter(o => !o.tapped && manaOf(o) && manaOf(o).n > 0 && !(isCreature(o) && o.sick && !has(o, 'haste')));
 }
 function availableMana(P) { return manaSources(P).reduce((a, o) => a + manaOf(o).n, 0) + (P.pool || []).length; }
-function emptyPools() { if (G) G.players.forEach(P => { if (P.pool && P.pool.length) P.pool = P.bf.some(a => Rx(a).keepRedMana && !lostAbilities(a)) ? P.pool.filter(c => c[0] === 'R') : []; }); } // Leyline Tyrant: red mana stays
+function emptyPools() { if (G) G.players.forEach(P => { if (P.pool && P.pool.length) P.pool = P.bf.some(a => Rx(a).keepColorless && !lostAbilities(a)) ? P.pool.map(() => 'C') : P.bf.some(a => Rx(a).keepRedMana && !lostAbilities(a)) ? P.pool.filter(c => c[0] === 'R') : []; }); } // Leyline Tyrant: red mana stays
 // Which sources to tap for a cost: colored symbols first (scarcest color
 // first, least flexible source first), then generic from what's left.
 // Pays from the mana pool first, then lands and other sources; painlands
@@ -753,6 +755,7 @@ function costOf(P, o) {
     if (R.costLessIf && condOk(R.costLessIf.cond, P, o)) cut += R.costLessIf.n;
     if (R.costLessTgt && (o._tgt ? tgtFits(o._tgt, R.costLessTgt.what, P) : !o._noTgtYet && firstTargetEffect(o) && validTargets(P, firstTargetEffect(o), o).some(v => tgtFits(v, R.costLessTgt.what, P)))) cut += R.costLessTgt.n;
     P.bf.forEach(x => { const rd = Rx(x).reducer; if (rd && spellFits(o, rd, x)) cut += rd.perCounter ? rd.n * Math.max(0, x.counters) : rd.n; });
+    P.command.forEach(x => { const rd = Rx(x).reducer; if (rd && rd.eminence && spellFits(o, rd, x)) cut += rd.n; }); // Eminence: The Ur-Sphinx works from the command zone
     let generic = Math.max(0, base.generic - cut);
     if (/Artifact/.test(o.card.type)) { const hum = allPerms().filter(x => Rx(x).hum && !lostAbilities(x)).length; if (hum) generic += hum * P.bf.filter(x => /Artifact/.test(x.card.type)).length; } // Hum of the Radix
     if ((R.kind === 'creature' && P.bf.some(x => Rx(x).anyManaCreatures)) || (o.anyMana && P.exile.includes(o))) { const colored = ['W', 'U', 'B', 'R', 'G'].reduce((a, c) => a + (base[c] || 0), 0); return { ...base, W: 0, U: 0, B: 0, R: 0, G: 0, generic: generic + colored }; }
@@ -1049,7 +1052,7 @@ function extraLandZones(P) {
 }
 
 // ---- Targets ----
-const TARGETED = ['any', 'creature', 'player', 'spell', 'perm'];
+const TARGETED = ['any', 'creature', 'player', 'spell', 'perm', 'spellOrCreature'];
 function needsTarget(e) { return TARGETED.includes(e.target); }
 function firstTargetEffect(o) {
     const r = Rx(o);
@@ -1076,8 +1079,9 @@ function validTargets(P, e, src) {
     if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.powLtSrc || pow(o) < pow(src)) && (!e.withCounters || o.counters > 0)).map(o => ({ o })));
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
-    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a)))).map(p => ({ p })));
-    if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P)).map(item => ({ item })));
+    if (e.target === 'spellOrCreature') { out.push(...creatures.map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); }
+    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(p.protAll && G.turn < p.protAll) && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a)))).map(p => ({ p })));
+    if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P) && !(e.filter === 'oppInstSorc' && it.P === P)).map(item => ({ item })));
     return out;
 }
 function stackMatches(it, filter) {
@@ -1091,6 +1095,7 @@ function stackMatches(it, filter) {
     if (filter === 'targetsCreature') return it.kind === 'spell' && !!it.target && !!it.target.o && isCreature(it.target.o);
     if (/^mv=\d+$/.test(filter)) return it.kind === 'spell' && (it.o.card.cmc || 0) === +filter.slice(3);
     if (filter === 'creature or planeswalker') return it.kind === 'spell' && (Rx(it.o).kind === 'creature' || Rx(it.o).kind === 'planeswalker');
+    if (filter === 'oppInstSorc') return it.kind === 'spell' && ['instant', 'sorcery'].includes(Rx(it.o).kind);
     if (filter === 'notMine') return it.kind === 'spell';
     if (filter === 'enchantment, instant, or sorcery') return it.kind === 'spell' && (/Enchantment/.test(it.o.card.type) || ['instant', 'sorcery'].includes(Rx(it.o).kind));
     if (COLOR_WORDS[filter]) return it.kind === 'spell' && (it.o.card.colors || []).includes(COLOR_WORDS[filter]);
@@ -2025,7 +2030,7 @@ async function applyChoiceEffect(P, e, src, t) {
         return;
     }
     if (e.t === 'brainstorm') {
-        drawCards(P, 3);
+        drawCards(P, e.draw || 3);
         for (let k = 0; k < 2 && P.hand.length; k++) {
             const pick = P.isAI ? P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0] : await pickCard(P, P.hand, `${src.card.name}: put a card back on top (${k + 1} of 2)`) || P.hand[0];
             pull(P.hand, pick);
@@ -2509,7 +2514,7 @@ async function applyEffect(P, e, t, src) {
         case 'draw': drawCards(P, e.n); break;
         case 'gain': if (e.caveOnly && !(G.lastPutLand && hasType(G.lastPutLand, 'Cave'))) break; if (e.n <= 0) break; e = { ...e, n: e.n + lifeGainBonus(P) }; P.life += e.n; log(`${P.name} ${you(P) ? 'gain' : 'gains'} ${e.n} life.`); fire('gainLife', { P, n: e.n }); break;
         // ---- Top-1000 round 2 (2026-10-07) ----
-        case 'minusCounters': { const x = t && t.o; if (!x || !onBf(x.uid)) break; x.counters -= e.n; log(`${x.card.name} gets ${e.n === 1 ? 'a -1/-1 counter' : `${e.n} -1/-1 counters`}.`); break; }
+        case 'minusCounters': { const x = t && t.o; if (!x || !onBf(x.uid)) break; if (cmdNoMinus(x)) { log(`${x.card.name} can't have -1/-1 counters put on it.`); break; } x.counters -= e.n; log(`${x.card.name} gets ${e.n === 1 ? 'a -1/-1 counter' : `${e.n} -1/-1 counters`}.`); break; }
         case 'doubleCountersAll': { const hit = P.bf.filter(c => isCreature(c) && c.counters > 0); hit.forEach(c => putCounters(c, c.counters, P)); log(`${name}: +1/+1 counters doubled on ${hit.length ? hit.map(c => c.card.name).join(', ') : 'nothing'}.`); break; }
         case 'sacColored': G.players.forEach(X => { const hit = X.bf.filter(x => (x.card.colors || []).length); if (hit.length) log(`${X.name} ${you(X) ? 'sacrifice' : 'sacrifices'} ${hit.map(x => x.card.name).join(', ')}.`); hit.forEach(x => { fire('sacrificed', { o: x }); dieOrLeave(x, 'gy'); }); }); break;
         case 'exileGraveyards': G.players.forEach(X => { X.exile.push(...X.gy.splice(0)); }); log(`${name}: all graveyards are exiled.`); break;
@@ -2559,6 +2564,7 @@ async function applyEffect(P, e, t, src) {
             if (e.sacEndCombat) madeNow.forEach(tk => { tk.sacEndCombat = true; });
             if (e.sacEnd) madeNow.forEach(tk => { tk.sacAtEnd = G.turn; });
             tokenMade(P);
+            fire('creatureTokenMade', { P });
             break;
         case 'counters': {
             const target = e.target === 'self' ? src : t.o;
@@ -2720,7 +2726,7 @@ async function applyEffect(P, e, t, src) {
             log(`${name} deals ${e.n} damage to ${hit.length} creature${hit.length === 1 ? '' : 's'}${e.players ? ' and each player' : ''}.`);
             break;
         }
-        case 'minusEach': allPerms().filter(isCreature).forEach(c => { c.counters -= e.n; }); log(`Each creature gets ${e.n} -1/-1 counter${e.n === 1 ? '' : 's'}.`); break;
+        case 'minusEach': allPerms().filter(isCreature).filter(c => !cmdNoMinus(c)).forEach(c => { c.counters -= e.n; }); log(`Each creature gets ${e.n} -1/-1 counter${e.n === 1 ? '' : 's'}.`); break;
         case 'stealPerm': { const from = G.players[t.o.owner]; if (from === P) break; pull(from.bf, t.o); t.o.realOwner = t.o.realOwner ?? t.o.owner; t.o.owner = P.i; t.o.sick = true; P.bf.push(t.o); log(`${P.name} ${you(P) ? 'gain' : 'gains'} control of ${t.o.card.name}.`); break; }
         // ---- Top-1000 round (2026-10-06) ----
         case 'discardIfNoSac': for (const X of G.players) { if ((G.edictDid || [true, true])[X.i] || !X.hand.length) continue; const d = await chooseDiscard(X, name); pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} couldn't sacrifice, so ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
@@ -3768,6 +3774,7 @@ async function equip(P, eq, creature) {
 // ---- Combat ----
 function canBlock(b, atk) {
     if (!isCreature(b) || b.tapped || has(b, 'cantblock')) return false;
+    if (atk.evadeHaste === G.turn && !has(b, 'haste')) return false; // Gingerbrute: can't be blocked except by creatures with haste
     if (Rx(atk).spy && !lostAbilities(atk) && ctrl(b).bf.some(x => /Artifact/.test(x.card.type))) return false; // Neurok Spy
     if (hasType(b, 'Wall') && hasType(atk, 'Juggernaut') && G.players[atk.owner].bf.some(a => Rx(a).juggernautsAttack && !lostAbilities(a))) return false; // Graaz: Juggernauts can't be blocked by Walls
     if (auraTaxOn(b) && !planPayment(ctrl(b), parseCost(''), auraTaxOn(b))) return false; // Oppressive Rays: it can only block if its controller can pay
@@ -3968,6 +3975,7 @@ async function beginTurn() {
     await dealsTick(P);
     P.landsPlayed = 0;
     P.turnsTaken = (P.turnsTaken || 0) + 1;
+    if (typeof phaseInAll === 'function') phaseInAll(P);
     foes(P).flatMap(F => F.bf).forEach(o => { if (o.tapped && grantsOn(o).some(g => g.untapEach)) { o.tapped = false; } });
     // Seedborn Muse, Unwinding Clock: untap during each other player's untap step
     foes(P).flatMap(F => F.bf).filter(a => Rx(a).untapOthers && !lostAbilities(a)).forEach(a => { const w = Rx(a).untapOthers; foes(P).flatMap(F => F.bf).forEach(o => { if (w === '~' ? o === a : w === 'all artifacts' ? /Artifact/.test(o.card.type) : true) o.tapped = false; }); });
@@ -4263,7 +4271,7 @@ async function humanEquip(uid) {
 }
 // Creatures that must attack if able: "attacks each combat", a one-turn order, or Goblin Rabblemaster's Goblins
 function forcedAttack(o) {
-    return !!(Rx(o).mustAttack || (hasType(o, 'Juggernaut') && G.players[o.owner].bf.some(a => Rx(a).juggernautsAttack && !lostAbilities(a))) || o.mustAttackTurn === G.turn || (hasType(o, 'Goblin') && G.players[o.owner].bf.some(l => l !== o && Rx(l).forceGoblins && !lostAbilities(l))));
+    return !!(Rx(o).mustAttack || isGoaded(o) || (hasType(o, 'Juggernaut') && G.players[o.owner].bf.some(a => Rx(a).juggernautsAttack && !lostAbilities(a))) || o.mustAttackTurn === G.turn || (hasType(o, 'Goblin') && G.players[o.owner].bf.some(l => l !== o && Rx(l).forceGoblins && !lostAbilities(l))));
 }
 async function goToCombat() {
     if (G.active !== G.view || G.phase !== 'main1' || G.busy) return;
@@ -4293,7 +4301,7 @@ async function confirmAttack() {
     me().bf.filter(o => canAttackWith(o) && forcedAttack(o) && !sel.includes(o)).forEach(o => sel.push(o)); // they must attack if able
     G.mode = null;
     if (!sel.length) { G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame(); return; }
-    const pws = [...foe().bf.filter(isPlaneswalker), ...me().bf.filter(isBattle)];
+    const pws = [...foe().bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me())), ...me().bf.filter(isBattle)];
     if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
     G.busy = true;
     if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected

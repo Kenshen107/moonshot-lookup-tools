@@ -218,9 +218,13 @@ function lifeWatch() {
         let d = X.life - G.lifeSeen[i];
         if (!d) return;
         if (d > 0) {
+            if (X.lifeLock && G.turn < X.lifeLock) { X.life = G.lifeSeen[i]; return; } // Teferi's Reproach: their life total can't change
+            if (G.players.some(A2 => A2 !== X && A2.bf.some(a => Rx(a).noOppGain && !lostAbilities(a)))) { log(`${X.name} ${you(X) ? "can't" : "can't"} gain life (Archfiend of Despair).`); X.life -= d; G.lifeSeen[i] = X.life; return; }
             const dg = X.bf.filter(a => Rx(a).doubleGain && !lostAbilities(a)).length;
             if (dg) { const extra = d * (2 ** dg - 1); X.life += extra; log(`${X.name} ${you(X) ? 'gain' : 'gains'} ${extra} more life (${X.bf.find(a => Rx(a).doubleGain).card.name}).`); }
         } else {
+            if (X.lifeLock && G.turn < X.lifeLock) { X.life = G.lifeSeen[i]; return; }
+            X.lostN = X.lostTurn === G.turn ? (X.lostN || 0) - d : -d; X.lostTurn = G.turn; // life lost this turn (Archfiend of Despair)
             const A = G.players[G.active];
             if (A !== X && A.bf.some(a => Rx(a).doubleOppLoss && !lostAbilities(a))) { X.life += d; log(`${X.name} ${you(X) ? 'lose' : 'loses'} ${-d} more life (${A.bf.find(a => Rx(a).doubleOppLoss).card.name}).`); d *= 2; }
             G.lifeSeen[i] = X.life;
@@ -367,6 +371,7 @@ function staticBuffs(o) {
     if (staticDepth > 1) return b;
     staticDepth++;
     try {
+    if (((G.players[o.owner].emblems) || []).includes('sunsChampion')) { b.p += 2; b.q += 2; b.kw.push('flying'); } // Elspeth, Sun's Champion's emblem
     { const X = G.players[o.owner]; for (const c of X.gy) { const gs = Rx(c).gyStatic; if (gs && X.bf.some(l => hasType(l, gs.type))) b.kw.push(...gs.kw); } }
     for (const a of allPerms()) {
         const st = Rx(a).statics;
@@ -442,6 +447,7 @@ function trigMatches(tr, ev, o, ctx) {
     if (ev === 'enters' && tr.typeEnter) { const x = ctx.o; if (x.owner !== o.owner || (!tr.self && x === o)) return false; const f = tr.typeEnter; return (f.creature ? isCreature(x) : true) && (!f.type || new RegExp(`\\b${f.type}\\b`).test(x.card.type) || hasType(x, f.type)) && (!f.color || (x.card.colors || []).includes(f.color)) && (!f.mvMax || (x.card.cmc || 0) <= f.mvMax) && (!f.kw || has(x, f.kw)) && (!f.nontoken || !x.token) && (!f.chosen || hasType(x, chosenTypeOf(o))) && (!f.uniqueName || !G.players[o.owner].bf.some(y => y !== x && isCreature(y) && y.card.name === x.card.name) && !G.players[o.owner].gy.some(y => /Creature/.test(y.card.type) && y.card.name === x.card.name)); }
     if (ev === 'attacks' && tr.chosen) return ctx.list.some(x => x.owner === o.owner && hasType(x, chosenTypeOf(o)));
     if (ev === 'hitPlayer' && tr.anyMine && tr.only) return ctx.src.owner === o.owner && (tr.only === 'token' ? !!ctx.src.token : /\bArtifact\b/.test(ctx.src.card.type) && isCreature(ctx.src));
+    if (ev === 'creatureTokenMade') return ctx.P.i === o.owner;
     if (ev === 'enters' && tr.filt === 'nontokenArtifact') return !!ctx.o && ctx.o !== o && ctx.o.owner === o.owner && !ctx.o.token && /\bArtifact\b/.test(ctx.o.card.type);
     if (ev === 'targeted') return ctx.o === o;
     if (ev === 'artifactMana') return !!ctx.o && ctx.o.owner !== o.owner;
@@ -566,7 +572,8 @@ function fire(ev, ctx = {}) {
             const ctxObj = (ev === 'cast' ? null : ctx.o) || (ctx.list && (tr.alone ? ctx.list[0] : ctx.list.find(x => x.owner === o.owner && (!tr.color || (x.card.colors || []).includes(tr.color))))) || null;
             const ctxCount = tr.attackWith ? ctx.list.filter(x => x.owner === o.owner && (tr.attackWith === 'creatures' || (tr.attackWith === 'legendary creatures' ? /Legendary/.test(x.card.type) : hasType(x, PLURAL_TYPES[tr.attackWith] || tr.attackWith.replace(/s$/, ''))))).length : ctx.n || 0;
             if (tr.anyMine && tr.ctxTarget && !tr.alone) { ctx.list.filter(x => x.owner === o.owner && (!tr.color || (x.card.colors || []).includes(tr.color)) && (!tr.withCounter || x.counters > 0)).forEach(x => (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: x })); continue; }
-            for (let k = 0; k < times; k++) (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: ctxObj, ctxCount, raw: { P: ctx.P, o: ctx.o, by: ctx.by } });
+            const timesTotal = times * (1 + (typeof cmdExtraTriggers === 'function' ? cmdExtraTriggers(ev, o, tr, ctx) : 0)); // Windcrag Siege (Mardu), Annie Joins Up
+            for (let k = 0; k < timesTotal; k++) (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: ctxObj, ctxCount, raw: { P: ctx.P, o: ctx.o, by: ctx.by, n: ctx.n !== undefined ? ctx.n : ctx.n, src: ctx.src } });
         }
     }
 }
@@ -821,11 +828,13 @@ async function activate(P, o, a, presetTarget, presetX) {
 function canCycle(P, o) { const c = Rx(o).cycling; return !!c && P.hand.includes(o) && !G.over && actTimingOk(P, {}) && !!planPayment(P, c); }
 async function cycle(P, o) {
     if (!canCycle(P, o)) return false;
-    planPayment(P, Rx(o).cycling).forEach(s => tapSource(P, s));
+    let cx;
+    if (Rx(o).cycling.x) { let mx = 0; while (mx < 30 && planPayment(P, Rx(o).cycling, mx + 1)) mx++; cx = P.isAI || AUTOPLAY ? mx : await askNumber(P, `Cycling ${o.card.name}: choose X`, 0, mx, mx, { card: o.card, ok: 'Cycle' }); if (cx === null) return false; planPayment(P, Rx(o).cycling, cx).forEach(s => tapSource(P, s)); }
+    else planPayment(P, Rx(o).cycling).forEach(s => tapSource(P, s));
     pull(P.hand, o);
     P.gy.push(o);
     log(`${P.name} ${you(P) ? 'cycle' : 'cycles'} ${o.card.name}.`);
-    if (Rx(o).cycleTrig) (G.trigQ = G.trigQ || []).push({ P, o, effects: Rx(o).cycleTrig });
+    if (Rx(o).cycleTrig) (G.trigQ = G.trigQ || []).push({ P, o, effects: cx !== undefined ? Rx(o).cycleTrig.map(e => ({ ...e, x: cx })) : Rx(o).cycleTrig });
     drawCards(P, 1);
     renderGame();
     return true;
@@ -1064,6 +1073,8 @@ function permMatches(o, f, P) {
         case 'artifact, enchantment, or land': return /Artifact|Enchantment|\bLand\b/.test(t);
         case 'artifact, creature, or land': return isCreature(o) || /Artifact|\bLand\b/.test(t);
         case 'commander': return !!o.isCommander;
+        case 'creature or planeswalker you control': return !theirs && (isCreature(o) || /Planeswalker/.test(t));
+        case 'permanent an opponent controls': return theirs;
         case 'artifacts, creatures, and enchantments': return isCreature(o) || /Artifact|Enchantment/.test(t);
         case 'artifact, enchantment, land, or creature': return isCreature(o) || /Artifact|Enchantment|\bLand\b/.test(t);
         case 'creature or planeswalker': return isCreature(o) || /Planeswalker/.test(t);

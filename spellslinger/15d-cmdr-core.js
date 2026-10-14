@@ -103,3 +103,63 @@ COUNT_EXTRA.push(
     [/^(?:the number of )?([A-Z][a-z]+) cards? in all graveyards$/, m => () => G.players.reduce((a, X) => a + X.gy.filter(x => hasType(x, m[1])).length, 0)],
     [/^(?:the number of )?creature cards? in your opponents' graveyards$/, () => o => foes(G.players[o.owner]).reduce((a, F) => a + F.gy.filter(x => /\bCreature\b/.test(x.card.type)).length, 0)]
 );
+// ---- Phasing (702.26): a permanent that phases out is treated as though it doesn't exist; it phases in before its controller untaps ----
+function phaseOut(o) {
+    if (!o || !onBf(o.uid)) return;
+    const group = [o, ...allPerms().filter(a => a.attachedTo === o.uid)]; // Auras and Equipment phase out with it
+    group.forEach(x => { const Y = G.players[x.owner]; pull(Y.bf, x); (Y.phased = Y.phased || []).push(x); x.phasedOut = true; });
+    log(`${o.card.name} phases out.`);
+}
+function phaseInAll(P) {
+    const back = (P.phased || []).splice(0);
+    back.forEach(x => { delete x.phasedOut; P.bf.push(x); });
+    if (back.length) log(`${back.map(x => x.card.name).join(', ')} phase${back.length === 1 ? 's' : ''} in.`);
+}
+// ---- Goad (701.38): attacks each combat if able, and attacks a player other than the goader if able ----
+function goad(o, by, until) { o.goaded = { by, until: until === undefined ? Infinity : until }; log(`${o.card.name} is goaded.`); }
+const isGoaded = o => !!(G && o && o.goaded && G.turn < o.goaded.until && G.players[o.goaded.by] && !G.players[o.goaded.by].out);
+const cmdNoMinus = o => !!G && isCreature(o) && G.players[o.owner].bf.some(a => Rx(a).noMinusCounters && !lostAbilities(a));
+// Jace, Multiverse Architect: creatures that didn't pay can't attack his controller's Jaces this turn
+const jaceNoAttack = (w, A) => !!G && !!G.jaceNoAttack && G.jaceNoAttack.turn === G.turn && G.jaceNoAttack.player === A.i && hasType(w, 'Jace') && w.owner === G.jaceNoAttack.by;
+// Serra's Emissary: protection from a card type
+const cardTypeOf = (card, ty) => new RegExp(`\\b${ty}\\b`).test(card.type || '');
+function emissaryProtects(i, src) { return !!G && allPerms().some(a => a.owner === i && Rx(a).emissary && a.chosenCardType && cardTypeOf(src.card, a.chosenCardType) && !lostAbilities(a)); }
+// Extra copies of a trigger (Windcrag Siege's Mardu mode, Annie Joins Up)
+function cmdExtraTriggers(ev, o, tr, ctx) {
+    let k = 0;
+    allPerms().forEach(a => {
+        if (a.owner !== o.owner || lostAbilities(a)) return;
+        if (Rx(a).doubleAttackTrig && a.word === 'Mardu' && ev === 'attacks' && (ctx.list || []).length) k++; // a creature attacking causes the trigger
+        if (Rx(a).doubleLegendTrig && /\bLegendary\b/.test(o.card.type) && isCreature(o)) k++;
+    });
+    return k;
+}
+// Cast a card from a zone without paying its mana cost; returns true when it was cast
+async function castFreeFrom(P, c) {
+    const from = G.players.find(X => ['gy', 'exile', 'library', 'hand'].some(z => X[z].includes(c)));
+    const zone = from ? ['gy', 'exile', 'library', 'hand'].find(z => from[z].includes(c)) : null;
+    if (!from || Rx(c).kind === 'land' || Rx(c).support === 'none') return false;
+    pull(from[zone], c); c.freeCast = true; c.playUntil = G.turn; P.exile.push(c);
+    let cast = true;
+    try { cast = await castSpell(P, c); } catch (er) { cast = false; }
+    if (P.exile.includes(c)) { pull(P.exile, c); from[zone].push(c); c.freeCast = false; return false; }
+    return true;
+}
+// Jace token (Plan for All Outcomes, Fatehold Charm): "empower Jace N" puts loyalty counters on your Jace token, making one first
+function jaceToken(P) {
+    let j = P.bf.find(x => x.token && hasType(x, 'Jace'));
+    if (!j) {
+        const card = { id: `token-jace-${uidSeq}`, name: 'Jace', fullName: 'Jace token', cost: '', cmc: 0, type: 'Token Legendary Planeswalker — Jace', text: '−1: Surveil 1\n−3: Draw a card.', loyalty: '0', colors: ['U'], ci: ['U'], img: null, imgS: null, legal: {} };
+        j = makeObj(card, P.i, { token: true, sick: false }); P.bf.push(j); j.ctr.loyalty = 0; j.pwReady = true; fire('enters', { o: j }); tokenMade(P);
+        log(`${P.name} ${you(P) ? 'create' : 'creates'} a Jace planeswalker token.`);
+    }
+    return j;
+}
+function empowerJace(P, n) { const j = jaceToken(P); j.ctr.loyalty = (j.ctr.loyalty || 0) + n; log(`${j.card.name} gets ${n} loyalty counter${n === 1 ? '' : 's'} (empower).`); }
+COND_EXTRA.push(
+    [/^you gained life this turn$/, () => P => P.gainedTurn === G.turn],
+    [/^an opponent has three or more poison counters$/, () => P => foes(P).some(F => (F.poison || 0) >= 3)],
+    [/^it is your turn$/, () => P => G.active === P.i]
+);
+COUNT_EXTRA.push([/^(?:the number of )?unspent mana you have$/, () => o => (G.players[o.owner].pool || []).length]);
+STATIC_FN.toxicCreature = o => Rx(o).toxic > 0;
