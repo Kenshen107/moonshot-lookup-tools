@@ -752,7 +752,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         plan.forEach(s => tapSource(P, s));
         if (a.cost.tap) { o.tapped = true; fire('tapped', { o }); }
         if (a.cost.life) { P.life -= a.cost.life; }
-        if (a.cost.discard) { const d = P.hand.slice().sort((x, y) => (x.card.cmc || 0) - (y.card.cmc || 0))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
+        if (a.cost.discard) { const d = (!P.isAI && P.hand.length > 1 ? await pickCard(P, P.hand, `${o.card.name}: discard a card`, { required: true }) : null) || P.hand.slice().sort((x, y) => (x.card.cmc || 0) - (y.card.cmc || 0))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
         if (a.once) { o.actTurn = o.actTurn || {}; o.actTurn[a.text] = G.turn; }
         if (a.maxTurn) { o.actCount = o.actCount || {}; const c = o.actCount[a.text]; o.actCount[a.text] = c && c.turn === G.turn ? { turn: G.turn, n: c.n + 1 } : { turn: G.turn, n: 1 }; }
         if (a.onceEver || a.powerUp) { o.usedOnce = o.usedOnce || {}; o.usedOnce[a.text] = true; }

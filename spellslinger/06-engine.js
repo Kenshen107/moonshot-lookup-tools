@@ -2068,6 +2068,12 @@ function noteDiscard(P, n) { if (P.discardTurn !== G.turn) { P.discardTurn = G.t
 
 // In a pod these effects hit every opponent ("each opponent loses N life", "deals N damage to each opponent"); everything else keeps using opp(P)
 const EACH_OPP_EFFECTS = new Set(['drain', 'dmgOpp', 'oppDraws', 'oppPump']);
+// A card the player chooses to discard (the computer picks its least useful one). Random discards don't use this.
+async function chooseDiscard(X, why) {
+    const low = X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0];
+    if (X.isAI || X.hand.length < 2) return low;
+    return (await pickCard(X, X.hand, `${why}: discard a card`, { required: true })) || low;
+}
 async function applyEffect(P, e, t, src) {
     if (G.players.length > 2 && !e._O && (EACH_OPP_EFFECTS.has(e.t) || (e.t === 'dmg' && (e.target === 'opponents' || e.target === 'oppAll')))) {
         const fs = foes(P);
@@ -2111,7 +2117,7 @@ async function applyEffect(P, e, t, src) {
             break;
         }
         case 'lifeFromPower': if (G.lastPower) { G.lastPower.P.life += G.lastPower.n; log(`${G.lastPower.P.name} ${you(G.lastPower.P) ? 'gain' : 'gains'} ${G.lastPower.n} life.`); } break;
-        case 'discardSelf': noteDiscard(P, Math.min(e.n, P.hand.length)); for (let k = 0; k < e.n && P.hand.length; k++) { const d = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
+        case 'discardSelf': noteDiscard(P, Math.min(e.n, P.hand.length)); for (let k = 0; k < e.n && P.hand.length; k++) { const d = await chooseDiscard(P, name); pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
         case 'bounce':
             if (e.topIfAttacking && G.attackers.includes(t.o.uid) && (P.isAI || await askYes(P, `Put ${t.o.card.name} on top of its owner's library instead?`, { card: t.o.card }))) { leaveBattlefield(t.o, 'library'); log(`${t.o.card.name} is put on top of its owner's library.`); break; }
             G.lastBounced = t.o.owner; G.lastMv = t.o.card.cmc || 0;
@@ -2610,7 +2616,7 @@ async function applyEffect(P, e, t, src) {
         case 'loot': {
             drawCards(P, e.n);
             noteDiscard(P, Math.min(e.d, P.hand.length));
-            for (let k = 0; k < e.d && P.hand.length; k++) { const d = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
+            for (let k = 0; k < e.d && P.hand.length; k++) { const d = await chooseDiscard(P, name); pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
             break;
         }
         case 'drawAll': G.players.forEach(X => drawCards(X, e.n)); break;
@@ -2639,8 +2645,8 @@ async function applyEffect(P, e, t, src) {
         case 'minusEach': allPerms().filter(isCreature).forEach(c => { c.counters -= e.n; }); log(`Each creature gets ${e.n} -1/-1 counter${e.n === 1 ? '' : 's'}.`); break;
         case 'stealPerm': { const from = G.players[t.o.owner]; if (from === P) break; pull(from.bf, t.o); t.o.realOwner = t.o.realOwner ?? t.o.owner; t.o.owner = P.i; t.o.sick = true; P.bf.push(t.o); log(`${P.name} ${you(P) ? 'gain' : 'gains'} control of ${t.o.card.name}.`); break; }
         // ---- Top-1000 round (2026-10-06) ----
-        case 'discardIfNoSac': G.players.forEach(X => { if ((G.edictDid || [true, true])[X.i] || !X.hand.length) return; const d = X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0]; pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} couldn't sacrifice, so ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); }); break;
-        case 'lootAll': G.players.forEach(X => { drawCards(X, 1); if (!X.hand.length) return; const d = X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0]; pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); }); break;
+        case 'discardIfNoSac': for (const X of G.players) { if ((G.edictDid || [true, true])[X.i] || !X.hand.length) continue; const d = await chooseDiscard(X, name); pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} couldn't sacrifice, so ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
+        case 'lootAll': for (const X of G.players) { drawCards(X, 1); if (!X.hand.length) continue; const d = await chooseDiscard(X, name); pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
         case 'ctxPowDmg': { const from = G.ctxObj && onBf(G.ctxObj.uid) ? G.ctxObj : src; const n = Math.max(0, pow(from)); if (!n || !t) break; damage(t.p || t.o, n, from); log(`${from.card.name} deals ${n} damage to ${targetName(t)}.`); break; }
         case 'cmdToHand': { const c = P.command.find(x => x.isCommander); if (c) { pull(P.command, c); P.hand.push(c); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${c.card.name} into ${you(P) ? 'your' : 'their'} hand from the command zone.`); } break; }
         case 'foodOrTreasure': { const needMana = P.hand.some(h => Rx(h).kind !== 'land' && !canPay(P, h)); const kind = P.isAI || AUTOPLAY ? (needMana || P.life > 12 ? 'treasure' : 'food') : (await askYes(P, `${name}: create a Treasure token? (Cancel = a Food token.)`, { card: src && src.card }) ? 'treasure' : 'food'); applyEffect(P, { t: 'artToken', n: 1, kind }, null, src); break; }
@@ -3975,7 +3981,9 @@ async function endTurn(P) {
     allPerms().filter(o => o.warpExile === G.turn).forEach(o => { log(`${o.card.name} is exiled (warp); it can be cast from exile on a later turn.`); leaveBattlefield(o, 'exile'); if (G.players[o.owner].exile.includes(o)) o.warpedTurn = G.turn; });
     allPerms().filter(o => o.copyOf && o.copyTurn === G.turn).forEach(o => { o.card = o.copyOf; delete o.copyOf; delete o.copyTurn; log(`${o.card.name} is itself again.`); });
     while (P.hand.length > 7 && !P.noMaxHand && !P.bf.some(x => Rx(x).noMaxHand)) {
-        const d = P.hand.slice().sort((a, b) => b.card.cmc - a.card.cmc)[0];
+        // 514.1: the player chooses what to discard down to seven (the computer throws away its most expensive card)
+        const over = P.hand.length - 7;
+        const d = (!P.isAI ? await pickCard(P, P.hand, `Hand size: discard ${over} more card${over === 1 ? '' : 's'} (down to 7)`, { required: true }) : null) || P.hand.slice().sort((a, b) => b.card.cmc - a.card.cmc)[0];
         pull(P.hand, d);
         P.gy.push(d); d.discardTurn = G.turn;
         log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} (hand size).`);

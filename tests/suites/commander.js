@@ -48,6 +48,14 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         asks.length = 0; const plain = T.put(A, C['Grizzly Bears']); dieOrLeave(plain, 'gy'); await settle();
         out.push(['an ordinary creature stays in the graveyard and nothing is asked', zones(plain) === 'gy' && asks.length === 0, zones(plain)]);
         window.askYes = real;
+        // Hand size: a person is asked which card to discard
+        T.clear(); A.hand.length = 0;
+        for (let i = 0; i < 9; i++) A.hand.push(makeObj(C[i % 2 ? 'Mountain' : 'Grizzly Bears'], 0));
+        const asked = []; const realPick = window.pickCard;
+        window.pickCard = async (P, list, title) => { asked.push(title); return list.find(x => x.card.name === 'Grizzly Bears'); };
+        G.active = 0; G.phase = 'main2'; await endTurn(A);
+        window.pickCard = realPick;
+        out.push(['a person chooses what to discard down to seven (twice for nine cards)', asked.length === 2 && A.hand.length === 7 && A.gy.filter(x => x.card.name === 'Grizzly Bears').length === 2, { asked, hand: A.hand.length }]);
         return out;
     });
     const results = formatChecks(r);
