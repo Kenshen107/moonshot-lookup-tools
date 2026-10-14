@@ -4376,7 +4376,7 @@ function permClick(uid) {
             renderGame();
             return;
         }
-        if (o.owner === 1 && G.attackers.includes(uid) && m.picked) {
+        if (o.owner !== G.view && G.attackers.includes(uid) && m.picked) {
             const b = onBf(m.picked);
             if (!canBlock(b, o)) { toast(`${b.card.name} can't block ${o.card.name}${has(o, 'flying') ? ' (it has flying)' : ''}.`); return; }
             (G.blocks[uid] = G.blocks[uid] || []).push(m.picked);

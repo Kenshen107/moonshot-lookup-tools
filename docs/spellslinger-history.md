@@ -155,3 +155,6 @@ CLAUDE.md keeps the short version: how the card reader is laid out, how to measu
 
 ## Table talk, information, deals 2 and instant windows (2026-10-15)
 - Characters, salt, cool plays, tips/Ask with bluffing and checks, complex deals, instant-speed ability windows (Sandman), Mithril Coat AI response. Marauder double trigger not reproduced. Tests: `tests/suites/priority.js`, `banter.js`, `politics2.js`. Pod lab (150): 0 hangs; deals made 11.7, broken 2.8 per game (pacts 244/548, peace 171/1729).
+
+## Blocking fix (2026-10-15)
+- `permClick` only let a person pick attackers owned by seat 1, so in pods a block against seat 2 or 3 could not be assigned ("No blocks"). Now any attacker not owned by the viewer. `tests/suites/blocking.js` (duel, pod of 3, pod of 4; fails without the fix).
