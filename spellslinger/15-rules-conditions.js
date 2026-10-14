@@ -27,12 +27,11 @@ function buildCond(t) {
     let m;
     for (const [re, mk] of COND_EXTRA) { const mm = t.match(re); if (mm) return mk(mm, t); }
     const cmp = (a, rel, n) => (/more|greater/.test(rel) ? a >= n : a <= n);
-    const opp = P => G.players[1 - P.i];
     if (t === 'you control a commander') return P => P.bf.some(x => x.isCommander);
     if (t === 'the top card of your library is black') return P => { const c = P.library[P.library.length - 1]; return !!c && (c.card.colors || []).includes('B'); }; // Vampire Nocturnus
     if (t === 'you cast it from your hand') return (P, o) => !!o && o.castFromHand === G.turn;
     if (t === 'you control no artifacts') return P => !P.bf.some(x => /Artifact/.test(x.card.type));
-    if (t === 'an opponent controls no basic lands') return P => !opp(P).bf.some(x => /\bBasic\b/.test(x.card.type) && /\bLand\b/.test(x.card.type));
+    if (t === 'an opponent controls no basic lands') return P => foes(P).some(F => !F.bf.some(x => /\bBasic\b/.test(x.card.type) && /\bLand\b/.test(x.card.type)));
     if (t === "you haven't been dealt combat damage since your last turn" || t === 'you have not been dealt combat damage since your last turn') return P => !(P.combatHitTurn >= G.turn - 2);
     if (t === 'you control your commander') return P => P.bf.some(x => x.isCommander);
     if ((m = t.match(/^you control no ([A-Z][a-z]+)s other than ~$/))) { const ty = m[1]; return (P, o) => !P.bf.some(x => x !== o && hasType(x, ty)); }
@@ -75,7 +74,7 @@ function buildCond(t) {
     if (t === 'it is not your turn') return P => G.active !== P.i;
     if (t === '~ is tapped') return (P, o) => !!o && o.tapped;
     if (t === 'it is attacking' || t === '~ is attacking') return (P, o) => !!o && G.attackers.includes(o.uid);
-    if (t === 'an opponent lost life this turn') return P => opp(P).lostTurn === G.turn;
+    if (t === 'an opponent lost life this turn') return P => foes(P).some(F => F.lostTurn === G.turn);
     if ((m = t.match(/^(?:it's|it is|that creature is|that creature was) (?:a|an|another) ([A-Z][a-z]+)$/))) { const ty = m[1]; return () => { const x = G.ctxObj || (G.lastTargets && G.lastTargets[0] && G.lastTargets[0].o); return !!x && hasType(x, ty); }; }
     if ((m = t.match(/^it(?:'s| is) an? (artifact|creature|land|instant|sorcery) card$/))) { const k = m[1]; return () => !!G.revealed && cardFits(G.revealed, k); }
     if ((m = t.match(/^there are (\w+) or more creature cards in your graveyard$/)) && num(m[1]) !== undefined) { const n = num(m[1]); return P => P.gy.filter(x => /Creature/.test(x.card.type)).length >= n; }
@@ -94,11 +93,11 @@ function buildCond(t) {
     if (t === 'a player cast two or more spells last turn') return () => !!G.lastCastBy && Math.max(...G.lastCastBy) >= 2;
     if ((m = t.match(/^you (?:have )?cast (another spell|two or more spells|three or more spells|a noncreature spell|an instant or sorcery spell) this turn$/))) {
         const n = { 'another spell': 2, 'two or more spells': 2, 'three or more spells': 3 }[m[1]];
-        return n ? P => (G.castBy || [0, 0])[P.i] >= n : P => (G.castBy || [0, 0])[P.i] >= 1;
+        return n ? P => (G.castBy || Z())[P.i] >= n : P => (G.castBy || Z())[P.i] >= 1;
     }
     if ((m = t.match(/^you have (\w+) or (more|less) life$/)) && num(m[1]) !== undefined) { const n = num(m[1]); return P => cmp(P.life, m[2], n); }
     if ((m = t.match(/^your life total is (\w+) or (more|less)$/)) && num(m[1]) !== undefined) { const n = num(m[1]); return P => cmp(P.life, m[2], n); }
-    if ((m = t.match(/^an opponent has (\w+) or (more|less) life$/)) && num(m[1]) !== undefined) { const n = num(m[1]); return P => cmp(opp(P).life, m[2], n); }
+    if ((m = t.match(/^an opponent has (\w+) or (more|less) life$/)) && num(m[1]) !== undefined) { const n = num(m[1]); return P => foes(P).some(F => cmp(F.life, m[2], n)); }
     if (/^you have no cards in hand$/.test(t)) return P => P.hand.length === 0;
     if ((m = t.match(/^you have (\w+) or (more|fewer) cards in (?:your )?hand$/)) && num(m[1]) !== undefined) { const n = num(m[1]); return P => cmp(P.hand.length, m[2], n); }
     if ((m = t.match(/^(?:there are )?(\w+) or more cards (?:are )?in your graveyard$/)) && num(m[1]) !== undefined) { const n = num(m[1]); return P => P.gy.length >= n; }
@@ -116,7 +115,7 @@ function buildCond(t) {
     }
     if ((m = t.match(/^an opponent controls more (creatures|lands) than you$/))) {
         const f = m[1] === 'lands' ? x => /\bLand\b/.test(x.card.type) : isCreature;
-        return P => opp(P).bf.filter(f).length > P.bf.filter(f).length;
+        return P => foes(P).some(F => F.bf.filter(f).length > P.bf.filter(f).length);
     }
     if ((m = t.match(/^you control a creature with power (\w+) or greater$/)) && num(m[1]) !== undefined) { const n = num(m[1]); return P => P.bf.some(x => isCreature(x) && pow(x) >= n); }
     // "you control three or more artifacts", "you control an Island", "you control no other creatures", "you control another Elf"
@@ -160,10 +159,10 @@ function countFn(phrase) {
     if ((mm0 = p.match(/^([A-Z][a-z]+) on the battlefield$/))) { const ty = PLURAL_TYPES[mm0[1]] || (mm0[1].endsWith('s') ? mm0[1].slice(0, -1) : mm0[1]); return () => allPerms().filter(x => hasType(x, ty)).length; }
     if (/^\+1\/\+1 counters? on ~$/.test(p)) return o => Math.max(0, o.counters || 0);
     if (/^land cards? in your graveyard$/.test(p)) return o => ctl(o).gy.filter(x => /\bLand\b/.test(x.card.type)).length;
-    if (/^artifacts and enchantments your opponents control$/.test(p)) return o => G.players[1 - o.owner].bf.filter(x => /\b(?:Artifact|Enchantment)\b/.test(x.card.type)).length;
+    if (/^artifacts and enchantments your opponents control$/.test(p)) return o => foes(G.players[o.owner]).reduce((a, F) => a + F.bf.filter(x => /\b(?:Artifact|Enchantment)\b/.test(x.card.type)).length, 0);
     if (/^colors? among permanents you control$/.test(p)) return o => amongColors(ctl(o), 'permanents').length;
     if (/^artifacts? and\/or enchantments? you control$/.test(p)) return o => ctl(o).bf.filter(x => /\b(?:Artifact|Enchantment)\b/.test(x.card.type)).length;
-    if (/^tapped lands? your opponents control$/.test(p)) return o => G.players[1 - o.owner].bf.filter(x => x.tapped && /\bLand\b/.test(x.card.type)).length;
+    if (/^tapped lands? your opponents control$/.test(p)) return o => foes(G.players[o.owner]).reduce((a, F) => a + F.bf.filter(x => x.tapped && /\bLand\b/.test(x.card.type)).length, 0);
     if ((mm0 = p.match(/^cards? named (.+) in (?:each|all) graveyards?$/i))) { const nm = mm0[1].toLowerCase(); return () => G.players.reduce((a, X) => a + X.gy.filter(x => x.card.name.toLowerCase() === nm).length, 0); }
     if (/^charge counters? on ~$/.test(p)) return o => (o.ctr && o.ctr.charge) || 0;
     let mm;
@@ -490,7 +489,7 @@ function trigMatches(tr, ev, o, ctx) {
         case 'dies': return tr.host ? ctx.o.uid === o.attachedTo : ctx.o === o;
         case 'toGy': return ctx.o === o;
         case 'hitPlayer': return tr.host ? ctx.src.uid === o.attachedTo : ctx.src === o;
-        case 'cast': castFilterSrc = o; return (tr.who === 'any' || (tr.who === 'opp' ? ctx.P.i !== o.owner : ctx.P.i === o.owner)) && castFilter(tr.filter, ctx.o) && (!tr.nth || (G.castBy || [0, 0])[ctx.P.i] === tr.nth);
+        case 'cast': castFilterSrc = o; return (tr.who === 'any' || (tr.who === 'opp' ? ctx.P.i !== o.owner : ctx.P.i === o.owner)) && castFilter(tr.filter, ctx.o) && (!tr.nth || (G.castBy || Z())[ctx.P.i] === tr.nth);
         case 'landfall': return mine(ctx.o);
         case 'enters': return (tr.anyone || mine(ctx.o)) && isCreature(ctx.o) && !(tr.another && ctx.o === o) && !(tr.nontoken && ctx.o.token);
         case 'creatureDies': return ctx.o !== o && (!tr.mine || mine(ctx.o)) && !(tr.nontoken && ctx.o.token);

@@ -19,8 +19,19 @@ const Rx = o => rulesFor(o.card);
 const me = () => G.players[G.view || 0];
 const foe = () => G.players[1 - (G.view || 0)];
 const you = P => !!P && P.i === 0 && !(G && G.hotseat);
-const opp = P => G.players[1 - P.i];
-const allPerms = () => [...G.players[0].bf, ...G.players[1].bf];
+// Seats and opponents (2 to 4 players; 2026-10-14). A player who has lost has `out` set and takes no more part.
+// opp(P) is "the" opponent for code written for two players: the player being attacked while P attacks (or defends),
+// otherwise the next living player in turn order. foes(P) is every living opponent; use it for "each opponent" and "an opponent".
+const Z = () => G.players.map(() => 0); // a counter per seat
+const alive = P => !P.out;
+const seatAfter = (i, from = 1) => { const n = G.players.length; for (let k = from; k <= n; k++) { const j = (i + k) % n; if (!G.players[j].out) return G.players[j]; } return G.players[i]; };
+const foes = P => G.players.filter(x => x !== P && !x.out);
+function opp(P) {
+    if (G.players.length === 2) return G.players[1 - P.i];
+    if (G.defender != null && !G.players[G.defender].out) { if (P.i === G.active && P.i !== G.defender) return G.players[G.defender]; if (P.i === G.defender) return G.players[G.active]; }
+    return seatAfter(P.i);
+}
+const allPerms = () => G.players.flatMap(P => P.bf);
 const onBf = uid => allPerms().find(o => o.uid === uid) || null;
 function findObj(uid) {
     const onStack = G.stack.find(it => it.kind === 'spell' && it.o.uid === uid);
@@ -65,7 +76,7 @@ function mirageColor(aura, land) {
 }
 // Pithing Needle: the name is chosen as it enters (you pick from the opponent's permanents with activated abilities)
 async function needleName(P, o) {
-    const pool = opp(P).bf.filter(x => actsOf(x).some(a => !a.effects.every(e => e.t === 'addMana')));
+    const pool = foes(P).flatMap(F => F.bf).filter(x => actsOf(x).some(a => !a.effects.every(e => e.t === 'addMana')));
     const uniq = pool.filter((x, i) => pool.findIndex(y => y.card.name === x.card.name) === i);
     let pick = null;
     if (P.isAI || AUTOPLAY) pick = uniq.sort((a, b) => permValue(b) - permValue(a))[0] || null;
@@ -96,7 +107,7 @@ const pow = o => basePT(o, 'p') + o.counters + o.tp + buffsOn(o).p;
 const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q;
 const has = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
-const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackNeedsLand && !G.players[1 - ctrl(o).i].bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !has(o, 'defender') && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
+const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !has(o, 'defender') && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
 function log(msg) {
     G.log.push(msg);
@@ -113,7 +124,7 @@ const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 // ---- Setup ----
 function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
-        landsPlayed: 0, tax: 0, cmdDmg: 0, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
+        landsPlayed: 0, tax: 0, cmdDmg: 0, cmdBy: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
         aiLevel: deck.aiLevel || 'normal', aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
     deck.entries.forEach(e => { for (let k = 0; k < e.n; k++) P.library.push(makeObj(e.card, i)); });
     shuffle(P.library);
@@ -175,22 +186,24 @@ async function startMatch(again) {
     }
 }
 
-async function newGame(myDeck, oppDeck, friend) {
+// `more` is a list of extra opponent decks for a pod of 3 or 4 players (free-for-all; seats clockwise)
+async function newGame(myDeck, oppDeck, friend, more = []) {
     uidSeq = 1;
     actReset();
     G = { format: myDeck.format, players: [], active: 0, turn: 1, phase: 'setup', log: [], attackers: [], blocks: {}, mode: null, over: false, busy: true,
         stack: [], stackRunning: false, priority: null, campaign: oppDeck.campaign || null, view: 0, hotseat: friend || null, draftRound: oppDeck.draftRound };
     G.players = friend ? [makePlayer(0, friend.accounts[0], myDeck, false), makePlayer(1, friend.accounts[1], oppDeck, false)]
-        : [makePlayer(0, 'You', myDeck, AUTOPLAY), makePlayer(1, oppDeck.commander ? oppDeck.commander.name : oppDeck.name, oppDeck, true)];
+        : [makePlayer(0, 'You', myDeck, AUTOPLAY), makePlayer(1, oppDeck.commander ? oppDeck.commander.name : oppDeck.name, oppDeck, true),
+            ...more.map((d, k) => makePlayer(2 + k, d.commander ? d.commander.name : d.name, d, true))];
     $('game').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     log(`${FORMATS[G.format].name} game: ${myDeck.name} vs ${oppDeck.name}${oppDeck.source ? ` (${oppDeck.source})` : ''}.`);
     G.players.forEach(P => drawCards(P, 7, true));
     renderGame();
     await handTo(G.players[0]); await mulligan(G.players[0]);
-    await handTo(G.players[1]); await mulligan(G.players[1]);
+    for (const X of G.players.slice(1)) { await handTo(X); await mulligan(X); }
     for (const X of G.players) await leylineStart(X);
-    G.active = rand(2);
+    G.active = rand(G.players.length);
     log(`${G.players[G.active].name} ${you(G.players[G.active]) ? 'go' : 'goes'} first (coin flip).`);
     G.firstTurn = true;
     beginTurn();
@@ -293,7 +306,7 @@ function tokenCopyOf(P, card, opts = {}) {
 function drawCards(P, n, quiet) {
     const sf = G && G.phase !== 'setup' && allPerms().some(x => Rx(x).sharedFate && !lostAbilities(x));
     if (sf) {
-        const O = G.players[1 - P.i];
+        const O = opp(P);
         for (let k = 0; k < n; k++) { const c = O.library.pop(); if (!c) break; c.realOwner = O.i; c.owner = P.i; c.playUntil = 1e9; P.exile.push(c); }
         log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${n === 1 ? 'the top card' : `the top ${n} cards`} of ${O.name === 'You' ? 'your' : `${O.name}'s`} library face down instead of drawing (Shared Fate).`);
         return;
@@ -430,7 +443,7 @@ function damage(target, n, src) {
     if (target.life !== undefined) {
         // Infect: damage to a player is given as poison counters (702.90b)
         if (infect) target.poison += n; else target.life -= n;
-        if (src && src.isCommander && G.format === 'commander' && isCreature(src)) target.cmdDmg += n;
+        if (src && src.isCommander && G.format === 'commander' && isCreature(src)) { target.cmdBy[src.owner] = (target.cmdBy[src.owner] || 0) + n; target.cmdDmg = Math.max(target.cmdDmg, target.cmdBy[src.owner]); }
     } else if (isPlaneswalker(target)) {
         target.ctr.loyalty = (target.ctr.loyalty || 0) - n; // damage to a planeswalker removes loyalty (120.3c)
         log(`${target.card.name} loses ${n} loyalty.`);
@@ -493,16 +506,39 @@ function sba() {
         }
     }
     G.marchOn = allPerms().some(x => Rx(x).march && !lostAbilities(x));
-    const lost = G.players.filter(P => (P.life <= 0 || P.drewEmpty || P.poison >= 10 || (G.format === 'commander' && P.cmdDmg >= 21)) && !P.bf.some(x => Rx(x).cantLose && !lostAbilities(x)));
+    const lost = G.players.filter(P => !P.out && (P.life <= 0 || P.drewEmpty || P.poison >= 10 || (G.format === 'commander' && P.cmdDmg >= 21)) && !P.bf.some(x => Rx(x).cantLose && !lostAbilities(x)));
     if (lost.length) {
-        const P = lost[0];
-        const you = P.i === 0 && !G.hotseat;
-        const reason = P.life <= 0 ? `${you ? 'You are' : `${P.name} is`} at ${P.life} life.`
+        const reasonOf = P => { const you = P.i === 0 && !G.hotseat; return P.life <= 0 ? `${you ? 'You are' : `${P.name} is`} at ${P.life} life.`
             : P.drewEmpty ? `${you ? 'You have' : `${P.name} has`} no cards left to draw.`
             : P.poison >= 10 ? `${you ? 'You have' : `${P.name} has`} 10 poison counters (rule 704.5c).`
-            : `${you ? 'You' : P.name} took 21 commander damage.`;
-        endGame(lost.length === 2 ? null : 1 - P.i, lost.length === 2 ? 'Both players lost at the same time.' : reason);
+            : `${you ? 'You' : P.name} took 21 commander damage.`; };
+        if (G.players.length === 2) {
+            endGame(lost.length === 2 ? null : 1 - lost[0].i, lost.length === 2 ? 'Both players lost at the same time.' : reasonOf(lost[0]));
+        } else {
+            // 800.4: a player who loses leaves the game; the game goes on until one player is left
+            const reasons = lost.map(reasonOf);
+            lost.forEach((P, k) => eliminate(P, reasons[k]));
+            const left = G.players.filter(P => !P.out);
+            if (left.length <= 1) endGame(left.length ? left[0].i : null, left.length ? `${reasons[reasons.length - 1]} ${left[0].i === 0 && !G.hotseat ? 'You are' : `${left[0].name} is`} the last player standing.` : 'Everyone lost at the same time.');
+            else if (G.players[0].out && !AUTOPLAY && !G.hotseat) endGame(left[0].i, `${reasons[0]} You are out of the game.`);
+        }
     }
+}
+// 800.4: a player who has lost leaves: their cards go away, what they were using of other players' goes back, their spells leave the stack
+function eliminate(P, reason) {
+    P.out = true;
+    log(`${P.name} ${you(P) ? 'lose' : 'loses'} the game and leaves the pod: ${reason}`);
+    G.stack.splice(0, G.stack.length, ...G.stack.filter(it => it.P !== P));
+    G.players.forEach(X => {
+        if (X === P) return;
+        X.bf.filter(o => o.realOwner === P.i).forEach(o => pull(X.bf, o)); // their cards that others were using
+    });
+    P.bf.filter(o => o.realOwner !== undefined && o.realOwner !== P.i).forEach(o => { // others' cards they were using go home
+        pull(P.bf, o); const H = G.players[o.realOwner]; o.owner = o.realOwner; delete o.realOwner; delete o.stolenTurn; if (!H.out) H.bf.push(o);
+    });
+    ['bf', 'hand', 'gy', 'exile', 'library', 'command'].forEach(z => { P[z].length = 0; });
+    G.attackers = G.attackers.filter(u => onBf(u));
+    Object.keys(G.blocks).forEach(k => { if (!onBf(Number(k))) delete G.blocks[k]; });
 }
 
 // ---- Mana ----
@@ -528,7 +564,7 @@ function manaOf(o) {
     if (m.among) { const cols = amongColors(X, m.among); return { ...m, colors: cols, n: m.each ? cols.length : cols.length ? 1 : 0, fixed: !!m.each }; }
     // Exotic Orchard / Fellwar Stone / Reflecting Pool: the colors those lands could make right now (none: it makes nothing)
     if (m.like) {
-        const lands = (m.like === 'opp' ? G.players[1 - X.i].bf : X.bf.filter(a => a !== o)).filter(a => /\bLand\b/.test(a.card.type));
+        const lands = (m.like === 'opp' ? foes(X).flatMap(F => F.bf) : X.bf.filter(a => a !== o)).filter(a => /\bLand\b/.test(a.card.type));
         const cols = [...new Set(lands.flatMap(a => { const lm = Rx(a).mana; return lm && !lm.like ? lm.colors : []; }))].filter(c => m.like === 'mine' || c !== 'C');
         return { ...m, colors: cols, n: cols.length ? 1 : 0 };
     }
@@ -917,13 +953,13 @@ function canCastNow(P, o) {
     // Silence and friends; Grand Abolisher-style "your opponents can't cast spells during your turn"
     if (P.noMoreSpellsTurn === G.turn) return false; // Conduit of Worlds
     if (r.kind === 'creature' && P.bf.some(x => Rx(x).noCreatureSpells && !lostAbilities(x))) return false; // Grid Monitor
-    if ((G.castBy || [0, 0])[P.i] >= 1 && allPerms().some(x => Rx(x).ruleOfLaw && !lostAbilities(x))) return false; // Rule of Law
+    if ((G.castBy || Z())[P.i] >= 1 && allPerms().some(x => Rx(x).ruleOfLaw && !lostAbilities(x))) return false; // Rule of Law
     if (P.skip && P.skip.turn === G.turn && P.skip.what === 'main' && G.active === P.i && MAIN.includes(G.phase) && r.kind !== 'instant' && !r.flash) return false; // Fatespinner
     if (r.suspend && !o.card.cost && !o.suspendCast) return false; // Ancestral Vision: no mana cost, so it can only be suspended
     const emry = P.gy.includes(o) && o.gyCastTurn === G.turn;
     if (P.silenced && P.silenced.turn === G.turn && (!P.silenced.noncreature || r.kind !== 'creature')) return false;
     if (G.active !== P.i && G.players[G.active].bf.some(x => Rx(x).noCastOnMyTurn && !lostAbilities(x))) return false;
-    if (!P.hand.includes(o) && opp(P).bf.some(x => Rx(x).handOnly && !lostAbilities(x))) return false;
+    if (!P.hand.includes(o) && foes(P).some(F => F.bf.some(x => Rx(x).handOnly && !lostAbilities(x)))) return false;
     const flash = !!r.flash || P.flashTurn === G.turn || P.bf.some(x => !lostAbilities(x) && (Rx(x).flashAll || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type)))));
     const fromTop = (r.kind === 'creature' && P.library[P.library.length - 1] === o && P.bf.some(x => Rx(x).castTopCreatures)) || pitTop(P) === o;
     if (o.castAs && !castAsOk(P, o, o.castAs)) return false;
@@ -1173,7 +1209,7 @@ async function castSpell(P, o, presetTarget) {
     // Chalice of the Void: counter a spell with mana value equal to its charge counters
     allPerms().filter(x => Rx(x).chalice && !lostAbilities(x) && (x.ctr.charge || 0) === (o.card.cmc || 0)).forEach(x => { G.stack.push({ id: stackSeq++, kind: 'trigger', o: x, P: G.players[x.owner], target: { item }, effects: [{ t: 'counter', target: 'spell', filter: 'any' }], name: `${x.card.name}'s ability` }); log(`${x.card.name} triggers (mana value ${o.card.cmc || 0}).`); });
     G.castThisTurn = (G.castThisTurn || 0) + 1;
-    (G.castBy = G.castBy || [0, 0])[P.i]++;
+    (G.castBy = G.castBy || Z())[P.i]++;
     // "When you cast ~" triggers go on the stack above the spell (Hydroid Krasis)
     if (Rx(o).castTrig) G.stack.push({ id: stackSeq++, kind: 'trigger', o, P, target: null, effects: withX(Rx(o).castTrig, item.x), name: `${o.card.name}'s cast trigger` });
     fire('cast', { P, o, target: item.target });
@@ -1240,7 +1276,7 @@ async function runStack() {
             // A loop guard: after 200 responses in one go, everyone passes
             if (++offers === 200) log('That\'s a lot of responses - the stack now resolves without more.');
             if (offers < 200 && await offerPriority(holder, top)) { holder = null; continue; } // they responded: the new top goes first
-            if (++passes < 2) { holder = opp(holder); continue; }
+            if (++passes < G.players.filter(alive).length) { holder = seatAfter(holder.i); continue; } // 117.4: everyone passes in a row
             await resolveTop();
             await flushTriggers();
             await pause(300);
@@ -1338,12 +1374,12 @@ async function resolveTop() {
             if (item.castAs === 'blitz') { o.blitzed = true; o.tkw.push('haste'); o.sacAtEnd = G.turn; }
             if (r.kind === 'battle') { const d = Number(o.card.defense); o.ctr.defense = d >= 0 && !isNaN(d) ? d : 4; }
             if (r.alsoLand && !/\bLand\b/.test(o.card.type)) o.card = { ...o.card, type: `Land ${o.card.type}` };
-            { const et = opp(item.P).bf.find(x => Rx(x).oppEnterTapped && !lostAbilities(x)); if (et && (r.kind === 'creature' || (Rx(et).oppEnterTapped !== 'creature' && /Artifact/.test(o.card.type)))) { o.tapped = true; log(`${o.card.name} enters tapped (${et.card.name}).`); } }
+            { const et = foes(item.P).flatMap(F => F.bf).find(x => Rx(x).oppEnterTapped && !lostAbilities(x)); if (et && (r.kind === 'creature' || (Rx(et).oppEnterTapped !== 'creature' && /Artifact/.test(o.card.type)))) { o.tapped = true; log(`${o.card.name} enters tapped (${et.card.name}).`); } }
             if (r.etbCounters) o.counters += r.etbCounters === 'X' ? (item.x || 0) : r.etbCounters === 'spent' ? costTotal(r.cost) + (item.x || 0) * (r.cost.xn || 1) : r.etbCounters;
             if (r.etbNamedX) o.ctr[r.etbNamedX] = item.x || 0;
             if (r.devour) await devourChoice(item.P, o, r.devour);
             if (r.kickPer && o.kickN) { if (r.kickPer === 'plus') o.counters += o.kickN; else o.ctr[r.kickPer] = (o.ctr[r.kickPer] || 0) + o.kickN; }
-            if (r.bloodthirst && opp(item.P).lostTurn === G.turn) { o.counters += r.bloodthirst; log(`${o.card.name} enters with ${r.bloodthirst} +1/+1 counters (bloodthirst).`); }
+            if (r.bloodthirst && foes(item.P).some(F => F.lostTurn === G.turn)) { o.counters += r.bloodthirst; log(`${o.card.name} enters with ${r.bloodthirst} +1/+1 counters (bloodthirst).`); }
             // Ravenous: X +1/+1 counters, and a card if X is 5 or more
             if (r.ravenous && (item.x || 0) >= 5) (G.trigQ = G.trigQ || []).push({ P: item.P, o, effects: [{ t: 'draw', n: 1 }] });
             if (r.kickCounters && o.kicked) o.counters += r.kickCounters;
@@ -1462,7 +1498,7 @@ function dynN(P, e, source) {
         case 'lastMv': return G.lastMv || 0;
         case 'lastEdictN': return G.lastEdictN || 0;
         case 'lastLost': return G.lastLost || 0;
-        case 'myCasts': return (G.castBy || [0, 0])[P.i];
+        case 'myCasts': return (G.castBy || Z())[P.i];
         case 'sacMv': return G.lastSacMv || 0;
         case 'lastCastMv': return (G.lastCast && G.lastCast.card.cmc) || 0;
         case 'bigAttackers': return G.attackers.map(onBf).filter(x => x && x.owner === P.i && pow(x) >= 4).length;
@@ -1487,7 +1523,7 @@ async function resolveEffects(P, effects, presetTarget, source) {
         // "unless that player pays {1}" (Rhystic Study style): the opponent chooses
         if (e.unless) {
             const un = e.unless === 'pow' ? Math.max(0, source && onBf(source.uid) ? pow(source) : Number(source.card.power) || 0) : e.unless;
-            const Q = G.players[1 - P.i], cost = { ...parseCost(''), generic: un }, plan = planPayment(Q, cost);
+            const Q = opp(P), cost = { ...parseCost(''), generic: un }, plan = planPayment(Q, cost);
             if (plan && (Q.isAI ? Q.hand.length < 3 || un <= 1 : await askYes(Q, `${source.card.name}: pay {${un}} to stop it?`, { card: source.card }))) { plan.forEach(x => tapSource(Q, x)); if (un) log(`${Q.name} ${you(Q) ? 'pay' : 'pays'} {${un}}.`); continue; }
         }
         if (e.t === 'modal') { const i = await pickModes(P, { modeN: { min: e.min ?? 1, max: e.n || 1 } }, e.modes, source); if (i !== null) await resolveEffects(P, [].concat(i).flatMap(k => e.modes[k]), null, source); continue; }
@@ -1995,8 +2031,16 @@ function combatPartners(o) {
 }
 function noteDiscard(P, n) { if (P.discardTurn !== G.turn) { P.discardTurn = G.turn; P.discardN = 0; } P.discardN += n; }
 
+// In a pod these effects hit every opponent ("each opponent loses N life", "deals N damage to each opponent"); everything else keeps using opp(P)
+const EACH_OPP_EFFECTS = new Set(['drain', 'dmgOpp', 'oppDraws', 'oppPump']);
 async function applyEffect(P, e, t, src) {
-    const O = opp(P);
+    if (G.players.length > 2 && !e._O && (EACH_OPP_EFFECTS.has(e.t) || (e.t === 'dmg' && (e.target === 'opponents' || e.target === 'oppAll')))) {
+        const fs = foes(P);
+        for (const F of fs) await applyEffect(P, { ...e, _O: F }, t, src);
+        if (e.t === 'drain') G.lastLost = e.n * fs.length; // "gain life equal to the life lost this way"
+        return;
+    }
+    const O = e._O || opp(P);
     const name = src.card.name;
     switch (e.t) {
         case 'dmg':
@@ -2287,8 +2331,10 @@ async function applyEffect(P, e, t, src) {
             const plan = planPayment(P, { ...parseCost(''), W: 1 }) || planPayment(P, { ...parseCost(''), B: 1 });
             if (!plan || !(P.isAI ? P.hand.filter(x => canPay(P, x)).length === 0 || plan.length > 0 && G.phase !== 'main1' : await askYes(P, `${name}: extort - pay {W/B} to drain 1?`, { card: src && src.card }))) break;
             plan.forEach(x => tapSource(P, x));
-            O.life -= 1; P.life += 1; fire('gainLife', { P, n: 1 });
-            log(`${name} extorts: ${O.name} ${you(O) ? 'lose' : 'loses'} 1 life and ${P.name} ${you(P) ? 'gain' : 'gains'} 1.`);
+            const victims = foes(P);
+            victims.forEach(V => { V.life -= 1; P.life += 1; });
+            fire('gainLife', { P, n: victims.length });
+            log(`${name} extorts: ${victims.map(V => V.name).join(', ')} ${victims.length === 1 && you(O) ? 'lose' : 'loses'} 1 life and ${P.name} ${you(P) ? 'gain' : 'gains'} ${victims.length}.`);
             break;
         }
         case 'evolve': {
@@ -2413,7 +2459,7 @@ async function applyEffect(P, e, t, src) {
             log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${got.map(x => x.card.name).join(', ') || 'nothing'} from the top of the library${e.play !== undefined ? ` (playable ${e.play ? 'until the end of the next turn' : 'this turn'})` : ''}.`);
             break;
         }
-        case 'extraTurn': G.extra = G.extra || [0, 0]; G.extra[P.i]++; log(`${P.name} will take an extra turn after this one.`); break;
+        case 'extraTurn': G.extra = G.extra || Z(); G.extra[P.i]++; log(`${P.name} will take an extra turn after this one.`); break;
         case 'transform': {
             if (!onBf(src.uid) || !src.front || !src.front.back) break;
             const was = src.card.name;
@@ -2985,7 +3031,7 @@ async function applyEffect(P, e, t, src) {
                 const mv = shown.map(c => (c ? c.card.cmc || 0 : -1));
                 if (mv[0] === mv[1]) { if (!shown.some(Boolean)) break; continue; }
                 const w = mv[0] > mv[1] ? 0 : 1;
-                G.extra = G.extra || [0, 0]; G.extra[w]++;
+                G.extra = G.extra || Z(); G.extra[w]++;
                 log(`${G.players[w].name} ${you(G.players[w]) ? 'take' : 'takes'} an extra turn after this one.`);
                 break;
             }
@@ -3205,7 +3251,7 @@ async function applyEffect(P, e, t, src) {
         case 'dmgCtxPlayer': { const X = G.ctxRaw && G.ctxRaw.P; if (X) { damage(X, e.n, src); log(`${name} deals ${e.n} damage to ${X.name === 'You' ? 'you' : X.name}.`); } break; }
         case 'confusion': {
             const x = G.ctxObj; if (!x || !onBf(x.uid)) break;
-            const X = G.players[x.owner], Y = G.players[1 - X.i];
+            const X = G.players[x.owner], Y = opp(X);
             const kinds = ['Artifact', 'Creature', 'Enchantment'].filter(k => new RegExp(`\\b${k}\\b`).test(x.card.type));
             const pool = Y.bf.filter(y => kinds.some(k => new RegExp(`\\b${k}\\b`).test(y.card.type)) && !has(y, 'shroud') && !(has(y, 'hexproof')));
             if (!pool.length) break;
@@ -3490,7 +3536,7 @@ async function applyEffect(P, e, t, src) {
             break;
         }
         case 'conduit': {
-            if ((G.castBy || [0, 0])[P.i] > 0) { log(`${name}: ${P.name} already cast a spell this turn.`); break; }
+            if ((G.castBy || Z())[P.i] > 0) { log(`${name}: ${P.name} already cast a spell this turn.`); break; }
             const pool = P.gy.filter(x => !['instant', 'sorcery', 'land'].includes(Rx(x).kind) && Rx(x).support !== 'none' && canPay(P, x));
             const pick = P.isAI ? pool.sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0] : await pickCard(P, pool, `${name}: cast a permanent card from your graveyard (or None)`);
             if (!pick) break;
@@ -3499,7 +3545,7 @@ async function applyEffect(P, e, t, src) {
             if (!payFor(P, pick)) break;
             pull(P.gy, pick);
             G.stack.push({ id: stackSeq++, kind: 'spell', o: pick, P, target: tg, name: pick.card.name, x: 0 });
-            (G.castBy = G.castBy || [0, 0])[P.i]++; G.castThisTurn = (G.castThisTurn || 0) + 1;
+            (G.castBy = G.castBy || Z())[P.i]++; G.castThisTurn = (G.castThisTurn || 0) + 1;
             P.noMoreSpellsTurn = G.turn;
             log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${pick.card.name} from the graveyard and can't cast more spells this turn.`);
             fire('cast', { P, o: pick });
@@ -3631,6 +3677,7 @@ function attackTax(P) {
     return opp(P).bf.reduce((a, x) => { const t = Rx(x).attackTax; if (!t || lostAbilities(x)) return a; return a + (t === 'enchantments' ? opp(P).bf.filter(e => /Enchantment/.test(e.card.type)).length : t); }, 0);
 }
 function declareAttackers(P, list) {
+    if (G.players.length > 2 && (G.defender == null || G.players[G.defender].out)) G.defender = aiPickDefender(P).i; // the player this attack goes at
     if (list.length === 1 && has(list[0], 'notalone')) { log(`${list[0].card.name} can't attack alone.`); list = []; }
     const tax = list.length ? attackTax(P) : 0;
     if (tax) {
@@ -3672,13 +3719,13 @@ function fixMenace() {
     });
     // "Must be blocked this turn if able": one creature able to block it does
     G.attackers.map(onBf).filter(o => o && has(o, 'mustbeblocked') && !(G.blocks[o.uid] || []).length).forEach(atk => {
-        const D = G.players[1 - atk.owner];
+        const D = opp(G.players[atk.owner]);
         const free = D.bf.find(b => canBlock(b, atk) && !Object.values(G.blocks).some(bs => bs.includes(b.uid)));
         if (free) { (G.blocks[atk.uid] = G.blocks[atk.uid] || []).push(free.uid); log(`${free.card.name} must block ${atk.card.name}.`); }
     });
     const lure = G.attackers.map(onBf).find(o => o && has(o, 'lure'));
     if (lure) {
-        const D = G.players[1 - lure.owner];
+        const D = opp(G.players[lure.owner]);
         D.bf.filter(b => canBlock(b, lure)).forEach(b => {
             if ((G.blocks[lure.uid] || []).includes(b.uid)) return;
             Object.keys(G.blocks).forEach(k => { G.blocks[k] = G.blocks[k].filter(u => u !== b.uid); if (!G.blocks[k].length) delete G.blocks[k]; });
@@ -3768,9 +3815,9 @@ async function beginTurn() {
     const P = G.players[G.active];
     G.phase = 'beginning';
     P.landsPlayed = 0;
-    opp(P).bf.forEach(o => { if (o.tapped && grantsOn(o).some(g => g.untapEach)) { o.tapped = false; } });
+    foes(P).flatMap(F => F.bf).forEach(o => { if (o.tapped && grantsOn(o).some(g => g.untapEach)) { o.tapped = false; } });
     // Seedborn Muse, Unwinding Clock: untap during each other player's untap step
-    opp(P).bf.filter(a => Rx(a).untapOthers && !lostAbilities(a)).forEach(a => { const w = Rx(a).untapOthers; opp(P).bf.forEach(o => { if (w === '~' ? o === a : w === 'all artifacts' ? /Artifact/.test(o.card.type) : true) o.tapped = false; }); });
+    foes(P).flatMap(F => F.bf).filter(a => Rx(a).untapOthers && !lostAbilities(a)).forEach(a => { const w = Rx(a).untapOthers; foes(P).flatMap(F => F.bf).forEach(o => { if (w === '~' ? o === a : w === 'all artifacts' ? /Artifact/.test(o.card.type) : true) o.tapped = false; }); });
     P.handAtStart = P.hand.length;
     const wasTapped = P.bf.filter(o => o.tapped);
     P.bf.forEach(o => { if (o.skipUntap) { o.skipUntap = false; } else if (o.tapped && (o.ctr.stun || 0) > 0) { o.ctr.stun--; log(`${o.card.name} stays tapped (a stun counter is removed).`); } else if (!has(o, 'nountap') && !(o.lockedBy && onBf(o.lockedBy) && onBf(o.lockedBy).tapped) && !(Rx(o).mayNotUntap && o.tapped && allPerms().some(l => l.lockedBy === o.uid))) o.tapped = false; o.sick = false; });
@@ -3780,8 +3827,8 @@ async function beginTurn() {
     G.trigCount = 0;
     G.combatFired = false; G.extraCombat = 0; G.extraCombatOn = false;
     G.castThisTurn = 0;
-    G.lastCastBy = G.castBy || [0, 0];
-    G.castBy = [0, 0];
+    G.lastCastBy = G.castBy || Z();
+    G.castBy = Z();
     emptyPools();
     log(`— Turn ${G.turn}: ${you(P) ? 'your' : `${P.name}'s`} turn —`);
     G.phase = 'upkeep';
@@ -3811,7 +3858,7 @@ async function beginTurn() {
     await upkeepGyActs(P);
     if (G.over) return;
     const skipDraw = (P.skip && P.skip.turn === G.turn && P.skip.what === 'draw') || P.bf.some(x => Rx(x).skipDraw && !lostAbilities(x));
-    if (!G.firstTurn && !skipDraw) { G.inDrawStep = true; drawCards(P, 1, P.i === 1); G.inDrawStep = false; }
+    if (!G.firstTurn && !skipDraw) { G.inDrawStep = true; drawCards(P, 1, P.i !== 0); G.inDrawStep = false; }
     G.firstTurn = false;
     // Sagas get a lore counter at the start of the precombat main phase (714.3b)
     P.bf.filter(o => Rx(o).saga && !o.sagaDone).forEach(o => { o.ctr.lore = (o.ctr.lore || 0) + 1; sagaChapter(P, o); });
@@ -3906,9 +3953,10 @@ async function endTurn(P) {
         G.players[o.owner].bf.push(o);
         log(`${o.card.name} goes back to ${you(G.players[o.owner]) ? 'you' : G.players[o.owner].name}.`);
     });
-    G.extra = G.extra || [0, 0];
+    G.defender = null;
+    G.extra = G.extra || Z();
     if (G.extra[P.i] > 0) { G.extra[P.i]--; log(`${P.name} ${you(P) ? 'take' : 'takes'} an extra turn.`); }
-    else G.active = 1 - G.active;
+    else G.active = G.players.length === 2 ? 1 - G.active : seatAfter(G.active).i;
     G.turn++;
     await pause(250);
     beginTurn();

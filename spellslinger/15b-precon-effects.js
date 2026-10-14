@@ -371,7 +371,7 @@ async function preconEffect(P, e, t, src, O, name) {
         case 'counterAttackers': (G.attackers || []).map(onBf).filter(x => x && x.owner === P.i).forEach(x => putCounters(x, 1, P)); log(`${name}: each attacking creature gets a +1/+1 counter.`); break;
         case 'meglonoth': { const k = Math.max(0, pow(src)); Object.entries(G.blocks).forEach(([a, bs]) => { const atk = onBf(Number(a)); if (atk && bs.includes(src.uid)) { const X = G.players[atk.owner]; damage(X, k, src); log(`${name} deals ${k} damage to ${X.name}.`); } }); break; }
         case 'hostDiesLose': { const x = G.ctxObj || null; const k = x ? Math.max(0, tou(x)) : 0; const who = x ? G.players[x.owner] : O; if (k) { who.life -= k; log(`${who.name} ${you(who) ? 'lose' : 'loses'} ${k} life.`); fire('loseLife', { P: who, n: k }); } break; }
-        case 'millCaster': { const X = G.lastCast ? G.players[G.lastCast.owner] === undefined ? O : G.players[1 - P.i] : O; const m = X.library.splice(-e.n).reverse(); X.gy.push(...m); log(`${X.name} ${you(X) ? 'mill' : 'mills'} ${m.length}.`); break; }
+        case 'millCaster': { const X = G.lastCast ? G.players[G.lastCast.owner] === undefined ? O : opp(P) : O; const m = X.library.splice(-e.n).reverse(); X.gy.push(...m); log(`${X.name} ${you(X) ? 'mill' : 'mills'} ${m.length}.`); break; }
         case 'lootTarget': { const X = (t && t.p) || P; drawCards(X, 1); if (X.hand.length) { const d = X.isAI ? X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0] : (await pickCard(X, X.hand, `${name}: discard a card`, { required: true })) || X.hand[0]; pull(X.hand, d); X.gy.push(d); discardMark([d]); log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); } break; }
         case 'sacUnlessForests': { const fs = P.bf.filter(x => /\bForest\b/.test(x.card.type) && x !== src); if (fs.length >= 3 && (P.isAI || await askYes(P, `${name}: sacrifice three Forests (or sacrifice it)?`, { card: src.card }))) { fs.slice(0, 3).forEach(x => { fire('sacrificed', { o: x }); dieOrLeave(x, 'gy'); }); log(`${P.name} sacrifices three Forests.`); } else if (onBf(src.uid)) { log(`${name} is sacrificed.`); fire('sacrificed', { o: src }); dieOrLeave(src, 'gy'); } break; }
         case 'wumpus': { const X = O; const cs = X.hand.filter(x => isCreatureCard(x.card)); if (!cs.length) break; const c = X.isAI ? cs.slice().sort((a, b) => aiKeepValue(X, b) - aiKeepValue(X, a))[0] : await askYes(X, `${name}: put a creature card from your hand onto the battlefield?`, { card: src.card }) ? ((await pickCard(X, cs, `${name}: put a creature card onto the battlefield`, { required: true })) || cs[0]) : null; if (c) { pull(X.hand, c); putOntoBattlefield(X, c); log(`${X.name} puts ${c.card.name} onto the battlefield.`); } break; }
@@ -446,8 +446,8 @@ function preconDamage(target, n, src) {
             // Vengeful Archon: {X}: prevent the next X damage to you; it deals that much to target player
             if (owner.archon && owner.archon.turn === G.turn && owner.archon.n > 0) {
                 const k = Math.min(n, owner.archon.n); owner.archon.n -= k; n -= k;
-                log(`${owner.archon.src.card.name} prevents ${k} damage and deals ${k} damage to ${G.players[1 - owner.i].name}.`);
-                damage(G.players[1 - owner.i], k, owner.archon.src);
+                log(`${owner.archon.src.card.name} prevents ${k} damage and deals ${k} damage to ${opp(owner).name}.`);
+                damage(opp(owner), k, owner.archon.src);
                 if (n <= 0) return 0;
             }
         }
@@ -460,7 +460,7 @@ function preconDamage(target, n, src) {
 // ---- Extra conditions, static filters and block restrictions ----
 COND_EXTRA.push(
     [/^you control a permanent named (.+?)(?: or a permanent named (.+))?$/, m => P => P.bf.some(x => x.card.name === m[1] || (m[2] && x.card.name === m[2]))],
-    [/^an opponent controls an? (Island|Swamp|Forest|Mountain|Plains)$/, m => P => G.players[1 - P.i].bf.some(x => hasType(x, m[1]))],
+    [/^an opponent controls an? (Island|Swamp|Forest|Mountain|Plains)$/, m => P => foes(P).some(F => F.bf.some(x => hasType(x, m[1])))],
     [/^a library has (\w+) or fewer cards in it$/, m => () => G.players.some(X => X.library.length <= num(m[1]))],
     [/^you control an? ([A-Z][a-z]+) planeswalker$/, m => P => P.bf.some(x => isPlaneswalker(x) && hasType(x, m[1]))],
     [/^there are two or more instant and\/or sorcery cards in your graveyard$/, () => P => P.gy.filter(x => /Instant|Sorcery/.test(x.card.type)).length >= 2],
@@ -492,7 +492,7 @@ Object.assign(TRIG_FN, {
     selfTurned: (o, ctx) => ctx.o === o,
     selfHit: (o, ctx) => ctx.src === o,
     training: (o, ctx) => ctx.list.includes(o) && ctx.list.some(x => x !== o && x.owner === o.owner && pow(x) > pow(o)),
-    dethrone: (o, ctx) => ctx.list.includes(o) && G.players[1 - o.owner].life >= G.players[o.owner].life
+    dethrone: (o, ctx) => ctx.list.includes(o) && foes(G.players[o.owner]).some(F => F.life >= G.players[o.owner].life)
 });
 Object.assign(BLOCKER_FN, { noPow2: (b, atk) => pow(atk) < 2 });
 Object.assign(BLOCK_FN, {
@@ -631,8 +631,8 @@ async function suspendTick(P) {
         if (!ok) { o.suspHaste = false; log(`${o.card.name} has no target - it stays in exile.`); }
     }
 }
-function preconCantCast(P) { return !!G && P.attackedTurn === G.turn && G.players[1 - P.i].bf.some(a => Rx(a).arbiter && !lostAbilities(a)); }
-function preconCantAttack(o) { if (!G) return false; if (o.ctr && o.ctr.petrification) return true; const P = G.players[o.owner]; return P.castTurn === G.turn && G.players[1 - P.i].bf.some(a => Rx(a).arbiter && !lostAbilities(a)); }
+function preconCantCast(P) { return !!G && P.attackedTurn === G.turn && foes(P).some(F => F.bf.some(a => Rx(a).arbiter && !lostAbilities(a))); }
+function preconCantAttack(o) { if (!G) return false; if (o.ctr && o.ctr.petrification) return true; const P = G.players[o.owner]; return P.castTurn === G.turn && foes(P).some(F => F.bf.some(a => Rx(a).arbiter && !lostAbilities(a))); }
 function lifeGainBonus(P) { return G ? P.bf.filter(a => Rx(a).vitality && !lostAbilities(a)).length : 0; }
 // Guerrilla Tactics: a spell or ability an opponent controls makes you discard it
 function discardByOpp(d, byP) {
@@ -650,7 +650,7 @@ function auraTaxOn(o) { return G ? allPerms().filter(a => a.attachedTo === o.uid
 // Lure: every creature able to block the enchanted creature does
 function preconLure() {
     G.attackers.map(onBf).filter(a => a && allPerms().some(x => x.attachedTo === a.uid && Rx(x).lure && !lostAbilities(x))).forEach(atk => {
-        const D = G.players[1 - atk.owner];
+        const D = opp(G.players[atk.owner]);
         const must = D.bf.filter(b => isCreature(b) && canBlock(b, atk));
         if (!must.length) return;
         Object.keys(G.blocks).forEach(a => { G.blocks[a] = G.blocks[a].filter(u => !must.some(b => b.uid === u)); if (!G.blocks[a].length) delete G.blocks[a]; });

@@ -458,6 +458,17 @@ async function aiMain(P) {
     }
 }
 
+// In a pod: which opponent to attack this combat. Lethal on someone first, else the biggest threat on the table.
+function aiPickDefender(P) {
+    const fs = foes(P);
+    if (fs.length === 1) return fs[0];
+    const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
+    const blockers = F => F.bf.filter(o => isCreature(o) && !o.tapped).length;
+    const lethal = fs.filter(F => F.life <= power && !blockers(F)).sort((a, b) => a.life - b.life)[0];
+    if (lethal) return lethal;
+    const threat = F => F.bf.filter(isCreature).reduce((a, o) => a + Math.max(0, pow(o)), 0) + F.bf.length * 0.25 + (F.bf.some(o => o.isCommander) ? 2 : 0);
+    return fs.slice().sort((a, b) => threat(b) - threat(a) || a.life - b.life || a.i - b.i)[0];
+}
 function aiChooseAttackers(P) {
     const must = P.bf.filter(o => canAttackWith(o) && forcedAttack(o));
     const chosen = [...new Set([...aiChooseAttackersFree(P), ...must])];
@@ -587,6 +598,7 @@ async function aiTurn(P) {
     await settle();
     if (G.over) return;
     aiCrew(P);
+    if (G.players.length > 2) G.defender = aiPickDefender(P).i;
     let attackers = P.skip && P.skip.turn === G.turn && P.skip.what === 'combat' ? [] : aiChooseAttackers(P);
     if (P.mustAttackTurn === G.turn && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...P.bf.filter(canAttackWith)])];
     for (let round = 0; round < 4 && attackers.length && !G.over; round++) {

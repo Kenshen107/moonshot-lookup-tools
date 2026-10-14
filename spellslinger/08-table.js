@@ -128,7 +128,7 @@ function gameMenu() {
         <button class="btn danger" onclick="closeSheet(); concede()">🏳️ Concede</button></div>`);
 }
 // Telepathy (Magic 2010): a player who controls it sees the opponent's hand
-function handRevealed(P) { return !!G && G.players[1 - P.i].bf.some(x => Rx(x).telepathy && !lostAbilities(x)); }
+function handRevealed(P) { return !!G && foes(P).some(F => F.bf.some(x => Rx(x).telepathy && !lostAbilities(x))); }
 function showRevealedHand(i) {
     const P = G.players[i];
     if (!handRevealed(P)) return;

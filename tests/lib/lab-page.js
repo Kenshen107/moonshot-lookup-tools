@@ -88,13 +88,16 @@ window.LAB = (() => {
             const kind = opts.kind === 'mix' ? (opts.seed % 2 ? 'modern' : 'commander') : opts.kind; out.kind = kind;
             const build = kind === 'modern' ? L.modernDeck : L.commanderDeck;
             const A = build(), B = build();
+            const more = Array.from({ length: Math.max(0, (opts.players || 2) - 2) }, () => build());
             A.aiLevel = opts.la || 'normal'; B.aiLevel = opts.lb || 'normal';
+            more.forEach(d => { d.aiLevel = opts.lb || 'normal'; });
             out.a = A.commander ? A.commander.name : A.name; out.b = B.commander ? B.commander.name : B.name;
+            if (more.length) out.pod = [A, B, ...more].map(d => d.commander ? d.commander.name : d.name);
             window.lastResult = null; L.pending = {};
-            await newGame(A, B);
+            await newGame(A, B, null, more);
             const limit = opts.timeout || 60000;
             while (!window.lastResult && performance.now() - t0 < limit) await new Promise(r => setTimeout(r, 0));
-            if (!window.lastResult) { out.hang = true; out.turn = G.turn; out.phase = G.phase; out.diag = { pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
+            if (!window.lastResult) { out.hang = true; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); out.turn = G.turn; out.phase = G.phase; out.diag = { pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
             else Object.assign(out, window.lastResult);
             out.bad = T.invariants();
             if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
