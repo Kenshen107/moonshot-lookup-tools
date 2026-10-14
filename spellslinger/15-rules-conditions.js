@@ -811,6 +811,7 @@ async function cycle(P, o) {
     pull(P.hand, o);
     P.gy.push(o);
     log(`${P.name} ${you(P) ? 'cycle' : 'cycles'} ${o.card.name}.`);
+    if (Rx(o).cycleTrig) (G.trigQ = G.trigQ || []).push({ P, o, effects: Rx(o).cycleTrig });
     drawCards(P, 1);
     renderGame();
     return true;

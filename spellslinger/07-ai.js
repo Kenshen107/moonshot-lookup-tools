@@ -125,6 +125,7 @@ function scoreEffects(P, effects, target, src) {
             peer: target && target.p === P ? 6 : target && target.p ? (O.library.length < 14 ? 1000 : 2) : 0, stealWhile: target && target.o ? 8 + creatureValue(target.o) : 0, digLand: 3, topLandOrHand: 3, revealToLand: 4,
             bounceSpell: target && target.item ? 4 : 0, freeze: 1, tutorNamed: 3, landMana: 1, exileHost: 6, countersMade: 2, doubleCounters: 2, attachAllEquip: 1, attachSelf: 1, attachEquipToSelf: 1, gollum: 1, asmoReturn: 0, selfToLibrary: 0, pumpChoice: 0, arni: 0, unearth: 4 };
         if (e.t in sk) { score += sk[e.t]; continue; }
+        { const u = uldScore(P, e, O, target); if (u !== undefined) { score += u; continue; } } // the Uldaros Theorix deck (15c-uldaros-effects.js)
         const t = needsTarget(e) ? target : null;
         if (needsTarget(e) && !t) return 0;
         switch (e.t) {
@@ -369,7 +370,7 @@ function aiBestPlay(P) {
         if (P.hand.includes(o) && Rx(o).overload) faces.push([o, o.card, true]);
         if (P.hand.includes(o) && Rx(o).evoke && Rx(o).etb.length && !canPay(P, o)) faces.push([o, o.card, false, true]);
         if (Rx(o).alt && !canPay(P, o) && altOk(P, o)) faces.push([o, o.card, false, false, true]);
-        for (const md of ['warp', 'bestow', 'blitz', 'dash', 'morph', 'disturb', 'retrace', 'energy', 'escape']) if (castAsOk(P, o, md)) faces.push([o, o.card, false, false, false, md]);
+        for (const md of ['warp', 'bestow', 'blitz', 'dash', 'impending', 'morph', 'disturb', 'retrace', 'energy', 'escape']) if (castAsOk(P, o, md)) faces.push([o, o.card, false, false, false, md]);
     }
     for (const [o, face, ov, ev, alt, md] of faces) {
         o.card = face;
@@ -396,7 +397,7 @@ function aiBestPlay(P) {
         if (P.aiLevel === 'hard' && target && target.o && target.o.owner !== P.i && ['destroy', 'exile', 'dmg'].includes(te.t) && creatureValue(target.o) < 5 && !(te.t === 'dmg' && target.p)) s = 0; // save it
         if (ev) s = s * 0.5 - 1;
         if (alt) s = s * 0.7 - 1;
-        if (md === 'warp' || md === 'blitz' || md === 'dash' || md === 'morph') { o.castAs = null; const full = canPay(P, o) && !P.gy.includes(o); o.castAs = md; s = full ? 0 : s * 0.6; } // the real thing when it can
+        if (md === 'warp' || md === 'blitz' || md === 'dash' || md === 'impending' || md === 'morph') { o.castAs = null; const full = canPay(P, o) && !P.gy.includes(o); o.castAs = md; s = full ? 0 : s * 0.6; } // the real thing when it can
         if (md === 'bestow') s = target ? 6 + (o.card.cmc || 0) : 0;
         if (md === 'energy') s = s * 1.1 + 2;
         if (s > 0) cands.push({ o, target, s, face, ov: !!ov, ev: !!ev, alt: !!alt, md });

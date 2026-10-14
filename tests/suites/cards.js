@@ -11,7 +11,7 @@ const { launch, openTestPage, installHelpers, printResults, writeOut } = require
 const BASELINE = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'baseline.json'), 'utf8'));
 
 const GROUPS = {
-    verified: { must100: true, desc: 'every deck in VERIFIED_DECKS (Sandman, Brudiclad, Gitrog, Tyrox)' },
+    verified: { must100: true, desc: 'every deck in VERIFIED_DECKS (Sandman, Brudiclad, Gitrog, Tyrox, Uldaros and the Tyrants)' },
     mirrodin: { must100: true, desc: 'Mirrodin booster cards (set:mrd is:booster)' },
     m10: { must100: true, desc: 'Magic 2010 booster cards (set:m10 is:booster)' },
     welcome: { must100: true, desc: 'MTGJSON Welcome Decks (55 decks)' },

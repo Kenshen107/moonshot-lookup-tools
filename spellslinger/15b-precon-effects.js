@@ -379,7 +379,7 @@ async function preconEffect(P, e, t, src, O, name) {
         case 'copShield': P.cop = P.cop && P.cop.turn === G.turn ? P.cop : { turn: G.turn }; P.cop[e.color] = (P.cop[e.color] || 0) + 1; log(`${name}: the next ${e.color} source's damage to ${P.name} this turn is prevented.`); break;
         case 'reaverBurn': { const n = (src.ctr && src.ctr.charge) || 0; if (n > 0) { damage(O, n, src); log(`${name} deals ${n} damage to ${O.name}.`); } break; }
         case 'bloodReckoning': { const n = (G.attackers || []).length * e.n; if (n > 0) { O.life -= n; log(`${O.name} ${you(O) ? 'lose' : 'loses'} ${n} life for attacking.`); fire('loseLife', { P: O, n }); } break; }
-        default: break;
+        default: await uldEffect(P, e, t, src, O, name); // the Uldaros Theorix deck (15c-uldaros-effects.js)
     }
 }
 function isCreatureCard(card) { return /\bCreature\b/.test(card.type || ''); }
@@ -504,13 +504,13 @@ Object.assign(BLOCK_FN, {
 function faceDownCard(ward) {
     return { id: 'facedown', name: 'Face-down creature', fullName: 'Face-down creature', cost: '', cmc: 0, type: 'Creature', text: ward ? 'Ward {2}' : '', power: '2', toughness: '2', colors: [], ci: [], img: null, imgS: null, rarity: 'common', set: '', num: '', layout: 'normal', legal: {}, usd: null, frame: [], released: null, v: 3 };
 }
-function canTurnUp(P, o) { return !!o.fdCard && onBf(o.uid) && o.owner === P.i && !!Rx({ card: o.fdCard }).morph && !!planPayment(P, Rx({ card: o.fdCard }).morph); }
+function canTurnUp(P, o) { const c = fdTurnCost(o); return !!o.fdCard && onBf(o.uid) && o.owner === P.i && !!c && !!planPayment(P, c); }
 function turnFaceUp(P, o) {
     const R = Rx({ card: o.fdCard });
-    const plan = planPayment(P, R.morph);
+    const plan = planPayment(P, fdTurnCost(o));
     if (!plan) return false;
     plan.forEach(x => tapSource(P, x));
-    o.card = o.fdCard; delete o.fdCard;
+    o.card = o.fdCard; delete o.fdCard; delete o.manifest;
     log(`${P.name} ${you(P) ? 'turn' : 'turns'} ${o.card.name} face up.`);
     if (R.megamorph) { putCounters(o, 1, P); log(`${o.card.name} gets a +1/+1 counter (megamorph).`); }
     fire('turnedUp', { o });

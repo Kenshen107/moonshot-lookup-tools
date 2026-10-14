@@ -10,7 +10,7 @@ const { launch, ROOT } = require('./lib/harness');
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : (process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : true); };
 const N = Number(arg('n', 200)), KIND = arg('kind', 'mix'), SEED = Number(arg('seed', 1)), CONC = Number(arg('conc', 3));
-const LA = arg('la', 'normal'), LB = arg('lb', 'normal'), TMO = Number(arg('timeout', 15000)), PLAYERS = Number(arg('players', 2)), STYLES = arg('styles', null), THEMES = arg('themes', null), REPLAY = arg('replay', null);
+const LA = arg('la', 'normal'), LB = arg('lb', 'normal'), TMO = Number(arg('timeout', 15000)), PLAYERS = Number(arg('players', 2)), STYLES = arg('styles', null), THEMES = arg('themes', null), DECKA = arg('decka', null) ? require('fs').readFileSync(arg('decka', null), 'utf8') : null, REPLAY = arg('replay', null);
 
 async function openLab(h) {
     await h.ctx.addInitScript(() => { window.__LAB = true; });
@@ -20,6 +20,7 @@ async function openLab(h) {
     await h.ctx.route('http://spellslinger.test/__lab/cards.json', r => r.fulfill({ status: 200, contentType: 'application/json', body: fs.readFileSync(cardsFile) }));
     const page = await h.ctx.newPage();
     const errors = [];
+    if (process.env.LAB_TRACE) page.on('console', m => { if (/^LABSEED/.test(m.text())) require('fs').appendFileSync(process.env.LAB_TRACE, m.text() + '\n'); }); // the last seed started shows which game hung a page
     page.on('pageerror', e => errors.push(String(e.stack || e.message || e).split('\n').slice(0, 4).join(' | ')));
     await page.goto(`${h.server.url}/Spellslinger_Duels.html?autoplay&format=none`);
     await page.waitForFunction(() => typeof autoTest === 'function' && typeof parseTrigger === 'function' && typeof preconEffect === 'function', null, { timeout: 30000 });
@@ -41,7 +42,20 @@ async function main() {
     const t0 = Date.now();
     if (REPLAY) {
         const { page, info, errors } = await openLab(h);
-        const r = await page.evaluate(([s, k, la, lb, tmo, pl, st, th]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES]);
+        if (process.env.LAB_PAUSE) { // a game that never returns (a synchronous loop): pause the page after N ms and print where it is
+            const cdp = await h.ctx.newCDPSession(page);
+            await cdp.send('Debugger.enable');
+            const paused = new Promise(res => cdp.on('Debugger.paused', res));
+            page.evaluate(([s, k, la, lb, tmo, pl, st, th, da]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA]).catch(() => {});
+            await new Promise(r => setTimeout(r, Number(process.env.LAB_PAUSE)));
+            await cdp.send('Debugger.pause');
+            const ev = await paused;
+            console.log(ev.callFrames.slice(0, 14).map(f => `${f.functionName || '(anonymous)'} ${f.url.split('/').pop()}:${f.location.lineNumber + 1}`).join('\n'));
+            const info2 = await cdp.send('Debugger.evaluateOnCallFrame', { callFrameId: ev.callFrames[0].callFrameId, expression: "G.players.map(p => p.bf.length + 'bf/' + p.gy.length + 'gy').join(' ') + ' T' + G.turn + ' :: ' + G.log.slice(-12).map(l => l.text || l).join(' | ')" }).catch(e => ({ result: { value: String(e) } }));
+            console.log(info2.result.value);
+            await h.close(); return;
+        }
+        const r = await page.evaluate(([s, k, la, lb, tmo, pl, st, th, da]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA]);
         console.log(JSON.stringify(r, null, 1));
         if (errors.length) console.log('PAGE ERRORS:\n' + errors.join('\n'));
         console.log((await page.evaluate(() => G.log.map(l => l.text || l).join('\n'))).slice(-6000));
@@ -57,7 +71,7 @@ async function main() {
         if (!w) console.log(`Loaded ${info.cards} cards offline (${info.automated} fully Automated) in ${info.ms} ms`);
         for (let done = 0; done < count; done += 25) {
             const n = Math.min(25, count - done);
-            const rs = await page.evaluate(([f, c, k, la, lb, tmo, pl, st, th]) => LAB.batch(f, c, { kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th }), [from + done, n, KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES]);
+            const rs = await page.evaluate(([f, c, k, la, lb, tmo, pl, st, th, da]) => LAB.batch(f, c, { kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da }), [from + done, n, KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA]);
             // mix: alternate kinds by seed
             all.push(...rs);
             process.stdout.write(`\r${all.length}/${N} games, ${((Date.now() - t0) / 1000).toFixed(0)}s`);

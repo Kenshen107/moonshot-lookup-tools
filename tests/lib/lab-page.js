@@ -120,8 +120,19 @@ window.LAB = (() => {
         return { name: `${commander.name} (${th.name})`, format: 'commander', commander, entries, source: 'lab', aiStyle: th.style, theme: key };
     };
 
+    // A fixed decklist for seat A (lab.js --decka file.txt): "N Name" lines, the commander in the last block. Cards come from the offline pool by name.
+    L.listDeck = text => {
+        const byName = new Map(); L.pool.forEach(c => { if (!byName.has(c.fullName)) byName.set(c.fullName, c); if (!byName.has(c.name)) byName.set(c.name, c); });
+        const blocks = text.trim().split(/\n\s*\n/), entries = [];
+        let commander = null;
+        const read = (blk, isCmd) => blk.split('\n').forEach(l => { const m = l.match(/^(\d+)\s+(.+)$/); if (!m) return; const c = byName.get(m[2].trim()); if (!c) throw new Error('deck: unknown card ' + m[2]); if (isCmd) commander = c; else entries.push({ card: c, n: Number(m[1]) }); });
+        read(blocks[0], false); if (blocks[1]) read(blocks[1], true);
+        return { name: `${commander ? commander.name : 'List'} (list)`, format: 'commander', commander, entries, source: 'lab', aiStyle: 'control' };
+    };
+
     // One game. opts: { seed, kind: 'commander'|'modern', la, lb, timeout }. Returns a plain result object.
     L.play = async opts => {
+        console.log('LABSEED ' + opts.seed);
         seeded(opts.seed); Math.random = rnd;
         const t0 = performance.now();
         const out = { seed: opts.seed };
@@ -151,6 +162,7 @@ window.LAB = (() => {
                 A = build(styles[0]); B = build(styles[1]);
                 more = Array.from({ length: Math.max(0, n - 2) }, (_, k) => build(styles[2 + k]));
             }
+            if (opts.deckA) { A = L.listDeck(opts.deckA); out.styles[0] = A.aiStyle || null; }
             A.aiLevel = opts.la || 'normal'; B.aiLevel = opts.lb || 'normal';
             more.forEach(d => { d.aiLevel = opts.lb || 'normal'; });
             out.cmds = [A, B, ...more].map(d => d.commander ? d.commander.name : d.name);

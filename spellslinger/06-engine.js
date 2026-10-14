@@ -51,7 +51,7 @@ function findObj(uid) {
     return null;
 }
 const ctrl = o => G.players[o.owner];
-const isCreature = o => !o.enchOnly && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
+const isCreature = o => !o.enchOnly && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
 function buffsOn(o) {
     const b = { p: 0, q: 0, kw: [] };
     allPerms().forEach(a => {
@@ -137,6 +137,7 @@ function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
         landsPlayed: 0, tax: 0, cmdDmg: 0, cmdBy: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
         aiLevel: deck.aiLevel || 'normal', aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
+    trackGraveyard(P);
     deck.entries.forEach(e => { for (let k = 0; k < e.n; k++) P.library.push(makeObj(e.card, i)); });
     shuffle(P.library);
     if (deck.commander) {
@@ -355,7 +356,7 @@ function removeFromZones(o) {
         if (i >= 0) { P[z].splice(i, 1); return; }
     }
 }
-function resetObj(o) { Object.assign(o, { cmdSeenZone: null, enchOnly: false, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, kicked: false, sagaDone: false, bestowed: false, blitzed: false, warpExile: 0, saddledTurn: 0, saddlers: null }); }
+function resetObj(o) { Object.assign(o, { cmdSeenZone: null, enchOnly: false, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, kicked: false, sagaDone: false, bestowed: false, blitzed: false, warpExile: 0, saddledTurn: 0, saddlers: null, wasCast: false, impending: false, manifest: false }); }
 // A commander that would go to the graveyard or exile goes back to the command zone.
 function leaveBattlefield(o, zone) {
     const wasOn = !!(G && onBf(o.uid));
@@ -433,7 +434,9 @@ const isPlaneswalker = o => !!o && !!o.card && Rx(o).kind === 'planeswalker' && 
 const isBattle = o => !!o && !!o.card && Rx(o).kind === 'battle';
 function damage(target, n, src) {
     if (n <= 0) return;
-    n = preconDamage(target, n, src); if (n <= 0) return; // replacement and prevention effects of the precon rounds (15b-precon-effects.js)
+    n = preconDamage(target, n, src); if (n <= 0) return;
+    // The Mindskinner: damage a source you control would deal to an opponent is prevented; each opponent mills that many cards
+    if (target.life !== undefined && src && src.card && src.uid !== undefined && G.players[src.owner] && src.owner !== target.i && G.players[src.owner].bf.some(a => Rx(a).mindskin && !lostAbilities(a))) { log(`${n} damage from ${src.card.name} is prevented (The Mindskinner).`); foes(G.players[src.owner]).forEach(F => doMill(F, n)); return; } // replacement and prevention effects of the precon rounds (15b-precon-effects.js)
     // ---- Magic 2010 (2026-10-08): Safe Passage, Harm's Way, Guardian Seraph, Magebane Armor, Protean Hydra ----
     const tgtP = target.life !== undefined ? target : (target.card && target.uid !== undefined && G.players[target.owner]) || null;
     const oppSrc = !!(src && src.card && src.uid !== undefined && G.players[src.owner] && tgtP && src.owner !== tgtP.i);
@@ -701,6 +704,7 @@ function castAsOk(P, o, mode) {
     if (mode === 'blitz') return !!R.blitz && (P.hand.includes(o) || (R.blitzGy && P.gy.includes(o))) && P.life > R.blitz.life;
     if (mode === 'madness') return !!R.madness && P.exile.includes(o) && o.madnessTurn === G.turn;
     if (mode === 'dash') return !!R.dash && P.hand.includes(o) && R.kind === 'creature';
+    if (mode === 'impending') return !!R.impending && P.hand.includes(o);
     if (mode === 'energy') return energyAltOk(P, o);
     if (mode === 'escape') return lockerOk(P, o);
     return false;
@@ -715,6 +719,7 @@ function costOf(P, o) {
         if (o.castAs === 'blitz') return { ...R.blitz.cost };
         if (o.castAs === 'madness') return { ...R.madness };
         if (o.castAs === 'dash') return dashCost(P, o);
+        if (o.castAs === 'impending') return { ...R.impending.cost };
         if (o.castAs === 'morph') return parseCost('{3}');
         if (o.castAs === 'disturb') return { ...R.disturb };
         if (o.castAs === 'retrace') return { ...R.cost };
@@ -1120,6 +1125,8 @@ function cloneMatches(x, what, P) {
     if (what === 'land') return /\bLand\b/.test(x.card.type);
     if (what === 'creature you control') return cre && x.owner === P.i;
     if (what === 'creature or planeswalker you control') return (cre || isPlaneswalker(x)) && x.owner === P.i;
+    if (what === 'nonland permanent') return !/\bLand\b/.test(x.card.type);
+    if (what === 'creature you control with power 4 or greater') return cre && x.owner === P.i && pow(x) >= 4;
     return false;
 }
 async function enterAsCopy(P, o, cl) {
@@ -1131,8 +1138,12 @@ async function enterAsCopy(P, o, cl) {
     let type = pick.card.type;
     if (cl.addType && !new RegExp(`\\b${cl.addType}\\b`).test(type)) type = type.replace(/^(Legendary )?/, `$1${cl.addType} `);
     if (cl.notLegendary) type = type.replace(/\bLegendary /, '');
+    if (cl.addSub) { const subs = cl.addSub.split(' ').filter(w => !new RegExp(`\\b${w}\\b`).test(type)); if (subs.length) type = /\u2014/.test(type) ? `${type} ${subs.join(' ')}` : `${type} \u2014 ${subs.join(' ')}`; }
+    let text = pick.card.text;
+    if (cl.addText) { const add = cl.addText(pick.card.name, pick.card); if (add) text = `${text || ''}\n${add}`.trim(); }
+    if (cl.vanishing && !/\bVanishing\b/i.test(pick.card.text || '')) { text = `${text || ''}\nVanishing 3`.trim(); o.ctr.time = 3; }
     o.copyOf = o.card;
-    o.card = { ...(pick.copyOf ? pick.card : pick.card), id: `${pick.card.id}-copy${uidSeq}`, type };
+    o.card = { ...(pick.copyOf ? pick.card : pick.card), id: `${pick.card.id}-copy${uidSeq}`, type, text };
     if (cl.plusOne && isCreature(o)) o.counters += 1;
     if (Rx(o).kind === 'planeswalker') { o.ctr.loyalty = (Number(o.card.loyalty) || 0) + (cl.plusOne ? 1 : 0); o.pwReady = true; }
     log(`${o.copyOf.name} enters as a copy of ${pick.card.name}${cl.addType ? ` (also an ${cl.addType.toLowerCase()})` : ''}${cl.notLegendary ? ', not legendary' : ''}${cl.plusOne && isCreature(o) ? ', with an extra +1/+1 counter' : ''} (rule 707.9).`);
@@ -1410,6 +1421,8 @@ async function resolveTop() {
             if (item.castAs === 'warp') o.warpExile = G.turn;
             if (o.suspHaste) { o.suspHaste = false; if (r.kind === 'creature') { o.tkw.push('haste'); log(`${o.card.name} has haste (suspend).`); } }
             if (item.castAs === 'dash') { o.tkw.push('haste'); o.dashTurn = G.turn; }
+            o.wasCast = true;
+            if (item.castAs === 'impending') { o.impending = true; o.ctr.time = r.impending.n; log(`${o.card.name} enters with ${r.impending.n} time counters (impending): it isn't a creature until the last is removed.`); }
             if (item.castAs === 'blitz') { o.blitzed = true; o.tkw.push('haste'); o.sacAtEnd = G.turn; }
             if (r.kind === 'battle') { const d = Number(o.card.defense); o.ctr.defense = d >= 0 && !isNaN(d) ? d : 4; }
             if (r.alsoLand && !/\bLand\b/.test(o.card.type)) o.card = { ...o.card, type: `Land ${o.card.type}` };
@@ -2071,6 +2084,7 @@ function combatPartners(o) {
 function noteDiscard(P, n) { if (P.discardTurn !== G.turn) { P.discardTurn = G.turn; P.discardN = 0; } P.discardN += n; }
 
 // In a pod these effects hit every opponent ("each opponent loses N life", "deals N damage to each opponent"); everything else keeps using opp(P)
+const STALEMATE_TURN = 500; // total turns (every player's turn counts); no real game gets near it
 const EACH_OPP_EFFECTS = new Set(['drain', 'dmgOpp', 'oppDraws', 'oppPump']);
 // A card the player chooses to discard (the computer picks its least useful one). Random discards don't use this.
 async function chooseDiscard(X, why) {
@@ -2452,12 +2466,7 @@ async function applyEffect(P, e, t, src) {
         case 'discard':
             for (let k = 0; k < e.n && O.hand.length; k++) { const d = O.hand.splice(rand(O.hand.length), 1)[0]; O.gy.push(d); d.discardTurn = G.turn; discardByOpp(d, P); log(`${O.name} ${you(O) ? 'discard' : 'discards'} ${d.card.name} (at random).`); }
             break;
-        case 'mill': {
-            const milled = O.library.splice(-e.n).reverse();
-            O.gy.push(...milled);
-            log(`${O.name} ${you(O) ? 'mill' : 'mills'} ${milled.length}${milled.length ? `: ${milled.map(x => x.card.name).join(', ')}` : ''}.`);
-            break;
-        }
+        case 'mill': doMill(O, e.n); break;
         case 'pump':
             if (e.target === 'self') { if (!onBf(src.uid)) break; t = { o: src }; }
             if (!t || !t.o) break; // the target is gone
@@ -3635,6 +3644,14 @@ async function applyEffect(P, e, t, src) {
             const it = t.item;
             const i = G.stack.indexOf(it);
             if (i < 0) break;
+            if (e.unlessDiscard) {
+                const Q = it.P;
+                if (Q.hand.length && (Q.isAI || AUTOPLAY ? Q.hand.length <= 1 + ((it.o.card.cmc || 0) >= 5 ? 1 : 0) : await askYes(Q, `${name}: discard your hand so ${it.name} isn't countered?`, { card: src.card, yes: 'Discard my hand', no: 'Let it be countered' }))) {
+                    const gone = Q.hand.splice(0); Q.gy.push(...gone); discardMark(gone);
+                    log(`${Q.name} ${you(Q) ? 'discard' : 'discards'} ${gone.length} card${gone.length === 1 ? '' : 's'}, so ${it.name} isn't countered.`);
+                    break;
+                }
+            }
             const unless = e.unlessFrom === 'myArtifacts' ? P.bf.filter(x => /Artifact/.test(x.card.type)).length : e.unlessFrom ? Math.max(0, ...P.bf.filter(isCreature).map(pow)) : e.unless;
             if (unless) {
                 const plan = planPayment(it.P, { generic: unless, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 });
@@ -3859,6 +3876,8 @@ function combatDamage(A) {
 // ---- Turns ----
 async function beginTurn() {
     if (G.over) return;
+    // A lock nobody can break (for example The Mindskinner against Shared Fate with an empty library) would never end: call it a draw
+    if (G.turn >= STALEMATE_TURN) { endGame(null, `Stalemate: nobody has been able to win in ${STALEMATE_TURN} turns.`); return; }
     const P = G.players[G.active];
     G.phase = 'beginning';
     G.focusPick = null; // the pod view follows whoever's turn it is
@@ -3918,6 +3937,7 @@ async function beginTurn() {
     if (G.over) return;
     G.phase = 'main1';
     await runDelayed('main', P);
+    await radTick(P);
     fire('main1');
     await settle();
     if (G.over) return;
@@ -3973,6 +3993,7 @@ async function endTurn(P) {
     G.phase = 'end';
     emptyPools();
     if (G.monarch === P.i) { log(`${P.name} ${you(P) ? 'are' : 'is'} the monarch and ${you(P) ? 'draw' : 'draws'} a card (rule 724.2).`); drawCards(P, 1); }
+    P.bf.filter(o => o.impending && o.ctr.time > 0).forEach(o => { o.ctr.time--; log(`${o.card.name} loses a time counter (${o.ctr.time} left).`); });
     fire('end');
     await settle();
     if (G.over) return;
@@ -4351,7 +4372,7 @@ function showGameCard(uid) {
     if (P.hand.includes(o) && r.foretell && G.active === P.i && !G.stack.length && planPayment(P, parseCost('{2}'))) actions += `<button class="btn" onclick="humanForetell(${uid})" title="Foretell: pay {2} and exile it face down; cast it on a later turn for ${esc(costSymbols(r.foretell))} (rule 702.143)">Foretell {2}</button>`;
     if (P.hand.includes(o) && r.alt && altOk(P, o)) actions += `<button class="btn" onclick="humanCastAlt(${uid})" title="Alternative cost: cast it without paying its mana cost (rule 118.9)">Cast: ${esc(r.alt.text)}</button>`;
     if (P.hand.includes(o) && r.evoke) actions += `<button class="btn" onclick="humanCastEvoke(${uid})" title="Evoke: cast it for its evoke cost; it's sacrificed when it enters (rule 702.74)">Evoke ${esc(costSymbols(r.evoke))}</button>`;
-    for (const [md, label, tip] of [['warp', r.warp && `Warp ${costSymbols(r.warp)}`, 'Warp: cast it for its warp cost; it\'s exiled at the next end step and can be cast from exile on a later turn'], ['bestow', r.bestow && `Bestow ${costSymbols(r.bestow)}`, 'Bestow: cast it as an Aura on a creature; it becomes a creature again if that creature leaves (rule 702.103)'], ['blitz', r.blitz && `Blitz ${costSymbols(r.blitz.cost)}${r.blitz.life ? `, ${r.blitz.life} life` : ''}`, 'Blitz: haste, draw a card when it dies, sacrificed at the end step (rule 702.152)'], ['disturb', r.disturb && `Disturb ${costSymbols(r.disturb)}`, 'Disturb: cast it transformed from your graveyard; it is exiled if it would die (rule 702.146)'], ['retrace', r.retrace && 'Retrace (discard a land)', 'Retrace: cast it from your graveyard by discarding a land card too (rule 702.81)'], ['morph', r.morph && 'Cast face down {3}', 'Morph: cast it face down as a 2/2 for {3}; later pay its morph cost to turn it face up (rule 702.37)'], ['dash', r.dash && `Dash ${costSymbols(r.dash)}`, 'Dash: haste, and it returns to your hand at the next end step (rule 702.109)'], ['energy', `Pay ${energyAltN(P)} energy`, 'Cast it by paying energy instead of its mana cost'], ['escape', P.lockerCost && `Escape ${costSymbols(P.lockerCost)}, exile ${P.lockerN || 4}`, 'Escape: cast it from your graveyard (The Grim Captain\'s Locker)']]) {
+    for (const [md, label, tip] of [['impending', r.impending && `Impending ${r.impending.n}\u2014${costSymbols(r.impending.cost)}`, 'Impending: cast it for its impending cost; it enters with time counters, is not a creature until the last is removed, and loses one at the start of your end step'], ['warp', r.warp && `Warp ${costSymbols(r.warp)}`, 'Warp: cast it for its warp cost; it\'s exiled at the next end step and can be cast from exile on a later turn'], ['bestow', r.bestow && `Bestow ${costSymbols(r.bestow)}`, 'Bestow: cast it as an Aura on a creature; it becomes a creature again if that creature leaves (rule 702.103)'], ['blitz', r.blitz && `Blitz ${costSymbols(r.blitz.cost)}${r.blitz.life ? `, ${r.blitz.life} life` : ''}`, 'Blitz: haste, draw a card when it dies, sacrificed at the end step (rule 702.152)'], ['disturb', r.disturb && `Disturb ${costSymbols(r.disturb)}`, 'Disturb: cast it transformed from your graveyard; it is exiled if it would die (rule 702.146)'], ['retrace', r.retrace && 'Retrace (discard a land)', 'Retrace: cast it from your graveyard by discarding a land card too (rule 702.81)'], ['morph', r.morph && 'Cast face down {3}', 'Morph: cast it face down as a 2/2 for {3}; later pay its morph cost to turn it face up (rule 702.37)'], ['dash', r.dash && `Dash ${costSymbols(r.dash)}`, 'Dash: haste, and it returns to your hand at the next end step (rule 702.109)'], ['energy', `Pay ${energyAltN(P)} energy`, 'Cast it by paying energy instead of its mana cost'], ['escape', P.lockerCost && `Escape ${costSymbols(P.lockerCost)}, exile ${P.lockerN || 4}`, 'Escape: cast it from your graveyard (The Grim Captain\'s Locker)']]) {
         if (!label || !castAsOk(P, o, md)) continue;
         o.castAs = md; const ok = canCastNow(P, o) && canPay(P, o); o.castAs = null;
         actions += `<button class="btn" ${ok ? '' : 'disabled'} onclick="humanCastAs(${uid}, '${md}')" title="${esc(tip)}">${esc(label)}</button>`;
@@ -4364,7 +4385,7 @@ function showGameCard(uid) {
     const temp = o.tp || o.tq || o.tkw.length ? `, until end of turn ${[o.tp || o.tq ? `${o.tp >= 0 ? '+' : ''}${o.tp}/${o.tq >= 0 ? '+' : ''}${o.tq}` : '', ...o.tkw].filter(Boolean).join(', ')}` : '';
     const stats = isCreature(o) && onBf(uid) ? `<div class="note">Now: ${pow(o)}/${tou(o)}${o.dmg ? `, ${o.dmg} damage` : ''}${o.counters ? `, ${Math.abs(o.counters)} ${o.counters > 0 ? '+1/+1' : '-1/-1'} counter${Math.abs(o.counters) === 1 ? '' : 's'}` : ''}${temp}${o.sick && !has(o, 'haste') && o.owner === G.active ? ', summoning sick' : ''}</div>` : '';
     const tracker = onBf(uid) ? counterTrackerHTML(o) : '';
-    if (o.fdCard && onBf(uid) && o.owner === me().i) actions = `<span class="note">Face-down: it's really <strong>${esc(o.fdCard.fullName || o.fdCard.name)}</strong>.</span> <button class="btn primary" ${canTurnUp(me(), o) ? '' : 'disabled'} onclick="humanTurnUp(${uid})" title="Pay its morph cost to turn it face up (any time you have priority; rule 702.37)">Turn face up ${costSymbols(Rx({ card: o.fdCard }).morph)}</button>` + actions;
+    if (o.fdCard && onBf(uid) && o.owner === me().i) actions = `<span class="note">Face-down: it's really <strong>${esc(o.fdCard.fullName || o.fdCard.name)}</strong>.</span> <button class="btn primary" ${canTurnUp(me(), o) ? '' : 'disabled'} onclick="humanTurnUp(${uid})" title="Pay its morph cost to turn it face up (any time you have priority; rule 702.37)">Turn face up ${costSymbols(fdTurnCost(o) || Rx({ card: o.fdCard }).morph)}</button>` + actions;
     $('sheetHost').innerHTML = `
         <div class="sheet-bg" onclick="if (event.target === this) closeSheet()">
             <div class="sheet" role="dialog" aria-label="${esc(o.card.name)}">

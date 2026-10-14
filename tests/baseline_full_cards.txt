@@ -1517,6 +1517,7 @@ Brazen Scourge
 Brazen Upstart
 Brazen Wolves
 Breach
+Breach the Multiverse
 Breaching Hippocamp
 Break Asunder
 Break of Day
@@ -2134,6 +2135,7 @@ Cleon, Merry Champion
 Clergy en-Vec
 Cleric of Chill Depths
 Clerics
+Clever Impersonator
 Clever Lumimancer
 Clickslither
 Cliff Threader
@@ -2327,6 +2329,7 @@ Consulate Skygate
 Consult the Necrosages
 Consume Spirit
 Consume Strength
+Consuming Aberration
 Consuming Aetherborn
 Consuming Sinkhole
 Consuming Tide
@@ -2366,6 +2369,7 @@ Copperhoof Vorrac
 Copperline Gorge
 Copy Artifact
 Copy Land
+Copycrook
 Coral Barrier
 Coral Commando
 Coral Eel
@@ -2845,6 +2849,7 @@ Decanter of Endless Water
 Decaying Time Loop
 Deceive the Messenger
 Deception
+Deceptive Frostkite
 Deceptive Landscape
 Decimate
 Decision Paralysis
@@ -3164,6 +3169,7 @@ Doombot Harbinger
 Doomed Dissenter
 Doomed Necromancer
 Doomed Traveler
+Doomsday Excruciator
 Doomskar
 Doomskar Titan
 Doomwake Giant
@@ -3259,6 +3265,7 @@ Dreadwing Scavenger
 Dreadwurm
 Dream Beavers
 Dream Fracture
+Dream Harvest
 Dream Twist
 Dream's Grip
 Dreamcaller Siren
@@ -3857,6 +3864,7 @@ Extended Absence
 Extinguish
 Extinguish the Light
 Extra Arms
+Extract from Darkness
 Extraction Specialist
 Extraplanar Lens
 Extremis Elite
@@ -4267,6 +4275,7 @@ Fleeting Image
 Fleeting Memories
 Flensermite
 Flesh Burrower
+Flesh Duplicate
 Flesh to Dust
 Flesh-Eater Imp
 Fleshbag Marauder
@@ -4277,6 +4286,7 @@ Flight Spellbomb
 Flight of Equenauts
 Flight of Fancy
 Fling
+Flint Golem
 Flinthoof Boar
 Flitterstep Eidolon
 Flood
@@ -4433,12 +4443,14 @@ Foxfire Oak
 Fractal Summoning
 Fracture
 Fractured Loyalty
+Fractured Sanity
 Fragmentize
 Franklin Richards, Ascendant
 Frantic Confrontation
 Frantic Purification
 Frantic Search
 Frantic Strength
+Fraying Sanity
 Free Borg Revolutionaries
 Freedom Fighter Recruit
 Freedom Fighters
@@ -4794,6 +4806,7 @@ Glass of the Guildpact
 Glassblower's Puzzleknot
 Glassdust Hulk
 Glasses of Urza
+Glasspool Mimic // Glasspool Shore
 Glasswing Grace // Age-Graced Chapel
 Glaze Fiend
 Gleam of Battle
@@ -4980,6 +4993,7 @@ Gods' Hall Guardian
 Godtracker of Jund
 Goggles of Night
 Gohn, Town of Ruin
+Golbez, Crystal Collector
 Gold Myr
 Gold Pan
 Gold Rush
@@ -6214,6 +6228,7 @@ Joint Exploration
 Jolrael's Centaur
 Jolrael's Favor
 Jolt
+Joo Dee, One of Many
 Joraga Auxiliary
 Joraga Visionary
 Jorubai Murk Lurker
@@ -7023,6 +7038,7 @@ Madame Masque
 Madblind Mountain
 Madcap Experiment
 Madcap Skills
+Maddening Cacophony
 Maddening Wind
 Madrush Cyclops
 Maelstrom Colossus
@@ -7428,7 +7444,9 @@ Minas Tirith Garrison
 Mind Control
 Mind Drill Assailant
 Mind Flayer
+Mind Funeral
 Mind Games
+Mind Grind
 Mind Knives
 Mind Meanderer
 Mind Over Matter
@@ -7900,6 +7918,7 @@ Nekrataal
 Nekusar, the Mindrazer
 Nema Siltlurker
 Nemesis of Mortals
+Nemesis of Reason
 Nephalia Drownyard
 Nephalia Moondrakes
 Nephalia Seakite
@@ -8055,6 +8074,7 @@ Noxious Gearhulk
 Noxious Groodion
 Noxious Newt
 Noxious Toad
+Nuclear Fallout
 Nuisance Engine
 Null Brooch
 Null Group Biological Assets
@@ -8318,6 +8338,10 @@ Overgrown Estate
 Overgrown Farmland
 Overgrown Tomb
 Overkill
+Overlord of the Balemurk
+Overlord of the Boilerbilges
+Overlord of the Floodpits
+Overlord of the Mistmoors
 Overprotect
 Override
 Overrule
@@ -8463,6 +8487,7 @@ Perilous Voyage
 Perils of the Past
 Perimeter Patrol
 Permission Denied
+Perplex
 Persistent Specimen
 Personal Tutor
 Personify
@@ -8492,6 +8517,7 @@ Phantasmal Bear
 Phantasmal Dragon
 Phantasmal Dreadmaw
 Phantasmal Forces
+Phantasmal Image
 Phantasmal Shieldback
 Phantasmal Terrain
 Phantom Beast
@@ -9190,6 +9216,7 @@ Ready to Attack
 Ready to Charge
 Ready to Rumble
 Reality Hemorrhage
+Reality Shift
 Realm of Koh
 Realm-Cloaked Giant // Cast Off
 Reanimate
@@ -9486,6 +9513,7 @@ Rip-Clan Crasher
 Ripchain Razorkin
 Ripclaw Wrangler
 Ripjaw Raptor
+Ripples of Undeath
 Ripscale Predator
 Riptide Biologist
 Riptide Crab
@@ -10547,6 +10575,7 @@ Simulacrum Shaper
 Sinew Sliver
 Singe-Mind Ogre
 Singing Bell Strike
+Singularity Rupture
 Sinister Cryologist
 Sinister Hideout
 Sinister Monolith
@@ -11687,6 +11716,7 @@ Syndicate Trafficker
 Synod Sanctum
 Syphon Fuel
 Syphon Life
+Syphon Mind
 Syphon Sliver
 Syr Alin, the Lion's Claw
 Sythis, Harvest's Hand
@@ -11784,6 +11814,7 @@ Tarmogoyf
 Tarnished Citadel
 Tarpan
 Tarrian's Journal // The Tomb of Aclazotz
+Tasha's Hideous Laughter
 Tasigur's Cruelty
 Tasseled Dromedary
 Taste of Blood
@@ -11900,6 +11931,7 @@ Tenured Inkcaster
 Terashi's Cry
 Terashi's Verdict
 Tergrid's Shadow
+Terisian Mindbreaker
 Termagant Swarm
 Terminal Agony
 Terminal Moraine
@@ -11990,6 +12022,7 @@ The Legend of Roku // Avatar Roku
 The Mary Janes
 The Masters of Evil
 The Meathook Massacre
+The Mindskinner
 The Misty Mountains Cold
 The Modern Age // Vector Glider
 The Philosopher
@@ -12012,6 +12045,7 @@ The Walls of Ba Sing Se
 The Warmonger
 The Warrior
 The Wasp, Janet Van Dyne
+The Water Crystal
 The Whizzer, Classic Speedster
 The Wiley Speedster
 The Wind Crystal
@@ -12026,6 +12060,7 @@ Thermal Navigator
 Thermo-Alchemist
 They Went This Way
 Thicket Crasher
+Thief of Sanity
 Thief's Knife
 Thieving Magpie
 Thieving Otter
@@ -12411,6 +12446,7 @@ Tremor
 Trench Wurm
 Trenching Steed
 Treno, Dark City
+Trepanation Blade
 Trespasser il-Vec
 Trespassing Souleater
 Tresserhorn Sinks
@@ -12567,6 +12603,7 @@ Uktabi Orangutan
 Uktabi Wildcats
 Ukud Cobra
 Ulcerate
+Uldaros Theorix
 Ulna Alley Shopkeep
 Ultima Weapon
 Ultimate Alliance
@@ -13015,6 +13052,7 @@ Virtuous Variant
 Virulent Emissary
 Virulent Swipe
 Virus Beetle
+Visage Bandit
 Visage of Bolas
 Visara the Dreadful
 Viscera Dragger

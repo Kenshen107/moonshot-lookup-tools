@@ -43,6 +43,9 @@ Try it: https://kenshen107.github.io/moonshot-lookup-tools/Spellslinger_Duels.ht
 
 ## Update log
 
+### Oct 15
+A new fully working Commander deck, Uldaros Theorix (Dimir mill and clones), and about 40 more cards that work: mill spells, clones that copy with a twist, Impending, rad counters and manifest. Plus the About panel.
+
 ### Oct 5 (launch day)
 First test game: packs, decks, Modern and Commander vs the computer. Then the same day: the stack, priority and counterspells; a Rules tab; the goldfish playtester; multiple players; the card shop, wholesale distributor and sealed packs; precons, the campaign ladder, AI levels and deck analytics; and a flexible game table with a bigger hand and counter tracking. The first rules rounds made triggers, activated abilities and statics work.
 
