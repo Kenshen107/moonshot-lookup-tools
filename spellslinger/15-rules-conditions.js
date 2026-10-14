@@ -1112,6 +1112,7 @@ function wardCheck(P, target, name) {
 // Leaving the battlefield with "dies" triggers (a creature going to the graveyard, 700.4)
 function dieOrLeave(o, zone) {
     if (zone === 'gy' && !o.token && onBf(o.uid) && isCreature(o) && Rx(o).diesToTop && !lostAbilities(o)) { log(`${o.card.name} is put on top of its owner's library instead of dying.`); leaveBattlefield(o, 'library'); return; } // Gravebane Zombie
+    if (o.disturbed) { o.disturbed = false; if (zone === 'gy') { log(`${o.card.name} is exiled instead (disturb).`); zone = 'exile'; } }
     if (zone === 'gy' && o.exileOnDeath === G.turn) { log(`${o.card.name} is exiled instead.`); zone = 'exile'; }
     const dying = zone === 'gy' && onBf(o.uid) && isCreature(o);
     if (dying) { fire('dies', { o }); fire('creatureDies', { o }); }
@@ -1136,6 +1137,7 @@ function dieOrLeave(o, zone) {
 function tapSource(P, s) {
     if (s.pool) { const i = (P.pool || []).indexOf(s.color); if (i >= 0) P.pool.splice(i, 1); return; }
     s.tapped = true;
+    if (Rx(s).lockAfterTap) s.skipUntap = true; // Cinder Marsh and friends: doesn't untap next untap step
     fire('tapped', { o: s, mana: true });
     if (/\bArtifact\b/.test(s.card.type) && manaOf(s)) fire('artifactMana', { o: s, P });
     if (/\bLand\b/.test(s.card.type)) allPerms().filter(b => Rx(b).manabarbs && !lostAbilities(b)).forEach(b => { damage(P, 1, b); log(`${b.card.name} deals 1 damage to ${P.name === 'You' ? 'you' : P.name}.`); }); // Manabarbs

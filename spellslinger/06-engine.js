@@ -326,6 +326,7 @@ function leaveBattlefield(o, zone) {
     if (wasOn && zone === 'gy' && !o.token && /\bArtifact\b/.test(o.card.type) && (G.players[o.realOwner ?? o.owner].emblems || []).includes('artifactReturn')) o.returnAtEnd = true;
     // Unearth (702.84): exiled instead if it would leave the battlefield
     if (wasOn && o.unearthed) { zone = 'exile'; delete o.unearthed; delete o.exileAtEnd; log(`${o.card.name} is exiled (unearth).`); }
+    if (o.fdCard) { o.card = o.fdCard; delete o.fdCard; if (wasOn) log(`${o.card.name} was face down (revealed).`); }
     if (wasOn && o.copyOf) { o.card = o.copyOf; delete o.copyOf; delete o.copyTurn; }
     if (wasOn) {
         // Things that last "for as long as you control ~"
@@ -441,6 +442,7 @@ function sba() {
     while (changed && rounds++ < 100) { // a guard against a loop of deaths and returns
         changed = false;
         for (const o of allPerms()) {
+            { const sl = Rx(o).sacNoLand; if (sl && !lostAbilities(o) && !G.players[o.owner].bf.some(x => hasType(x, sl))) { log(`${o.card.name} is sacrificed (no ${sl}s).`); dieOrLeave(o, 'gy'); changed = true; continue; } }
             if (isCreature(o)) {
                 const t = tou(o);
                 if (t <= 0) { log(`${o.card.name} dies (0 toughness).`); dieOrLeave(o, 'gy'); changed = true; continue; }
@@ -603,6 +605,9 @@ function energyAltOk(P, o) { const n = energyAltN(P); return !!n && (P.energy ||
 function pitTop(P) { const top = P.library[P.library.length - 1]; return top && P.bf.some(x => Rx(x).castTopSac && !lostAbilities(x)) && Rx(top).kind !== 'land' && P.bf.some(x => !/\bLand\b/.test(x.card.type)) ? top : null; }
 function castAsOk(P, o, mode) {
     const R = Rx(o);
+    if (mode === 'disturb') return !!R.disturb && P.gy.includes(o) && !!o.front && !!o.front.back;
+    if (mode === 'retrace') return !!R.retrace && P.gy.includes(o) && P.hand.some(x => Rx(x).kind === 'land');
+    if (mode === 'morph') return !!R.morph && P.hand.includes(o) && R.kind === 'creature' && !o.fdCard;
     if (mode === 'warp') return !!R.warp && P.hand.includes(o);
     if (mode === 'bestow') return !!R.bestow && P.hand.includes(o);
     if (mode === 'blitz') return !!R.blitz && (P.hand.includes(o) || (R.blitzGy && P.gy.includes(o))) && P.life > R.blitz.life;
@@ -622,6 +627,9 @@ function costOf(P, o) {
         if (o.castAs === 'blitz') return { ...R.blitz.cost };
         if (o.castAs === 'madness') return { ...R.madness };
         if (o.castAs === 'dash') return dashCost(P, o);
+        if (o.castAs === 'morph') return parseCost('{3}');
+        if (o.castAs === 'disturb') return { ...R.disturb };
+        if (o.castAs === 'retrace') return { ...R.cost };
         if (o.castAs === 'energy') return parseCost('');
         if (o.castAs === 'escape') return { ...P.lockerCost };
     }
@@ -898,6 +906,7 @@ function canCastNow(P, o) {
     if (r.kind === 'creature' && P.bf.some(x => Rx(x).noCreatureSpells && !lostAbilities(x))) return false; // Grid Monitor
     if ((G.castBy || [0, 0])[P.i] >= 1 && allPerms().some(x => Rx(x).ruleOfLaw && !lostAbilities(x))) return false; // Rule of Law
     if (P.skip && P.skip.turn === G.turn && P.skip.what === 'main' && G.active === P.i && MAIN.includes(G.phase) && r.kind !== 'instant' && !r.flash) return false; // Fatespinner
+    if (r.suspend && !o.card.cost && !o.suspendCast) return false; // Ancestral Vision: no mana cost, so it can only be suspended
     const emry = P.gy.includes(o) && o.gyCastTurn === G.turn;
     if (P.silenced && P.silenced.turn === G.turn && (!P.silenced.noncreature || r.kind !== 'creature')) return false;
     if (G.active !== P.i && G.players[G.active].bf.some(x => Rx(x).noCastOnMyTurn && !lostAbilities(x))) return false;
@@ -906,7 +915,8 @@ function canCastNow(P, o) {
     const fromTop = (r.kind === 'creature' && P.library[P.library.length - 1] === o && P.bf.some(x => Rx(x).castTopCreatures)) || pitTop(P) === o;
     if (o.castAs && !castAsOk(P, o, o.castAs)) return false;
     if (o.castAs === 'madness') return true;
-    const otherZone = (o.castAs === 'blitz' && P.gy.includes(o)) || o.castAs === 'escape' || (P.exile.includes(o) && o.warpedTurn && o.warpedTurn < G.turn);
+    if (o.plotTurn && o.plotTurn >= G.turn && P.exile.includes(o)) return false; // plot: a later turn
+    const otherZone = (['blitz', 'disturb', 'retrace'].includes(o.castAs) && P.gy.includes(o)) || o.castAs === 'escape' || (P.exile.includes(o) && o.warpedTurn && o.warpedTurn < G.turn);
     if (!fromTop && !emry && !otherZone && !P.hand.includes(o) && !P.command.includes(o) && !(P.gy.includes(o) && (r.flashback || mayhemOk(P, o) || gyCastOk(P, o) || (r.gyCast && P.life > r.gyCast.life && P.hand.length >= r.gyCast.discard))) && !(P.exile.includes(o) && (o.playUntil >= G.turn || (o.advReady && o.card === o.front) || (o.foretoldTurn && o.foretoldTurn < G.turn && r.foretell)))) return false;
     // While something is on the stack, only the player holding priority can
     // cast, and only instant-speed spells (CR 117.1a, 307.1).
@@ -1105,6 +1115,10 @@ async function castSpell(P, o, presetTarget) {
     const pitCast = P.library.includes(o) && pitTop(P) === o && !(Rx(o).kind === 'creature' && P.bf.some(x => Rx(x).castTopCreatures));
     if (!payFor(P, o)) { o._tgt = null; return false; }
     o.castAs = null;
+    if (o.plotTurn) { delete o.plotTurn; o.freeCast = false; o.playUntil = 0; }
+    if (castAs === 'disturb') { o.card = o.front.back; o.disturbed = true; log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name} with disturb.`); }
+    if (castAs === 'retrace') { const lands = P.hand.filter(x => Rx(x).kind === 'land'); const d = P.isAI ? lands.sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0] : await pickCard(P, lands, `${o.card.name}: discard a land card (retrace)`, { required: true }); if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} (retrace).`); } }
+    if (castAs === 'morph') { o.fdCard = o.card; o.card = faceDownCard(); log(`${P.name} ${you(P) ? 'cast' : 'casts'} a creature face down.`); }
     if (o._tgt && o._tgt.o) fire('targeted', { o: o._tgt.o, by: P.i });
     if (castAs === 'blitz' && Rx(o).blitz.life) { P.life -= Rx(o).blitz.life; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${Rx(o).blitz.life} life (blitz).`); }
     if (castAs === 'energy') { P.energy -= energyAltN(P); log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${energyAltN(P)} energy instead of the mana cost.`); }
@@ -1300,6 +1314,7 @@ async function resolveTop() {
             if (r.auraSteal && item.target && item.target.o && item.target.o.owner !== item.P.i) { const x = item.target.o; pull(G.players[x.owner].bf, x); x.realOwner = x.realOwner ?? x.owner; x.owner = item.P.i; x.stolenBy = o.uid; x.sick = true; item.P.bf.push(x); log(`${item.P.name} ${you(item.P) ? 'gain' : 'gains'} control of ${x.card.name} (${o.card.name}).`); }
             if (item.castAs === 'bestow' && item.target && item.target.o) { o.bestowed = true; o.attachedTo = item.target.o.uid; log(`${o.card.name} enters as an Aura on ${item.target.o.card.name} (bestow).`); }
             if (item.castAs === 'warp') o.warpExile = G.turn;
+            if (o.suspHaste) { o.suspHaste = false; if (r.kind === 'creature') { o.tkw.push('haste'); log(`${o.card.name} has haste (suspend).`); } }
             if (item.castAs === 'dash') { o.tkw.push('haste'); o.dashTurn = G.turn; }
             if (item.castAs === 'blitz') { o.blitzed = true; o.tkw.push('haste'); o.sacAtEnd = G.turn; }
             if (r.kind === 'battle') { const d = Number(o.card.defense); o.ctr.defense = d >= 0 && !isNaN(d) ? d : 4; }
@@ -1376,6 +1391,7 @@ function putOntoBattlefield(P, o, tapped) {
     if (Rx(o).etb.length) (G.trigQ = G.trigQ || []).push({ P, o, effects: Rx(o).etb });
 }
 function moveSpellCard(o, zone) {
+    if (o.fdCard) { o.card = o.fdCard; delete o.fdCard; } // a face-down spell that is countered is revealed
     if (o.realOwner !== undefined) { o.owner = o.realOwner; delete o.realOwner; }
     const owner = G.players[o.owner];
     if (o.exileAfter) { o.exileAfter = false; zone = 'exile'; }
@@ -3748,6 +3764,7 @@ async function beginTurn() {
     log(`— Turn ${G.turn}: ${you(P) ? 'your' : `${P.name}'s`} turn —`);
     G.phase = 'upkeep';
     await runDelayed('upkeep', P);
+    await suspendTick(P);
     // Echo (702.30): pay its echo cost at your next upkeep, or sacrifice it
     for (const o of P.bf.filter(x => x.echoDue && Rx(x).echo)) {
         o.echoDue = false;
@@ -4210,16 +4227,20 @@ function showGameCard(uid) {
     if (P.hand.includes(o) && r.foretell && G.active === P.i && !G.stack.length && planPayment(P, parseCost('{2}'))) actions += `<button class="btn" onclick="humanForetell(${uid})" title="Foretell: pay {2} and exile it face down; cast it on a later turn for ${esc(costSymbols(r.foretell))} (rule 702.143)">Foretell {2}</button>`;
     if (P.hand.includes(o) && r.alt && altOk(P, o)) actions += `<button class="btn" onclick="humanCastAlt(${uid})" title="Alternative cost: cast it without paying its mana cost (rule 118.9)">Cast: ${esc(r.alt.text)}</button>`;
     if (P.hand.includes(o) && r.evoke) actions += `<button class="btn" onclick="humanCastEvoke(${uid})" title="Evoke: cast it for its evoke cost; it's sacrificed when it enters (rule 702.74)">Evoke ${esc(costSymbols(r.evoke))}</button>`;
-    for (const [md, label, tip] of [['warp', r.warp && `Warp ${costSymbols(r.warp)}`, 'Warp: cast it for its warp cost; it\'s exiled at the next end step and can be cast from exile on a later turn'], ['bestow', r.bestow && `Bestow ${costSymbols(r.bestow)}`, 'Bestow: cast it as an Aura on a creature; it becomes a creature again if that creature leaves (rule 702.103)'], ['blitz', r.blitz && `Blitz ${costSymbols(r.blitz.cost)}${r.blitz.life ? `, ${r.blitz.life} life` : ''}`, 'Blitz: haste, draw a card when it dies, sacrificed at the end step (rule 702.152)'], ['dash', r.dash && `Dash ${costSymbols(r.dash)}`, 'Dash: haste, and it returns to your hand at the next end step (rule 702.109)'], ['energy', `Pay ${energyAltN(P)} energy`, 'Cast it by paying energy instead of its mana cost'], ['escape', P.lockerCost && `Escape ${costSymbols(P.lockerCost)}, exile ${P.lockerN || 4}`, 'Escape: cast it from your graveyard (The Grim Captain\'s Locker)']]) {
+    for (const [md, label, tip] of [['warp', r.warp && `Warp ${costSymbols(r.warp)}`, 'Warp: cast it for its warp cost; it\'s exiled at the next end step and can be cast from exile on a later turn'], ['bestow', r.bestow && `Bestow ${costSymbols(r.bestow)}`, 'Bestow: cast it as an Aura on a creature; it becomes a creature again if that creature leaves (rule 702.103)'], ['blitz', r.blitz && `Blitz ${costSymbols(r.blitz.cost)}${r.blitz.life ? `, ${r.blitz.life} life` : ''}`, 'Blitz: haste, draw a card when it dies, sacrificed at the end step (rule 702.152)'], ['disturb', r.disturb && `Disturb ${costSymbols(r.disturb)}`, 'Disturb: cast it transformed from your graveyard; it is exiled if it would die (rule 702.146)'], ['retrace', r.retrace && 'Retrace (discard a land)', 'Retrace: cast it from your graveyard by discarding a land card too (rule 702.81)'], ['morph', r.morph && 'Cast face down {3}', 'Morph: cast it face down as a 2/2 for {3}; later pay its morph cost to turn it face up (rule 702.37)'], ['dash', r.dash && `Dash ${costSymbols(r.dash)}`, 'Dash: haste, and it returns to your hand at the next end step (rule 702.109)'], ['energy', `Pay ${energyAltN(P)} energy`, 'Cast it by paying energy instead of its mana cost'], ['escape', P.lockerCost && `Escape ${costSymbols(P.lockerCost)}, exile ${P.lockerN || 4}`, 'Escape: cast it from your graveyard (The Grim Captain\'s Locker)']]) {
         if (!label || !castAsOk(P, o, md)) continue;
         o.castAs = md; const ok = canCastNow(P, o) && canPay(P, o); o.castAs = null;
         actions += `<button class="btn" ${ok ? '' : 'disabled'} onclick="humanCastAs(${uid}, '${md}')" title="${esc(tip)}">${esc(label)}</button>`;
     }
+    if (P.hand.includes(o) && r.plot && canPlot(P, o)) actions += `<button class="btn" ${canPayPlot(P, o) ? '' : 'disabled'} onclick="humanPlot(${uid})" title="Plot: exile it now; on a later turn you may cast it free at sorcery speed (rule 702.170)">Plot ${costSymbols(r.plot)}</button>`;
+    if (P.hand.includes(o) && r.suspend && canSuspend(P, o)) actions += `<button class="btn" ${canPaySuspend(P, o) ? '' : 'disabled'} onclick="humanSuspend(${uid})" title="Suspend: exile it with ${r.suspend.n} time counters; at each of your upkeeps remove one, and when the last is gone cast it free (a creature has haste) (rule 702.62)">Suspend ${r.suspend.n}—${costSymbols(r.suspend.cost)}</button>`;
+    if (P.hand.includes(o) && r.ninjutsu && canNinjutsu(P, o)) actions += `<button class="btn gold" onclick="humanNinjutsu(${uid})" title="Ninjutsu: return an unblocked attacker to your hand; this enters tapped and attacking (rule 702.49)">Ninjutsu ${costSymbols(r.ninjutsu)}</button>`;
     if (P.hand.includes(o) && r.overload) actions += `<button class="btn" onclick="humanCastOverload(${uid})" title="Overload: every &quot;target&quot; becomes &quot;each&quot; (rule 702.96)">Cast with overload ${esc(r.overload.text)}</button>`;
     if (o.front && o.front.back && o.front.layout === 'transform') actions += `<span class="note">Other face: <strong>${esc(o.card === o.front ? o.front.back.name : o.front.name)}</strong></span>`;
     const temp = o.tp || o.tq || o.tkw.length ? `, until end of turn ${[o.tp || o.tq ? `${o.tp >= 0 ? '+' : ''}${o.tp}/${o.tq >= 0 ? '+' : ''}${o.tq}` : '', ...o.tkw].filter(Boolean).join(', ')}` : '';
     const stats = isCreature(o) && onBf(uid) ? `<div class="note">Now: ${pow(o)}/${tou(o)}${o.dmg ? `, ${o.dmg} damage` : ''}${o.counters ? `, ${Math.abs(o.counters)} ${o.counters > 0 ? '+1/+1' : '-1/-1'} counter${Math.abs(o.counters) === 1 ? '' : 's'}` : ''}${temp}${o.sick && !has(o, 'haste') && o.owner === G.active ? ', summoning sick' : ''}</div>` : '';
     const tracker = onBf(uid) ? counterTrackerHTML(o) : '';
+    if (o.fdCard && onBf(uid) && o.owner === me().i) actions = `<span class="note">Face-down: it's really <strong>${esc(o.fdCard.fullName || o.fdCard.name)}</strong>.</span> <button class="btn primary" ${canTurnUp(me(), o) ? '' : 'disabled'} onclick="humanTurnUp(${uid})" title="Pay its morph cost to turn it face up (any time you have priority; rule 702.37)">Turn face up ${costSymbols(Rx({ card: o.fdCard }).morph)}</button>` + actions;
     $('sheetHost').innerHTML = `
         <div class="sheet-bg" onclick="if (event.target === this) closeSheet()">
             <div class="sheet" role="dialog" aria-label="${esc(o.card.name)}">

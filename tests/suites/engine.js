@@ -7,7 +7,7 @@ const NAMES = ['Mountain', 'Grizzly Bears', 'Hill Giant', 'Shivan Dragon', 'Ligh
     'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger',
     'Coercion', 'Incinerate', 'Path of Peace', 'Chastise', 'Condemn', 'Jagged Lightning', 'Kiss of the Amesha', 'Sleight of Hand', 'Telling Time', 'Ancestral Memories', 'Blessed Reversal', 'Whisk Away',
     'Furnace of Rath', "Urza's Armor", 'Cho-Manno, Revolutionary', 'Vigor', 'Pariah', 'Gravebane Zombie', 'Angelic Arbiter', 'Mole Worms', 'Deathgazer', 'Lure', 'Oppressive Rays', 'Angel of Vitality', "Hunter's Insight", 'Call of the Wild', 'Fertile Ground', 'Forest', 'Curfew', 'Esper Battlemage', 'Goblin Arsonist', 'Ascendant Evincar',
-    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate', 'Capsize', "Evincar's Justice", 'Blastoderm', 'Aven Riftwatcher', 'Nezumi Ronin', 'Burr Grafter', 'Benalish Cavalry', 'Fiery Temper', 'Wolfbriar Elemental', 'Lightning Berserker', 'Mountain'];
+    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate', 'Capsize', "Evincar's Justice", 'Blastoderm', 'Aven Riftwatcher', 'Nezumi Ronin', 'Burr Grafter', 'Benalish Cavalry', 'Fiery Temper', 'Wolfbriar Elemental', 'Lightning Berserker', 'Mountain', 'Blade Sliver', 'Ashenmoor Liege', 'Acolyte of the Inferno', 'Arcbound Bruiser', 'Blade Instructor', 'Cavern Harpy', 'Drifter il-Dal', 'Aleatory', 'Dauthi Horror', 'Indebted Spirit', 'Cloaked Cadet', 'Aerathi Berserker', 'Dandân', 'Island', 'Rift Bolt', 'Ancestral Vision', 'Exalted Angel', 'Aerie Bowmasters', 'Plains', 'Forest', 'Ninja of the Deep Hours', 'Island', 'Syphon Life', 'Baithook Angler', 'Aloe Alchemist'];
 
 const BODY = async function (NAMES, ONLY, SKIP) {
     const startTurnUntapForTest = P => { P.bf.forEach(o => { if (o.skipUntap) o.skipUntap = false; else if (!has(o, 'nountap') && !(o.lockedBy && onBf(o.lockedBy) && onBf(o.lockedBy).tapped) && !(Rx(o).mayNotUntap && o.tapped && allPerms().some(l => l.lockedBy === o.uid))) o.tapped = false; }); };
@@ -364,6 +364,80 @@ const BODY = async function (NAMES, ONLY, SKIP) {
         const lb = makeObj(C['Lightning Berserker'], 0); P0.hand = [lb]; lb.castAs = 'dash';
         ok('dash: cast for the dash cost from hand', castAsOk(P0, lb, 'dash') && costOf(P0, lb).R === 1, costOf(P0, lb));
         P1.isAI = false;
+    });
+    await check('sweep round 1', async () => {
+        const bs = put(P0, 'Blade Sliver'); const bg = put(P1, 'Blade Sliver');
+        ok('All Sliver creatures get +1/+0 (both sides)', pow(bs) === 4 && pow(bg) === 4, [pow(bs), pow(bg)]);
+        const li = put(P0, 'Ashenmoor Liege'), gb = put(P0, 'Hill Giant', { }); const bl = put(P0, 'Dauthi Horror');
+        ok('Other black creatures get +1/+1 (Dauthi Horror 2/1 -> 3/2), the Liege itself does not', pow(bl) === 3 && tou(bl) === 2 && pow(li) === 4, [pow(bl), tou(bl), pow(li)]);
+        const ren = put(P0, 'Acolyte of the Inferno');
+        ok('Renown reads as a hit-player trigger', Rx(ren).trig.some(t => t.ev === 'hitPlayer' && t.fn === 'renown'));
+        const r2 = makeObj(C['Acolyte of the Inferno'], 0); const h = put(P0, 'Acolyte of the Inferno');
+        await applyEffect(P0, { t: 'renown', n: 1 }, null, h); const before = h.counters; await applyEffect(P0, { t: 'renown', n: 1 }, null, h);
+        ok('Renown gives its counters once', before === 1 && h.counters === 1, [before, h.counters]);
+        const bi = put(P0, 'Arcbound Bruiser'); ok('Modular enters with 3 counters', Rx(bi).etbCounters === 3);
+        const dr = put(P0, 'Drifter il-Dal'); P0.bf = P0.bf.filter(x => x === dr || x.card.name !== 'Island'); 
+        P0.isAI = true; P0.hand = [];
+        await applyEffect(P0, { t: 'upkeepPay', cost: parseCost('{U}') }, null, dr);
+        ok('upkeep cost: with no mana the permanent is sacrificed', !onBf(dr.uid), onBf(dr.uid)); P0.isAI = false;
+        P0.hand = []; await applyEffect(P0, { t: 'delayedDraw', n: 1 }, null, makeObj(C['Aleatory'], 0));
+        ok('"draw at the beginning of the next upkeep" waits for an upkeep', (G.delayed || []).some(d => d.effects[0].t === 'draw'));
+        const horror = makeObj(C['Dauthi Horror'], 0); ok('Dauthi Horror cannot be blocked by white creatures', Rx(horror).blockFns && Rx(horror).blockFns.includes('not_W'));
+        const dd = put(P0, 'Dandân'); ok('Dandân reads its no-Island sacrifice', Rx(dd).sacNoLand === 'Island');
+        P0.bf = P0.bf.filter(x => x === dd); sba(); ok('Dandân is sacrificed with no Island', !onBf(dd.uid));
+    });
+    await check('suspend', async () => {
+        const rb = makeObj(C['Rift Bolt'], 0); P0.hand = [rb]; P0.exile = []; put(P0, 'Mountain'); P0.isAI = true; G.active = 0; G.phase = 'main1'; G.stack = [];
+        ok('Rift Bolt can be suspended', canSuspend(P0, rb) && canPaySuspend(P0, rb));
+        ok('suspending exiles it with 1 time counter', suspendCard(P0, rb) && P0.exile.includes(rb) && rb.ctr.time === 1, rb.ctr);
+        const av = makeObj(C['Ancestral Vision'], 0); P0.hand = [av];
+        ok('Ancestral Vision cannot be cast normally (no mana cost)', !canCastNow(P0, av));
+        P1.life = 40; await suspendTick(P0); await settle(); if (G.stack.length) await resolveTop();
+        ok('the last time counter casts it free: 3 damage', P1.life === 37 && !P0.exile.includes(rb), [P1.life, P0.exile.length]);
+        P0.isAI = false;
+    });
+    await check('morph', async () => {
+        const ea = makeObj(C['Exalted Angel'], 0); P0.hand = [ea]; P0.isAI = true; G.active = 0; G.phase = 'main1'; G.stack = [];
+        for (let i = 0; i < 4; i++) { put(P0, 'Mountain'); put(P0, 'Plains'); put(P0, 'Forest'); }
+        ok('Exalted Angel can be cast face down', castAsOk(P0, ea, 'morph'));
+        ea.castAs = 'morph'; ok('face down costs {3}', costOf(P0, ea).generic === 3, costOf(P0, ea)); ea.castAs = null;
+        const fd = put(P0, 'Hill Giant'); fd.fdCard = ea.card; fd.card = faceDownCard();
+        ok('a face-down creature is a 2/2 with no abilities', pow(fd) === 2 && tou(fd) === 2 && !has(fd, 'flying') && fd.card.name === 'Face-down creature', [pow(fd), tou(fd)]);
+        ok('its owner can turn it face up with the mana', canTurnUp(P0, fd));
+        P0.bf.forEach(x => { x.tapped = false; });
+        turnFaceUp(P0, fd);
+        ok('turned face up it is the real card again (4/5 flying lifelink)', fd.card.name === 'Exalted Angel' && pow(fd) === 4 && has(fd, 'flying') && !fd.fdCard, [fd.card.name, pow(fd)]);
+        const mm = put(P0, 'Hill Giant'); mm.fdCard = makeObj(C['Aerie Bowmasters'], 0).card; mm.card = faceDownCard(); P0.bf.forEach(x => { x.tapped = false; });
+        turnFaceUp(P0, mm); ok('megamorph adds a +1/+1 counter', mm.counters === 1, mm.counters);
+        const fd2 = put(P1, 'Exalted Angel'); fd2.fdCard = fd2.card; fd2.card = faceDownCard(); dieOrLeave(fd2, 'gy');
+        ok('a face-down creature that dies is revealed in the graveyard', P1.gy.some(x => x === fd2 && x.card.name === 'Exalted Angel'));
+        P0.isAI = false;
+    });
+    await check('ninjutsu', async () => {
+        const nj = makeObj(C['Ninja of the Deep Hours'], 0); P0.hand = [nj]; P0.isAI = true;
+        for (let i = 0; i < 3; i++) put(P0, 'Island');
+        const a = put(P0, 'Hill Giant'); G.active = 0; G.phase = 'afterBlocks'; G.attackers = [a.uid]; G.blocks = {};
+        ok('ninjutsu is possible with an unblocked attacker', canNinjutsu(P0, nj));
+        G.blocks = { [a.uid]: [999] }; ok('and not when the attacker is blocked', !canNinjutsu(P0, nj)); G.blocks = {};
+        doNinjutsu(P0, nj, a);
+        ok('the attacker returns to hand and the ninja attacks tapped', P0.hand.includes(a) && onBf(nj.uid) && nj.tapped && G.attackers.includes(nj.uid) && !G.attackers.includes(a.uid), [P0.hand.length, G.attackers]);
+        P0.isAI = false; G.attackers = [];
+    });
+    await check('plot, disturb, retrace', async () => {
+        P0.isAI = true; G.active = 0; G.phase = 'main1'; G.stack = []; P0.hand = []; P0.gy = []; P0.exile = [];
+        for (let i = 0; i < 6; i++) { put(P0, 'Mountain'); put(P0, 'Plains'); put(P0, 'Forest'); put(P0, 'Island'); }
+        const al = makeObj(C['Aloe Alchemist'], 0); P0.hand = [al];
+        ok('plot can be paid at sorcery speed', canPlot(P0, al) && canPayPlot(P0, al));
+        plotCard(P0, al);
+        ok('a plotted card waits for a later turn', P0.exile.includes(al) && !canCastNow(P0, al));
+        G.turn += 1; ok('and can be cast on a later turn', canCastNow(P0, al) && costOf(P0, al).generic === 0 && !costOf(P0, al).G, costOf(P0, al));
+        G.turn -= 1;
+        const sl = makeObj(C['Syphon Life'], 0); P0.gy = [sl]; P0.hand = [makeObj(C['Mountain'], 0)];
+        ok('retrace needs a land card in hand', castAsOk(P0, sl, 'retrace'));
+        P0.hand = []; ok('and not without one', !castAsOk(P0, sl, 'retrace'));
+        const ba = makeObj(C['Baithook Angler'], 0); P0.gy = [ba];
+        ok('disturb casts the back face from the graveyard', castAsOk(P0, ba, 'disturb') && !!ba.front.back, !!ba.front.back);
+        P0.isAI = false; P0.gy = []; P0.exile = [];
     });
     await check('precon round 2: spells', async () => {
         const c1 = put(P1, 'Hill Giant'), l1 = put(P1, 'Mountain'); c1.tapped = l1.tapped = true;

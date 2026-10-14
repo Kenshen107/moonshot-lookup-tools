@@ -356,13 +356,13 @@ function aiBestPlay(P) {
     const reserve = P.aiStyle === 'control' && P.aiLevel !== 'easy' && G.active === P.i && O.hand.length ? heldInstantCost(P) : 0;
     const faces = [];
     const libTop = P.library[P.library.length - 1];
-    for (const o of [...P.hand, ...P.command, ...P.gy.filter(x => Rx(x).flashback || mayhemOk(P, x) || gyCastOk(P, x) || x.gyCastTurn === G.turn || (Rx(x).gyCast && Rx(x).gyCast.exile) || castAsOk(P, x, 'blitz') || lockerOk(P, x)), ...P.exile.filter(x => x.playUntil >= G.turn || x.advReady || (x.foretoldTurn && x.foretoldTurn < G.turn) || (x.warpedTurn && x.warpedTurn < G.turn)), ...(libTop && ((P.bf.some(x => Rx(x).castTopCreatures) && Rx(libTop).kind === 'creature') || pitTop(P) === libTop) ? [libTop] : [])]) {
+    for (const o of [...P.hand, ...P.command, ...P.gy.filter(x => Rx(x).flashback || mayhemOk(P, x) || gyCastOk(P, x) || x.gyCastTurn === G.turn || (Rx(x).gyCast && Rx(x).gyCast.exile) || castAsOk(P, x, 'blitz') || castAsOk(P, x, 'disturb') || castAsOk(P, x, 'retrace') || lockerOk(P, x)), ...P.exile.filter(x => x.playUntil >= G.turn || x.advReady || (x.foretoldTurn && x.foretoldTurn < G.turn) || (x.warpedTurn && x.warpedTurn < G.turn)), ...(libTop && ((P.bf.some(x => Rx(x).castTopCreatures) && Rx(libTop).kind === 'creature') || pitTop(P) === libTop) ? [libTop] : [])]) {
         faces.push([o, o.front || o.card]);
         if (P.hand.includes(o) && o.front && o.front.back && ['modal_dfc', 'adventure', 'split'].includes(o.front.layout) && rulesFor(o.front.back).kind !== 'land') faces.push([o, o.front.back]);
         if (P.hand.includes(o) && Rx(o).overload) faces.push([o, o.card, true]);
         if (P.hand.includes(o) && Rx(o).evoke && Rx(o).etb.length && !canPay(P, o)) faces.push([o, o.card, false, true]);
         if (Rx(o).alt && !canPay(P, o) && altOk(P, o)) faces.push([o, o.card, false, false, true]);
-        for (const md of ['warp', 'bestow', 'blitz', 'dash', 'energy', 'escape']) if (castAsOk(P, o, md)) faces.push([o, o.card, false, false, false, md]);
+        for (const md of ['warp', 'bestow', 'blitz', 'dash', 'morph', 'disturb', 'retrace', 'energy', 'escape']) if (castAsOk(P, o, md)) faces.push([o, o.card, false, false, false, md]);
     }
     for (const [o, face, ov, ev, alt, md] of faces) {
         o.card = face;
@@ -389,7 +389,7 @@ function aiBestPlay(P) {
         if (P.aiLevel === 'hard' && target && target.o && target.o.owner !== P.i && ['destroy', 'exile', 'dmg'].includes(te.t) && creatureValue(target.o) < 5 && !(te.t === 'dmg' && target.p)) s = 0; // save it
         if (ev) s = s * 0.5 - 1;
         if (alt) s = s * 0.7 - 1;
-        if (md === 'warp' || md === 'blitz' || md === 'dash') { o.castAs = null; const full = canPay(P, o) && !P.gy.includes(o); o.castAs = md; s = full ? 0 : s * 0.6; } // the real thing when it can
+        if (md === 'warp' || md === 'blitz' || md === 'dash' || md === 'morph') { o.castAs = null; const full = canPay(P, o) && !P.gy.includes(o); o.castAs = md; s = full ? 0 : s * 0.6; } // the real thing when it can
         if (md === 'bestow') s = target ? 6 + (o.card.cmc || 0) : 0;
         if (md === 'energy') s = s * 1.1 + 2;
         if (s > 0) cands.push({ o, target, s, face, ov: !!ov, ev: !!ev, alt: !!alt, md });
@@ -444,6 +444,10 @@ async function aiMain(P) {
         await actDrain();
         if (!ok) break;
     }
+    // Suspend what it couldn't cast this turn (a special action, any time it could cast the card)
+    for (const o of P.hand.filter(x => Rx(x).plot && canPlot(P, x) && canPayPlot(P, x))) { plotCard(P, o); await pause(300); }
+    for (const o of P.hand.filter(x => Rx(x).suspend && canSuspend(P, x) && canPaySuspend(P, x))) { suspendCard(P, o); await pause(300); }
+    for (const o of P.bf.filter(x => x.fdCard && canTurnUp(P, x))) { if (turnFaceUp(P, o)) await pause(300); }
     await aiUseAbilities(P);
     await actDrain();
     // Equip unattached equipment to the best creature
@@ -610,6 +614,7 @@ async function aiTurn(P) {
         if (G.over) return;
         fixMenace(); fireBlocked();
         logBlocks();
+        await aiNinjutsu(P);
         fire('blocks', { list: Object.values(G.blocks).flat().map(onBf).filter(Boolean) });
         await settle();
         renderGame();

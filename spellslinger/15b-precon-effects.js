@@ -184,6 +184,57 @@ async function preconEffect(P, e, t, src, O, name) {
             if (!ok) { pull(X.exile, x); X.gy.push(x); log(`${x.card.name} is put into the graveyard.`); }
             break;
         }
+        case 'delayedDraw': { (G.delayed = G.delayed || []).push({ at: 'upkeep', own: false, P, after: G.turn, effects: [{ t: 'draw', n: e.n }], src, label: `${name}: ${P.name} draws ${e.n === 1 ? 'a card' : e.n + ' cards'} at the beginning of the next upkeep.` }); log(`${name}: you'll draw at the beginning of the next turn's upkeep.`); break; }
+        case 'renown': { if (!onBf(src.uid) || src.renowned) break; src.renowned = true; const got = putCounters(src, e.n, P); log(`${src.card.name} becomes renowned (${got} +1/+1 counter${got === 1 ? '' : 's'}).`); break; }
+        case 'modular': {
+            const n = G.lastModular || 0; if (!n) break;
+            const pool = P.bf.filter(x => isCreature(x) && /\bArtifact\b/.test(x.card.type) && x !== src);
+            if (!pool.length) break;
+            const pick = P.isAI ? pool.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${name}: put its ${n} +1/+1 counter${n === 1 ? '' : 's'} on an artifact creature (modular)`);
+            if (pick) { const got = putCounters(pick, n, P); log(`${pick.card.name} gets ${got} +1/+1 counter${got === 1 ? '' : 's'} (modular).`); }
+            break;
+        }
+        case 'mentor': {
+            if (!onBf(src.uid)) break;
+            const pool = (G.attackers || []).map(onBf).filter(x => x && x.owner === src.owner && x !== src && pow(x) < pow(src));
+            if (!pool.length) break;
+            const pick = P.isAI ? pool.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : (pool.length === 1 ? pool[0] : await pickCard(P, pool, `${name}: mentor - put a +1/+1 counter on an attacking creature with lesser power`));
+            if (pick) { putCounters(pick, 1, P); log(`${pick.card.name} gets a +1/+1 counter (mentor).`); }
+            break;
+        }
+        case 'rampage': {
+            if (!onBf(src.uid)) break;
+            const extra = Math.max(0, (G.blocks[src.uid] || []).length - 1);
+            if (extra) { src.tp += e.n * extra; src.tq += e.n * extra; log(`${src.card.name} gets +${e.n * extra}/+${e.n * extra} (rampage ${e.n}).`); }
+            break;
+        }
+        case 'upkeepPay': {
+            if (!onBf(src.uid)) break;
+            const plan = planPayment(P, e.cost);
+            const pay = plan && (P.isAI || AUTOPLAY ? creatureValue(src) >= 3 || P.hand.filter(h => Rx(h).kind !== 'land').length <= 1 : await askYes(P, `Upkeep: pay ${costSymbols(e.cost)} to keep ${src.card.name}? (Otherwise it is sacrificed.)`, { card: src.card }));
+            if (pay) { plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} to keep ${src.card.name}.`); }
+            else { log(`${src.card.name} is sacrificed (upkeep cost not paid).`); fire('sacrificed', { o: src }); dieOrLeave(src, 'gy'); }
+            break;
+        }
+        case 'exploreSelf': {
+            if (!onBf(src.uid)) break;
+            const top = P.library[P.library.length - 1];
+            if (!top) { putCounters(src, 1, P); log(`${src.card.name} explores: no card, +1/+1 counter.`); break; }
+            if (Rx(top).kind === 'land') { P.library.pop(); P.hand.push(top); log(`${src.card.name} explores: ${top.card.name} is a land and goes to hand.`); }
+            else {
+                putCounters(src, 1, P);
+                const keep = P.isAI ? (top.card.cmc || 0) <= 2 : await askYes(P, `${src.card.name} explores: ${top.card.name} is not a land (+1/+1 counter). Keep it on top?`, { card: top.card, yes: 'Keep on top', no: 'Put in graveyard' });
+                if (!keep) { P.library.pop(); P.gy.push(top); log(`${top.card.name} goes to the graveyard.`); } else log(`${src.card.name} explores: ${top.card.name} stays on top, +1/+1 counter.`);
+            }
+            break;
+        }
+        case 'returnOwn': {
+            const pool = P.bf.filter(x => isCreature(x) && (x.card.colors || []).some(c => e.colors.includes(c)));
+            if (!pool.length) break;
+            const pick = P.isAI ? pool.slice().sort((a, b) => creatureValue(a) - creatureValue(b))[0] : await pickCard(P, pool, `${name}: return a creature you control to its owner's hand`, { required: true });
+            if (pick) { log(`${pick.card.name} returns to its owner's hand.`); leaveBattlefield(pick, 'hand'); }
+            break;
+        }
         case 'flankingHit': {
             if (!onBf(src.uid)) break;
             for (const u of (G.blocks[src.uid] || [])) { const b = onBf(u); if (b && !has(b, 'flanking')) { b.tp -= 1; b.tq -= 1; log(`${b.card.name} gets -1/-1 until end of turn (flanking).`); } }
@@ -369,12 +420,131 @@ Object.assign(STATIC_FN, {
 });
 COUNT_EXTRA.push([/^(twice )?the number of times (?:it|~|this creature) was kicked$/, m => o => (o.kickN || 0) * (m[1] ? 2 : 1)]);
 COUNT_EXTRA.push([/^(?:the number of )?(white|blue|black|red|green) permanents you control$/, m => o => G.players[o.owner].bf.filter(x => (x.card.colors || []).includes({ white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' }[m[1]])).length]);
+// Sweep round 1: lords by color, "can't be blocked by ..." limits, keyword triggers
+for (const c of ['W', 'U', 'B', 'R', 'G']) { STATIC_FN['c_' + c] = o => (o.card.colors || []).includes(c); BLOCK_FN['not_' + c] = b => !(b.card.colors || []).includes(c); }
+for (let n = 1; n <= 8; n++) BLOCK_FN['powLt' + n] = b => pow(b) < n;
+BLOCK_FN.powGeAtk = (b, atk) => pow(b) >= pow(atk);
+Object.assign(TRIG_FN, {
+    renown: (o, ctx) => ctx.src === o && !o.renowned,
+    modular: (o, ctx) => { if (ctx.o !== o) return false; G.lastModular = Math.max(0, o.counters); return true; },
+    selfDies: (o, ctx) => ctx.o === o,
+    selfTurned: (o, ctx) => ctx.o === o,
+    selfHit: (o, ctx) => ctx.src === o,
+    training: (o, ctx) => ctx.list.includes(o) && ctx.list.some(x => x !== o && x.owner === o.owner && pow(x) > pow(o)),
+    dethrone: (o, ctx) => ctx.list.includes(o) && G.players[1 - o.owner].life >= G.players[o.owner].life
+});
 Object.assign(BLOCKER_FN, { noPow2: (b, atk) => pow(atk) < 2 });
 Object.assign(BLOCK_FN, {
     wallOrFlying: b => hasType(b, 'Wall') || has(b, 'flying'),
     notWall: b => !hasType(b, 'Wall')
 });
 
+// ---- Morph (702.37): a face-down 2/2 for {3}; pay the morph cost any time you have priority to turn it face up ----
+function faceDownCard() {
+    return { id: 'facedown', name: 'Face-down creature', fullName: 'Face-down creature', cost: '', cmc: 0, type: 'Creature', text: '', power: '2', toughness: '2', colors: [], ci: [], img: null, imgS: null, rarity: 'common', set: '', num: '', layout: 'normal', legal: {}, usd: null, frame: [], released: null, v: 3 };
+}
+function canTurnUp(P, o) { return !!o.fdCard && onBf(o.uid) && o.owner === P.i && !!Rx({ card: o.fdCard }).morph && !!planPayment(P, Rx({ card: o.fdCard }).morph); }
+function turnFaceUp(P, o) {
+    const R = Rx({ card: o.fdCard });
+    const plan = planPayment(P, R.morph);
+    if (!plan) return false;
+    plan.forEach(x => tapSource(P, x));
+    o.card = o.fdCard; delete o.fdCard;
+    log(`${P.name} ${you(P) ? 'turn' : 'turns'} ${o.card.name} face up.`);
+    if (R.megamorph) { putCounters(o, 1, P); log(`${o.card.name} gets a +1/+1 counter (megamorph).`); }
+    fire('turnedUp', { o });
+    renderGame();
+    return true;
+}
+async function humanTurnUp(uid) {
+    const o = findObj(uid), P = me();
+    closeSheet();
+    if (!o || !canTurnUp(P, o)) { toast('Not enough mana to turn it face up.'); return; }
+    turnFaceUp(P, o);
+    await settle();
+}
+// ---- Ninjutsu (702.49): after blockers, return an unblocked attacker to hand; the ninja enters tapped and attacking ----
+function ninjaTargets(P) { return (G.attackers || []).map(onBf).filter(a => a && a.owner === P.i && !(G.blocks[a.uid] || []).length); }
+function canNinjutsu(P, o) { return !!Rx(o).ninjutsu && P.hand.includes(o) && G.active === P.i && G.phase === 'afterBlocks' && ninjaTargets(P).length > 0 && !!planPayment(P, Rx(o).ninjutsu); }
+function doNinjutsu(P, o, att) {
+    const plan = planPayment(P, Rx(o).ninjutsu);
+    if (!plan || !att || !onBf(att.uid)) return false;
+    plan.forEach(x => tapSource(P, x));
+    log(`${P.name} ${you(P) ? 'activate' : 'activates'} ninjutsu: ${att.card.name} returns to hand and ${o.card.name} enters attacking.`);
+    const pw = att.attackPW;
+    G.attackers = G.attackers.filter(u => u !== att.uid);
+    leaveBattlefield(att, 'hand');
+    pull(P.hand, o); resetObj(o); o.tapped = true; o.sick = true;
+    if (pw !== undefined) o.attackPW = pw;
+    P.bf.push(o); G.attackers.push(o.uid);
+    fire('enters', { o });
+    if (Rx(o).etb.length) (G.trigQ = G.trigQ || []).push({ P, o, effects: Rx(o).etb });
+    renderGame();
+    return true;
+}
+async function humanNinjutsu(uid) {
+    const o = findObj(uid), P = me();
+    closeSheet();
+    if (!o || !canNinjutsu(P, o)) { toast('Ninjutsu needs an unblocked attacker, after blockers are declared, and the mana.'); return; }
+    const t = ninjaTargets(P);
+    const att = t.length === 1 ? t[0] : await pickCard(P, t, `Ninjutsu: return which unblocked attacker to your hand?`, { required: true });
+    if (att) { doNinjutsu(P, o, att); await settle(); }
+}
+async function aiNinjutsu(P) {
+    for (const o of P.hand.filter(x => Rx(x).ninjutsu && canNinjutsu(P, x))) {
+        const t = ninjaTargets(P).sort((a, b) => creatureValue(a) - creatureValue(b))[0];
+        if (t && creatureValue(o) >= creatureValue(t) && doNinjutsu(P, o, t)) { await pause(400); break; }
+    }
+}
+// ---- Plot (702.170): exile it from hand for the plot cost (sorcery speed); on a later turn cast it free ----
+function canPlot(P, o) { return !!Rx(o).plot && P.hand.includes(o) && G.active === P.i && MAIN.includes(G.phase) && !G.stack.length && !G.over; }
+function canPayPlot(P, o) { return !!planPayment(P, Rx(o).plot); }
+function plotCard(P, o) {
+    const plan = planPayment(P, Rx(o).plot);
+    if (!plan) return false;
+    plan.forEach(x => tapSource(P, x));
+    pull(P.hand, o); P.exile.push(o); o.plotTurn = G.turn; o.playUntil = 1e9; o.freeCast = true;
+    log(`${P.name} ${you(P) ? 'plot' : 'plots'} ${o.card.name}: it can be cast free on a later turn.`);
+    renderGame();
+    return true;
+}
+async function humanPlot(uid) {
+    const o = findObj(uid), P = me();
+    closeSheet();
+    if (!o || !canPlot(P, o)) { toast('Plot at sorcery speed: in your main phase.'); return; }
+    if (!canPayPlot(P, o)) { toast('Not enough mana.'); return; }
+    plotCard(P, o);
+}
+// ---- Suspend (702.62): exile from hand with time counters; at each of your upkeeps remove one; the last one casts it free ----
+function canSuspend(P, o) { return !!Rx(o).suspend && P.hand.includes(o) && !G.over && canCastNow(P, o); }
+function canPaySuspend(P, o) { return !!planPayment(P, Rx(o).suspend.cost); }
+function suspendCard(P, o) {
+    const plan = planPayment(P, Rx(o).suspend.cost);
+    if (!plan) return false;
+    plan.forEach(x => tapSource(P, x));
+    pull(P.hand, o); o.ctr = o.ctr || {}; o.ctr.time = Rx(o).suspend.n; o.suspended = true; P.exile.push(o);
+    log(`${P.name} ${you(P) ? 'suspend' : 'suspends'} ${o.card.name} (${Rx(o).suspend.n}).`);
+    renderGame();
+    return true;
+}
+async function humanSuspend(uid) {
+    const o = findObj(uid), P = me();
+    closeSheet();
+    if (!o || !canSuspend(P, o)) { toast("You can't suspend that right now."); return; }
+    if (!canPaySuspend(P, o)) { toast('Not enough mana.'); return; }
+    suspendCard(P, o);
+}
+async function suspendTick(P) {
+    for (const o of P.exile.filter(x => x.suspended && x.ctr && x.ctr.time > 0)) {
+        o.ctr.time--;
+        log(`${o.card.name}: a time counter is removed (${o.ctr.time} left).`);
+        if (o.ctr.time > 0) continue;
+        o.suspended = false; o.suspHaste = true;
+        log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name} from suspend.`);
+        const ok = Rx(o).kind === 'land' ? false : await castFreeNow(P, o, P.exile);
+        if (!ok) { o.suspHaste = false; log(`${o.card.name} has no target - it stays in exile.`); }
+    }
+}
 function preconCantCast(P) { return !!G && P.attackedTurn === G.turn && G.players[1 - P.i].bf.some(a => Rx(a).arbiter && !lostAbilities(a)); }
 function preconCantAttack(o) { if (!G) return false; if (o.ctr && o.ctr.petrification) return true; const P = G.players[o.owner]; return P.castTurn === G.turn && G.players[1 - P.i].bf.some(a => Rx(a).arbiter && !lostAbilities(a)); }
 function lifeGainBonus(P) { return G ? P.bf.filter(a => Rx(a).vitality && !lostAbilities(a)).length : 0; }
