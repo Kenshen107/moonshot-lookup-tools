@@ -352,7 +352,7 @@ function removeFromZones(o) {
         if (i >= 0) { P[z].splice(i, 1); return; }
     }
 }
-function resetObj(o) { Object.assign(o, { enchOnly: false, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, kicked: false, sagaDone: false, bestowed: false, blitzed: false, warpExile: 0, saddledTurn: 0, saddlers: null }); }
+function resetObj(o) { Object.assign(o, { cmdSeenZone: null, enchOnly: false, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, kicked: false, sagaDone: false, bestowed: false, blitzed: false, warpExile: 0, saddledTurn: 0, saddlers: null }); }
 // A commander that would go to the graveyard or exile goes back to the command zone.
 function leaveBattlefield(o, zone) {
     const wasOn = !!(G && onBf(o.uid));
@@ -388,10 +388,27 @@ function leaveBattlefield(o, zone) {
     resetObj(o);
     const P = G.players[o.owner];
     if (o.token) return;
-    if (o.isCommander && zone !== 'hand') { P.command.push(o); log(`${o.card.name} returns to the command zone.`); return; }
+    // 903.9: a commander that would go to the library returns to the command zone; one that goes to the graveyard or exile waits there until its owner chooses (commanderChoices)
+    if (o.isCommander && zone === 'library') { P.command.push(o); log(`${o.card.name} returns to the command zone.`); return; }
     P[zone].push(o);
     if (wasOn && zone === 'gy') o.toGyTurn = G.turn;
     if (G && G.toGyQ && G.toGyQ.includes(o)) { G.toGyQ = G.toGyQ.filter(x => x !== o); fire('toGy', { o }); }
+}
+// 903.9a (owner's report, 2026-10-14): when a commander is put into the graveyard or exile, its owner may put it into the command zone
+// the next time state-based actions are checked, or leave it there (to reanimate it, say). A commander that is exiled from the graveyard
+// asks again, because it has just arrived in a new zone. Called from settle(); the computer always takes it back.
+async function commanderChoices() {
+    if (!G || G.over) return;
+    for (const P of G.players) {
+        for (const z of ['gy', 'exile']) {
+            for (const o of P[z].filter(x => x.isCommander && x.cmdSeenZone !== z)) {
+                o.cmdSeenZone = z;
+                const yes = P.isAI ? true : await askYes(P, `${o.card.name} was put into ${z === 'gy' ? (you(P) ? 'your' : `${P.name}'s`) + ' graveyard' : 'exile'}. Put it into the command zone? (Cancel = leave it there)`, { card: o.card, yes: 'Command zone', no: z === 'gy' ? 'Leave it in the graveyard' : 'Leave it in exile' });
+                if (yes && P[z].includes(o)) { G.players.forEach(X => ['bf', 'hand', 'gy', 'exile', 'library', 'command'].forEach(zz => { while (X[zz].includes(o)) pull(X[zz], o); })); P.command.push(o); log(`${o.card.name} returns to the command zone (rule 903.9a).`); }
+                else if (P[z].includes(o)) log(`${P.name} ${you(P) ? 'leave' : 'leaves'} ${o.card.name} in ${z === 'gy' ? 'the graveyard' : 'exile'}.`);
+            }
+        }
+    }
 }
 function umbraSave(o) {
     const a = allPerms().find(x => x.attachedTo === o.uid && Rx(x).umbra && !lostAbilities(x));
@@ -1476,7 +1493,7 @@ function moveSpellCard(o, zone) {
     o.overloaded = false;
     if (o.front) o.card = o.front;
     resetObj(o);
-    if (o.isCommander) { owner.command.push(o); log(`${o.card.name} returns to the command zone.`); }
+    if (o.isCommander && zone === 'library') { owner.command.push(o); log(`${o.card.name} returns to the command zone.`); }
     else owner[zone].push(o);
 }
 
@@ -2773,7 +2790,7 @@ async function applyEffect(P, e, t, src) {
             if (!x || !owner || !owner.gy.includes(x) || !onBf(src.uid)) break;
             const yes = P.isAI ? !src.imprinted || creatureValue(x) > creatureValue(src.imprinted) : await askYes(P, `${name}: exile ${x.card.name} with it${src.imprinted ? ` (${src.imprinted.card.name} goes back to its graveyard)` : ''}?`, { card: x.card });
             if (!yes) break;
-            if (src.imprinted) { const old = src.imprinted, ow = G.players[old.realOwner ?? old.owner]; if (pull(ow.exile, old) !== false) ow.gy.push(old); }
+            if (src.imprinted) { const old = src.imprinted, ow = G.players[old.realOwner ?? old.owner]; if (pull(ow.exile, old).length) ow.gy.push(old); }
             pull(owner.gy, x); owner.exile.push(x); src.imprinted = x;
             log(`${name} exiles ${x.card.name}.`);
             break;

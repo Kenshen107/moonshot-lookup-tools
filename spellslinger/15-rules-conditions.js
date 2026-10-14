@@ -574,6 +574,7 @@ async function settle() {
     if (!G || G.over) return;
     await flushTriggers();
     await runStack();
+    await commanderChoices();
 }
 
 // ---- Activated abilities ----
