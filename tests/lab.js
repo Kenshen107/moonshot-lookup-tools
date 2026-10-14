@@ -10,7 +10,7 @@ const { launch, ROOT } = require('./lib/harness');
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : (process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : true); };
 const N = Number(arg('n', 200)), KIND = arg('kind', 'mix'), SEED = Number(arg('seed', 1)), CONC = Number(arg('conc', 3));
-const LA = arg('la', 'normal'), LB = arg('lb', 'normal'), TMO = Number(arg('timeout', 15000)), PLAYERS = Number(arg('players', 2)), STYLES = arg('styles', null), REPLAY = arg('replay', null);
+const LA = arg('la', 'normal'), LB = arg('lb', 'normal'), TMO = Number(arg('timeout', 15000)), PLAYERS = Number(arg('players', 2)), STYLES = arg('styles', null), THEMES = arg('themes', null), REPLAY = arg('replay', null);
 
 async function openLab(h) {
     await h.ctx.addInitScript(() => { window.__LAB = true; });
@@ -41,7 +41,7 @@ async function main() {
     const t0 = Date.now();
     if (REPLAY) {
         const { page, info, errors } = await openLab(h);
-        const r = await page.evaluate(([s, k, la, lb, tmo, pl, st]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES]);
+        const r = await page.evaluate(([s, k, la, lb, tmo, pl, st, th]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES]);
         console.log(JSON.stringify(r, null, 1));
         if (errors.length) console.log('PAGE ERRORS:\n' + errors.join('\n'));
         console.log((await page.evaluate(() => G.log.map(l => l.text || l).join('\n'))).slice(-6000));
@@ -57,7 +57,7 @@ async function main() {
         if (!w) console.log(`Loaded ${info.cards} cards offline (${info.automated} fully Automated) in ${info.ms} ms`);
         for (let done = 0; done < count; done += 25) {
             const n = Math.min(25, count - done);
-            const rs = await page.evaluate(([f, c, k, la, lb, tmo, pl, st]) => LAB.batch(f, c, { kind: k, la, lb, timeout: tmo, players: pl, styles: st }), [from + done, n, KIND, LA, LB, TMO, PLAYERS, STYLES]);
+            const rs = await page.evaluate(([f, c, k, la, lb, tmo, pl, st, th]) => LAB.batch(f, c, { kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th }), [from + done, n, KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES]);
             // mix: alternate kinds by seed
             all.push(...rs);
             process.stdout.write(`\r${all.length}/${N} games, ${((Date.now() - t0) / 1000).toFixed(0)}s`);

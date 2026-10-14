@@ -79,6 +79,47 @@ window.LAB = (() => {
         return { name: colors.join('') + ' (lab)', format: 'modern', commander: null, entries, source: 'lab' };
     };
 
+    // ---- Political decks (for finding fun pods): the cards a theme likes, read from card text ----
+    const T_ = (re, w) => [new RegExp(re, 'i'), w];
+    L.THEMES = {
+        fort: { name: 'Pillow Fort', style: 'control', caps: { creature: 18, instant: 8, sorcery: 6, artifact: 12, enchantment: 16 },
+            w: [T_("can't attack you|attack you or a planeswalker|creatures can't attack|can't attack unless", 8), T_('\\bdefender\\b', 2), T_('gain \\d+ life', 1.5), T_('draw (a|two|three) cards?', 1.5), T_("prevent all (combat )?damage|fog", 3), T_('\\bhexproof\\b|\\bprotection from\\b', 1.5), T_('enters? tapped|doesn\\u2019t untap|tap target', 1)],
+            cmd: T_("can't attack|defender|gain \\d+ life|draw", 1) },
+        thief: { name: 'Thief', style: 'aggro', caps: { creature: 26, instant: 8, sorcery: 14, artifact: 6, enchantment: 6 },
+            w: [T_('gain control of (target|up to)', 8), T_('\\bhaste\\b', 2), T_('sacrifice (it|that creature|those creatures)|until end of turn', 1.5), T_('exchange control', 6), T_('copy target', 2), T_('untap (it|that creature|target creature)', 2)],
+            cmd: T_('gain control|haste|steal', 1) },
+        hug: { name: 'Group Hug', style: 'ramp', caps: { creature: 22, instant: 6, sorcery: 12, artifact: 14, enchantment: 10 },
+            w: [T_('each player (draws|may|gains|puts|untaps|creates)', 6), T_('monarch', 8), T_('\\bvote\\b|tempting offer|council', 6), T_('target (player|opponent) (draws|gains|creates)', 3), T_('add (one|two|\\{)', 2), T_('search your library for [^.]*land', 1.5)],
+            cmd: T_('each player|monarch|draws? a card', 1) },
+        drain: { name: 'Table Drain', style: 'midrange', caps: { creature: 24, instant: 10, sorcery: 10, artifact: 8, enchantment: 10 },
+            w: [T_('each opponent loses', 6), T_('deals? \\d+ damage to each opponent', 6), T_('whenever an opponent', 3), T_('gain \\d+ life', 1), T_('each opponent (sacrifices|discards)', 4), T_('drain|life equal to', 2)],
+            cmd: T_('each opponent|whenever an opponent', 1) },
+        assassin: { name: 'Edict & Removal', style: 'control', caps: { creature: 18, instant: 14, sorcery: 14, artifact: 6, enchantment: 6 },
+            w: [T_('(each|target) opponent sacrifices|sacrifices a creature|choose an opponent', 7), T_('destroy target (creature|permanent)', 4), T_('exile target (creature|permanent)', 4), T_('deals? \\d+ damage to (target|any target)', 2), T_('target creature gets -\\d+/-\\d+', 3)],
+            cmd: T_('destroy|sacrifice|exile', 1) },
+        bully: { name: 'Big Bully', style: 'voltron', caps: { creature: 28, instant: 6, sorcery: 6, artifact: 12, enchantment: 10 },
+            w: [T_('\\b(trample|menace|flying)\\b', 2.5), T_('\\bhaste\\b', 2), T_('equipped creature|enchanted creature gets \\+', 4), T_('gets? \\+\\d+/\\+\\d+', 1.5), T_("must be blocked|can\\u2019t be blocked|can't be blocked", 3)],
+            cmd: T_('trample|haste|menace|flying', 1) }
+    };
+    L.THEME_KEYS = Object.keys(L.THEMES);
+    L.themeFit = (th, c) => { const t = String(c.text || ''); return th.w.reduce((a, [re, w]) => a + (re.test(t) ? w : 0), 0); };
+    L.themeDeck = key => {
+        const th = L.THEMES[key];
+        // The commander: a legendary creature in 1-3 colors whose text fits, from the best few dozen
+        const cands = cmdPool().map(c => ({ c, k: L.themeFit(th, c) + (th.cmd[0].test(c.text || '') ? 3 : 0) + rnd() * 2 })).sort((a, b) => b.k - a.k).slice(0, 40).map(x => x.c);
+        const commander = pickOf(cands), ci = commander.ci;
+        const cand = L.auto.filter(c => c.legal.commander === 'legal' && c.id !== commander.id && inCI(c, ci) && rulesFor(c).kind !== 'land' && c.cmc < 7);
+        const pool = cand.map(c => ({ c, k: L.themeFit(th, c) + (styleFit(th.style, c) * 0.4) + rnd() * 3 })).sort((a, b) => b.k - a.k).map(x => x.c);
+        const lands = shuf(L.auto.filter(c => c.legal.commander === 'legal' && inCI(c, ci) && /Land/.test(c.type) && rulesFor(c).mana)).slice(0, ci.length > 1 ? 8 : 3);
+        const picked = [], counts = {}, seen = new Set();
+        for (const c of pool) { if (picked.length >= 62) break; const k = rulesFor(c).kind; if (seen.has(c.fullName) || (counts[k] || 0) >= (th.caps[k] ?? 6)) continue; seen.add(c.fullName); counts[k] = (counts[k] || 0) + 1; picked.push(c); }
+        for (const c of pool) { if (picked.length >= 62) break; if (!seen.has(c.fullName)) { seen.add(c.fullName); picked.push(c); } }
+        const entries = [...picked.map(card => ({ card, n: 1 })), ...lands.map(card => ({ card, n: 1 }))];
+        const split = landSplit(entries, ci, 99 - entries.length);
+        Object.entries(split).forEach(([col, n]) => { if (n > 0 && L.basics[col]) entries.push({ card: CARDS.get(L.basics[col]), n }); });
+        return { name: `${commander.name} (${th.name})`, format: 'commander', commander, entries, source: 'lab', aiStyle: th.style, theme: key };
+    };
+
     // One game. opts: { seed, kind: 'commander'|'modern', la, lb, timeout }. Returns a plain result object.
     L.play = async opts => {
         seeded(opts.seed); Math.random = rnd;
@@ -98,10 +139,21 @@ window.LAB = (() => {
             const hshuf = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(hrnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
             const styles = mode === 'none' ? Array(n).fill(null) : mode === 'random' ? hshuf(PLAYSTYLE_KEYS).slice(0, n) : Array(n).fill(mode);
             out.styles = styles;
-            const A = build(styles[0]), B = build(styles[1]);
-            const more = Array.from({ length: Math.max(0, n - 2) }, (_, k) => build(styles[2 + k]));
+            let A, B, more;
+            if (opts.themes) {
+                // Political decks: 'random' = a different theme at every seat, or a list like fort,thief,hug,drain
+                const keys = opts.themes === 'random' ? hshuf(L.THEME_KEYS).slice(0, n) : String(opts.themes).split(',');
+                out.themes = keys.slice(0, n);
+                const ds = out.themes.map(k => L.themeDeck(k));
+                A = ds[0]; B = ds[1]; more = ds.slice(2);
+                out.styles = ds.map(d => d.aiStyle);
+            } else {
+                A = build(styles[0]); B = build(styles[1]);
+                more = Array.from({ length: Math.max(0, n - 2) }, (_, k) => build(styles[2 + k]));
+            }
             A.aiLevel = opts.la || 'normal'; B.aiLevel = opts.lb || 'normal';
             more.forEach(d => { d.aiLevel = opts.lb || 'normal'; });
+            out.cmds = [A, B, ...more].map(d => d.commander ? d.commander.name : d.name);
             out.a = A.commander ? A.commander.name : A.name; out.b = B.commander ? B.commander.name : B.name;
             if (more.length) out.pod = [A, B, ...more].map(d => d.commander ? d.commander.name : d.name);
             window.lastResult = null; L.pending = {};
@@ -110,7 +162,7 @@ window.LAB = (() => {
             while (!window.lastResult && performance.now() - t0 < limit) await new Promise(r => setTimeout(r, 0));
             if (!window.lastResult) { out.hang = true; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); out.turn = G.turn; out.phase = G.phase; out.diag = { pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
             else Object.assign(out, window.lastResult);
-            out.bad = T.invariants(); if (G.dealStats) out.deals = G.dealStats;
+            out.bad = T.invariants(); if (G.dealStats) out.deals = G.dealStats; if (G.pol) out.pol = G.pol;
             if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
         } catch (e) { out.error = String(e && e.stack || e).slice(0, 400); }
         window.removeEventListener('error', onErr);

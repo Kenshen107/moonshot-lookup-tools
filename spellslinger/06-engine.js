@@ -565,6 +565,7 @@ function sba() {
 // 800.4: a player who has lost leaves: their cards go away, what they were using of other players' goes back, their spells leave the stack
 function eliminate(P, reason) {
     P.out = true;
+    if (typeof pol === 'function') pol().outAt.push(G.turn);
     log(`${P.name} ${you(P) ? 'lose' : 'loses'} the game and leaves the pod: ${reason}`);
     G.stack.splice(0, G.stack.length, ...G.stack.filter(it => it.P !== P));
     G.players.forEach(X => {

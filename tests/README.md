@@ -48,3 +48,6 @@ Results are also written to `tests/.out/*.json` (not committed).
 ## Known problems the tests report
 
 - **Chalice of the Void** reads as "Not yet", although CLAUDE.md says all of Mirrodin is Automated. It is listed under `knownNotFull` in `baseline.json` so the run passes; remove it from that list when the card is fixed.
+
+## Political decks (2026-10-14)
+`node tests/lab.js --players 4 --kind commander --themes random --n 800` seats six themed Commander decks (`L.THEMES`); `node tests/political_report.js` scores pods for fun (deals, betrayals, archenemy changes, talk, comebacks, length). Results: `docs/spellslinger-political-decks.md`. `G.pol` holds the counters.

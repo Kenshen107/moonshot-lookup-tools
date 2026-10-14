@@ -28,6 +28,7 @@ function updateArchenemy() {
     const start = th[leader.i] > mean(leader) * 1.35 + 3;
     G.arch = keep ? was : start ? leader.i : null;
     if (G.arch !== was && G.arch != null) {
+        pol().arch++;
         const A = G.players[G.arch];
         const caller = live.find(P => P !== A && P.isAI);
         log(`${A.name} is pulling ahead - the table starts to focus on them.`);
@@ -52,6 +53,8 @@ function botMood(P) {
 
 // ---- Table talk and the speech bubble ----
 const talkSeen = new Map();
+// Counters for the test lab: how political a game was (talk lines, archenemy swings, who hit whom, who was last at the table and when players left)
+const pol = () => (G.pol = G.pol || { talk: 0, arch: 0, hits: {}, worst: {}, outAt: [], steals: 0 });
 function talkOn() { return !AUTOPLAY && !(typeof window !== 'undefined' && window.__LAB) && !!G && !G.over && !G.hotseat && !$('game').classList.contains('hidden'); }
 // A bot says something: it goes in the log, and a bubble with its mood pops up near the top of the table.
 // `key` limits repeats: the same bot says the same kind of thing at most once every few turns.
@@ -60,6 +63,7 @@ function botSay(P, mood, text, key) {
     const k = `${P.i}:${key || mood}`;
     if (key !== null && talkSeen.get(k) !== undefined && G.turn - talkSeen.get(k) < 6) return;
     talkSeen.set(k, G.turn);
+    pol().talk++;
     const m = MOODS[mood] || MOODS.calm;
     G.log.push(`${m.emoji} ${P.name.split(',')[0]}: "${text}"`);
     if (G.log.length > 80) G.log.shift();
@@ -98,6 +102,7 @@ function moodCheck(P) {
 // Your attack, a bot's answer
 function politicsAttacked(att, def, n) {
     dealsOnAttack(att, def);
+    if (att && def) { const h = pol().hits; const k = `${att.i}>${def.i}`; h[k] = (h[k] || 0) + 1; }
     if (!def || !def.isAI || def.out || att === def) return;
     const g = (def.grudge && def.grudge[att.i]) || 0;
     const who = you(att) ? 'you' : att.name.split(',')[0];
@@ -116,6 +121,7 @@ function politicsTick(P) {
     if (!G || G.players.length < 3) return;
     updateArchenemy();
     G.players.forEach(moodCheck);
+    if (G.turn >= 12) { const live = G.players.filter(X => !X.out).sort((a, b) => podThreat(b) - podThreat(a)); live.forEach((X, r) => { if (r === live.length - 1 && live.length > 2) pol().worst[X.i] = G.turn; }); }
 }
 
 // =====================================================================
