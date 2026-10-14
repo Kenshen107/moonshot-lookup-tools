@@ -17,7 +17,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rand = n => Math.floor(Math.random() * n);
 // Takes x out of the list (an empty list back if it isn't there; splice(-1) would
 // remove the last item instead - audit, 2026-10-06)
-function pull(a, x) { const i = a.indexOf(x); return i >= 0 ? a.splice(i, 1) : []; }
+function pull(a, x) {
+    const i = a.indexOf(x);
+    if (i < 0) return [];
+    const r = a.splice(i, 1);
+    if (typeof G !== 'undefined' && G && G.players) { const P = G.players.find(p => p.gy === a); if (P) gyLeft(P, x); } // a card left a graveyard (Lorehold)
+    return r;
+}
+function gyLeft(P, x) { P.gyLeftTurn = G.turn; (P.gyLeftNow = P.gyLeftNow || []).push(x); (G.gyLeaveP = G.gyLeaveP || new Set()).add(P.i); }
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function todayISO() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 
@@ -286,7 +293,7 @@ function mtgjsonSet(code) {
 const RULE_PACKS = {};
 // Extension points for the precon rounds (filled in by 15b-precon-effects.js): extra conditions, static-ability and block filters
 const COND_EXTRA = [], STATIC_FN = {}, BLOCK_FN = {}, BLOCKER_FN = {}, COUNT_EXTRA = [];
-const RULE_PACK_ORDER = ['cmdr', 'uldaros', 'precons5', 'precons4', 'precons3', 'precons2', 'precons1', 'm10', 'mirrodin', 'gitrog', 'brudiclad', 'sandman', 'tyrox', 'top1000-r2', 'landfall', 'xspells', 'top1000', 'starter-kits', 'welcome'];
+const RULE_PACK_ORDER = ['soc', 'cmdr', 'uldaros', 'precons5', 'precons4', 'precons3', 'precons2', 'precons1', 'm10', 'mirrodin', 'gitrog', 'brudiclad', 'sandman', 'tyrox', 'top1000-r2', 'landfall', 'xspells', 'top1000', 'starter-kits', 'welcome'];
 function registerRules(pack) { RULE_PACKS[pack.name] = pack; }
 function rulePackEntries(kind) { return RULE_PACK_ORDER.flatMap(n => (RULE_PACKS[n] && RULE_PACKS[n][kind]) || []); }
 // The lines of card text a pack reads (rulesFor's line loop): functions that take { R, card, lines, t, line, li } and return true

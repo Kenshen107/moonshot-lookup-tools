@@ -146,8 +146,17 @@ Object.assign(CMD, {
     async toxicDeluge(P, e, t, src) { const x = G.curX || 0; if (x > 0) await applyEffect(P, { t: 'allPump', p: -x, q: -x }, null, src); }
 });
 // Promise of Loyalty: a creature with a vow counter can't attack the player who cast it (or their planeswalkers)
-function cmdCantAttack(o) { return !!(o.ctr && o.ctr.vow > 0 && o.vowBy !== undefined && G && G.players.length === 2 && o.vowBy !== o.owner); }
+// Can't attack player i (or their planeswalkers): vow counters (Promise of Loyalty), Eriette's enchanted creatures, Combat Calligrapher's Inklings
+function cmdBarredFrom(o, i) {
+    if (!G || i == null) return false;
+    if (o.ctr && o.ctr.vow > 0 && o.vowBy === i && o.vowBy !== o.owner) return true;
+    const mine = allPerms().filter(a => a.owner === i && !lostAbilities(a));
+    if (mine.some(a => Rx(a).erietteBars) && allPerms().some(au => au.attachedTo === o.uid && au.owner === i && (hasType(au, 'Aura') || au.bestowed))) return true;
+    if (hasType(o, 'Inkling') && mine.some(a => Rx(a).calligrapher)) return true;
+    return false;
+}
+function cmdCantAttack(o) { return !!(G && G.players.length === 2 && o.owner !== undefined && cmdBarredFrom(o, 1 - o.owner)); }
 function cmdAttackFilter(P, list) {
     if (!G || G.defender == null) return list;
-    return list.filter(o => !(o.ctr && o.ctr.vow > 0 && o.vowBy === G.defender && o.vowBy !== o.owner));
+    return list.filter(o => !cmdBarredFrom(o, G.defender));
 }

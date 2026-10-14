@@ -4,7 +4,7 @@
 // run: 'full' (everything), 'partial' (castable, some text does nothing)
 // or 'none' (can't be cast yet: planeswalkers, X costs, counterspells...).
 // =====================================================================
-const KEYWORDS = ['flying', 'reach', 'trample', 'first strike', 'double strike', 'deathtouch', 'lifelink', 'vigilance', 'haste', 'defender', 'menace', 'indestructible', 'hexproof', 'shroud', 'flash',
+const KEYWORDS = ['decayed', 'flying', 'reach', 'trample', 'first strike', 'double strike', 'deathtouch', 'lifelink', 'vigilance', 'haste', 'defender', 'menace', 'indestructible', 'hexproof', 'shroud', 'flash',
     // added 2026-10-05 (rules round 2): evasion, combat and "no effect here" keywords
     'prowess', 'riot', 'infect', 'wither', 'exalted', 'persist', 'undying', 'convoke', 'storm', 'cascade', 'delve', 'shadow', 'horsemanship', 'fear', 'intimidate', 'skulk', 'changeling', 'devoid', 'partner',
     'swampwalk', 'islandwalk', 'nonbasic landwalk', 'myriad', 'forestwalk', 'mountainwalk', 'plainswalk',
@@ -754,6 +754,7 @@ function rulesFor(card) {
         if ((m = line.match(/^Equip ((?:\{[^}]+\})+)$/))) { const c = parseCost(m[1]); if (!c.x && !c.odd) { R.equip = c; R.equipText = m[1]; continue; } }
         R.unhandled.push(line);
     }
+    if ((R.kind === 'instant' || R.kind === 'sorcery') && !R.spell && !R.modes && !R.unhandled.length && R.kw.size && lines.length && lines.every(l => /^(?:cascade|retrace|flashback|storm|cipher|rebound|jump-start|buyback|convoke|delve|miracle|casualty|replicate|entwine|kicker|overload|suspend|cycling|foretell|ravenous|improvise|conspire|gift|escape|spree|splice)\b/i.test(l))) R.spell = []; // Throes of Chaos: nothing but keywords
     if (R.cost.x) xMarkRules(R);
     if ((R.spell || []).some(e => e.t === 'detonate')) R.xFromTarget = true; // Detonate: X is the artifact's mana value
     if (R._kwBefore) { R.backupKw = [...R.kw].filter(k => !R._kwBefore.has(k)); delete R._kwBefore; }
@@ -765,9 +766,17 @@ function rulesFor(card) {
         if (cols.length) R.mana = { colors: [...new Set([...(R.mana ? R.mana.colors : []), ...cols])], n: 1 };
         if (/\bWastes\b/.test(card.name)) R.mana = { colors: ['C'], n: 1 };
     }
+    // Prepared (Secrets of Strixhaven): while the creature is prepared, its owner may pay the back spell's cost to cast a copy of it (the creature is then unprepared)
+    if (card.layout === 'prepare' && card.back) {
+        const B = rulesFor(card.back), fx = B.spell || (B.modes ? B.modes[0] : null);
+        if (B.support === 'full' && fx && !B.modes) {
+            const a = { cost: { mana: parseCost(card.back.cost || ''), tap: false, sacSelf: false, life: 0, discard: 0 }, effects: fx, text: `Cast a copy of ${card.back.name}: ${(card.back.text || '').replace(/\n/g, ' ')}`, needPrepared: true, sorcery: B.kind === 'sorcery' };
+            R.acts.push(a); R.preparedSpell = card.back.name;
+        } else R.unhandled.push(`${card.back.name} (the prepared spell): ${B.why || card.back.text}`);
+    }
     // How much of it works
     const numeric = v => v !== undefined && /^\d+$/.test(String(v));
-    const xOk = R.cost.x && (((R.kind === 'instant' || R.kind === 'sorcery') && (R.spell || []).some(e => e.n === 'X' || e.p === 'X')) || R.etbCounters === 'X' || R.etbNamedX || R.etb.some(e => e.n === 'X') || R.cloneX || hasXMark([R.spell, R.modes, R.etb, R.etbModes, R.trig.map(t => t.effects), R.castTrig]));
+    const xOk = R.cost.x && (((R.kind === 'instant' || R.kind === 'sorcery') && (R.spell || []).some(e => e.n === 'X' || e.p === 'X')) || R.etbCounters === 'X' || R.etbCounters === 'X2' || R.etbNamedX || R.etb.some(e => e.n === 'X') || R.cloneX || hasXMark([R.spell, R.modes, R.etb, R.etbModes, R.trig.map(t => t.effects), R.castTrig]));
     if (R.saga && Object.keys(R.saga).length && Object.keys(R.saga).length < Math.max(...Object.keys(R.saga).map(Number))) R.unhandled.push('(some Saga chapters)');
     if (R.isEquipment && R.equip === null && R.equipCheap) { R.equip = R.equipCheap.cost; R.equipOnly = R.equipCheap.type; R.equipText = costSymbols(R.equip); } // "Equip legendary creature {2}" only (Excalibur)
     if (R.kind === 'battle' && !/\bSiege\b/.test(t)) { R.support = 'none'; R.why = 'Only Siege battles are in the game so far.'; }

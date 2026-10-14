@@ -104,7 +104,7 @@ function parseTrigger(line) {
 function parseActivated(line, R) {
     const m = line.match(/^([^:"]+?): (.+)$/);
     if (!m) return null;
-    let body = m[2];
+    let body = m[2].replace(/Activate only as a sorcery and only if /, 'Activate only as a sorcery. Activate only if ');
     const sorcery = /Activate only as a sorcery\.?/.test(body);
     const once = /Activate only (?:during your turn and only )?once each turn\.?/.test(body);
     const beforeAtk = /Activate only during your turn, before attackers are declared\.?/.test(body);
@@ -156,6 +156,7 @@ function parseActivated(line, R) {
         else if ((sm0 = part.match(/^Sacrifice (?:a|an) ([A-Z][a-z]+)$/))) cost.sacPerm = sm0[1]; // "Sacrifice a Desert"
         else if ((sm0 = part.match(/^Return (two|three) lands you control to their owner's hand$/))) cost.returnLands = num(sm0[1]); // Multani
         else if (part === "Return an artifact you control to its owner's hand") cost.returnArt = true; // Master Transmuter
+        else if (part === "Return ~ to its owner's hand") cost.bounceSelf = true; // Rootha, Mercurial Artist
         else if (/^Sacrifice (two|three|four) ([A-Z][a-z]+)s$/.test(part)) { const sm = part.match(/^Sacrifice (\w+) ([A-Z][a-z]+)s$/); cost.sacN = { n: num(sm[1]), kind: sm[2] }; }
         // Top-1000 round 2 (2026-10-07)
         else if (/^Sacrifice (two|three) (artifacts|creatures)$/.test(part)) { const sm = part.match(/^Sacrifice (\w+) (\w+)s$/); cost.sacN = { n: num(sm[1]), kind: sm[2][0].toUpperCase() + sm[2].slice(1) }; }

@@ -125,6 +125,7 @@ function scoreEffects(P, effects, target, src) {
             peer: target && target.p === P ? 6 : target && target.p ? (O.library.length < 14 ? 1000 : 2) : 0, stealWhile: target && target.o ? 8 + creatureValue(target.o) : 0, digLand: 3, topLandOrHand: 3, revealToLand: 4,
             bounceSpell: target && target.item ? 4 : 0, freeze: 1, tutorNamed: 3, landMana: 1, exileHost: 6, countersMade: 2, doubleCounters: 2, attachAllEquip: 1, attachSelf: 1, attachEquipToSelf: 1, gollum: 1, asmoReturn: 0, selfToLibrary: 0, pumpChoice: 0, arni: 0, unearth: 4 };
         if (e.t in sk) { score += sk[e.t]; continue; }
+        if (e.t === 'cmd' && typeof CMD_SCORE !== 'undefined' && CMD_SCORE[e.id]) { score += CMD_SCORE[e.id](P, e, target, src); continue; } // commander precons (15d-cmdr-*.js)
         { const u = uldScore(P, e, O, target); if (u !== undefined) { score += u; continue; } } // the Uldaros Theorix deck (15c-uldaros-effects.js)
         const t = needsTarget(e) ? target : null;
         if (needsTarget(e) && !t) return 0;

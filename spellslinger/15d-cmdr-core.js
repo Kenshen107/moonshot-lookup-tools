@@ -4,6 +4,7 @@
 // Wordings are in rules/cmdr-*.js; the per-card engine code is in 15d-cmdr-*.js. preconEffect -> uldEffect -> cmdEffect.
 // =====================================================================
 const CMD = {};
+const CMD_SCORE = {}; // id -> (P, e, target, src) => AI score of a cmd effect (0 when missing)
 async function cmdEffect(P, e, t, src, O, name) {
     if (e.t !== 'cmd') return;
     const f = CMD[e.id];
@@ -30,6 +31,7 @@ function specMatch(spec, o, x, ctx) {
     if (spec.mvMin !== undefined && !((x.card.cmc || 0) >= spec.mvMin)) return false;
     if (spec.hadCounters && !((x.lastCounters || 0) > 0 || Object.values(x.ctr || {}).some(v => v > 0) || (x.counters || 0) > 0)) return false;
     if (spec.commander && !x.isCommander) return false;
+    if (spec.attacking && !(G.attackers || []).includes(x.uid)) return false;
     if (spec.byOpp && !(ctx && ctx.by !== undefined && ctx.by !== o.owner)) return false;
     return true;
 }
@@ -117,7 +119,7 @@ function phaseInAll(P) {
 }
 // ---- Goad (701.38): attacks each combat if able, and attacks a player other than the goader if able ----
 function goad(o, by, until) { o.goaded = { by, until: until === undefined ? Infinity : until }; log(`${o.card.name} is goaded.`); }
-const isGoaded = o => !!(G && o && o.goaded && G.turn < o.goaded.until && G.players[o.goaded.by] && !G.players[o.goaded.by].out);
+const isGoaded = o => !!(G && o && ((o.goaded && G.turn < o.goaded.until && G.players[o.goaded.by] && !G.players[o.goaded.by].out) || allPerms().some(a => a.attachedTo === o.uid && Rx(a).goadsHost && !lostAbilities(a))));
 const cmdNoMinus = o => !!G && isCreature(o) && G.players[o.owner].bf.some(a => Rx(a).noMinusCounters && !lostAbilities(a));
 // Jace, Multiverse Architect: creatures that didn't pay can't attack his controller's Jaces this turn
 const jaceNoAttack = (w, A) => !!G && !!G.jaceNoAttack && G.jaceNoAttack.turn === G.turn && G.jaceNoAttack.player === A.i && hasType(w, 'Jace') && w.owner === G.jaceNoAttack.by;
@@ -131,17 +133,19 @@ function cmdExtraTriggers(ev, o, tr, ctx) {
         if (a.owner !== o.owner || lostAbilities(a)) return;
         if (Rx(a).doubleAttackTrig && a.word === 'Mardu' && ev === 'attacks' && (ctx.list || []).length) k++; // a creature attacking causes the trigger
         if (Rx(a).doubleLegendTrig && /\bLegendary\b/.test(o.card.type) && isCreature(o)) k++;
+        if (Rx(a).harmonic && (hasType(o, 'Shaman') || (hasType(o, 'Wizard') && o !== a))) k++; // Harmonic Prodigy
+        if (Rx(a).veyran && ev === 'cast' && ctx.o && ['instant', 'sorcery'].includes(Rx(ctx.o).kind)) k++; // Veyran: casting an instant or sorcery
     });
     return k;
 }
 // Cast a card from a zone without paying its mana cost; returns true when it was cast
-async function castFreeFrom(P, c) {
+async function castFreeFrom(P, c, target) {
     const from = G.players.find(X => ['gy', 'exile', 'library', 'hand'].some(z => X[z].includes(c)));
     const zone = from ? ['gy', 'exile', 'library', 'hand'].find(z => from[z].includes(c)) : null;
     if (!from || Rx(c).kind === 'land' || Rx(c).support === 'none') return false;
     pull(from[zone], c); c.freeCast = true; c.playUntil = G.turn; P.exile.push(c);
     let cast = true;
-    try { cast = await castSpell(P, c); } catch (er) { cast = false; }
+    try { cast = await castSpell(P, c, target); } catch (er) { cast = false; }
     if (P.exile.includes(c)) { pull(P.exile, c); from[zone].push(c); c.freeCast = false; return false; }
     return true;
 }

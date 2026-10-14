@@ -71,7 +71,7 @@ registerRules({
         if (/^~ enters(?: the battlefield)? with X \+1\/\+1 counters on it\.$/.test(line)) { R.etbCounters = 'X'; { ctx.li = li; return true; } }
         if ((m = line.match(/^When you cast ~, (.+)$/)) && parseEffects(m[1])) { R.castTrig = parseEffects(m[1]); { ctx.li = li; return true; } }
         if (/^Ravenous$/.test(line)) { R.etbCounters = 'X'; R.ravenous = true; { ctx.li = li; return true; } }
-        if ((m = line.match(/^~ enters(?: the battlefield)? with X (charge|oil|fire|time|quest) counters on it\.$/))) { R.etbNamedX = m[1]; { ctx.li = li; return true; } }
+        if ((m = line.match(/^~ enters(?: the battlefield)? with X (charge|oil|fire|time|quest|study) counters on it\.$/))) { R.etbNamedX = m[1]; { ctx.li = li; return true; } }
         if (/^~ enters with a number of \+1\/\+1 counters on it equal to the amount of mana spent to cast it\.$/.test(line)) { R.etbCounters = 'spent'; { ctx.li = li; return true; } }
         if (/^Improvise$/.test(line)) { R.kw.add('improvise'); { ctx.li = li; return true; } }
         if (/^Nonartifact spells you cast have improvise\.$/.test(line)) { R.improviseAll = true; { ctx.li = li; return true; } }
