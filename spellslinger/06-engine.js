@@ -17,7 +17,18 @@ function makeObj(card, owner, extra) {
 const Rx = o => rulesFor(o.card);
 // The player holding the device (G.view; always 0 except in a pass-and-play game) and the other one
 const me = () => G.players[G.view || 0];
-const foe = () => G.players[1 - (G.view || 0)];
+// The opponent whose board and bar are shown: the only one in a 1v1; in a pod, the one you tapped, else whose turn it is, else the one being attacked
+const foe = () => {
+    const v = G.view || 0;
+    if (G.players.length === 2) return G.players[1 - v];
+    const pick = G.players[G.focusPick];
+    if (pick && pick.i !== v && !pick.out) return pick;
+    const act = G.players[G.active];
+    if (act && act.i !== v && !act.out) return act;
+    const def = G.players[G.defender];
+    if (def && def.i !== v && !def.out) return def;
+    return seatAfter(v);
+};
 const you = P => !!P && P.i === 0 && !(G && G.hotseat);
 // Seats and opponents (2 to 4 players; 2026-10-14). A player who has lost has `out` set and takes no more part.
 // opp(P) is "the" opponent for code written for two players: the player being attacked while P attacks (or defends),
@@ -178,8 +189,11 @@ async function startMatch(again) {
             oppDeck = await buildCommanderDeck(chosenOpponent.key);
             oppDeck.source = `EDHREC average deck${oppDeck.swapped ? `, ${oppDeck.swapped} cards swapped for lands` : ''}`;
         }
+        // A pod (3 or 4 players, Commander only): the other seats are random playable Commander decks
+        const more = [];
+        for (let k = 2; k < (deck.format === 'commander' ? podSize : 2); k++) { more.push(await buildRandomCommanderDeck()); }
         closeModal();
-        newGame(deckToEntries(deck), oppDeck);
+        newGame(deckToEntries(deck), oppDeck, null, more);
     } catch (e) {
         console.error(e);
         showModal(`<h2>Couldn't start</h2><p class="warn">${esc(e.message)}</p><div class="row" style="justify-content:center; margin-top:12px;"><button class="btn" onclick="closeModal()">OK</button></div>`);
@@ -1015,7 +1029,7 @@ function validTargets(P, e, src) {
     if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.powLtSrc || pow(o) < pow(src)) && (!e.withCounters || o.counters > 0)).map(o => ({ o })));
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
-    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a)))).map(p => ({ p })));
+    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a)))).map(p => ({ p })));
     if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P)).map(item => ({ item })));
     return out;
 }
@@ -3814,6 +3828,7 @@ async function beginTurn() {
     if (G.over) return;
     const P = G.players[G.active];
     G.phase = 'beginning';
+    G.focusPick = null; // the pod view follows whoever's turn it is
     P.landsPlayed = 0;
     foes(P).flatMap(F => F.bf).forEach(o => { if (o.tapped && grantsOn(o).some(g => g.untapEach)) { o.tapped = false; } });
     // Seedborn Muse, Unwinding Clock: untap during each other player's untap step
@@ -4134,6 +4149,7 @@ async function confirmAttack() {
     const pws = [...foe().bf.filter(isPlaneswalker), ...me().bf.filter(isBattle)];
     if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
     G.busy = true;
+    if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected
     declareAttackers(me(), sel);
     await exertChoices(me(), sel);
     G.phase = 'declareBlocks';

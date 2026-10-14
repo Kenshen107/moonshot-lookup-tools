@@ -1416,6 +1416,13 @@ function closeModal() { $('modalHost').innerHTML = ''; }
 // Play setup
 // ---------------------------------------------------------------------
 let chosenOpponent = null;
+// How many players at the table (Commander decks only): 2 = a duel, 3 or 4 = a free-for-all pod against random playable decks
+let podSize = Number(store.get('podSize', 2)) || 2;
+function setPodSize(n) { podSize = n; store.set('podSize', n); renderOpponents(); }
+function podChipsHTML(deck) {
+    if (deck.format !== 'commander') return '';
+    return `<div class="chips" style="margin:0 0 10px;" role="group" aria-label="Players at the table"><span class="note" style="align-self:center;">Table:</span>${[[2, '⚔️ 1 vs 1'], [3, '👥 3 players'], [4, '👥 4 players']].map(([n, t]) => `<button type="button" class="chip${podSize === n ? ' on' : ''}" onclick="setPodSize(${n})">${t}</button>`).join('')}</div>${podSize > 2 ? `<p class="note" style="margin-bottom:10px;">Free-for-all: the opponent you pick sits next to you, and ${podSize === 3 ? 'one more seat is' : 'two more seats are'} filled with random playable Commander decks. Last player standing wins; 21 damage from one commander knocks a player out.</p>` : ''}`;
+}
 const OPPSEL = { kind: 'all', q: '' };
 function oppSel(k, v) { OPPSEL[k] = v; renderOpponents(); }
 // Pass and play: your deck and another account's deck on this device
@@ -1523,7 +1530,7 @@ async function renderOpponents() {
         try {
             const cmds = await loadTrendingCommanders();
             const custom = chosenOpponent && chosenOpponent.type === 'commander' && !cmds.some(c => c.slug === chosenOpponent.key) ? `<div class="opp-custom"><button type="button" class="opp" aria-pressed="true"><strong>👑 ${esc(chosenOpponent.name || chosenOpponent.key)}</strong><small>EDHREC average deck</small></button></div>` : '';
-            list.innerHTML = `${randomOppHTML('commander')}${verifiedOppHTML()}<h3 class="opp-h">Face any commander</h3>
+            list.innerHTML = `${podChipsHTML(deck)}${randomOppHTML('commander')}${verifiedOppHTML()}<h3 class="opp-h">Face any commander</h3>
                 <div class="row" style="margin-bottom:6px;"><input type="search" id="cmdFind" list="cmdSuggest" placeholder="Type a commander's name" aria-label="Commander to face" oninput="suggestCommanders(this.value)" onkeydown="if (event.key === 'Enter') faceCommander()" style="flex:1 1 220px;"><datalist id="cmdSuggest"></datalist>
                 <button class="btn" onclick="faceCommander()">👑 Face this commander</button>${pasteBtn}</div>
                 <div class="note" id="cmdFindNote" style="margin-bottom:8px;">Any commander EDHREC has decks for, playing its average deck. Or paste a real list.</div>
@@ -1533,7 +1540,7 @@ async function renderOpponents() {
                 <div class="opp-grid">${cmds.map(c => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === c.slug}" onclick="chooseOpponent({ type: 'commander', key: '${esc(c.slug)}' })">
                     <strong>👑 ${esc(c.name)}</strong><small>${c.decks ? `${c.decks.toLocaleString()} decks on EDHREC` : ''}</small></button>`).join('')}</div>`;
         } catch (e) {
-            list.innerHTML = `${randomOppHTML('commander')}${verifiedOppHTML()}<p class="warn">EDHREC is unavailable right now, so its commanders aren't listed. Try again later.</p>`;
+            list.innerHTML = `${podChipsHTML(deck)}${randomOppHTML('commander')}${verifiedOppHTML()}<p class="warn">EDHREC is unavailable right now, so its commanders aren't listed. Try again later.</p>`;
         }
     }
     const oppIsCmd = chosenOpponent && (chosenOpponent.type === 'commander' || chosenOpponent.type === 'verified' || (chosenOpponent.type === 'random' && chosenOpponent.fmt === 'commander') || (chosenOpponent.type === 'list' && chosenOpponent.gen.format === 'commander'));

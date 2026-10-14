@@ -291,6 +291,14 @@
         /* ---- The game table ---- */
         #game { position: fixed; inset: 0; z-index: var(--z-game); background: radial-gradient(ellipse at center, var(--felt-1), var(--felt-2) 70%, var(--bg-canvas)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto auto; overflow: hidden; }
         .pbar { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 6px 14px; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); border-bottom: 1px solid var(--border-subtle); }
+        .pod-strip { display: flex; gap: 6px; flex-wrap: wrap; flex: 1 1 100%; }
+        .pod-chip { display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-primary); font-size: 0.85em; cursor: pointer; }
+        .pod-chip b { font-family: var(--font-display); color: var(--text-heading); max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pod-chip.on { border-color: var(--brand-light); box-shadow: 0 0 0 1px var(--brand-light) inset; }
+        .pod-chip.turn { border-color: var(--color-warning); }
+        .pod-chip.out { opacity: 0.45; cursor: default; }
+        .pod-chip.targetable { border-color: var(--color-success); }
+        .pod-chip .atk { color: var(--color-warning); font-size: 0.9em; }
         .pbar.me { border-top: 1px solid var(--border-subtle); border-bottom: 0; }
         .pbar .who { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); }
         .life { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--text-heading); background: var(--bg-panel); border: 2px solid var(--border); border-radius: var(--radius-md); padding: 0 12px; min-width: 64px; text-align: center; }
@@ -826,6 +834,11 @@
             .pbar { flex-wrap: nowrap; gap: 8px; padding: 4px 8px; overflow: hidden; }
             .pbar .who { max-width: 30vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .pbar .opp-hand, .pbar .deckname { display: none; }
+            .pbar:has(.pod-strip) { flex-wrap: wrap; row-gap: 4px; }
+            .pod-strip { flex-wrap: nowrap; overflow-x: auto; gap: 4px; }
+            .pod-chip { padding: 3px 6px; gap: 5px; font-size: 0.72em; flex: 0 0 auto; }
+            .pod-chip b { max-width: 8ch; }
+            .pod-chip .atk { display: none; }
             .pbar .pool { white-space: nowrap; overflow: hidden; }
             .gm-btn { margin-left: auto; min-width: 40px; min-height: 36px; }
             .dock { grid-template-columns: minmax(0, 1fr); }

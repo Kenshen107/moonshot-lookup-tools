@@ -99,6 +99,21 @@ function manaSourcesSummary(P) {
     return `<span class="pool" title="Untapped mana">⚡ ${total}${Object.entries(counts).map(([c, n]) => c === 'any' ? ` · ${n} multi` : ` · ${n}<span class="pip ${c}"></span>`).join('')}</span>`;
 }
 
+// A pod (3 or 4 players): one chip per opponent with life, the commander damage you have taken from them, hand and creatures.
+// Tap a chip to look at that player's board (and to attack them); while choosing a target it picks that player.
+function podStripHTML() {
+    const v = me(), m = G.mode;
+    const chips = G.players.filter(X => X !== v).map(X => {
+        const on = foe() === X, turn = G.active === X.i && !G.over, hitsMe = G.defender === v.i && G.active === X.i, tgt = m && m.type === 'target' && m.valid.some(t => t.p && t.p.i === X.i);
+        const dmg = G.format === 'commander' ? (v.cmdBy[X.i] || 0) : 0;
+        return `<button type="button" class="pod-chip${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
+            title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${X.hand.length} cards in hand, ${X.bf.filter(isCreature).length} creatures${dmg ? `, you have taken ${dmg} commander damage from them` : ''}">
+            <b>${X.out ? '💀' : turn ? '▶' : '🤖'} ${esc(X.name.split(',')[0])}</b><span>❤️ ${X.life}</span>${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}<span>✋ ${X.hand.length}</span><span>🛡 ${X.bf.filter(isCreature).length}</span>${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}</button>`;
+    }).join('');
+    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}</div>`;
+}
+function podFocus(i) { G.focusPick = i; renderGame(); }
+
 function barHTML(P) {
     const m = G.mode;
     const targetable = m && m.type === 'target' && m.valid.some(v => v.p && v.p.i === P.i);
@@ -112,9 +127,9 @@ function barHTML(P) {
         <button type="button" class="btn small desk-only" onclick="playerSheet(${P.i})" title="Track life, poison, energy and experience">🧮</button>
         <span class="zone-count" title="Library">📚 ${P.library.length}</span>
         <button type="button" class="zone-count zone-btn" title="Graveyard: tap to look" onclick="showGraveyard(${P.i})">🪦 ${P.gy.length}</button>
-        ${P.i === 1 ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
+        ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
         <span class="cmd-zone">${cmd}</span>
-        ${P.i === 1 ? `<span class="note deckname" style="margin-left:auto;">${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</span>` : `<span style="margin-left:auto;" class="row desk-only"><button class="btn small danger" onclick="concede()">Concede</button></span><button type="button" class="btn small phone-only gm-btn" onclick="gameMenu()" aria-label="Game menu: log, life tracker, mana mode, concede">⋯</button>`}`;
+        ${P !== me() ? `<span class="note deckname" style="margin-left:auto;">${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</span>` : `<span style="margin-left:auto;" class="row desk-only"><button class="btn small danger" onclick="concede()">Concede</button></span><button type="button" class="btn small phone-only gm-btn" onclick="gameMenu()" aria-label="Game menu: log, life tracker, mana mode, concede">⋯</button>`}`;
 }
 
 // Phones: the game menu (log, trackers, paying mana, concede) and the full log
@@ -343,7 +358,7 @@ function renderGame() {
     if (G.hotseat && !G.over) { const d = decider(); if (d !== null && d !== G.view) handTo(G.players[d]); }
     // Each zone is rebuilt only if its HTML changed (Phase 1c); the fitting below runs only if something did, or the window changed
     let changed = false;
-    changed = setHTML($('oppBar'), barHTML(foe())) || changed;
+    changed = setHTML($('oppBar'), (G.players.length > 2 ? podStripHTML() : '') + barHTML(foe())) || changed;
     changed = setHTML($('meBar'), barHTML(me())) || changed;
     changed = setHTML($('oppSide'), sideHTML(foe())) || changed;
     changed = setHTML($('meSide'), sideHTML(me())) || changed;
