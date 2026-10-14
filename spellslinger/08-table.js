@@ -347,7 +347,7 @@ function handHTML() {
     const P = me();
     // Cards you may play from exile this turn sit at the end of your hand, marked
     const top = P.library[P.library.length - 1];
-    const topCard = top && ((P.bf.some(x => Rx(x).castTopCreatures) && Rx(top).kind === 'creature') || pitTop(P) === top) ? [top] : [];
+    const topCard = top && (topCastOk(P, top) || pitTop(P) === top) ? [top] : [];
     const extraLands = MAIN.includes(G.phase) && G.active === G.view ? extraLandZones(P).filter(o => !topCard.includes(o)) : [];
     const gyModes = P.gy.filter(o => castAsOk(P, o, 'blitz') || castAsOk(P, o, 'disturb') || castAsOk(P, o, 'retrace') || lockerOk(P, o));
     return [...P.hand, ...P.exile.filter(o => o.playUntil >= G.turn || o.advReady || (o.foretoldTurn && o.foretoldTurn < G.turn) || (o.warpedTurn && o.warpedTurn < G.turn)), ...topCard, ...extraLands, ...gyModes].map(o => {

@@ -162,13 +162,14 @@ function parseActivated(line, R) {
         else if (part === 'Sacrifice a token') cost.sacPerm = 'token';
         else if (part === 'Sacrifice a nontoken creature') cost.sacPerm = 'nontoken creature';
         else if (part === 'Tap two untapped creatures you control') cost.tapOtherN = 2;
+        else if (part === 'Tap two untapped artifacts you control') cost.tapArt = 2;
         else if ((sm0 = part.match(/^Tap an untapped ([A-Z][a-z]+) you control$/))) cost.tapOther = sm0[1];
         else if ((sm0 = part.match(/^Sacrifice another (white|blue|black|red|green) creature$/))) cost.sacPerm = `creature:${COLOR_WORDS[sm0[1]]}`;
         else if ((sm0 = part.match(/^Exile (two|three|four) cards from your graveyard$/))) cost.exileGy = num(sm0[1]);
         else if (part === 'Put a -1/-1 counter on ~') cost.minusSelf = 1;
         // Mirrodin (2026-10-08)
         else if ((sm0 = part.match(/^Exile the top (\w+) cards of your library$/))) cost.exileTop = num(sm0[1]);
-        else if ((sm0 = part.match(/^Remove a (charge|wish|\+1\/\+1) counter from ~$/))) { if (sm0[1] !== '+1/+1') cost.removeNamed = sm0[1]; else cost.removeCounter = 1; }
+        else if ((sm0 = part.match(/^Remove a (charge|wish|page|story|gold|\+1\/\+1) counter from ~$/))) { if (sm0[1] !== '+1/+1') cost.removeNamed = sm0[1]; else cost.removeCounter = 1; }
         else if (part === 'Remove a counter from a permanent you control') cost.removeAny = true;
         else return null;
     }

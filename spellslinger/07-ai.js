@@ -398,6 +398,7 @@ function aiBestPlay(P) {
         if (r.kind === 'land' || !canCastNow(P, o) || !canPay(P, o)) continue;
         if (reserve && r.kind !== 'instant' && (o.card.cmc || 0) > untapped - reserve) continue; // hold mana up
         if (r.kicker) o.kicked = canKick(P, o);
+        o.giftPromised = !!r.gift && typeof giftWanted === 'function' && giftWanted(P, o);
         if (r.multikicker) { o.kickN = maxKick(P, o); o.kicked = o.kickN > 0; } else o.kickN = 0;
         o.buyback = !!r.buyback && canBuyback(P, o) && (untapped - (o.card.cmc || 0)) >= 3;
         if (r.cost.x) o.xVal = maxX(P, o);
@@ -629,6 +630,7 @@ async function aiTurn(P) {
     if (G.players.length > 2) G.defender = aiPickDefender(P).i;
     let attackers = P.skip && P.skip.turn === G.turn && P.skip.what === 'combat' ? [] : aiChooseAttackers(P);
     if (P.mustAttackTurn === G.turn && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...P.bf.filter(canAttackWith)])];
+    if (typeof cmdForcedAttackers === 'function' && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...cmdForcedAttackers(P)])]; // Graaz: Juggernauts must attack
     for (let round = 0; round < 4 && attackers.length && !G.over; round++) {
         G.phase = 'declareAttackers';
         declareAttackers(P, attackers);

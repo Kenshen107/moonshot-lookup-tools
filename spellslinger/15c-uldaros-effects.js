@@ -309,7 +309,7 @@ async function uldEffect(P, e, t, src, O, name) {
             if (c) { log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${c.card.name}.`); fire('sacrificed', { o: c }); dieOrLeave(c, 'gy'); }
             break;
         }
-        default: break;
+        default: await cmdEffect(P, e, t, src, O, name); break; // the Commander precons (15d-cmdr-*.js)
     }
 }
 // Choose one of several players (Fraying Sanity). Returns the player or null.

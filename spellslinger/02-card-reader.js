@@ -44,7 +44,8 @@ function splitKw(s) {
 
 function parseManaProduce(s) {
     s = s.trim();
-    if (/^one mana of any color(?: in your commander's color identity)?$/i.test(s)) return { colors: [...COLORS], n: 1 };
+    if (/^one mana of any color in your commander's color identity$/i.test(s)) return { colors: [...COLORS], n: 1, identity: true };
+    if (/^one mana of any color$/i.test(s)) return { colors: [...COLORS], n: 1 };
     // Heraldic Banner ("one mana of the chosen color"), Thriving lands ("{U} or one mana of the chosen color")
     let cm = s.match(/^(?:\{([WUBRG])\} or )?one mana of the chosen color$/i);
     if (cm) return { colors: cm[1] ? [cm[1]] : [...COLORS], n: 1, chosen: true, base: cm[1] || null };
@@ -450,6 +451,8 @@ function parseEffects(text) {
                 const m = p.match(re) || p.toLowerCase().match(re);
                 if (m) { const h = make(m); if (h) { hit = h; break; } }
             }
+            // "you create a Treasure token" reads like "create a Treasure token" (2026-10-15), only when nothing read it as written
+            if (!hit && /^you create /i.test(p)) { const p3 = p.replace(/^you create /i, 'create '); for (const [re, make] of EFFECTS) { const m = p3.match(re) || p3.toLowerCase().match(re); if (m) { const h = make(m); if (h) { hit = h; break; } } } }
             // Phase 2b: the token reader, only for sentences no pattern above read
             if (!hit && typeof tokenReadSentence === 'function') hit = tokenReadSentence(p);
             // "Tap target creature. ... exile that creature" / "put a +1/+1 counter on it": the creature targeted earlier
@@ -698,6 +701,7 @@ function rulesFor(card) {
                     p.limit = { test: /legendary/.test(lm[1]) ? 'legendary' : lm[2] ? 'chosenOrAbil' : 'chosen', free: prevMana ? prevMana.colors.slice() : [], uncounter: !!lm[3] };
                     if (prevMana) p.colors = [...new Set([...prevMana.colors, ...p.colors])];
                 }
+                else if (m[5] && (lm = m[5].match(/^ Spend this mana only to cast an? ([A-Z][a-z]+) spells?(?: or activate abilities of [A-Z][a-z]+s)?\.$/))) p.onlyType = lm[1]; // Giada, Orb of Dragonkind (2026-10-15)
                 else if (m[5]) R.approx = 'The "spend this mana only" limit isn\'t checked.';
                 continue;
             }

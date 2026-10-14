@@ -16,6 +16,7 @@ const GROUPS = {
     m10: { must100: true, desc: 'Magic 2010 booster cards (set:m10 is:booster)' },
     welcome: { must100: true, desc: 'MTGJSON Welcome Decks (55 decks)' },
     starter: { must100: true, desc: 'MTGJSON Starter Kits (20 decks)' },
+    cmdr: { must100: true, desc: 'the Commander precons of FDC, FRC, SOC and MSC marked done in tests/data/cmdr_decks.json' },
     precon: { must100: true, desc: 'every Ready precon that is not a Welcome Deck or Starter Kit (spellslinger/data/precon-ready.json)' }
 };
 
@@ -30,6 +31,11 @@ const BODY = async function (group, mustBe100) {
         }
     } else if (group === 'mirrodin' || group === 'm10') {
         cards = await searchCards(`set:${group === 'm10' ? 'm10' : 'mrd'} is:booster`, 6, 'name');
+    } else if (group === 'cmdr') {
+        const decks = await (await fetch('/tests/data/cmdr_decks.json')).json();
+        const names = [...new Set(decks.filter(d => d.done).flatMap(d => d.cards))];
+        const got = await T.cards(names);
+        names.forEach(n => { if (got[n]) cards.push(got[n]); });
     } else if (group === 'precon') {
         await loadPreconReady();
         const list = (await loadPreconList()).filter(p => preconIsReady(p) && !['Welcome Deck', 'Starter Kit'].includes(p.type));
