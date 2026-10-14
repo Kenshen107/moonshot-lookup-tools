@@ -9,10 +9,25 @@ registerRules({
         [/^create a token that's a copy of ~, except it's a white Zombie in addition to its other types and it has no mana cost$/i, () => ({ t: 'embalmCopy' })],
         [/^search your library for a card with the same mana value as ~, reveal it, put it into your hand, then shuffle$/i, () => ({ t: 'transmute' })],
         [/^search your library for an? ([A-Z][a-z]+) permanent card with mana value (\d+) or less, put it onto the battlefield, then shuffle$/i, m => ({ t: 'tutor', what: `${m[1]} permanent mv${m[2]}`, bf: true })],
+        [/^sacrifice it unless you return a non-Lair land you control to its owner's hand$/i, () => ({ t: 'lairBounce' })],
+        [/^return a creature you control to its owner's hand$/i, () => ({ t: 'returnOwn', colors: null })],
+        [/^bolster (\d+)$/i, m => ({ t: 'bolster', n: +m[1] })],
+        [/^support (\d+)$/i, m => ({ t: 'support', n: +m[1] })],
+        [/^target creature deals damage to itself equal to its power$/i, () => ({ t: 'selfDmg', target: 'creature', good: false })],
+        [/^enchanted creature gains ([a-z ]+) until end of turn$/i, m => ({ t: 'hostKw', kw: splitKw(m[1]) })],
+        [/^regenerate target creature$/i, () => ({ t: 'regenTarget', target: 'creature', good: true })],
+        [/^its controller mills (\w+) cards$/i, m => ({ t: 'millCaster', n: num(m[1]) })],
+        [/^~ deals (\w+) damage to each attacking creature$/i, m => ({ t: 'dmgAttackers', n: num(m[1]) })],
+        [/^discard all the cards in your hand, then draw that many cards$/i, () => ({ t: 'discardDraw' })],
+        [/^target player shuffles their graveyard into their library$/i, () => ({ t: 'shuffleGy', target: 'player' })],
+        [/^sacrifice it unless you pay ((?:\{[^}]+\})+)$/i, m => ({ t: 'upkeepPay', cost: parseCost(m[1]) })],
+        [/^monstrosity (\d+)$/i, m => ({ t: 'monstrosity', n: +m[1] })],
         [/^(?:~|it) explores$/i, () => ({ t: 'exploreSelf' })],
         [/^return a (white|blue|black|red|green) or (white|blue|black|red|green) creature you control to its owner's hand$/i, m => ({ t: 'returnOwn', colors: [SW_COLORS[m[1].toLowerCase()], SW_COLORS[m[2].toLowerCase()]] })]
     ],
     triggers: [
+        [/^Whenever ~ becomes blocked by a creature, (.+)$/, () => ({ ev: 'blocked' })],
+        [/^Whenever ~ becomes blocked, it gets \+(\d+)\/\+(\d+) until end of turn for each creature blocking it$/, () => ({ ev: 'blocked' })],
         [/^Whenever ~ or another Ally you control enters, (.+)$/, () => ({ ev: 'enters', fn: 'allyEnters' })],
         [/^Whenever you cast a spell that targets ~, (.+)$/, () => ({ ev: 'cast', fn: 'targetsMe', who: 'any', filter: 'any' })],
         [/^When(?:ever)? ~ is turned face up, (.+)$/, () => ({ ev: 'turnedUp', fn: 'selfTurned' })]
@@ -53,6 +68,15 @@ registerRules({
             if (/^Umbra armor$/.test(line)) { R.umbra = true; return true; }
             if (/^If ~ is in your opening hand, you may begin the game with it on the battlefield\.$/.test(line)) { R.leyline = true; return true; }
             if ((m = line.match(/^Squad ((?:\{[^}]+\})+)$/))) { R.multikicker = parseCost(m[1]); R.trig.push({ ev: 'selfEnters', effects: [{ t: 'squadCopies' }] }); return true; }
+            if (/^~ can't be blocked by artifact creatures\.$/.test(line)) { (R.blockFns = R.blockFns || []).push('notArtifact'); return true; }
+            if ((m = line.match(/^(White|Blue|Black|Red|Green) creatures get \+(\d+)\/\+(\d+)\.$/))) { R.statics.push({ global: true, fn: 'c_' + SW_COLORS[m[1].toLowerCase()], p: +m[2], q: +m[3], kw: [] }); return true; }
+            if ((m = line.match(/^Other creatures you control with flying get \+(\d+)\/\+(\d+)\.$/))) { R.statics.push({ other: true, fn: 'flying', p: +m[1], q: +m[2], kw: [] }); return true; }
+            if ((m = line.match(/^If ~ was kicked, it enters with a \+1\/\+1 counter on it\.$/))) { R.kickCounters = 1; return true; }
+            if (/^Skip your draw step\.$/.test(line)) { R.skipDraw = true; return true; }
+            if (/^Melee$/.test(line)) { R.trig.push({ ev: 'attacks', effects: [{ t: 'pump', p: 1, q: 1, kw: [], target: 'self', good: true }] }); return true; }
+            if ((m = line.match(/^When ~ enters, sacrifice it unless you pay ((?:\{[^}]+\})+)\.$/))) { R.etb.push({ t: 'upkeepPay', cost: parseCost(m[1]) }); return true; }
+            if ((m = line.match(/^Whenever ~ becomes blocked, it gets \+(\d+)\/\+(\d+) until end of turn for each creature blocking it\.$/))) { R.trig.push({ ev: 'blocked', effects: [{ t: 'rampage', n: +m[1], all: true }] }); return true; }
+            if (/^Start your engines!$/.test(line)) { R.startEngines = true; return true; } // approximation: speed isn't tracked, so cards that only start an engine play as written
             if ((m = line.match(/^Plot ((?:\{[^}]+\})+)$/))) { R.plot = parseCost(m[1]); return true; }
             if ((m = line.match(/^Disturb ((?:\{[^}]+\})+)$/))) { R.disturb = parseCost(m[1]); return true; }
             if (/^Retrace$/.test(line)) { R.retrace = true; return true; }

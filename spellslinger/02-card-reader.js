@@ -518,6 +518,7 @@ function rulesFor(card) {
     text = text.replace(/^((?:\{[^}]+\})+), \{T\} or ((?:\{[^}]+\})+), \{T\}: (.+)$/gm, '$1, {T}: $3\n$2, {T}: $3'); // Mirrodin's Shards
     // Sweep round 1 (2026-10-13): "{T}: Add ... ~ doesn't untap during your next untap step." keeps the mana line and marks the land
     text = text.replace(/^(\{T\}: Add [^\n]*?)\. ~ doesn't untap during your next untap step\.[ \t]*$/gm, '$1.\nLOCKTAP');
+    text = text.replace(/ This effect doesn't remove ~\./g, '');
     // Sweep round 2 (2026-10-14): more keywords written out as the sentences they stand for
     text = text.replace(/^Blitz ((?:\{[^}]+\})+)[ \t]*$/gm, 'Blitz—$1')
         .replace(/^Embalm ((?:\{[^}]+\})+)[ \t]*$/gm, '$1, Exile ~ from your graveyard: Create a token that\'s a copy of ~, except it\'s a white Zombie in addition to its other types and it has no mana cost. Activate only as a sorcery.')

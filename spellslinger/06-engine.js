@@ -3806,7 +3806,7 @@ async function beginTurn() {
     if (G.over) return;
     await upkeepGyActs(P);
     if (G.over) return;
-    const skipDraw = P.skip && P.skip.turn === G.turn && P.skip.what === 'draw';
+    const skipDraw = (P.skip && P.skip.turn === G.turn && P.skip.what === 'draw') || P.bf.some(x => Rx(x).skipDraw && !lostAbilities(x));
     if (!G.firstTurn && !skipDraw) { G.inDrawStep = true; drawCards(P, 1, P.i === 1); G.inDrawStep = false; }
     G.firstTurn = false;
     // Sagas get a lore counter at the start of the precombat main phase (714.3b)

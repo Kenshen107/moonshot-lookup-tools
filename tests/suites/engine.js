@@ -7,7 +7,7 @@ const NAMES = ['Mountain', 'Grizzly Bears', 'Hill Giant', 'Shivan Dragon', 'Ligh
     'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger',
     'Coercion', 'Incinerate', 'Path of Peace', 'Chastise', 'Condemn', 'Jagged Lightning', 'Kiss of the Amesha', 'Sleight of Hand', 'Telling Time', 'Ancestral Memories', 'Blessed Reversal', 'Whisk Away',
     'Furnace of Rath', "Urza's Armor", 'Cho-Manno, Revolutionary', 'Vigor', 'Pariah', 'Gravebane Zombie', 'Angelic Arbiter', 'Mole Worms', 'Deathgazer', 'Lure', 'Oppressive Rays', 'Angel of Vitality', "Hunter's Insight", 'Call of the Wild', 'Fertile Ground', 'Forest', 'Curfew', 'Esper Battlemage', 'Goblin Arsonist', 'Ascendant Evincar',
-    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate', 'Capsize', "Evincar's Justice", 'Blastoderm', 'Aven Riftwatcher', 'Nezumi Ronin', 'Burr Grafter', 'Benalish Cavalry', 'Fiery Temper', 'Wolfbriar Elemental', 'Lightning Berserker', 'Mountain', 'Blade Sliver', 'Ashenmoor Liege', 'Acolyte of the Inferno', 'Arcbound Bruiser', 'Blade Instructor', 'Cavern Harpy', 'Drifter il-Dal', 'Aleatory', 'Dauthi Horror', 'Indebted Spirit', 'Cloaked Cadet', 'Aerathi Berserker', 'Dandân', 'Island', 'Rift Bolt', 'Ancestral Vision', 'Exalted Angel', 'Aerie Bowmasters', 'Plains', 'Forest', 'Ninja of the Deep Hours', 'Island', 'Syphon Life', 'Baithook Angler', 'Aloe Alchemist', 'Bear Umbra', 'Dimir House Guard', 'Angel of Sanctions', 'Bloodspore Thrinax', 'Arno Dorian', 'Bojuka Brigand', 'Cateran Brute', 'Thriving Grubs'];
+    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate', 'Capsize', "Evincar's Justice", 'Blastoderm', 'Aven Riftwatcher', 'Nezumi Ronin', 'Burr Grafter', 'Benalish Cavalry', 'Fiery Temper', 'Wolfbriar Elemental', 'Lightning Berserker', 'Mountain', 'Blade Sliver', 'Ashenmoor Liege', 'Acolyte of the Inferno', 'Arcbound Bruiser', 'Blade Instructor', 'Cavern Harpy', 'Drifter il-Dal', 'Aleatory', 'Dauthi Horror', 'Indebted Spirit', 'Cloaked Cadet', 'Aerathi Berserker', 'Dandân', 'Island', 'Rift Bolt', 'Ancestral Vision', 'Exalted Angel', 'Aerie Bowmasters', 'Plains', 'Forest', 'Ninja of the Deep Hours', 'Island', 'Syphon Life', 'Baithook Angler', 'Aloe Alchemist', 'Bear Umbra', 'Dimir House Guard', 'Angel of Sanctions', 'Bloodspore Thrinax', 'Arno Dorian', 'Bojuka Brigand', 'Cateran Brute', 'Thriving Grubs', 'Aven Tactician', 'Nessian Asp', "Crosis's Catacombs", 'Rabid Elephant', 'Marrow Shards', 'Tolarian Winds'];
 
 const BODY = async function (NAMES, ONLY, SKIP) {
     const startTurnUntapForTest = P => { P.bf.forEach(o => { if (o.skipUntap) o.skipUntap = false; else if (!has(o, 'nountap') && !(o.lockedBy && onBf(o.lockedBy) && onBf(o.lockedBy).tapped) && !(Rx(o).mayNotUntap && o.tapped && allPerms().some(l => l.lockedBy === o.uid))) o.tapped = false; }); };
@@ -462,6 +462,26 @@ const BODY = async function (NAMES, ONLY, SKIP) {
         // Ally trigger, tutor
         ok('Bojuka Brigand reads an Ally-enters trigger', Rx(put(P0, 'Bojuka Brigand')).trig.some(t => t.fn === 'allyEnters'));
         ok('Cateran Brute reads its Mercenary search', Rx(put(P0, 'Cateran Brute')).acts.length > 0);
+        P0.isAI = false;
+    });
+    await check('sweep round 3', async () => {
+        P0.isAI = true; G.active = 0; G.phase = 'main1'; G.stack = []; P0.hand = []; P0.gy = [];
+        const a = put(P0, 'Grizzly Bears'), b = put(P0, 'Hill Giant');
+        await applyEffect(P0, { t: 'bolster', n: 2 }, null, a);
+        ok('bolster puts counters on the creature with least toughness', a.counters === 2 && b.counters === 0, [a.counters, b.counters]);
+        const na = put(P0, 'Nessian Asp'); await applyEffect(P0, { t: 'monstrosity', n: 4 }, null, na); await applyEffect(P0, { t: 'monstrosity', n: 4 }, null, na);
+        ok('monstrosity works once', na.counters === 4 && na.monstrous, na.counters);
+        const re = put(P0, 'Rabid Elephant'); G.blocks = { [re.uid]: [901, 902, 903] };
+        await applyEffect(P0, { t: 'rampage', n: 1, all: true }, null, re);
+        ok('"+1/+1 for each creature blocking it": 3 blockers = +3/+3', re.tp === 3 && re.tq === 3, [re.tp, re.tq]); G.blocks = {};
+        const g = put(P0, 'Hill Giant'); await applyEffect(P0, { t: 'selfDmg' }, { o: g }, makeObj(C['Aven Tactician'], 0)); sba();
+        ok('a creature that deals damage to itself equal to its power dies (3 damage on a 3/3)', !onBf(g.uid));
+        const lc = put(P0, 'Crosis\'s Catacombs'); P0.bf.forEach(x => { if (x !== lc && /Land/.test(x.card.type)) pull(P0.bf, x); });
+        await applyEffect(P0, { t: 'lairBounce' }, null, lc);
+        ok('a Lair land with no other land is sacrificed', !onBf(lc.uid));
+        P0.hand = [makeObj(C['Mountain'], 0), makeObj(C['Mountain'], 0)]; P0.library = [makeObj(C['Hill Giant'], 0), makeObj(C['Hill Giant'], 0), makeObj(C['Hill Giant'], 0)];
+        await applyEffect(P0, { t: 'discardDraw' }, null, makeObj(C['Tolarian Winds'], 0));
+        ok('discard all, draw that many', P0.hand.length === 2 && P0.hand.every(x => x.card.name === 'Hill Giant') && P0.gy.length >= 2, P0.hand.map(x => x.card.name));
         P0.isAI = false;
     });
     await check('precon round 2: spells', async () => {

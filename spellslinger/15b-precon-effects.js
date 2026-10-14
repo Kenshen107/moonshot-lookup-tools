@@ -209,6 +209,37 @@ async function preconEffect(P, e, t, src, O, name) {
             break;
         }
         case 'squadCopies': { if (!onBf(src.uid)) break; for (let k = 0; k < (src.kickN || 0); k++) tokenCopyOf(P, src.front || src.card); break; }
+        case 'lairBounce': {
+            const lands = P.bf.filter(x => /\bLand\b/.test(x.card.type) && !/\bLair\b/.test(x.card.type) && x !== src);
+            const pick = lands.length ? (P.isAI ? lands.slice().sort((a, b) => (b.tapped - a.tapped) || (isBasic(b.card) - isBasic(a.card)))[0] : await pickCard(P, lands, `${name}: return a non-Lair land to hand, or skip to sacrifice it`)) : null;
+            if (pick) { leaveBattlefield(pick, 'hand'); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${pick.card.name} to hand.`); }
+            else if (onBf(src.uid)) { log(`${src.card.name} is sacrificed.`); fire('sacrificed', { o: src }); dieOrLeave(src, 'gy'); }
+            break;
+        }
+        case 'bolster': {
+            const cs = P.bf.filter(isCreature);
+            if (!cs.length) break;
+            const low = Math.min(...cs.map(x => tou(x)));
+            const pool = cs.filter(x => tou(x) === low);
+            const pick = pool.length === 1 || P.isAI ? pool.sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${name}: bolster ${e.n} - choose among your creatures with least toughness`, { required: true });
+            if (pick) { const got = putCounters(pick, e.n, P); log(`${pick.card.name} gets ${got} +1/+1 counter${got === 1 ? '' : 's'} (bolster).`); }
+            break;
+        }
+        case 'support': {
+            let pool = P.bf.filter(x => isCreature(x) && x !== src);
+            for (let k = 0; k < e.n && pool.length; k++) {
+                const pick = P.isAI ? pool.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${name}: support ${e.n} - put a +1/+1 counter on another creature (${k + 1} of ${e.n}; skip to stop)`);
+                if (!pick) break;
+                putCounters(pick, 1, P); log(`${pick.card.name} gets a +1/+1 counter (support).`); pool = pool.filter(x => x !== pick);
+            }
+            break;
+        }
+        case 'selfDmg': { const x = t && t.o; if (!x || !onBf(x.uid)) break; damage(x, Math.max(0, pow(x)), x); log(`${x.card.name} deals ${Math.max(0, pow(x))} damage to itself.`); break; }
+        case 'hostKw': { const h = src.attachedTo && onBf(src.attachedTo); if (h) { h.tkw.push(...e.kw); log(`${h.card.name} gains ${e.kw.join(', ')} until end of turn.`); } break; }
+        case 'dmgAttackers': { (G.attackers || []).map(onBf).filter(Boolean).forEach(a => damage(a, e.n, src)); log(`${name} deals ${e.n} damage to each attacking creature.`); break; }
+        case 'discardDraw': { const n = P.hand.length; P.hand.splice(0).forEach(c => { P.gy.push(c); c.discardTurn = G.turn; }); drawCards(P, n); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${n} cards and ${you(P) ? 'draw' : 'draws'} ${n}.`); break; }
+        case 'shuffleGy': { const X = (t && t.p) || P; X.library.push(...X.gy.splice(0)); shuffle(X.library); log(`${X.name} ${you(X) ? 'shuffle' : 'shuffles'} their graveyard into their library.`); break; }
+        case 'monstrosity': { if (!onBf(src.uid) || src.monstrous) break; src.monstrous = true; const got = putCounters(src, e.n, P); log(`${src.card.name} becomes monstrous (${got} +1/+1 counters).`); break; }
         case 'delayedDraw': { (G.delayed = G.delayed || []).push({ at: 'upkeep', own: false, P, after: G.turn, effects: [{ t: 'draw', n: e.n }], src, label: `${name}: ${P.name} draws ${e.n === 1 ? 'a card' : e.n + ' cards'} at the beginning of the next upkeep.` }); log(`${name}: you'll draw at the beginning of the next turn's upkeep.`); break; }
         case 'renown': { if (!onBf(src.uid) || src.renowned) break; src.renowned = true; const got = putCounters(src, e.n, P); log(`${src.card.name} becomes renowned (${got} +1/+1 counter${got === 1 ? '' : 's'}).`); break; }
         case 'modular': {
@@ -229,7 +260,7 @@ async function preconEffect(P, e, t, src, O, name) {
         }
         case 'rampage': {
             if (!onBf(src.uid)) break;
-            const extra = Math.max(0, (G.blocks[src.uid] || []).length - 1);
+            const extra = Math.max(0, (G.blocks[src.uid] || []).length - (e.all ? 0 : 1));
             if (extra) { src.tp += e.n * extra; src.tq += e.n * extra; log(`${src.card.name} gets +${e.n * extra}/+${e.n * extra} (rampage ${e.n}).`); }
             break;
         }
@@ -254,7 +285,7 @@ async function preconEffect(P, e, t, src, O, name) {
             break;
         }
         case 'returnOwn': {
-            const pool = P.bf.filter(x => isCreature(x) && (x.card.colors || []).some(c => e.colors.includes(c)));
+            const pool = P.bf.filter(x => isCreature(x) && (!e.colors || (x.card.colors || []).some(c => e.colors.includes(c))));
             if (!pool.length) break;
             const pick = P.isAI ? pool.slice().sort((a, b) => creatureValue(a) - creatureValue(b))[0] : await pickCard(P, pool, `${name}: return a creature you control to its owner's hand`, { required: true });
             if (pick) { log(`${pick.card.name} returns to its owner's hand.`); leaveBattlefield(pick, 'hand'); }
@@ -354,6 +385,8 @@ async function preconEffect(P, e, t, src, O, name) {
 function isCreatureCard(card) { return /\bCreature\b/.test(card.type || ''); }
 
 // Trigger conditions used by the precon rounds (TRIG_FN is read by trigMatches in 15-rules-conditions.js)
+STATIC_FN.flying = o => has(o, 'flying');
+BLOCK_FN.notArtifact = b => !/\bArtifact\b/.test(b.card.type);
 Object.assign(TRIG_FN, {
     anotherPow: (o, ctx, tr) => !!ctx.o && ctx.o !== o && ctx.o.owner === o.owner && isCreature(ctx.o) && pow(ctx.o) >= (tr.minPow || 0),
     oppAttacks: (o, ctx) => G.active !== o.owner && (ctx.list || []).some(x => x.owner !== o.owner),
