@@ -10,6 +10,7 @@ const MOODS = {
     angry: { emoji: '😠', name: 'angry' }, annoyed: { emoji: '😒', name: 'annoyed' }, worried: { emoji: '😰', name: 'worried' },
     smug: { emoji: '😏', name: 'confident' }, nervous: { emoji: '😬', name: 'nervous' }, scheming: { emoji: '🤔', name: 'plotting' },
     determined: { emoji: '😤', name: 'determined' }, calm: { emoji: '😌', name: 'calm' }, cheerful: { emoji: '😄', name: 'cheerful' }, nerdy: { emoji: '🤓', name: 'focused' },
+    impressed: { emoji: '🤩', name: 'impressed' }, salty: { emoji: '🧂', name: 'salty' },
     out: { emoji: '💀', name: 'out of the game' }
 };
 // What each playstyle feels when nothing is going on
@@ -32,13 +33,14 @@ function updateArchenemy() {
         const A = G.players[G.arch];
         const caller = live.find(P => P !== A && P.isAI);
         log(`${A.name} is pulling ahead - the table starts to focus on them.`);
-        if (caller) botSay(caller, 'worried', `${you(A) ? 'You are' : `${A.name.split(',')[0]} is`} getting out of hand. Somebody has to deal with that.`);
+        if (caller) say(caller, 'archenemy', 'worried', { foe: you(A) ? 'You' : who(A) });
     }
 }
 
 // ---- Moods ----
 function botMood(P) {
     if (P.out) return { mood: 'out', why: 'knocked out' };
+    if (typeof saltyMood === 'function' && saltyMood(P)) return { mood: 'salty', why: `${who(P)} is salty (${Math.round(P.salt)}): the table has been rough on them` };
     const st = styleOf(P);
     const foeList = foes(P);
     const incoming = foeList.flatMap(F => F.bf.filter(isCreature)).reduce((a, o) => a + Math.max(0, pow(o)), 0);
@@ -65,7 +67,7 @@ function botSay(P, mood, text, key) {
     talkSeen.set(k, G.turn);
     pol().talk++;
     const m = MOODS[mood] || MOODS.calm;
-    G.log.push(`${m.emoji} ${P.name.split(',')[0]}: "${text}"`);
+    G.log.push(`${m.emoji} ${who(P)}: "${text}"`);
     if (G.log.length > 80) G.log.shift();
     if (!talkOn()) return;
     P.lastMood = mood;
@@ -77,7 +79,7 @@ function showBubble(P, mood, text) {
     const m = MOODS[mood] || MOODS.calm;
     const el = document.createElement('div');
     el.className = 'talk-bubble';
-    el.innerHTML = `<span class="tb-emoji" aria-hidden="true">${m.emoji}</span><span class="tb-body"><strong>${esc(P.name.split(',')[0])}</strong> <em>is feeling ${esc(m.name)}</em><br>${esc(text)}</span>`;
+    el.innerHTML = `<span class="tb-emoji" aria-hidden="true">${m.emoji}</span><span class="tb-body"><strong>${esc(who(P))}</strong> <em>is feeling ${esc(m.name)}</em><br>${esc(text)}</span>`;
     el.onclick = () => el.remove();
     host.appendChild(el);
     while (host.children.length > 3) host.firstChild.remove();
@@ -91,13 +93,7 @@ function moodCheck(P) {
     const before = P.mood;
     P.mood = mood;
     if (mood === before || mood === 'calm' || mood === STYLE_MOOD[P.aiStyle]) return;
-    const LINES = {
-        worried: ['I\'m in trouble here.', 'This is getting dangerous for me.'],
-        angry: ['I won\'t forget that.', 'You keep coming after me. Noted.'],
-        smug: ['Looks like somebody else is the problem now.', 'I\'m happy to watch this.']
-    };
-    const a = LINES[mood]; if (!a) return;
-    botSay(P, mood, a[(G.turn + P.i) % a.length], `mood-${mood}`);
+    if (['worried', 'angry', 'smug'].includes(mood)) say(P, mood, mood, {}, `mood-${mood}`);
 }
 // Your attack, a bot's answer
 function politicsAttacked(att, def, n) {
@@ -105,22 +101,26 @@ function politicsAttacked(att, def, n) {
     if (att && def) { const h = pol().hits; const k = `${att.i}>${def.i}`; h[k] = (h[k] || 0) + 1; }
     if (!def || !def.isAI || def.out || att === def) return;
     const g = (def.grudge && def.grudge[att.i]) || 0;
-    const who = you(att) ? 'you' : att.name.split(',')[0];
+    const foe = you(att) ? 'you' : who(att);
     if (def._betrayedTurn === G.turn) return; // the betrayal line already said it
-    if (g >= 6) botSay(def, 'angry', `That's twice now, ${who}. I'm remembering this.`, `hit${att.i}`);
-    else botSay(def, 'annoyed', `Really, ${who}? Fine. We'll see how that goes.`, `hit${att.i}`);
+    if (g >= 6) say(def, 'hitAgain', 'angry', { foe }, `hit${att.i}`);
+    else say(def, 'hit', 'annoyed', { foe, n: n || '' }, `hit${att.i}`);
 }
-function politicsTargeted(P, victim) {
+function politicsTargeted(P, victim, obj) {
     if (!victim || victim === P || victim.out) return;
     dealsOnTarget(P, victim);
+    if (typeof restraintOnTarget === 'function') restraintOnTarget(P, victim, obj);
     victim.grudge = victim.grudge || {};
     victim.grudge[P.i] = (victim.grudge[P.i] || 0) + 2;
-    if (victim.isAI) botSay(victim, 'annoyed', `${you(P) ? 'You' : P.name.split(',')[0]} just went after my stuff.`, `spell${P.i}`);
+    banterTargeted(P, victim);
+    if (victim.isAI) say(victim, 'spellAtMine', 'annoyed', { foe: you(P) ? 'you' : who(P) }, `spell${P.i}`);
 }
 // Called at the start of every turn in a pod
 function politicsTick(P) {
     if (!G || G.players.length < 3) return;
     updateArchenemy();
+    banterTurnStart(P);
+    if (typeof infoTick === 'function') infoTick(P);
     G.players.forEach(moodCheck);
     if (G.turn >= 12) { const live = G.players.filter(X => !X.out).sort((a, b) => podThreat(b) - podThreat(a)); live.forEach((X, r) => { if (r === live.length - 1 && live.length > 2) pol().worst[X.i] = G.turn; }); }
 }
@@ -146,7 +146,7 @@ const hasPeace = (i, j) => !!dealBetween(i, j, 'peace');
 const hasSpare = (i, j) => !!dealBetween(i, j, 'spare');
 // The third player a bot has promised to attack with a pact
 function pactTarget(P) {
-    const d = (G.deals || []).find(x => !x.over && x.type === 'pact' && (x.a === P.i || x.b === P.i) && x.x !== P.i && G.players[x.x] && !G.players[x.x].out);
+    const d = (G.deals || []).find(x => !x.over && (x.type === 'pact' ? (x.a === P.i || x.b === P.i) : x.type === 'bounty' && x.b === P.i) && x.x !== P.i && G.players[x.x] && !G.players[x.x].out);
     return d ? G.players[d.x] : null;
 }
 const nm = P => (you(P) ? 'you' : P.name.split(',')[0]);
@@ -159,6 +159,7 @@ function dealScore(bot, from, type, x) {
     const mean = live.reduce((a, P) => a + podThreat(P), 0) / live.length;
     const mood = botMood(bot).mood;
     // Burned twice (two broken deals): no more deals, from anyone who was betrayed
+    if (dealsRefused(bot)) return { score: -99, parts: {}, reason: "I'm too angry to make deals right now." };
     if (bot.trust && bot.trust[from.i] <= -6) return { score: -99, parts: {}, reason: "You've broken your word twice. No more deals." };
     let s = 1 + 2 * trust - grudge * 0.4;
     const parts = { trust: 2 * trust, grudge: -grudge * 0.4 };
@@ -183,11 +184,14 @@ function dealScore(bot, from, type, x) {
     return { score: s, parts, reason };
 }
 
-function makeDeal(a, b, type, x) {
-    const d = { type, a: a.i, b: b.i, x: x === undefined ? null : x, owner: a.i, turn: G.turn, over: false };
+// opts: { len: how many of the maker's turns it lasts (default 1), extra: more fields on the deal (bounty progress, alliance flag) }
+function makeDeal(a, b, type, x, opts = {}) {
+    const d = { type, a: a.i, b: b.i, x: x === undefined ? null : x, owner: a.i, turn: G.turn, over: false, left: opts.len || 1, ...(opts.extra || {}) };
     (G.deals = G.deals || []).push(d);
     dealStats().made++;
-    log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make a ${DEAL_TYPES[type].name.toLowerCase()} deal${type === 'pact' ? ` against ${G.players[x].name.split(',')[0]}` : ''} (until ${a.name.split(',')[0]}'s next turn).`);
+    { const b = dealStats().by = dealStats().by || {}; b[type] = (b[type] || 0) + 1; }
+    const until = d.left > 1 ? `for ${d.left} of ${nm(a)}${you(a) ? 'r' : "'s"} turns` : `until ${nm(a)}${you(a) ? 'r' : "'s"} next turn`;
+    log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make a ${d.alliance ? 'alliance ' : ''}${DEAL_TYPES[type].name.toLowerCase()} deal${['pact', 'bounty'].includes(type) ? ` against ${G.players[x].name.split(',')[0]}` : ''} (${until}).`);
     return d;
 }
 // `from` proposes to `to`. A bot answers at once; the result is { ok, reason }.
@@ -197,30 +201,39 @@ function proposeDeal(from, to, type, x) {
     const r = dealScore(to, from, type, x);
     if (r.score >= 1) {
         makeDeal(from, to, type, x);
-        botSay(to, 'calm', `Deal. ${type === 'peace' ? "I won't attack you" : type === 'spare' ? "I'll leave your permanents alone" : `We'll go after ${nm(G.players[x])} together`} until ${from.i === 0 ? 'your' : `${nm(from)}'s`} next turn.`, null);
+        if (type === 'peace') say(to, 'peaceYes', 'calm', { foe: nm(from) }, null);
+        else botSay(to, 'calm', `Deal. ${type === 'peace' ? "I won't attack you" : type === 'spare' ? "I'll leave your permanents alone" : `We'll go after ${nm(G.players[x])} together`} until ${from.i === 0 ? 'your' : `${nm(from)}'s`} next turn.`, null);
         return { ok: true, reason: '' };
     }
     dealStats().declined++;
-    botSay(to, 'annoyed', r.reason, null);
+    botSay(to, 'annoyed', `${r.reason}`, null);
     return { ok: false, reason: r.reason };
 }
 function breakDeal(d, by, why) {
     if (d.over) return;
     d.over = true; d.broken = by;
     dealStats().broken++;
+    { const b = dealStats().brokenBy = dealStats().brokenBy || {}; b[d.type] = (b[d.type] || 0) + 1; }
     const other = G.players[d.a === by ? d.b : d.a], culprit = G.players[by];
     G.rep = G.rep || {}; G.rep[by] = (G.rep[by] || 0) - 1;
     other.trust = other.trust || {}; other.trust[by] = (other.trust[by] || 0) - 3;
     other.grudge = other.grudge || {}; other.grudge[by] = (other.grudge[by] || 0) + 4;
     log(`💔 ${nm(culprit) === 'you' ? 'You break' : `${nm(culprit)} breaks`} the ${DEAL_TYPES[d.type].name.toLowerCase()} deal with ${nm(other) === 'you' ? 'you' : nm(other)}${why ? ` (${why})` : ''}.`);
     other._betrayedTurn = G.turn;
-    if (other.isAI) botSay(other, 'angry', `You gave me your word, ${nm(culprit)}. I won't forget that.`, `betray${by}`);
+    saltAdd(other, culprit, 'betray', 3, { quiet: true });
+    if (typeof gossip === 'function') gossip(culprit, other);
+    (G.deals || []).filter(x => x !== d && !x.over && x.alliance && ((x.a === d.a && x.b === d.b) || (x.a === d.b && x.b === d.a))).forEach(x => { x.over = true; }); // the other half of the alliance ends with it
+    if (d.alliance) { other.trust[by] -= 2; G.rep[by] = (G.rep[by] || 0) - 1; log('💔 An alliance is broken: the whole table notices.'); }
+    if (other.isAI) say(other, 'betrayed', 'angry', { foe: you(culprit) ? 'you' : who(culprit) }, `betray${by}`);
+    if (culprit.isAI) say(culprit, 'betrayer', 'smug', { foe: you(other) ? 'you' : who(other) }, `betrayer${by}`);
 }
 // A deal runs out when the player who made it starts their next turn
 function expireDeals(P) {
     (G.deals || []).forEach(d => {
         if (d.over || d.owner !== P.i || G.turn <= d.turn) return;
+        if (d.left > 1) { d.left--; d.turn = G.turn; return; } // a longer deal runs another round
         d.over = true;
+        if (typeof dealExpired === 'function' && dealExpired(d)) return; // bounties and the like say their own ending
         dealStats().kept++;
         [d.a, d.b].forEach(i => { const o = G.players[i === d.a ? d.b : d.a]; if (o) { G.players[i].trust = G.players[i].trust || {}; G.players[i].trust[o.i] = (G.players[i].trust[o.i] || 0) + 1; } });
         const A = G.players[d.a], B = G.players[d.b];
@@ -245,6 +258,7 @@ async function dealsTick(P) {
     if (!G || G.players.length < 3 || P.out) return;
     expireDeals(P);
     if (!P.isAI || P.aiLevel === 'easy') return;
+    if (typeof moreOffers === 'function') await moreOffers(P);
     const m = botMood(P).mood;
     const live = foes(P).filter(F => !hasPeace(P.i, F.i));
     if (!live.length) return;
@@ -257,11 +271,11 @@ async function dealsTick(P) {
     (G.dealAsk = G.dealAsk || {})[P.i] = G.turn;
     if (!ask.isAI && talkOn()) {
         const yes = await askYes(ask, `${P.name.split(',')[0]} (${(MOODS[m] || MOODS.calm).emoji} ${(MOODS[m] || MOODS.calm).name}) offers peace: neither of you attacks the other until their next turn. Accept? You can still change your mind, but a broken deal is remembered.`, { card: P.command[0] && P.command[0].card, yes: 'Accept the deal', no: 'No deal' });
-        if (yes) { makeDeal(P, ask, 'peace'); botSay(P, 'calm', "Good. Let's both watch the others.", null); }
-        else { dealStats().declined++; botSay(P, 'annoyed', 'Your loss.', null); }
+        if (yes) { makeDeal(P, ask, 'peace'); say(P, 'peaceYes', 'calm', { foe: 'you' }, null); }
+        else { dealStats().declined++; say(P, 'peaceNo', 'annoyed', { foe: 'you' }, null); }
     } else {
         const r = dealScore(ask, P, 'peace');
-        if (r.score >= 1) { makeDeal(P, ask, 'peace'); if (ask.isAI) botSay(ask, 'calm', `Fine, ${nm(P)}. Peace for now.`, null); }
+        if (r.score >= 1) { makeDeal(P, ask, 'peace'); if (ask.isAI) say(ask, 'peaceYes', 'calm', { foe: nm(P) }, null); }
         else dealStats().declined++;
     }
 }
@@ -281,7 +295,7 @@ function dealDialog(step, to, type) {
         ${active ? `<p><b>Active deals</b></p><ul>${active}</ul>` : ''}
         ${bots.map(B => `<div class="panel" style="margin:8px 0;"><div class="row"><b>${(MOODS[botMood(B).mood] || MOODS.calm).emoji} ${esc(nm(B))}</b> <span class="note">${esc(styleOf(B) ? styleOf(B).name : '')} · feeling ${esc((MOODS[botMood(B).mood] || MOODS.calm).name)}</span></div>
             <div class="row" style="flex-wrap:wrap; gap:6px; margin-top:6px;">${['peace', 'spare'].map(t => `<button class="btn small" title="${esc(DEAL_TYPES[t].desc)}" onclick="dealAsk(${B.i}, '${t}')">${DEAL_TYPES[t].emoji} ${DEAL_TYPES[t].name}</button>`).join('')}
-            <button class="btn small" title="${esc(DEAL_TYPES.pact.desc)}" onclick="dealDialog('target', ${B.i})">${DEAL_TYPES.pact.emoji} ${DEAL_TYPES.pact.name}…</button></div></div>`).join('')}
+            <button class="btn small" title="${esc(DEAL_TYPES.pact.desc)}" onclick="dealDialog('target', ${B.i})">${DEAL_TYPES.pact.emoji} ${DEAL_TYPES.pact.name}…</button>${typeof moreDealsHTML === 'function' ? moreDealsHTML(B) : ''}</div></div>`).join('')}
         <div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
 }
 function dealAsk(i, type, x) {

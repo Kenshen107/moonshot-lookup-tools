@@ -823,7 +823,7 @@ async function humanActivate(uid, i) {
     const a = actsOf(o)[i];
     const responding = G.mode && G.mode.type === 'respond' ? G.mode : null;
     if (!a || !canActivate(me(), o, a)) { toast('You can\'t activate that right now.'); return; }
-    if (responding) { G.mode = null; G.priority = null; const ok = await activate(me(), o, a); responding.resolve(ok); return; }
+    if (responding) { G.mode = null; G.priority = me().i; const ok = await activate(me(), o, a); G.priority = null; responding.resolve(ok); return; } // keep priority while paying: activate() checks the timing again
     const wasBusy = G.busy;
     G.busy = true;
     await activate(me(), o, a);

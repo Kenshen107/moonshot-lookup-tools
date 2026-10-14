@@ -177,7 +177,7 @@ const SETUP = async function (n) {
             T.put(P[0], C['Grizzly Bears']);
             G.active = 0; G.phase = 'main1'; G.focusPick = null;
             renderGame(); fitTable();
-            const chips = [...document.querySelectorAll('.pod-chip')].filter(c => !/Deals/.test(c.textContent));
+            const chips = [...document.querySelectorAll('.pod-chip')].filter(c => !/Deals|Ask|🧂/.test(c.textContent));
             const first = foe().i;
             podFocus(3);
             const after = foe().i;

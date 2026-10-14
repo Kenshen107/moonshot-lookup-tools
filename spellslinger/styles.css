@@ -904,3 +904,8 @@
 .about ul { margin: 6px 0 2px 18px; font-size: 0.85rem; line-height: 1.5; color: var(--text-soft); }
 .about .about-credit { font-size: 0.85rem; color: var(--text-secondary); }
 .about .actions { text-align: center; margin-top: 14px; }
+.pod-chip.meters { cursor: default; font-size: 0.85em; }
+.talk-report { margin-top: 6px; }
+.reli { font-size: 0.72em; padding: 0 4px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.reli.ok { color: var(--color-success); }
+.reli.bad { color: var(--color-warning); }

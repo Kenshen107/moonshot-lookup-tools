@@ -108,10 +108,10 @@ function podStripHTML() {
         const dmg = G.format === 'commander' ? (v.cmdBy[X.i] || 0) : 0;
         return `<button type="button" class="pod-chip${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
             title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${X.hand.length} cards in hand, ${X.bf.filter(isCreature).length} creatures${dmg ? `, you have taken ${dmg} commander damage from them` : ''}">
-            <b>${X.out ? '💀' : turn ? '▶' : styleOf(X) ? styleOf(X).emoji : '🤖'} ${esc(X.name.split(',')[0])}</b><span class="mood" title="${esc(X.name.split(',')[0])} is feeling ${esc(MOODS[botMood(X).mood].name)}: ${esc(botMood(X).why)}">${MOODS[botMood(X).mood].emoji}</span>${G.arch === X.i ? '<span title="The table is focusing on this player">🎯</span>' : ''}${styleOf(X) ? `<span class="note" title="${esc(styleOf(X).desc)}">${esc(styleOf(X).name)}</span>` : ''}<span>❤️ ${X.life}</span>${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}<span>✋ ${X.hand.length}</span><span>🛡 ${X.bf.filter(isCreature).length}</span>${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}</button>`;
+            <b>${X.out ? '💀' : turn ? '▶' : styleOf(X) ? styleOf(X).emoji : '🤖'} ${esc(who(X))}</b>${typeof reliTag === 'function' ? reliTag(X) : ''}<span class="mood" title="${esc(X.name.split(',')[0])} is feeling ${esc(MOODS[botMood(X).mood].name)}: ${esc(botMood(X).why)}">${MOODS[botMood(X).mood].emoji}</span>${G.arch === X.i ? '<span title="The table is focusing on this player">🎯</span>' : ''}${styleOf(X) ? `<span class="note" title="${esc(styleOf(X).desc)}">${esc(styleOf(X).name)}</span>` : ''}<span>❤️ ${X.life}</span>${(X.salt || 0) >= 3 ? `<span title="Salt level: how annoyed they are with the table">🧂${Math.round(X.salt)}</span>` : ''}${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}<span>✋ ${X.hand.length}</span><span>🛡 ${X.bf.filter(isCreature).length}</span>${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}</button>`;
     }).join('');
     const mine = dealsOf(v.i).length;
-    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<button type="button" class="pod-chip" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝 Deals</b>${mine ? `<span>${mine} active</span>` : ''}</button></div>`;
+    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<button type="button" class="pod-chip" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝 Deals</b>${mine ? `<span>${mine} active</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}<span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div>`;
 }
 function podFocus(i) { G.focusPick = i; renderGame(); }
 
@@ -140,6 +140,7 @@ function gameMenu() {
         <button class="btn" onclick="closeSheet(); playerSheet(0)">🧮 Your life & counters</button>
         <button class="btn" onclick="closeSheet(); playerSheet(1)">🧮 ${esc(foe().name)}'s life & counters</button>
         <div class="seg" role="group" aria-label="Paying mana" style="width:100%;"><button type="button" style="flex:1; padding:10px;" data-mm="manual" aria-pressed="${manaMode === 'manual'}" onclick="setManaMode('manual'); gameMenu()">🖐 Tap lands myself</button><button type="button" style="flex:1; padding:10px;" data-mm="auto" aria-pressed="${manaMode === 'auto'}" onclick="setManaMode('auto'); gameMenu()">⚡ Auto-pay</button></div>
+        <div class="seg" role="group" aria-label="Stops at the end of their turn" style="width:100%;"><button type="button" style="flex:1; padding:10px;" aria-pressed="${endStops === 'on'}" onclick="setEndStops('on'); gameMenu()" title="Ask me at the end of an opponent's turn when I can still cast an instant or use an ability">⏸ Ask at their end step</button><button type="button" style="flex:1; padding:10px;" aria-pressed="${endStops === 'off'}" onclick="setEndStops('off'); gameMenu()">⏩ Don't ask</button></div>
         <p class="note">${esc(foe().deckName)}${foe().source ? ` · ${esc(foe().source)}` : ''}</p>
         <button class="btn danger" onclick="closeSheet(); concede()">🏳️ Concede</button></div>`);
 }
@@ -326,6 +327,7 @@ function midControlsHTML() {
     }
     if (m && m.type === 'respond') {
         const it = m.item;
+        if (it.window) return `${phase}<span class="prompt">⏳ ${esc(it.name)}: cast an instant or activate an ability, or:</span><button class="btn primary" onclick="passPriority()">✔ Continue</button>`;
         return `${phase}<span class="prompt">↩️ ${esc(it.name)}${it.target ? ` (targeting ${esc(targetName(it.target))})` : ''} is on the stack. Cast an instant to respond, or:</span><button class="btn primary" onclick="passPriority()">✔ Let it resolve</button>`;
     }
     if (m && m.type === 'block') {

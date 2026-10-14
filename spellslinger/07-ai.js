@@ -11,7 +11,7 @@ function creatureValue(o) {
 
 function aiPickTarget(P, e, source, valid) {
     valid = valid || validTargets(P, e, source);
-    if (G.players.length > 2) valid = valid.filter(v => !(v.o && hasSpare(P.i, v.o.owner))); // a hands-off deal keeps spells off that player's permanents
+    if (G.players.length > 2) valid = valid.filter(v => !(v.o && (hasSpare(P.i, v.o.owner) || (v.o.isCommander && typeof hasRestraint === 'function' && hasRestraint(P.i, v.o.owner))))); // a hands-off deal keeps spells off that player's permanents; restraint keeps them off the commander
     const O = opp(P);
     const theirs = valid.filter(v => v.o && v.o.owner !== P.i);
     const mine = valid.filter(v => v.o && v.o.owner === P.i);
@@ -324,10 +324,11 @@ function stackThreat(item, P) {
 // or burn for lethal.
 function aiRespond(P, top) {
     if (top.P === P || P.aiLevel === 'easy') return null;
+    const noCounter = G.players.length > 2 && typeof hasRestraint === 'function' && hasRestraint(P.i, top.P.i); // a restraint deal: no counterspells between us
     const opts = P.hand.filter(o => (Rx(o).kind === 'instant' || Rx(o).flash) && canCastNow(P, o) && canPay(P, o));
     for (const o of [...opts, ...P.hand.filter(x => !opts.includes(x) && Rx(x).alt && Rx(x).kind === 'instant' && canCastNow(P, x) && altOk(P, x))]) {
         const ce = (Rx(o).spell || []).find(e => e.t === 'counter');
-        if (ce && stackMatches(top, ce.filter) && stackThreat(top, P) >= (opts.includes(o) ? 5 : 7)) { if (!opts.includes(o)) o.altCast = true; return { o, target: { item: top } }; }
+        if (ce && !noCounter && stackMatches(top, ce.filter) && stackThreat(top, P) >= (opts.includes(o) ? 5 : 7)) { if (!opts.includes(o)) o.altCast = true; return { o, target: { item: top } }; }
     }
     const mine = top.target && top.target.o && top.target.o.owner === P.i && onBf(top.target.o.uid) ? top.target.o : null;
     if (mine && top.kind === 'spell') {
@@ -340,6 +341,20 @@ function aiRespond(P, top) {
                 || ((eff.t === 'destroy' || eff.t === 'dmg') && pe.kw.includes('indestructible'))
                 || pe.kw.includes('hexproof') || pe.kw.includes('shroud');
             if (saves && creatureValue(mine) >= 3) return { o, target: { o: mine } };
+        }
+    }
+    // A flash Equipment that makes the creature indestructible (Mithril Coat: enters attached to a legendary creature you control)
+    if (mine && top.kind === 'spell' && creatureValue(mine) >= 3) {
+        const eff = (Rx(top.o).spell || []).find(needsTarget);
+        const lethalHit = eff && (eff.t === 'destroy' || (eff.t === 'dmg' && eff.n >= tou(mine) - mine.dmg));
+        if (lethalHit && !has(mine, 'indestructible')) {
+            for (const o of opts) {
+                const R = Rx(o);
+                const at = (R.etb || []).find(e => e.t === 'attachSelf');
+                if (!R.flash || !at || !(R.buff && (R.buff.kw || []).includes('indestructible'))) continue;
+                if (at.only && !new RegExp(at.only.split(' ')[0], 'i').test(mine.card.type)) continue;
+                return { o, target: null };
+            }
         }
     }
     const O = opp(P);

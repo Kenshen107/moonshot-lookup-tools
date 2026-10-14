@@ -123,6 +123,7 @@ function noteGrudge(target, src, n) {
     if (!src || src.owner === undefined || !target || target.life === undefined || src.owner === target.i || !(n > 0)) return;
     target.grudge = target.grudge || {};
     target.grudge[src.owner] = (target.grudge[src.owner] || 0) + n;
+    if (typeof bountyProgress === 'function') bountyProgress(target, src, n);
 }
 // Which opponent to attack in a pod. Lethal on someone first; then by the style's habit.
 function podPickDefender(P) {

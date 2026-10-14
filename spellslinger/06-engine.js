@@ -224,6 +224,7 @@ async function newGame(myDeck, oppDeck, friend, more = []) {
     G.active = rand(G.players.length);
     log(`${G.players[G.active].name} ${you(G.players[G.active]) ? 'go' : 'goes'} first (coin flip).`);
     G.firstTurn = true;
+    await banterStart();
     beginTurn();
 }
 
@@ -238,7 +239,7 @@ async function mulligan(P) {
             P.library.push(...P.hand.splice(0));
             shuffle(P.library);
             drawCards(P, 7, true);
-            if (G.players.length > 2) { log(`${P.name} takes the free mulligan (keeps seven).`); botSay(P, 'nervous', 'My hand was a mess, so I took the free mulligan.'); return; }
+            if (G.players.length > 2) { log(`${P.name} takes the free mulligan (keeps seven).`); say(P, 'mulligan', 'nervous', {}, null); return; }
             const nonland = P.hand.filter(o => Rx(o).kind !== 'land').sort((a, b) => b.card.cmc - a.card.cmc);
             const bottom = nonland[0] || P.hand[0];
             pull(P.hand, bottom);
@@ -568,6 +569,8 @@ function sba() {
 // 800.4: a player who has lost leaves: their cards go away, what they were using of other players' goes back, their spells leave the stack
 function eliminate(P, reason) {
     P.out = true;
+    if (typeof bountyOnOut === 'function') bountyOnOut(P);
+    if (typeof banterOut === 'function') banterOut(P, reason);
     if (typeof pol === 'function') pol().outAt.push(G.turn);
     log(`${P.name} ${you(P) ? 'lose' : 'loses'} the game and leaves the pod: ${reason}`);
     G.stack.splice(0, G.stack.length, ...G.stack.filter(it => it.P !== P));
@@ -1144,6 +1147,7 @@ async function enterAsCopy(P, o, cl) {
     if (cl.vanishing && !/\bVanishing\b/i.test(pick.card.text || '')) { text = `${text || ''}\nVanishing 3`.trim(); o.ctr.time = 3; }
     o.copyOf = o.card;
     o.card = { ...(pick.copyOf ? pick.card : pick.card), id: `${pick.card.id}-copy${uidSeq}`, type, text };
+    if (typeof banterCopy === 'function') banterCopy(P, pick);
     if (cl.plusOne && isCreature(o)) o.counters += 1;
     if (Rx(o).kind === 'planeswalker') { o.ctr.loyalty = (Number(o.card.loyalty) || 0) + (cl.plusOne ? 1 : 0); o.pwReady = true; }
     log(`${o.copyOf.name} enters as a copy of ${pick.card.name}${cl.addType ? ` (also an ${cl.addType.toLowerCase()})` : ''}${cl.notLegendary ? ', not legendary' : ''}${cl.plusOne && isCreature(o) ? ', with an extra +1/+1 counter' : ''} (rule 707.9).`);
@@ -1341,11 +1345,51 @@ async function runStack() {
 
 // Give a player priority to respond to the top of the stack. Returns true
 // if they cast something.
+// Does P have anything to do at instant speed right now: a spell from hand or the command zone, or an activated ability (on the battlefield,
+// in the graveyard such as Sandman's, or in hand)? Mana abilities don't count. Used to decide when to stop and ask a person.
+function instantOptions(P) {
+    const was = G.priority;
+    G.priority = P.i; // canCastNow and actTimingOk read it
+    try {
+        if ([...P.hand, ...P.command].some(o => canCastNow(P, o) && canPay(P, o))) return true;
+        for (const o of [...P.bf, ...P.gy, ...P.hand]) for (const a of actsOf(o)) { if ((a.effects || []).length && a.effects.every(e => e.t === 'mana')) continue; if (canActivate(P, o, a)) return true; }
+        return false;
+    } finally { G.priority = was; }
+}
+// A stop at the end of an opponent's turn (and any step with nothing on the stack): a person who can still do something is asked (2026-10-15, owner's report:
+// Sandman's graveyard ability "can be activated like an instant")
+async function humanWindow(P, label) {
+    G.priority = P.i;
+    const prevMode = G.mode && G.mode.type !== 'respond' ? G.mode : null;
+    const prevBusy = G.busy;
+    await actDrain();
+    G.busy = false;
+    const acted = await new Promise(resolve => { G.mode = { type: 'respond', who: P.i, item: { name: label, window: true, kind: 'window', P: G.players[G.active] }, resolve }; renderGame(); });
+    G.mode = prevMode;
+    G.busy = prevBusy;
+    G.priority = null;
+    return acted;
+}
+let endStops = store.get('endStops', 'on');
+function setEndStops(v) { endStops = v; store.set('endStops', v); renderGame(); }
+async function endStepWindow(P) {
+    if ((AUTOPLAY && !window.__FORCE_WINDOWS) || window.__LAB || G.hotseat || G.over || endStops === 'off') return; // tests force the stop on with __FORCE_WINDOWS
+    for (const X of G.players) {
+        if (X === P || X.isAI || X.out) continue;
+        for (let k = 0; k < 8 && !G.over; k++) {
+            if (!instantOptions(X)) break;
+            const acted = await humanWindow(X, `${P.name.split(',')[0]}'s end step`);
+            if (!acted) break;
+            await settle();
+        }
+    }
+}
 async function offerPriority(P, top) {
     if (top.P === P) return false; // auto-pass on your own spell or ability
     if (G.stack.some(it => it.kind === 'spell' && Rx(it.o).splitSecond)) return false; // split second (702.61)
-    const castable = [...P.hand, ...P.command].filter(o => { G.priority = P.i; const ok = canCastNow(P, o) && canPay(P, o); return ok; });
-    if (!castable.length) { G.priority = null; return false; } // nothing they could do: pass automatically
+    // A person is asked when they have any spell or ability to use; the computer only answers with spells (what aiRespond knows how to do)
+    const anything = P.isAI ? [...P.hand, ...P.command].some(o => { G.priority = P.i; return canCastNow(P, o) && canPay(P, o); }) : instantOptions(P);
+    if (!anything) { G.priority = null; return false; } // nothing they could do: pass automatically
     G.priority = P.i;
     if (P.isAI) {
         const r = aiRespond(P, top);
@@ -2100,7 +2144,7 @@ async function applyEffect(P, e, t, src) {
         return;
     }
     const O = e._O || opp(P);
-    if (G.players.length > 2 && t && t.o && t.o.owner !== P.i && ['destroy', 'exile', 'bounce', 'dmg', 'tap', 'steal'].includes(e.t)) politicsTargeted(P, G.players[t.o.owner]);
+    if (G.players.length > 2 && t && t.o && t.o.owner !== P.i && ['destroy', 'exile', 'bounce', 'dmg', 'tap', 'steal'].includes(e.t)) politicsTargeted(P, G.players[t.o.owner], t.o);
     const name = src.card.name;
     switch (e.t) {
         case 'dmg':
@@ -3997,6 +4041,8 @@ async function endTurn(P) {
     fire('end');
     await settle();
     if (G.over) return;
+    await endStepWindow(P);
+    if (G.over) return;
     allPerms().filter(o => o.dashTurn === G.turn).forEach(o => { o.dashTurn = 0; log(`${o.card.name} returns to its owner's hand (dash).`); leaveBattlefield(o, 'hand'); });
     allPerms().filter(o => o.sacAtEnd === G.turn).forEach(o => { log(`${o.card.name} is sacrificed at the end of the turn.`); dieOrLeave(o, 'gy'); });
     // Magic 2010: Stone Giant's flier is destroyed; Protean Hydra gets its counters back
@@ -4410,7 +4456,9 @@ function endGame(winner, reason) {
     const won = winner === 0;
     let reward = 0;
     if (G.hotseat && !AUTOPLAY) { endFriendGame(winner, reason); return; }
+    const talk = !AUTOPLAY ? banterEnd(winner) : null; // style points, salt and cool report (07d-banter.js)
     if (!AUTOPLAY) {
+        if (talk && talk.bonus) profile.coins += talk.bonus;
         if (G.campaign || G.draftRound !== undefined) { if (won) profile.wins++; else profile.losses++; }
         else {
             if (won) { reward = G.format === 'commander' ? REWARDS.winCommander : REWARDS.win; profile.wins++; }
@@ -4425,7 +4473,7 @@ function endGame(winner, reason) {
     renderGame();
     if (AUTOPLAY) return;
     showModal(`<h2>${winner === null ? '🤝 Draw' : won ? '🏆 You win!' : '💀 You lose'}</h2>
-        <p>${esc(reason)}</p><p class="note">${G.turn} turns${G.campaign || G.draftRound !== undefined ? '' : ` · 🪙 +${reward} coins`}</p>${campLine ? `<p class="ok">${esc(campLine)}</p>` : ''}
+        <p>${esc(reason)}</p><p class="note">${G.turn} turns${G.campaign || G.draftRound !== undefined ? '' : ` · 🪙 +${reward} coins`}</p>${talk ? talk.html : ''}${campLine ? `<p class="ok">${esc(campLine)}</p>` : ''}
         <div class="row" style="justify-content:center; margin-top:14px;">
             ${G.draftRound !== undefined ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'draft\');">🃏 Back to the draft</button>' : G.campaign ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'campaign\');">🗺️ Back to the map</button>' : '<button class="btn primary" onclick="closeModal(); leaveGame(); startMatch(true);">Play again</button>'}
             <button class="btn gold" onclick="closeModal(); leaveGame(); showView('packs');">🎴 Open packs</button>

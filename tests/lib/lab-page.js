@@ -174,6 +174,12 @@ window.LAB = (() => {
             while (!window.lastResult && performance.now() - t0 < limit) await new Promise(r => setTimeout(r, 0));
             if (!window.lastResult) { out.hang = true; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); out.turn = G.turn; out.phase = G.phase; out.diag = { pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
             else Object.assign(out, window.lastResult);
+            if (opts.watch) { // a card with one enters-the-battlefield trigger: more triggers than entries means it fired twice (lab.js --watch "Card Name")
+                const lines = G.log.map(l => l.text || l), name = opts.watch;
+                const trig = lines.filter(l => l === `${name}'s ability triggers.`).length;
+                const ent = lines.filter(l => l.startsWith(`${name} enters the battlefield`) || l.includes(`as a copy of ${name}`) || l.includes(`token copy of ${name}`) || l.startsWith(`${name} enters as a copy`)).length;
+                if (trig > ent) out.watch = { name, trig, ent };
+            }
             out.bad = T.invariants(); if (G.dealStats) out.deals = G.dealStats; if (G.pol) out.pol = G.pol;
             if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
         } catch (e) { out.error = String(e && e.stack || e).slice(0, 400); }

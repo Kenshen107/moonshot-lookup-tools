@@ -17,6 +17,7 @@ function doMill(X, n) {
     X.gy.push(...milled);
     log(`${X.name} ${you(X) ? 'mill' : 'mills'} ${milled.length}${milled.length ? `: ${milled.map(x => x.card.name).slice(0, 6).join(', ')}${milled.length > 6 ? ', ...' : ''}` : ''}.`);
     if (milled.length) fire('milled', { P: X, cards: milled });
+    if (typeof banterMill === 'function') banterMill(X, milled.length);
     return milled;
 }
 // "Reveal cards from the top of the library until N land cards are revealed; put all of them into the graveyard" (not milling: no bonus)
@@ -74,6 +75,7 @@ function reanimateFrom(P, X, x) {
     log(`${x.card.name} enters the battlefield under ${you(P) ? 'your' : `${P.name}'s`} control.`);
     fire('enters', { o: x });
     if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P, o: x, effects: Rx(x).etb });
+    if (typeof banterReanimate === 'function') banterReanimate(P, X, x);
 }
 function gyOwnerOf(x) { return G.players.find(X => X.gy.includes(x)); }
 const ULD_TYPES = ['Artifact', 'Creature', 'Enchantment', 'Instant', 'Sorcery', 'Planeswalker', 'Battle'];
