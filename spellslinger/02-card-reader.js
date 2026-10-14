@@ -104,7 +104,7 @@ const EFFECTS = [
     [/^search your library for (?:a|an) (creature|instant|sorcery|artifact|enchantment|instant or sorcery|land|artifact or enchantment)? ?card(?: with mana value \w+ or less)?(?:, reveal it)?,? (?:and )?put (?:it|that card) into your hand(?:, then shuffle)?$/, m => ({ t: 'tutor', what: m[1] || 'card' })],
     [/^return (?:up to one )?target (creature|instant or sorcery|instant|sorcery|artifact|enchantment|permanent|land|nonland permanent|artifact or enchantment|creature or planeswalker)? ?card from your graveyard to (your hand|the battlefield(?: under your control)?|the battlefield tapped)$/, m => ({ t: 'regrow', what: m[1] || 'card', bf: !m[2].includes('hand') })],
     // Artifact tokens (each comes with its real rules text, read by rulesFor)
-    [/^create (\w+) (treasure|food|clue|blood|map|powerstone|gold) tokens?$/, m => ({ t: 'artToken', n: num(m[1]), kind: m[2] })],
+    [/^create (\w+) (treasure|food|clue|blood|map|powerstone|gold|vibranium) tokens?$/, m => ({ t: 'artToken', n: num(m[1]), kind: m[2] })],
     [/^investigate$/, () => ({ t: 'artToken', n: 1, kind: 'clue' })],
     [/^create (\w+) (\d+)\/(\d+) ([a-z ]+?) (artifact )?creature tokens? (?:with|that (?:have|has)) ([a-z ,]+)$/, m => ({ t: 'token', n: num(m[1]), p: +m[2], q: +m[3], name: m[4], kw: splitKw(m[6]), artifact: !!m[5] })],
     [/^create (\w+) (\d+)\/(\d+) ([a-z ]+?) artifact creature tokens?$/, m => ({ t: 'token', n: num(m[1]), p: +m[2], q: +m[3], name: m[4], kw: [], artifact: true })],

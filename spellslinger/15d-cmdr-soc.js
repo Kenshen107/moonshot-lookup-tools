@@ -361,7 +361,8 @@ Object.assign(CMD, {
         const nonland = lists.map(l => l.hit);
         if (!nonland.length) return;
         const O = foes(P)[0];
-        const choose = O ? (await chooseFrom(O, nonland.map(c => ({ card: c.card, _c: c })), `${src.card.name}: choose a nonland card exiled this way`)) : null;
+        const wrapped = nonland.map(c => ({ card: c.card, _c: c }));
+        const choose = !O ? null : (O.isAI || AUTOPLAY) ? wrapped.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0] : await chooseFrom(O, wrapped, `${src.card.name}: choose a nonland card exiled this way`);
         const chosen = choose ? choose._c : null;
         const rest = nonland.filter(c => c !== chosen);
         let n = 0;

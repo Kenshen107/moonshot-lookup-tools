@@ -6,7 +6,7 @@ function cmdFlashOk(src, spell, P) {
     if (f.cond && !condOk(f.cond, P, src)) return false;
     return specMatch(f.spec, src, spell, { cast: true, P });
 }
-function cmdForcedAttackers(P) { return P.bf.filter(o => canAttackWith(o) && ((hasType(o, 'Juggernaut') && P.bf.some(a => Rx(a).juggernautsAttack && !lostAbilities(a))) || o.forceAtk === G.turn)); }
+function cmdForcedAttackers(P) { return P.bf.filter(o => canAttackWith(o) && ((hasType(o, 'Juggernaut') && P.bf.some(a => Rx(a).juggernautsAttack && !lostAbilities(a))) || o.forceAtk === G.turn || (o.forceAtkUntil >= G.turn) || (Rx(o).galactus && !P.bf.some(y => y.card.name === "Silver Surfer, Galactus's Herald")))); }
 // Look at the top n cards: you may take one that fits into your hand, the rest go to the bottom in a random order
 async function digInto(P, n, fits, label, src, then) {
     const top = P.library.splice(-Math.min(n, P.library.length)).reverse(); if (!top.length) return null;

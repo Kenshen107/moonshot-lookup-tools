@@ -214,7 +214,139 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
                 let [A, B] = await fresh(); const ib = makeObj(need('Immoral Bargain'), 0); A.hand.push(ib); lands(A, 3, 'Swamp'); lands(A, 1, 'Forest'); put(A, 'Grizzly Bears'); const t1 = put(B, 'Serra Angel'); window.askNumber = async () => 1;
                 ok('Immoral Bargain can be cast with a creature to sacrifice', canCastNow(A, ib) && canPay(A, ib));
             }
+
+            // ===== Marvel (MSC) =====
+            { // Vibranium token: indestructible, taps for {C} that only pays for artifacts
+                let [A, B] = await fresh(); await applyEffect(A, { t: 'artToken', n: 1, kind: 'vibranium', tapped: true }, null, put(A, 'Island')); const v = A.bf.find(x => x.token && /Vibranium/.test(x.card.name));
+                ok('Vibranium: a tapped indestructible artifact token', !!v && v.tapped && has(v, 'indestructible'), v && [v.tapped, [...Rx(v).kw]]);
+                v.tapped = false; const m = manaOf(v); ok('Vibranium: taps for {C} only for artifact spells', m && m.colors[0] === 'C' && m.onlyType === 'Artifact', m);
+            }
+            { // T'Challa, Shuri's Fabricator, Zuri
+                let [A, B] = await fresh(); const tc = put(A, "T'Challa, the Black Panther"); await settle2();
+                ok("T'Challa: enters with a tapped Vibranium token", A.bf.some(x => x.token && /Vibranium/.test(x.card.name) && x.tapped));
+                fire('cast', { P: A, o: makeObj(need('Sol Ring'), 0) }); await settle2(); ok("T'Challa: Sol Ring (MV 1) does not trigger", tc.counters === 0);
+                fire('cast', { P: A, o: makeObj(need("Coveted Jewel"), 0) }); await settle2(); ok("T'Challa: an artifact spell with MV 4 or more gives two counters", tc.counters === 2, tc.counters);
+                const zu = put(A, 'Zuri, Warrior of Wakanda'); fire('cast', { P: A, o: makeObj(need('Coveted Jewel'), 0) }); await settle2(); ok('Zuri: a +1/+1 counter on each creature you control', zu.counters === 1, zu.counters);
+            }
+            { // Monarch cards
+                let [A, B] = await fresh(); G.monarch = null; put(A, 'The Spear of Bashenga'); await settle2(); ok('The Spear of Bashenga: you become the monarch when there is none', G.monarch === A.i, G.monarch);
+                [A, B] = await fresh(); G.monarch = null; const mb = put(A, "M'Baku, Jabari Chieftain"); fire('end', {}); await settle2(); ok("M'Baku: an opponent becomes the monarch at the end step", G.monarch === B.i, G.monarch);
+                const atk = put(A, 'Grizzly Bears'); G.defender = null; G.attackers = [atk.uid]; fire('attacks', { list: [atk] }); await settle2(); ok("M'Baku: a creature attacking the monarch gets +1/+1 and trample", pow(atk) === 3 && has(atk, 'trample'), [pow(atk), has(atk, 'trample')]);
+                [A, B] = await fresh(); G.monarch = A.i; put(A, 'Queen Mother Ramonda'); const small = put(B, 'Grizzly Bears'); small.card = { ...small.card, power: '2' }; ok('Queen Mother Ramonda: power 2 or less cannot attack the monarch', cmdCantAttack(small), 'x');
+                G.monarch = B.i; ok('Ramonda: no effect when you are not the monarch', !cmdCantAttack(small));
+                [A, B] = await fresh(); G.monarch = null; const pj = put(A, 'Palace Jailer'); await settle2(); const vict = put(B, 'Grizzly Bears'); sba();
+            }
+            { // Palace Jailer: exile until an opponent becomes the monarch
+                let [A, B] = await fresh(); G.monarch = null; const vict = put(B, 'Grizzly Bears'); const pj = makeObj(need('Palace Jailer'), 0); A.hand.push(pj); lands(A, 5, 'Plains'); await castSpell(A, pj, null); await settle2();
+                ok('Palace Jailer: exiles an opponent creature and you become the monarch', B.exile.includes(vict) && G.monarch === A.i, [B.exile.map(x => x.card.name), G.monarch]);
+                G.monarch = B.i; sba(); ok('Palace Jailer: the creature returns when an opponent becomes the monarch', B.bf.includes(vict) || B.bf.some(x => x.card.name === 'Grizzly Bears'), B.bf.map(x => x.card.name));
+            }
+            { // Divine Visitation, Thor
+                let [A, B] = await fresh(); put(A, 'Divine Visitation'); await applyEffect(A, { t: 'token', n: 2, p: 1, q: 1, name: 'white Spirit', kw: ['flying'] }, null, put(A, 'Island')); const ang = A.bf.filter(x => x.token);
+                ok('Divine Visitation: creature tokens become 4/4 Angels', ang.length === 2 && ang.every(x => pow(x) === 4 && has(x, 'vigilance')), ang.map(x => [x.card.name, pow(x)]));
+                [A, B] = await fresh(); put(A, 'Thor, Asgard\'s Avenger'); const bear = put(A, 'Grizzly Bears'); const l0 = B.life; damage(B, 2, bear); ok('Thor: another source deals one extra damage', B.life === l0 - 3, l0 - B.life);
+            }
+            { // Heroic Sacrifice
+                let [A, B] = await fresh(); const hero = put(A, 'Serra Angel'); const other = put(A, 'Grizzly Bears'); await applyEffect(A, { t: 'cmd', id: 'heroicSacrifice' }, { o: hero }, put(A, 'Island'));
+                const l0 = A.life; damage(A, 2, put(B, 'Grizzly Bears')); damage(other, 2, hero); ok('Heroic Sacrifice: damage to you and your creatures goes to the chosen creature', A.life === l0 && onBf(other.uid) && hero.dmg === 4 || A.life === l0 && onBf(other.uid), [A.life - l0, hero.dmg]);
+            }
+            { // Captain America, Living Legend: untap on first tap each turn; Winter Soldier
+                let [A, B] = await fresh(); put(A, 'Captain America, Living Legend'); const bear = put(A, 'Grizzly Bears'); bear.tapped = true; fire('tapped', { o: bear }); await settle2(); ok('Captain America: untaps a creature the first time it becomes tapped on your turn', !bear.tapped);
+                bear.tapped = true; fire('tapped', { o: bear }); await settle2(); ok('Captain America: only the first time', bear.tapped);
+            }
+            { // Hawkeye, Falcon and Redwing, Hercules
+                let [A, B] = await fresh(); const hw = put(A, 'Hawkeye, Avenging Archer'); const vic = put(B, 'Grizzly Bears'); vic.dmgBy = { [hw.uid]: G.turn }; const h0 = A.hand.length; dieOrLeave(vic, 'gy'); await settle2(); ok('Hawkeye: draws when a creature it damaged dies', A.hand.length === h0 + 1, A.hand.length - h0);
+                [A, B] = await fresh(); const fr = put(A, 'Falcon and Redwing'); G.ctxRaw = { n: 3 }; await applyEffect(A, { t: 'cmd', id: 'falconBirds' }, null, fr); ok('Falcon and Redwing: a Bird for each damage and a counter', A.bf.filter(x => x.token && /Bird/.test(x.card.type)).length === 3 && fr.counters === 1);
+            }
+            { // Doom Prevails: connive triggers, Madame Hydra, Frightful Four
+                let [A, B] = await fresh(); const im = put(A, 'Iron Monger, Sadistic Tycoon'); const vil = put(A, 'Madame Hydra'); fire('connives', { o: vil, P: A }); await settle2(); ok('Iron Monger: a +1/+1 counter on each Villain when a creature connives', vil.counters === 1 && im.counters === 1, [vil.counters, im.counters]);
+                [A, B] = await fresh(); put(A, 'Madame Hydra'); const vs = makeObj(need('Doctor Doom, King of Latveria'), 0); A.hand.push(vs); fire('cast', { P: A, o: vs }); await settle2(); ok('Madame Hydra: a Villain spell makes a 2/1 menace Villain token', A.bf.some(x => x.token && /Villain/.test(x.card.type) && has(x, 'menace')), A.bf.map(x => x.card.name));
+                [A, B] = await fresh(); put(A, 'The Frightful Four'); const l0 = B.life; const sp = makeObj(need('Aether Gale'), 1); B.hand.push(sp); B.castN = 0; fire('cast', { P: B, o: sp }); await settle2(); ok('The Frightful Four: an opponent\'s first noncreature spell costs them life equal to its mana value', B.life === l0 - 5, l0 - B.life);
+            }
+            { // Kang Dynasty chapter I goads; Taunt from the Rampart
+                let [A, B] = await fresh(); put(B, 'Grizzly Bears'); const tc = makeObj(need('Taunt from the Rampart'), 0); await applyEffect(A, { t: 'cmd', id: 'taunt' }, null, tc); const b = B.bf.find(x => x.card.name === 'Grizzly Bears'); ok('Taunt from the Rampart: goads and stops blocking', isGoaded(b) && b.cantBlockUntil > G.turn, [isGoaded(b), b.cantBlockUntil]);
+            }
+            { // Fantastic Four: Dragon Man power, Invisible Force Field, Lockjaw, Crystal
+                let [A, B] = await fresh(); const dm = put(A, 'Dragon Man, Reformed Robot'); put(A, 'Sol Ring'); A.gy.push(makeObj(need('Aether Gale'), 0)); ok('Dragon Man: power is the greatest mana value among noncreature permanents and graveyard cards', pow(dm) === 5, pow(dm));
+                [A, B] = await fresh(); const cr = put(A, 'Crystal, Inhuman Princess'); const l0 = B.life; fire('cast', { P: A, o: makeObj(need('Lightning Bolt'), 0) }); await settle2(); ok('Crystal: damage equals the colors of the spell', B.life === l0 - 1, l0 - B.life);
+                [A, B] = await fresh(); const lj = put(A, 'Lockjaw, Slobbering Teleporter'); fire('cast', { P: A, o: makeObj(need('Lightning Bolt'), 0) }); await settle2(); fire('combat'); await settle2(); ok('Lockjaw: a counter and unblockable after a noncreature spell', lj.counters === 1 && has(lj, 'unblockable'), [lj.counters, has(lj, 'unblockable')]);
+            }
+            { // Escalate with tapping, Collective Effort
+                let [A, B] = await fresh(); const ce = makeObj(need('Collective Effort'), 0); A.hand.push(ce); lands(A, 3, 'Plains'); put(A, 'Grizzly Bears'); put(A, 'Grizzly Bears'); ok('Collective Effort: castable', canPay(A, ce));
+                const R = Rx(ce); const rng = modeRange(A, R, ce); ok('Collective Effort: two untapped creatures allow three modes', rng.max === 3, rng);
+            }
+            { // Wakanda Forever! and Kimoyo Beads
+                let [A, B] = await fresh(); A.library.length = 0; for (let i = 0; i < 8; i++) A.library.push(makeObj(C['Grizzly Bears'], 0)); const wf = makeObj(need('Wakanda Forever!'), 0); await applyEffect(A, { t: 'cmd', id: 'wakandaForever' }, null, wf); await settle2();
+                const bears = A.bf.filter(x => x.card.name === 'Grizzly Bears'); ok('Wakanda Forever!: a permanent with an indestructible counter, one to hand, the rest to the graveyard', bears.length === 1 && has(bears[0], 'indestructible') && A.hand.length >= 1 && A.gy.length === 4, [bears.length, A.hand.length, A.gy.length]);
+                [A, B] = await fresh(); const kb = put(A, 'Kimoyo Beads'); const h0 = A.hand.length; fire('end', {}); await settle2(); fire('end', {}); await settle2(); ok('Kimoyo Beads: a different mode each end step', A.hand.length === h0 + 1 && A.bf.filter(x => x.token).length === 2, [A.hand.length - h0, A.bf.length]);
+            }
             //@@NEXT
+
+            // ===== Marvel (MSC) =====
+            { // Vibranium token: indestructible, taps for {C} that only pays for artifacts
+                let [A, B] = await fresh(); await applyEffect(A, { t: 'artToken', n: 1, kind: 'vibranium', tapped: true }, null, put(A, 'Island')); const v = A.bf.find(x => x.token && /Vibranium/.test(x.card.name));
+                ok('Vibranium: a tapped indestructible artifact token', !!v && v.tapped && has(v, 'indestructible'), v && [v.tapped, [...Rx(v).kw]]);
+                v.tapped = false; const m = manaOf(v); ok('Vibranium: taps for {C} only for artifact spells', m && m.colors[0] === 'C' && m.onlyType === 'Artifact', m);
+            }
+            { // T'Challa, Shuri's Fabricator, Zuri
+                let [A, B] = await fresh(); const tc = put(A, "T'Challa, the Black Panther"); await settle2();
+                ok("T'Challa: enters with a tapped Vibranium token", A.bf.some(x => x.token && /Vibranium/.test(x.card.name) && x.tapped));
+                fire('cast', { P: A, o: makeObj(need('Sol Ring'), 0) }); await settle2(); ok("T'Challa: Sol Ring (MV 1) does not trigger", tc.counters === 0);
+                fire('cast', { P: A, o: makeObj(need("Coveted Jewel"), 0) }); await settle2(); ok("T'Challa: an artifact spell with MV 4 or more gives two counters", tc.counters === 2, tc.counters);
+                const zu = put(A, 'Zuri, Warrior of Wakanda'); fire('cast', { P: A, o: makeObj(need('Coveted Jewel'), 0) }); await settle2(); ok('Zuri: a +1/+1 counter on each creature you control', zu.counters === 1, zu.counters);
+            }
+            { // Monarch cards
+                let [A, B] = await fresh(); G.monarch = null; put(A, 'The Spear of Bashenga'); await settle2(); ok('The Spear of Bashenga: you become the monarch when there is none', G.monarch === A.i, G.monarch);
+                [A, B] = await fresh(); G.monarch = null; const mb = put(A, "M'Baku, Jabari Chieftain"); fire('end', {}); await settle2(); ok("M'Baku: an opponent becomes the monarch at the end step", G.monarch === B.i, G.monarch);
+                const atk = put(A, 'Grizzly Bears'); G.defender = null; G.attackers = [atk.uid]; fire('attacks', { list: [atk] }); await settle2(); ok("M'Baku: a creature attacking the monarch gets +1/+1 and trample", pow(atk) === 3 && has(atk, 'trample'), [pow(atk), has(atk, 'trample')]);
+                [A, B] = await fresh(); G.monarch = A.i; put(A, 'Queen Mother Ramonda'); const small = put(B, 'Grizzly Bears'); small.card = { ...small.card, power: '2' }; ok('Queen Mother Ramonda: power 2 or less cannot attack the monarch', cmdCantAttack(small), 'x');
+                G.monarch = B.i; ok('Ramonda: no effect when you are not the monarch', !cmdCantAttack(small));
+                [A, B] = await fresh(); G.monarch = null; const pj = put(A, 'Palace Jailer'); await settle2(); const vict = put(B, 'Grizzly Bears'); sba();
+            }
+            { // Palace Jailer: exile until an opponent becomes the monarch
+                let [A, B] = await fresh(); G.monarch = null; const vict = put(B, 'Grizzly Bears'); const pj = makeObj(need('Palace Jailer'), 0); A.hand.push(pj); lands(A, 5, 'Plains'); await castSpell(A, pj, null); await settle2();
+                ok('Palace Jailer: exiles an opponent creature and you become the monarch', B.exile.includes(vict) && G.monarch === A.i, [B.exile.map(x => x.card.name), G.monarch]);
+                G.monarch = B.i; sba(); ok('Palace Jailer: the creature returns when an opponent becomes the monarch', B.bf.includes(vict) || B.bf.some(x => x.card.name === 'Grizzly Bears'), B.bf.map(x => x.card.name));
+            }
+            { // Divine Visitation, Thor
+                let [A, B] = await fresh(); put(A, 'Divine Visitation'); await applyEffect(A, { t: 'token', n: 2, p: 1, q: 1, name: 'white Spirit', kw: ['flying'] }, null, put(A, 'Island')); const ang = A.bf.filter(x => x.token);
+                ok('Divine Visitation: creature tokens become 4/4 Angels', ang.length === 2 && ang.every(x => pow(x) === 4 && has(x, 'vigilance')), ang.map(x => [x.card.name, pow(x)]));
+                [A, B] = await fresh(); put(A, 'Thor, Asgard\'s Avenger'); const bear = put(A, 'Grizzly Bears'); const l0 = B.life; damage(B, 2, bear); ok('Thor: another source deals one extra damage', B.life === l0 - 3, l0 - B.life);
+            }
+            { // Heroic Sacrifice
+                let [A, B] = await fresh(); const hero = put(A, 'Serra Angel'); const other = put(A, 'Grizzly Bears'); await applyEffect(A, { t: 'cmd', id: 'heroicSacrifice' }, { o: hero }, put(A, 'Island'));
+                const l0 = A.life; damage(A, 2, put(B, 'Grizzly Bears')); damage(other, 2, hero); ok('Heroic Sacrifice: damage to you and your creatures goes to the chosen creature', A.life === l0 && onBf(other.uid) && hero.dmg === 4 || A.life === l0 && onBf(other.uid), [A.life - l0, hero.dmg]);
+            }
+            { // Captain America, Living Legend: untap on first tap each turn; Winter Soldier
+                let [A, B] = await fresh(); put(A, 'Captain America, Living Legend'); const bear = put(A, 'Grizzly Bears'); bear.tapped = true; fire('tapped', { o: bear }); await settle2(); ok('Captain America: untaps a creature the first time it becomes tapped on your turn', !bear.tapped);
+                bear.tapped = true; fire('tapped', { o: bear }); await settle2(); ok('Captain America: only the first time', bear.tapped);
+            }
+            { // Hawkeye, Falcon and Redwing, Hercules
+                let [A, B] = await fresh(); const hw = put(A, 'Hawkeye, Avenging Archer'); const vic = put(B, 'Grizzly Bears'); vic.dmgBy = { [hw.uid]: G.turn }; const h0 = A.hand.length; dieOrLeave(vic, 'gy'); await settle2(); ok('Hawkeye: draws when a creature it damaged dies', A.hand.length === h0 + 1, A.hand.length - h0);
+                [A, B] = await fresh(); const fr = put(A, 'Falcon and Redwing'); G.ctxRaw = { n: 3 }; await applyEffect(A, { t: 'cmd', id: 'falconBirds' }, null, fr); ok('Falcon and Redwing: a Bird for each damage and a counter', A.bf.filter(x => x.token && /Bird/.test(x.card.type)).length === 3 && fr.counters === 1);
+            }
+            { // Doom Prevails: connive triggers, Madame Hydra, Frightful Four
+                let [A, B] = await fresh(); const im = put(A, 'Iron Monger, Sadistic Tycoon'); const vil = put(A, 'Madame Hydra'); fire('connives', { o: vil, P: A }); await settle2(); ok('Iron Monger: a +1/+1 counter on each Villain when a creature connives', vil.counters === 1 && im.counters === 1, [vil.counters, im.counters]);
+                [A, B] = await fresh(); put(A, 'Madame Hydra'); const vs = makeObj(need('Doctor Doom, King of Latveria'), 0); A.hand.push(vs); fire('cast', { P: A, o: vs }); await settle2(); ok('Madame Hydra: a Villain spell makes a 2/1 menace Villain token', A.bf.some(x => x.token && /Villain/.test(x.card.type) && has(x, 'menace')), A.bf.map(x => x.card.name));
+                [A, B] = await fresh(); put(A, 'The Frightful Four'); const l0 = B.life; const sp = makeObj(need('Aether Gale'), 1); B.hand.push(sp); B.castN = 0; fire('cast', { P: B, o: sp }); await settle2(); ok('The Frightful Four: an opponent\'s first noncreature spell costs them life equal to its mana value', B.life === l0 - 5, l0 - B.life);
+            }
+            { // Kang Dynasty chapter I goads; Taunt from the Rampart
+                let [A, B] = await fresh(); put(B, 'Grizzly Bears'); const tc = makeObj(need('Taunt from the Rampart'), 0); await applyEffect(A, { t: 'cmd', id: 'taunt' }, null, tc); const b = B.bf.find(x => x.card.name === 'Grizzly Bears'); ok('Taunt from the Rampart: goads and stops blocking', isGoaded(b) && b.cantBlockUntil > G.turn, [isGoaded(b), b.cantBlockUntil]);
+            }
+            { // Fantastic Four: Dragon Man power, Invisible Force Field, Lockjaw, Crystal
+                let [A, B] = await fresh(); const dm = put(A, 'Dragon Man, Reformed Robot'); put(A, 'Sol Ring'); A.gy.push(makeObj(need('Aether Gale'), 0)); ok('Dragon Man: power is the greatest mana value among noncreature permanents and graveyard cards', pow(dm) === 5, pow(dm));
+                [A, B] = await fresh(); const cr = put(A, 'Crystal, Inhuman Princess'); const l0 = B.life; fire('cast', { P: A, o: makeObj(need('Lightning Bolt'), 0) }); await settle2(); ok('Crystal: damage equals the colors of the spell', B.life === l0 - 1, l0 - B.life);
+                [A, B] = await fresh(); const lj = put(A, 'Lockjaw, Slobbering Teleporter'); fire('cast', { P: A, o: makeObj(need('Lightning Bolt'), 0) }); await settle2(); fire('combat'); await settle2(); ok('Lockjaw: a counter and unblockable after a noncreature spell', lj.counters === 1 && has(lj, 'unblockable'), [lj.counters, has(lj, 'unblockable')]);
+            }
+            { // Escalate with tapping, Collective Effort
+                let [A, B] = await fresh(); const ce = makeObj(need('Collective Effort'), 0); A.hand.push(ce); lands(A, 3, 'Plains'); put(A, 'Grizzly Bears'); put(A, 'Grizzly Bears'); ok('Collective Effort: castable', canPay(A, ce));
+                const R = Rx(ce); const rng = modeRange(A, R, ce); ok('Collective Effort: two untapped creatures allow three modes', rng.max === 3, rng);
+            }
+            { // Wakanda Forever! and Kimoyo Beads
+                let [A, B] = await fresh(); A.library.length = 0; for (let i = 0; i < 8; i++) A.library.push(makeObj(C['Grizzly Bears'], 0)); const wf = makeObj(need('Wakanda Forever!'), 0); await applyEffect(A, { t: 'cmd', id: 'wakandaForever' }, null, wf); await settle2();
+                const bears = A.bf.filter(x => x.card.name === 'Grizzly Bears'); ok('Wakanda Forever!: a permanent with an indestructible counter, one to hand, the rest to the graveyard', bears.length === 1 && has(bears[0], 'indestructible') && A.hand.length >= 1 && A.gy.length === 4, [bears.length, A.hand.length, A.gy.length]);
+                [A, B] = await fresh(); const kb = put(A, 'Kimoyo Beads'); const h0 = A.hand.length; fire('end', {}); await settle2(); fire('end', {}); await settle2(); ok('Kimoyo Beads: a different mode each end step', A.hand.length === h0 + 1 && A.bf.filter(x => x.token).length === 2, [A.hand.length - h0, A.bf.length]);
+            }
             //@@NEXT
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;

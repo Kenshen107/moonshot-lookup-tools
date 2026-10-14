@@ -93,6 +93,8 @@ function buildCond(t) {
     if (t === 'a player cast two or more spells last turn') return () => !!G.lastCastBy && Math.max(...G.lastCastBy) >= 2;
     if ((m = t.match(/^you (?:have )?cast (another spell|two or more spells|three or more spells|a noncreature spell|an instant or sorcery spell) this turn$/))) {
         const n = { 'another spell': 2, 'two or more spells': 2, 'three or more spells': 3 }[m[1]];
+        if (!n && m[1] === 'a noncreature spell') return P => P.nonCreatureCastTurn === G.turn; // noncreature / instant or sorcery were read as "any spell" before 2026-10-15
+        if (!n && m[1] === 'an instant or sorcery spell') return P => { const k = (G.castKinds || {})[P.i]; return !!k && k.turn === G.turn && (k.instant + k.sorcery) > 0; };
         return n ? P => (G.castBy || Z())[P.i] >= n : P => (G.castBy || Z())[P.i] >= 1;
     }
     if ((m = t.match(/^you have (\w+) or (more|less) life$/)) && num(m[1]) !== undefined) { const n = num(m[1]); return P => cmp(P.life, m[2], n); }
@@ -388,7 +390,7 @@ function staticBuffs(o) {
             if (s.colorChosen && !(a.chosenColor && (o.card.colors || []).includes(a.chosenColor))) continue;
             if (s.lvl && (a.level || 1) < s.lvl) continue;
             if (s.cond && !condOk(s.cond, G.players[a.owner], a)) continue;
-            { const mult = s.perCmdCast ? commanderCasts(G.players[a.owner]) : 1; b.p += s.p * mult; b.q += s.q * mult; } b.kw.push(...s.kw);
+            { const mult = s.perCmdCast ? commanderCasts(G.players[a.owner]) : s.perCtr ? ((a.ctr && a.ctr[s.perCtr]) || 0) : 1; b.p += s.p * mult; b.q += s.q * mult; } b.kw.push(...s.kw);
         }
     }
     } finally { staticDepth--; }
@@ -462,6 +464,7 @@ function trigMatches(tr, ev, o, ctx) {
     if (ev === 'scry') return ctx.P.i === o.owner;
     if (ev === 'gyLeave' || ev === 'exiledOwn' || ev === 'spellCopied') return ctx.P.i === o.owner;
     if (ev === 'enchantToGy') return ctx.o.owner === o.owner;
+    if (ev === 'playedFromExile') return ctx.P.i === o.owner;
     if (ev === 'counters') return ctx.P.i === o.owner && (tr.self ? ctx.o === o : ctx.o !== o);
     if (ev === 'draw' && tr.nth) return ctx.P.i === o.owner && ctx.n === tr.nth;
     if (ev === 'upkeep' && tr.who === 'host') { const h = o.attachedTo && onBf(o.attachedTo); return !!h && G.active === h.owner; }
@@ -539,6 +542,7 @@ function fire(ev, ctx = {}) {
     }
     // Horizon Explorer, Spelunking: lands you control enter untapped (also ones put onto the battlefield tapped)
     if (ev === 'landfall' && ctx.o && ctx.o.tapped && landsUntappedFor(G.players[ctx.o.owner])) ctx.o.tapped = false;
+    if (ev === 'dies' && ctx.o && G.players[ctx.o.owner].hsRedirect && G.players[ctx.o.owner].hsRedirect.uid === ctx.o.uid && G.players[ctx.o.owner].hsRedirect.turn === G.turn) { const hsP = G.players[ctx.o.owner]; (G.trigQ = G.trigQ || []).push({ P: hsP, o: ctx.o, effects: [{ t: 'cmd', id: 'heroicSacrificeDies', target: 'creature', mine: true, optional: true, good: true }], raw: { counters: ctx.o.counters, ctr: { ...ctx.o.ctr } } }); hsP.hsRedirect = null; }
     if (ev === 'creatureDies' && ctx.o && (ctx.o.counters > 0 || Object.values(ctx.o.ctr || {}).some(v => v > 0) || allPerms().some(a => a.attachedTo === ctx.o.uid))) G.players[ctx.o.owner].modDied = G.turn; // a modified creature died
     if (ev === 'creatureDies') { G.diedTurn = G.turn; G.diedN = G.diedN && G.diedN.turn === G.turn ? { turn: G.turn, n: G.diedN.n + 1 } : { turn: G.turn, n: 1 }; }
     if (ev === 'cast' && ctx.o) {
@@ -550,6 +554,8 @@ function fire(ev, ctx = {}) {
             const Q = ctx.P; Q.xCasts = Q.xCastsTurn === G.turn ? Q.xCasts + 1 : 1; Q.xCastsTurn = G.turn;
             if (Q.xRider && Q.xRider.turn === G.turn) { Q.xRider = null; (G.trigQ = G.trigQ || []).push({ P: Q, o: ctx.o, effects: [{ t: 'cmd', id: 'infiniscopeTrig' }], raw: { P: Q, o: ctx.o } }); }
         }
+        if (kind !== 'creature') { const Q = ctx.P; Q.nonCreatureCastTurn = G.turn; Q.nonCreatureN = Q.nonCreatureNTurn === G.turn ? Q.nonCreatureN + 1 : 1; Q.nonCreatureNTurn = G.turn; }
+        { const Q = ctx.P; Q.castColors = Q.castColorsTurn === G.turn ? Q.castColors : new Set(); Q.castColorsTurn = G.turn; (ctx.o.card.colors || []).forEach(c => Q.castColors.add(c)); }
         if (kind === 'instant' || kind === 'sorcery') { const Q = ctx.P; Q.maxIS = Q.maxISTurn === G.turn ? Math.max(Q.maxIS || 0, ctx.o.card.cmc || 0) : (ctx.o.card.cmc || 0); Q.maxISTurn = G.turn; if (Q.nextCastCopies && Q.nextCastCopies.turn === G.turn) { const nn = Q.nextCastCopies.n; Q.nextCastCopies = null; (G.trigQ = G.trigQ || []).push({ P: Q, o: ctx.o, effects: [{ t: 'cmd', id: 'copyLastCast', n: nn }], raw: { P: Q, o: ctx.o } }); } }
         if (kind === 'instant') k.instant++; if (kind === 'sorcery') k.sorcery++; if (hasType(ctx.o, 'Otter')) k.otter++;
     }
@@ -560,6 +566,7 @@ function fire(ev, ctx = {}) {
     if (ev === 'cast' && ctx.P) { ctx.P.castN = ctx.P.castTurn === G.turn ? (ctx.P.castN || 0) + 1 : 1; ctx.P.castTurn = G.turn; } // Angelic Arbiter; Monologue Tax counts spells per turn
     if (ev === 'attacks' && ctx.list && ctx.list.length) G.players[ctx.list[0].owner].attackedTurn = G.turn;
     if (ev === 'playerDamaged' && ctx.P) { ctx.P.dmgTakenN = ctx.P.dmgTakenTurn === G.turn ? (ctx.P.dmgTakenN || 0) + ctx.n : ctx.n; ctx.P.dmgTakenTurn = G.turn; }
+    if (ev === 'hitPlayer' && ctx.src && ctx.src.kangDraw && ctx.src.kangDraw.until > G.turn) { const kp = G.players[ctx.src.kangDraw.by]; if (kp && !kp.out) drawCards(kp, 1); }
     if (ev === 'hitPlayer' && ctx.src && G.players[ctx.src.owner].surge && G.players[ctx.src.owner].surge.turn === G.turn) (G.trigQ = G.trigQ || []).push({ P: G.players[ctx.src.owner], o: ctx.src, effects: [{ t: 'cmd', id: 'surgeCopy' }] }); // Surge to Victory
     if (ev === 'hitPlayer') preconHitWatch(ctx); // Hunter's Insight (15b-precon-effects.js)
     // Gorma, the Gullet: nontoken creatures enter with an additional +1/+1 counter for each creature that died under your control this turn
@@ -695,6 +702,7 @@ function actsOf(o) {
 }
 // The least valuable permanent of a kind to sacrifice for a cost (tokens first)
 function sacFodder(P, src, kind) {
+    if (kind === 'legendary creature') return P.bf.filter(x => isCreature(x) && /Legendary/.test(x.card.type)).sort((a, b) => permValue(a) - permValue(b))[0] || null;
     if (/^another /.test(kind)) return sacCandidates(P, src, kind).sort((a, b) => (a.token ? -5 : 0) + permValue(a) - ((b.token ? -5 : 0) + permValue(b)))[0] || null;
     if (kind === 'nontoken creature') return P.bf.filter(x => isCreature(x) && !x.token && x !== src).sort((a, b) => permValue(a) - permValue(b))[0] || null;
     if (/ or /.test(kind)) return kind.split(' or ').map(k => sacFodder(P, src, k)).filter(Boolean).sort((a, b) => (a.token ? -5 : 0) + permValue(a) - ((b.token ? -5 : 0) + permValue(b)))[0] || null;
@@ -705,6 +713,7 @@ function sacFodder(P, src, kind) {
 }
 // Everything that could pay "sacrifice a <kind>" (sacFodder picks the least valuable of these)
 function sacCandidates(P, src, kind) {
+    if (kind === 'legendary creature') return P.bf.filter(x => isCreature(x) && /Legendary/.test(x.card.type));
     if (/^another /.test(kind)) return sacCandidates(P, src, kind.slice(8)).filter(x => x !== src);
     if (kind === 'nontoken creature') return P.bf.filter(x => isCreature(x) && !x.token && x !== src);
     if (/ or /.test(kind)) return [...new Set(kind.split(' or ').flatMap(k => sacCandidates(P, src, k)))];
@@ -1011,6 +1020,7 @@ function aiPickModes(P, R, modes, src) {
 function modeRange(P, R, src) {
     const n = R.modeN || { min: 1, max: 1 };
     if (R.escalate && src && !(R.modeTeamwork)) { let k = 0; while (k + 1 < n.max) { const c = { ...costOf(P, src) }; Object.keys(R.escalate).forEach(x => { if (typeof c[x] === 'number') c[x] += R.escalate[x] * (k + 1); }); if (!planPayment(P, c, extraCost(P, src))) break; k++; } return { min: n.min, max: Math.min(n.max, 1 + k) }; }
+    if (R.escalateTap && src) { const free = P.bf.filter(x => isCreature(x) && !x.tapped).length; return { min: n.min, max: Math.min(n.max, 1 + free) }; }
     if (R.modeTeamwork) return { min: 1, max: src && src.teamworked ? 2 : 1 };
     return { min: n.min, max: R.modeCmdBoth ? (P.bf.some(x => x.isCommander) ? 2 : 1) : n.max };
 }
@@ -1248,6 +1258,7 @@ const ART_TOKENS = {
     gold: { name: 'Gold', text: 'Sacrifice this artifact: Add one mana of any color.' },
     lander: { name: 'Lander', text: '{2}, {T}, Sacrifice this token: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.' },
     map: { name: 'Map', text: '{1}, {T}, Sacrifice this artifact: Target creature you control explores. Activate only as a sorcery.' },
+    vibranium: { name: 'Vibranium', text: 'Indestructible\n{T}: Add {C}. This mana can\'t be spent to cast a nonartifact spell.' },
     powerstone: { name: 'Powerstone', text: '{T}: Add {C}. This mana can\'t be spent to cast a nonartifact spell.' }
 };
 function makeArtifactToken(P, kind) {

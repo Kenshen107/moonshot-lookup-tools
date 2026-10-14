@@ -59,11 +59,13 @@ async function main() {
         return;
     }
     const results = [];
+    let changedAll = [];
     if (!fs.existsSync(FILE)) results.push({ label: 'a rules snapshot baseline exists (run with --update to make one)', ok: false });
     else {
         const was = new Map(zlib.gunzipSync(fs.readFileSync(FILE)).toString().split('\n').filter(Boolean).map(l => l.split('\t')));
         const now = new Map(lines.map(l => l.split('\t')));
         const changed = [...was].filter(([n, f]) => now.has(n) && now.get(n) !== f).map(([n]) => n);
+        changedAll = changed;
         const gone = [...was.keys()].filter(n => !now.has(n));
         results.push({ label: `no card is read differently than in the baseline (${was.size} cards)`, ok: changed.length === 0, detail: changed.length ? `${changed.length} changed: ${JSON.stringify(changed.slice(0, 30))}` : undefined });
         results.push({ label: 'the card reader threw on no card', ok: errs.length === 0, detail: errs.length ? JSON.stringify(errs.slice(0, 5)) : undefined });
@@ -71,7 +73,7 @@ async function main() {
         if (added.length) console.log(`  ${added.length} cards are new since the baseline (not compared)${gone.length ? `, ${gone.length} are gone` : ''}`);
     }
     const good = printResults('rules-snapshot', results, errors);
-    writeOut('rules-snapshot', { count: lines.length });
+    writeOut('rules-snapshot', { count: lines.length, changed: changedAll }); // the full list of changed cards is in tests/.out/rules-snapshot.json
     await h.close();
     process.exit(good ? 0 : 1);
 }

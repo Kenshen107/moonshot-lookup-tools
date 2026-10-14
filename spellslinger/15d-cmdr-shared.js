@@ -2,7 +2,10 @@
 // Wordings: rules/cmdr.js.
 // ---- End-step queue: things that happen "at the beginning of the next end step" ----
 function atEndStep(fn, label) { (G.endQ = G.endQ || []).push({ fn, label }); }
-async function runEndQueue() { const q = (G.endQ || []).splice(0); for (const it of q) { if (it.label) log(it.label); await it.fn(); } }
+async function runEndQueue() {
+    const q = (G.endQ || []).splice(0); for (const it of q) { if (it.label) log(it.label); await it.fn(); }
+    const due = (G.endAt || []).filter(x => x.turn <= G.turn); G.endAt = (G.endAt || []).filter(x => x.turn > G.turn); for (const it of due) await it.fn(); // "until the end of your next turn"
+}
 // ---- Mana riders: "When that mana is spent to cast ..." (Path of Ancestry, Study Hall) ----
 const MANA_RIDERS = {
     pathAncestry(P, o, srcPerm) {
@@ -153,6 +156,8 @@ function cmdBarredFrom(o, i) {
     const mine = allPerms().filter(a => a.owner === i && !lostAbilities(a));
     if (mine.some(a => Rx(a).erietteBars) && allPerms().some(au => au.attachedTo === o.uid && au.owner === i && (hasType(au, 'Aura') || au.bestowed))) return true;
     if (hasType(o, 'Inkling') && mine.some(a => Rx(a).calligrapher)) return true;
+    if (G.monarch === i && pow(o) <= 2 && mine.some(a => Rx(a).ramonda)) return true; // Queen Mother Ramonda
+    { const X = G.players[o.owner]; if (X && X.noAttackVs && X.noAttackVs.against === i && G.turn <= X.noAttackVs.until) return true; } // Willie Lumpkin
     return false;
 }
 function cmdCantAttack(o) { return !!(G && G.players.length === 2 && o.owner !== undefined && cmdBarredFrom(o, 1 - o.owner)); }
