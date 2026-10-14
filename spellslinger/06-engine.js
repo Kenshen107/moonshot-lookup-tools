@@ -187,6 +187,7 @@ async function newGame(myDeck, oppDeck, friend) {
     renderGame();
     await handTo(G.players[0]); await mulligan(G.players[0]);
     await handTo(G.players[1]); await mulligan(G.players[1]);
+    for (const X of G.players) await leylineStart(X);
     G.active = rand(2);
     log(`${G.players[G.active].name} ${you(G.players[G.active]) ? 'go' : 'goes'} first (coin flip).`);
     G.firstTurn = true;
@@ -360,9 +361,18 @@ function leaveBattlefield(o, zone) {
     if (wasOn && zone === 'gy') o.toGyTurn = G.turn;
     if (G && G.toGyQ && G.toGyQ.includes(o)) { G.toGyQ = G.toGyQ.filter(x => x !== o); fire('toGy', { o }); }
 }
+function umbraSave(o) {
+    const a = allPerms().find(x => x.attachedTo === o.uid && Rx(x).umbra && !lostAbilities(x));
+    if (!a) return false;
+    o.dmg = 0; o.dt = false;
+    log(`${a.card.name}'s umbra armor saves ${o.card.name}: ${a.card.name} is destroyed instead.`);
+    dieOrLeave(a, 'gy');
+    return true;
+}
 function destroy(o, why) {
     if (has(o, 'indestructible')) { log(`${o.card.name} is indestructible.`); return; }
     if (o.regen) { o.regen--; o.tapped = true; o.dmg = 0; G.attackers = G.attackers.filter(u => u !== o.uid); log(`${o.card.name} regenerates (rule 701.19).`); return; }
+    if (umbraSave(o)) return;
     log(`${o.card.name} ${why || 'is destroyed'}.`);
     dieOrLeave(o, 'gy');
 }
@@ -448,6 +458,7 @@ function sba() {
                 if (t <= 0) { log(`${o.card.name} dies (0 toughness).`); dieOrLeave(o, 'gy'); changed = true; continue; }
                 if ((o.dmg >= t || (o.dt && o.dmg > 0)) && !has(o, 'indestructible')) {
                     if (o.regen) { o.regen--; o.tapped = true; o.dmg = 0; o.dt = false; log(`${o.card.name} regenerates (rule 701.19).`); changed = true; continue; }
+                    if (umbraSave(o)) { changed = true; continue; }
                     log(`${o.card.name} dies.`); dieOrLeave(o, 'gy'); changed = true; continue;
                 }
             }
@@ -1118,7 +1129,7 @@ async function castSpell(P, o, presetTarget) {
     if (o.plotTurn) { delete o.plotTurn; o.freeCast = false; o.playUntil = 0; }
     if (castAs === 'disturb') { o.card = o.front.back; o.disturbed = true; log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name} with disturb.`); }
     if (castAs === 'retrace') { const lands = P.hand.filter(x => Rx(x).kind === 'land'); const d = P.isAI ? lands.sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0] : await pickCard(P, lands, `${o.card.name}: discard a land card (retrace)`, { required: true }); if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} (retrace).`); } }
-    if (castAs === 'morph') { o.fdCard = o.card; o.card = faceDownCard(); log(`${P.name} ${you(P) ? 'cast' : 'casts'} a creature face down.`); }
+    if (castAs === 'morph') { o.fdCard = o.card; o.card = faceDownCard(!!Rx(o).disguise); log(`${P.name} ${you(P) ? 'cast' : 'casts'} a creature face down.`); }
     if (o._tgt && o._tgt.o) fire('targeted', { o: o._tgt.o, by: P.i });
     if (castAs === 'blitz' && Rx(o).blitz.life) { P.life -= Rx(o).blitz.life; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${Rx(o).blitz.life} life (blitz).`); }
     if (castAs === 'energy') { P.energy -= energyAltN(P); log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${energyAltN(P)} energy instead of the mana cost.`); }
@@ -1163,7 +1174,13 @@ async function castSpell(P, o, presetTarget) {
     (G.castBy = G.castBy || [0, 0])[P.i]++;
     // "When you cast ~" triggers go on the stack above the spell (Hydroid Krasis)
     if (Rx(o).castTrig) G.stack.push({ id: stackSeq++, kind: 'trigger', o, P, target: null, effects: withX(Rx(o).castTrig, item.x), name: `${o.card.name}'s cast trigger` });
-    fire('cast', { P, o });
+    fire('cast', { P, o, target: item.target });
+    // Casualty (702.153): sacrifice a creature with enough power as you cast it, and the spell is copied
+    if (Rx(o).casualty && Rx(o).kind !== 'creature') {
+        const cs = P.bf.filter(x => isCreature(x) && pow(x) >= Rx(o).casualty);
+        const sac = cs.length ? (P.isAI ? cs.slice().sort((a, b) => creatureValue(a) - creatureValue(b))[0] : (await askYes(P, `Casualty ${Rx(o).casualty}: sacrifice a creature with power ${Rx(o).casualty} or more to copy ${o.card.name}?`, { card: o.card }) ? await pickCard(P, cs, `${o.card.name}: sacrifice a creature (casualty)`, { required: true }) : null)) : null;
+        if (sac && (!P.isAI || creatureValue(sac) <= 2 || sac.token)) { fire('sacrificed', { o: sac }); dieOrLeave(sac, 'gy'); G.stack.push({ id: stackSeq++, kind: 'trigger', o, P, target: null, effects: withX(spellEffects(o), item.x), name: `${o.card.name} (casualty copy)`, copy: true }); log(`Casualty: ${sac.card.name} is sacrificed and ${o.card.name} is copied.`); }
+    }
     // Storm (702.40): a copy for each spell cast before it this turn
     if (Rx(o).kw.has('storm') && G.castThisTurn > 1) {
         const n = G.castThisTurn - 1;
@@ -1322,6 +1339,7 @@ async function resolveTop() {
             { const et = opp(item.P).bf.find(x => Rx(x).oppEnterTapped && !lostAbilities(x)); if (et && (r.kind === 'creature' || (Rx(et).oppEnterTapped !== 'creature' && /Artifact/.test(o.card.type)))) { o.tapped = true; log(`${o.card.name} enters tapped (${et.card.name}).`); } }
             if (r.etbCounters) o.counters += r.etbCounters === 'X' ? (item.x || 0) : r.etbCounters === 'spent' ? costTotal(r.cost) + (item.x || 0) * (r.cost.xn || 1) : r.etbCounters;
             if (r.etbNamedX) o.ctr[r.etbNamedX] = item.x || 0;
+            if (r.devour) await devourChoice(item.P, o, r.devour);
             if (r.kickPer && o.kickN) { if (r.kickPer === 'plus') o.counters += o.kickN; else o.ctr[r.kickPer] = (o.ctr[r.kickPer] || 0) + o.kickN; }
             if (r.bloodthirst && opp(item.P).lostTurn === G.turn) { o.counters += r.bloodthirst; log(`${o.card.name} enters with ${r.bloodthirst} +1/+1 counters (bloodthirst).`); }
             // Ravenous: X +1/+1 counters, and a card if X is 5 or more

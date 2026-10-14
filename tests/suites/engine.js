@@ -7,7 +7,7 @@ const NAMES = ['Mountain', 'Grizzly Bears', 'Hill Giant', 'Shivan Dragon', 'Ligh
     'Glorybringer', 'Combat Celebrant', 'Embercleave', 'Temur Battle Rage', 'Light Up the Stage', 'Tyrox, Saurid Tyrant', 'Sol Ring', 'Monastery Swiftspear', 'Swamp', 'Cast Down', 'Kroxa, Titan of Death\'s Hunger',
     'Coercion', 'Incinerate', 'Path of Peace', 'Chastise', 'Condemn', 'Jagged Lightning', 'Kiss of the Amesha', 'Sleight of Hand', 'Telling Time', 'Ancestral Memories', 'Blessed Reversal', 'Whisk Away',
     'Furnace of Rath', "Urza's Armor", 'Cho-Manno, Revolutionary', 'Vigor', 'Pariah', 'Gravebane Zombie', 'Angelic Arbiter', 'Mole Worms', 'Deathgazer', 'Lure', 'Oppressive Rays', 'Angel of Vitality', "Hunter's Insight", 'Call of the Wild', 'Fertile Ground', 'Forest', 'Curfew', 'Esper Battlemage', 'Goblin Arsonist', 'Ascendant Evincar',
-    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate', 'Capsize', "Evincar's Justice", 'Blastoderm', 'Aven Riftwatcher', 'Nezumi Ronin', 'Burr Grafter', 'Benalish Cavalry', 'Fiery Temper', 'Wolfbriar Elemental', 'Lightning Berserker', 'Mountain', 'Blade Sliver', 'Ashenmoor Liege', 'Acolyte of the Inferno', 'Arcbound Bruiser', 'Blade Instructor', 'Cavern Harpy', 'Drifter il-Dal', 'Aleatory', 'Dauthi Horror', 'Indebted Spirit', 'Cloaked Cadet', 'Aerathi Berserker', 'Dandân', 'Island', 'Rift Bolt', 'Ancestral Vision', 'Exalted Angel', 'Aerie Bowmasters', 'Plains', 'Forest', 'Ninja of the Deep Hours', 'Island', 'Syphon Life', 'Baithook Angler', 'Aloe Alchemist'];
+    'Exhaustion', 'Blightning', 'Ironclaw Orcs', 'Murk Dwellers', 'Signal Pest', 'Circle of Protection: Black', 'Spirit of the Hearth', 'Cruel Ultimatum', 'Meglonoth', 'Primeval Force', 'Sever Soul', 'Staff of the Wild Magus', 'Disintegrate', 'Capsize', "Evincar's Justice", 'Blastoderm', 'Aven Riftwatcher', 'Nezumi Ronin', 'Burr Grafter', 'Benalish Cavalry', 'Fiery Temper', 'Wolfbriar Elemental', 'Lightning Berserker', 'Mountain', 'Blade Sliver', 'Ashenmoor Liege', 'Acolyte of the Inferno', 'Arcbound Bruiser', 'Blade Instructor', 'Cavern Harpy', 'Drifter il-Dal', 'Aleatory', 'Dauthi Horror', 'Indebted Spirit', 'Cloaked Cadet', 'Aerathi Berserker', 'Dandân', 'Island', 'Rift Bolt', 'Ancestral Vision', 'Exalted Angel', 'Aerie Bowmasters', 'Plains', 'Forest', 'Ninja of the Deep Hours', 'Island', 'Syphon Life', 'Baithook Angler', 'Aloe Alchemist', 'Bear Umbra', 'Dimir House Guard', 'Angel of Sanctions', 'Bloodspore Thrinax', 'Arno Dorian', 'Bojuka Brigand', 'Cateran Brute', 'Thriving Grubs'];
 
 const BODY = async function (NAMES, ONLY, SKIP) {
     const startTurnUntapForTest = P => { P.bf.forEach(o => { if (o.skipUntap) o.skipUntap = false; else if (!has(o, 'nountap') && !(o.lockedBy && onBf(o.lockedBy) && onBf(o.lockedBy).tapped) && !(Rx(o).mayNotUntap && o.tapped && allPerms().some(l => l.lockedBy === o.uid))) o.tapped = false; }); };
@@ -438,6 +438,31 @@ const BODY = async function (NAMES, ONLY, SKIP) {
         const ba = makeObj(C['Baithook Angler'], 0); P0.gy = [ba];
         ok('disturb casts the back face from the graveyard', castAsOk(P0, ba, 'disturb') && !!ba.front.back, !!ba.front.back);
         P0.isAI = false; P0.gy = []; P0.exile = [];
+    });
+    await check('sweep round 2', async () => {
+        P0.isAI = true; G.active = 0; G.phase = 'main1'; G.stack = []; P0.hand = []; P0.gy = []; P0.exile = [];
+        // Umbra armor
+        const g = put(P0, 'Hill Giant'), um = put(P0, 'Bear Umbra'); um.attachedTo = g.uid;
+        g.dmg = 5; sba();
+        ok('umbra armor: the creature survives lethal damage and the Aura is destroyed', onBf(g.uid) && g.dmg === 0 && !onBf(um.uid), [onBf(g.uid), g.dmg, onBf(um.uid)]);
+        // Disguise: face down 2/2 with ward
+        const dg = put(P0, 'Hill Giant'); dg.fdCard = makeObj(C['Arno Dorian'], 0).card; dg.card = faceDownCard(true);
+        ok('a disguised creature is a 2/2 with ward', pow(dg) === 2 && Rx(dg).ward > 0, [pow(dg), Rx(dg).ward]);
+        // Devour
+        const th = put(P0, 'Bloodspore Thrinax'); const fod = put(P0, 'Hill Giant', { token: true });
+        await devourChoice(P0, th, 1);
+        ok('devour 1: sacrificing a token gives +1/+1 counter', !onBf(fod.uid) && th.counters === 1, [onBf(fod.uid), th.counters]);
+        // Embalm and transmute
+        const as = makeObj(C['Angel of Sanctions'], 0); await applyEffect(P0, { t: 'embalmCopy' }, null, as);
+        const z = P0.bf.find(x => x.token && x.card.name === 'Angel of Sanctions');
+        ok('embalm: a white Zombie token copy with no mana cost', !!z && /Zombie/.test(z.card.type) && (z.card.colors || []).join() === 'W' && !z.card.cost, z && z.card.type);
+        const dh = makeObj(C['Dimir House Guard'], 0); P0.library = [makeObj(C['Hill Giant'], 0), makeObj(C['Grizzly Bears'], 0)];
+        await applyEffect(P0, { t: 'transmute' }, null, dh);
+        ok('transmute finds a card with the same mana value (Dimir House Guard is 3: Hill Giant)', P0.hand.some(x => x.card.name === 'Hill Giant'), P0.hand.map(x => x.card.name));
+        // Ally trigger, tutor
+        ok('Bojuka Brigand reads an Ally-enters trigger', Rx(put(P0, 'Bojuka Brigand')).trig.some(t => t.fn === 'allyEnters'));
+        ok('Cateran Brute reads its Mercenary search', Rx(put(P0, 'Cateran Brute')).acts.length > 0);
+        P0.isAI = false;
     });
     await check('precon round 2: spells', async () => {
         const c1 = put(P1, 'Hill Giant'), l1 = put(P1, 'Mountain'); c1.tapped = l1.tapped = true;

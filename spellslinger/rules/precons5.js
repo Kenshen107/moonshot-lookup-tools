@@ -6,10 +6,15 @@ registerRules({
     name: 'precons5',
     effects: [
         [/^draw (a|one|two|three) cards? at the beginning of the next turn's upkeep$/i, m => ({ t: 'delayedDraw', n: num(m[1]) })],
+        [/^create a token that's a copy of ~, except it's a white Zombie in addition to its other types and it has no mana cost$/i, () => ({ t: 'embalmCopy' })],
+        [/^search your library for a card with the same mana value as ~, reveal it, put it into your hand, then shuffle$/i, () => ({ t: 'transmute' })],
+        [/^search your library for an? ([A-Z][a-z]+) permanent card with mana value (\d+) or less, put it onto the battlefield, then shuffle$/i, m => ({ t: 'tutor', what: `${m[1]} permanent mv${m[2]}`, bf: true })],
         [/^(?:~|it) explores$/i, () => ({ t: 'exploreSelf' })],
         [/^return a (white|blue|black|red|green) or (white|blue|black|red|green) creature you control to its owner's hand$/i, m => ({ t: 'returnOwn', colors: [SW_COLORS[m[1].toLowerCase()], SW_COLORS[m[2].toLowerCase()]] })]
     ],
     triggers: [
+        [/^Whenever ~ or another Ally you control enters, (.+)$/, () => ({ ev: 'enters', fn: 'allyEnters' })],
+        [/^Whenever you cast a spell that targets ~, (.+)$/, () => ({ ev: 'cast', fn: 'targetsMe', who: 'any', filter: 'any' })],
         [/^When(?:ever)? ~ is turned face up, (.+)$/, () => ({ ev: 'turnedUp', fn: 'selfTurned' })]
     ],
     lines: [
@@ -39,6 +44,15 @@ registerRules({
             if ((m = line.match(/^When you control no (Islands|Swamps|Forests|Mountains|Plains), sacrifice ~\.$/))) { R.sacNoLand = m[1].slice(0, -1); return true; }
             if ((m = line.match(/^(Mega)?morph ((?:\{[^}]+\})+)$/i))) { R.morph = parseCost(m[2]); if (m[1]) R.megamorph = true; return true; }
             if ((m = line.match(/^Ninjutsu ((?:\{[^}]+\})+)$/))) { R.ninjutsu = parseCost(m[1]); return true; }
+            if ((m = line.match(/^Disguise ((?:\{[^}]+\})+)$/))) { R.morph = parseCost(m[1]); R.disguise = true; return true; }
+            if ((m = line.match(/^Devour (\d+)$/))) { R.devour = +m[1]; return true; }
+            if ((m = line.match(/^Casualty (\d+)$/))) { R.casualty = +m[1]; return true; }
+            if (/^Enlist$/.test(line)) { R.trig.push({ ev: 'attacks', effects: [{ t: 'enlist' }] }); return true; }
+            if ((m = line.match(/^Whenever ~ attacks, you may pay ((?:\{[^}]+\})+)\. If you do, put a \+1\/\+1 counter on it\.$/)) && !/\{E\}/.test(m[1])) { R.trig.push({ ev: 'attacks', effects: [{ t: 'payCounter', cost: parseCost(m[1]) }] }); return true; }
+            if (/^Each creature you control with a \+1\/\+1 counter on it has trample\.$/.test(line)) { R.statics.push({ fn: 'hasPlus', p: 0, q: 0, kw: ['trample'] }); return true; }
+            if (/^Umbra armor$/.test(line)) { R.umbra = true; return true; }
+            if (/^If ~ is in your opening hand, you may begin the game with it on the battlefield\.$/.test(line)) { R.leyline = true; return true; }
+            if ((m = line.match(/^Squad ((?:\{[^}]+\})+)$/))) { R.multikicker = parseCost(m[1]); R.trig.push({ ev: 'selfEnters', effects: [{ t: 'squadCopies' }] }); return true; }
             if ((m = line.match(/^Plot ((?:\{[^}]+\})+)$/))) { R.plot = parseCost(m[1]); return true; }
             if ((m = line.match(/^Disturb ((?:\{[^}]+\})+)$/))) { R.disturb = parseCost(m[1]); return true; }
             if (/^Retrace$/.test(line)) { R.retrace = true; return true; }

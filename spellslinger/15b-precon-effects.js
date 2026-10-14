@@ -184,6 +184,31 @@ async function preconEffect(P, e, t, src, O, name) {
             if (!ok) { pull(X.exile, x); X.gy.push(x); log(`${x.card.name} is put into the graveyard.`); }
             break;
         }
+        case 'embalmCopy': { const { _r, ...c } = src.front || src.card; tokenCopyOf(P, { ...c, colors: ['W'], type: /—/.test(c.type) ? `${c.type} Zombie` : `${c.type} — Zombie`, cost: '', cmc: 0 }); break; }
+        case 'transmute': {
+            const mv = (src.front || src.card).cmc || 0;
+            const pool = P.library.filter(x => (x.card.cmc || 0) === mv);
+            const pick = pool.length ? (P.isAI ? pool.slice().sort((a, b) => aiKeepValue(P, b) - aiKeepValue(P, a))[0] : await pickCard(P, pool, `${name}: search for a card with mana value ${mv} (transmute)`)) : null;
+            if (pick) { pull(P.library, pick); P.hand.push(pick); log(`${P.name} ${you(P) ? 'search' : 'searches'} for a card with mana value ${mv}${you(P) ? ` (${pick.card.name})` : ''}.`); }
+            shuffle(P.library);
+            break;
+        }
+        case 'enlist': {
+            if (!onBf(src.uid)) break;
+            const ok = P.bf.filter(x => isCreature(x) && x !== src && !x.tapped && !x.sick && !(G.attackers || []).includes(x.uid));
+            if (!ok.length) break;
+            const pick = P.isAI ? ok.slice().sort((a, b) => pow(b) - pow(a))[0] : await pickCard(P, ok, `${name}: enlist - tap a creature that isn't attacking to add its power`);
+            if (pick && (!P.isAI || pow(pick) >= 1)) { pick.tapped = true; src.tp += pow(pick); log(`${src.card.name} enlists ${pick.card.name} (+${pow(pick)}/+0).`); }
+            break;
+        }
+        case 'payCounter': {
+            if (!onBf(src.uid)) break;
+            const plan = planPayment(P, e.cost);
+            const yes = plan && (P.isAI || AUTOPLAY ? true : await askYes(P, `${src.card.name}: pay ${costSymbols(e.cost)} to put a +1/+1 counter on it?`, { card: src.card }));
+            if (yes) { plan.forEach(x => tapSource(P, x)); putCounters(src, 1, P); log(`${src.card.name} gets a +1/+1 counter.`); }
+            break;
+        }
+        case 'squadCopies': { if (!onBf(src.uid)) break; for (let k = 0; k < (src.kickN || 0); k++) tokenCopyOf(P, src.front || src.card); break; }
         case 'delayedDraw': { (G.delayed = G.delayed || []).push({ at: 'upkeep', own: false, P, after: G.turn, effects: [{ t: 'draw', n: e.n }], src, label: `${name}: ${P.name} draws ${e.n === 1 ? 'a card' : e.n + ' cards'} at the beginning of the next upkeep.` }); log(`${name}: you'll draw at the beginning of the next turn's upkeep.`); break; }
         case 'renown': { if (!onBf(src.uid) || src.renowned) break; src.renowned = true; const got = putCounters(src, e.n, P); log(`${src.card.name} becomes renowned (${got} +1/+1 counter${got === 1 ? '' : 's'}).`); break; }
         case 'modular': {
@@ -421,6 +446,7 @@ Object.assign(STATIC_FN, {
 COUNT_EXTRA.push([/^(twice )?the number of times (?:it|~|this creature) was kicked$/, m => o => (o.kickN || 0) * (m[1] ? 2 : 1)]);
 COUNT_EXTRA.push([/^(?:the number of )?(white|blue|black|red|green) permanents you control$/, m => o => G.players[o.owner].bf.filter(x => (x.card.colors || []).includes({ white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' }[m[1]])).length]);
 // Sweep round 1: lords by color, "can't be blocked by ..." limits, keyword triggers
+STATIC_FN.hasPlus = o => o.counters > 0;
 for (const c of ['W', 'U', 'B', 'R', 'G']) { STATIC_FN['c_' + c] = o => (o.card.colors || []).includes(c); BLOCK_FN['not_' + c] = b => !(b.card.colors || []).includes(c); }
 for (let n = 1; n <= 8; n++) BLOCK_FN['powLt' + n] = b => pow(b) < n;
 BLOCK_FN.powGeAtk = (b, atk) => pow(b) >= pow(atk);
@@ -428,6 +454,8 @@ Object.assign(TRIG_FN, {
     renown: (o, ctx) => ctx.src === o && !o.renowned,
     modular: (o, ctx) => { if (ctx.o !== o) return false; G.lastModular = Math.max(0, o.counters); return true; },
     selfDies: (o, ctx) => ctx.o === o,
+    allyEnters: (o, ctx) => ctx.o.owner === o.owner && hasType(ctx.o, 'Ally'),
+    targetsMe: (o, ctx) => ctx.P.i === o.owner && !!ctx.target && ctx.target.o === o,
     selfTurned: (o, ctx) => ctx.o === o,
     selfHit: (o, ctx) => ctx.src === o,
     training: (o, ctx) => ctx.list.includes(o) && ctx.list.some(x => x !== o && x.owner === o.owner && pow(x) > pow(o)),
@@ -440,8 +468,8 @@ Object.assign(BLOCK_FN, {
 });
 
 // ---- Morph (702.37): a face-down 2/2 for {3}; pay the morph cost any time you have priority to turn it face up ----
-function faceDownCard() {
-    return { id: 'facedown', name: 'Face-down creature', fullName: 'Face-down creature', cost: '', cmc: 0, type: 'Creature', text: '', power: '2', toughness: '2', colors: [], ci: [], img: null, imgS: null, rarity: 'common', set: '', num: '', layout: 'normal', legal: {}, usd: null, frame: [], released: null, v: 3 };
+function faceDownCard(ward) {
+    return { id: 'facedown', name: 'Face-down creature', fullName: 'Face-down creature', cost: '', cmc: 0, type: 'Creature', text: ward ? 'Ward {2}' : '', power: '2', toughness: '2', colors: [], ci: [], img: null, imgS: null, rarity: 'common', set: '', num: '', layout: 'normal', legal: {}, usd: null, frame: [], released: null, v: 3 };
 }
 function canTurnUp(P, o) { return !!o.fdCard && onBf(o.uid) && o.owner === P.i && !!Rx({ card: o.fdCard }).morph && !!planPayment(P, Rx({ card: o.fdCard }).morph); }
 function turnFaceUp(P, o) {
@@ -514,6 +542,31 @@ async function humanPlot(uid) {
     if (!o || !canPlot(P, o)) { toast('Plot at sorcery speed: in your main phase.'); return; }
     if (!canPayPlot(P, o)) { toast('Not enough mana.'); return; }
     plotCard(P, o);
+}
+// ---- Leylines: begin the game with it on the battlefield ----
+async function leylineStart(P) {
+    for (const o of P.hand.filter(x => Rx(x).leyline)) {
+        const yes = P.isAI || AUTOPLAY ? true : await askYes(P, `${o.card.name} is in your opening hand: begin the game with it on the battlefield?`, { card: o.card });
+        if (yes) { pull(P.hand, o); putOntoBattlefield(P, o, false); log(`${P.name} ${you(P) ? 'begin' : 'begins'} the game with ${o.card.name} on the battlefield.`); }
+    }
+}
+// ---- Devour (702.82): as it enters, sacrifice any number of other creatures; it gets N +1/+1 counters for each ----
+async function devourChoice(P, o, n) {
+    const pool = P.bf.filter(x => isCreature(x) && x !== o);
+    if (!pool.length) return;
+    let eaten = 0;
+    if (P.isAI || AUTOPLAY) {
+        for (const x of pool.filter(y => y.token || creatureValue(y) <= 1.5).slice(0, 3)) { fire('sacrificed', { o: x }); dieOrLeave(x, 'gy'); eaten++; }
+    } else {
+        for (let guard = 0; guard < 20; guard++) {
+            const left = P.bf.filter(x => isCreature(x) && x !== o);
+            if (!left.length) break;
+            const pick = await pickCard(P, left, `${o.card.name}: sacrifice a creature to devour it (${n} counter${n === 1 ? '' : 's'} each) - or skip`);
+            if (!pick) break;
+            fire('sacrificed', { o: pick }); dieOrLeave(pick, 'gy'); eaten++;
+        }
+    }
+    if (eaten) { const got = putCounters(o, n * eaten, P); log(`${o.card.name} devours ${eaten} creature${eaten === 1 ? '' : 's'} and gets ${got} +1/+1 counters.`); }
 }
 // ---- Suspend (702.62): exile from hand with time counters; at each of your upkeeps remove one; the last one casts it free ----
 function canSuspend(P, o) { return !!Rx(o).suspend && P.hand.includes(o) && !G.over && canCastNow(P, o); }

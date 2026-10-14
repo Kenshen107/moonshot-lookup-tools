@@ -518,6 +518,10 @@ function rulesFor(card) {
     text = text.replace(/^((?:\{[^}]+\})+), \{T\} or ((?:\{[^}]+\})+), \{T\}: (.+)$/gm, '$1, {T}: $3\n$2, {T}: $3'); // Mirrodin's Shards
     // Sweep round 1 (2026-10-13): "{T}: Add ... ~ doesn't untap during your next untap step." keeps the mana line and marks the land
     text = text.replace(/^(\{T\}: Add [^\n]*?)\. ~ doesn't untap during your next untap step\.[ \t]*$/gm, '$1.\nLOCKTAP');
+    // Sweep round 2 (2026-10-14): more keywords written out as the sentences they stand for
+    text = text.replace(/^Blitz ((?:\{[^}]+\})+)[ \t]*$/gm, 'Blitz—$1')
+        .replace(/^Embalm ((?:\{[^}]+\})+)[ \t]*$/gm, '$1, Exile ~ from your graveyard: Create a token that\'s a copy of ~, except it\'s a white Zombie in addition to its other types and it has no mana cost. Activate only as a sorcery.')
+        .replace(/^Transmute ((?:\{[^}]+\})+)[ \t]*$/gm, '$1, Discard ~: Search your library for a card with the same mana value as ~, reveal it, put it into your hand, then shuffle. Activate only as a sorcery.');
     // Repeating keywords (precon round 3, 2026-10-09): written out as the sentences they stand for
     text = text.replace(/^Bushido (\d+)[ \t]*$/gm, 'Whenever ~ blocks or becomes blocked, ~ gets +$1/+$1 until end of turn.')
         .replace(/^Soulshift (\d+)[ \t]*$/gm, 'When ~ dies, you may return target Spirit card with mana value $1 or less from your graveyard to your hand.')
