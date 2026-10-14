@@ -88,6 +88,15 @@ function report(all, pageErrors, secs) {
     Object.entries(uniq).forEach(([k, n]) => console.log(`  page error x${n}: ${k.slice(0, 400)}`));
     const slow = all.slice().sort((a, b) => b.ms - a.ms).slice(0, 3);
     console.log('Slowest:', slow.map(r => `seed ${r.seed} ${r.ms}ms`).join(', '));
+    const cmp = arg('compare', null);
+    if (cmp && cmp !== true) {
+        // Same seeds, same decks: a refactor that should not change play must give the same winner, length and ending for every seed
+        const base = JSON.parse(fs.readFileSync(cmp, 'utf8')), bySeed = Object.fromEntries(base.map(r => [r.seed, r]));
+        const diff = all.filter(r => bySeed[r.seed] && (bySeed[r.seed].winner !== r.winner || bySeed[r.seed].turns !== r.turns || bySeed[r.seed].reason !== r.reason));
+        console.log(`Compared with ${cmp}: ${all.filter(r => bySeed[r.seed]).length} seeds in both, ${diff.length} differ`);
+        diff.slice(0, 8).forEach(r => console.log(`  seed ${r.seed}: was ${bySeed[r.seed].winner}/${bySeed[r.seed].turns} now ${r.winner}/${r.turns}`));
+        if (diff.length) process.exitCode = 1;
+    }
     fs.mkdirSync(path.join(ROOT, 'tests', '.out'), { recursive: true });
     fs.writeFileSync(path.join(ROOT, 'tests', '.out', 'lab.json'), JSON.stringify(all));
     process.exitCode = hung.length || err.length || bad.length || logged.length ? 1 : 0;
