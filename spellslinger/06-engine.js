@@ -2512,7 +2512,7 @@ async function applyEffect(P, e, t, src) {
             if (l) { leaveBattlefield(l, 'hand'); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${l.card.name} to hand.`); }
             break;
         }
-        case 'tapAll': allPerms().filter(x => isCreature(x) && (e.who === 'all' || x.owner !== P.i)).forEach(x => { x.tapped = true; }); log(`${e.who === 'all' ? 'All creatures are' : `${G.players[1 - P.i].name}'s creatures are`} tapped.`); break;
+        case 'tapAll': allPerms().filter(x => isCreature(x) && (e.who === 'all' || x.owner !== P.i)).forEach(x => { x.tapped = true; }); log(`${e.who === 'all' ? 'All creatures are' : `${foes(P).map(F => F.name).join(', ')}'s creatures are`} tapped.`); break;
         case 'noPrevent': G.noPrevent = G.turn; if (G.fog === G.turn) G.fog = null; log('Damage can\'t be prevented this turn.'); break;
         case 'exileGy': { const n = e.all ? O.gy.length : Math.min(e.n || 1, O.gy.length); const gone = O.gy.splice(0, n); O.exile.push(...gone); log(`${name} exiles ${gone.length ? gone.map(x => x.card.name).join(', ') : 'nothing'} from ${O.name}'s graveyard.`); break; }
         case 'steal': {
