@@ -25,6 +25,7 @@
         <label class="acct" title="Each player has their own coins, collection, decks and record (saved in this browser)">👤 <select id="acctSel" onchange="pickAccount(this.value)" aria-label="Player"></select></label>
         <span class="coins" id="coinPill" title="Coins: free, in-game only. Win games to earn more.">🪙 <span id="coinCount">0</span></span>
         <button type="button" class="coins cash" id="cashPill" data-modes="campaign shop" onclick="cashPillClick()" title="Shop cash: in-game money. Earn it in the Shop; spend it at the Distributor and on imported decks. Tap to open the Shop.">💵 <span id="cashCount">$0.00</span></button>
+        <button type="button" class="btn small desk-only" onclick="aboutPanel()" title="What this game is, what it can do, and what changed lately">ℹ️ About</button>
         <button class="btn small" data-modes="sandbox" onclick="addTestCoins()" title="Test build: add free coins to this player">＋🪙 Add coins</button>
         <button class="btn small" data-modes="sandbox" onclick="restartPlayer()" title="Test build: wipe this player's coins, cards, decks and record and start fresh">↺ Start over</button>
         <button type="button" class="btn small phone-only" id="acctBtn" onclick="accountSheet()" aria-label="Player and test options">👤 <span id="acctName"></span></button>
@@ -295,6 +296,7 @@
     </main>
 
     <footer>
+        <a href="#" onclick="aboutPanel(); return false;">ℹ️ About this game and what's new</a><br>
         Spellslinger Duels is a free, fan-made test game. Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>; pack odds from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>; Commander decks from <a href="https://edhrec.com" target="_blank" rel="noopener">EDHREC</a>. Coins and shop cash are in-game only and can't be bought or cashed out.<br>
         Spellslinger Duels is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
     </footer>
@@ -348,7 +350,7 @@
 <script src="spellslinger/00-storage.js"></script>
 <script>
 // The saved data is read from IndexedDB first; then these load one after another, in this order (they share one global scope)
-loadGame(["01-core.js", "rules/precons5.js", "rules/precons4.js", "rules/precons3.js", "rules/precons2.js", "rules/precons1.js", "rules/m10.js", "rules/mirrodin.js", "rules/gitrog.js", "rules/brudiclad.js", "rules/sandman.js", "rules/tyrox.js", "rules/top1000-r2.js", "rules/landfall.js", "rules/xspells.js", "rules/top1000.js", "rules/starter-kits.js", "rules/welcome.js", "02-card-reader.js","02b-token-reader.js", "03-comp-rules.js", "04-views-decks.js", "04b-modes.js", "04c-random-decks.js", "05-draft.js", "06-engine.js", "07-ai.js", "07b-playstyles.js", "07c-politics.js", "08-table.js", "09-playtest.js", "10-shop.js", "11-grading.js", "12-distributor.js", "13-campaign.js","13b-precon-library.js", "14-rules-abilities.js", "15-rules-conditions.js", "15b-precon-effects.js", "16-startup.js"]);
+loadGame(["01-core.js", "rules/precons5.js", "rules/precons4.js", "rules/precons3.js", "rules/precons2.js", "rules/precons1.js", "rules/m10.js", "rules/mirrodin.js", "rules/gitrog.js", "rules/brudiclad.js", "rules/sandman.js", "rules/tyrox.js", "rules/top1000-r2.js", "rules/landfall.js", "rules/xspells.js", "rules/top1000.js", "rules/starter-kits.js", "rules/welcome.js", "02-card-reader.js","02b-token-reader.js", "03-comp-rules.js", "04-views-decks.js", "04b-modes.js", "04c-random-decks.js", "04d-about.js", "05-draft.js", "06-engine.js", "07-ai.js", "07b-playstyles.js", "07c-politics.js", "08-table.js", "09-playtest.js", "10-shop.js", "11-grading.js", "12-distributor.js", "13-campaign.js","13b-precon-library.js", "14-rules-abilities.js", "15-rules-conditions.js", "15b-precon-effects.js", "16-startup.js"]);
 </script>
 </body>
 </html>

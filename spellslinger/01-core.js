@@ -73,7 +73,7 @@ function setHTML(el, html) {
 // Phones: one sheet for the rest of the tabs, one for the player and test buttons
 const isPhone = () => window.matchMedia('(max-width: 600px)').matches;
 function menuSheet(title, inner) { $('sheetHost').innerHTML = `<div class="sheet-bg" onclick="if (event.target === this) closeSheet()"><div class="sheet one" role="dialog" aria-label="${esc(title)}"><div><h3>${esc(title)}</h3>${inner}<div class="actions"><button class="btn" onclick="closeSheet()">Close</button></div></div></div></div>`; }
-function moreSheet() { menuSheet('More', `<div class="menu-list">${MORE_VIEWS.filter(([k]) => modeAllows(k)).map(([k, label]) => `<button class="btn${$(`view-${k}`).classList.contains('hidden') ? '' : ' primary'}" onclick="showView('${k}')">${label}</button>`).join('')}</div>`); }
+function moreSheet() { menuSheet('More', `<div class="menu-list">${MORE_VIEWS.filter(([k]) => modeAllows(k)).map(([k, label]) => `<button class="btn${$(`view-${k}`).classList.contains('hidden') ? '' : ' primary'}" onclick="showView('${k}')">${label}</button>`).join('')}<button class="btn" onclick="closeSheet(); aboutPanel()">ℹ️ About</button></div>`); }
 function accountSheet() {
     menuSheet('Player', `<label class="note" for="acctSel2">Who's playing</label>
         <select id="acctSel2" onchange="closeSheet(); pickAccount(this.value)" style="width:100%; margin-top:4px;">${$('acctSel').innerHTML}</select>

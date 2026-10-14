@@ -1,0 +1,36 @@
+// About panel (owner's request 2026-10-15): what the game is, what it can do, and an update log, for people seeing it for the first time.
+// Opens from the header (ℹ️ About), the phone More sheet and the footer. Keep ABOUT_LOG current: add a line when a round of work ships.
+const ABOUT_FEATURES = [
+    ['⚔️ Play real Magic', 'A rules engine with the stack and responses, counterspells, full combat (first strike, trample, deathtouch, lifelink and more), commander tax and commander damage. Modern, Commander, Casual and Limited formats, 1 vs 1 or a 4-player Commander pod, or two people on one device.'],
+    ['🤖 Computer opponents with personalities', 'Easy, normal and hard levels and seven playstyles (Aggro, Control, Midrange, Ramp, Tokens, Voltron, Spellslinger). "Surprise me" builds a new random playable deck every game. Face any commander, this week\'s trending commanders, a pasted decklist or any of 553 real precons.'],
+    ['🎭 Table politics', 'In a pod, the table gangs up on whoever pulls ahead (the archenemy). Bots show moods and speech bubbles, and you can make Peace, Hands off and Gang up deals. They keep their word, remember betrayal, and stop dealing with you after two broken deals.'],
+    ['🎴 Packs, boxes and drafts', 'Open packs from nearly any paper set (Alpha to today) with real booster odds, foils and serialized cards. Reveals grow with the pull, and you can open a whole box at once. Run an 8-seat booster draft (you plus 7 bots) for Mirrodin or Magic 2010 and play three rounds.'],
+    ['🗂️ Deck building', 'A Moxfield-style builder with a mana curve, color balance and sample hands, plus import from Moxfield, Arena, Archidekt or plain text. A goldfish playtester, preset fully working Commander decks, and a library of all 553 precons marked Ready or not.'],
+    ['🗺️ Three game modes', 'Sandbox (free play, no shop money), Campaign (Kitchen Table, Friday Night and Regional tiers with bosses and a Precon Circuit) and Shop Simulator (run a card shop: price, haggle with nine kinds of customers, order boxes, grade cards).'],
+    ['📱 Built for the table and the phone', 'An always-visible End turn button, a phase strip, tap-your-own-lands payment, Arena-style stacked boards, every question as an on-screen panel, and a full phone layout.'],
+    ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log.']
+];
+const ABOUT_LOG = [
+    ['Oct 14', ['4-player Commander pods with a pod strip on the table, and seven playstyles with matching decks.', 'Table politics: archenemy, bot moods with speech bubbles, a free pod mulligan, and deals (Peace, Hands off, Gang up) with trust and reputation.', 'Rules fixes: choose whether a dead commander returns to the command zone, choose what to discard, and choose which creatures to tap for Saddle and Crew (saddle more than once).', 'About 750 more cards fully automated (Morph, Suspend, Ninjutsu, Plot, Embalm, Squad and more); "Surprise me" random decks.', 'An offline test lab plays hundreds of games a minute; it found and fixed frozen games and a duplicated-card bug.', 'Balance: drain decks count as a threat sooner; one grudge line per betrayal.']],
+    ['Oct 9', ['Sandbox has no shop cash: imports and missing cards are free there.']],
+    ['Oct 8', ['Three game modes: Sandbox, Campaign and Shop Simulator, each with its own money and record.', 'The Precon Library (553 decks) and the Precon Circuit, plus four precon rounds of new keywords.', 'The Play tab picks a deck type, then a same-type opponent. Smarter AI blocking.', 'The four other Aetherdrift Tyrant decks as fully working presets.']],
+    ['Oct 7', ['8-seat booster draft; every Mirrodin and Magic 2010 card automated.', 'Top-1000 rounds: 821 of the top 1,000 Commander cards automated. Preset decks: Sandman, Brudiclad, Gitrog, Tyrox.', 'Card coverage on Home; you choose what to sacrifice; the opponent\'s turn plays out step by step.', 'Faster: split into script files, saved data moved to IndexedDB, redraws only what changed.']],
+    ['Oct 6', ['Rules rounds 3 to 6: mana pool, kicker, sagas, storm, cascade, delve, protection, two-faced cards, planeswalker attacks and modes.', 'Stacked pack reveal, grading, the 10-minute shop day, pack prices from the cards inside, coin boxes and opening a whole box.', 'Every Welcome Deck and Starter Kit card automated; tap-your-own-lands payment; phone layout; play a friend on one device.', 'The Moxfield-style deck builder and decklist import; face any commander or a pasted list.']],
+    ['Oct 5', ['Launch: packs, decks, and Modern and Commander against the computer.', 'The stack, priority and counterspells; a Rules tab; the playtester; multiple players; the card shop, distributor and sealed packs; precons, the campaign ladder and AI levels; a flexible game table with counters.']]
+];
+function aboutPanel() {
+    const c = CARD_COVERAGE, pct = n => Math.round(100 * n / c.total);
+    showModal(`<div class="about">
+        <h2>🪄 About Spellslinger Duels</h2>
+        <p class="about-lead">A free, fan-made Magic: The Gathering test game that runs in your browser. Open packs, build decks, run a card shop and play against the computer. No account, no download, no real money: coins and cash are for the game only. It is a test build, so expect rough edges, and it is not made or run by any store.</p>
+        <p class="about-stat"><strong>${c.full.toLocaleString()}</strong> cards fully automated &middot; <strong>${pct(c.full + c.partial)}%</strong> of paper cards can be cast <span>(measured ${esc(c.measured)})</span></p>
+        <h3>What it can do</h3>
+        <div class="about-grid">${ABOUT_FEATURES.map(([t, d]) => `<div class="about-card"><strong>${t}</strong><p>${esc(d)}</p></div>`).join('')}</div>
+        <h3>Update log</h3>
+        ${ABOUT_LOG.map(([d, items], i) => `<details${i === 0 ? ' open' : ''}><summary>${esc(d)}</summary><ul>${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>`).join('')}
+        <h3>Credits</h3>
+        <p class="about-credit">Cards, images and prices from Scryfall; pack contents from MTGJSON; Commander decks from EDHREC; rules from Wizards' Comprehensive Rules. Unofficial Fan Content under Wizards of the Coast's Fan Content Policy, not approved or endorsed by Wizards.</p>
+        <div class="actions"><button class="btn primary" onclick="closeModal()">Got it</button></div>
+    </div>`);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('#modalHost .about')) closeModal(); });

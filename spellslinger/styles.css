@@ -887,3 +887,20 @@
         .pl-set-h { margin: 10px 0 4px; font-weight: 700; color: var(--text-heading); }
         .pl-decks { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
         .pl-deck.pl-warn { opacity: 0.75; border-style: dashed; }
+
+/* About panel */
+.about { text-align: left; }
+.about h2 { text-align: center; }
+.about h3 { font-size: 1.1rem; margin: 16px 0 6px; color: var(--text-heading); }
+.about p { font-size: 0.9rem; line-height: 1.5; color: var(--text-primary); }
+.about .about-lead { color: var(--text-soft); }
+.about .about-stat { text-align: center; margin: 10px 0; color: var(--text-soft); }
+.about .about-stat span { font-size: 0.85rem; color: var(--text-secondary); }
+.about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.about-card { background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; }
+.about-card p { margin-top: 4px; font-size: 0.85rem; color: var(--text-soft); }
+.about details { border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; margin-bottom: 6px; background: var(--bg-inset); }
+.about summary { cursor: pointer; font-weight: 600; font-size: 0.95rem; }
+.about ul { margin: 6px 0 2px 18px; font-size: 0.85rem; line-height: 1.5; color: var(--text-soft); }
+.about .about-credit { font-size: 0.85rem; color: var(--text-secondary); }
+.about .actions { text-align: center; margin-top: 14px; }
