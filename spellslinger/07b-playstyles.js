@@ -110,7 +110,13 @@ function styleAttackers(P, base, cands, D) {
 function podThreat(F) {
     const creatures = F.bf.filter(isCreature);
     return creatures.reduce((a, o) => a + Math.max(0, pow(o)), 0) + creatures.length * 0.5 + F.bf.filter(o => !isCreature(o)).length * 0.25
-        + (F.bf.some(o => o.isCommander) ? 2 : 0) + F.hand.length * 0.3 + Math.max(0, F.life - 40) * 0.1;
+        + (F.bf.some(o => o.isCommander) ? 2 : 0) + F.hand.length * 0.3 + Math.max(0, F.life - 40) * 0.1 + drainThreat(F);
+}
+// Permanents that drain every opponent bypass the board and any peace deals, so the table should see them as a threat sooner
+const DRAIN_RE = /each opponent loses|deals? \d+ damage to each opponent|each opponent (sacrifices|discards)|whenever an opponent (loses|draws|casts)/i;
+function drainThreat(F) {
+    const n = F.bf.filter(o => o.card && DRAIN_RE.test(String(o.card.text || ''))).length;
+    return Math.min(n, 5) * 3;
 }
 // 1v1 and pod: remember who hurt me
 function noteGrudge(target, src, n) {

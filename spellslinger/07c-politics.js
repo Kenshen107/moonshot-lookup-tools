@@ -106,6 +106,7 @@ function politicsAttacked(att, def, n) {
     if (!def || !def.isAI || def.out || att === def) return;
     const g = (def.grudge && def.grudge[att.i]) || 0;
     const who = you(att) ? 'you' : att.name.split(',')[0];
+    if (def._betrayedTurn === G.turn) return; // the betrayal line already said it
     if (g >= 6) botSay(def, 'angry', `That's twice now, ${who}. I'm remembering this.`, `hit${att.i}`);
     else botSay(def, 'annoyed', `Really, ${who}? Fine. We'll see how that goes.`, `hit${att.i}`);
 }
@@ -157,6 +158,8 @@ function dealScore(bot, from, type, x) {
     const live = G.players.filter(P => !P.out);
     const mean = live.reduce((a, P) => a + podThreat(P), 0) / live.length;
     const mood = botMood(bot).mood;
+    // Burned twice (two broken deals): no more deals, from anyone who was betrayed
+    if (bot.trust && bot.trust[from.i] <= -6) return { score: -99, parts: {}, reason: "You've broken your word twice. No more deals." };
     let s = 1 + 2 * trust - grudge * 0.4;
     const parts = { trust: 2 * trust, grudge: -grudge * 0.4 };
     if (type === 'peace' || type === 'spare') {
@@ -210,6 +213,7 @@ function breakDeal(d, by, why) {
     other.trust = other.trust || {}; other.trust[by] = (other.trust[by] || 0) - 3;
     other.grudge = other.grudge || {}; other.grudge[by] = (other.grudge[by] || 0) + 4;
     log(`💔 ${nm(culprit) === 'you' ? 'You break' : `${nm(culprit)} breaks`} the ${DEAL_TYPES[d.type].name.toLowerCase()} deal with ${nm(other) === 'you' ? 'you' : nm(other)}${why ? ` (${why})` : ''}.`);
+    other._betrayedTurn = G.turn;
     if (other.isAI) botSay(other, 'angry', `You gave me your word, ${nm(culprit)}. I won't forget that.`, `betray${by}`);
 }
 // A deal runs out when the player who made it starts their next turn
