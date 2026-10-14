@@ -56,6 +56,22 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         G.active = 0; G.phase = 'main2'; await endTurn(A);
         window.pickCard = realPick;
         out.push(['a person chooses what to discard down to seven (twice for nine cards)', asked.length === 2 && A.hand.length === 7 && A.gy.filter(x => x.card.name === 'Grizzly Bears').length === 2, { asked, hand: A.hand.length }]);
+        // Saddle: you choose who to tap, and you can saddle again and again
+        T.clear(); A.hand.length = 0; G.active = 0; G.phase = 'main1'; G.turn = 10;
+        const mountCard = { ...C['Grizzly Bears'], id: 'test-mount', name: 'Test Mount', fullName: 'Test Mount', text: 'Saddle 2', type: 'Creature — Horse Mount', power: '3', toughness: '3' };
+        const mount = T.put(A, mountCard);
+        const bears = [T.put(A, C['Grizzly Bears']), T.put(A, C['Grizzly Bears']), T.put(A, C['Grizzly Bears'])];
+        const sacks = [];
+        window.pickCard = async (P, list, title) => { sacks.push(title); return list.find(x => x === bears[2]) || list.find(x => x !== mount); };
+        const act = actsOf(mount).find(x => x.saddle !== undefined);
+        const first = await activate(A, mount, act);
+        out.push(['saddling asks you which creature to tap, and taps the one you chose', first && bears[2].tapped && !bears[0].tapped && !bears[1].tapped && sacks.length === 1, { tapped: bears.map(b => b.tapped), asks: sacks.length }]);
+        const again = await activate(A, mount, act);
+        out.push(['a mount can be saddled a second time in the same turn', again && bears[0].tapped && mount.saddlers.length === 2, { again, saddlers: mount.saddlers.length }]);
+        const third = await activate(A, mount, act);
+        const fourth = canActivate(A, mount, act);
+        out.push(['it can be saddled a third time, and stops when no creature is left to tap', third && mount.saddlers.length === 3 && fourth === false, { third, fourth, saddlers: mount.saddlers.length }]);
+        window.pickCard = realPick;
         return out;
     });
     const results = formatChecks(r);

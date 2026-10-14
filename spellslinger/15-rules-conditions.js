@@ -604,7 +604,7 @@ function actPlan(P, o, a, xExtra = 0) {
         return [];
     }
     if (a.crew !== undefined) return !dampingOn() && crewPick(P, o, a.crew) ? [] : null;
-    if (a.saddle !== undefined) return o.saddledTurn !== G.turn && crewPick(P, o, a.saddle) ? [] : null;
+    if (a.saddle !== undefined) return crewPick(P, o, a.saddle) ? [] : null; // it can be saddled again and again (702.171: sorcery speed, any number of times)
     if (a.cost.life && P.life < a.cost.life) return null;
     if (a.cost.tapOther && !tapFodder(P, o, a.cost.tapOther)) return null; // nothing to tap for the cost
     if (dampingOn() && (isCreature(o) || /Artifact/.test(o.card.type)) && !a.effects.every(e => e.t === 'addMana')) return null; // Damping Matrix
@@ -695,6 +695,21 @@ function crewPick(P, v, n) {
     for (const c of pool) { if (sum >= n) break; out.push(c); sum += Math.max(0, pow(c)); }
     return sum >= n ? out : null;
 }
+// You choose which untapped creatures to tap for Crew / Saddle N, one at a time, until their total power is N or more (the computer takes the cheapest set).
+// The first pick can be cancelled; returns null then.
+async function chooseCrew(P, v, n, what) {
+    if (P.isAI) return crewPick(P, v, n);
+    const chosen = [];
+    let sum = 0;
+    while (sum < n) {
+        const pool = P.bf.filter(c => c !== v && isCreature(c) && !c.tapped && !chosen.includes(c));
+        if (!pool.length) return null;
+        const c = await pickCard(P, pool, `${what} ${v.card.name}: tap creatures with total power ${n} or more (${sum} so far, ${n - sum} to go)`, { required: chosen.length > 0 });
+        if (!c) return null;
+        chosen.push(c); sum += Math.max(0, pow(c));
+    }
+    return chosen;
+}
 // The most X an activated ability with {X} in its cost can be paid for
 function maxActX(P, o, a) { const xn = a.cost.mana.xn || 1; let x = 0; while (x < 30 && planPayment(P, actCost(o, a), (x + 1) * xn, a.cost.tap ? o : null, { forType: o.card.type })) x++; return x; }
 async function activate(P, o, a, presetTarget, presetX) {
@@ -715,16 +730,18 @@ async function activate(P, o, a, presetTarget, presetX) {
         a = { ...a, loyalty: -x, effects: withX(a.effects, x) };
     }
     if (a.saddle !== undefined) {
-        const crew = crewPick(P, o, a.saddle);
+        const crew = await chooseCrew(P, o, a.saddle, 'Saddle');
         if (!crew) return false;
         crew.forEach(c => { c.tapped = true; fire('tapped', { o: c }); });
-        o.saddledTurn = G.turn; o.saddlers = crew.map(c => c.uid);
+        o.saddlers = [...(o.saddledTurn === G.turn ? o.saddlers || [] : []), ...crew.map(c => c.uid)]; // every creature that saddled it this turn
+        o.saddledTurn = G.turn;
         log(`${P.name} ${you(P) ? 'saddle' : 'saddles'} ${o.card.name} with ${crew.map(c => c.card.name).join(', ')} (rule 702.171).`);
         renderGame();
         return true;
     }
     if (a.crew !== undefined) {
-        const crew = crewPick(P, o, a.crew);
+        const crew = await chooseCrew(P, o, a.crew, 'Crew');
+        if (!crew) return false;
         crew.forEach(c => { c.tapped = true; });
         o.crewed = G.turn;
         log(`${P.name} ${you(P) ? 'crew' : 'crews'} ${o.card.name} with ${crew.map(c => c.card.name).join(', ')}: it's an artifact creature until end of turn.`);
