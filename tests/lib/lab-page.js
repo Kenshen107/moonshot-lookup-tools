@@ -110,7 +110,7 @@ window.LAB = (() => {
             while (!window.lastResult && performance.now() - t0 < limit) await new Promise(r => setTimeout(r, 0));
             if (!window.lastResult) { out.hang = true; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); out.turn = G.turn; out.phase = G.phase; out.diag = { pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
             else Object.assign(out, window.lastResult);
-            out.bad = T.invariants();
+            out.bad = T.invariants(); if (G.dealStats) out.deals = G.dealStats;
             if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
         } catch (e) { out.error = String(e && e.stack || e).slice(0, 400); }
         window.removeEventListener('error', onErr);

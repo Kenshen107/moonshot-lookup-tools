@@ -87,6 +87,7 @@ function report(all, pageErrors, secs) {
         done.forEach(r => r.styles.forEach((s, i) => { const t = tally[s] = tally[s] || { games: 0, wins: 0 }; t.games++; if (r.winner === i) t.wins++; }));
         console.log('Wins by playstyle (fair share ' + (100 / PLAYERS).toFixed(0) + '%): ' + Object.entries(tally).sort((a, b) => b[1].wins / b[1].games - a[1].wins / a[1].games).map(([s, t]) => `${s} ${(100 * t.wins / t.games).toFixed(0)}% (${t.wins}/${t.games})`).join(', '));
     }
+    const dl = done.filter(r => r.deals); if (dl.length) { const t = dl.reduce((a, r) => ({ made: a.made + r.deals.made, kept: a.kept + r.deals.kept, broken: a.broken + r.deals.broken, declined: a.declined + r.deals.declined }), { made: 0, kept: 0, broken: 0, declined: 0 }); console.log(`Deals per game: ${(t.made / done.length).toFixed(2)} made, ${(t.kept / done.length).toFixed(2)} kept, ${(t.broken / done.length).toFixed(2)} broken, ${(t.declined / done.length).toFixed(2)} declined`); }
     const reasons = {};
     done.forEach(r => { const k = /commander damage/.test(r.reason) ? 'commander damage' : /life/.test(r.reason) ? 'life total' : /library|draw/.test(r.reason) ? 'empty library' : /poison/.test(r.reason) ? 'poison' : String(r.reason).replace(/\d+/g, 'N').slice(0, 40); reasons[k] = (reasons[k] || 0) + 1; });
     console.log('Endings:', JSON.stringify(reasons));

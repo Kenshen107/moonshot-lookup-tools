@@ -80,7 +80,17 @@ function structMatch(o, F, P) {
     return true;
 }
 const TR_CACHE = new Map();
-function structFilter(f) { let F = TR_CACHE.get(f); if (!F) { F = JSON.parse(f.slice(3)); TR_CACHE.set(f, F); } return F; }
+function structFilter(f) {
+    let F = TR_CACHE.get(f);
+    if (!F) {
+        const body = f.slice(3);
+        // Some callers add words after the filter ("sf:{...} you control"): keep the JSON part and ignore the rest
+        try { F = JSON.parse(body); } catch (e) { try { F = JSON.parse(body.slice(0, body.lastIndexOf('}') + 1)); } catch (e2) { F = false; } }
+        if (!F || !Array.isArray(F.types) || !Array.isArray(F.notTypes)) F = false;
+        TR_CACHE.set(f, F);
+    }
+    return F || null; // null: the filter text was damaged (a card name with a quote in it, say); it matches nothing
+}
 
 // One sentence -> an effect, or null. Used only after every EFFECTS pattern failed.
 function tokenReadSentence(p) {

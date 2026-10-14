@@ -120,6 +120,52 @@ const SETUP = async function (n) {
     check('the play-by-play popups are on in pods too (not only duels)', !r.act, r.act);
     check('the speech bubble shows the bot, its feeling and the line', await page.evaluate(() => { showBubble(G.players[1], 'worried', 'Test line'); const t = document.querySelector('#talkLayer .talk-bubble'); return !!t && /feeling worried/.test(t.textContent) && /Test line/.test(t.textContent); }), '');
 
+    // Deals
+    await page.evaluate(SETUP, 4);
+    r = await page.evaluate(async () => {
+        const out = {};
+        G.players.length = 4; G.players.forEach(P => { P.out = false; P.life = 40; P.grudge = {}; P.trust = {}; P.bf.length = 0; P.aiStyle = 'midrange'; P.isAI = true; });
+        G.deals = []; G.dealStats = null; G.rep = {}; G.arch = null; G.turn = 20; G.active = 0;
+        const [A, B, Cc, D] = G.players;
+        // 1. a calm bot says yes to peace, an aggro bot with a grudge says no
+        const ok = proposeDeal(A, B, 'peace');
+        out.accepted = ok.ok && hasPeace(0, 1);
+        D.aiStyle = 'aggro'; D.grudge = { 0: 9 };
+        const no = proposeDeal(A, D, 'peace');
+        out.declined = !no.ok && !hasPeace(0, 3) && /went after me|trust|play/i.test(no.reason);
+        // 2. a bot at peace with you does not pick you as its target, and keeps its word even with lethal (not aggro)
+        A.life = 3; T.put(B, C['Hill Giant']); B.bf[0].sick = false;
+        G.defender = null; out.picksOther = podPickDefender(B).i !== 0;
+        // 3. an aggro bot at peace with you breaks it for lethal
+        B.aiStyle = 'aggro'; out.aggroLethal = podPickDefender(B).i === 0;
+        B.aiStyle = 'midrange'; A.life = 40;
+        // 4. attacking a peace partner breaks it: trust and reputation drop, the partner remembers
+        G.log.length = 0;
+        dealsOnAttack(A, B);
+        out.broken = !hasPeace(0, 1) && B.trust[0] === -3 && G.rep[0] === -1 && B.grudge[0] >= 4 && G.dealStats.broken === 1;
+        // 5. a later ask is judged harder
+        out.lowerScore = dealScore(B, A, 'peace').score < dealScore(Cc, A, 'peace').score;
+        // 6. spare: spells cannot target a spare partner's permanents (bot target filter)
+        proposeDeal(A, Cc, 'spare');
+        const dude = T.put(Cc, C['Hill Giant']);
+        const t = aiPickTarget(A, { t: 'destroy', target: 'creature' }, null, [{ o: dude }, { o: T.put(D, C['Grizzly Bears']) }]);
+        out.spare = t && t.o.owner === 3;
+        // 7. a pact names the target
+        proposeDeal(A, Cc, 'pact', 3);
+        out.pact = !!pactTarget(Cc) && pactTarget(Cc).i === 3;
+        // 8. deals run out when the maker's next turn starts
+        const d = G.deals.find(x => x.type === 'spare'); d.turn = 1; d.owner = 0; G.turn = 30; expireDeals(A);
+        out.expired = !G.deals.find(x => x === d) && G.dealStats.kept >= 1;
+        return out;
+    });
+    check('a calm bot agrees to peace; an aggro bot you have hurt says no, and why', r.accepted && r.declined, r);
+    check('a bot at peace with you attacks someone else, even with a chance at lethal (unless it plays Aggro)', r.picksOther && r.aggroLethal, r);
+    check('breaking a deal costs trust with that bot and reputation with everyone', r.broken, r);
+    check('a player who broke a deal is judged harder next time', r.lowerScore, r);
+    check('a hands-off deal keeps a bot from targeting that player\'s permanents', r.spare, r);
+    check('a gang-up pact names who the bot attacks', r.pact, r);
+    check('deals run out on the maker\'s next turn and count as kept', r.expired, r);
+
     // The table: chips, focus, layout at three widths
     const checks = [];
     for (const [w, hgt] of SIZES) {
@@ -131,7 +177,7 @@ const SETUP = async function (n) {
             T.put(P[0], C['Grizzly Bears']);
             G.active = 0; G.phase = 'main1'; G.focusPick = null;
             renderGame(); fitTable();
-            const chips = [...document.querySelectorAll('.pod-chip')];
+            const chips = [...document.querySelectorAll('.pod-chip')].filter(c => !/Deals/.test(c.textContent));
             const first = foe().i;
             podFocus(3);
             const after = foe().i;

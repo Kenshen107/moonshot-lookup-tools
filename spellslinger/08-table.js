@@ -110,7 +110,8 @@ function podStripHTML() {
             title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${X.hand.length} cards in hand, ${X.bf.filter(isCreature).length} creatures${dmg ? `, you have taken ${dmg} commander damage from them` : ''}">
             <b>${X.out ? '💀' : turn ? '▶' : styleOf(X) ? styleOf(X).emoji : '🤖'} ${esc(X.name.split(',')[0])}</b><span class="mood" title="${esc(X.name.split(',')[0])} is feeling ${esc(MOODS[botMood(X).mood].name)}: ${esc(botMood(X).why)}">${MOODS[botMood(X).mood].emoji}</span>${G.arch === X.i ? '<span title="The table is focusing on this player">🎯</span>' : ''}${styleOf(X) ? `<span class="note" title="${esc(styleOf(X).desc)}">${esc(styleOf(X).name)}</span>` : ''}<span>❤️ ${X.life}</span>${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}<span>✋ ${X.hand.length}</span><span>🛡 ${X.bf.filter(isCreature).length}</span>${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}</button>`;
     }).join('');
-    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}</div>`;
+    const mine = dealsOf(v.i).length;
+    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<button type="button" class="pod-chip" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝 Deals</b>${mine ? `<span>${mine} active</span>` : ''}</button></div>`;
 }
 function podFocus(i) { G.focusPick = i; renderGame(); }
 

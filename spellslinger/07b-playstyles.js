@@ -120,16 +120,22 @@ function noteGrudge(target, src, n) {
 }
 // Which opponent to attack in a pod. Lethal on someone first; then by the style's habit.
 function podPickDefender(P) {
-    const fs = foes(P);
+    let fs = foes(P);
     const st = styleOf(P);
     const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
     const open = F => !F.bf.some(o => isCreature(o) && !o.tapped);
-    const lethal = fs.filter(F => F.life <= power && open(F)).sort((a, b) => a.life - b.life)[0];
+    // Lethal first - but a deal is a deal, unless this bot plays Aggro
+    const lethal = fs.filter(F => F.life <= power && open(F) && (!hasPeace(P.i, F.i) || P.aiStyle === 'aggro')).sort((a, b) => a.life - b.life)[0];
     if (lethal) return lethal;
     const grudge = F => (P.grudge && P.grudge[F.i]) || 0;
     // Politics: when one player is far ahead the whole table goes after them (a revenge-minded bot still hits whoever hurt it most; an aggro bot finishes a nearly dead player first)
+    // Deals: a pact names who to hit; a peace keeps us off someone (an Aggro bot breaks it for lethal, handled above by the lethal pick only when it has no deal)
+    const pt = pactTarget(P);
+    if (pt && !hasPeace(P.i, pt.i)) return pt;
+    const free = fs.filter(F => !hasPeace(P.i, F.i));
+    if (free.length && free.length < fs.length) fs = free;
     const arch = G.arch != null ? G.players[G.arch] : null;
-    if (arch && !arch.out && arch !== P) {
+    if (arch && !arch.out && arch !== P && fs.includes(arch)) {
         const wounded = fs.filter(F => F !== arch && F.life <= 10).sort((a, b) => a.life - b.life)[0];
         const angry = fs.filter(F => F !== arch && grudge(F) >= 8).sort((a, b) => grudge(b) - grudge(a))[0];
         if (st && st.target === 'weak' && wounded) return wounded;

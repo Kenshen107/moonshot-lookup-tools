@@ -3862,6 +3862,7 @@ async function beginTurn() {
     G.phase = 'beginning';
     G.focusPick = null; // the pod view follows whoever's turn it is
     politicsTick(P);
+    await dealsTick(P);
     P.landsPlayed = 0;
     foes(P).flatMap(F => F.bf).forEach(o => { if (o.tapped && grantsOn(o).some(g => g.untapEach)) { o.tapped = false; } });
     // Seedborn Muse, Unwinding Clock: untap during each other player's untap step
@@ -4185,6 +4186,7 @@ async function confirmAttack() {
     if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
     G.busy = true;
     if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected
+    if (G.players.length > 2 && hasPeace(me().i, G.defender) && !(await askYes(me(), `You have a peace deal with ${nm(foe())}. Attack anyway? (You break your word and they will remember.)`, { card: foe().command[0] && foe().command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
     declareAttackers(me(), sel);
     await exertChoices(me(), sel);
     G.phase = 'declareBlocks';

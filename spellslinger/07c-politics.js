@@ -97,6 +97,7 @@ function moodCheck(P) {
 }
 // Your attack, a bot's answer
 function politicsAttacked(att, def, n) {
+    dealsOnAttack(att, def);
     if (!def || !def.isAI || def.out || att === def) return;
     const g = (def.grudge && def.grudge[att.i]) || 0;
     const who = you(att) ? 'you' : att.name.split(',')[0];
@@ -105,6 +106,7 @@ function politicsAttacked(att, def, n) {
 }
 function politicsTargeted(P, victim) {
     if (!victim || victim === P || victim.out) return;
+    dealsOnTarget(P, victim);
     victim.grudge = victim.grudge || {};
     victim.grudge[P.i] = (victim.grudge[P.i] || 0) + 2;
     if (victim.isAI) botSay(victim, 'annoyed', `${you(P) ? 'You' : P.name.split(',')[0]} just went after my stuff.`, `spell${P.i}`);
@@ -114,4 +116,168 @@ function politicsTick(P) {
     if (!G || G.players.length < 3) return;
     updateArchenemy();
     G.players.forEach(moodCheck);
+}
+
+// =====================================================================
+// Deals (2026-10-14, owner: "let's build out the deals"). Agreements between two players in a pod, kept for one round (until the player who
+// made the deal starts their next turn):
+//   peace - neither attacks the other.   spare - neither targets the other's permanents with spells and abilities.
+//   pact  - both attack a named third player (x).
+// A bot decides by its trust in the asker, what the asker did to it, how threatened it feels and its playstyle (`dealScore`; no random numbers).
+// Bots keep their word (an Aggro bot breaks a peace when it has lethal). Breaking a deal costs trust with that bot and a little with everyone (`G.rep`).
+// You make deals from the 🤝 Deals button in the opponent strip; worried bots and bots that are behind offer them to you and to each other.
+// =====================================================================
+const DEAL_TYPES = {
+    peace: { name: 'Peace', emoji: '🕊️', desc: "Neither of us attacks the other until my next turn." },
+    spare: { name: 'Hands off', emoji: '🤚', desc: "Neither of us targets the other's permanents with spells or abilities until my next turn." },
+    pact: { name: 'Gang up', emoji: '🎯', desc: "We both attack the same third player until my next turn." }
+};
+function dealStats() { return G.dealStats || (G.dealStats = { made: 0, kept: 0, broken: 0, declined: 0 }); }
+const dealsOf = i => (G.deals || []).filter(d => !d.over && (d.a === i || d.b === i));
+const dealBetween = (i, j, type) => (G.deals || []).find(d => !d.over && d.type === type && ((d.a === i && d.b === j) || (d.a === j && d.b === i)));
+const hasPeace = (i, j) => !!dealBetween(i, j, 'peace');
+const hasSpare = (i, j) => !!dealBetween(i, j, 'spare');
+// The third player a bot has promised to attack with a pact
+function pactTarget(P) {
+    const d = (G.deals || []).find(x => !x.over && x.type === 'pact' && (x.a === P.i || x.b === P.i) && x.x !== P.i && G.players[x.x] && !G.players[x.x].out);
+    return d ? G.players[d.x] : null;
+}
+const nm = P => (you(P) ? 'you' : P.name.split(',')[0]);
+
+function dealScore(bot, from, type, x) {
+    const st = styleOf(bot);
+    const trust = ((bot.trust && bot.trust[from.i]) || 0) + ((G.rep && G.rep[from.i]) || 0) * 0.5;
+    const grudge = (bot.grudge && bot.grudge[from.i]) || 0;
+    const live = G.players.filter(P => !P.out);
+    const mean = live.reduce((a, P) => a + podThreat(P), 0) / live.length;
+    const mood = botMood(bot).mood;
+    let s = 1 + 2 * trust - grudge * 0.4;
+    const parts = { trust: 2 * trust, grudge: -grudge * 0.4 };
+    if (type === 'peace' || type === 'spare') {
+        const bias = { control: 2, ramp: 2, midrange: 1, spellslinger: 1, tokens: 0, voltron: -1, aggro: -2 }[bot.aiStyle] || 0;
+        const b = type === 'spare' ? 1 + bias / 2 : bias;
+        s += b; parts.style = b;
+        if (mood === 'worried') { s += 3; parts.worried = 3; }
+        if (G.arch === from.i) { s += 2; parts.threat = 2; }
+        if (G.arch === bot.i) { s += 2; parts.threat = 2; }
+        if (type === 'peace' && from.life <= 8) { s -= 3; parts.tempted = -3; } // a nearly dead player is a tempting target
+    } else if (type === 'pact') {
+        const X = G.players[x];
+        if (!X || X.out || X === bot) return { score: -99, parts, reason: 'that doesn\'t make sense' };
+        const t = G.arch === x ? 4 : podThreat(X) > mean ? 2 : -2;
+        s += t + ((bot.grudge && bot.grudge[x]) || 0) * 0.3 - 0.2 * grudge; parts.target = t;
+        if (hasPeace(bot.i, x)) { s -= 5; parts.promised = -5; }
+    }
+    // The biggest thing standing in the way is the reason when it says no
+    const worst = Object.entries(parts).sort((a, b) => a[1] - b[1])[0];
+    const reason = !worst || worst[1] >= 0 ? 'Not this time.' : { trust: "I don't trust you.", grudge: `You went after me, ${nm(from)}.`, style: "That's not how I play.", tempted: "You're too easy a target right now.", target: "I don't see why they're the problem.", promised: 'I already gave my word to them.' }[worst[0]];
+    return { score: s, parts, reason };
+}
+
+function makeDeal(a, b, type, x) {
+    const d = { type, a: a.i, b: b.i, x: x === undefined ? null : x, owner: a.i, turn: G.turn, over: false };
+    (G.deals = G.deals || []).push(d);
+    dealStats().made++;
+    log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make a ${DEAL_TYPES[type].name.toLowerCase()} deal${type === 'pact' ? ` against ${G.players[x].name.split(',')[0]}` : ''} (until ${a.name.split(',')[0]}'s next turn).`);
+    return d;
+}
+// `from` proposes to `to`. A bot answers at once; the result is { ok, reason }.
+function proposeDeal(from, to, type, x) {
+    if (!to || to.out || from.out || from === to) return { ok: false, reason: 'No.' };
+    if (dealBetween(from.i, to.i, type)) return { ok: false, reason: 'We already have that deal.' };
+    const r = dealScore(to, from, type, x);
+    if (r.score >= 1) {
+        makeDeal(from, to, type, x);
+        botSay(to, 'calm', `Deal. ${type === 'peace' ? "I won't attack you" : type === 'spare' ? "I'll leave your permanents alone" : `We'll go after ${nm(G.players[x])} together`} until ${from.i === 0 ? 'your' : `${nm(from)}'s`} next turn.`, null);
+        return { ok: true, reason: '' };
+    }
+    dealStats().declined++;
+    botSay(to, 'annoyed', r.reason, null);
+    return { ok: false, reason: r.reason };
+}
+function breakDeal(d, by, why) {
+    if (d.over) return;
+    d.over = true; d.broken = by;
+    dealStats().broken++;
+    const other = G.players[d.a === by ? d.b : d.a], culprit = G.players[by];
+    G.rep = G.rep || {}; G.rep[by] = (G.rep[by] || 0) - 1;
+    other.trust = other.trust || {}; other.trust[by] = (other.trust[by] || 0) - 3;
+    other.grudge = other.grudge || {}; other.grudge[by] = (other.grudge[by] || 0) + 4;
+    log(`💔 ${nm(culprit) === 'you' ? 'You break' : `${nm(culprit)} breaks`} the ${DEAL_TYPES[d.type].name.toLowerCase()} deal with ${nm(other) === 'you' ? 'you' : nm(other)}${why ? ` (${why})` : ''}.`);
+    if (other.isAI) botSay(other, 'angry', `You gave me your word, ${nm(culprit)}. I won't forget that.`, `betray${by}`);
+}
+// A deal runs out when the player who made it starts their next turn
+function expireDeals(P) {
+    (G.deals || []).forEach(d => {
+        if (d.over || d.owner !== P.i || G.turn <= d.turn) return;
+        d.over = true;
+        dealStats().kept++;
+        [d.a, d.b].forEach(i => { const o = G.players[i === d.a ? d.b : d.a]; if (o) { G.players[i].trust = G.players[i].trust || {}; G.players[i].trust[o.i] = (G.players[i].trust[o.i] || 0) + 1; } });
+        const A = G.players[d.a], B = G.players[d.b];
+        log(`🤝 The ${DEAL_TYPES[d.type].name.toLowerCase()} deal between ${nm(A)} and ${nm(B)} is over - both kept their word.`);
+    });
+    G.deals = (G.deals || []).filter(d => !d.over);
+}
+// Attacks and spells that break a deal
+function dealsOnAttack(att, def) {
+    if (!def) return;
+    const d = dealBetween(att.i, def.i, 'peace');
+    if (d) breakDeal(d, att.i, 'attacked');
+    const p = (G.deals || []).find(x => !x.over && x.type === 'pact' && (x.a === att.i || x.b === att.i) && x.x !== def.i);
+    if (p && !hasPeace(att.i, def.i)) breakDeal(p, att.i, 'did not attack the target');
+}
+function dealsOnTarget(by, victim) {
+    const d = dealBetween(by.i, victim.i, 'spare');
+    if (d) breakDeal(d, by.i, 'targeted a permanent');
+}
+// Bots offer deals to each other and, when it is a person's table, to the person (a prompt)
+async function dealsTick(P) {
+    if (!G || G.players.length < 3 || P.out) return;
+    expireDeals(P);
+    if (!P.isAI || P.aiLevel === 'easy') return;
+    const m = botMood(P).mood;
+    const live = foes(P).filter(F => !hasPeace(P.i, F.i));
+    if (!live.length) return;
+    const meanT = G.players.filter(X => !X.out).reduce((a, X) => a + podThreat(X), 0) / G.players.filter(X => !X.out).length;
+    const behind = podThreat(P) < meanT * 0.6;
+    if (!(m === 'worried' || behind || G.arch === P.i)) return;
+    // Ask whoever worries it most (the biggest board that isn't already at peace with it)
+    const ask = live.slice().sort((a, b) => podThreat(b) - podThreat(a) || a.i - b.i)[0];
+    if (G.dealAsk && G.turn - (G.dealAsk[P.i] ?? -99) < 8) return;
+    (G.dealAsk = G.dealAsk || {})[P.i] = G.turn;
+    if (!ask.isAI && talkOn()) {
+        const yes = await askYes(ask, `${P.name.split(',')[0]} (${(MOODS[m] || MOODS.calm).emoji} ${(MOODS[m] || MOODS.calm).name}) offers peace: neither of you attacks the other until their next turn. Accept? You can still change your mind, but a broken deal is remembered.`, { card: P.command[0] && P.command[0].card, yes: 'Accept the deal', no: 'No deal' });
+        if (yes) { makeDeal(P, ask, 'peace'); botSay(P, 'calm', "Good. Let's both watch the others.", null); }
+        else { dealStats().declined++; botSay(P, 'annoyed', 'Your loss.', null); }
+    } else {
+        const r = dealScore(ask, P, 'peace');
+        if (r.score >= 1) { makeDeal(P, ask, 'peace'); if (ask.isAI) botSay(ask, 'calm', `Fine, ${nm(P)}. Peace for now.`, null); }
+        else dealStats().declined++;
+    }
+}
+// The 🤝 Deals dialog (you ask a bot)
+function dealDialog(step, to, type) {
+    if (!G || G.players.length < 3 || G.over) return;
+    const v = me();
+    const bots = G.players.filter(P => P !== v && !P.out && P.isAI);
+    const active = dealsOf(v.i).map(d => { const o = G.players[d.a === v.i ? d.b : d.a]; return `<li>${DEAL_TYPES[d.type].emoji} ${DEAL_TYPES[d.type].name} with <b>${esc(nm(o))}</b>${d.type === 'pact' ? ` against <b>${esc(nm(G.players[d.x]))}</b>` : ''}</li>`; }).join('');
+    if (step === 'target') {
+        const others = G.players.filter(P => P !== v && P !== G.players[to] && !P.out);
+        showModal(`<h2>${DEAL_TYPES.pact.emoji} Gang up with ${esc(nm(G.players[to]))}</h2><p class="note">Who should you both attack?</p><div class="row" style="flex-wrap:wrap; gap:8px;">${others.map(O => `<button class="btn" onclick="dealAsk(${to}, 'pact', ${O.i})">${esc(nm(O))}</button>`).join('')}</div><div class="row" style="margin-top:12px;"><button class="btn" onclick="dealDialog()">Back</button></div>`);
+        return;
+    }
+    showModal(`<h2>🤝 Make a deal</h2>
+        <p class="note">A deal lasts until your next turn. Break one and that player (and, a little, everyone) remembers. Bots decide from how much they trust you, what you did to them, how threatened they feel, and how they play.</p>
+        ${active ? `<p><b>Active deals</b></p><ul>${active}</ul>` : ''}
+        ${bots.map(B => `<div class="panel" style="margin:8px 0;"><div class="row"><b>${(MOODS[botMood(B).mood] || MOODS.calm).emoji} ${esc(nm(B))}</b> <span class="note">${esc(styleOf(B) ? styleOf(B).name : '')} · feeling ${esc((MOODS[botMood(B).mood] || MOODS.calm).name)}</span></div>
+            <div class="row" style="flex-wrap:wrap; gap:6px; margin-top:6px;">${['peace', 'spare'].map(t => `<button class="btn small" title="${esc(DEAL_TYPES[t].desc)}" onclick="dealAsk(${B.i}, '${t}')">${DEAL_TYPES[t].emoji} ${DEAL_TYPES[t].name}</button>`).join('')}
+            <button class="btn small" title="${esc(DEAL_TYPES.pact.desc)}" onclick="dealDialog('target', ${B.i})">${DEAL_TYPES.pact.emoji} ${DEAL_TYPES.pact.name}…</button></div></div>`).join('')}
+        <div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
+}
+function dealAsk(i, type, x) {
+    const r = proposeDeal(me(), G.players[i], type, x);
+    closeModal();
+    renderGame();
+    if (!r.ok) toast(`${nm(G.players[i])} says no: ${r.reason}`);
+    else toast(`${nm(G.players[i])} agrees.`);
 }

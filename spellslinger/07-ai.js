@@ -11,6 +11,7 @@ function creatureValue(o) {
 
 function aiPickTarget(P, e, source, valid) {
     valid = valid || validTargets(P, e, source);
+    if (G.players.length > 2) valid = valid.filter(v => !(v.o && hasSpare(P.i, v.o.owner))); // a hands-off deal keeps spells off that player's permanents
     const O = opp(P);
     const theirs = valid.filter(v => v.o && v.o.owner !== P.i);
     const mine = valid.filter(v => v.o && v.o.owner === P.i);
