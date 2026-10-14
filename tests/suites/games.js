@@ -91,7 +91,7 @@ async function main() {
         if (netSkip.length) console.log(`WARN ${kind}: ${netSkip.length} game(s) skipped because Scryfall/MTGJSON could not be reached`);
         const bad = mine.filter(g => !netSkip.includes(g) && (!g.result || (g.invariants || []).length || (g.errors || []).length));
         results.push({ label: `${kind}: ${mine.length} games played to the end with no errors or broken cards`, ok: bad.length === 0,
-            detail: bad.length ? JSON.stringify(bad.slice(0, 4).map(g => ({ q: g.q, error: g.error, inv: g.invariants, errors: g.errors && g.errors.slice(0, 2) }))) : `turns ${mine.map(g => g.result.turns).join(',')}` });
+            detail: bad.length ? JSON.stringify(bad.slice(0, 4).map(g => ({ q: g.q, error: g.error, inv: g.invariants, errors: g.errors && g.errors.slice(0, 2) }))) : `turns ${mine.filter(g => g.result).map(g => g.result.turns).join(',')}` });
     }
     const good = printResults('games', results);
     writeOut('games', out);

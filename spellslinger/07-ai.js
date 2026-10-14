@@ -14,7 +14,9 @@ function aiPickTarget(P, e, source, valid) {
     const O = opp(P);
     const theirs = valid.filter(v => v.o && v.o.owner !== P.i);
     const mine = valid.filter(v => v.o && v.o.owner === P.i);
-    const byValue = list => list.slice().sort((a, b) => creatureValue(b.o) - creatureValue(a.o));
+    // In a pod, a permanent of the player who is furthest ahead is worth a bit more to remove
+    const podBias = o => G.players.length > 2 ? podThreat(ctrl(o)) * 0.15 : 0;
+    const byValue = list => list.slice().sort((a, b) => (creatureValue(b.o) + podBias(b.o)) - (creatureValue(a.o) + podBias(a.o)));
     switch (e.t) {
         // ---- Magic 2010 (2026-10-08) ----
         case 'harmsWay': return { p: O };
@@ -94,8 +96,12 @@ function aiPickTarget(P, e, source, valid) {
     }
 }
 
-// How much a play is worth right now (0 = don't).
+// How much a play is worth right now (0 = don't). A playstyle adds a bonus for the kinds of cards it likes (07b-playstyles.js).
 function aiScore(P, o, target) {
+    const s = aiScoreBase(P, o, target);
+    return s > 0 && P.aiStyle ? s + styleBonus(P, o) : s;
+}
+function aiScoreBase(P, o, target) {
     const r = Rx(o);
     const O = opp(P);
     if (r.legendary && P.bf.some(x => x.card.name === o.card.name)) return 0; // the legend rule would bin one
@@ -462,6 +468,7 @@ async function aiMain(P) {
 function aiPickDefender(P) {
     const fs = foes(P);
     if (fs.length === 1) return fs[0];
+    if (P.aiStyle || P.aiLevel !== 'easy') return podPickDefender(P);
     const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
     const blockers = F => F.bf.filter(o => isCreature(o) && !o.tapped).length;
     const lethal = fs.filter(F => F.life <= power && !blockers(F)).sort((a, b) => a.life - b.life)[0];
@@ -471,7 +478,10 @@ function aiPickDefender(P) {
 }
 function aiChooseAttackers(P) {
     const must = P.bf.filter(o => canAttackWith(o) && forcedAttack(o));
-    const chosen = [...new Set([...aiChooseAttackersFree(P), ...must])];
+    let chosen = [...new Set([...aiChooseAttackersFree(P), ...must])];
+    const D = opp(P), cands = P.bf.filter(o => canAttackWith(o) && pow(o) > 0);
+    if (P.aiStyle) chosen = [...new Set([...styleAttackers(P, chosen, cands, D), ...must])];
+    if (G.players.length > 2) chosen = [...new Set([...aiHoldBack(P, chosen, D), ...must])];
     aiAimAtPlaneswalkers(P, chosen);
     return chosen;
 }
@@ -547,6 +557,7 @@ function aiChooseBlocks(D, A) {
     const blocks = {};
     const take = b => pull(free, b);
     let incoming = atks.reduce((s, a) => s + dmgOf(a), 0);
+    const st = styleOf(D), blkTol = st ? st.blk : 0; // control and midrange block more eagerly, aggro less
     for (const atk of atks) {
         let options = free.filter(b => canBlock(b, atk));
         if (!options.length) continue;
@@ -558,7 +569,7 @@ function aiChooseBlocks(D, A) {
         }
         const safeKill = options.filter(b => !atkKills(b) && blockerKills(b));
         const safe = options.filter(b => !atkKills(b));
-        const trade = options.filter(b => blockerKills(b) && creatureValue(b) <= creatureValue(atk) + 1);
+        const trade = options.filter(b => blockerKills(b) && creatureValue(b) <= creatureValue(atk) + 1 + blkTol * 1.5);
         let pick = safeKill[0] || safe.sort((a, b) => creatureValue(a) - creatureValue(b))[0] || trade.sort((a, b) => creatureValue(a) - creatureValue(b))[0];
         // A double block: two creatures that kill it together, when it can only kill one of them
         if (!pick && D.aiLevel !== 'easy' && options.length >= 2 && !has(atk, 'indestructible') && !firstStriker(atk) && creatureValue(atk) >= 3) {
@@ -575,7 +586,7 @@ function aiChooseBlocks(D, A) {
         }
         // Chump to survive: when the hit is lethal, or leaves 2 life or less and the blocker is a cheap one (a turn at 1 life is a turn from dying to anything)
         const cheapest = options.slice().sort((a, b) => creatureValue(a) - creatureValue(b))[0];
-        if (!pick && (incoming >= D.life || (D.aiLevel !== 'easy' && incoming > 0 && D.life - incoming <= 2 && creatureValue(cheapest) <= 3))) pick = cheapest;
+        if (!pick && (incoming >= D.life || (D.aiLevel !== 'easy' && blkTol >= 0 && incoming > 0 && D.life - incoming <= 2 && creatureValue(cheapest) <= 3))) pick = cheapest;
         if (pick && D.aiLevel === 'easy' && incoming < D.life && Math.random() < 0.5) pick = null; // misses blocks
         if (pick) {
             take(pick);

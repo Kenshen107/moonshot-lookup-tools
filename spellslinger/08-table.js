@@ -108,7 +108,7 @@ function podStripHTML() {
         const dmg = G.format === 'commander' ? (v.cmdBy[X.i] || 0) : 0;
         return `<button type="button" class="pod-chip${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
             title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${X.hand.length} cards in hand, ${X.bf.filter(isCreature).length} creatures${dmg ? `, you have taken ${dmg} commander damage from them` : ''}">
-            <b>${X.out ? '💀' : turn ? '▶' : '🤖'} ${esc(X.name.split(',')[0])}</b><span>❤️ ${X.life}</span>${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}<span>✋ ${X.hand.length}</span><span>🛡 ${X.bf.filter(isCreature).length}</span>${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}</button>`;
+            <b>${X.out ? '💀' : turn ? '▶' : styleOf(X) ? styleOf(X).emoji : '🤖'} ${esc(X.name.split(',')[0])}</b>${styleOf(X) ? `<span class="note" title="${esc(styleOf(X).desc)}">${esc(styleOf(X).name)}</span>` : ''}<span>❤️ ${X.life}</span>${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}<span>✋ ${X.hand.length}</span><span>🛡 ${X.bf.filter(isCreature).length}</span>${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}</button>`;
     }).join('');
     return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}</div>`;
 }
@@ -129,7 +129,7 @@ function barHTML(P) {
         <button type="button" class="zone-count zone-btn" title="Graveyard: tap to look" onclick="showGraveyard(${P.i})">🪦 ${P.gy.length}</button>
         ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
         <span class="cmd-zone">${cmd}</span>
-        ${P !== me() ? `<span class="note deckname" style="margin-left:auto;">${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</span>` : `<span style="margin-left:auto;" class="row desk-only"><button class="btn small danger" onclick="concede()">Concede</button></span><button type="button" class="btn small phone-only gm-btn" onclick="gameMenu()" aria-label="Game menu: log, life tracker, mana mode, concede">⋯</button>`}`;
+        ${P !== me() ? `<span class="note deckname" style="margin-left:auto;">${styleOf(P) ? `${styleOf(P).emoji} ${esc(styleOf(P).name)} · ` : ''}${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</span>` : `<span style="margin-left:auto;" class="row desk-only"><button class="btn small danger" onclick="concede()">Concede</button></span><button type="button" class="btn small phone-only gm-btn" onclick="gameMenu()" aria-label="Game menu: log, life tracker, mana mode, concede">⋯</button>`}`;
 }
 
 // Phones: the game menu (log, trackers, paying mana, concede) and the full log

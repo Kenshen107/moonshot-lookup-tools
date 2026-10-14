@@ -42,22 +42,25 @@ window.LAB = (() => {
     const inCI = (c, ci) => c.ci.every(x => ci.includes(x));
     const CAPS = { creature: 27, instant: 11, sorcery: 11, artifact: 12, enchantment: 8 };
 
-    L.commanderDeck = () => {
+    L.commanderDeck = style => {
         const commander = pickOf(cmdPool());
         const ci = commander.ci;
-        const pool = shuf(L.auto.filter(c => c.legal.commander === 'legal' && c.id !== commander.id && inCI(c, ci) && rulesFor(c).kind !== 'land' && c.cmc < 7));
+        const cand = L.auto.filter(c => c.legal.commander === 'legal' && c.id !== commander.id && inCI(c, ci) && rulesFor(c).kind !== 'land' && c.cmc < 7);
+        const pool = style ? styleSort(style, shuf(cand), 3, rnd) : shuf(cand);
+        const caps = style ? PLAYSTYLES[style].caps : CAPS;
         const lands = shuf(L.auto.filter(c => c.legal.commander === 'legal' && inCI(c, ci) && /Land/.test(c.type) && rulesFor(c).mana)).slice(0, ci.length > 1 ? 8 : 3);
         const picked = [], counts = {}, seen = new Set();
         for (const c of pool) {
             if (picked.length >= 62) break;
             const k = rulesFor(c).kind;
-            if (seen.has(c.fullName) || (counts[k] || 0) >= (CAPS[k] ?? 6)) continue;
+            if (seen.has(c.fullName) || (counts[k] || 0) >= (caps[k] ?? 6)) continue;
             seen.add(c.fullName); counts[k] = (counts[k] || 0) + 1; picked.push(c);
         }
+        if (picked.length < 62) for (const c of pool) { if (picked.length >= 62) break; if (!seen.has(c.fullName)) { seen.add(c.fullName); picked.push(c); } } // relaxed fill
         const entries = [...picked.map(card => ({ card, n: 1 })), ...lands.map(card => ({ card, n: 1 }))];
         const split = landSplit(entries, ci, 99 - entries.length);
         Object.entries(split).forEach(([col, n]) => { if (n > 0 && L.basics[col]) entries.push({ card: CARDS.get(L.basics[col]), n }); });
-        return { name: `${commander.name} (lab)`, format: 'commander', commander, entries, source: 'lab' };
+        return { name: `${commander.name} (lab)`, format: 'commander', commander, entries, source: 'lab', aiStyle: style || null };
     };
     const PAIRS = ['WU', 'WB', 'WR', 'WG', 'UB', 'UR', 'UG', 'BR', 'BG', 'RG'];
     L.modernDeck = () => {
@@ -87,8 +90,16 @@ window.LAB = (() => {
         try {
             const kind = opts.kind === 'mix' ? (opts.seed % 2 ? 'modern' : 'commander') : opts.kind; out.kind = kind;
             const build = kind === 'modern' ? L.modernDeck : L.commanderDeck;
-            const A = build(), B = build();
-            const more = Array.from({ length: Math.max(0, (opts.players || 2) - 2) }, () => build());
+            // Styles: 'none' (the old way), 'random' (a different style for every seat) or one style name for every seat
+            const n = opts.players || 2, mode = opts.styles || (n > 2 ? 'random' : 'none');
+            // the style draw uses its own generator (hashed from the seed) so neighbouring seeds don't line styles up with seats
+            const hs = (opts.seed * 2654435761) >>> 0; let hseed = hs;
+            const hrnd = () => { hseed = (hseed + 0x6D2B79F5) >>> 0; let t = hseed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+            const hshuf = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(hrnd() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+            const styles = mode === 'none' ? Array(n).fill(null) : mode === 'random' ? hshuf(PLAYSTYLE_KEYS).slice(0, n) : Array(n).fill(mode);
+            out.styles = styles;
+            const A = build(styles[0]), B = build(styles[1]);
+            const more = Array.from({ length: Math.max(0, n - 2) }, (_, k) => build(styles[2 + k]));
             A.aiLevel = opts.la || 'normal'; B.aiLevel = opts.lb || 'normal';
             more.forEach(d => { d.aiLevel = opts.lb || 'normal'; });
             out.a = A.commander ? A.commander.name : A.name; out.b = B.commander ? B.commander.name : B.name;

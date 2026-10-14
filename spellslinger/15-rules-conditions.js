@@ -591,6 +591,7 @@ function actPlan(P, o, a, xExtra = 0) {
     if (a.hand ? !P.hand.includes(o) : a.gy ? !P.gy.includes(o) : !P.bf.includes(o)) return null;
     if (o.detainedUntil > G.turn) return null;
     if (a.onlyIf && !condOk(a.onlyIf, P, o)) return null;
+    if (a.cost && a.cost.discard && !P.hand.some(x => x !== o)) return null; // nothing to discard for the cost
     if ((a.onceEver || a.powerUp) && (o.usedOnce || {})[a.text]) return null;
     if (a.hand || a.gy) return planPayment(P, actCost(o, a), xExtra);
     if (a.cost && a.cost.tap && !sourceCanTap(o)) return null;

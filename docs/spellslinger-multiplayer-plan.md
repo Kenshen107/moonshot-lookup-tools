@@ -39,3 +39,8 @@ Phase 2 is the big one (the engine's two-player assumptions are everywhere), the
 1. Free-for-all only, or also two-vs-two teams later?
 2. Rewards for 2nd/3rd place?
 3. Should the campaign get a 4-player tier, or is this Sandbox only for now?
+
+## Status (2026-10-14)
+- **Done:** phase 1 (lab pods), phase 2 (engine core, one defending player per combat), phase 3 (table strip, Play tab chips), phase 4 (7 playstyles with matching decks, assigned to every opponent), and the first part of phase 5 (threat-based defender choice, revenge memory, hold-back in pods, removal bias to the leader, block and attack eagerness by style). See CLAUDE.md for details.
+- **Lab, 700 pods:** 0 hangs; wins by style 14% (aggro) to 39% (voltron).
+- **Still to do:** combat tricks and turn sequencing for the AI, better mulligans, difficulty levels that switch these on or off, splitting attackers between opponents, a pod in Campaign, balancing Aggro / Spellslinger up and Voltron down, a Politician style (needs group-hug cards the engine reads), real "target opponent" choices, team formats.

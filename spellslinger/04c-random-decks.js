@@ -17,8 +17,10 @@ async function pickRandomCommander() {
     return Math.random() < 0.75 || !rest.length ? top[Math.floor(Math.random() * top.length)] : rest[Math.floor(Math.random() * rest.length)];
 }
 
-async function buildRandomCommanderDeck(commander) {
+// `style` (a key of PLAYSTYLES, 07b-playstyles.js) shapes the card choices; with none, a random style is picked so every opponent has a way of playing.
+async function buildRandomCommanderDeck(commander, style) {
     await loadBasics();
+    style = style || PLAYSTYLE_KEYS[Math.floor(Math.random() * PLAYSTYLE_KEYS.length)];
     commander = commander || await pickRandomCommander();
     const ci = commander.ci.filter(c => BASIC_IDS[c]);
     const q = `f:commander game:paper ${colorQuery(ci)} -is:commander -is:funny`;
@@ -26,13 +28,14 @@ async function buildRandomCommanderDeck(commander) {
         searchCards(`${q} -t:land`, 4, 'edhrec'),
         searchCards(`${q} t:land -t:basic`, 2, 'edhrec')
     ]);
-    const spells = shuffled(spellPool.filter(c => isFullAuto(c) && c.id !== commander.id && rulesFor(c).kind !== 'land').slice(0, 330));
+    const spells = styleSort(style, shuffled(spellPool.filter(c => isFullAuto(c) && c.id !== commander.id && rulesFor(c).kind !== 'land').slice(0, 330)));
+    const caps = PLAYSTYLES[style].caps;
     const picked = [], counts = {}, seen = new Set();
     let big = 0;
     const take = (c, relaxed) => {
         const k = rulesFor(c).kind;
         if (seen.has(c.fullName)) return false;
-        if (!relaxed && (counts[k] || 0) >= (RANDOM_CMD_CAPS[k] ?? 6)) return false;
+        if (!relaxed && (counts[k] || 0) >= (caps[k] ?? RANDOM_CMD_CAPS[k] ?? 6)) return false;
         if (c.cmc >= 7) { if (big >= 2) return false; big++; }
         seen.add(c.fullName); counts[k] = (counts[k] || 0) + 1; picked.push(c);
         return true;
@@ -46,7 +49,7 @@ async function buildRandomCommanderDeck(commander) {
     const basicCount = 99 - entries.length;
     const split = landSplit(entries, ci, basicCount);
     Object.entries(split).forEach(([col, n]) => { if (n > 0 && BASIC_IDS[col]) entries.push({ card: CARDS.get(BASIC_IDS[col]), n }); });
-    return { name: `${commander.name} (random)`, format: 'commander', commander, entries, swapped: 0, source: 'random playable deck: every card is fully automated' };
+    return { name: `${commander.name} (random)`, format: 'commander', commander, entries, swapped: 0, aiStyle: style, source: `random ${PLAYSTYLES[style].name} deck: every card is fully automated` };
 }
 
 // Modern: two random colors, 24 lands, four-ofs of the most-played Automated cards

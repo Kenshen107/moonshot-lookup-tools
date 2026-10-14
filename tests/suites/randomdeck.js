@@ -50,6 +50,7 @@ async function main() {
     const h = await launch({ profileDir: dir });
     const { page, errors } = await openTestPage(h.ctx, h.server);
     await installHelpers(page);
+    page.on('requestfailed', r => console.log('request failed:', r.method(), r.url().slice(0, 200), r.failure() && r.failure().errorText));
     const raw = await page.evaluate(`(${BODY.toString()})()`);
     const results = formatChecks(raw);
     const shots = path.join(ROOT, 'tests', '.out'); fs.mkdirSync(shots, { recursive: true });

@@ -191,7 +191,10 @@ async function startMatch(again) {
         }
         // A pod (3 or 4 players, Commander only): the other seats are random playable Commander decks
         const more = [];
-        for (let k = 2; k < (deck.format === 'commander' ? podSize : 2); k++) { more.push(await buildRandomCommanderDeck()); }
+        const seatStyles = shuffled(PLAYSTYLE_KEYS.filter(k => k !== oppDeck.aiStyle));
+        for (let k = 2; k < (deck.format === 'commander' ? podSize : 2); k++) { more.push(await buildRandomCommanderDeck(null, seatStyles[k - 2])); }
+        // Every opponent has a way of playing: the style of a built-for-it random deck, or the one a finished deck looks most like
+        if (!PLAYSTYLES[oppDeck.aiStyle]) oppDeck.aiStyle = inferStyle(oppDeck.entries);
         closeModal();
         newGame(deckToEntries(deck), oppDeck, null, more);
     } catch (e) {
@@ -457,6 +460,7 @@ function damage(target, n, src) {
     if (target.life !== undefined) {
         // Infect: damage to a player is given as poison counters (702.90b)
         if (infect) target.poison += n; else target.life -= n;
+        noteGrudge(target, src, n);
         if (src && src.isCommander && G.format === 'commander' && isCreature(src)) { target.cmdBy[src.owner] = (target.cmdBy[src.owner] || 0) + n; target.cmdDmg = Math.max(target.cmdDmg, target.cmdBy[src.owner]); }
     } else if (isPlaneswalker(target)) {
         target.ctr.loyalty = (target.ctr.loyalty || 0) - n; // damage to a planeswalker removes loyalty (120.3c)
