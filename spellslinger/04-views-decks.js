@@ -1515,7 +1515,7 @@ async function renderOpponents() {
             if (OPPSEL.q) { const el = $('oppQ'); if (el) { el.focus(); el.setSelectionRange(OPPSEL.q.length, OPPSEL.q.length); } }
         } catch (e) { list.innerHTML = `${pasted}<p class="warn">${esc(e.message)}</p>`; }
     } else if (deck.format !== 'commander') {
-        list.innerHTML = `${pasted}<div class="row" style="margin-bottom:10px;">${pasteBtn}</div><p class="note" style="margin-bottom:8px;">Themed decks built live from Scryfall: the most-played Modern-legal cards for each theme that the game can run (not tournament lists).</p>
+        list.innerHTML = `${pasted}<div class="row" style="margin-bottom:10px;">${pasteBtn}</div>${randomOppHTML('modern')}<p class="note" style="margin-bottom:8px;">Themed decks built live from Scryfall: the most-played Modern-legal cards for each theme that the game can run (not tournament lists).</p>
             <div class="opp-grid">${MODERN_THEMES.map(t => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === t.key}" onclick="chooseOpponent({ type: 'theme', key: '${t.key}' })">
                 <strong>${t.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(t.name)}</strong><small>${esc(t.desc)}</small></button>`).join('')}</div>`;
     } else {
@@ -1523,7 +1523,7 @@ async function renderOpponents() {
         try {
             const cmds = await loadTrendingCommanders();
             const custom = chosenOpponent && chosenOpponent.type === 'commander' && !cmds.some(c => c.slug === chosenOpponent.key) ? `<div class="opp-custom"><button type="button" class="opp" aria-pressed="true"><strong>👑 ${esc(chosenOpponent.name || chosenOpponent.key)}</strong><small>EDHREC average deck</small></button></div>` : '';
-            list.innerHTML = `${verifiedOppHTML()}<h3 class="opp-h">Face any commander</h3>
+            list.innerHTML = `${randomOppHTML('commander')}${verifiedOppHTML()}<h3 class="opp-h">Face any commander</h3>
                 <div class="row" style="margin-bottom:6px;"><input type="search" id="cmdFind" list="cmdSuggest" placeholder="Type a commander's name" aria-label="Commander to face" oninput="suggestCommanders(this.value)" onkeydown="if (event.key === 'Enter') faceCommander()" style="flex:1 1 220px;"><datalist id="cmdSuggest"></datalist>
                 <button class="btn" onclick="faceCommander()">👑 Face this commander</button>${pasteBtn}</div>
                 <div class="note" id="cmdFindNote" style="margin-bottom:8px;">Any commander EDHREC has decks for, playing its average deck. Or paste a real list.</div>
@@ -1533,14 +1533,18 @@ async function renderOpponents() {
                 <div class="opp-grid">${cmds.map(c => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === c.slug}" onclick="chooseOpponent({ type: 'commander', key: '${esc(c.slug)}' })">
                     <strong>👑 ${esc(c.name)}</strong><small>${c.decks ? `${c.decks.toLocaleString()} decks on EDHREC` : ''}</small></button>`).join('')}</div>`;
         } catch (e) {
-            list.innerHTML = `${verifiedOppHTML()}<p class="warn">EDHREC is unavailable right now, so its commanders aren't listed. Try again later.</p>`;
+            list.innerHTML = `${randomOppHTML('commander')}${verifiedOppHTML()}<p class="warn">EDHREC is unavailable right now, so its commanders aren't listed. Try again later.</p>`;
         }
     }
-    const oppIsCmd = chosenOpponent && (chosenOpponent.type === 'commander' || chosenOpponent.type === 'verified' || (chosenOpponent.type === 'list' && chosenOpponent.gen.format === 'commander'));
+    const oppIsCmd = chosenOpponent && (chosenOpponent.type === 'commander' || chosenOpponent.type === 'verified' || (chosenOpponent.type === 'random' && chosenOpponent.fmt === 'commander') || (chosenOpponent.type === 'list' && chosenOpponent.gen.format === 'commander'));
     if (chosenOpponent && (deck.format === 'commander') !== !!oppIsCmd) chosenOpponent = null;
     if (chosenOpponent && ((chosenOpponent.type === 'precon') !== (deck.format === 'casual' || deck.format === 'limited') && chosenOpponent.type !== 'list')) chosenOpponent = null;
     if (chosenOpponent && chosenOpponent.type === 'theme' && deck.format !== 'modern') chosenOpponent = null;
     $('startNote').textContent = chosenOpponent ? '' : 'Pick an opponent.';
+}
+function randomOppHTML(fmt) {
+    const on = chosenOpponent && chosenOpponent.type === 'random' && chosenOpponent.fmt === fmt;
+    return `<h3 class="opp-h">🎲 Surprise me</h3><div class="opp-grid" style="margin-bottom:12px;"><button type="button" class="opp" aria-pressed="${!!on}" onclick="chooseOpponent({ type: 'random', fmt: '${fmt}', name: 'Random playable deck' })"><strong>🎲 A random playable ${fmt === 'commander' ? 'Commander' : 'Modern'} deck</strong><small>${fmt === 'commander' ? 'A random commander and a shuffle of the popular cards in its colors' : 'Two random colors and popular cards in them'}. Every card is fully automated; a new deck each game.</small></button></div>`;
 }
 function verifiedOppHTML() {
     return `<h3 class="opp-h">✅ Fully working decks</h3><p class="note" style="margin-bottom:8px;">Every card in these decks is automated and was checked one by one.</p>${verifiedDecksHTML('chooseVerifiedOpp', chosenOpponent && chosenOpponent.type === 'verified' ? chosenOpponent.key : null)}`;

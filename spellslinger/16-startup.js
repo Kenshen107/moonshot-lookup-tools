@@ -26,6 +26,10 @@ async function autoTest() {
             // Pasted decklists (saved in this browser as duels:testListA / duels:testListB); b can be a commander slug instead
             A = await listToOppDeck(store.get('testListA', ''), 'commander');
             B = q.get('b') ? await buildCommanderDeck(q.get('b')) : await listToOppDeck(store.get('testListB', '') || store.get('testListA', ''), 'commander');
+        } else if (format === 'random') {
+            // Two random playable decks: format=random&a=commander (or modern)
+            const build = q.get('a') === 'modern' ? buildRandomModernDeck : buildRandomCommanderDeck;
+            A = await build(); B = await build();
         } else if (format === 'precon') {
             // Real precons from MTGJSON by file name: format=precon&a=<file>&b=<file>
             const list = await loadPreconList();

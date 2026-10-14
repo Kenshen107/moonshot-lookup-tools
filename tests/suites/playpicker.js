@@ -29,7 +29,7 @@ const BODY = async function () {
     ok('picking a precon marks it', chosenOpponent && chosenOpponent.type === 'precon', chosenOpponent);
     playPickType('modern'); await new Promise(r => setTimeout(r, 1500));
     ok('switching type clears an opponent of the wrong kind', chosenOpponent === null, chosenOpponent);
-    ok('Modern decks face the themed decks', opps().length === MODERN_THEMES.length, opps().length);
+    ok('Modern decks face the themed decks', opps().length === MODERN_THEMES.length + 1, opps().length);
     playPickType('casual'); await new Promise(r => setTimeout(r, 1500));
     return out;
 };

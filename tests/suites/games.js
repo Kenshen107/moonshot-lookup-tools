@@ -10,11 +10,12 @@ const THEMES = ['burn', 'stompy'];
 const BOSSES = ['greg', 'marcus', 'sarah', 'leo', 'trevor', 'sam', 'arthur', 'brenda', 'luke'];
 
 function plan(mode) {
-    const n = mode === 'full' ? { modern: 20, boss: 18, commander: 24, precon: 16, verified: 12, draft: 4 } : mode === 'quick' ? { modern: 3, boss: 3, commander: 3, precon: 3, verified: 4, draft: 1 } : { modern: 6, boss: 6, commander: 6, precon: 6, verified: 8, draft: 2 };
+    const n = mode === 'full' ? { modern: 20, boss: 18, commander: 24, precon: 16, verified: 12, draft: 4, random: 12 } : mode === 'quick' ? { modern: 3, boss: 3, commander: 3, precon: 3, verified: 4, draft: 1, random: 3 } : { modern: 6, boss: 6, commander: 6, precon: 6, verified: 8, draft: 2, random: 6 };
     const games = [];
     for (let i = 0; i < n.modern; i++) games.push({ kind: 'modern', q: `format=modern&a=${THEMES[i % 2]}&b=${THEMES[(i + 1) % 2]}` });
     for (let i = 0; i < n.boss; i++) games.push({ kind: 'boss', q: `format=boss&a=${BOSSES[i % 9]}&b=${BOSSES[(i + 3) % 9]}&la=hard&lb=${['easy', 'normal', 'hard'][i % 3]}` });
     for (let i = 0; i < n.commander; i++) games.push({ kind: 'commander', q: `format=commander&a=${SLUGS[i % 8]}&b=${SLUGS[(i + 3) % 8]}` });
+    for (let i = 0; i < (n.random || 0); i++) games.push({ kind: 'random', q: `format=random&a=${i % 3 === 2 ? 'modern' : 'commander'}` });
     for (let i = 0; i < n.precon; i++) games.push({ kind: 'precon', q: 'PRECON', i });
     for (let i = 0; i < n.verified; i++) games.push({ kind: 'verified', q: 'VERIFIED', i });
     for (let i = 0; i < n.draft; i++) games.push({ kind: 'draft', q: `format=draft&set=${['mrd', 'm10'][i % 2]}&a=${i % 8}&b=${(i + 3) % 8}` });

@@ -151,6 +151,8 @@ async function startMatch(again) {
             const theme = MODERN_THEMES.find(t => t.key === chosenOpponent.key);
             oppDeck = await buildThemeDeck(theme);
             oppDeck.source = 'Scryfall theme deck';
+        } else if (chosenOpponent.type === 'random') {
+            oppDeck = chosenOpponent.fmt === 'commander' ? await buildRandomCommanderDeck() : await buildRandomModernDeck();
         } else if (chosenOpponent.type === 'precon') {
             const pc = (await loadPreconList()).find(x => x.file === chosenOpponent.key);
             oppDeck = await preconForAI(await loadPreconDeck(pc));
