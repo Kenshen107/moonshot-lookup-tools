@@ -227,6 +227,8 @@ async function newGame(myDeck, oppDeck, friend, more = []) {
 }
 
 // London mulligan: draw seven, then put one card on the bottom for each mulligan.
+// In a pod (3 or 4 players) the first mulligan is free: draw a new seven and keep all of them (103.5c, multiplayer mulligan)
+const mullBottom = P => G.players.length > 2 ? Math.max(0, P.mulligans - 1) : P.mulligans;
 async function mulligan(P) {
     if (P.isAI) {
         let lands = P.hand.filter(o => Rx(o).kind === 'land').length;
@@ -235,6 +237,7 @@ async function mulligan(P) {
             P.library.push(...P.hand.splice(0));
             shuffle(P.library);
             drawCards(P, 7, true);
+            if (G.players.length > 2) { log(`${P.name} takes the free mulligan (keeps seven).`); botSay(P, 'nervous', 'My hand was a mess, so I took the free mulligan.'); return; }
             const nonland = P.hand.filter(o => Rx(o).kind !== 'land').sort((a, b) => b.card.cmc - a.card.cmc);
             const bottom = nonland[0] || P.hand[0];
             pull(P.hand, bottom);
@@ -246,9 +249,9 @@ async function mulligan(P) {
     while (true) {
         const choice = await new Promise(resolve => {
             showModal(`<h2>Your opening hand</h2>
-                <p class="note">${P.mulligans ? `Mulligan ${P.mulligans}: you'll put ${P.mulligans} card${P.mulligans === 1 ? '' : 's'} on the bottom if you keep.` : 'Keep these seven, or shuffle and draw a new seven (and put one on the bottom).'}</p>
+                <p class="note">${P.mulligans ? (mullBottom(P) ? `Mulligan ${P.mulligans}: you'll put ${mullBottom(P)} card${mullBottom(P) === 1 ? '' : 's'} on the bottom if you keep.` : `Free mulligan: keep all seven of this new hand, or mulligan again.`) : G.players.length > 2 ? 'Keep these seven, or take a free mulligan (a new seven, nothing on the bottom).' : 'Keep these seven, or shuffle and draw a new seven (and put one on the bottom).'}</p>
                 <div class="hand mull-hand">${P.hand.map(o => `<span class="hc">${o.card.imgS || o.card.img ? `<img src="${o.card.imgS || o.card.img}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</span>`).join('')}</div>
-                <div class="mull-actions"><button class="btn primary" id="keepBtn">✔ Keep ${P.hand.length - P.mulligans}</button><button class="btn" id="mullBtn" ${P.mulligans >= 4 ? 'disabled' : ''}>↻ Mulligan</button></div>`);
+                <div class="mull-actions"><button class="btn primary" id="keepBtn">✔ Keep ${P.hand.length - mullBottom(P)}</button><button class="btn" id="mullBtn" ${P.mulligans >= 4 ? 'disabled' : ''}>↻ Mulligan</button></div>`);
             $('keepBtn').onclick = () => resolve('keep');
             $('mullBtn').onclick = () => resolve('mull');
         });
@@ -258,16 +261,16 @@ async function mulligan(P) {
         shuffle(P.library);
         drawCards(P, 7, true);
     }
-    if (P.mulligans) {
+    if (mullBottom(P)) {
         const picked = new Set();
         await new Promise(resolve => {
             const draw = () => {
-                showModal(`<h2>Put ${P.mulligans} on the bottom</h2><p class="note">Tap cards to choose (${picked.size}/${P.mulligans}).</p>
+                showModal(`<h2>Put ${mullBottom(P)} on the bottom</h2><p class="note">Tap cards to choose (${picked.size}/${mullBottom(P)}).</p>
                     <div class="hand mull-hand">${P.hand.map(o => `<button class="hc${picked.has(o.uid) ? ' chosen' : ''}" data-uid="${o.uid}">${o.card.imgS || o.card.img ? `<img src="${o.card.imgS || o.card.img}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</button>`).join('')}</div>
-                    <div class="mull-actions"><button class="btn primary" id="bottomBtn" ${picked.size === P.mulligans ? '' : 'disabled'}>Done</button></div>`);
+                    <div class="mull-actions"><button class="btn primary" id="bottomBtn" ${picked.size === mullBottom(P) ? '' : 'disabled'}>Done</button></div>`);
                 document.querySelectorAll('#modalHost .hc').forEach(b => b.onclick = () => {
                     const u = Number(b.dataset.uid);
-                    if (picked.has(u)) picked.delete(u); else if (picked.size < P.mulligans) picked.add(u);
+                    if (picked.has(u)) picked.delete(u); else if (picked.size < mullBottom(P)) picked.add(u);
                     draw();
                 });
                 $('bottomBtn').onclick = resolve;
@@ -2082,6 +2085,7 @@ async function applyEffect(P, e, t, src) {
         return;
     }
     const O = e._O || opp(P);
+    if (G.players.length > 2 && t && t.o && t.o.owner !== P.i && ['destroy', 'exile', 'bounce', 'dmg', 'tap', 'steal'].includes(e.t)) politicsTargeted(P, G.players[t.o.owner]);
     const name = src.card.name;
     switch (e.t) {
         case 'dmg':
@@ -3731,6 +3735,7 @@ function declareAttackers(P, list) {
     list = list.filter(o => { if (!Rx(o).protoTax || o.counters <= 0) return true; const plan = planPayment(P, parseCost(''), o.counters); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${o.counters}}.`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${o.counters}} for ${o.card.name} to attack.`); return true; });
     list = list.filter(o => { const t = auraTaxOn(o); if (!t) return true; const plan = planPayment(P, parseCost(''), t); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${t}}.`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${t}} for ${o.card.name} to attack.`); return true; });
     G.attackedN = { turn: G.turn, p: P.i, n: list.length };
+    if (G.players.length > 2 && list.length) politicsAttacked(P, G.players[G.defender], list.length);
     G.attackers = list.map(o => o.uid);
     list.forEach(o => { o.attackedTurn = G.turn; });
     list.forEach(o => { if (!has(o, 'vigilance')) { o.tapped = true; fire('tapped', { o }); } });
@@ -3856,6 +3861,7 @@ async function beginTurn() {
     const P = G.players[G.active];
     G.phase = 'beginning';
     G.focusPick = null; // the pod view follows whoever's turn it is
+    politicsTick(P);
     P.landsPlayed = 0;
     foes(P).flatMap(F => F.bf).forEach(o => { if (o.tapped && grantsOn(o).some(g => g.untapEach)) { o.tapped = false; } });
     // Seedborn Muse, Unwinding Clock: untap during each other player's untap step

@@ -108,7 +108,7 @@ function podStripHTML() {
         const dmg = G.format === 'commander' ? (v.cmdBy[X.i] || 0) : 0;
         return `<button type="button" class="pod-chip${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
             title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${X.hand.length} cards in hand, ${X.bf.filter(isCreature).length} creatures${dmg ? `, you have taken ${dmg} commander damage from them` : ''}">
-            <b>${X.out ? '💀' : turn ? '▶' : styleOf(X) ? styleOf(X).emoji : '🤖'} ${esc(X.name.split(',')[0])}</b>${styleOf(X) ? `<span class="note" title="${esc(styleOf(X).desc)}">${esc(styleOf(X).name)}</span>` : ''}<span>❤️ ${X.life}</span>${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}<span>✋ ${X.hand.length}</span><span>🛡 ${X.bf.filter(isCreature).length}</span>${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}</button>`;
+            <b>${X.out ? '💀' : turn ? '▶' : styleOf(X) ? styleOf(X).emoji : '🤖'} ${esc(X.name.split(',')[0])}</b><span class="mood" title="${esc(X.name.split(',')[0])} is feeling ${esc(MOODS[botMood(X).mood].name)}: ${esc(botMood(X).why)}">${MOODS[botMood(X).mood].emoji}</span>${G.arch === X.i ? '<span title="The table is focusing on this player">🎯</span>' : ''}${styleOf(X) ? `<span class="note" title="${esc(styleOf(X).desc)}">${esc(styleOf(X).name)}</span>` : ''}<span>❤️ ${X.life}</span>${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}<span>✋ ${X.hand.length}</span><span>🛡 ${X.bf.filter(isCreature).length}</span>${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}</button>`;
     }).join('');
     return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}</div>`;
 }
@@ -119,7 +119,7 @@ function barHTML(P) {
     const targetable = m && m.type === 'target' && m.valid.some(v => v.p && v.p.i === P.i);
     const cmd = P.command.map(o => `<button type="button" class="btn small" onclick="showGameCard(${o.uid})">👑 ${esc(o.card.name.split(',')[0])}${P.tax ? ` (+${P.tax * 2})` : ''}</button>`).join('');
     return `
-        <span class="who">${you(P) ? '🧙 You' : `🤖 ${esc(P.name)}`}</span>
+        <span class="who">${you(P) ? '🧙 You' : `🤖 ${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
         <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}">❤️ ${P.life}</button>
         ${G.format === 'commander' ? `<span class="zone-count" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
         ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
@@ -162,7 +162,7 @@ function logSheet() {
 const ACT_MAJOR = /'s turn —|\b(?:casts?|plays?|activates?|attacks? with|equips?|crews?|cycles?|saddles?|foretells?|counters?)\b|^Blocks:|^No blocks/;
 const ACT_MS = 1700, ACT_QUICK_MS = 1200, ACT_SUB_MS = 900, ACT_MAX_SUBS = 5;
 let actQ = [], actCur = null, actTimer = null, actWaiters = [];
-function actOn() { return !AUTOPLAY && !!G && G.players.length === 2 && !G.hotseat && !G.over && !$('game').classList.contains('hidden'); }
+function actOn() { return !AUTOPLAY && !!G && !G.hotseat && !G.over && !$('game').classList.contains('hidden'); }
 const actBusy = () => actOn() && (!!actCur || actQ.length > 0);
 // The cards a line names, from every zone the players can see (longest names first)
 function actCards(msg) {
@@ -185,7 +185,8 @@ function showActBanner(msg) {
     const theirs = G.players[G.active] && G.players[G.active].isAI;
     const cards = actCards(msg);
     // On your own turn, only what the opponent does and what happens to you
-    if (!theirs && !(msg.includes(foe().name) || /^(?:Blocks:|You )/.test(msg) || cards.some(c => foe().bf.concat(foe().gy, foe().exile, foe().command).some(o => o.card === c) && !me().bf.some(o => o.card === c)))) return;
+    const others = G.players.filter(p => p !== me());
+    if (!theirs && !(others.some(p => msg.includes(p.name)) || /^(?:Blocks:|You )/.test(msg) || cards.some(c => others.some(F => F.bf.concat(F.gy, F.exile, F.command).some(o => o.card === c)) && !me().bf.some(o => o.card === c)))) return;
     const major = ACT_MAJOR.test(msg);
     const last = actQ.length ? actQ[actQ.length - 1] : actCur;
     if (!major && last && last.subs.length < ACT_MAX_SUBS) {

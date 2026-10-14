@@ -2,13 +2,20 @@
 // attacking one opponent, turn order skipping players who are out, and the pod strip on the table at phone, tablet and desktop widths.
 'use strict';
 const path = require('path');
+const fs = require('fs');
 const { launch, openTestPage, installHelpers, formatChecks, printResults, writeOut, ROOT } = require('../lib/harness');
 
 const SIZES = [[360, 740], [768, 1024], [1280, 800]];
 
+// Offline: the few cards these checks need come from tests/data/cards_all.json (served as /__cards.json), not from Scryfall
 const SETUP = async function (n) {
-    const C = await T.cards(['Mountain', 'Grizzly Bears', 'Hill Giant', 'Syphon Mind']);
-    const mk = () => listToOppDeck('1 Tyrox, Saurid Tyrant\n98 Mountain', 'commander');
+    if (!window.LOCAL) {
+        const raw = await (await fetch('/__cards.json')).json();
+        window.LOCAL = {};
+        raw.forEach(c => { if (['Mountain', 'Grizzly Bears', 'Hill Giant', 'Syphon Mind', 'Tyrox, Saurid Tyrant'].includes(c.name) && !window.LOCAL[c.name] && (c.type_line || '').length) { const sc = slimCard(c); CARDS.set(sc.id, sc); window.LOCAL[c.name] = sc; } });
+    }
+    const C = window.LOCAL;
+    const mk = async () => ({ name: 'Tyrox (test)', format: 'commander', commander: C['Tyrox, Saurid Tyrant'], entries: [{ card: C['Mountain'], n: 98 }, { card: C['Syphon Mind'], n: 1 }], source: 'test' });
     const decks = []; for (let i = 0; i < n; i++) decks.push(await mk());
     await newGame(decks[0], decks[1], null, decks.slice(2));
     G.active = 0; G.turn = 5; G.phase = 'main1'; G.busy = false; G.firstTurn = false;
@@ -19,6 +26,7 @@ const SETUP = async function (n) {
 
 (async () => {
     const h = await launch({ profileDir: undefined });
+    await h.ctx.route('http://spellslinger.test/__cards.json', r => r.fulfill({ status: 200, contentType: 'application/json', body: fs.readFileSync(path.join(ROOT, 'tests', 'data', 'cards_all.json')) }));
     const { page, errors } = await openTestPage(h.ctx, h.server);
     await installHelpers(page);
     const results = [];
@@ -80,6 +88,37 @@ const SETUP = async function (n) {
     check('turn order skips players who are out', JSON.stringify(r.order) === '[3,0,3,0]', r.order);
     check('opp() skips players who are out', r.oppOfA === 3, r.oppOfA);
     check('the last player standing wins', r.over && r.winner === 0, { over: r.over, winner: r.winner });
+
+    // Politics, moods, free mulligan, play-by-play in pods
+    await page.evaluate(SETUP, 4);
+    r = await page.evaluate(async () => {
+        T.clear();
+        const [A, B, Cc, D] = G.players;
+        for (let i = 0; i < 7; i++) T.put(Cc, C['Hill Giant']);
+        T.put(B, C['Grizzly Bears']); T.put(D, C['Grizzly Bears']);
+        G.active = 0; G.defender = null; G.turn = 12;
+        updateArchenemy();
+        const arch = G.arch, pick = podPickDefender(A).i, pickB = podPickDefender(B).i;
+        B.aiStyle = 'aggro'; D.life = 6; const aggroPick = podPickDefender(B).i; B.aiStyle = null; D.life = 40;
+        Cc.bf.length = 0; updateArchenemy(); const after = G.arch;
+        B.life = 5; const worried = botMood(B).mood; B.life = 40;
+        B.grudge = { 0: 9 }; const angry = botMood(B).mood; B.grudge = {};
+        const before = G.log.length; botSay(B, 'angry', 'I will remember that.', 'test'); const said = G.log.length - before;
+        botSay(B, 'angry', 'again', 'test'); const repeat = G.log.length - before;
+        G.players.forEach(X => { X.mulligans = 0; });
+        const mb = [1, 2].map(n => { A.mulligans = n; return mullBottom(A); });
+        G.players.length = 2; A.mulligans = 1; const mb2 = mullBottom(A);
+        return { arch, pick, pickB, aggroPick, after, worried, angry, said, repeat, mb, mb2, act: String(actOn).includes('length === 2') };
+    });
+    check('one player far ahead becomes the archenemy', r.arch === 2, r.arch);
+    check('every bot attacks the archenemy', r.pick === 2 && r.pickB === 2, { a: r.pick, b: r.pickB });
+    check('an aggro bot still finishes a nearly dead player first', r.aggroPick === 3, r.aggroPick);
+    check('the archenemy label goes away when the lead does', r.after === null, r.after);
+    check('a bot at 5 life feels worried, one with a big grudge feels angry', r.worried === 'worried' && r.angry === 'angry', { w: r.worried, a: r.angry });
+    check('a bot speaks once and not again right away', r.said === 1 && r.repeat === 1, { said: r.said, repeat: r.repeat });
+    check('in a pod the first mulligan is free (0 on the bottom), the second puts 1; a duel puts 1', r.mb[0] === 0 && r.mb[1] === 1 && r.mb2 === 1, { pod: r.mb, duel: r.mb2 });
+    check('the play-by-play popups are on in pods too (not only duels)', !r.act, r.act);
+    check('the speech bubble shows the bot, its feeling and the line', await page.evaluate(() => { showBubble(G.players[1], 'worried', 'Test line'); const t = document.querySelector('#talkLayer .talk-bubble'); return !!t && /feeling worried/.test(t.textContent) && /Test line/.test(t.textContent); }), '');
 
     // The table: chips, focus, layout at three widths
     const checks = [];

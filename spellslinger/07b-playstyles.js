@@ -127,6 +127,15 @@ function podPickDefender(P) {
     const lethal = fs.filter(F => F.life <= power && open(F)).sort((a, b) => a.life - b.life)[0];
     if (lethal) return lethal;
     const grudge = F => (P.grudge && P.grudge[F.i]) || 0;
+    // Politics: when one player is far ahead the whole table goes after them (a revenge-minded bot still hits whoever hurt it most; an aggro bot finishes a nearly dead player first)
+    const arch = G.arch != null ? G.players[G.arch] : null;
+    if (arch && !arch.out && arch !== P) {
+        const wounded = fs.filter(F => F !== arch && F.life <= 10).sort((a, b) => a.life - b.life)[0];
+        const angry = fs.filter(F => F !== arch && grudge(F) >= 8).sort((a, b) => grudge(b) - grudge(a))[0];
+        if (st && st.target === 'weak' && wounded) return wounded;
+        if (st && st.target === 'revenge' && angry) return angry;
+        return arch;
+    }
     const rel = F => (F.i - P.i + G.players.length) % G.players.length; // ties go to whoever sits next to us (not always seat 0)
     const by = {
         threat: (a, b) => podThreat(b) - podThreat(a) || a.life - b.life || rel(a) - rel(b),
@@ -139,7 +148,7 @@ function podPickDefender(P) {
 function aiHoldBack(P, chosen, D) {
     if (G.players.length <= 2 || !chosen.length || P.aiLevel === 'easy') return chosen;
     if (chosen.reduce((s, a) => s + Math.max(0, pow(a)), 0) >= D.life && !D.bf.some(o => isCreature(o) && !o.tapped)) return chosen; // lethal
-    const st = styleOf(P), factor = st ? st.hold : 0.75;
+    const st = styleOf(P), factor = (st ? st.hold : 0.75) * (G.arch === P.i ? 0.8 : 1); // the archenemy keeps more at home
     const theirs = foes(P).flatMap(F => F.bf.filter(isCreature)).map(o => Math.max(0, pow(o))).sort((a, b) => b - a);
     let home = P.bf.filter(o => isCreature(o) && !o.tapped && !chosen.includes(o)).length;
     const through = () => theirs.slice(home).reduce((a, b) => a + b, 0);

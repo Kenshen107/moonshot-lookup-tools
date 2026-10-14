@@ -291,6 +291,13 @@
         /* ---- The game table ---- */
         #game { position: fixed; inset: 0; z-index: var(--z-game); background: radial-gradient(ellipse at center, var(--felt-1), var(--felt-2) 70%, var(--bg-canvas)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto auto; overflow: hidden; }
         .pbar { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 6px 14px; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); border-bottom: 1px solid var(--border-subtle); }
+        .talk-layer { position: fixed; top: 74px; right: 12px; width: min(340px, calc(100vw - 24px)); display: flex; flex-direction: column; gap: 8px; z-index: var(--z-banner); pointer-events: none; }
+        .talk-bubble { pointer-events: auto; display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius-lg); background: var(--panel-base); border: 1px solid var(--brand-light); color: var(--text-primary); font-size: 0.9em; box-shadow: 0 6px 22px var(--bg-canvas); animation: tbIn 0.25s ease-out; cursor: pointer; }
+        .talk-bubble.fade { opacity: 0; transform: translateY(-6px); transition: opacity 0.6s, transform 0.6s; }
+        .talk-bubble .tb-emoji { font-size: 1.8em; line-height: 1; }
+        .talk-bubble em { color: var(--text-soft); font-style: normal; font-size: 0.85em; }
+        .mood { font-size: 1.1em; cursor: help; }
+        @keyframes tbIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
         .pod-strip { display: flex; gap: 6px; flex-wrap: wrap; flex: 1 1 100%; }
         .pod-chip { display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-primary); font-size: 0.85em; cursor: pointer; }
         .pod-chip b { font-family: var(--font-display); color: var(--text-heading); max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
