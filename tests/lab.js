@@ -20,7 +20,7 @@ async function openLab(h) {
     await h.ctx.route('http://spellslinger.test/__lab/cards.json', r => r.fulfill({ status: 200, contentType: 'application/json', body: fs.readFileSync(cardsFile) }));
     const page = await h.ctx.newPage();
     const errors = [];
-    page.on('pageerror', e => errors.push(String(e.message || e)));
+    page.on('pageerror', e => errors.push(String(e.stack || e.message || e).split('\n').slice(0, 4).join(' | ')));
     await page.goto(`${h.server.url}/Spellslinger_Duels.html?autoplay&format=none`);
     await page.waitForFunction(() => typeof autoTest === 'function' && typeof parseTrigger === 'function' && typeof preconEffect === 'function', null, { timeout: 30000 });
     await page.addScriptTag({ path: path.join(__dirname, 'lib', 'lab-page.js') });
@@ -40,9 +40,10 @@ async function main() {
     const h = await launch({ profileDir: path.join(ROOT, 'tests', '.cache', 'lab' + (process.env.TEST_PROFILE || '')) });
     const t0 = Date.now();
     if (REPLAY) {
-        const { page, info } = await openLab(h);
+        const { page, info, errors } = await openLab(h);
         const r = await page.evaluate(([s, k, la, lb, tmo]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo }), [Number(REPLAY), KIND, LA, LB, TMO]);
         console.log(JSON.stringify(r, null, 1));
+        if (errors.length) console.log('PAGE ERRORS:\n' + errors.join('\n'));
         console.log((await page.evaluate(() => G.log.map(l => l.text || l).join('\n'))).slice(-6000));
         await h.close(); return;
     }
@@ -83,6 +84,8 @@ function report(all, pageErrors, secs) {
     console.log('Endings:', JSON.stringify(reasons));
     console.log(`Hung (no result in time): ${hung.length}   Threw: ${err.length}   Broken invariants: ${bad.length}   Page errors during games: ${logged.length}   Page errors total: ${pageErrors.length}`);
     [...hung, ...err, ...bad, ...logged].slice(0, 12).forEach(r => console.log(`  seed ${r.seed} ${r.kind}: ${r.hang ? 'HUNG turn ' + r.turn + ' ' + r.phase : r.error || JSON.stringify(r.bad || r.errors)}  (${r.a} vs ${r.b})`));
+    const uniq = {}; pageErrors.forEach(e => { const k = e; uniq[k] = (uniq[k] || 0) + 1; });
+    Object.entries(uniq).forEach(([k, n]) => console.log(`  page error x${n}: ${k.slice(0, 400)}`));
     const slow = all.slice().sort((a, b) => b.ms - a.ms).slice(0, 3);
     console.log('Slowest:', slow.map(r => `seed ${r.seed} ${r.ms}ms`).join(', '));
     fs.mkdirSync(path.join(ROOT, 'tests', '.out'), { recursive: true });

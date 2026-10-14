@@ -13,6 +13,12 @@ window.LAB = (() => {
     // No drawing: the lab only needs the rules, not the table
     window.renderGame = () => {};
     window.log = msg => { G.log.push(msg); if (G.log.length > 400) G.log.shift(); };
+    // Which waiting function is still pending when a game hangs (for the hang report)
+    L.pending = {};
+    ['askYes', 'askNumber', 'pickCard', 'pickMode', 'pickModes', 'pickScry', 'actDrain', 'settle', 'offerPriority', 'handTo', 'humanPay', 'runStack', 'activate', 'castSpell'].forEach(n => {
+        const f = window[n]; if (typeof f !== 'function') return;
+        window[n] = function (...a) { L.pending[n] = (L.pending[n] || 0) + 1; const r = f.apply(this, a); Promise.resolve(r).finally(() => { L.pending[n]--; }); return r; };
+    });
     L.load = (raw, autoNames) => {
         const t0 = performance.now();
         L.pool = [];
@@ -84,13 +90,14 @@ window.LAB = (() => {
             const A = build(), B = build();
             A.aiLevel = opts.la || 'normal'; B.aiLevel = opts.lb || 'normal';
             out.a = A.commander ? A.commander.name : A.name; out.b = B.commander ? B.commander.name : B.name;
-            window.lastResult = null;
+            window.lastResult = null; L.pending = {};
             await newGame(A, B);
             const limit = opts.timeout || 60000;
             while (!window.lastResult && performance.now() - t0 < limit) await new Promise(r => setTimeout(r, 0));
-            if (!window.lastResult) { out.hang = true; out.turn = G.turn; out.phase = G.phase; out.diag = { active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
+            if (!window.lastResult) { out.hang = true; out.turn = G.turn; out.phase = G.phase; out.diag = { pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
             else Object.assign(out, window.lastResult);
             out.bad = T.invariants();
+            if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
         } catch (e) { out.error = String(e && e.stack || e).slice(0, 400); }
         window.removeEventListener('error', onErr);
         Math.random = realRandom;

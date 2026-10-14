@@ -781,7 +781,7 @@ async function payAddCost(P, o) {
         const sac = f && (!others.length || (P.isAI ? f.token || permValue(f) < 2 : await askYes(P, `${o.card.name}: sacrifice ${/^[aeiou]/.test(a.sac) ? 'an' : 'a'} ${a.sac}? (Cancel = discard a card instead)`, { card: o.card, yes: 'Sacrifice', no: 'Discard a card' })));
         if (!sac) { const d = (P.isAI || AUTOPLAY ? null : await pickCard(P, others, `${o.card.name}: discard a card`)) || others.sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} to cast ${o.card.name}.`); return; }
     }
-    if (a.sac) { const f = await chooseSac(P, o, a.sac, o.card.name); G.lastSacMv = f.card.cmc || 0; G.lastSacPow = Math.max(0, pow(f)); G.lastSacTou = Math.max(0, tou(f)); G.lastSacLegend = /Legendary/.test(f.card.type); fire('sacrificed', { o: f }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name} to cast ${o.card.name}.`); dieOrLeave(f, 'gy'); }
+    if (a.sac) { const f = await chooseSac(P, o, a.sac, o.card.name); if (!f) return; /* the fodder was tapped for mana first: the cost goes unpaid rather than crashing */ G.lastSacMv = f.card.cmc || 0; G.lastSacPow = Math.max(0, pow(f)); G.lastSacTou = Math.max(0, tou(f)); G.lastSacLegend = /Legendary/.test(f.card.type); fire('sacrificed', { o: f }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name} to cast ${o.card.name}.`); dieOrLeave(f, 'gy'); }
     if (a.discard && a.orLife) {
         const others = P.hand.filter(x => x !== o);
         const life = !others.length || (P.life > a.orLife && (P.isAI ? P.life > 10 : !(await askYes(P, `${o.card.name}: discard a card? (Cancel = pay ${a.orLife} life instead)`, { card: o.card, yes: 'Discard a card', no: `Pay ${a.orLife} life` }))));
@@ -2156,6 +2156,7 @@ async function applyEffect(P, e, t, src) {
             if (onBf(src.uid)) leaveBattlefield(src, 'library');
             else if (zone) pull(X.gy, src);
             else break;
+            if (X.command.includes(src)) break; // a commander goes to the command zone instead (903.9a)
             const li = X.library.indexOf(src); if (li >= 0) X.library.splice(li, 1);
             if (e.pos === 'bottom') X.library.unshift(src); else X.library.splice(Math.max(0, X.library.length - (e.pos - 1)), 0, src);
             log(`${name} is put into its owner's library ${e.pos === 'bottom' ? 'on the bottom' : 'fifth from the top'}.`);
@@ -2367,6 +2368,7 @@ async function applyEffect(P, e, t, src) {
         }
         case 'pump':
             if (e.target === 'self') { if (!onBf(src.uid)) break; t = { o: src }; }
+            if (!t || !t.o) break; // the target is gone
             if (e.exileDies) t.o.exileOnDeath = G.turn;
             t.o.tp += e.p; t.o.tq += e.q; t.o.tkw.push(...e.kw);
             log(`${t.o.card.name} gets ${e.p >= 0 ? '+' : ''}${e.p}/${e.q >= 0 ? '+' : ''}${e.q}${e.kw.length ? ` and ${e.kw.join(', ')}` : ''} until end of turn.`);
@@ -3084,7 +3086,7 @@ async function applyEffect(P, e, t, src) {
             const x = t && t.o; if (!x || !onBf(x.uid)) break;
             const X = G.players[x.owner], owner = G.players[x.realOwner ?? x.owner];
             leaveBattlefield(x, 'library');
-            if (!x.token && !owner.library.includes(x)) owner.library.unshift(x);
+            if (!x.token && !x.isCommander && !owner.library.includes(x)) owner.library.unshift(x);
             const shown = []; let hit = null;
             while (X.library.length) { const c = X.library.pop(); if (/Creature/.test(c.card.type) && c !== x) { hit = c; break; } shown.push(c); }
             X.library.unshift(...shown);
@@ -3126,8 +3128,8 @@ async function applyEffect(P, e, t, src) {
             log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${out.map(c => c.card.name).join(', ')}.`);
             break;
         }
-        case 'toTop': { const x = t && t.o; if (!x) break; const owner = G.players[x.realOwner ?? x.owner]; leaveBattlefield(x, 'library'); if (!x.token && !owner.library.includes(x)) owner.library.push(x); log(`${x.card.name} goes on top of its owner's library.`); break; }
-        case 'toBottomOwn': { const x = t && t.o; if (!x) break; const owner = G.players[x.realOwner ?? x.owner]; leaveBattlefield(x, 'library'); if (!x.token && !owner.library.includes(x)) owner.library.unshift(x); log(`${x.card.name} goes to the bottom of its owner's library.`); break; }
+        case 'toTop': { const x = t && t.o; if (!x) break; const owner = G.players[x.realOwner ?? x.owner]; leaveBattlefield(x, 'library'); if (!x.token && !x.isCommander && !owner.library.includes(x)) owner.library.push(x); log(`${x.card.name} goes on top of its owner's library.`); break; }
+        case 'toBottomOwn': { const x = t && t.o; if (!x) break; const owner = G.players[x.realOwner ?? x.owner]; leaveBattlefield(x, 'library'); if (!x.token && !x.isCommander && !owner.library.includes(x)) owner.library.unshift(x); log(`${x.card.name} goes to the bottom of its owner's library.`); break; }
         case 'regenTarget': if (t && t.o) { t.o.regen = (t.o.regen || 0) + 1; log(`${t.o.card.name} gets a regeneration shield.`); } break;
         case 'regenAll': P.bf.filter(isCreature).forEach(x => { x.regen = (x.regen || 0) + 1; }); log(`Each creature ${P.name} ${you(P) ? 'control' : 'controls'} gets a regeneration shield.`); break;
         case 'exileLibrary': { const n = P.library.length; P.exile.push(...P.library.splice(0)); log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${n} cards from the library.`); break; }

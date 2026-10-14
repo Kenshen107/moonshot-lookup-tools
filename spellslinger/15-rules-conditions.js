@@ -605,6 +605,7 @@ function actPlan(P, o, a, xExtra = 0) {
     if (a.crew !== undefined) return !dampingOn() && crewPick(P, o, a.crew) ? [] : null;
     if (a.saddle !== undefined) return o.saddledTurn !== G.turn && crewPick(P, o, a.saddle) ? [] : null;
     if (a.cost.life && P.life < a.cost.life) return null;
+    if (a.cost.tapOther && !tapFodder(P, o, a.cost.tapOther)) return null; // nothing to tap for the cost
     if (dampingOn() && (isCreature(o) || /Artifact/.test(o.card.type)) && !a.effects.every(e => e.t === 'addMana')) return null; // Damping Matrix
     if (a.cost.exileTop && P.library.length < a.cost.exileTop) return null;
     if (a.cost.removeNamed && !((o.ctr[a.cost.removeNamed] || 0) > 0)) return null;
@@ -742,8 +743,11 @@ async function activate(P, o, a, presetTarget, presetX) {
     if (a.loyalty !== undefined) { o.ctr.loyalty = (o.ctr.loyalty || 0) + a.loyalty; o.loyaltyTurn = G.turn; }
     else {
         if (manual(P) && !(await humanPay(P, actCost(o, a), xExtra, { forType: o.card.type, exclude: a.cost && a.cost.tap ? o : null }, o.card.name))) { renderGame(); return false; }
+        // The creature tapped for "Tap an untapped creature you control" is chosen first, so mana sources can't use it up
+        const tapFor = a.cost.tapOther ? tapFodder(P, o, a.cost.tapOther) : null;
+        if (tapFor) tapFor.tapped = true;
         const plan = actPlan(P, o, a, xExtra);
-        if (!plan) return false;
+        if (!plan) { if (tapFor) tapFor.tapped = false; return false; }
         plan.forEach(s => tapSource(P, s));
         if (a.cost.tap) { o.tapped = true; fire('tapped', { o }); }
         if (a.cost.life) { P.life -= a.cost.life; }
@@ -766,7 +770,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (a.cost.returnArt) { const ar = P.bf.filter(x => /\bArtifact\b/.test(x.card.type) && x !== o).sort((x, y) => (Rx(y).etb.length - Rx(x).etb.length) || (permValue(x) - permValue(y)))[0]; leaveBattlefield(ar, 'hand'); if (ar.token) pull(P.hand, ar); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${ar.card.name} to hand.`); }
         if (a.cost.returnLands) { const ls = P.bf.filter(x => /\bLand\b/.test(x.card.type)).sort((x, y) => (y.tapped - x.tapped) || (permValue(x) - permValue(y))).slice(0, a.cost.returnLands); ls.forEach(l => leaveBattlefield(l, 'hand')); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${ls.map(l => l.card.name).join(' and ')} to hand.`); }
         if (a.cost.tapOtherN) { P.bf.filter(x => x !== o && !x.tapped && isCreature(x)).sort((x, y) => creatureValue(x) - creatureValue(y)).slice(0, a.cost.tapOtherN).forEach(x => { x.tapped = true; fire('tapped', { o: x }); log(`${P.name} ${you(P) ? 'tap' : 'taps'} ${x.card.name}.`); }); }
-        if (a.cost.tapOther) { const f = tapFodder(P, o, a.cost.tapOther); f.tapped = true; fire('tapped', { o: f }); log(`${P.name} ${you(P) ? 'tap' : 'taps'} ${f.card.name} for ${o.card.name}.`); }
+        if (a.cost.tapOther && tapFor) { const f = tapFor; fire('tapped', { o: f }); log(`${P.name} ${you(P) ? 'tap' : 'taps'} ${f.card.name} for ${o.card.name}.`); }
         for (const kind of [a.cost.sacCreature && 'creature', a.cost.sacPerm].filter(Boolean)) { const f = await chooseSac(P, o, kind, o.card.name); if (isCreature(f)) G.lastSacPow = Math.max(0, pow(f)); G.lastSacMv = f.card.cmc || 0; log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }
         if (a.cost.sacN) { const fs = await chooseSacN(P, P.bf.filter(x => new RegExp(`\\b${a.cost.sacN.kind}\\b`).test(x.card.type)), a.cost.sacN.n, o.card.name); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(', ')}.`); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); }
     }

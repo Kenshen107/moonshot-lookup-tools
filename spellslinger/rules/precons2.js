@@ -89,7 +89,7 @@ registerRules({
             if (/^Haste; fear$/.test(line)) { R.kw.add('haste'); R.kw.add('fear'); return done(); }
             if (/^You have hexproof\.$/.test(line)) { R.playerHexproof = true; return done(); }
             if (/^Prevent all combat damage that would be dealt to and dealt by ~\.$/.test(line)) { R.kw.add('nocombatdmg'); return done(); }
-            if ((m = line.match(/^\{1\}: The next time a (black|blue|green|red|white) source of your choice would deal damage to you this turn, prevent that damage\.$/))) { const act = parseActivated('{1}: Prevent all combat damage that would be dealt to and dealt by this creature this turn.', R); R.acts.push({ ...act, effects: [{ t: 'copShield', color: { white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' }[m[1]] }] }); return done(); }
+            if ((m = line.match(/^\{1\}: The next time a (black|blue|green|red|white) source of your choice would deal damage to you this turn, prevent that damage\.$/))) { const act = parseActivated('{1}: You gain 1 life.', R); R.acts.push({ ...act, effects: [{ t: 'copShield', color: { white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' }[m[1]] }] }); return done(); }
             if ((m = line.match(/^~ gets \+2\/\+2 as long as you control a permanent named (.+) or a permanent named (.+)\.$/))) { (R.selfCond = R.selfCond || []).push({ cond: `you control a permanent named ${m[1]} or a permanent named ${m[2]}`, p: 2, q: 2, kw: [] }); return done(); }
             if (/^Battle cry$/.test(line)) { R.trig.push({ ev: 'attacks', fn: 'selfAttacks', effects: [{ t: 'battleCry' }] }); return done(); }
             if (/^You may have ~ assign its combat damage as though it weren't blocked\.$/.test(line)) { R.assignUnblocked = true; return done(); }
