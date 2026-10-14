@@ -1,0 +1,92 @@
+// Test lab: play hundreds or thousands of AI-vs-AI games with NO network (no Scryfall, MTGJSON or EDHREC).
+// Every card comes from tests/data/cards_all.json, decks are random but fully Automated, each game has a seed so it can be replayed.
+// Usage: node tests/lab.js [--n 500] [--kind commander|modern|mix] [--seed 1] [--conc 4] [--la normal] [--lb normal] [--show-bad]
+//   Compare two AI versions: GAME_ROOT=/path/to/older/worktree node tests/lab.js --n 500   (same seeds, same decks)
+//   Replay one game with the full log: node tests/lab.js --replay 123 --kind commander
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const { launch, ROOT } = require('./lib/harness');
+
+const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : (process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : true); };
+const N = Number(arg('n', 200)), KIND = arg('kind', 'mix'), SEED = Number(arg('seed', 1)), CONC = Number(arg('conc', 3));
+const LA = arg('la', 'normal'), LB = arg('lb', 'normal'), TMO = Number(arg('timeout', 15000)), REPLAY = arg('replay', null);
+
+async function openLab(h) {
+    await h.ctx.addInitScript(() => { window.__LAB = true; });
+    await h.ctx.route(/api\.scryfall\.com|mtgjson\.com|edhrec\.com|data\.scryfall\.io/, route => route.abort());
+    const cardsFile = path.join(ROOT, 'tests', 'data', 'cards_all.json');
+    if (!fs.existsSync(cardsFile)) throw new Error('tests/data/cards_all.json is missing: run python3 tests/fetch_cards.py once (needs Scryfall)');
+    await h.ctx.route('http://spellslinger.test/__lab/cards.json', r => r.fulfill({ status: 200, contentType: 'application/json', body: fs.readFileSync(cardsFile) }));
+    const page = await h.ctx.newPage();
+    const errors = [];
+    page.on('pageerror', e => errors.push(String(e.message || e)));
+    await page.goto(`${h.server.url}/Spellslinger_Duels.html?autoplay&format=none`);
+    await page.waitForFunction(() => typeof autoTest === 'function' && typeof parseTrigger === 'function' && typeof preconEffect === 'function', null, { timeout: 30000 });
+    await page.addScriptTag({ path: path.join(__dirname, 'lib', 'lab-page.js') });
+    // the invariant check the other suites use
+    await page.evaluate(() => { window.T = { invariants() {
+        const bad = [], seen = new Set();
+        G.players.forEach(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].forEach(z => (P[z] || []).forEach(x => { if (seen.has(x.uid)) bad.push('duplicate ' + x.card.name); seen.add(x.uid); })));
+        G.players.forEach(P => { if (isNaN(P.life)) bad.push('NaN life ' + P.name); });
+        allPerms().filter(isCreature).forEach(x => { if (isNaN(pow(x)) || isNaN(tou(x))) bad.push('NaN P/T ' + x.card.name); });
+        return bad;
+    } }; });
+    const info = await page.evaluate(async () => { const raw = await (await fetch('/__lab/cards.json')).json(); const names = (await (await fetch('/tests/baseline_full_cards.txt')).text()).split('\n').map(x => x.trim()).filter(Boolean); return LAB.load(raw, names); });
+    return { page, errors, info };
+}
+
+async function main() {
+    const h = await launch({ profileDir: path.join(ROOT, 'tests', '.cache', 'lab' + (process.env.TEST_PROFILE || '')) });
+    const t0 = Date.now();
+    if (REPLAY) {
+        const { page, info } = await openLab(h);
+        const r = await page.evaluate(([s, k, la, lb, tmo]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo }), [Number(REPLAY), KIND, LA, LB, TMO]);
+        console.log(JSON.stringify(r, null, 1));
+        console.log((await page.evaluate(() => G.log.map(l => l.text || l).join('\n'))).slice(-6000));
+        await h.close(); return;
+    }
+    console.log(`Lab: ${N} games, kind ${KIND}, seeds ${SEED}..${SEED + N - 1}, ${CONC} pages, AI A=${LA} B=${LB}`);
+    const per = Math.ceil(N / CONC), all = [];
+    const info0 = [];
+    await Promise.all(Array.from({ length: CONC }, async (_, w) => {
+        const from = SEED + w * per, count = Math.min(per, N - w * per);
+        if (count <= 0) return;
+        const { page, errors, info } = await openLab(h);
+        if (!w) console.log(`Loaded ${info.cards} cards offline (${info.automated} fully Automated) in ${info.ms} ms`);
+        for (let done = 0; done < count; done += 25) {
+            const n = Math.min(25, count - done);
+            const rs = await page.evaluate(([f, c, k, la, lb, tmo]) => LAB.batch(f, c, { kind: k, la, lb, timeout: tmo }), [from + done, n, KIND, LA, LB, TMO]);
+            // mix: alternate kinds by seed
+            all.push(...rs);
+            process.stdout.write(`\r${all.length}/${N} games, ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+        }
+        if (errors.length) info0.push(...errors);
+        await page.close();
+    }));
+    console.log('');
+    report(all, info0, (Date.now() - t0) / 1000);
+    await h.close();
+}
+
+function report(all, pageErrors, secs) {
+    const done = all.filter(r => r.winner !== undefined && !r.hang && !r.error);
+    const hung = all.filter(r => r.hang), err = all.filter(r => r.error), bad = all.filter(r => r.bad && r.bad.length), logged = all.filter(r => r.errors);
+    const w0 = done.filter(r => r.winner === 0).length, w1 = done.filter(r => r.winner === 1).length, draws = done.filter(r => r.winner === null).length;
+    const turns = done.map(r => r.turn || r.turns).sort((a, b) => a - b);
+    const avg = a => a.length ? (a.reduce((x, y) => x + y, 0) / a.length) : 0;
+    console.log(`\n${all.length} games in ${secs.toFixed(0)}s (${(all.length / secs).toFixed(1)}/s), avg ${avg(all.map(r => r.ms)).toFixed(0)} ms each`);
+    console.log(`Finished ${done.length}: seat A won ${w0} (${(100 * w0 / Math.max(1, done.length)).toFixed(1)}%), seat B won ${w1}, draws ${draws}`);
+    console.log(`Turns: median ${turns[turns.length >> 1]}, p90 ${turns[Math.floor(turns.length * 0.9)]}, max ${turns[turns.length - 1]}`);
+    const reasons = {};
+    done.forEach(r => { const k = /commander damage/.test(r.reason) ? 'commander damage' : /life/.test(r.reason) ? 'life total' : /library|draw/.test(r.reason) ? 'empty library' : /poison/.test(r.reason) ? 'poison' : String(r.reason).replace(/\d+/g, 'N').slice(0, 40); reasons[k] = (reasons[k] || 0) + 1; });
+    console.log('Endings:', JSON.stringify(reasons));
+    console.log(`Hung (no result in time): ${hung.length}   Threw: ${err.length}   Broken invariants: ${bad.length}   Page errors during games: ${logged.length}   Page errors total: ${pageErrors.length}`);
+    [...hung, ...err, ...bad, ...logged].slice(0, 12).forEach(r => console.log(`  seed ${r.seed} ${r.kind}: ${r.hang ? 'HUNG turn ' + r.turn + ' ' + r.phase : r.error || JSON.stringify(r.bad || r.errors)}  (${r.a} vs ${r.b})`));
+    const slow = all.slice().sort((a, b) => b.ms - a.ms).slice(0, 3);
+    console.log('Slowest:', slow.map(r => `seed ${r.seed} ${r.ms}ms`).join(', '));
+    fs.mkdirSync(path.join(ROOT, 'tests', '.out'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'tests', '.out', 'lab.json'), JSON.stringify(all));
+    process.exitCode = hung.length || err.length || bad.length || logged.length ? 1 : 0;
+}
+main().catch(e => { console.error(e); process.exit(2); });

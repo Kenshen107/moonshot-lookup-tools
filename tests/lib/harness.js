@@ -26,8 +26,10 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 function patch(text) {
     return text
         .replace(/^(\s*)beginTurn\(\);(\s*\n\})/mg, '$1if (!window.__TEST) beginTurn();$2')
+        // the test lab (tests/lab.js, window.__LAB) skips the zero-length waits between steps
+        .replace('const pause = ms => sleep(AUTOPLAY ? 0 : ms);', 'const pause = ms => (window.__LAB ? Promise.resolve() : sleep(AUTOPLAY ? 0 : ms));')
         // ?autoplay would also start its own background game while a test is running
-        .replace(/if \(AUTOPLAY\) autoTest\(\);/g, 'if (AUTOPLAY && !window.__TEST) autoTest();');
+        .replace(/if \(AUTOPLAY\) autoTest\(\);/g, 'if (AUTOPLAY && !window.__TEST && !window.__LAB) autoTest();');
 }
 
 const SITE = 'http://spellslinger.test';
