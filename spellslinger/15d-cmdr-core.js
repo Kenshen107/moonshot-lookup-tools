@@ -136,6 +136,7 @@ function cmdExtraTriggers(ev, o, tr, ctx) {
         if (Rx(a).harmonic && (hasType(o, 'Shaman') || (hasType(o, 'Wizard') && o !== a))) k++; // Harmonic Prodigy
         if (Rx(a).veyran && ev === 'cast' && ctx.o && ['instant', 'sorcery'].includes(Rx(ctx.o).kind)) k++; // Veyran: casting an instant or sorcery
     });
+    k += throneBoost(o, true); // Roaming Throne
     return k;
 }
 // Cast a card from a zone without paying its mana cost; returns true when it was cast

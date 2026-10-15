@@ -23,7 +23,7 @@ def plan(mode, only):
     have_cards = os.path.exists(os.path.join(HERE, 'data', 'cards_all.json'))
     steps = [('engine', ['engine.js'], 300), ('storage', ['storage.js'], 300), ('redraw', ['redraw.js'], 300), ('layout', ['layout.js'], 300), ('modes', ['modes.js'], 300), ('precons', ['precons.js'], 600), ('playpicker', ['playpicker.js'], 300), ('aiblock', ['aiblock.js'], 300), ('randomdeck', ['randomdeck.js'], 600), ('about', ['about.js'], 300), ('uldaros', ['uldaros.js'], 300), ('priority', ['priority.js'], 300), ('blocking', ['blocking.js'], 300), ('banter', ['banter.js'], 300), ('politics2', ['politics2.js'], 300), ('pod', ['pod.js'], 300), ('commander', ['commander.js'], 300), ('lab', ['lab.js'], 1200)]
     if have_cards:
-        steps[-1:-1] = [('cmdr (Commander precons FDC/FRC)', ['cmdr.js'], 600), ('soc (Strixhaven Commander precons)', ['soc.js'], 600)]
+        steps[-1:-1] = [('cmdr (Commander precons FDC/FRC)', ['cmdr.js'], 600), ('soc (Strixhaven Commander precons)', ['soc.js'], 600), ('gishath (Gishath deck)', ['gishath.js'], 600)]
     if mode == 'quick':
         steps.append(('cards (verified decks)', ['cards.js', '--quick'], 600))
         steps.append(('games (quick)', ['games.js', '--quick'], 900))

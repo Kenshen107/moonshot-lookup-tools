@@ -580,7 +580,7 @@ function fire(ev, ctx = {}) {
     if (ev === 'landfall' && ctx.o) { fire('selfEnters', { o: ctx.o }); if (Rx(ctx.o).etb.length) (G.trigQ = G.trigQ || []).push({ P: G.players[ctx.o.owner], o: ctx.o, effects: Rx(ctx.o).etb }); }
     if (ev === 'attacks') G.attackedTurn = G.turn;
     const perms = (ev === 'dies' || ev === 'toGy' || ev === 'leaves') && ctx.o ? [ctx.o, ...allPerms().filter(x => x !== ctx.o)] : allPerms();
-    if (ev === 'draw' && ctx.P) { if (ctx.P.drawTurn !== G.turn) { ctx.P.drawTurn = G.turn; ctx.P.drawN = 0; } ctx.n = ++ctx.P.drawN; }
+    if (ev === 'draw' && ctx.P) { if (ctx.P.drawTurn !== G.turn) { ctx.P.drawTurn = G.turn; ctx.P.drawN = 0; } ctx.n = ++ctx.P.drawN; if (ctx.n === 1 && ctx.o && Rx(ctx.o).miracle && G.phase !== 'setup') { ctx.o.miracleTurn = G.turn; (G.miracleQ = G.miracleQ || []).push({ P: ctx.P, o: ctx.o }); } }
     for (const o of perms) {
         if (lostAbilities(o)) continue;
         // Built-in keyword triggers
@@ -603,9 +603,11 @@ function fire(ev, ctx = {}) {
 }
 async function flushTriggers() {
     for (;;) {
+        if (G && G.miracleQ && G.miracleQ.length && !G.over) { const mq = G.miracleQ.shift(); await runMiracle(mq.P, mq.o); continue; }
         if (G && G.gyLeaveP && G.gyLeaveP.size) { const ps = [...G.gyLeaveP]; G.gyLeaveP.clear(); ps.forEach(i => { const X = G.players[i]; X.gyLeftLast = (X.gyLeftNow || []).splice(0); fire('gyLeave', { P: X }); }); }
         if (!(G && G.trigQ && G.trigQ.length && !G.over)) break;
         const t = G.trigQ.shift();
+        if (t.o && t.o.card && t.effects === Rx(t.o).etb && !t.doubled) { const k = throneBoost(t.o); for (let i = 0; i < k; i++) G.trigQ.push({ ...t, doubled: true }); } // Roaming Throne
         await putTriggers(t.P, t.o, t.effects, t.ctx, t.ctxCount, t.raw);
     }
 }
@@ -702,6 +704,7 @@ function actsOf(o) {
 }
 // The least valuable permanent of a kind to sacrifice for a cost (tokens first)
 function sacFodder(P, src, kind) {
+    if (kind === 'creature with power 4 or greater') return sacCandidates(P, src, kind).sort((a, b) => permValue(a) - permValue(b))[0] || null;
     if (kind === 'legendary creature') return P.bf.filter(x => isCreature(x) && /Legendary/.test(x.card.type)).sort((a, b) => permValue(a) - permValue(b))[0] || null;
     if (/^another /.test(kind)) return sacCandidates(P, src, kind).sort((a, b) => (a.token ? -5 : 0) + permValue(a) - ((b.token ? -5 : 0) + permValue(b)))[0] || null;
     if (kind === 'nontoken creature') return P.bf.filter(x => isCreature(x) && !x.token && x !== src).sort((a, b) => permValue(a) - permValue(b))[0] || null;
@@ -713,6 +716,7 @@ function sacFodder(P, src, kind) {
 }
 // Everything that could pay "sacrifice a <kind>" (sacFodder picks the least valuable of these)
 function sacCandidates(P, src, kind) {
+    if (kind === 'creature with power 4 or greater') return P.bf.filter(x => isCreature(x) && pow(x) >= 4);
     if (kind === 'legendary creature') return P.bf.filter(x => isCreature(x) && /Legendary/.test(x.card.type));
     if (/^another /.test(kind)) return sacCandidates(P, src, kind.slice(8)).filter(x => x !== src);
     if (kind === 'nontoken creature') return P.bf.filter(x => isCreature(x) && !x.token && x !== src);

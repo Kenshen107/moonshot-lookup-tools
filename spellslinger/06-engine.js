@@ -126,7 +126,7 @@ function basePT(o, which) {
 const pow = o => basePT(o, 'p') + o.counters + o.tp + buffsOn(o).p;
 const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q;
 const hasBase = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (k === 'indestructible' && !!o.ctr && o.ctr.indestructible > 0) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
-const has = (o, k) => (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
+const has = (o, k) => (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
 const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackCond && !condOk(Rx(o).attackCond, ctrl(o), o)) && !(typeof cmdCantAttack === 'function' && cmdCantAttack(o)) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !has(o, 'defender') && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
@@ -147,6 +147,7 @@ function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, startLife: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
         landsPlayed: 0, tax: 0, cmdDmg: 0, cmdBy: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
         aiLevel: deck.aiLevel || 'normal', aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
+    { let lifeNow = P.life; Object.defineProperty(P, 'life', { enumerable: true, configurable: true, get() { return lifeNow; }, set(v) { if (v > lifeNow && typeof noLifeGainActive === 'function' && noLifeGainActive()) return; lifeNow = v; } }); } // "Players can't gain life" (Rampaging Ferocidon)
     trackGraveyard(P);
     deck.entries.forEach(e => { for (let k = 0; k < e.n; k++) P.library.push(makeObj(e.card, i)); });
     shuffle(P.library);
@@ -521,7 +522,7 @@ function damage(target, n, src) {
         if (infect || wither) target.counters -= n; else target.dmg += n;
         if (src && src.card && has(src, 'deathtouch')) target.dt = true;
     }
-    if (src && src.card && isCreature(src) && has(src, 'lifelink')) { n += lifeGainBonus(ctrl(src)); ctrl(src).life += n; fire('gainLife', { P: ctrl(src), n }); }
+    if (src && src.card && isCreature(src) && has(src, 'lifelink') && !noLifeGainActive()) { n += lifeGainBonus(ctrl(src)); ctrl(src).life += n; fire('gainLife', { P: ctrl(src), n }); }
 }
 
 // State-based actions: lethal damage, 0 toughness, loose Auras, losing.
@@ -534,6 +535,11 @@ function sba() {
     G.players.forEach(X => X.exile.filter(x => x.jailedBy !== undefined).forEach(x => { const j = G.players[x.jailedBy]; if (G.monarch != null && j && G.monarch !== j.i) { delete x.jailedBy; pull(X.exile, x); const home = G.players[x.realOwner ?? x.owner]; x.owner = home.i; delete x.realOwner; resetObj(x); home.bf.push(x); log(`${x.card.name} returns to the battlefield (${G.players[G.monarch].name} became the monarch).`); fire('enters', { o: x }); if (Rx(x).etb.length) (G.trigQ = G.trigQ || []).push({ P: home, o: x, effects: Rx(x).etb }); } }));
     while (changed && rounds++ < 100) { // a guard against a loop of deaths and returns
         changed = false;
+        if (G.dontMove) { // Don't Move: until the caster's next turn, a creature that becomes tapped is destroyed
+            const dm = G.dontMove;
+            if (G.active === dm.by && G.turn !== dm.turn) G.dontMove = null;
+            else allPerms().filter(c => isCreature(c) && c.tapped && !has(c, 'indestructible')).forEach(c => { log(`${c.card.name} is tapped and is destroyed (Don't Move).`); destroy(c); changed = true; });
+        }
         for (const o of allPerms()) {
             { const sl = Rx(o).sacNoLand; if (sl && !lostAbilities(o) && !G.players[o.owner].bf.some(x => hasType(x, sl))) { log(`${o.card.name} is sacrificed (no ${sl}s).`); dieOrLeave(o, 'gy'); changed = true; continue; } }
             if (isCreature(o)) {
@@ -620,6 +626,11 @@ function manaOf(o) {
     let m = R.mana;
     if (!G || !o.uid) return m;
     if (m && G && m.colors && m.colors.length === 1 && m.colors[0] === 'C' && o.uid) { const k = G.players[o.owner].bf.filter(a => Rx(a).monumentC && !lostAbilities(a)).length; if (k) m = { ...m, n: (m.n || 1) + k }; } // Forsaken Monument: an additional {C}
+    if (m && /\bLand\b/.test(o.card.type)) { // Virtue of Strength: a basic land makes three times as much; Regal Behemoth: the monarch's lands add one more mana of any color
+        const X1 = G.players[o.owner];
+        if (/\bBasic\b/.test(o.card.type) && X1.bf.some(a => Rx(a).tripleBasic && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 3 };
+        if (G.monarch === o.owner && X1.bf.some(a => Rx(a).monarchMana && !lostAbilities(a))) m = { ...m, n: (m.n || 1) + 1, colors: [...new Set([...(m.colors || []), ...COLORS])] };
+    }
     if (m && m.identity) { const X0 = G.players[o.owner]; if ([...X0.command, ...X0.bf].some(x => x.isCommander && x.owner === o.owner)) { const id = cmdrIdentity(X0).filter(c => COLORS.includes(c)); return id.length ? { ...m, colors: id } : null; } } // Command Tower, Path of Ancestry: the commander's color identity
     if (o.ctr && o.ctr.flood > 0 && /\bLand\b/.test(o.card.type)) return { colors: ['U'], n: 1 }; // an Island while it has a flood counter
     if (m && m.nCtr) { const n = (o.ctr && o.ctr[m.nCtr]) || 0; return n ? { ...m, n, fixed: true } : null; } // Elementalist's Palette
@@ -721,7 +732,7 @@ function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
     chosen.forEach(s => { if (!s.o.pool) s.o._payColor = s.payColor; });
     return chosen.map(s => s.o);
 }
-function extraCost(P, o) { return o.isCommander && P.command.includes(o) ? P.tax * 2 : 0; }
+function extraCost(P, o) { return (o.isCommander && P.command.includes(o) ? P.tax * 2 : 0) - (Rx(o).harmonize && P.gy.includes(o) ? harmonizeCut(P) : 0); } // Harmonize: tapping a creature pays generic mana equal to its power
 // X spells need X of at least 1; xVal is the X chosen for this cast
 // Flashback (702.34): from the graveyard, for the flashback cost
 // Gitrog deck: other ways to cast (o.castAs)
@@ -732,6 +743,7 @@ function pitTop(P) { const top = P.library[P.library.length - 1]; return top && 
 function castAsOk(P, o, mode) {
     const R = Rx(o);
     if (mode === 'disturb') return !!R.disturb && P.gy.includes(o) && !!o.front && !!o.front.back;
+    if (mode === 'miracle') return !!R.miracle && P.hand.includes(o) && o.miracleTurn === G.turn;
     if (mode === 'retrace') return !!R.retrace && P.gy.includes(o) && P.hand.some(x => Rx(x).kind === 'land');
     if (mode === 'morph') return !!R.morph && P.hand.includes(o) && R.kind === 'creature' && !o.fdCard;
     if (mode === 'warp') return !!R.warp && P.hand.includes(o);
@@ -758,6 +770,7 @@ function costOf(P, o) {
         if (o.castAs === 'morph') return parseCost('{3}');
         if (o.castAs === 'disturb') return { ...R.disturb };
         if (o.castAs === 'retrace') return { ...R.cost };
+        if (o.castAs === 'miracle') return { ...R.miracle };
         if (o.castAs === 'energy') return parseCost('');
         if (o.castAs === 'escape') return R.escape ? { ...R.escape.cost } : { ...P.lockerCost };
     }
@@ -1128,7 +1141,7 @@ function validTargets(P, e, src) {
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'spellOrCreature') { out.push(...creatures.map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); }
     if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(p.protAll && G.turn < p.protAll) && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a)))).map(p => ({ p })));
-    if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P) && !(e.filter === 'oppInstSorc' && it.P === P) && !(e.filter === 'myInstSorc' && it.P !== P)).map(item => ({ item })));
+    if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P) && !(e.filter === 'oppInstSorc' && it.P === P) && !(e.filter === 'myInstSorc' && it.P !== P) && !(e.filter === 'targetsMine' && !(it.target && it.target.o && it.target.o.owner === P.i))).map(item => ({ item })));
     return out;
 }
 function stackMatches(it, filter) {
@@ -1143,7 +1156,7 @@ function stackMatches(it, filter) {
     if (/^mv=\d+$/.test(filter)) return it.kind === 'spell' && (it.o.card.cmc || 0) === +filter.slice(3);
     if (filter === 'creature or planeswalker') return it.kind === 'spell' && (Rx(it.o).kind === 'creature' || Rx(it.o).kind === 'planeswalker');
     if (filter === 'oppInstSorc' || filter === 'myInstSorc') return it.kind === 'spell' && ['instant', 'sorcery'].includes(Rx(it.o).kind);
-    if (filter === 'notMine') return it.kind === 'spell';
+    if (filter === 'notMine' || filter === 'targetsMine') return it.kind === 'spell';
     if (filter === 'enchantment, instant, or sorcery') return it.kind === 'spell' && (/Enchantment/.test(it.o.card.type) || ['instant', 'sorcery'].includes(Rx(it.o).kind));
     if (COLOR_WORDS[filter]) return it.kind === 'spell' && (it.o.card.colors || []).includes(COLOR_WORDS[filter]);
     { const cm = filter.match(/^(white|blue|black|red|green) or (white|blue|black|red|green)$/); if (cm) return it.kind === 'spell' && [cm[1], cm[2]].some(c => (it.o.card.colors || []).includes(COLOR_WORDS[c])); } // Flashfreeze
@@ -1291,7 +1304,9 @@ async function castSpell(P, o, presetTarget) {
     const castAs = o.castAs && castAsOk(P, o, o.castAs) ? o.castAs : null;
     const pitCast = P.library.includes(o) && pitTop(P) === o && !(Rx(o).kind === 'creature' && topCastOk(P, o));
     if (P.library.includes(o) && Rx(o).kind === 'creature' && topCastOk(P, o) && P.bf.some(x => { const c = Rx(x).castTopCreatures; return c && c.haste && !lostAbilities(x); })) o.hasteOnEnter = G.turn; // Thundermane Dragon
+    const harmonizeBy = flashback && Rx(o).harmonize ? harmonizeCreature(P) : null;
     if (!payFor(P, o)) { o._tgt = null; return false; }
+    if (harmonizeBy) { harmonizeBy.tapped = true; fire('tapped', { o: harmonizeBy }); log(`${P.name} ${you(P) ? 'tap' : 'taps'} ${harmonizeBy.card.name} to help pay for ${o.card.name} (harmonize).`); }
     o.castAs = null;
     if (o.plotTurn) { delete o.plotTurn; o.freeCast = false; o.playUntil = 0; }
     if (castAs === 'disturb') { o.card = o.front.back; o.disturbed = true; log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name} with disturb.`); }
@@ -2577,7 +2592,7 @@ async function applyEffect(P, e, t, src) {
         case 'fogSelf': P.fogSelf = G.turn; log(`Combat damage that would be dealt to ${P.name === 'You' ? 'you' : P.name} this turn is prevented.`); break;
         case 'fogNoCounters': G.fogNoCounters = G.turn; log('Combat damage from creatures with no +1/+1 counters is prevented this turn.'); break;
         case 'draw': drawCards(P, e.n); break;
-        case 'gain': if (e.caveOnly && !(G.lastPutLand && hasType(G.lastPutLand, 'Cave'))) break; if (e.n <= 0) break; e = { ...e, n: e.n + lifeGainBonus(P) }; P.life += e.n; log(`${P.name} ${you(P) ? 'gain' : 'gains'} ${e.n} life.`); fire('gainLife', { P, n: e.n }); break;
+        case 'gain': if (e.caveOnly && !(G.lastPutLand && hasType(G.lastPutLand, 'Cave'))) break; if (e.n <= 0) break; if (noLifeGainActive()) { log(`${P.name} can't gain life.`); break; } e = { ...e, n: e.n + lifeGainBonus(P) }; P.life += e.n; log(`${P.name} ${you(P) ? 'gain' : 'gains'} ${e.n} life.`); fire('gainLife', { P, n: e.n }); break;
         // ---- Top-1000 round 2 (2026-10-07) ----
         case 'minusCounters': { const x = t && t.o; if (!x || !onBf(x.uid)) break; if (cmdNoMinus(x)) { log(`${x.card.name} can't have -1/-1 counters put on it.`); break; } x.counters -= e.n; log(`${x.card.name} gets ${e.n === 1 ? 'a -1/-1 counter' : `${e.n} -1/-1 counters`}.`); break; }
         case 'doubleCountersAll': { const hit = P.bf.filter(c => isCreature(c) && c.counters > 0); hit.forEach(c => putCounters(c, c.counters, P)); log(`${name}: +1/+1 counters doubled on ${hit.length ? hit.map(c => c.card.name).join(', ') : 'nothing'}.`); break; }

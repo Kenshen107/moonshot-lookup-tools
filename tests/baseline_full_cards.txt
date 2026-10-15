@@ -1454,6 +1454,7 @@ Bone to Ash
 Bonebreaker Giant
 Bonecaller Cleric
 Boneclub Berserker
+Bonehoard Dracosaur
 Bonepicker Skirge
 Bonescythe Sliver
 Bonesplitter
@@ -1461,6 +1462,7 @@ Bonesplitter Sliver
 Boneyard
 Boneyard Mycodrax
 Boneyard Wurm
+Bonfire of the Damned
 Bontu's Monument
 Book of Mazarbul
 Book of Rass
@@ -1710,6 +1712,7 @@ Burning Inquiry
 Burning Oil
 Burning Prophet
 Burning Shield Askari
+Burning Sun's Avatar
 Burning Sun's Fury
 Burning-Fist Minotaur
 Burning-Tree Emissary
@@ -2045,6 +2048,7 @@ Changeling Wayfinder
 Changing Loyalty
 Channel
 Channel the Suns
+Channeled Dragonfire
 Chant of the Skifsang
 Chaos
 Chaos Charm
@@ -3109,6 +3113,7 @@ Detective
 Determined Iteration
 Detonate
 Devastate
+Devastation Tide
 Deviant Glee
 Devil Dinosaur
 Devil's Play
@@ -3290,6 +3295,7 @@ Domineer
 Dominion Supervisor
 Domri's Nodorog
 Domri, City Smasher
+Don't Move
 Donatello
 Donatello, Turtle Techie
 Donatello, Way with Machines
@@ -3652,6 +3658,7 @@ Eldrazi
 Eldrazi Aggressor
 Eldrazi Conscription
 Eldrazi Devastator
+Eldritch Evolution
 Electric Revelation
 Electrickery
 Electrify
@@ -3845,6 +3852,7 @@ Entomb
 Entomber Exarch
 Entrancing Lyre
 Entrancing Melody
+Entreat the Angels
 Entropic Eidolon
 Envelop
 Environmental Sciences
@@ -3913,6 +3921,7 @@ Essence Scatter
 Essence Warden
 Estwald Shieldbasher
 Etali's Favor
+Etali, Primal Conqueror // Etali, Primal Sickness
 Etali, Primal Storm
 Etched Champion
 Etched Cornfield
@@ -4206,6 +4215,7 @@ Feast of the Unicorn
 Feast or Famine
 Feaster of Fools
 Feasting Troll King
+Feat of Resistance
 Feather of Flight
 Featherbrained Filcher
 Feathered Friends
@@ -4877,8 +4887,10 @@ Geth's Grimoire
 Geyser Glider
 Geyserfield Stalker
 Ghalma's Warden
+Ghalta and Mavren
 Ghalta the Unstoppable
 Ghalta, Primal Hunger
+Ghalta, Stampede Tyrant
 Ghastbark Twins
 Ghastly
 Ghastly Gloomhunter
@@ -4926,6 +4938,7 @@ Ghoultree
 Giada, Font of Hope
 Giant Adephage
 Giant Badger
+Giant Cindermaw
 Giant Cockroach
 Giant Crab
 Giant Dustwasp
@@ -4990,6 +5003,7 @@ Gingerbread Hunter // Puny Snack
 Gingerbrute
 Gird for Battle
 Gisa's Bidding
+Gishath, Sun's Avatar
 Gitaxian Probe
 Githzerai Monk
 Give In to Violence
@@ -5556,6 +5570,7 @@ Hall Monitor
 Hall of Heliod's Generosity
 Hall of Oracles
 Hall of Triumph
+Hallowed Burial
 Hallowed Fountain
 Hallowed Healer
 Hallowed Spiritkeeper
@@ -6632,6 +6647,7 @@ Keeneye Aven
 Keening Apparition
 Keening Banshee
 Keep Out
+Keep Safe
 Keep Watch
 Keeper of Kookus
 Keeper of the Quiet Hour
@@ -7434,6 +7450,7 @@ Malevolent Hermit // Benevolent Geist
 Malevolent Whispers
 Malfunctioning Holodeck
 Malicious Intent
+Mammoth Bellow
 Mammoth Growth
 Mammoth Spider
 Mammoth Umbra
@@ -7487,6 +7504,7 @@ Marauding Blight-Priest
 Marauding Boneslasher
 Marauding Brinefang
 Marauding Looter
+Marauding Raptor
 Marble Chalice
 Marble Diamond
 Marble Gargoyle
@@ -8227,6 +8245,7 @@ Naturalize
 Nature's Chant
 Nature's Claim
 Nature's Lore
+Nature's Rhythm
 Nature's Spiral
 Nature's Way
 Nausea
@@ -8790,6 +8809,7 @@ Panicked Altisaur
 Panther Habit
 Panther Robot
 Panther Warriors
+Pantlaza, Sun-Favored
 Papercraft Decoy
 Paradise Druid
 Paradise Mantle
@@ -9545,6 +9565,7 @@ Rampaging Baloths
 Rampaging Brontodon
 Rampaging Ceratops
 Rampaging Classmate
+Rampaging Ferocidon
 Rampaging Hippo
 Rampaging Monument
 Rampaging Rendhorn
@@ -9682,6 +9703,7 @@ Rebelling
 Rebellious
 Rebellious Strike
 Reborn Hope
+Rebuff the Wicked
 Rebuild
 Rebuke
 Reckless Abandon
@@ -9743,10 +9765,12 @@ Referee Squad
 Reflecting Pool
 Reflexes
 Refocus
+Reforge the Soul
 Refresh
 Refurbish
 Refuse to Yield
 Refute
+Regal Behemoth
 Regal Bloodlord
 Regal Caracal
 Regal Imperiosaur
@@ -10033,6 +10057,8 @@ Rix Maadi, Dungeon Palace
 Road // Ruin
 Road of Return
 Roadside Reliquary
+Roamer's Routine
+Roaming Throne
 Roar of Endless Song
 Roar of the Kha
 Roar of the Wurm
@@ -10374,6 +10400,7 @@ Savage Land Dinosaur
 Savage Lands
 Savage Lands
 Savage Mansion
+Savage Order
 Savage Silhouette
 Savage Smash
 Savage Stomp
@@ -10542,6 +10569,7 @@ Scuzzback Scrapper
 Scythe Leopard
 Scythe of the Wretched
 Scythecat Cub
+Scytheclaw Raptor
 Sea Eagle
 Sea Gate Banneret
 Sea Gate Restoration // Sea Gate, Reborn
@@ -11092,6 +11120,7 @@ Siren Lookout
 Siren Reaver
 Siren Song Lyre
 Sisay's Ring
+Sister Repentia
 Sisters of the Flame
 Sivitri Scarzam
 Sixth Sense
@@ -12464,6 +12493,7 @@ Temporal Cascade
 Temporal Fissure
 Temporal Machinations
 Temporal Manipulation
+Temporal Mastery
 Temporal Trespass
 Tempt with Reflections
 Tempting Witch
@@ -12497,6 +12527,7 @@ Termagant Swarm
 Terminal Agony
 Terminal Moraine
 Terminate
+Terminus
 Teroh's Faithful
 Terra Stomper
 Terrain Elemental
@@ -12599,6 +12630,7 @@ The Regalia
 The Royal Scions
 The Shattered States Era // Nameless Conqueror
 The Shire
+The Skullspore Nexus
 The Spear of Bashenga
 The Spirit Oasis
 The Squadron Sinister
@@ -12769,6 +12801,7 @@ Thundering Tanadon
 Thundermane Dragon
 Thunderous Orator
 Thunderous Snapper
+Thunderous Wrath
 Thunderscape Apprentice
 Thunderscape Master
 Thundersteel Colossus
@@ -12840,6 +12873,7 @@ Titanic Growth
 Titanic Ultimatum
 Titanium Golem
 Titanium Man
+Titanoth Rex
 Tithe Drinker
 Tithebearer Giant
 To Arms!
@@ -13130,6 +13164,7 @@ Turbulent Steppe
 Turbulent Wetlands
 Turbulent Wilderness
 Turn Against
+Turn Aside
 Turn the Tide
 Turn to Dust
 Turn to Slag
@@ -13290,6 +13325,7 @@ Unearth (Theme)
 Unearthly Blizzard
 Uneasy Alliance
 Uneasy Partings
+Unending Whisper
 Unexpected Assistance
 Unexpected Windfall
 Unexplained Disappearance
@@ -13374,6 +13410,7 @@ Urborg Syphon-Mage
 Urborg Uprising
 Urborg Volcano
 Urborg, Tomb of Yawgmoth
+Ureni's Rebuff
 Uril, the Miststalker
 Urn of Godfire
 Ursapine
@@ -13455,6 +13492,7 @@ Vanguard Suppressor
 Vanguard of Brimaz
 Vanguard of the Restless
 Vanishing Verse
+Vanishment
 Vanquish
 Vanquish the Foul
 Vanquish the Horde
@@ -13664,6 +13702,7 @@ Viridian Scout
 Viridian Shaman
 Viridian Zealot
 Virtue of Persistence // Locthwain Scorn
+Virtue of Strength // Garenbrig Growth
 Virtuous Charge
 Virtuous Variant
 Virulent Emissary
@@ -13809,6 +13848,7 @@ Wakandan Tusker
 Wake of Vultures
 Wake the Reflections
 Wakedancer
+Wakening Sun's Avatar
 Waking Nightmare
 Walk with the Ancestors
 Walk-In Closet // Forgotten Cellar
@@ -14103,6 +14143,7 @@ Wild Leotau
 Wild Nacatl
 Wild Ox
 Wild Pack Squad
+Wild Ride
 Wild Roads
 Wild Slash
 Wild Wanderer
@@ -14149,6 +14190,7 @@ Windcrag Siege
 Windfall
 Windgrace Acolyte
 Winding Wurm
+Windmill Slam
 Windreaper Falcon
 Windrider Eel
 Windrider Patrol
@@ -14408,6 +14450,7 @@ Youthful Knight
 Youthful Scholar
 Youthful Valkyrie
 Yuyan Archers
+Zacama, Primal Calamity
 Zada's Commando
 Zagoth Crystal
 Zagoth Triome
@@ -14426,6 +14469,7 @@ Zell Dincht
 Zendikar Farguide
 Zendikar Incarnate
 Zendikar's Roil
+Zenith Festival
 Zephid
 Zephid's Embrace
 Zephyr Boots
@@ -14435,6 +14479,7 @@ Zephyr Net
 Zephyr Scribe
 Zephyr Sprite
 Zephyr Winder
+Zephyrim
 Zeriam, Golden Wind
 Zetalpa, Primal Dawn
 Zhalfirin Knight
