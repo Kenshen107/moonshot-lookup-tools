@@ -280,6 +280,22 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
                 const bears = A.bf.filter(x => x.card.name === 'Grizzly Bears'); ok('Wakanda Forever!: a permanent with an indestructible counter, one to hand, the rest to the graveyard', bears.length === 1 && has(bears[0], 'indestructible') && A.hand.length >= 1 && A.gy.length === 4, [bears.length, A.hand.length, A.gy.length]);
                 [A, B] = await fresh(); const kb = put(A, 'Kimoyo Beads'); const h0 = A.hand.length; fire('end', {}); await settle2(); fire('end', {}); await settle2(); ok('Kimoyo Beads: a different mode each end step', A.hand.length === h0 + 1 && A.bf.filter(x => x.token).length === 2, [A.hand.length - h0, A.bf.length]);
             }
+            { // A planeswalker commander ("can be your commander"): Jace, Multiverse Architect leads the FRC precon
+                const jc = need('Jace, Multiverse Architect'); ['Island', 'Plains', 'Swamp', 'Mountain'].forEach(need);
+                ok('canBeCommander: a legendary planeswalker that says so', canBeCommander(jc) && canBeCommander(need('Tyrox, Saurid Tyrant')) && !canBeCommander(need('Grizzly Bears')));
+                const deck = { name: 'J', format: 'commander', commander: jc, entries: [{ card: C['Island'], n: 99 }], source: 'test', starter: true };
+                const sd = { name: 'J', format: 'commander', commander: jc.id, cards: { [C['Island'].id]: 99 }, starter: true }; ok('deckProblems accepts a planeswalker commander', !deckProblems(sd).some(x => /commander/i.test(x)), deckProblems(sd)); const bad = { ...sd, commander: need('Grizzly Bears').id }; ok('deckProblems still refuses a plain creature', deckProblems(bad).some(x => /commander/i.test(x)), deckProblems(bad));
+                await newGame({ ...deck, entries: [{ card: C['Island'], n: 98 }] }, mk()); T.clear(); G.turn = 6; G.phase = 'main1'; G.firstTurn = false; G.active = 0; G.busy = false;
+                const [A, B] = G.players; A.isAI = true; B.isAI = true; ['Island', 'Plains', 'Swamp', 'Mountain'].forEach(n => lands(A, 3, n)); A.library.length = 0; for (let i = 0; i < 12; i++) A.library.push(makeObj(C['Island'], 0));
+                const j = A.command[0]; ok('Jace starts in the command zone', !!j && j.card.name === 'Jace, Multiverse Architect');
+                const cc = canCastNow(A, j) && canPay(A, j); ok('Jace can be cast from the command zone', cc, [canCastNow(A, j), canPay(A, j)]);
+                await castSpell(A, j, null); await settle2();
+                ok('Jace enters as a planeswalker with loyalty', A.bf.includes(j) && isPlaneswalker(j) && j.ctr.loyalty === 4, j.ctr);
+                ok('Commander tax counted', A.tax === 1, A.tax);
+                const plus = actsOf(j).find(a => /^\+1/.test(a.text) || /Draw two cards/.test(a.text)); ok('Jace has its loyalty abilities', !!plus);
+                if (plus && canActivate(A, j, plus)) { await activate(A, j, plus); await settle2(); ok('Jace +1 works', j.ctr.loyalty === 5, j.ctr); }
+                dieOrLeave(j, 'gy'); await settle2(); ok('Jace can go back to the command zone (a choice)', A.gy.includes(j) || A.command.includes(j));
+            }
             //@@NEXT
 
             // ===== Marvel (MSC) =====
@@ -346,6 +362,22 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
                 let [A, B] = await fresh(); A.library.length = 0; for (let i = 0; i < 8; i++) A.library.push(makeObj(C['Grizzly Bears'], 0)); const wf = makeObj(need('Wakanda Forever!'), 0); await applyEffect(A, { t: 'cmd', id: 'wakandaForever' }, null, wf); await settle2();
                 const bears = A.bf.filter(x => x.card.name === 'Grizzly Bears'); ok('Wakanda Forever!: a permanent with an indestructible counter, one to hand, the rest to the graveyard', bears.length === 1 && has(bears[0], 'indestructible') && A.hand.length >= 1 && A.gy.length === 4, [bears.length, A.hand.length, A.gy.length]);
                 [A, B] = await fresh(); const kb = put(A, 'Kimoyo Beads'); const h0 = A.hand.length; fire('end', {}); await settle2(); fire('end', {}); await settle2(); ok('Kimoyo Beads: a different mode each end step', A.hand.length === h0 + 1 && A.bf.filter(x => x.token).length === 2, [A.hand.length - h0, A.bf.length]);
+            }
+            { // A planeswalker commander ("can be your commander"): Jace, Multiverse Architect leads the FRC precon
+                const jc = need('Jace, Multiverse Architect'); ['Island', 'Plains', 'Swamp', 'Mountain'].forEach(need);
+                ok('canBeCommander: a legendary planeswalker that says so', canBeCommander(jc) && canBeCommander(need('Tyrox, Saurid Tyrant')) && !canBeCommander(need('Grizzly Bears')));
+                const deck = { name: 'J', format: 'commander', commander: jc, entries: [{ card: C['Island'], n: 99 }], source: 'test', starter: true };
+                const sd = { name: 'J', format: 'commander', commander: jc.id, cards: { [C['Island'].id]: 99 }, starter: true }; ok('deckProblems accepts a planeswalker commander', !deckProblems(sd).some(x => /commander/i.test(x)), deckProblems(sd)); const bad = { ...sd, commander: need('Grizzly Bears').id }; ok('deckProblems still refuses a plain creature', deckProblems(bad).some(x => /commander/i.test(x)), deckProblems(bad));
+                await newGame({ ...deck, entries: [{ card: C['Island'], n: 98 }] }, mk()); T.clear(); G.turn = 6; G.phase = 'main1'; G.firstTurn = false; G.active = 0; G.busy = false;
+                const [A, B] = G.players; A.isAI = true; B.isAI = true; ['Island', 'Plains', 'Swamp', 'Mountain'].forEach(n => lands(A, 3, n)); A.library.length = 0; for (let i = 0; i < 12; i++) A.library.push(makeObj(C['Island'], 0));
+                const j = A.command[0]; ok('Jace starts in the command zone', !!j && j.card.name === 'Jace, Multiverse Architect');
+                const cc = canCastNow(A, j) && canPay(A, j); ok('Jace can be cast from the command zone', cc, [canCastNow(A, j), canPay(A, j)]);
+                await castSpell(A, j, null); await settle2();
+                ok('Jace enters as a planeswalker with loyalty', A.bf.includes(j) && isPlaneswalker(j) && j.ctr.loyalty === 4, j.ctr);
+                ok('Commander tax counted', A.tax === 1, A.tax);
+                const plus = actsOf(j).find(a => /^\+1/.test(a.text) || /Draw two cards/.test(a.text)); ok('Jace has its loyalty abilities', !!plus);
+                if (plus && canActivate(A, j, plus)) { await activate(A, j, plus); await settle2(); ok('Jace +1 works', j.ctr.loyalty === 5, j.ctr); }
+                dieOrLeave(j, 'gy'); await settle2(); ok('Jace can go back to the command zone (a choice)', A.gy.includes(j) || A.command.includes(j));
             }
             //@@NEXT
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }

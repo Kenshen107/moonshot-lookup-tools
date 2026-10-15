@@ -315,6 +315,12 @@ const FORMATS = {
 
 function deckCount(deck) { return Object.values(deck.cards).reduce((a, b) => a + b, 0) + (deck.commander ? 1 : 0); }
 
+// Who can lead a Commander deck: a legendary creature, or a card that says "can be your commander" (a few planeswalkers, 903.3)
+function canBeCommander(card) {
+    if (!card) return false;
+    const R = rulesFor(card);
+    return (R.legendary && R.kind === 'creature') || (/\bLegendary\b/.test(card.type || '') && /can be your commander/i.test(card.text || ''));
+}
 function deckProblems(deck) {
     const F = FORMATS[deck.format];
     const out = [];
@@ -325,8 +331,8 @@ function deckProblems(deck) {
     if (deck.format === 'commander') {
         if (total !== 100) out.push(`${total}/100 cards - a Commander deck has exactly 100, commander included.`);
         const cmd = deck.commander && CARDS.get(deck.commander);
-        if (!cmd) out.push('Pick a commander: a legendary creature.');
-        else if (!(rulesFor(cmd).legendary && rulesFor(cmd).kind === 'creature')) out.push(`${cmd.name} isn't a legendary creature.`);
+        if (!cmd) out.push('Pick a commander: a legendary creature, or a planeswalker that says it can be your commander.');
+        else if (!canBeCommander(cmd)) out.push(`${cmd.name} can't be a commander (it needs to be a legendary creature, or say it can be your commander).`);
     }
     const cmd = deck.commander && CARDS.get(deck.commander);
     for (const [id, n] of Object.entries(deck.cards)) {
@@ -484,7 +490,7 @@ function renderCollection() {
 function collectionClick(id) {
     const c = CARDS.get(id);
     const R = rulesFor(c);
-    const canCmd = editing.format === 'commander' && R.legendary && R.kind === 'creature';
+    const canCmd = editing.format === 'commander' && canBeCommander(c);
     showCardSheet(id, `
         <button class="btn primary" onclick="addToDeck('${id}'); closeSheet();">➕ Add to deck</button>
         ${editing.cards[id] ? `<button class="btn" onclick="removeFromDeck('${id}'); closeSheet();">➖ Remove one</button>` : ''}
@@ -644,7 +650,7 @@ function mxRowMenu(id) {
     if (!c) return;
     const R = rulesFor(c);
     const isCmd = editing.commander === id;
-    const canCmd = editing.format === 'commander' && R.legendary && R.kind === 'creature' && !isCmd;
+    const canCmd = editing.format === 'commander' && canBeCommander(c) && !isCmd;
     showCardSheet(id, isCmd
         ? `<button class="btn" onclick="unsetCommander(); closeSheet();">↩ Move to the main deck</button>`
         : `<button class="btn primary" onclick="addToDeck('${id}'); closeSheet();">＋ Add one</button>
@@ -1012,7 +1018,7 @@ async function checkImport() {
     let cmd = null;
     if (fmt === 'commander') {
         const marked = rows.filter(r => parsed.commander.includes(all[rows.indexOf(r)]) && r.card);
-        cmd = (marked[0] || rows.find(r => r.card && rulesFor(r.card).legendary && rulesFor(r.card).kind === 'creature')) || null;
+        cmd = (marked[0] || rows.find(r => r.card && canBeCommander(r.card))) || null;
     }
     IMP = { text, name: $('impName').value.trim(), fmt, rows, cmdRow: cmd, partners: fmt === 'commander' ? rows.filter(r => parsed.commander.includes(all[rows.indexOf(r)]) && r !== cmd).length : 0 };
     renderImport();
@@ -1044,7 +1050,7 @@ function renderImport() {
     const count = rows.filter(r => r.card).reduce((a, r) => a + r.n, 0);
     const toBuy = plan.reduce((a, p) => a + p.buy, 0);
     const notYet = plan.filter(p => !p.free && rulesFor(p.r.card).support === 'none');
-    const legends = rows.filter(r => r.card && rulesFor(r.card).legendary && rulesFor(r.card).kind === 'creature');
+    const legends = rows.filter(r => r.card && canBeCommander(r.card));
     const short = Math.max(0, cost - cash);
     $('impOut').innerHTML = `
         <div class="imp-sum">
@@ -1137,8 +1143,8 @@ async function listToOppDeck(text, wantFormat) {
     const format = wantFormat === 'commander' || parsed.commander.length || (total >= 98 && total <= 101) ? 'commander' : 'casual';
     let commander = null;
     if (format === 'commander') {
-        const c = rows.find(r => parsed.commander.includes(all[rows.indexOf(r)]) && r.card) || rows.find(r => r.card && rulesFor(r.card).legendary && rulesFor(r.card).kind === 'creature');
-        if (!c) throw new Error('That list has no commander (a legendary creature).');
+        const c = rows.find(r => parsed.commander.includes(all[rows.indexOf(r)]) && r.card) || rows.find(r => r.card && canBeCommander(r.card));
+        if (!c) throw new Error('That list has no commander (a legendary creature, or a planeswalker that can be your commander).');
         commander = c.card;
     }
     const ci = (commander ? commander.ci : [...new Set(rows.filter(r => r.card).flatMap(r => r.card.ci))]).filter(c => BASIC_IDS[c]);
