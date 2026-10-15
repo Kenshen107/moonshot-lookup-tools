@@ -197,6 +197,7 @@ async function startMatch(again) {
             const v = VERIFIED_DECKS.find(x => x.key === chosenOpponent.key);
             oppDeck = await listToOppDeck(v.text, 'commander');
             oppDeck.source = `fully working deck (checked ${v.checked})`;
+            if (v.style && PLAYSTYLES[v.style]) oppDeck.aiStyle = v.style; // a deck can name the playstyle it was tuned with
         } else {
             oppDeck = await buildCommanderDeck(chosenOpponent.key);
             oppDeck.source = `EDHREC average deck${oppDeck.swapped ? `, ${oppDeck.swapped} cards swapped for lands` : ''}`;

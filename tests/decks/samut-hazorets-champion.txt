@@ -1,0 +1,78 @@
+# style: voltron
+1 Sol Ring
+1 Arcane Signet
+1 Mind Stone
+1 Fellwar Stone
+1 Thought Vessel
+1 Commander's Sphere
+1 Everflowing Chalice
+1 Worn Powerstone
+1 Lightning Greaves
+1 Lightning Bolt
+1 Shock
+1 Lightning Strike
+1 Abrade
+1 Mizzium Mortars
+1 Vandalblast
+1 Big Score
+1 Faithless Looting
+1 Battle Hymn
+1 Embercleave
+1 Goblin Bombardment
+1 Warstorm Surge
+1 Hordeling Outburst
+1 Monastery Swiftspear
+1 Goblin Guide
+1 Spark Elemental
+1 Young Pyromancer
+1 Reckless Fireweaver
+1 Firebrand Archer
+1 Coruscation Mage
+1 Goblin Instigator
+1 Mogg War Marshal
+1 Loyal Apprentice
+1 Hellspark Elemental
+1 Laelia, the Blade Reforged
+1 Captain Lannery Storm
+1 Ball Lightning
+1 Krenko, Tin Street Kingpin
+1 Combat Celebrant
+1 Scytheclaw Raptor
+1 Guttersnipe
+1 Chandra's Phoenix
+1 Professional Face-Breaker
+1 Hellrider
+1 Hazoret the Fervent
+1 Torbran, Thane of Red Fell
+1 Krenko, Mob Boss
+1 Thundermane Dragon
+1 Thunderbreak Regent
+1 Ogre Battledriver
+1 Storm-Kiln Artist
+1 Captivating Crew
+1 Archwing Dragon
+1 Glorybringer
+1 Goldspan Dragon
+1 Siege-Gang Commander
+1 Terror of the Peaks
+1 Bonehoard Dracosaur
+1 Scourge of Valkas
+1 Charging Monstrosaur
+1 Etali, Primal Storm
+1 Inferno Titan
+1 Lathliss, Dragon Queen
+1 Castle Embereth
+1 Sokenzan, Crucible of Defiance
+1 Rogue's Passage
+1 Myriad Landscape
+1 Kher Keep
+1 Jeska's Will
+1 Sword of Fire and Ice
+1 Purphoros, God of the Forge
+1 Twinflame Tyrant
+1 Seething Song
+25 Mountain
+1 Pyretic Ritual
+1 Light Up the Stage
+
+1 Samut, Hazoret's Champion
