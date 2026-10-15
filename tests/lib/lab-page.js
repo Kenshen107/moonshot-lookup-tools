@@ -170,6 +170,27 @@ window.LAB = (() => {
             out.a = A.commander ? A.commander.name : A.name; out.b = B.commander ? B.commander.name : B.name;
             if (more.length) out.pod = [A, B, ...more].map(d => d.commander ? d.commander.name : d.name);
             window.lastResult = null; L.pending = {};
+            // A probe for the fixed decklist at seat A (lab.js --decka): at the start of each of A's turns, how much mana A could spend, how many cards it has seen, and what it has in play
+            let unprobe = null;
+            if (opts.deckA) {
+                out.probe = []; const of = window.fire; let lastKey = '';
+                window.fire = function (ev, ctx) {
+                    if (ev === 'main1' && G && G.players && G.active === 0 && G.players[0] && `${G.turn}` !== lastKey) {
+                        lastKey = `${G.turn}`; const Q = G.players[0];
+                        let m = 0; try { while (m < 30 && planPayment(Q, parseCost(''), m + 1)) m++; } catch (e) { m = -1; }
+                        out.probe.push({ t: out.probe.length + 1, mana: m, hand: Q.hand.length, lib: Q.library.length, lands: Q.bf.filter(x => /\bLand\b/.test(x.card.type)).length, rocks: Q.bf.filter(x => !/\bLand\b/.test(x.card.type) && manaOf(x)).length, creatures: Q.bf.filter(isCreature).length, life: Q.life });
+                    }
+                    if (ev === 'combat' && G && G.active === 0 && out.probe.length && !out.probe[out.probe.length - 1].cap) { // mana the player could use this turn: every untapped-or-tapped mana source it has in play now (summoning-sick creatures can't tap)
+                        const Q = G.players[0]; let cap = 0;
+                        for (const x of Q.bf) { const mo = typeof manaOf === 'function' ? manaOf(x) : null; if (!mo) continue; if (isCreature(x) && x.sick) continue; cap += mo.n || 1; }
+                        const pr = out.probe[out.probe.length - 1]; pr.cap = cap;
+                        pr.landsC = Q.bf.filter(x => /\bLand\b/.test(x.card.type)).length; pr.rocksC = Q.bf.filter(x => !/\bLand\b/.test(x.card.type) && manaOf(x)).length;
+                        pr.rocksHand = Q.hand.filter(x => !/\bLand\b/.test(x.card.type) && Rx(x).mana).length; pr.rocksUnspent = Q.hand.filter(x => !/\bLand\b/.test(x.card.type) && Rx(x).mana && (x.card.cmc || 0) <= cap).length; pr.untappedMana = Q.bf.filter(x => !x.tapped && manaOf(x)).reduce((a, x) => a + ((manaOf(x) || {}).n || 1), 0); pr.landsHand = Q.hand.filter(x => /\bLand\b/.test(x.card.type)).length;
+                    }
+                    return of.apply(this, arguments);
+                };
+                unprobe = () => { window.fire = of; };
+            }
             await newGame(A, B, null, more);
             const limit = opts.timeout || 60000;
             while (!window.lastResult && performance.now() - t0 < limit) await new Promise(r => setTimeout(r, 0));
@@ -181,6 +202,7 @@ window.LAB = (() => {
                 const ent = lines.filter(l => l.startsWith(`${name} enters the battlefield`) || l.includes(`as a copy of ${name}`) || l.includes(`token copy of ${name}`) || l.startsWith(`${name} enters as a copy`)).length;
                 if (trig > ent) out.watch = { name, trig, ent };
             }
+            if (unprobe) unprobe();
             out.bad = T.invariants(); if (G.dealStats) out.deals = G.dealStats; if (G.pol) out.pol = G.pol;
             if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
         } catch (e) { out.error = String(e && e.stack || e).slice(0, 400); }

@@ -51,14 +51,14 @@ async function main() {
             await cdp.send('Debugger.pause');
             const ev = await paused;
             console.log(ev.callFrames.slice(0, 14).map(f => `${f.functionName || '(anonymous)'} ${f.url.split('/').pop()}:${f.location.lineNumber + 1}`).join('\n'));
-            const info2 = await cdp.send('Debugger.evaluateOnCallFrame', { callFrameId: ev.callFrames[0].callFrameId, expression: "G.players.map(p => p.bf.length + 'bf/' + p.gy.length + 'gy').join(' ') + ' T' + G.turn + ' :: ' + G.log.slice(-12).map(l => l.text || l).join(' | ')" }).catch(e => ({ result: { value: String(e) } }));
+            const info2 = await cdp.send('Debugger.evaluateOnCallFrame', { callFrameId: ev.callFrames[0].callFrameId, expression: process.env.LAB_EXPR || "G.players.map(p => p.bf.length + 'bf/' + p.gy.length + 'gy').join(' ') + ' T' + G.turn + ' :: ' + G.log.slice(-12).map(l => l.text || l).join(' | ')" }).catch(e => ({ result: { value: String(e) } }));
             console.log(info2.result.value);
             await h.close(); return;
         }
         const r = await page.evaluate(([s, k, la, lb, tmo, pl, st, th, da, wa]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH]);
         console.log(JSON.stringify(r, null, 1));
         if (errors.length) console.log('PAGE ERRORS:\n' + errors.join('\n'));
-        console.log((await page.evaluate(() => G.log.map(l => l.text || l).join('\n'))).slice(-6000));
+        { const full = await page.evaluate(() => G.log.map(l => l.text || l).join('\n')); console.log(process.env.LAB_HEAD ? full.slice(0, Number(process.env.LAB_HEAD)) : full.slice(-6000)); } // LAB_HEAD=N prints the first N characters of the log instead of the last 6000
         await h.close(); return;
     }
     console.log(`Lab: ${N} games, kind ${KIND}, seeds ${SEED}..${SEED + N - 1}, ${CONC} pages, AI A=${LA} B=${LB}`);

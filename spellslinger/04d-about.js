@@ -11,7 +11,7 @@ const ABOUT_FEATURES = [
     ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log.']
 ];
 const ABOUT_LOG = [
-    ['Oct 16 (Samut deck)', ['New fully working Commander deck: Samut, Hazoret\'s Champion (mono-red haste, about $233 in real cards), tuned in the test lab against 4-player pods. A deck can now name the playstyle the computer uses when it plays it.']],
+    ['Oct 16 (Samut deck)', ['New fully working Commander deck: Samut, Hazoret\'s Champion (mono-red ramp into bombs, about $284 in real cards), tuned in the test lab against 4-player pods. A deck can now name the playstyle the computer uses when it plays it. Also fixed: Cut a Deal drew you a card for every card the opponents drew; it now draws one per opponent who drew. Ramp-style computer players now cast mana rocks sooner when they hold expensive cards.']],
     ['Oct 16 (planeswalker commanders)', ['Planeswalkers that say "can be your commander" (like Jace, Multiverse Architect) can now lead a Commander deck, so the Multiverse Reforged precon works as a starter and in the deck builder and importer.']],
     ['Oct 15 (Gishath deck)', ['New fully working Commander deck: Gishath, Sun\'s Avatar (Naya Dinosaurs). About 45 more cards now work: Miracle, Harmonize, "players can\'t gain life", Roaming Throne\'s extra triggers and the Dinosaur commanders.']],
     ['Oct 15 (Commander precons)', ['15 more Commander precons now play fully: all of the last four sets (Aetherdrift, Foundations, Strixhaven, Marvel). About 650 more cards work, and each deck is a "Fully working Commander deck" you can take as a starter or face as an opponent.']],

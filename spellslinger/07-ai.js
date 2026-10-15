@@ -272,6 +272,7 @@ function scoreEffects(P, effects, target, src) {
             case 'protChoice': score += 0; break;
             case 'selfBounce': case 'sacSelf': score -= 1; break;
             case 'draw': score += 5 + e.n; break;
+            case 'cutDeal': score += 3 + 3 * foes(P).length; break;
             case 'gain': score += P.life < 10 ? 4 : 1; break;
             case 'drain': score += O.life <= e.n ? 1000 : 4; break;
             case 'discard': score += O.hand.length ? 3 : 0; break;

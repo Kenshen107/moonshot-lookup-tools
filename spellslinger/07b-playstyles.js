@@ -90,7 +90,22 @@ function inferStyle(entries) {
 function styleBonus(P, o) {
     const st = styleOf(P);
     if (!st) return 0;
-    return 0.8 * styleFit(P.aiStyle, o.card);
+    return 0.8 * styleFit(P.aiStyle, o.card) + (P.aiStyle === 'ramp' ? rampUrgency(P, o) : 0);
+}
+// The mana a player could spend this turn (every mana source in play; summoning-sick creatures can't tap)
+function manaCapacity(P) {
+    let cap = 0;
+    for (const x of P.bf) { const mo = manaOf(x); if (!mo) continue; if (isCreature(x) && x.sick && !has(x, 'haste')) continue; cap += mo.n || 1; }
+    return cap;
+}
+// Ramp style (2026-10-16, owner's Samut deck: "get to 7-8 mana by turn 4"): while the hand holds spells it can't pay for yet, a mana rock or mana creature
+// is worth more than a creature of the same cost, so the bot ramps first instead of casting small things and sitting on its rocks.
+function rampUrgency(P, o) {
+    const r = Rx(o);
+    if (r.kind === 'land' || !(r.mana || cardFeatures(o.card).ramp)) return 0;
+    const cap = manaCapacity(P) + P.bf.filter(x => /\bLand\b/.test(x.card.type) && !x.tapped && !manaOf(x)).length;
+    const big = P.hand.filter(c => c !== o && Rx(c).kind !== 'land' && (c.card.cmc || 0) > cap + 1).length;
+    return Math.min(9, 2.5 * big);
 }
 // Attackers after the style has its say: aggro sends creatures that would trade, control keeps back anything that could die
 function styleAttackers(P, base, cands, D) {

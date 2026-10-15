@@ -47,7 +47,7 @@ registerRules({
         [/^draw cards equal to the number of cards in your hand plus one$/, () => ({ t: 'draw', n: 0, nFrom: 'handPlusOne' })],
         [/^you have no maximum hand size for the rest of the game$/, () => ({ t: 'noMaxHandForever' })],
         [/^(?:you may )?put a land card from your hand onto the battlefield$/, () => ({ t: 'putLandFromHand' })],
-        [/^each opponent draws a card, then you draw a card for each opponent who drew a card this way$/, () => [{ t: 'oppDraws', n: 1 }, { t: 'draw', n: 1 }]],
+        [/^each opponent draws a card, then you draw a card for each opponent who drew a card this way$/, () => [{ t: 'cutDeal' }]], // each opponent draws, then you draw once for every opponent who drew (4-player pods: up to three cards)
         [/^choose a creature type$/i, () => ({ t: 'noop' })],
         [/^draw a card for each permanent you control of that type$/i, () => ({ t: 'draw', n: 0, nFrom: 'commonTypeCount' })],
         [/^draw a card for each creature you control with a \+1\/\+1 counter on it$/, () => ({ t: 'draw', n: 0, nFrom: 'countersCreatures' })],

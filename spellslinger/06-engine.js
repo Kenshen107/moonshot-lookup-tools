@@ -1553,6 +1553,7 @@ async function resolveTop() {
             o.card = face;
             o.advReady = false;
             o.kicked = item.kicked; o.kickN = item.kickN || 0;
+            if (o.owner !== item.P.i) { o.realOwner = o.realOwner ?? o.owner; o.owner = item.P.i; } // cast from someone else's zone: the caster controls it
             item.P.bf.push(o);
             if (r.isAura && item.target && item.target.o) o.attachedTo = item.target.o.uid;
             if (r.auraSteal && item.target && item.target.o && item.target.o.owner !== item.P.i) { const x = item.target.o; pull(G.players[x.owner].bf, x); x.realOwner = x.realOwner ?? x.owner; x.owner = item.P.i; x.stolenBy = o.uid; x.sick = true; item.P.bf.push(x); log(`${item.P.name} ${you(item.P) ? 'gain' : 'gains'} control of ${x.card.name} (${o.card.name}).`); }
@@ -2320,6 +2321,12 @@ async function applyEffect(P, e, t, src) {
         case 'noMaxHandForever': P.noMaxHand = true; log(`${P.name} ${you(P) ? 'have' : 'has'} no maximum hand size for the rest of the game.`); break;
         case 'putLandFromHand': { G.lastPutLand = null; const l = P.hand.filter(x => Rx(x).kind === 'land' && (!e.what || landFits(x, e.what))).sort((a, b) => hasType(b, 'Cave') - hasType(a, 'Cave'))[0]; if (l) G.lastPutLand = l; if (l && (P.isAI || await askYes(P, `${name}: put ${l.card.name} onto the battlefield?`, { card: src && src.card }))) { pull(P.hand, l); resetObj(l); l.tapped = !!Rx(l).entersTapped; P.bf.push(l); fire('landfall', { o: l }); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${l.card.name} onto the battlefield.`); } break; }
         case 'oppDraws': drawCards(O, e.n); break;
+        case 'cutDeal': { // Cut a Deal: each opponent draws a card, then you draw a card for each opponent who drew one this way
+            let n = 0;
+            for (const F of foes(P)) { if (F.library.length) { drawCards(F, 1); n++; } else drawCards(F, 1); }
+            if (n) drawCards(P, n);
+            break;
+        }
         case 'wipeNotType': {
             const ty = commonType(P);
             const hit = allPerms().filter(x => isCreature(x) && !hasType(x, ty));
@@ -2726,7 +2733,7 @@ async function applyEffect(P, e, t, src) {
         case 'steal': {
             // Threaten effects: you control it until end of turn, untapped and with haste
             const x = t.o;
-            if (x.owner === P.i) break;
+            if (x.owner === P.i || !onBf(x.uid)) break;
             pull(G.players[x.owner].bf, x);
             x.realOwner = x.realOwner ?? x.owner;
             x.owner = P.i; x.tapped = false; x.tkw.push('haste'); x.stolenTurn = G.turn;
@@ -4203,6 +4210,7 @@ async function endTurn(P) {
     allPerms().forEach(o => { o.dmg = 0; o.dt = false; o.tp = 0; o.tq = 0; o.tkw = []; o.regen = 0; });
     // Stolen creatures go back (threaten effects end, 514.2)
     allPerms().filter(o => o.realOwner !== undefined && o.stolenTurn !== undefined).forEach(o => {
+        if (o.realOwner === undefined) return; // already sent home (listed twice)
         pull(G.players[o.owner].bf, o);
         o.owner = o.realOwner; delete o.realOwner; delete o.stolenTurn;
         G.players[o.owner].bf.push(o);

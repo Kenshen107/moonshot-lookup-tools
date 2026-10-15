@@ -54,6 +54,15 @@ const SETUP = async function (n) {
     });
     check('"deals 2 damage to each opponent" hits all three', [1, 2, 3].every(i => r.after[i] === r.before[i] - 2) && r.after[0] === r.before[0], r);
 
+    // Cut a Deal: each opponent draws, then you draw once for each opponent who drew (not once per card drawn)
+    r = await page.evaluate(async () => {
+        const [A] = G.players, src = T.put(A, C['Grizzly Bears']);
+        const h0 = G.players.map(P => P.hand.length);
+        await applyEffect(A, { t: 'cutDeal' }, null, src);
+        return { gain: G.players.map((P, i) => P.hand.length - h0[i]) };
+    });
+    check('Cut a Deal in a 4-player pod: each opponent draws 1 and the caster draws 3', r.gain[0] === 3 && [1, 2, 3].every(i => r.gain[i] === 1), r);
+
     // Commander damage counts per commander
     r = await page.evaluate(() => {
         T.clear();
