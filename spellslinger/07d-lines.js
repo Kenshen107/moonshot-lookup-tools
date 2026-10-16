@@ -155,7 +155,6 @@ const TALK = {
         _: ["Good game, everybody. Well played, {foe}.", "I had fun. Good luck to the rest of you.", "Out! Nicely done, {foe}.", "That was a fun one. Go get them."],
         sarah: ["That was great! Who's winning?"], leo: ["A fine ending to my chapter."], greg: ["Good game, {foe}. Really."], trevor: ["Game over. Good play, {foe}."]
     },
-    kingmake: { _: ["If I'm going down, {foe} gets my help.", "{foe}, take my stuff. Finish them."], luke: ["Everyone wins a little, {foe}. Especially you."], greg: ["Here, {foe}. Make me proud."] },
     // ---- Cool plays (impressed) ----
     'cool:big': {
         _: ["Okay, that's a big play, {foe}.", "Whoa. {foe} has the big one.", "That's the kind of play you remember, {foe}.", "Nicely done, {foe}. Even if it hurts."],

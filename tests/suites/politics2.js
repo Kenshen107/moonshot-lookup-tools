@@ -1,5 +1,5 @@
 // Information and complex deals (2026-10-15): tips and answers (and whether they were true), reliability, and the new deals:
-// peace for 3 turns, bounty, restraint, tip for peace, alliance, counter-offers, bot offers and kingmaking.
+// peace for 3 turns, bounty, restraint, tip for peace, alliance, counter-offers, bot offers (and a bot that goes out gives nothing away).
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -125,10 +125,10 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             [A, B, Cc, D] = await fresh(['greg', 'marcus', 'sam']); B.trust = { 2: 2 }; Cc.trust = { 1: 2 }; T.put(D, C['Serra Angel']); T.put(D, C['Serra Angel']); T.put(D, C['Serra Angel']); G.arch = D.i; B.life = 30; G.dealAsk2 = {};
             let offered = false; for (let t = 6; t < 20 && !offered; t++) { G.turn = t; await moreOffers(B); offered = !!G.deals.length; }
             ok('a bot proposes an alliance against the archenemy to another bot', offered, G.deals.map(d => d.type));
-            // kingmaking
+            // no kingmaking: a bot that goes out never hands cards to anyone (owner, 2026-10-16: that is cheating)
             [A, B, Cc, D] = await fresh(['greg', 'marcus', 'sam']); B.trust = { 0: 4 }; for (let i = 0; i < 4; i++) B.hand.push(makeObj(C['Divination'], 1));
             const h0 = A.hand.length; eliminate(B, 'test');
-            ok('a bot that goes out and likes someone gives them up to three cards', A.hand.length === h0 + 3 && lines().some(l => /🎁/.test(l)), A.hand.length - h0);
+            ok('a bot that goes out gives nobody any cards, however much it likes them', A.hand.length === h0 && !lines().some(l => /🎁/.test(l)), A.hand.length - h0);
             ok('no broken invariants', T.invariants().length === 0, T.invariants());
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 4)]); }
         return out;

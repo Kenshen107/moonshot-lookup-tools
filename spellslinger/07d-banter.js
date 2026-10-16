@@ -189,13 +189,6 @@ function banterOut(P, reason) {
     const culprit = G.players.filter(X => !X.out && X !== P).sort((a, b) => ((P.grudge && P.grudge[b.i]) || 0) - ((P.grudge && P.grudge[a.i]) || 0))[0];
     const foe = culprit ? (you(culprit) ? 'you' : who(culprit)) : 'everyone';
     say(P, (P.salt || 0) >= SALT_TIERS[2] ? 'outSalty' : 'outGracious', (P.salt || 0) >= SALT_TIERS[2] ? 'salty' : 'cheerful', { foe }, null);
-    // A bot that likes someone more than the person who knocked it out hands over what it can (kingmaking): the best creature it owns goes to its favorite
-    const fav = G.players.filter(X => !X.out && X !== P).sort((a, b) => ((P.trust && P.trust[b.i]) || 0) - ((P.trust && P.trust[a.i]) || 0))[0];
-    if (fav && ((P.trust && P.trust[fav.i]) || 0) >= 2) {
-        say(P, 'kingmake', 'calm', { foe: you(fav) ? 'you' : who(fav) }, null);
-        const gift = P.hand.splice(0, 3);
-        if (gift.length) { fav.hand.push(...gift); log(`🎁 ${who(P)} slides ${gift.length} card${gift.length === 1 ? '' : 's'} from ${P.name.split(',')[0] === who(P) ? 'their' : 'their'} hand to ${you(fav) ? 'you' : who(fav)} on the way out.`); }
-    }
 }
 
 // ---- End of the game ----
