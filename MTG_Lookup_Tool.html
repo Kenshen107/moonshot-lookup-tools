@@ -6803,6 +6803,145 @@
             .slp-sw { aspect-ratio: 5 / 7; border: 1px solid #666; border-radius: 3px; margin-bottom: 3px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
 
+                /* Shelf Planner tab. The reference's colors are mapped onto the site's
+           theme tokens, so every seasonal theme reaches it. The few --shelf-*
+           tokens are the wood of the shelving: a physical material, so (like
+           the foil sheens) they stay the same in every theme. The product
+           boxes drawn on the shelves use each product's own color. */
+        :root { --shelf-wood: #9b7a4c; --shelf-wood-edge: #6e5430; --shelf-wood-up: #866a42; --shelf-hole: #3b2c16; }
+        #shelfPlannerApp {
+            --sp-paper: var(--bg-canvas); --sp-panel: var(--bg-panel); --sp-ink: var(--text-primary); --sp-muted: var(--text-soft);
+            --sp-line: var(--border); --sp-line-soft: var(--border-subtle);
+            --sp-accent: var(--brand-light); --sp-accent-ink: var(--text-heading);
+            --sp-accent-soft: color-mix(in srgb, var(--brand) 28%, transparent); --sp-accent-strong: var(--brand-light);
+            --sp-wood: var(--shelf-wood); --sp-wood-edge: var(--shelf-wood-edge); --sp-wood-up: var(--shelf-wood-up); --sp-hole: var(--shelf-hole);
+            --sp-back: var(--bg-inset); --sp-back-line: var(--border-subtle); --sp-floor: var(--text-secondary);
+            --sp-good: var(--color-success); --sp-bad: var(--color-error); --sp-bad-soft: var(--color-error-bg);
+            --sp-font-display: var(--font-display); --sp-font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --sp-font-mono: ui-monospace, Menlo, Consolas, monospace;
+            color: var(--text-primary); font-size: 0.9em; line-height: 1.45;
+        }
+        #shelfPlannerApp *, #shelfPlannerApp *::before, #shelfPlannerApp *::after { box-sizing: border-box; }
+        
+        #shelfPlannerApp .app{max-width:1600px;margin:0 auto;padding:0 0 24px;display:grid;gap:16px}
+        #shelfPlannerApp h1,#shelfPlannerApp h2,#shelfPlannerApp h3,#shelfPlannerApp h4,#shelfPlannerApp p{margin:0}
+        #shelfPlannerApp h1{font:700 1.6em/1.1 var(--sp-font-display);letter-spacing:-.01em;text-wrap:balance}
+        #shelfPlannerApp h3{font:600 0.95em/1.25 var(--sp-font-display)}
+        #shelfPlannerApp h4{font:600 0.85em/1.25 var(--sp-font-display)}
+        #shelfPlannerApp .top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+        #shelfPlannerApp .sub{font:400 0.8em/1.4 var(--sp-font-mono);color:var(--sp-muted);margin-top:6px}
+        #shelfPlannerApp .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+        #shelfPlannerApp .pill{display:inline-flex;align-items:center;gap:6px;font:400 0.8em var(--sp-font-mono);color:var(--sp-muted);padding:5px 10px;border:1px solid var(--sp-line);border-radius:999px;background:var(--sp-panel)}
+        #shelfPlannerApp .pill i{width:8px;height:8px;border-radius:50%;background:var(--sp-muted);display:inline-block}
+        #shelfPlannerApp .pill[data-s="saved"] i,#shelfPlannerApp .pill[data-s="ready"] i{background:var(--sp-good)}
+        #shelfPlannerApp .pill[data-s="saving"] i{background:var(--sp-accent)}
+        #shelfPlannerApp .pill[data-s="error"] i,#shelfPlannerApp .pill[data-s="readonly"] i{background:var(--sp-bad)}
+        #shelfPlannerApp .btn{font:500 0.85em var(--sp-font-body);color:var(--sp-ink);background:var(--sp-panel);border:1px solid var(--sp-line);border-radius:var(--radius-sm);padding:6px 11px;cursor:pointer;min-height:32px}
+        #shelfPlannerApp .btn:hover{border-color:var(--sp-accent)}
+        #shelfPlannerApp .btn:disabled{opacity:.45;cursor:default}
+        #shelfPlannerApp .btn:focus-visible,#shelfPlannerApp .prow:focus-visible,#shelfPlannerApp input:focus-visible,#shelfPlannerApp select:focus-visible,#shelfPlannerApp textarea:focus-visible,#shelfPlannerApp summary:focus-visible{outline:2px solid var(--sp-accent);outline-offset:2px}
+        #shelfPlannerApp .btn.pri{background:var(--sp-accent);border-color:var(--sp-accent);color:var(--sp-accent-ink)}
+        #shelfPlannerApp .btn.sq{min-width:32px;padding:6px 0;font-family:var(--sp-font-mono)}
+        #shelfPlannerApp .btn.warn{color:var(--sp-bad)}
+        #shelfPlannerApp .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+        #shelfPlannerApp .stat{background:var(--sp-panel);border:1px solid var(--sp-line);border-radius:var(--radius-md);padding:10px 12px;min-width:0}
+        #shelfPlannerApp .stat b{display:block;font:700 1.5em/1.15 var(--sp-font-display);font-variant-numeric:tabular-nums}
+        #shelfPlannerApp .stat span{font:400 0.72em var(--sp-font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--sp-muted)}
+        #shelfPlannerApp .stat.bad b{color:var(--sp-bad)}
+        #shelfPlannerApp .layout{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+        @media (min-width:1000px){#shelfPlannerApp .layout{grid-template-columns:minmax(0,1fr) 380px;align-items:start}}
+        #shelfPlannerApp .stage{display:grid;gap:12px;min-width:0;grid-template-columns:minmax(0,1fr)}
+        #shelfPlannerApp .toolbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+        #shelfPlannerApp .toolbar label{font:400 0.8em var(--sp-font-mono);color:var(--sp-muted);display:inline-flex;align-items:center;gap:8px}
+        #shelfPlannerApp .toolbar input[type=range]{width:140px;accent-color:var(--sp-accent)}
+        #shelfPlannerApp .wallwrap{overflow-x:auto;border:1px solid var(--sp-line);border-radius:var(--radius-md);background:var(--sp-panel)}
+        #shelfPlannerApp .svg-wall{display:block;user-select:none;-webkit-user-select:none}
+        #shelfPlannerApp .svg-wall text{font-family:var(--sp-font-mono)}
+        #shelfPlannerApp .upr{fill:var(--sp-wood-up);stroke:var(--sp-wood-edge);stroke-width:.5}
+        #shelfPlannerApp .hole{fill:var(--sp-hole)}
+        #shelfPlannerApp .back{fill:var(--sp-back);stroke:var(--sp-back-line);stroke-width:.5}
+        #shelfPlannerApp .brd{fill:var(--sp-wood);stroke:var(--sp-wood-edge);stroke-width:.75}
+        #shelfPlannerApp .bay{fill:transparent;cursor:pointer}
+        #shelfPlannerApp .bay:hover{fill:var(--sp-accent);fill-opacity:.07}
+        #shelfPlannerApp .it{cursor:grab}
+        #shelfPlannerApp .rt{font-size:10px;fill:var(--sp-muted)}
+        #shelfPlannerApp .rtick{stroke:var(--sp-muted);stroke-width:.75}
+        #shelfPlannerApp .st{font-size:12px;fill:var(--sp-ink);font-weight:500}
+        #shelfPlannerApp .st2{font-size:10px;fill:var(--sp-muted)}
+        #shelfPlannerApp .floor{stroke:var(--sp-floor);stroke-width:2}
+        #shelfPlannerApp .eye{fill:var(--sp-accent);fill-opacity:.07;stroke:var(--sp-accent);stroke-opacity:.5;stroke-dasharray:4 4;stroke-width:1}
+        #shelfPlannerApp .selbox{fill:none;stroke:var(--sp-accent);stroke-width:2}
+        #shelfPlannerApp .selceil{stroke:var(--sp-accent);stroke-width:1.25;stroke-dasharray:5 4}
+        #shelfPlannerApp .selgap{font-size:11px;fill:var(--sp-accent-strong);font-weight:500}
+        #shelfPlannerApp .overrun{fill:var(--sp-bad);fill-opacity:.4}
+        #shelfPlannerApp .badline{stroke:var(--sp-bad);stroke-width:2}
+        #shelfPlannerApp .badge{fill:var(--sp-bad)}
+        #shelfPlannerApp .badget{font-size:11px;fill:var(--text-heading);font-weight:500}
+        #shelfPlannerApp .gbay{fill:var(--sp-accent);fill-opacity:.12;stroke:var(--sp-accent);stroke-dasharray:4 3}
+        #shelfPlannerApp .gline{stroke:var(--sp-accent);stroke-width:3}
+        #shelfPlannerApp .legend{font:400 0.8em var(--sp-font-mono);color:var(--sp-muted)}
+        #shelfPlannerApp .side{display:grid;gap:12px;min-width:0;grid-template-columns:minmax(0,1fr)}
+        @media (min-width:1000px){#shelfPlannerApp .side{position:sticky;top:72px;max-height:calc(100dvh - 88px);overflow-y:auto;padding-right:2px}}
+        #shelfPlannerApp .card{background:var(--sp-panel);border:1px solid var(--sp-line);border-radius:var(--radius-lg);padding:12px;display:grid;gap:10px;min-width:0}
+        #shelfPlannerApp .card-h{display:flex;gap:10px;align-items:center;min-width:0}
+        #shelfPlannerApp .card-h>div{min-width:0}
+        #shelfPlannerApp .meta{font:400 0.8em var(--sp-font-mono);color:var(--sp-muted);overflow-wrap:anywhere}
+        #shelfPlannerApp .note{font-size:0.8em;color:var(--sp-muted)}
+        #shelfPlannerApp .howto{font-size:0.85em;color:var(--sp-muted);display:grid;gap:4px}
+        #shelfPlannerApp .howto b{color:var(--sp-ink);font-weight:600}
+        #shelfPlannerApp .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        #shelfPlannerApp .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+        #shelfPlannerApp .field{display:grid;gap:4px;min-width:0}
+        #shelfPlannerApp .field label,#shelfPlannerApp .lbl{font:400 0.72em var(--sp-font-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--sp-muted)}
+        #shelfPlannerApp input[type=text],#shelfPlannerApp input[type=number],#shelfPlannerApp select,#shelfPlannerApp textarea{width:100%;font:400 0.9em var(--sp-font-body);color:var(--sp-ink);background:var(--sp-panel);border:1px solid var(--sp-line);border-radius:var(--radius-sm);padding:6px 8px;min-height:32px}
+        #shelfPlannerApp input[type=color]{width:100%;height:32px;border:1px solid var(--sp-line);border-radius:var(--radius-sm);background:var(--sp-panel);padding:2px}
+        #shelfPlannerApp textarea{min-height:70px;resize:vertical;font-family:var(--sp-font-mono);font-size:0.8em}
+        #shelfPlannerApp .step{display:inline-flex;align-items:center;gap:6px}
+        #shelfPlannerApp .step output{font:500 0.9em var(--sp-font-mono);min-width:3ch;text-align:center;font-variant-numeric:tabular-nums}
+        #shelfPlannerApp .btnrow{display:flex;flex-wrap:wrap;gap:6px}
+        #shelfPlannerApp .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:0.85em}
+        #shelfPlannerApp .kv dt{color:var(--sp-muted)}
+        #shelfPlannerApp .kv dd{margin:0;font:500 0.85em var(--sp-font-mono);text-align:right;font-variant-numeric:tabular-nums}
+        #shelfPlannerApp .kv dd.bad{color:var(--sp-bad)}
+        #shelfPlannerApp .flag{background:var(--sp-bad-soft);color:var(--sp-bad);border-radius:var(--radius-sm);padding:6px 8px;font-size:0.8em}
+        #shelfPlannerApp .sw{display:inline-block;width:30px;height:30px;border-radius:var(--radius-sm);border:1px solid var(--border);flex:none}
+        #shelfPlannerApp .stacks{display:grid;gap:4px}
+        #shelfPlannerApp .stk{display:flex;gap:8px;align-items:center;text-align:left;width:100%;background:transparent;border:1px solid var(--sp-line-soft);border-radius:var(--radius-sm);padding:4px 8px;font:400 0.85em var(--sp-font-body);color:var(--sp-ink);cursor:pointer}
+        #shelfPlannerApp .stk[aria-pressed="true"]{border-color:var(--sp-accent);background:var(--sp-accent-soft)}
+        #shelfPlannerApp .stk .sw{width:14px;height:14px}
+        #shelfPlannerApp .stk span:last-child{margin-left:auto;font:400 0.8em var(--sp-font-mono);color:var(--sp-muted)}
+        #shelfPlannerApp details{border-top:1px solid var(--sp-line-soft);padding-top:8px}
+        #shelfPlannerApp details>summary{cursor:pointer;font:500 0.85em var(--sp-font-body);list-style:none}
+        #shelfPlannerApp details>summary::-webkit-details-marker{display:none}
+        #shelfPlannerApp details>summary::before{content:"+ ";font-family:var(--sp-font-mono);color:var(--sp-muted)}
+        #shelfPlannerApp details[open]>summary::before{content:"\2212  "}
+        #shelfPlannerApp details>div.dbody{display:grid;gap:10px;margin-top:10px}
+        #shelfPlannerApp .banner{background:var(--sp-accent-soft);color:var(--sp-accent-strong);border-radius:var(--radius-sm);padding:8px 10px;font-size:0.85em;display:flex;gap:8px;justify-content:space-between;align-items:center}
+        #shelfPlannerApp .cathead{display:grid;grid-template-columns:1fr 130px;gap:8px}
+        #shelfPlannerApp .catlist{display:grid;gap:4px;max-height:420px;overflow-y:auto;padding-right:2px}
+        #shelfPlannerApp .prow{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:5px 6px;border:1px solid transparent;border-radius:var(--radius-md);cursor:pointer}
+        #shelfPlannerApp .prow:hover{background:var(--sp-paper)}
+        #shelfPlannerApp .prow.armed{border-color:var(--sp-accent);background:var(--sp-accent-soft)}
+        #shelfPlannerApp .prow .sw{cursor:grab}
+        #shelfPlannerApp .prow .nm{font-weight:500;overflow-wrap:anywhere}
+        #shelfPlannerApp .prow .ct{font:500 0.8em var(--sp-font-mono);color:var(--sp-muted);text-align:right}
+        #shelfPlannerApp .chip{position:fixed;z-index:2000;pointer-events:none;background:var(--sp-ink);color:var(--sp-paper);font:500 0.8em var(--sp-font-body);padding:4px 8px;border-radius:var(--radius-sm);display:none;white-space:nowrap}
+        #shelfPlannerApp .sheet{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+        #shelfPlannerApp .sheet h2{font:600 1.1em var(--sp-font-display)}
+        #shelfPlannerApp .tblwrap{overflow-x:auto;border:1px solid var(--sp-line);border-radius:var(--radius-md);background:var(--sp-panel)}
+        #shelfPlannerApp table{border-collapse:collapse;width:100%;font-size:0.85em;min-width:560px}
+        #shelfPlannerApp th,#shelfPlannerApp td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--sp-line-soft);vertical-align:top}
+        #shelfPlannerApp th{font:400 0.72em var(--sp-font-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--sp-muted);background:var(--sp-paper)}
+        #shelfPlannerApp td.n{font-family:var(--sp-font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+        #shelfPlannerApp tr.bad td{background:var(--sp-bad-soft)}
+        #shelfPlannerApp .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--sp-ink);color:var(--sp-paper);padding:9px 14px;border-radius:var(--radius-md);font-size:0.85em;max-width:calc(100vw - 32px);display:none;z-index:10}
+        #shelfPlannerApp .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+        @media (prefers-reduced-motion: no-preference){#shelfPlannerApp .btn{transition:border-color .12s}}
+        #shelfPlannerApp button{width:auto;margin:0}
+        #shelfPlannerApp .btn.pri{color:var(--text-heading)}
+        #shelfPlannerApp .btn.sq{padding:6px 0;min-width:32px}
+        #shelfPlannerApp h2.sp-title{font:700 1.6em/1.1 var(--font-display);letter-spacing:-.01em}
+
         /* About Moonshot Games panel and the fan-made note */
         .values-intro { color: var(--text-soft); font-size: 0.9em; margin: 4px 0 12px; line-height: 1.5; }
         .values-stores { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 16px; font-size: 0.9em; line-height: 1.5; margin-bottom: 14px; }
@@ -8746,6 +8885,90 @@
             <div id="caseMapResults"></div>
         </div>
         <div id="sleevesApp" style="display:none;"></div>
+        <div id="shelfPlannerApp" style="display:none;">
+        <div class="app">
+          <header class="top">
+            <div>
+              <h2 class="sp-title">Shelf planner</h2>
+              <p class="sub">70-hole uprights · 1 in hole spacing · ¼ in holes · layouts are saved on this device only</p>
+            </div>
+            <div class="actions">
+              <span class="pill" id="spStatus" data-s="loading"><i></i><span id="spStatusText">Loading</span></span>
+              <button class="btn" id="spUndoBtn" type="button" disabled>Undo</button>
+              <button class="btn pri" id="spFitAllBtn" type="button">Fit all shelves to products</button>
+            </div>
+          </header>
+
+          <section class="stats" id="spStats" aria-label="Wall summary"></section>
+
+          <div class="layout">
+            <main class="stage">
+              <div class="toolbar">
+                <label for="spZoom">Zoom <input id="spZoom" type="range" min="4" max="20" step="1" value="10"><span id="spZoomVal">10 px/in</span></label>
+                <button class="btn" id="spFitWidthBtn" type="button">Fit wall to width</button>
+                <button class="btn" id="spAddSecBtn" type="button">Add section</button>
+                <label for="spEyeToggle"><input id="spEyeToggle" type="checkbox" checked> Show eye level (45–65 in)</label>
+              </div>
+              <div class="wallwrap" id="spWallwrap"></div>
+              <p class="legend">Click a shelf or product to select it. Drag products with a mouse to reorder or move them. Red marks a shelf that is too wide, too tall or too deep.</p>
+
+              <section class="sheet" aria-labelledby="spSheetH">
+                <div class="actions" style="justify-content:space-between">
+                  <h2 id="spSheetH">Stocking sheet</h2>
+                  <button class="btn" id="spCopySheetBtn" type="button">Copy as text</button>
+                </div>
+                <div id="spSheetBody"></div>
+                <details id="spSheetTextWrap"><summary>Plain text version</summary><div class="dbody"><textarea id="spSheetText" readonly rows="8" aria-label="Stocking sheet as plain text"></textarea></div></details>
+              </section>
+            </main>
+
+            <aside class="side">
+              <div id="spInspector"></div>
+              <section class="card" aria-labelledby="spCatH">
+                <div class="card-h" style="justify-content:space-between"><h3 id="spCatH">Products</h3><span class="meta" id="spCatCount"></span></div>
+                <div id="spArmedBanner"></div>
+                <div class="cathead">
+                  <input id="spCatSearch" type="text" placeholder="Search products" aria-label="Search products">
+                  <select id="spCatFilter" aria-label="Filter by category"></select>
+                </div>
+                <div class="catlist" id="spCatList"></div>
+                <p class="note">Generic starter catalog with approximate box sizes. Edit any product to match your stock, or add your own.</p>
+                <details id="spPfDetails">
+                  <summary id="spPfSummary">Add or edit a product</summary>
+                  <div class="dbody">
+                    <div class="row2">
+                      <div class="field"><label for="spPfName">Name</label><input id="spPfName" type="text" placeholder="Sunset orange"></div>
+                      <div class="field"><label for="spPfBrand">Brand</label><input id="spPfBrand" type="text" placeholder="Brand (optional)"></div>
+                    </div>
+                    <div class="row2">
+                      <div class="field"><label for="spPfColor">Box color</label><input id="spPfColor" type="color" value="#cc5500"></div>
+                      <div class="field"><label for="spPfCat">Category</label><select id="spPfCat"></select></div>
+                    </div>
+                    <div class="row3">
+                      <div class="field"><label for="spPfW">Width in</label><input id="spPfW" type="number" step="0.05" min="0.2" value="3.1"></div>
+                      <div class="field"><label for="spPfH">Height in</label><input id="spPfH" type="number" step="0.05" min="0.2" value="3.9"></div>
+                      <div class="field"><label for="spPfD">Depth in</label><input id="spPfD" type="number" step="0.05" min="0.2" value="2.2"></div>
+                    </div>
+                    <div class="btnrow">
+                      <button class="btn pri" id="spPfAdd" type="button">Add product</button>
+                      <button class="btn pri" id="spPfSave" type="button" hidden>Save changes</button>
+                      <button class="btn" id="spPfCancel" type="button" hidden>Cancel</button>
+                      <button class="btn warn" id="spPfDelete" type="button" hidden>Delete product</button>
+                    </div>
+                    <div class="field">
+                      <label for="spQaText">Quick add, one per line: name, color</label>
+                      <textarea id="spQaText" placeholder="Amber, #e69a1c&#10;Teal, teal&#10;Plum, #6b2d5c"></textarea>
+                      <button class="btn" id="spQaBtn" type="button">Add lines using the brand, category and size above</button>
+                    </div>
+                  </div>
+                </details>
+              </section>
+            </aside>
+          </div>
+        </div>
+        <div class="chip" id="spChip"></div>
+        <div class="toast" id="spToast" role="status" aria-live="polite"></div>
+        </div>
     </div>
 
     <!-- Image lightbox -->
@@ -8900,6 +9123,7 @@
             judge:        { appId: 'judgeApp',        icon: '⚖️', navLabel: 'Judge Ref',       title: '⚖️ Judge Quick-Reference', desc: 'Quick rules answers, common myths and the layer system', keywords: 'rules ruling judge layers stack myths', onShow: showJudgeTab },
             setprimer:    { appId: 'setPrimerApp',    icon: '🎁', navLabel: 'Set Primer',      title: '🎁 Set Primer', desc: 'A set at a glance: its cards by rarity, top picks and bonus sheets', keywords: 'set new release cards primer' },
             grading:      { appId: 'gradingApp',      icon: '🔍', navLabel: 'Grading & Fakes', title: '🔍 Grading & Spotting Fakes', desc: 'Card grading basics and how to spot counterfeits', keywords: 'grade psa bgs fake counterfeit condition' },
+            shelves:      { appId: 'shelfPlannerApp', icon: '🗄️', navLabel: 'Shelf Planner',  title: '🗄️ Shelf Planner', desc: 'Plan a wall of shelves on 70-hole uprights and lay products out in rainbow order', keywords: 'shelf shelves planner wall sleeves layout uprights pegboard stocking', onShow: () => window.showShelfPlanner && window.showShelfPlanner() },
             sleeves:      { appId: 'sleevesApp',    icon: '🎨', navLabel: 'Sleeve Wall',     title: '🎨 Sleeve Wall', desc: 'Dragon Shield sleeve colors in rainbow order, for laying out the wall', keywords: 'dragon shield sleeves colors rainbow wall layout matte classic dual', onShow: renderSleeves },
             quiz:         { appId: 'quizApp',         icon: '🧠', navLabel: 'Card Quiz',       title: '🧠 Card Quiz', desc: 'Practice card knowledge, prices and the case map', keywords: 'quiz practice train learn test', onShow: showQuizTab }
         };
@@ -9068,7 +9292,7 @@
         // quick-jump search, are built from NAV_GROUPS + APP_VIEWS, so a new
         // tool only needs adding in those two places.
         const NAV_GROUPS = [
-            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap', 'sleeves'] },
+            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap', 'shelves', 'sleeves'] },
             { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'prerelease', 'valuevintage', 'judge'] },
             { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'grading', 'quiz'] }
         ];
@@ -15630,6 +15854,530 @@
             Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => window.print());
         }
 
+
+        // ============== SHELF PLANNER ==============
+        // Ported from the owner's standalone planner (reference file, 2026-10-17):
+        // a scaled elevation of the wall, 70-hole uprights at 1 in spacing, sections
+        // 32 in wide, a product catalog, rainbow fill, stocking sheet. Everything is
+        // scoped to #shelfPlannerApp and saved in this browser only (no backend).
+(function(){
+'use strict';
+var KEY='shelfPlannerV1', KEYZ='shelfPlannerZoom';
+var CEIL=71, UPPER=70, GUT=36, TOPPAD=44, FOOT=38, PADR=18;
+var CATS=['Sleeves','Deck boxes','Binders','Toploaders','Playmats','Other'];
+var DEFAULT_CFG={thick:0.75,upright:1.5,clearance:0.75,defaultGap:8,floor:0};
+
+function uid(){return Math.random().toString(36).slice(2,9);}
+var ROOT=null;
+function $(s){return ROOT.querySelector(s);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function num(v,d){var n=parseFloat(v);return isFinite(n)?n:d;}
+function int(v,d){var n=parseInt(v,10);return isFinite(n)?n:d;}
+function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
+function fmt(n){return String(Math.round(n*100)/100);}
+
+/* ---------- color helpers ---------- */
+function hexToRgb(h){h=String(h||'#888888').replace('#','');if(h.length===3)h=h.split('').map(function(c){return c+c;}).join('');var n=parseInt(h,16);if(!isFinite(n))n=0x888888;return [(n>>16)&255,(n>>8)&255,n&255];}
+function hexToHsl(hex){var c=hexToRgb(hex),r=c[0]/255,g=c[1]/255,b=c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,h=0,s=0,d=mx-mn;
+  if(d>0){s=l>0.5?d/(2-mx-mn):d/(mx+mn);if(mx===r)h=((g-b)/d+(g<b?6:0));else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;}
+  return {h:h,s:s,l:l};}
+function colorKey(hex){var c=hexToHsl(hex);if(c.s<0.14||c.l<0.12||c.l>0.85)return [1,c.l];return [0,(c.h+15)%360];}
+function cmpColor(a,b){var x=colorKey(a.hex),y=colorKey(b.hex);if(x[0]!==y[0])return x[0]-y[0];if(x[1]!==y[1])return x[1]-y[1];return a.name<b.name?-1:1;}
+function inkOn(hex){var c=hexToRgb(hex);var y=(c[0]*299+c[1]*587+c[2]*114)/1000;return y>150?'#111111':'#ffffff';}
+function cssToHex(str){var cx=document.createElement('canvas').getContext('2d');cx.fillStyle='#010203';cx.fillStyle=str;var a=cx.fillStyle;cx.fillStyle='#040506';cx.fillStyle=str;var b=cx.fillStyle;if(a!==b)return null;if(a.charAt(0)==='#')return a;var m=a.match(/\d+/g);if(!m)return null;return '#'+m.slice(0,3).map(function(x){return (+x).toString(16).padStart(2,'0');}).join('');}
+
+/* ---------- state ---------- */
+function defaultState(){
+  function P(name,brand,hex,cat,w,h,d){return {id:uid(),name:name,brand:brand,cat:cat||'Sleeves',hex:hex,w:w||3.1,h:h||3.9,d:d||2.2};}
+  var products=[
+    P('Red','','#c0262d'),P('Orange','','#e8741c'),P('Amber','','#e0a23a'),P('Yellow','','#e6c92b'),P('Lime','','#9bcd3b'),
+    P('Green','','#2f9e44'),P('Forest','','#1f5a3a'),P('Teal','','#1fa59a'),P('Sky blue','','#5fb4e6'),P('Blue','','#2762c4'),
+    P('Navy','','#1a2a5c'),P('Purple','','#6b3aa5'),P('Magenta','','#b0287a'),P('Pink','','#ee86b6'),P('Brown','','#6b4426'),
+    P('Ivory','','#efe8d4'),P('Silver','','#b8bcc2'),P('Black','','#1f1f23'),
+    P('Zip binder, flat stack','','#2b2b30','Binders',10.5,3.5,12)
+  ];
+  var holes=[6,14,22,30,38,46,54,62];
+  var sections=[1,2,3,4,5].map(function(i){return {id:uid(),name:'Section '+i,w:32,depth:12,shelves:holes.map(function(h){return {id:uid(),hole:h,items:[]};})};});
+  return {v:1,cfg:Object.assign({},DEFAULT_CFG),products:products,sections:sections};
+}
+function normalize(st){
+  var cfg=Object.assign({},DEFAULT_CFG,(st&&st.cfg)||{});
+  var products=Array.isArray(st&&st.products)?st.products.map(function(p){return {id:p.id||uid(),name:String(p.name||'Product'),brand:String(p.brand||''),cat:p.cat||'Other',hex:p.hex||'#888888',w:num(p.w,3),h:num(p.h,4),d:num(p.d,2)};}):[];
+  var sections=(Array.isArray(st&&st.sections)?st.sections:[]).map(function(sec){
+    return {id:sec.id||uid(),name:String(sec.name||'Section'),w:num(sec.w,32),depth:num(sec.depth,12),
+      shelves:(sec.shelves||[]).map(function(sh){return {id:sh.id||uid(),hole:num(sh.hole,10),items:(sh.items||[]).map(function(it){return {pid:it.pid,n:Math.max(1,int(it.n,1)),rows:Math.max(1,int(it.rows,1))};})};})};
+  });
+  if(!sections.length)sections=defaultState().sections;
+  return {v:1,cfg:cfg,products:products,sections:sections};
+}
+var S=defaultState();
+var ui={sec:S.sections[0].id,shelf:null,item:null,armed:null,zoom:10,eye:true,filterCat:'All',q:'',editId:null,
+        rb:{cat:'Sleeves',scope:'section',n:1,rows:1,fit:true,open:false}};
+var history=[];
+
+/* ---------- lookups and geometry ---------- */
+function prod(id){for(var i=0;i<S.products.length;i++)if(S.products[i].id===id)return S.products[i];return null;}
+function secById(id){for(var i=0;i<S.sections.length;i++)if(S.sections[i].id===id)return S.sections[i];return null;}
+function shelfById(sec,id){if(!sec)return null;for(var i=0;i<sec.shelves.length;i++)if(sec.shelves[i].id===id)return sec.shelves[i];return null;}
+function curSec(){var s=secById(ui.sec);if(!s){s=S.sections[0];ui.sec=s.id;}return s;}
+function sortedShelves(sec){return sec.shelves.slice().sort(function(a,b){return a.hole-b.hole;});}
+function tallest(sh){var t=0;sh.items.forEach(function(it){var p=prod(it.pid);t=Math.max(t,p?p.h:4);});return t;}
+function usedW(sh){var u=0;sh.items.forEach(function(it){var p=prod(it.pid);u+=it.n*(p?p.w:3);});return u;}
+function shelfInfo(sec,sh){
+  var arr=sortedShelves(sec),i=arr.indexOf(sh);
+  var ceil=i<arr.length-1?arr[i+1].hole-S.cfg.thick:CEIL;
+  var gap=ceil-sh.hole,tall=tallest(sh),used=usedW(sh),deep=0;
+  sh.items.forEach(function(it){var p=prod(it.pid);deep=Math.max(deep,it.rows*(p?p.d:2));});
+  var o={ceil:ceil,gap:gap,tall:tall,clear:gap-tall,used:used,deep:deep};
+  o.over=used>sec.w+1e-6;o.tooTall=o.clear<-1e-6;o.tooDeep=deep>sec.depth+1e-6;o.off=sh.hole>UPPER||sh.hole<1;
+  o.bad=o.over||o.tooTall||o.tooDeep||o.off;return o;
+}
+function zoom(){return ui.zoom;}
+function yOf(inch){return TOPPAD+(CEIL-inch)*zoom();}
+function layout(){
+  var s=zoom(),x=GUT,secs=[];
+  S.sections.forEach(function(sec){var ux=x;x+=S.cfg.upright*s;var ix=x;x+=sec.w*s;secs.push({sec:sec,ux:ux,ix:ix});});
+  var lastUx=x;x+=S.cfg.upright*s;
+  return {secs:secs,lastUx:lastUx,width:Math.ceil(x+PADR)};
+}
+
+/* ---------- persistence (this device only; the site has no backend) ---------- */
+function setStatus(k){
+  var map={loading:'Loading',saved:'Saved on this device',error:'Could not save: browser storage is blocked, so changes last only until you leave this page'};
+  var el=$('#spStatus');el.setAttribute('data-s',k);$('#spStatusText').textContent=map[k]||k;
+}
+function persistLocal(){try{localStorage.setItem(KEY,JSON.stringify(S));return true;}catch(e){return false;}}
+function saveSoon(){setStatus(persistLocal()?'saved':'error');}
+function fixSel(){if(!secById(ui.sec))ui.sec=S.sections[0].id;var sec=curSec();if(ui.shelf&&!shelfById(sec,ui.shelf)){ui.shelf=null;ui.item=null;}if(ui.armed&&!prod(ui.armed))ui.armed=null;}
+
+/* ---------- mutations ---------- */
+function mutate(fn){
+  history.push(JSON.stringify(S));if(history.length>40)history.shift();
+  fn();fixSel();saveSoon();renderAll();
+}
+function undo(){
+  var j=history.pop();if(!j)return;
+  S=JSON.parse(j);fixSel();saveSoon();renderAll();
+}
+function addItem(sec,sh,index,pid){
+  var prev=sh.items[index-1],next=sh.items[index];
+  if(prev&&prev.pid===pid){prev.n++;return index-1;}
+  if(next&&next.pid===pid){next.n++;return index;}
+  var p=prod(pid),rows=1;
+  sh.items.splice(index,0,{pid:pid,n:1,rows:rows});return index;
+}
+function moveItem(srcSh,srcIdx,dstSec,dstSh,dstIdx){
+  var removed=srcSh.items.splice(srcIdx,1)[0];
+  var index=dstIdx;if(dstSh===srcSh&&srcIdx<index)index--;
+  dstSh.items.splice(index,0,removed);
+  ui.sec=dstSec.id;ui.shelf=dstSh.id;ui.item=index;
+}
+function fitSection(sec){
+  var all=sortedShelves(sec);if(!all.length)return 0;
+  var filled=all.filter(function(s){return s.items.length;}),empty=all.filter(function(s){return !s.items.length;});
+  var order=filled.concat(empty),holes=[all[0].hole];
+  for(var i=1;i<order.length;i++){
+    var prev=order[i-1],gapNeeded=prev.items.length?tallest(prev)+S.cfg.clearance:S.cfg.defaultGap;
+    holes.push(Math.ceil(holes[i-1]+gapNeeded+S.cfg.thick-1e-6));
+  }
+  order.forEach(function(sh,i){sh.hole=holes[i];});
+  var last=order[order.length-1];
+  return CEIL-(last.hole+tallest(last));
+}
+function nextShelfHole(sec){
+  var h=sortedShelves(sec).map(function(s){return s.hole;});
+  var pts=[0].concat(h).concat([CEIL]),best=0,at=35;
+  for(var i=0;i<pts.length-1;i++){var g=pts[i+1]-pts[i];if(g>best){best=g;at=Math.round(pts[i]+g/2);}}
+  return clamp(at,1,UPPER);
+}
+function rainbow(){
+  var rb=ui.rb,prods=S.products.filter(function(p){return p.cat===rb.cat;}).sort(cmpColor);
+  if(!prods.length){toast('No products in '+rb.cat+' yet.');return;}
+  var idx=S.sections.indexOf(curSec()),secs=rb.scope==='section'?[curSec()]:rb.scope==='right'?S.sections.slice(idx):S.sections.slice();
+  var left=0,placed=0;
+  mutate(function(){
+    secs.forEach(function(sec){sec.shelves.forEach(function(sh){sh.items=[];});});
+    var slots=[];
+    secs.forEach(function(sec){sortedShelves(sec).slice().reverse().forEach(function(sh){slots.push({sec:sec,sh:sh,used:0});});});
+    var si=0;
+    prods.forEach(function(p){
+      var need=rb.n*p.w;
+      while(si<slots.length&&slots[si].used+need>slots[si].sec.w+1e-9)si++;
+      if(si>=slots.length){left++;return;}
+      var rows=Math.max(1,Math.min(rb.rows,Math.floor(slots[si].sec.depth/Math.max(p.d,0.1))));
+      slots[si].sh.items.push({pid:p.id,n:rb.n,rows:rows});slots[si].used+=need;placed++;
+    });
+    if(rb.fit)secs.forEach(fitSection);
+    ui.shelf=null;ui.item=null;
+  });
+  toast('Placed '+placed+' colors in rainbow order'+(left?'. '+left+' did not fit, so add shelves or sections.':'.'));
+}
+
+/* ---------- rendering: wall ---------- */
+function drawUpright(x){
+  var s=zoom(),up=S.cfg.upright*s,o='<rect class="upr" x="'+x+'" y="'+yOf(CEIL)+'" width="'+up+'" height="'+(yOf(0)-yOf(CEIL))+'"/>';
+  var r=Math.max(0.9,0.125*s);
+  for(var k=1;k<=UPPER;k++){o+='<circle class="hole" cx="'+(x+up/2)+'" cy="'+yOf(k)+'" r="'+(k%5===0?r*1.5:r)+'"/>';}
+  return o;
+}
+function boxSvg(x,bottom,pw,ph,hex,name,faded,showLabel){
+  var o='<rect x="'+x+'" y="'+(bottom-ph)+'" width="'+pw+'" height="'+ph+'" rx="1.5" fill="'+hex+'" fill-opacity="'+(faded?0.6:1)+'" stroke="rgba(0,0,0,.4)" stroke-width="0.75"/>';
+  if(!faded&&pw>14){
+    var lw=pw*0.76,lh=Math.min(ph*0.26,zoom()*1.1);
+    o+='<rect x="'+(x+pw*0.12)+'" y="'+(bottom-ph*0.55)+'" width="'+lw+'" height="'+lh+'" fill="#ffffff" fill-opacity="0.85"/>';
+    if(showLabel){var ch=Math.max(2,Math.floor(lw/5.2));o+='<text x="'+(x+pw/2)+'" y="'+(bottom-ph*0.55+lh*0.72)+'" text-anchor="middle" style="font-size:8px;fill:#1a1a1a">'+esc(name.slice(0,ch))+'</text>';}
+  }
+  return o;
+}
+function renderWall(){
+  var s=zoom(),up=S.cfg.upright*s,th=S.cfg.thick*s,L=layout(),W=L.width,H=Math.ceil(TOPPAD+CEIL*s+FOOT);
+  var o='<svg id="spWallSvg" class="svg-wall" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Elevation of the shelf wall with '+S.sections.length+' sections"><title>Shelf wall elevation</title>';
+  var floorY=yOf(0);
+  if(ui.eye){var f=S.cfg.floor,y1=yOf(65-f),y2=yOf(45-f);o+='<rect class="eye" x="'+GUT+'" y="'+y1+'" width="'+(W-GUT-PADR)+'" height="'+(y2-y1)+'"/>';}
+  for(var k=5;k<=UPPER;k+=5){var y=yOf(k);o+='<line class="rtick" x1="'+(GUT-5)+'" x2="'+GUT+'" y1="'+y+'" y2="'+y+'"/><text class="rt" x="'+(GUT-8)+'" y="'+(y+3.5)+'" text-anchor="end">'+k+'</text>';}
+  L.secs.forEach(function(e){
+    var sec=e.sec,ix=e.ix,sw=sec.w*s,isSel=sec.id===ui.sec;
+    o+=drawUpright(e.ux);
+    o+='<rect class="back" x="'+ix+'" y="'+yOf(CEIL)+'" width="'+sw+'" height="'+(floorY-yOf(CEIL))+'"/>';
+    o+='<g data-kind="sec" data-sec="'+sec.id+'" style="cursor:pointer"><rect x="'+ix+'" y="0" width="'+sw+'" height="'+(TOPPAD-6)+'" fill="transparent"/><text class="st" x="'+ix+'" y="18">'+esc(sec.name)+'</text><text class="st2" x="'+ix+'" y="32">'+fmt(sec.w)+' in wide, '+fmt(sec.depth)+' in deep</text></g>';
+    if(isSel)o+='<rect x="'+ix+'" y="'+(TOPPAD-6)+'" width="'+sw+'" height="3" fill="var(--accent)"/>';
+    sortedShelves(sec).forEach(function(sh){
+      var info=shelfInfo(sec,sh),by=yOf(sh.hole),bayH=Math.max(0,by-yOf(info.ceil))+th,isShelfSel=sh.id===ui.shelf;
+      o+='<rect class="bay" data-kind="bay" data-sec="'+sec.id+'" data-shelf="'+sh.id+'" x="'+ix+'" y="'+yOf(Math.max(info.ceil,sh.hole))+'" width="'+sw+'" height="'+bayH+'"/>';
+      o+='<rect class="brd" data-kind="bay" data-sec="'+sec.id+'" data-shelf="'+sh.id+'" x="'+ix+'" y="'+by+'" width="'+sw+'" height="'+th+'"/>';
+      var x=ix;
+      sh.items.forEach(function(it,idx){
+        var p=prod(it.pid),pw=(p?p.w:3)*s,ph=(p?p.h:4)*s,hex=p?p.hex:'#9aa0a6',nm=p?p.name:'Missing product',stackW=pw*it.n;
+        var selected=isShelfSel&&ui.item===idx,dy=0.4*s;
+        o+='<g class="it" data-kind="item" data-sec="'+sec.id+'" data-shelf="'+sh.id+'" data-idx="'+idx+'">';
+        for(var c=0;c<it.n;c++){
+          for(var r=it.rows-1;r>=1;r--){o+=boxSvg(x+c*pw,by-r*dy,pw,ph,hex,nm,true,false);}
+          o+=boxSvg(x+c*pw,by,pw,ph,hex,nm,false,s>=13);
+        }
+        o+='<rect x="'+x+'" y="'+(by-ph-(it.rows-1)*dy)+'" width="'+stackW+'" height="'+(ph+(it.rows-1)*dy)+'" fill="transparent"><title>'+esc(nm)+' x'+it.n+'</title></rect>';
+        if(selected)o+='<rect class="selbox" x="'+(x-1)+'" y="'+(by-ph-(it.rows-1)*dy-1)+'" width="'+(stackW+2)+'" height="'+(ph+(it.rows-1)*dy+2)+'"/>';
+        o+='</g>';
+        x+=stackW;
+      });
+      if(info.over){o+='<rect class="overrun" x="'+(ix+sw)+'" y="'+(by-info.tall*s)+'" width="'+((info.used-sec.w)*s)+'" height="'+(info.tall*s)+'"/><line class="badline" x1="'+(ix+sw)+'" x2="'+(ix+sw)+'" y1="'+(by-info.tall*s)+'" y2="'+(by+th)+'"/>';}
+      if(info.tooTall||info.tooDeep||info.off){o+='<line class="badline" x1="'+ix+'" x2="'+(ix+sw)+'" y1="'+yOf(Math.max(info.ceil,sh.hole))+'" y2="'+yOf(Math.max(info.ceil,sh.hole))+'" stroke-dasharray="6 4"/>';}
+      if(info.bad){o+='<circle class="badge" cx="'+(ix+9)+'" cy="'+(by+th/2)+'" r="7"/><text class="badget" x="'+(ix+9)+'" y="'+(by+th/2+4)+'" text-anchor="middle">!</text>';}
+      if(isShelfSel){
+        o+='<rect class="selbox" x="'+ix+'" y="'+by+'" width="'+sw+'" height="'+th+'"/>';
+        o+='<line class="selceil" x1="'+ix+'" x2="'+(ix+sw)+'" y1="'+yOf(info.ceil)+'" y2="'+yOf(info.ceil)+'"/>';
+        o+='<text class="selgap" x="'+(ix+sw-4)+'" y="'+(yOf(info.ceil)+13)+'" text-anchor="end">gap '+fmt(info.gap)+' in</text>';
+      }
+    });
+    o+='<line class="floor" x1="'+ix+'" x2="'+(ix+sw)+'" y1="'+floorY+'" y2="'+floorY+'"/>';
+    var ry=floorY+12;
+    o+='<line class="rtick" x1="'+ix+'" x2="'+(ix+sw)+'" y1="'+ry+'" y2="'+ry+'"/>';
+    for(var w=0;w<=sec.w;w++){var tx=ix+w*s,long=w%5===0;o+='<line class="rtick" x1="'+tx+'" x2="'+tx+'" y1="'+ry+'" y2="'+(ry+(long?7:3))+'"/>';if(w%5===0&&s>=7)o+='<text class="rt" x="'+tx+'" y="'+(ry+19)+'" text-anchor="middle">'+w+'</text>';}
+  });
+  o+=drawUpright(L.lastUx);
+  o+='<g id="spGhost" pointer-events="none"></g></svg>';
+  $('#spWallwrap').innerHTML=o;
+}
+
+/* ---------- rendering: stats, inspector, catalog, sheet ---------- */
+function renderStats(){
+  var boxes=0,shelves=0,problems=0,usedTot=0,wTot=0;
+  S.sections.forEach(function(sec){sec.shelves.forEach(function(sh){shelves++;var i=shelfInfo(sec,sh);if(i.bad)problems++;usedTot+=Math.min(i.used,sec.w);wTot+=sec.w;sh.items.forEach(function(it){boxes+=it.n*it.rows;});});});
+  var pct=wTot?Math.round(usedTot/wTot*100):0;
+  $('#spStats').innerHTML='<div class="stat"><b>'+S.sections.length+'</b><span>Sections</span></div><div class="stat"><b>'+shelves+'</b><span>Shelves</span></div><div class="stat"><b>'+boxes+'</b><span>Boxes on display</span></div><div class="stat"><b>'+pct+'%</b><span>Shelf width used</span></div><div class="stat'+(problems?' bad':'')+'"><b>'+problems+'</b><span>Shelves with problems</span></div>';
+  $('#spUndoBtn').disabled=!history.length;
+}
+function stepper(act,val,min){return '<span class="step"><button class="btn sq" type="button" data-act="'+act+'" data-d="-1" aria-label="Decrease">−</button><output>'+val+'</output><button class="btn sq" type="button" data-act="'+act+'" data-d="1" aria-label="Increase">+</button></span>';}
+function renderInspector(){
+  var el=$('#spInspector'),sec=curSec(),sh=ui.shelf?shelfById(sec,ui.shelf):null;
+  if(ui.shelf&&!sh){ui.shelf=null;ui.item=null;}
+  var it=sh&&ui.item!=null?sh.items[ui.item]:null;if(ui.item!=null&&!it)ui.item=null;
+  var h='';
+  if(it){
+    var p=prod(it.pid)||{name:'Missing product',brand:'',hex:'#9aa0a6',w:3,h:4,d:2};
+    h+='<section class="card"><div class="card-h"><span class="sw" style="background:'+p.hex+'"></span><div><h3>'+esc(p.name)+'</h3><p class="meta">'+esc(p.brand)+' · '+fmt(p.w)+' × '+fmt(p.h)+' × '+fmt(p.d)+' in</p></div></div>'
+     +'<div class="row2"><div class="field"><span class="lbl">Side by side</span>'+stepper('item-n',it.n)+'</div><div class="field"><span class="lbl">Rows deep</span>'+stepper('item-rows',it.rows)+'</div></div>'
+     +'<p class="note">Uses '+fmt(it.n*p.w)+' in of width and '+fmt(it.rows*p.d)+' in of depth for '+(it.n*it.rows)+' boxes.</p>'
+     +'<div class="btnrow"><button class="btn" type="button" data-act="item-left">Move left</button><button class="btn" type="button" data-act="item-right">Move right</button><button class="btn" type="button" data-act="item-up">To shelf above</button><button class="btn" type="button" data-act="item-down">To shelf below</button><button class="btn warn" type="button" data-act="item-del">Remove</button></div></section>';
+  }
+  if(sh){
+    var i=shelfInfo(sec,sh),flags='';
+    if(i.over)flags+='<p class="flag">Products run '+fmt(i.used-sec.w)+' in past the section edge.</p>';
+    if(i.tooTall)flags+='<p class="flag">The tallest product is '+fmt(-i.clear)+' in taller than the gap above.</p>';
+    if(i.tooDeep)flags+='<p class="flag">Needs '+fmt(i.deep)+' in of depth, and the shelf is '+fmt(sec.depth)+' in deep.</p>';
+    if(i.off)flags+='<p class="flag">This shelf is outside the 70-hole upright.</p>';
+    h+='<section class="card"><div class="card-h" style="justify-content:space-between"><h3>Shelf at hole '+sh.hole+'</h3><span class="meta">'+fmt(sh.hole-S.cfg.thick)+' to '+fmt(sh.hole)+' in</span></div>'
+     +'<div class="btnrow"><button class="btn sq" type="button" data-act="hole" data-d="-5" aria-label="Down 5 holes">−5</button><button class="btn sq" type="button" data-act="hole" data-d="-1" aria-label="Down 1 hole">−1</button><button class="btn sq" type="button" data-act="hole" data-d="1" aria-label="Up 1 hole">+1</button><button class="btn sq" type="button" data-act="hole" data-d="5" aria-label="Up 5 holes">+5</button></div>'
+     +'<dl class="kv"><dt>Gap to shelf above</dt><dd>'+fmt(i.gap)+' in</dd><dt>Tallest product</dt><dd>'+fmt(i.tall)+' in</dd><dt>Clearance</dt><dd class="'+(i.tooTall?'bad':'')+'">'+fmt(i.clear)+' in</dd><dt>Width used</dt><dd class="'+(i.over?'bad':'')+'">'+fmt(i.used)+' of '+fmt(sec.w)+' in</dd><dt>Depth needed</dt><dd class="'+(i.tooDeep?'bad':'')+'">'+fmt(i.deep)+' of '+fmt(sec.depth)+' in</dd></dl>'+flags;
+    if(sh.items.length){h+='<div class="stacks">'+sh.items.map(function(x,n){var q=prod(x.pid);return '<button class="stk" type="button" data-act="pick" data-idx="'+n+'" aria-pressed="'+(ui.item===n)+'"><span class="sw" style="background:'+(q?q.hex:'#9aa0a6')+'"></span><span>'+esc(q?q.name:'Missing product')+'</span><span>×'+x.n+' · '+x.rows+' deep</span></button>';}).join('')+'</div>';}
+    else h+='<p class="note">Empty shelf. Pick a product on the right, then click this shelf.</p>';
+    h+='<div class="btnrow"><button class="btn" type="button" data-act="shelf-clear"'+(sh.items.length?'':' disabled')+'>Clear shelf</button><button class="btn warn" type="button" data-act="shelf-del">Delete shelf</button></div></section>';
+  }
+  if(!sh&&!it){h+='<section class="card"><h3>How it works</h3><div class="howto"><p><b>1.</b> Pick a product below, then click a shelf. Or drag it onto a shelf.</p><p><b>2.</b> Use rainbow fill to sort a section by color.</p><p><b>3.</b> Fit shelves to products to close wasted gaps.</p></div></section>';}
+  var rb=ui.rb;
+  h+='<section class="card"><div class="card-h" style="justify-content:space-between"><h3>'+esc(sec.name)+'</h3><span class="meta">'+sec.shelves.length+' shelves</span></div>'
+   +'<div class="row3"><div class="field" style="grid-column:span 3"><label for="spFSecName">Name</label><input id="spFSecName" type="text" data-f="secName" value="'+esc(sec.name)+'"></div>'
+   +'<div class="field" style="grid-column:span 1"><label for="spFSecW">Width in</label><input id="spFSecW" type="number" step="0.25" min="6" data-f="secW" value="'+fmt(sec.w)+'"></div>'
+   +'<div class="field" style="grid-column:span 1"><label for="spFSecD">Depth in</label><input id="spFSecD" type="number" step="0.25" min="3" data-f="secD" value="'+fmt(sec.depth)+'"></div></div>'
+   +'<div class="btnrow"><button class="btn pri" type="button" data-act="sec-fit">Fit shelves to products</button><button class="btn" type="button" data-act="sec-addshelf">Add shelf</button><button class="btn warn" type="button" data-act="sec-del"'+(S.sections.length>1?'':' disabled')+'>Remove section</button></div>'
+   +'<details data-d="rb"'+(rb.open?' open':'')+'><summary>Rainbow fill</summary><div class="dbody">'
+   +'<div class="row2"><div class="field"><label for="spRbCat">Category</label><select id="spRbCat" data-f="rbCat">'+CATS.map(function(c){return '<option'+(c===rb.cat?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div>'
+   +'<div class="field"><label for="spRbScope">Where</label><select id="spRbScope" data-f="rbScope"><option value="section"'+(rb.scope==='section'?' selected':'')+'>This section</option><option value="right"'+(rb.scope==='right'?' selected':'')+'>This section and right</option><option value="all"'+(rb.scope==='all'?' selected':'')+'>Whole wall</option></select></div></div>'
+   +'<div class="row2"><div class="field"><label for="spRbN">Side by side</label><input id="spRbN" type="number" min="1" max="8" step="1" data-f="rbN" value="'+rb.n+'"></div><div class="field"><label for="spRbRows">Rows deep</label><input id="spRbRows" type="number" min="1" max="6" step="1" data-f="rbRows" value="'+rb.rows+'"></div></div>'
+   +'<label style="display:flex;gap:8px;align-items:center"><input id="spRbFit" type="checkbox" data-f="rbFit"'+(rb.fit?' checked':'')+'> Fit shelves to products afterward</label>'
+   +'<button class="btn pri" type="button" data-act="rainbow">Arrange by color</button><p class="note">Replaces everything on the shelves it touches, top shelf first. Undo brings it back.</p></div></details>'
+   +'<details data-d="wall"><summary>Wall settings</summary><div class="dbody"><div class="row2"><div class="field"><label for="spCfgThick">Shelf thickness in</label><input id="spCfgThick" type="number" step="0.05" min="0.1" data-f="cfgThick" value="'+fmt(S.cfg.thick)+'"></div><div class="field"><label for="spCfgClear">Hand room in</label><input id="spCfgClear" type="number" step="0.05" min="0" data-f="cfgClear" value="'+fmt(S.cfg.clearance)+'"></div></div>'
+   +'<div class="row2"><div class="field"><label for="spCfgUp">Upright width in</label><input id="spCfgUp" type="number" step="0.05" min="0.5" data-f="cfgUp" value="'+fmt(S.cfg.upright)+'"></div><div class="field"><label for="spCfgFloor">Floor to hole 0, in</label><input id="spCfgFloor" type="number" step="0.5" data-f="cfgFloor" value="'+fmt(S.cfg.floor)+'"></div></div><p class="note">Hole numbers count up from the bottom, 1 in apart. Shelf thickness is a starting guess of ¾ in. Measure one board and enter it here. Hand room is the space left above the tallest product.</p></div></details></section>';
+  var keepScroll=el.parentElement.scrollTop;
+  el.innerHTML='<div style="display:grid;gap:12px;grid-template-columns:minmax(0,1fr)">'+h+'</div>';
+  el.parentElement.scrollTop=keepScroll;
+}
+function renderCatalog(){
+  var placed={};
+  S.sections.forEach(function(sec){sec.shelves.forEach(function(sh){sh.items.forEach(function(it){placed[it.pid]=(placed[it.pid]||0)+it.n*it.rows;});});});
+  var list=$('#spCatList'),st=list.scrollTop,q=ui.q;
+  var ps=S.products.filter(function(p){return (ui.filterCat==='All'||p.cat===ui.filterCat)&&(!q||(p.name+' '+p.brand).toLowerCase().indexOf(q)>=0);}).sort(function(a,b){return a.cat===b.cat?cmpColor(a,b):(a.cat<b.cat?-1:1);});
+  $('#spCatCount').textContent=ps.length+' of '+S.products.length;
+  list.innerHTML=ps.length?ps.map(function(p){
+    return '<div class="prow'+(ui.armed===p.id?' armed':'')+'" role="button" tabindex="0" data-pid="'+p.id+'" aria-pressed="'+(ui.armed===p.id)+'"><span class="sw" data-grab="'+p.id+'" style="background:'+p.hex+'"></span><div><div class="nm">'+esc(p.name)+'</div><div class="meta">'+esc(p.brand)+(p.brand?' · ':'')+fmt(p.w)+' × '+fmt(p.h)+' × '+fmt(p.d)+' in</div></div><div class="ct">'+(placed[p.id]?'×'+placed[p.id]+' ':'')+'<button class="btn" type="button" data-edit="'+p.id+'" aria-label="Edit '+esc(p.name)+'">Edit</button></div></div>';
+  }).join(''):'<p class="note">No products match. Clear the search or add one below.</p>';
+  list.scrollTop=st;
+  var ar=prod(ui.armed);
+  $('#spArmedBanner').innerHTML=ar?'<div class="banner"><span>Placing <b>'+esc(ar.name)+'</b>. Click a shelf to add it.</span><button class="btn" type="button" data-disarm="1">Done</button></div>':'';
+}
+function renderSheet(){
+  var html='',txt=[];
+  S.sections.forEach(function(sec){
+    var arr=sortedShelves(sec).slice().reverse();
+    html+='<div><h4 style="margin-bottom:6px">'+esc(sec.name)+'</h4><div class="tblwrap"><table><thead><tr><th>Hole</th><th>Gap</th><th>Used</th><th>Top to bottom, left to right</th></tr></thead><tbody>';
+    txt.push(sec.name.toUpperCase()+' ('+fmt(sec.w)+' in wide)');
+    arr.forEach(function(sh){
+      var i=shelfInfo(sec,sh);
+      var parts=sh.items.map(function(it){var p=prod(it.pid);return (p?p.name:'Missing')+' x'+it.n+(it.rows>1?' ('+it.rows+' deep)':'');});
+      html+='<tr class="'+(i.bad?'bad':'')+'"><td class="n">'+sh.hole+'</td><td class="n">'+fmt(i.gap)+' in</td><td class="n">'+fmt(i.used)+'/'+fmt(sec.w)+'</td><td>'+(parts.length?esc(parts.join(', ')):'<span class="meta">empty</span>')+'</td></tr>';
+      txt.push('  Hole '+sh.hole+' (gap '+fmt(i.gap)+' in, '+fmt(i.used)+'/'+fmt(sec.w)+' in used)'+(i.bad?' [PROBLEM]':'')+': '+(parts.join(', ')||'empty'));
+    });
+    html+='</tbody></table></div></div>';txt.push('');
+  });
+  $('#spSheetBody').innerHTML='<div style="display:grid;gap:12px;grid-template-columns:minmax(0,1fr)">'+html+'</div>';
+  $('#spSheetText').value=txt.join('\n');
+}
+function renderAll(){renderStats();renderWall();renderInspector();renderCatalog();renderSheet();}
+function refreshSel(){renderWall();renderInspector();}
+
+/* ---------- toast ---------- */
+var toastT=null;
+function toast(m){var t=$('#spToast');t.textContent=m;t.style.display='block';clearTimeout(toastT);toastT=setTimeout(function(){t.style.display='none';},4200);}
+
+/* ---------- selection and drag ---------- */
+function clickTarget(t){
+  if(t.kind==='sec'){ui.sec=t.sec;ui.shelf=null;ui.item=null;refreshSel();return;}
+  var sec=secById(t.sec),sh=shelfById(sec,t.shelf);if(!sec||!sh)return;
+  if(ui.armed){
+    var idx=t.kind==='item'?int(t.idx,0)+1:sh.items.length,pid=ui.armed,at=0;
+    mutate(function(){at=addItem(sec,sh,idx,pid);ui.sec=sec.id;ui.shelf=sh.id;ui.item=at;});return;
+  }
+  ui.sec=sec.id;ui.shelf=sh.id;ui.item=t.kind==='item'?int(t.idx,0):null;refreshSel();
+}
+function widthBefore(sh,index){var w=0;for(var i=0;i<index&&i<sh.items.length;i++){var p=prod(sh.items[i].pid);w+=sh.items[i].n*(p?p.w:3);}return w;}
+function hitTest(x,y){
+  var s=zoom(),L=layout();
+  for(var k=0;k<L.secs.length;k++){
+    var e=L.secs[k];
+    if(x>=e.ix&&x<=e.ix+e.sec.w*s){
+      var arr=sortedShelves(e.sec);if(!arr.length)return null;
+      var inch=CEIL-(y-TOPPAD)/s,best=null,bd=1e9;
+      arr.forEach(function(sh){var info=shelfInfo(e.sec,sh),lo=sh.hole-S.cfg.thick,hi=Math.max(info.ceil,sh.hole+2),d=(inch>=lo&&inch<=hi)?0:Math.min(Math.abs(inch-lo),Math.abs(inch-hi));if(d<bd){bd=d;best=sh;}});
+      if(!best||bd>6)return null;
+      var rel=(x-e.ix)/s,acc=0,idx=0;
+      best.items.forEach(function(it,i){var p=prod(it.pid),w=it.n*(p?p.w:3);if(rel>acc+w/2)idx=i+1;acc+=w;});
+      return {sec:e.sec,sh:best,index:idx,ix:e.ix};
+    }
+  }
+  return null;
+}
+function showGhost(h){
+  var g=$('#spGhost');if(!g)return;
+  if(!h){g.innerHTML='';return;}
+  var s=zoom(),info=shelfInfo(h.sec,h.sh),x=h.ix+widthBefore(h.sh,h.index)*s,top=yOf(Math.max(info.ceil,h.sh.hole+4)),bot=yOf(h.sh.hole);
+  g.innerHTML='<rect class="gbay" x="'+h.ix+'" y="'+top+'" width="'+(h.sec.w*s)+'" height="'+(bot-top+S.cfg.thick*s)+'"/><line class="gline" x1="'+x+'" x2="'+x+'" y1="'+top+'" y2="'+bot+'"/>';
+}
+var drag=null;
+function pointOnWall(e){var svg=$('#spWallSvg');if(!svg)return null;var r=svg.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
+function startTracking(){document.addEventListener('pointermove',onMove);document.addEventListener('pointerup',onUp);document.addEventListener('pointercancel',onCancel);}
+function stopTracking(){document.removeEventListener('pointermove',onMove);document.removeEventListener('pointerup',onUp);document.removeEventListener('pointercancel',onCancel);$('#spChip').style.display='none';showGhost(null);}
+function onMove(e){
+  if(!drag)return;
+  if(!drag.moved&&Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)<6)return;
+  if(drag.kind==='wall'&&(drag.type==='touch'||drag.t.kind!=='item'))return;
+  drag.moved=true;
+  var chip=$('#spChip');chip.textContent=drag.label;chip.style.display='block';chip.style.left=(e.clientX+14)+'px';chip.style.top=(e.clientY+14)+'px';
+  var pt=pointOnWall(e);drag.hit=pt?hitTest(pt.x,pt.y):null;showGhost(drag.hit);
+}
+function onCancel(){drag=null;stopTracking();}
+function onUp(e){
+  var d=drag;drag=null;stopTracking();if(!d)return;
+  if(d.moved&&d.hit){
+    var hit=d.hit;
+    if(d.kind==='cat'){var pid=d.pid,at=0;mutate(function(){at=addItem(hit.sec,hit.sh,hit.index,pid);ui.sec=hit.sec.id;ui.shelf=hit.sh.id;ui.item=at;});}
+    else{
+      var ssec=secById(d.t.sec),ssh=shelfById(ssec,d.t.shelf),sidx=int(d.t.idx,0);
+      if(ssh&&ssh.items[sidx])mutate(function(){moveItem(ssh,sidx,hit.sec,hit.sh,hit.index);});
+    }
+    return;
+  }
+  if(!d.moved&&d.kind==='wall'&&Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<8)clickTarget(d.t);
+}
+
+/* ---------- events ---------- */
+function bind(){
+  var wall=$('#spWallwrap');
+  wall.addEventListener('pointerdown',function(e){
+    if(e.button!==0)return;
+    var el=e.target.closest('[data-kind]');if(!el)return;
+    var t={kind:el.getAttribute('data-kind'),sec:el.getAttribute('data-sec'),shelf:el.getAttribute('data-shelf'),idx:el.getAttribute('data-idx')};
+    var label='';
+    if(t.kind==='item'){var sh=shelfById(secById(t.sec),t.shelf),it=sh&&sh.items[int(t.idx,0)],p=it&&prod(it.pid);label=p?p.name:'Product';}
+    drag={kind:'wall',t:t,x0:e.clientX,y0:e.clientY,moved:false,type:e.pointerType,label:label,hit:null};
+    startTracking();
+  });
+  $('#spCatList').addEventListener('pointerdown',function(e){
+    var g=e.target.closest('[data-grab]');if(!g||e.button!==0||e.pointerType==='touch')return;
+    var p=prod(g.getAttribute('data-grab'));if(!p)return;
+    drag={kind:'cat',pid:p.id,x0:e.clientX,y0:e.clientY,moved:false,label:p.name,hit:null};startTracking();
+  });
+  $('#spCatList').addEventListener('click',function(e){
+    if(drag&&drag.moved)return;
+    var ed=e.target.closest('[data-edit]');if(ed){openEdit(ed.getAttribute('data-edit'));e.stopPropagation();return;}
+    var r=e.target.closest('[data-pid]');if(!r)return;
+    var id=r.getAttribute('data-pid');ui.armed=ui.armed===id?null:id;renderCatalog();
+  });
+  $('#spCatList').addEventListener('keydown',function(e){
+    if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-pid]')){e.preventDefault();var id=e.target.getAttribute('data-pid');ui.armed=ui.armed===id?null:id;renderCatalog();}
+  });
+  $('#spArmedBanner').addEventListener('click',function(e){if(e.target.closest('[data-disarm]')){ui.armed=null;renderCatalog();}});
+  $('#spCatSearch').addEventListener('input',function(e){ui.q=e.target.value.trim().toLowerCase();renderCatalog();});
+  $('#spCatFilter').addEventListener('change',function(e){ui.filterCat=e.target.value;renderCatalog();});
+  $('#spUndoBtn').addEventListener('click',undo);
+  $('#spFitAllBtn').addEventListener('click',function(){var free=[];mutate(function(){S.sections.forEach(function(s){free.push(fitSection(s));});});toast('Shelves now fit their products. Most free space left at a section top: '+fmt(Math.max.apply(null,free))+' in.');});
+  $('#spAddSecBtn').addEventListener('click',function(){
+    mutate(function(){var last=S.sections[S.sections.length-1];var n={id:uid(),name:'Section '+(S.sections.length+1),w:last.w,depth:last.depth,shelves:last.shelves.map(function(sh){return {id:uid(),hole:sh.hole,items:[]};})};S.sections.push(n);ui.sec=n.id;ui.shelf=null;ui.item=null;});
+  });
+  $('#spZoom').addEventListener('input',function(e){setZoom(int(e.target.value,10));});
+  $('#spFitWidthBtn').addEventListener('click',function(){
+    var total=0;S.sections.forEach(function(s){total+=s.w+S.cfg.upright;});total+=S.cfg.upright;
+    setZoom(clamp(Math.floor(($('#spWallwrap').clientWidth-GUT-PADR-2)/total),4,20));
+  });
+  $('#spEyeToggle').addEventListener('change',function(e){ui.eye=e.target.checked;renderWall();});
+  $('#spCopySheetBtn').addEventListener('click',function(){
+    var t=$('#spSheetText').value;
+    function fallback(){$('#spSheetTextWrap').open=true;var ta=$('#spSheetText');ta.focus();ta.select();toast('Select and copy the text shown below.');}
+    try{navigator.clipboard.writeText(t).then(function(){toast('Stocking sheet copied.');},fallback);}catch(err){fallback();}
+  });
+  var ins=$('#spInspector');
+  ins.addEventListener('toggle',function(e){var d=e.target;if(d&&d.getAttribute&&d.getAttribute('data-d')==='rb')ui.rb.open=d.open;},true);
+  ins.addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]');if(!b)return;
+    var act=b.getAttribute('data-act'),d=int(b.getAttribute('data-d'),0),sec=curSec(),sh=shelfById(sec,ui.shelf),it=sh&&ui.item!=null?sh.items[ui.item]:null;
+    if(act==='pick'){ui.item=int(b.getAttribute('data-idx'),0);refreshSel();return;}
+    if(act==='rainbow'){rainbow();return;}
+    if(act==='sec-fit'){var free=0;mutate(function(){free=fitSection(sec);});toast('Shelves fit. '+fmt(free)+' in free at the top of '+sec.name+'.');return;}
+    if(act==='sec-addshelf'){mutate(function(){var n={id:uid(),hole:nextShelfHole(sec),items:[]};sec.shelves.push(n);ui.shelf=n.id;ui.item=null;});return;}
+    if(act==='sec-del'){mutate(function(){S.sections=S.sections.filter(function(s){return s.id!==sec.id;});ui.sec=S.sections[0].id;ui.shelf=null;ui.item=null;});return;}
+    if(act==='hole'&&sh){mutate(function(){sh.hole=clamp(sh.hole+d,1,UPPER);});return;}
+    if(act==='shelf-clear'&&sh){mutate(function(){sh.items=[];ui.item=null;});return;}
+    if(act==='shelf-del'&&sh){mutate(function(){sec.shelves=sec.shelves.filter(function(x){return x!==sh;});ui.shelf=null;ui.item=null;});return;}
+    if(!it||!sh)return;
+    var idx=ui.item;
+    if(act==='item-n')mutate(function(){it.n=Math.max(1,it.n+d);});
+    else if(act==='item-rows')mutate(function(){it.rows=Math.max(1,it.rows+d);});
+    else if(act==='item-del')mutate(function(){sh.items.splice(idx,1);ui.item=null;});
+    else if(act==='item-left'&&idx>0)mutate(function(){var t=sh.items[idx-1];sh.items[idx-1]=sh.items[idx];sh.items[idx]=t;ui.item=idx-1;});
+    else if(act==='item-right'&&idx<sh.items.length-1)mutate(function(){var t=sh.items[idx+1];sh.items[idx+1]=sh.items[idx];sh.items[idx]=t;ui.item=idx+1;});
+    else if(act==='item-up'||act==='item-down'){
+      var arr=sortedShelves(sec),pos=arr.indexOf(sh),to=arr[act==='item-up'?pos+1:pos-1];
+      if(!to){toast('There is no shelf '+(act==='item-up'?'above':'below')+'.');return;}
+      mutate(function(){moveItem(sh,idx,sec,to,to.items.length);});
+    }
+  });
+  ins.addEventListener('change',function(e){
+    var f=e.target.getAttribute&&e.target.getAttribute('data-f');if(!f)return;
+    var sec=curSec(),v=e.target.value;
+    if(f==='rbCat'){ui.rb.cat=v;return;}
+    if(f==='rbScope'){ui.rb.scope=v;return;}
+    if(f==='rbN'){ui.rb.n=clamp(int(v,1),1,8);return;}
+    if(f==='rbRows'){ui.rb.rows=clamp(int(v,1),1,6);return;}
+    if(f==='rbFit'){ui.rb.fit=e.target.checked;return;}
+    mutate(function(){
+      if(f==='secName')sec.name=v.trim()||sec.name;
+      else if(f==='secW')sec.w=clamp(num(v,sec.w),6,120);
+      else if(f==='secD')sec.depth=clamp(num(v,sec.depth),3,60);
+      else if(f==='cfgThick')S.cfg.thick=clamp(num(v,S.cfg.thick),0.1,3);
+      else if(f==='cfgClear')S.cfg.clearance=clamp(num(v,S.cfg.clearance),0,12);
+      else if(f==='cfgUp')S.cfg.upright=clamp(num(v,S.cfg.upright),0.5,6);
+      else if(f==='cfgFloor')S.cfg.floor=clamp(num(v,S.cfg.floor),-24,48);
+    });
+  });
+  document.addEventListener('keydown',function(e){
+    if(!ROOT||!ROOT.offsetParent)return;
+    var tag=(e.target.tagName||'').toLowerCase(),typing=tag==='input'||tag==='textarea'||tag==='select';
+    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'&&!typing){e.preventDefault();undo();return;}
+    if(e.key==='Escape'){if(ui.armed){ui.armed=null;renderCatalog();}else{ui.shelf=null;ui.item=null;refreshSel();}return;}
+    if((e.key==='Delete'||e.key==='Backspace')&&!typing&&ui.shelf&&ui.item!=null){
+      var sec=curSec(),sh=shelfById(sec,ui.shelf);if(sh&&sh.items[ui.item]){e.preventDefault();mutate(function(){sh.items.splice(ui.item,1);ui.item=null;});}
+    }
+  });
+  $('#spPfAdd').addEventListener('click',function(){var p=readForm();if(!p)return;mutate(function(){S.products.push(p);});resetForm();toast(p.name+' added to the catalog.');});
+  $('#spPfSave').addEventListener('click',function(){var p=readForm();if(!p||!ui.editId)return;mutate(function(){var o=prod(ui.editId);if(o){p.id=o.id;Object.assign(o,p);}});resetForm();});
+  $('#spPfCancel').addEventListener('click',resetForm);
+  $('#spPfDelete').addEventListener('click',function(){
+    if(!ui.editId)return;var id=ui.editId;
+    mutate(function(){S.products=S.products.filter(function(p){return p.id!==id;});S.sections.forEach(function(sec){sec.shelves.forEach(function(sh){sh.items=sh.items.filter(function(it){return it.pid!==id;});});});if(ui.armed===id)ui.armed=null;ui.item=null;});
+    resetForm();toast('Product deleted and removed from shelves.');
+  });
+  $('#spQaBtn').addEventListener('click',function(){
+    var base=readForm(true);if(!base)return;var lines=$('#spQaText').value.split('\n'),added=[],bad=[];
+    lines.forEach(function(ln){
+      ln=ln.trim();if(!ln)return;var i=ln.lastIndexOf(','),name=i>0?ln.slice(0,i).trim():ln,col=i>0?ln.slice(i+1).trim():'';
+      var hex=col?cssToHex(col):base.hex;if(!hex){bad.push(name);hex=base.hex;}
+      added.push(Object.assign({},base,{id:uid(),name:name,hex:hex}));
+    });
+    if(!added.length){toast('Type one product per line first.');return;}
+    mutate(function(){added.forEach(function(p){S.products.push(p);});});
+    $('#spQaText').value='';toast('Added '+added.length+' products'+(bad.length?'. Could not read the color for: '+bad.join(', ')+'.':'.'));
+  });
+}
+function readForm(allowEmptyName){
+  var name=$('#spPfName').value.trim();
+  if(!name&&!allowEmptyName){toast('Give the product a name first.');return null;}
+  return {id:uid(),name:name,brand:$('#spPfBrand').value.trim(),cat:$('#spPfCat').value,hex:$('#spPfColor').value,w:Math.max(0.2,num($('#spPfW').value,3.1)),h:Math.max(0.2,num($('#spPfH').value,3.9)),d:Math.max(0.2,num($('#spPfD').value,2.2))};
+}
+function openEdit(id){
+  var p=prod(id);if(!p)return;ui.editId=id;
+  $('#spPfName').value=p.name;$('#spPfBrand').value=p.brand;$('#spPfColor').value=p.hex.length===7?p.hex:'#888888';$('#spPfCat').value=p.cat;$('#spPfW').value=p.w;$('#spPfH').value=p.h;$('#spPfD').value=p.d;
+  $('#spPfAdd').hidden=true;$('#spPfSave').hidden=false;$('#spPfCancel').hidden=false;$('#spPfDelete').hidden=false;$('#spPfSummary').textContent='Editing '+p.name;
+  $('#spPfDetails').open=true;$('#spPfName').focus();
+}
+function resetForm(){
+  ui.editId=null;$('#spPfName').value='';$('#spPfAdd').hidden=false;$('#spPfSave').hidden=true;$('#spPfCancel').hidden=true;$('#spPfDelete').hidden=true;$('#spPfSummary').textContent='Add or edit a product';
+}
+function setZoom(z){ui.zoom=clamp(z,4,20);$('#spZoom').value=ui.zoom;$('#spZoomVal').textContent=ui.zoom+' px/in';try{localStorage.setItem(KEYZ,String(ui.zoom));}catch(e){}renderWall();}
+
+/* ---------- boot ---------- */
+var started=false;
+function init(){
+  ROOT=document.getElementById('shelfPlannerApp');
+  var opts=CATS.map(function(c){return '<option>'+c+'</option>';}).join('');
+  $('#spPfCat').innerHTML=opts;
+  $('#spCatFilter').innerHTML='<option>All</option>'+opts;
+  try{var raw=localStorage.getItem(KEY);if(raw){S=normalize(JSON.parse(raw));}}catch(e){}
+  try{var z=parseInt(localStorage.getItem(KEYZ),10);if(z)ui.zoom=clamp(z,4,20);else ui.zoom=window.innerWidth<700?8:10;}catch(e){ui.zoom=window.innerWidth<700?8:10;}
+  ui.sec=S.sections[0].id;
+  $('#spZoom').value=ui.zoom;$('#spZoomVal').textContent=ui.zoom+' px/in';
+  bind();renderAll();setStatus(persistLocal()?'saved':'error');
+}
+// Called each time the tab is shown: set up once, then just redraw.
+window.showShelfPlanner=function(){if(!started){started=true;init();}else{renderAll();}};
+})();
 
         // ============== SLEEVE WALL ==============
         // A rainbow layout of Dragon Shield sleeve colors for the wall.
