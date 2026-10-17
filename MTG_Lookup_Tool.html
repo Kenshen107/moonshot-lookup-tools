@@ -6761,6 +6761,48 @@
         }
 
 
+        /* Sleeve Wall tab. The swatch colors are set inline from the sleeve
+           data (fixed hex values that copy the real sleeves); everything
+           else uses the theme tokens. */
+        .sl-note { max-width: 760px; margin: 0 auto 16px; padding: 10px 14px; border: 1px solid var(--color-warning); border-radius: var(--radius-md); color: var(--text-soft); font-size: 0.9em; line-height: 1.5; background: var(--bg-inset); }
+        .sl-chips { justify-content: center; margin-bottom: 12px; }
+        .sl-bar { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; justify-content: center; margin: 0 0 16px; font-size: 0.9em; color: var(--text-soft); }
+        .sl-check { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+        .sl-line { margin: 0 0 22px; }
+        .sl-line h3 { margin: 0 0 10px; font-size: 1.1em; color: var(--text-heading); }
+        .sl-count { font-size: 0.8em; color: var(--text-secondary); font-weight: normal; margin-left: 6px; }
+        .sl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 12px 10px; }
+        .sl-tile { text-align: center; }
+        .sl-swatch { position: relative; display: block; width: 100%; aspect-ratio: 5 / 7; border: 2px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.12); }
+        .sl-swatch:hover, .sl-swatch:focus-visible { border-color: var(--brand-light); outline: none; }
+        .sl-flag { position: absolute; left: 0; right: 0; bottom: 6px; font-size: 0.72em; font-weight: bold; letter-spacing: 0.04em; color: #fff; text-shadow: 0 0 3px #000, 0 0 3px #000; }
+        .sl-out .sl-swatch { opacity: 0.45; }
+        .sl-gone .sl-swatch { opacity: 0.2; border-style: dashed; }
+        .sl-gone .sl-name, .sl-out .sl-name { color: var(--text-muted); }
+        .sl-name { margin-top: 5px; font-size: 0.85em; color: var(--text-primary); line-height: 1.25; }
+        .sl-remove { margin-top: 3px; background: none; border: none; color: var(--color-link); font-size: 0.8em; cursor: pointer; text-decoration: underline; }
+        .sl-empty { color: var(--text-secondary); font-size: 0.9em; }
+        .sl-add { max-width: 760px; margin: 8px auto; color: var(--text-soft); font-size: 0.9em; }
+        .sl-add summary { cursor: pointer; }
+        .sl-add-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+        .sl-add-row input[type=text] { flex: 1 1 200px; }
+        .sl-foot { text-align: center; margin-top: 12px; }
+        .sl-btn { width: auto; margin: 0; padding: 7px 14px; font-size: 0.85em; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; }
+        .sl-btn:hover { border-color: var(--brand-light); }
+        #slPrintArea { display: none; }
+        @media print {
+            body.sl-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
+            body.sl-printing > *:not(#slPrintArea) { display: none !important; }
+            body.sl-printing #slPrintArea { display: block; color: #000; font-family: sans-serif; padding: 0.3in; }
+            #slPrintArea h1 { font-size: 18pt; margin: 0 0 4px; }
+            #slPrintArea p { font-size: 9pt; margin: 0 0 10px; color: #444; }
+            #slPrintArea h2 { font-size: 13pt; margin: 12px 0 6px; }
+            .slp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(0.95in, 1fr)); gap: 8px; }
+            .slp-tile { text-align: center; font-size: 8.5pt; break-inside: avoid; }
+            .slp-tile.out { opacity: 0.55; }
+            .slp-sw { aspect-ratio: 5 / 7; border: 1px solid #666; border-radius: 3px; margin-bottom: 3px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+
         /* About Moonshot Games panel and the fan-made note */
         .values-intro { color: var(--text-soft); font-size: 0.9em; margin: 4px 0 12px; line-height: 1.5; }
         .values-stores { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 16px; font-size: 0.9em; line-height: 1.5; margin-bottom: 14px; }
@@ -8703,6 +8745,7 @@
             </div>
             <div id="caseMapResults"></div>
         </div>
+        <div id="sleevesApp" style="display:none;"></div>
     </div>
 
     <!-- Image lightbox -->
@@ -8857,6 +8900,7 @@
             judge:        { appId: 'judgeApp',        icon: '⚖️', navLabel: 'Judge Ref',       title: '⚖️ Judge Quick-Reference', desc: 'Quick rules answers, common myths and the layer system', keywords: 'rules ruling judge layers stack myths', onShow: showJudgeTab },
             setprimer:    { appId: 'setPrimerApp',    icon: '🎁', navLabel: 'Set Primer',      title: '🎁 Set Primer', desc: 'A set at a glance: its cards by rarity, top picks and bonus sheets', keywords: 'set new release cards primer' },
             grading:      { appId: 'gradingApp',      icon: '🔍', navLabel: 'Grading & Fakes', title: '🔍 Grading & Spotting Fakes', desc: 'Card grading basics and how to spot counterfeits', keywords: 'grade psa bgs fake counterfeit condition' },
+            sleeves:      { appId: 'sleevesApp',    icon: '🎨', navLabel: 'Sleeve Wall',     title: '🎨 Sleeve Wall', desc: 'Dragon Shield sleeve colors in rainbow order, for laying out the wall', keywords: 'dragon shield sleeves colors rainbow wall layout matte classic dual', onShow: renderSleeves },
             quiz:         { appId: 'quizApp',         icon: '🧠', navLabel: 'Card Quiz',       title: '🧠 Card Quiz', desc: 'Practice card knowledge, prices and the case map', keywords: 'quiz practice train learn test', onShow: showQuizTab }
         };
 
@@ -9024,7 +9068,7 @@
         // quick-jump search, are built from NAV_GROUPS + APP_VIEWS, so a new
         // tool only needs adding in those two places.
         const NAV_GROUPS = [
-            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap'] },
+            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap', 'sleeves'] },
             { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'prerelease', 'valuevintage', 'judge'] },
             { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'grading', 'quiz'] }
         ];
@@ -15586,6 +15630,161 @@
             Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => window.print());
         }
 
+
+        // ============== SLEEVE WALL ==============
+        // A rainbow layout of Dragon Shield sleeve colors for the wall.
+        // Dragon Shield's site can't be reached from Claude's environment, so
+        // the list was put together from retailer listings (Card Kingdom,
+        // Asmodee, eBay and others, checked 2026-10-17) and is NOT checked
+        // against Dragon Shield's own list. Staff fix it on the page: mark a
+        // color out of stock or not carried, and add anything missing. The
+        // swatch colors are fixed, approximate hex values that copy the real
+        // sleeves (like the foil sheens), so they don't use the theme tokens.
+        const SLEEVES_AS_OF = '2026-10-17';
+        const SLEEVE_LINES = [
+            { key: 'matte',   label: 'Matte' },
+            { key: 'classic', label: 'Classic' },
+            { key: 'dual',    label: 'Dual Matte' },
+            { key: 'other',   label: 'Perspex / Non-Glare / Art' }
+        ];
+        // [line, name, swatch hex, second hex for two-color sleeves (inside color)]
+        const DS_SLEEVES = [
+            ['matte', 'Black', '#1c1c1e'], ['matte', 'Jet', '#0f0f10'], ['matte', 'White', '#f2f2f2'], ['matte', 'Ivory', '#efe6cf'],
+            ['matte', 'Silver', '#b8bcc2'], ['matte', 'Gold', '#d4a82a'], ['matte', 'Copper', '#b5642e'], ['matte', 'Ruby', '#b0123a'],
+            ['matte', 'Crimson', '#8f1d2c'], ['matte', 'Blood Red', '#7a0f12'], ['matte', 'Red', '#d0242a'], ['matte', 'Magenta', '#b0176f'],
+            ['matte', 'Pink Diamond', '#f2a1c8'], ['matte', 'Orange', '#ef7d1a'], ['matte', 'Amber', '#e0a23a'], ['matte', 'Lime', '#8fd13a'],
+            ['matte', 'Apple Green', '#86c440'], ['matte', 'Olive', '#6b7a2a'], ['matte', 'Forest Green', '#1f5a33'], ['matte', 'Emerald', '#0b8a5a'],
+            ['matte', 'Turquoise', '#1fb5ad'], ['matte', 'Petrol', '#1d5e6b'], ['matte', 'Sky Blue', '#6cb8e8'], ['matte', 'Blue', '#1f5fbf'],
+            ['matte', 'Sapphire', '#123a8c'], ['matte', 'Midnight Blue', '#14214f'], ['matte', 'Aurora', '#7ad3c1'], ['matte', 'Purple', '#6b2fa0'],
+            ['matte', 'Amethyst', '#8e5bc4'], ['matte', 'Clear', '#dfe9ee'],
+            ['classic', 'Black', '#1c1c1e'], ['classic', 'White', '#f2f2f2'], ['classic', 'Silver', '#b8bcc2'], ['classic', 'Gold', '#d4a82a'],
+            ['classic', 'Copper', '#b5642e'], ['classic', 'Brown', '#6b4426'], ['classic', 'Crimson', '#8f1d2c'], ['classic', 'Red', '#d0242a'],
+            ['classic', 'Tangerine', '#f07a1a'], ['classic', 'Orange', '#ef7d1a'], ['classic', 'Yellow', '#f2d230'], ['classic', 'Green', '#2e9a4a'],
+            ['classic', 'Turquoise', '#1fb5ad'], ['classic', 'Fusion', '#3aa6c8'], ['classic', 'Blue', '#1f5fbf'], ['classic', 'Purple', '#6b2fa0'],
+            ['classic', 'Pink', '#ee86b6'], ['classic', 'Clear', '#dfe9ee'],
+            ['dual', 'Snow', '#f2f4f7', '#c9d1da'], ['dual', 'Lightning', '#f2d230', '#7aa2f0'], ['dual', 'Lagoon', '#1f9cb0', '#8fe0e8'],
+            ['dual', 'Eucalyptus', '#5aa78a', '#cfe8d8'], ['dual', 'Orchid', '#b27bd6', '#f0d3f5'], ['dual', 'Peach', '#f6a98a', '#fde0cf'],
+            ['dual', 'Crypt', '#2a2630', '#6f6a7a'], ['dual', 'Glacier', '#a9d6ee', '#eef8fd'], ['dual', 'Nebula & Silver', '#5a3d9a', '#b8bcc2'],
+            ['dual', 'Yellow & Silver', '#f2d230', '#b8bcc2'], ['dual', 'Crimson & Silver', '#8f1d2c', '#b8bcc2'], ['dual', 'Apple Green & Silver', '#86c440', '#b8bcc2'],
+            ['dual', 'Sky Blue & Silver', '#6cb8e8', '#b8bcc2'], ['dual', 'Soul & Petrol', '#8a4fc0', '#1d5e6b'], ['dual', 'Power & Copper', '#2a9a78', '#b5642e'],
+            ['other', 'Perspex (clear)', '#dfe9ee'], ['other', 'Non-Glare (clear)', '#e6edf1']
+        ].map(([line, name, hex, hex2]) => ({ id: `${line}:${name}`, line, name, hex, hex2: hex2 || null, custom: false }));
+        const SLEEVE_STATUS = { active: 'Active', out: 'Out of stock', gone: 'Not carried' };
+        const sleeveUI = { line: 'all', showAll: false };
+
+        function sleeveStore() {
+            try { const s = JSON.parse(localStorage.getItem('dsSleeves') || 'null'); if (s && typeof s === 'object') return { status: s.status || {}, custom: Array.isArray(s.custom) ? s.custom : [] }; } catch (e) { /* private window or blocked storage */ }
+            return { status: {}, custom: [] };
+        }
+        function sleeveSave(s) { try { localStorage.setItem('dsSleeves', JSON.stringify(s)); } catch (e) { /* the page still works without saving */ } }
+        function allSleeves() { return [...DS_SLEEVES, ...sleeveStore().custom.map(c => ({ ...c, custom: true }))]; }
+        function sleeveStatus(id) { return sleeveStore().status[id] || 'active'; }
+
+        // Rainbow order: colors by hue from red round to pink, then the
+        // neutrals (white to black) at the end. Two-color sleeves sort by their outside color.
+        function sleeveSortKey(hex) {
+            const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+            const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+            const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+            let h = 0;
+            if (d) { h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = (h * 60 + 360) % 360; }
+            const neutral = s < 0.18 || l < 0.1 || l > 0.85;
+            return neutral ? [1, 1 - l, 0] : [0, h >= 338 ? h - 360 : h, l];
+        }
+        function sleeveCompare(a, b) {
+            const x = sleeveSortKey(a.hex), y = sleeveSortKey(b.hex);
+            return x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || a.name.localeCompare(b.name);
+        }
+        function sleeveSwatchStyle(sl) {
+            return sl.hex2 ? `background:linear-gradient(135deg, ${sl.hex} 0 58%, ${sl.hex2} 58% 100%)` : `background:${sl.hex}`;
+        }
+        function sleeveVisible(sl) {
+            if (sleeveUI.line !== 'all' && sl.line !== sleeveUI.line) return false;
+            return sleeveUI.showAll || sleeveStatus(sl.id) !== 'gone';
+        }
+        function renderSleeves() {
+            const root = document.getElementById('sleevesApp');
+            if (!root) return;
+            const store = sleeveStore();
+            const list = allSleeves();
+            const counts = { active: 0, out: 0, gone: 0 };
+            list.forEach(sl => { counts[store.status[sl.id] || 'active']++; });
+            const lineChips = [{ key: 'all', label: 'All lines' }, ...SLEEVE_LINES].map(l =>
+                `<button type="button" class="guide-tab${sleeveUI.line === l.key ? ' active' : ''}" onclick="sleeveSetLine('${l.key}')">${l.label}</button>`).join('');
+            const lines = (sleeveUI.line === 'all' ? SLEEVE_LINES : SLEEVE_LINES.filter(l => l.key === sleeveUI.line));
+            const sections = lines.map(l => {
+                const items = list.filter(sl => sl.line === l.key && sleeveVisible(sl)).sort(sleeveCompare);
+                const tiles = items.map(sl => {
+                    const st = store.status[sl.id] || 'active';
+                    return `<div class="sl-tile sl-${st}">
+                        <button type="button" class="sl-swatch" style="${sleeveSwatchStyle(sl)}" onclick="sleeveCycle('${sl.id.replace(/'/g, "\\'")}')" aria-label="${escapeAttr(sl.name)}: ${SLEEVE_STATUS[st]}. Tap to change."><span class="sl-flag">${st === 'out' ? 'OUT' : st === 'gone' ? 'NOT CARRIED' : ''}</span></button>
+                        <div class="sl-name">${escapeAttr(sl.name)}</div>
+                        ${sl.custom ? `<button type="button" class="sl-remove" onclick="sleeveRemoveCustom('${sl.id.replace(/'/g, "\\'")}')" aria-label="Remove ${escapeAttr(sl.name)}">Remove</button>` : ''}
+                    </div>`;
+                }).join('');
+                return `<section class="sl-line"><h3>${l.label} <span class="sl-count">${items.length}</span></h3>${tiles ? `<div class="sl-grid">${tiles}</div>` : '<div class="sl-empty">Nothing here.</div>'}</section>`;
+            }).join('');
+            root.innerHTML = `
+                <div class="formats-intro">A rainbow layout of the Dragon Shield sleeve colors, so the wall can always be laid out in the same order. Tap a color to cycle it: Active, Out of stock, Not carried. Your changes are saved on this device only.</div>
+                <div class="sl-note">⚠️ This list is <b>unverified</b>. Dragon Shield's own site can't be reached from here, so it was put together from retailer listings on ${SLEEVES_AS_OF} and can be out of date. Fix it as you go: mark what you don't carry and add anything missing. Swatch colors are approximate.</div>
+                <div class="guide-tabs sl-chips">${lineChips}</div>
+                <div class="sl-bar">
+                    <span class="sl-stats"><b>${counts.active}</b> active · ${counts.out} out of stock · ${counts.gone} not carried</span>
+                    <label class="sl-check"><input type="checkbox" ${sleeveUI.showAll ? 'checked' : ''} onchange="sleeveToggleAll(this.checked)"> Show colors I don't carry</label>
+                    <button type="button" class="sl-btn" onclick="printSleeveWall()">🖨️ Print the wall</button>
+                </div>
+                ${sections}
+                <details class="sl-add"><summary>➕ Add a sleeve color</summary>
+                    <div class="sl-add-row">
+                        <input type="text" id="slAddName" class="text-input" placeholder="Name (e.g. Matte Lavender)" maxlength="40" aria-label="New sleeve name">
+                        <select id="slAddLine" class="text-input" aria-label="Line">${SLEEVE_LINES.map(l => `<option value="${l.key}">${l.label}</option>`).join('')}</select>
+                        <input type="color" id="slAddHex" value="#7a4fc0" aria-label="Swatch color">
+                        <button type="button" class="sl-btn" onclick="sleeveAdd()">Add</button>
+                    </div>
+                </details>
+                <div class="sl-foot"><button type="button" class="sl-btn" onclick="sleeveReset()">Reset my changes</button></div>`;
+        }
+        function sleeveSetLine(k) { sleeveUI.line = k; renderSleeves(); }
+        function sleeveToggleAll(v) { sleeveUI.showAll = !!v; renderSleeves(); }
+        function sleeveCycle(id) {
+            const s = sleeveStore(), order = ['active', 'out', 'gone'], cur = s.status[id] || 'active';
+            const next = order[(order.indexOf(cur) + 1) % order.length];
+            if (next === 'active') delete s.status[id]; else s.status[id] = next;
+            sleeveSave(s); renderSleeves();
+        }
+        function sleeveAdd() {
+            const name = document.getElementById('slAddName').value.trim();
+            if (!name) { document.getElementById('slAddName').focus(); return; }
+            const line = document.getElementById('slAddLine').value, hex = document.getElementById('slAddHex').value;
+            const s = sleeveStore();
+            s.custom.push({ id: `custom:${Date.now()}`, line, name, hex, hex2: null });
+            sleeveSave(s); renderSleeves();
+        }
+        function sleeveRemoveCustom(id) {
+            const s = sleeveStore(); s.custom = s.custom.filter(c => c.id !== id); delete s.status[id]; sleeveSave(s); renderSleeves();
+        }
+        function sleeveReset() {
+            if (!confirm('Reset the sleeve wall to the starting list? This removes your changes on this device.')) return;
+            try { localStorage.removeItem('dsSleeves'); } catch (e) { /* nothing saved */ }
+            renderSleeves();
+        }
+        // Printing: each line in rainbow order, active colors only (out of stock ones are marked), on a landscape page.
+        function printSleeveWall() {
+            const store = sleeveStore();
+            let area = document.getElementById('slPrintArea'); if (area) area.remove();
+            area = document.createElement('div'); area.id = 'slPrintArea';
+            const lines = (sleeveUI.line === 'all' ? SLEEVE_LINES : SLEEVE_LINES.filter(l => l.key === sleeveUI.line));
+            area.innerHTML = `<h1>Dragon Shield sleeve wall</h1><p>Rainbow order. Printed ${new Date().toLocaleDateString()}. Fan-made layout list, not checked against Dragon Shield's own list.</p>` + lines.map(l => {
+                const items = allSleeves().filter(sl => sl.line === l.key && (store.status[sl.id] || 'active') !== 'gone').sort(sleeveCompare);
+                if (!items.length) return '';
+                return `<h2>${l.label}</h2><div class="slp-grid">${items.map(sl => `<div class="slp-tile${(store.status[sl.id] || 'active') === 'out' ? ' out' : ''}"><div class="slp-sw" style="${sleeveSwatchStyle(sl)}"></div><div>${escapeAttr(sl.name)}${(store.status[sl.id] || 'active') === 'out' ? ' (out)' : ''}</div></div>`).join('')}</div>`;
+            }).join('');
+            document.body.appendChild(area);
+            document.body.classList.add('sl-printing');
+            const done = () => { document.body.classList.remove('sl-printing'); area.remove(); window.removeEventListener('afterprint', done); };
+            window.addEventListener('afterprint', done);
+            window.print();
+        }
 
         // ============== COMMANDER BRACKETS ==============
         // The bracket rules themselves can't be fetched (Wizards publishes
