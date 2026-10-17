@@ -166,6 +166,10 @@ Explains every way to play, for staff talking to customers. The facts follow Wiz
 - **Glossary** (`FORMAT_GLOSSARY`): plain-English terms (rotation, banned vs restricted, singleton, color identity, mulligan...).
 - Community formats (Pauper Commander, Premodern...) aren't included, because their sites can't be reached from Claude's environment to check the rules.
 
+## Pull List tab (`MTG_Lookup_Tool.html`, printing added 2026-10-17, owner's request)
+
+Paste a Shopify fulfillment screen or a pick ticket; it looks every card up on Scryfall and groups the lines by set, newest set first (`renderPullList`). **🖨️ Print pull list** (`printPullList`, `plBuildSheetHTML`, `#plPrintArea`, `body.pl-printing`, named page `plsheet`) prints a letter-size sheet: a summary (sets, lines, copies, order value when the paste has prices, copies already pulled), then each set newest to oldest under a repeating set header (name, code, year, release date, copies and subtotal) with a table of tick box, quantity, optional card picture, name and rarity letter, collector number, condition, notes (FOIL, SKU), bin / order number (pick tickets only; `parsePickTicketPullListText` now keeps `loc` and `orderNo`), and each / line price. Lines already ticked on screen print checked and struck through; cards that weren't found print in a dashed box at the end; the page footer says "page N of M". Two options sit above the list: cards within each set A to Z (default), by collector number, or in the order pasted (`plPrintOpts`), and card pictures on or off. The sets are always newest first. The print CSS keeps its own fixed colors and sizes (like the prerelease card). The picture wait gives up after 6 seconds so a slow image can't hold up the print dialog.
+
 ## Case Map
 
 `CASE_MAP_DATA` holds only spot, shelf, side, category and card name. The old "location" and "notes" fields (which slots were chain-wide vs local picks) were removed on 2026-09-27 at the owner's request, since the repo is public. Don't add merchandising notes back.

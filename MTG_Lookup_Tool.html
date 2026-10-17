@@ -6942,6 +6942,62 @@
         #shelfPlannerApp .btn.sq{padding:6px 0;min-width:32px}
         #shelfPlannerApp h2.sp-title{font:700 1.6em/1.1 var(--font-display);letter-spacing:-.01em}
 
+        .pulllist-printbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 0 0 14px; padding: 10px 12px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.9em; color: var(--text-soft); }
+        .pulllist-printbar label { display: inline-flex; gap: 6px; align-items: center; }
+        .pulllist-printbar select { background: var(--bg-inset); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px 6px; }
+        .pulllist-print-btn { width: auto; margin: 0; padding: 7px 14px; font-size: 0.9em; }
+        .pulllist-printnote { font-size: 0.85em; color: var(--text-secondary); }
+        #plPrintArea { display: none; }
+        @page plsheet { size: letter; margin: 0.5in 0.5in 0.6in; @bottom-center { content: "Pull list · page " counter(page) " of " counter(pages); font: 8pt sans-serif; color: #777; } }
+        /* Printed pull list: its own fixed colors and sizes (like the prerelease card), so it prints the same in every theme. */
+        @media print {
+            body.pl-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
+            body.pl-printing > *:not(#plPrintArea) { display: none !important; }
+            body.pl-printing #plPrintArea { display: block; page: plsheet; color: #1b1f23; font: 9.5pt/1.35 "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; }
+            #plPrintArea * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+            .plp-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; border-bottom: 3px solid #1777a1; padding-bottom: 8px; margin-bottom: 6px; }
+            .plp-head h1 { margin: 0; font-size: 24pt; line-height: 1; letter-spacing: -0.01em; color: #10242e; }
+            .plp-head p { margin: 4px 0 0; font-size: 9pt; color: #5a6770; white-space: nowrap; }
+            .plp-stats { display: flex; gap: 8px; }
+            .plp-stat { text-align: center; min-width: 0.8in; padding: 5px 10px; border: 1px solid #c9d3d8; border-radius: 6px; background: #f3f7f9; }
+            .plp-stat b { display: block; font-size: 14pt; line-height: 1.1; color: #10242e; }
+            .plp-stat span { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.06em; color: #5a6770; }
+            .plp-sub { margin: 0 0 10px; font-size: 8.5pt; color: #5a6770; }
+            .plp-set { margin: 0 0 14px; }
+            .plp-set-head { display: flex; align-items: baseline; gap: 10px; padding: 5px 9px; background: #1777a1; color: #fff; border-radius: 5px 5px 0 0; }
+            .plp-set-head h2 { margin: 0; font-size: 12pt; flex: 1; }
+            .plp-code { font: 700 9pt ui-monospace, Menlo, Consolas, monospace; background: rgba(255,255,255,0.22); padding: 1px 6px; border-radius: 3px; }
+            .plp-rel, .plp-count { font-size: 8.5pt; opacity: 0.95; white-space: nowrap; }
+            .plp-count { font-weight: 700; }
+            .plp-table { width: 100%; border-collapse: collapse; }
+            .plp-table tbody td:first-child { border-left: 1px solid #c9d3d8; } .plp-table tbody td:last-child { border-right: 1px solid #c9d3d8; }
+            .plp-table thead { display: table-header-group; }
+            .plp-table .plp-set-row th { padding: 0; background: none; border: 0; text-transform: none; letter-spacing: 0; }
+            .plp-table th { text-align: left; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: #5a6770; background: #eef3f5; padding: 3px 6px; border-bottom: 1px solid #c9d3d8; }
+            .plp-table td { padding: 4px 6px; border-bottom: 1px solid #e3e9ec; vertical-align: middle; }
+            .plp-table tr { break-inside: avoid; }
+            .plp-table tbody tr:nth-child(even) td { background: #f8fafb; }
+            .plp-table tr.done td { color: #8a949a; }
+            .plp-table tr.done .c-name { text-decoration: line-through; }
+            .c-box { width: 0.28in; text-align: center; }
+            .plp-box { display: inline-block; width: 0.17in; height: 0.17in; border: 1.4px solid #1b1f23; border-radius: 2px; font-size: 9pt; line-height: 0.15in; text-align: center; vertical-align: middle; }
+            .c-qty { width: 0.42in; white-space: nowrap; font-variant-numeric: tabular-nums; }
+            .plp-multi { display: inline-block; background: #1b1f23; color: #fff; border-radius: 3px; padding: 0 5px; font-size: 10pt; }
+            .c-img { width: 0.5in; padding: 2px 4px; }
+            .c-img img { display: block; width: 0.42in; height: auto; border-radius: 2px; }
+            .c-name { font-weight: 600; font-size: 10.5pt; }
+            .plp-rar { display: inline-block; min-width: 0.15in; text-align: center; font: 700 7pt sans-serif; border: 1px solid #98a3a9; border-radius: 3px; color: #4c585f; margin-left: 4px; vertical-align: 1px; }
+            .c-num { width: 0.5in; font-variant-numeric: tabular-nums; color: #4c585f; }
+            .c-cond { width: 0.5in; font-weight: 600; }
+            .plp-foil { display: inline-block; font: 700 7.5pt sans-serif; letter-spacing: 0.06em; color: #fff; background: linear-gradient(90deg, #7a3fc0, #1f8ac0, #2fae6f); border-radius: 3px; padding: 1px 5px; }
+            .plp-sku { font: 7.5pt ui-monospace, Menlo, Consolas, monospace; color: #6a757b; }
+            .c-loc { font: 8.5pt ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
+            .c-price { text-align: right; width: 0.62in; font-variant-numeric: tabular-nums; white-space: nowrap; }
+            .plp-missing { margin-top: 12px; padding: 8px 12px; border: 1.5px dashed #b3261e; border-radius: 6px; break-inside: avoid; }
+            .plp-missing h2 { margin: 0 0 4px; font-size: 11pt; color: #b3261e; }
+            .plp-missing ul { margin: 0; padding-left: 18px; font-size: 9.5pt; }
+        }
+
         /* About Moonshot Games panel and the fan-made note */
         .values-intro { color: var(--text-soft); font-size: 0.9em; margin: 4px 0 12px; line-height: 1.5; }
         .values-stores { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 16px; font-size: 0.9em; line-height: 1.5; margin-bottom: 14px; }
@@ -21440,10 +21496,14 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 let quantity = 1;
                 let sku = '';
                 let isFoil = false;
+                let loc = '';
+                let orderNo = '';
                 for (let i = 1; i < chunk.length; i++) {
                     const line = chunk[i];
                     const qtyMatch = line.match(/×(\d+)/);
                     if (qtyMatch) quantity = parseInt(qtyMatch[1], 10);
+                    const locMatch = line.match(/^([A-Za-z0-9]*)×\d+(?:#(\d+))?$/); // "P1×1#446640": bin, quantity, order number
+                    if (locMatch) { loc = locMatch[1]; orderNo = locMatch[2] || ''; }
                     if (/^FOIL$/i.test(line)) isFoil = true;
                     if (/^[A-Za-z0-9-]+\/\d+$/.test(line)) sku = line;
                 }
@@ -21455,6 +21515,8 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     condition: condition || '?',
                     sku,
                     isFoil,
+                    loc,
+                    orderNo,
                     unitPrice: null,
                     quantity
                 });
@@ -21559,7 +21621,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             });
             const groupList = Object.values(groups).sort((a, b) => new Date(b.releasedAt) - new Date(a.releasedAt));
 
-            let html = `<div class="pulllist-progress">${pullListProgressHTML()}</div>`;
+            let html = `<div class="pulllist-progress">${pullListProgressHTML()}</div>${pullListPrintBarHTML()}`;
 
             if (pullListNotFound.length > 0) {
                 html += `
@@ -21650,6 +21712,121 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 pullListItems = [];
                 pullListNotFound = [];
             }
+        }
+
+        // ===== Printing the pull list =====
+        // A clean letter-size sheet: a summary, then every set newest to
+        // oldest, each with its own table (checkbox, quantity, card, number,
+        // rarity, condition, notes, price) and a subtotal. The sort inside a
+        // set is a choice (A-Z by default, since singles are usually filed
+        // that way); the sets themselves are always newest first. Print CSS
+        // keeps its own fixed colors so it prints the same in every theme.
+        const plPrintOpts = { within: 'name', pictures: true };
+
+        function pullListPrintBarHTML() {
+            return `<div class="pulllist-printbar">
+                <button type="button" class="pulllist-print-btn" onclick="printPullList()">🖨️ Print pull list</button>
+                <label>Cards within each set
+                    <select onchange="plPrintOpts.within = this.value">
+                        <option value="name"${plPrintOpts.within === 'name' ? ' selected' : ''}>A to Z</option>
+                        <option value="number"${plPrintOpts.within === 'number' ? ' selected' : ''}>Collector number</option>
+                        <option value="pasted"${plPrintOpts.within === 'pasted' ? ' selected' : ''}>Order pasted</option>
+                    </select>
+                </label>
+                <label><input type="checkbox" ${plPrintOpts.pictures ? 'checked' : ''} onchange="plPrintOpts.pictures = this.checked"> Card pictures</label>
+                <span class="pulllist-printnote">Sets print newest to oldest.</span>
+            </div>`;
+        }
+
+        function plCollectorKey(card) {
+            const m = String(card.collector_number || '').match(/^(\d+)(.*)$/);
+            return m ? [parseInt(m[1], 10), m[2]] : [1e9, String(card.collector_number || '')];
+        }
+
+        function plRarityLabel(card) {
+            return ({ common: 'C', uncommon: 'U', rare: 'R', mythic: 'M', special: 'S', bonus: 'B' })[card.rarity] || '';
+        }
+
+        function plMoney(n) { return '$' + n.toFixed(2); }
+
+        function plBuildSheetHTML() {
+            const groups = {};
+            pullListItems.forEach((item, idx) => {
+                const key = item.card.set.toUpperCase();
+                if (!groups[key]) groups[key] = { setCode: key, setName: item.card.set_name, releasedAt: item.card.released_at || '', rows: [] };
+                groups[key].rows.push({ item, idx });
+            });
+            // newest set first; sets with no date go last, ties by name so the order never shuffles
+            const list = Object.values(groups).sort((a, b) => (b.releasedAt || '').localeCompare(a.releasedAt || '') || a.setName.localeCompare(b.setName));
+            const cmpName = (a, b) => a.item.baseName.localeCompare(b.item.baseName) || a.idx - b.idx;
+            const cmpNum = (a, b) => { const x = plCollectorKey(a.item.card), y = plCollectorKey(b.item.card); return x[0] - y[0] || x[1].localeCompare(y[1]) || a.idx - b.idx; };
+            list.forEach(g => { if (plPrintOpts.within === 'name') g.rows.sort(cmpName); else if (plPrintOpts.within === 'number') g.rows.sort(cmpNum); });
+
+            const totalCopies = pullListItems.reduce((n, i) => n + i.quantity, 0);
+            const pulled = pullListItems.reduce((n, i) => n + (i.checked ? i.quantity : 0), 0);
+            const priced = pullListItems.some(i => i.unitPrice !== null);
+            const totalValue = pullListItems.reduce((n, i) => n + (i.unitPrice !== null ? i.unitPrice * i.quantity : 0), 0);
+            const hasLoc = pullListItems.some(i => i.loc || i.orderNo);
+            const now = new Date();
+            const when = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + ' at ' + now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+            const stat = (n, label) => `<div class="plp-stat"><b>${n}</b><span>${label}</span></div>`;
+
+            let html = `<div class="plp-head">
+                <div><h1>Pull List</h1><p>Printed ${escapeAttr(when)}</p></div>
+                <div class="plp-stats">${stat(list.length, list.length === 1 ? 'set' : 'sets')}${stat(pullListItems.length, pullListItems.length === 1 ? 'line' : 'lines')}${stat(totalCopies, totalCopies === 1 ? 'copy' : 'copies')}${priced ? stat(plMoney(totalValue), 'order value') : ''}${pulled ? stat(pulled + ' of ' + totalCopies, 'already pulled') : ''}</div>
+            </div>
+            <p class="plp-sub">Newest set first. ${plPrintOpts.within === 'name' ? 'Cards A to Z within each set.' : plPrintOpts.within === 'number' ? 'Cards by collector number within each set.' : 'Cards in the order they were pasted.'}</p>`;
+
+            list.forEach(g => {
+                const year = g.releasedAt ? g.releasedAt.slice(0, 4) : '?';
+                const rel = g.releasedAt ? new Date(g.releasedAt + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'release date unknown';
+                const copies = g.rows.reduce((n, r) => n + r.item.quantity, 0);
+                const sub = g.rows.reduce((n, r) => n + (r.item.unitPrice !== null ? r.item.unitPrice * r.item.quantity : 0), 0);
+                const gPriced = g.rows.some(r => r.item.unitPrice !== null);
+                html += `<section class="plp-set">
+                    <table class="plp-table"><thead><tr class="plp-set-row"><th colspan="${6 + (plPrintOpts.pictures ? 1 : 0) + (hasLoc ? 1 : 0) + (priced ? 2 : 0)}"><div class="plp-set-head"><h2>${escapeAttr(g.setName)}</h2><span class="plp-code">${escapeAttr(g.setCode)}</span><span class="plp-rel">${year} · ${escapeAttr(rel)}</span><span class="plp-count">${copies} ${copies === 1 ? 'copy' : 'copies'}${gPriced ? ' · ' + plMoney(sub) : ''}</span></div></th></tr><tr><th class="c-box"></th><th class="c-qty">Qty</th>${plPrintOpts.pictures ? '<th class="c-img"></th>' : ''}<th>Card</th><th class="c-num">No.</th><th class="c-cond">Cond.</th><th>Notes</th>${hasLoc ? '<th class="c-loc">Bin / order</th>' : ''}${priced ? '<th class="c-price">Each</th><th class="c-price">Line</th>' : ''}</tr></thead><tbody>`;
+                g.rows.forEach(({ item }) => {
+                    const card = item.card, img = plPrintOpts.pictures ? getCardImageSmall(card) : null;
+                    const notes = [item.isFoil ? '<span class="plp-foil">FOIL</span>' : '', item.sku ? `<span class="plp-sku">${escapeAttr(item.sku)}</span>` : ''].filter(Boolean).join(' ');
+                    const rar = plRarityLabel(card);
+                    html += `<tr class="${item.checked ? 'done' : ''}"><td class="c-box"><span class="plp-box">${item.checked ? '✔' : ''}</span></td>
+                        <td class="c-qty">${item.quantity > 1 ? `<b class="plp-multi">×${item.quantity}</b>` : '×1'}</td>
+                        ${plPrintOpts.pictures ? `<td class="c-img">${img ? `<img src="${img}" alt="">` : ''}</td>` : ''}
+                        <td class="c-name">${escapeAttr(item.rawName)}${rar ? ` <span class="plp-rar">${rar}</span>` : ''}</td>
+                        <td class="c-num">${escapeAttr(card.collector_number || '')}</td>
+                        <td class="c-cond">${escapeAttr(item.condition)}</td>
+                        <td>${notes}</td>
+                        ${hasLoc ? `<td class="c-loc">${escapeAttr(item.loc || '')}${item.orderNo ? ' #' + escapeAttr(item.orderNo) : ''}</td>` : ''}
+                        ${priced ? `<td class="c-price">${item.unitPrice !== null ? plMoney(item.unitPrice) : ''}</td><td class="c-price">${item.unitPrice !== null ? plMoney(item.unitPrice * item.quantity) : ''}</td>` : ''}</tr>`;
+                });
+                html += '</tbody></table></section>';
+            });
+
+            if (pullListNotFound.length) {
+                html += `<section class="plp-missing"><h2>Not found: look these up by hand</h2><ul>${pullListNotFound.map(i => `<li><b>${escapeAttr(i.setCode)}</b> ${escapeAttr(i.rawName)} ×${i.quantity}${i.condition && i.condition !== '?' ? ' · ' + escapeAttr(i.condition) : ''}</li>`).join('')}</ul></section>`;
+            }
+            return html;
+        }
+
+        function printPullList() {
+            if (!pullListItems.length) return;
+            let area = document.getElementById('plPrintArea');
+            if (area) area.remove();
+            area = document.createElement('div');
+            area.id = 'plPrintArea';
+            area.innerHTML = plBuildSheetHTML();
+            document.body.appendChild(area);
+            document.body.classList.add('pl-printing');
+            const done = () => {
+                document.body.classList.remove('pl-printing');
+                area.remove();
+                window.removeEventListener('afterprint', done);
+            };
+            window.addEventListener('afterprint', done);
+            // let the card pictures load before the print dialog opens (give up on slow ones after 6 seconds)
+            const imgs = [...area.querySelectorAll('img')];
+            const loaded = Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; }))));
+            Promise.race([loaded, new Promise(r => setTimeout(r, 6000))]).then(() => window.print());
         }
 
         // ===== Hotlist Case Map =====
