@@ -16436,43 +16436,230 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
 })();
 
         // ============== SLEEVE WALL ==============
-        // A rainbow layout of Dragon Shield sleeve colors for the wall.
-        // Dragon Shield's site can't be reached from Claude's environment, so
-        // the list was put together from retailer listings (Card Kingdom,
-        // Asmodee, eBay and others, checked 2026-10-17) and is NOT checked
-        // against Dragon Shield's own list. Staff fix it on the page: mark a
-        // color out of stock or not carried, and add anything missing. The
-        // swatch colors are fixed, approximate hex values that copy the real
-        // sleeves (like the foil sheens), so they don't use the theme tokens.
+        // A rainbow layout of Dragon Shield sleeve colors for the wall. The
+        // list was read from Dragon Shield's own product feed
+        // (dragonshield.com/products.json, 2026-10-17): every standard-size
+        // solid color, Dual Matte, Non-Glare, Perfect Fit and Art sleeve they
+        // list. `avail` is whether Dragon Shield had it in stock that day;
+        // it only sets the starting status. Their site has no color values, so
+        // the swatch colors are fixed approximations that copy the real
+        // sleeves (like the foil sheens) and don't use the theme tokens.
+        // To refresh the list, re-read that feed and rebuild DS_SLEEVES.
         const SLEEVES_AS_OF = '2026-10-17';
         const SLEEVE_LINES = [
             { key: 'matte',   label: 'Matte' },
             { key: 'classic', label: 'Classic' },
             { key: 'dual',    label: 'Dual Matte' },
-            { key: 'other',   label: 'Perspex / Non-Glare / Art' }
+            { key: 'other',   label: 'Non-Glare, Outer & Clear' },
+            { key: 'art',     label: 'Art sleeves', noRainbow: true }
         ];
-        // [line, name, swatch hex, second hex for two-color sleeves (inside color)]
+        // [line, name, swatch hex, second hex for two-color sleeves (inside color), in stock at Dragon Shield]
         const DS_SLEEVES = [
-            ['matte', 'Black', '#1c1c1e'], ['matte', 'Jet', '#0f0f10'], ['matte', 'White', '#f2f2f2'], ['matte', 'Ivory', '#efe6cf'],
-            ['matte', 'Silver', '#b8bcc2'], ['matte', 'Gold', '#d4a82a'], ['matte', 'Copper', '#b5642e'], ['matte', 'Ruby', '#b0123a'],
-            ['matte', 'Crimson', '#8f1d2c'], ['matte', 'Blood Red', '#7a0f12'], ['matte', 'Red', '#d0242a'], ['matte', 'Magenta', '#b0176f'],
-            ['matte', 'Pink Diamond', '#f2a1c8'], ['matte', 'Orange', '#ef7d1a'], ['matte', 'Amber', '#e0a23a'], ['matte', 'Lime', '#8fd13a'],
-            ['matte', 'Apple Green', '#86c440'], ['matte', 'Olive', '#6b7a2a'], ['matte', 'Forest Green', '#1f5a33'], ['matte', 'Emerald', '#0b8a5a'],
-            ['matte', 'Turquoise', '#1fb5ad'], ['matte', 'Petrol', '#1d5e6b'], ['matte', 'Sky Blue', '#6cb8e8'], ['matte', 'Blue', '#1f5fbf'],
-            ['matte', 'Sapphire', '#123a8c'], ['matte', 'Midnight Blue', '#14214f'], ['matte', 'Aurora', '#7ad3c1'], ['matte', 'Purple', '#6b2fa0'],
-            ['matte', 'Amethyst', '#8e5bc4'], ['matte', 'Clear', '#dfe9ee'],
-            ['classic', 'Black', '#1c1c1e'], ['classic', 'White', '#f2f2f2'], ['classic', 'Silver', '#b8bcc2'], ['classic', 'Gold', '#d4a82a'],
-            ['classic', 'Copper', '#b5642e'], ['classic', 'Brown', '#6b4426'], ['classic', 'Crimson', '#8f1d2c'], ['classic', 'Red', '#d0242a'],
-            ['classic', 'Tangerine', '#f07a1a'], ['classic', 'Orange', '#ef7d1a'], ['classic', 'Yellow', '#f2d230'], ['classic', 'Green', '#2e9a4a'],
-            ['classic', 'Turquoise', '#1fb5ad'], ['classic', 'Fusion', '#3aa6c8'], ['classic', 'Blue', '#1f5fbf'], ['classic', 'Purple', '#6b2fa0'],
-            ['classic', 'Pink', '#ee86b6'], ['classic', 'Clear', '#dfe9ee'],
-            ['dual', 'Snow', '#f2f4f7', '#c9d1da'], ['dual', 'Lightning', '#f2d230', '#7aa2f0'], ['dual', 'Lagoon', '#1f9cb0', '#8fe0e8'],
-            ['dual', 'Eucalyptus', '#5aa78a', '#cfe8d8'], ['dual', 'Orchid', '#b27bd6', '#f0d3f5'], ['dual', 'Peach', '#f6a98a', '#fde0cf'],
-            ['dual', 'Crypt', '#2a2630', '#6f6a7a'], ['dual', 'Glacier', '#a9d6ee', '#eef8fd'], ['dual', 'Nebula & Silver', '#5a3d9a', '#b8bcc2'],
-            ['dual', 'Yellow & Silver', '#f2d230', '#b8bcc2'], ['dual', 'Crimson & Silver', '#8f1d2c', '#b8bcc2'], ['dual', 'Apple Green & Silver', '#86c440', '#b8bcc2'],
-            ['dual', 'Sky Blue & Silver', '#6cb8e8', '#b8bcc2'], ['dual', 'Soul & Petrol', '#8a4fc0', '#1d5e6b'], ['dual', 'Power & Copper', '#2a9a78', '#b5642e'],
-            ['other', 'Perspex (clear)', '#dfe9ee'], ['other', 'Non-Glare (clear)', '#e6edf1']
-        ].map(([line, name, hex, hex2]) => ({ id: `${line}:${name}`, line, name, hex, hex2: hex2 || null, custom: false }));
+            ['art', "25th Anniversary - Matte Art", '#3a3f4a', null, false],
+            ['art', "Alaria - Constellations - Brushed Art", '#3a3f4a', null, true],
+            ['art', "Alaric - Constellations - Brushed Art", '#3a3f4a', null, false],
+            ['matte', "Amazonite", '#5fc7b8', null, true],
+            ['matte', "Amber", '#e0a23a', null, true],
+            ['other', "American Mini (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "American Standard (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['matte', "Amethyst", '#8e5bc4', null, true],
+            ['dual', "Apple Green & Silver", '#86c440', '#b8bcc2', true],
+            ['matte', "Apple Green", '#86c440', null, true],
+            ['art', "Aurora - Matte Art", '#3a3f4a', null, false],
+            ['matte', "Aurora", '#7ad3c1', null, true],
+            ['art', "Azalea - Matte Art", '#3a3f4a', null, false],
+            ['dual', "Black & Gold", '#1c1c1e', '#d4a82a', true],
+            ['classic', "Black", '#1c1c1e', null, true],
+            ['other', "Matte Outer Black", '#1c1c1e', null, true],
+            ['matte', "Black", '#1c1c1e', null, true],
+            ['other', "Non-Glare Matte Black", '#1c1c1e', null, false],
+            ['matte', "Blood Red", '#7a0f12', null, true],
+            ['other', "Non-Glare Matte Blood Red", '#7a0f12', null, false],
+            ['dual', "Blossom", '#f4b6c8', '#fde6ee', true],
+            ['classic', "Blue", '#1f5fbf', null, true],
+            ['matte', "Blue", '#1f5fbf', null, true],
+            ['other', "Non-Glare Matte Blue", '#1f5fbf', null, true],
+            ['art', "Chane - Matte Art", '#3a3f4a', null, true],
+            ['art', "Christmas 2021 - Brushed Art", '#3a3f4a', null, false],
+            ['art', "Christmas 2022 - Brushed Art", '#3a3f4a', null, false],
+            ['art', "Christmas 2023 - Brushed Art", '#3a3f4a', null, true],
+            ['art', "Christmas 2024 - Brushed Art", '#3a3f4a', null, false],
+            ['art', "Christmas 2025 - Brushed Art", '#3a3f4a', null, true],
+            ['classic', "Clear", '#dfe9ee', null, true],
+            ['other', "Matte Outer Clear", '#dfe9ee', null, true],
+            ['other', "Matte Outer Clear #2", '#dfe9ee', null, true],
+            ['matte', "Clear", '#dfe9ee', null, true],
+            ['other', "Non-Glare Matte Clear", '#dfe9ee', null, true],
+            ['other', "Clear - Sealable Perfect Fit", '#dfe9ee', null, true],
+            ['other', "Clear - Sealable Perfect Fit #2", '#dfe9ee', null, true],
+            ['other', "Clear - Sideloading Perfect Fit", '#dfe9ee', null, true],
+            ['other', "Clear - Toploading Perfect Fit", '#dfe9ee', null, true],
+            ['other', "Clear - Toploading Perfect Fit #2", '#dfe9ee', null, true],
+            ['dual', "Cobalt & Silver", '#1f4fbf', '#b8bcc2', true],
+            ['other', "Common Standard (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['classic', "Copper", '#b5642e', null, false],
+            ['matte', "Copper", '#b5642e', null, true],
+            ['dual', "Crimson & Silver", '#8f1d2c', '#b8bcc2', true],
+            ['classic', "Crimson", '#8f1d2c', null, true],
+            ['matte', "Crimson", '#8f1d2c', null, true],
+            ['art', "Cromai - Matte Art", '#3a3f4a', null, true],
+            ['dual', "Crypt", '#2a2630', '#6f6a7a', true],
+            ['art', "Dash: Inventor Extraordinaire - Matte Art", '#3a3f4a', null, true],
+            ['art', "Demon Hunters - Matte Art", '#3a3f4a', null, false],
+            ['art', "Dorinthea Ironsong - Matte Art", '#3a3f4a', null, true],
+            ['art', "Dragons in Space", '#3a3f4a', null, true],
+            ['art', "D\u00eda de Muertos 2026 - Matte Dual Art", '#3a3f4a', null, true],
+            ['dual', "Ember", '#e1631c', '#f2b27a', true],
+            ['matte', "Emerald", '#0b8a5a', null, true],
+            ['art', "Emperor - Matte Art", '#3a3f4a', null, true],
+            ['art', "Emperor Scion Portrait - Matte Art", '#3a3f4a', null, false],
+            ['art', "Enigma - Matte Art", '#3a3f4a', null, true],
+            ['dual', "Eucalyptus", '#5aa78a', '#cfe8d8', true],
+            ['other', "European Mini (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "European Standard (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "Extra Large (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['art', "Fai - Matte Art", '#3a3f4a', null, true],
+            ['art', "Fire Horse 2026 - Matte Dual Art", '#3a3f4a', null, true],
+            ['matte', "Forest Green", '#1f5a33', null, true],
+            ['other', "Non-Glare Matte Forest Green", '#1f5a33', null, true],
+            ['dual', "Fury", '#b3261e', '#e8863a', true],
+            ['art', "Gaial - Matte Dual Art", '#3a3f4a', null, true],
+            ['dual', "Glacier", '#a9d6ee', '#eef8fd', true],
+            ['matte', "Gold", '#d4a82a', null, true],
+            ['dual', "Gooseberry", '#b7c43a', '#eef3b8', true],
+            ['art', "Grand Archive - Alice Orleane - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Ariel, Archangel of Natura - Matte Dual Art", '#3a3f4a', null, false],
+            ['art', "Grand Archive - Azrael, Archangel of Materia - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Chronowarp - Matte Dual Art Sleeves:", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Ciel, Mirage's Grave - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Dante, Hemomancer - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Diana, Moonpiercer - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Diao Chan: Idyll Corsage - Matte Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Guo Jia: Heaven s Favored - Matte Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Haniel, Archangel of Spectra - Matte Dual Art", '#3a3f4a', null, false],
+            ['art', "Grand Archive - Jin: Fate Defiant - Matte Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Kongming: Wayward Maven - Matte Art", '#3a3f4a', null, false],
+            ['art', "Grand Archive - Lorraine, Arclight Saber - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Merlin Veritor - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Grand Archive - Raziel, Archangel of Libra - Matte Dual Art", '#3a3f4a', null, true],
+            ['other', "Grand Standard (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['classic', "Green", '#2e9a4a', null, true],
+            ['matte', "Green", '#2e9a4a', null, false],
+            ['art', "Guildpact Series - Azorius Senate - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Guildpact Series - Boros Legion - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Guildpact Series - Cult of Rakdos - Matte Dual Art", '#3a3f4a', null, false],
+            ['art', "Guildpact Series - Golgari Swarm - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Guildpact Series - Gruul Clans - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Guildpact Series - House Dimir - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Guildpact Series - Izzet League", '#3a3f4a', null, true],
+            ['art', "Guildpact Series - Orzhov Syndicate - Matte Dual Art", '#3a3f4a', null, false],
+            ['art', "Guildpact Series - Selesnya Conclave - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Guildpact Series - Simic Combine - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Halloween 2023 - Brushed Art", '#3a3f4a', null, true],
+            ['art', "Halloween 2024 - Brushed Art", '#3a3f4a', null, true],
+            ['art', "Halloween 2025 - Brushed Art", '#3a3f4a', null, false],
+            ['art', "Halloween 2026 - Brushed Art", '#3a3f4a', null, true],
+            ['art', "Hunters in the Snow - Classic Art", '#3a3f4a', null, true],
+            ['matte', "Ivory", '#efe6cf', null, true],
+            ['art', "Iyslander - Matte Art", '#3a3f4a', null, false],
+            ['art', "Iyslander: Elemental Wizard", '#3a3f4a', null, true],
+            ['matte', "Jet", '#0f0f10', null, true],
+            ['dual', "Justice", '#2a5fbf', '#d9d9d9', true],
+            ['art', "Kassai - Matte Art", '#3a3f4a', null, true],
+            ['art', "Katsu - Matte Art", '#3a3f4a', null, true],
+            ['art', "Kyloria - Matte Art", '#3a3f4a', null, true],
+            ['dual', "Lagoon", '#1f9cb0', '#8fe0e8', true],
+            ['art', "Landfall Series - Arid Mesa - Matte Dual Art", '#3a3f4a', null, false],
+            ['art', "Landfall Series - Marsh Flats - Matte Dual Art", '#3a3f4a', null, false],
+            ['art', "Landfall Series - Misty Rainforest - Matte Dual Art", '#3a3f4a', null, false],
+            ['art', "Landfall Series - Scalding Tarn - Matte Dual Art", '#3a3f4a', null, false],
+            ['art', "Landfall Series - Verdant Catacombs - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Lane Thunderhoof Portrait - Matte Art", '#3a3f4a', null, true],
+            ['art', "Legendary Series - Edgar Markov - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Legendary Series - Giada, Font of Hope", '#3a3f4a', null, true],
+            ['art', "Legendary Series - Gishath, Sun\u00b4s Avatar - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Legendary Series - Lathril, Blade of Elves - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Legendary Series - The Ur-Dragon - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Legendary Series - Wilhelt, the Rotcleaver", '#3a3f4a', null, true],
+            ['art', "Lexi - Matte Art", '#3a3f4a', null, false],
+            ['dual', "Lightning", '#f2d230', '#7aa2f0', true],
+            ['matte', "Magenta", '#b0176f', null, true],
+            ['art', "Melody - Matte Art", '#3a3f4a', null, true],
+            ['matte', "Midnight Blue", '#14214f', null, true],
+            ['dual', "Might", '#c0392b', '#e0b64a', true],
+            ['dual', "Might #2", '#c0392b', '#e0b64a', true],
+            ['matte', "Mint", '#9ee3c0', null, true],
+            ['art', "Miragai - Matte Art", '#3a3f4a', null, false],
+            ['art', "Mothar Vanguard Portrait - Matte Art", '#3a3f4a', null, true],
+            ['dual', "Nebula & Silver", '#5a3d9a', '#b8bcc2', true],
+            ['art', "Oldhim - Matte Art", '#3a3f4a', null, true],
+            ['matte', "Orange", '#ef7d1a', null, true],
+            ['dual', "Orchid", '#b27bd6', '#f0d3f5', true],
+            ['other', "Oversize (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['dual', "Peach", '#f6a98a', '#fde0cf', true],
+            ['other', "Perfect Fit - Thick Inner Sleeves - Black", '#6e7378', null, true],
+            ['other', "Perfect Fit - Thick Inner Sleeves - Clear", '#dfe9ee', null, true],
+            ['matte', "Petrol", '#1d5e6b', null, true],
+            ['matte', "Pink", '#ee86b6', null, true],
+            ['matte', "Pink Diamond", '#f2a1c8', null, true],
+            ['matte', "Pink Sapphire", '#e8639a', null, true],
+            ['dual', "Pomegranate & Gold", '#a3213f', '#d4a82a', true],
+            ['dual', "Power & Copper", '#2a9a78', '#b5642e', true],
+            ['dual', "Power", '#2a9a78', '#9fe0c8', true],
+            ['art', "Puffin: Hightail - Matte Art", '#3a3f4a', null, true],
+            ['matte', "Purple", '#6b2fa0', null, true],
+            ['art', "Queen Athromark Portrait - Matte Art", '#3a3f4a', null, true],
+            ['art', "Retro Series - Birds of Paradise - Brushed Art", '#3a3f4a', null, false],
+            ['art', "Retro Series - Counterspell - Brushed Art", '#3a3f4a', null, false],
+            ['art', "Retro Series - Lightning Bolt - Brushed Art", '#3a3f4a', null, false],
+            ['art', "Retro Series - Reanimate - Brushed Art", '#3a3f4a', null, false],
+            ['art', "Retro Series - Soul Warden - Brushed Art", '#3a3f4a', null, false],
+            ['matte', "Ruby", '#b0123a', null, true],
+            ['art', "Sakura Ally - Brushed Art", '#3a3f4a', null, true],
+            ['matte', "Sapphire", '#123a8c', null, true],
+            ['art', "Signature Series - The Adameer - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Signature Series - The Ejsingandr - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Signature Series - The Millerax", '#3a3f4a', null, true],
+            ['art', "Signature Series - The Raid - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Signoir - Constellations - Brushed Art", '#3a3f4a', null, true],
+            ['matte', "Silver", '#b8bcc2', null, true],
+            ['art', "Silvie, Slime Sovereign - Matte Art", '#3a3f4a', null, false],
+            ['dual', "Sky Blue & Silver", '#6cb8e8', '#b8bcc2', true],
+            ['other', "Smoke - Sealable Perfect Fit", '#6e7378', null, true],
+            ['other', "Smoke - Sideloading Perfect Fit Sleeves - Standard Size", '#6e7378', null, true],
+            ['other', "Smoke - Toploading Perfect Fit", '#6e7378', null, true],
+            ['dual', "Snow", '#f2f4f7', '#c9d1da', true],
+            ['dual', "Soul & Petrol", '#8a4fc0', '#1d5e6b', true],
+            ['dual', "Soul", '#8a4fc0', '#d9b8f0', true],
+            ['other', "Square (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['art', "Super Slam - Matte Art", '#3a3f4a', null, true],
+            ['classic', "Tangerine", '#f07a1a', null, false],
+            ['other', "Tarot (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['art', "The Burnbug - Brushed Art", '#3a3f4a', null, false],
+            ['art', "The Bushdrake - Brushed Art", '#3a3f4a', null, true],
+            ['art', "The Cinderfin - Brushed Art", '#3a3f4a', null, true],
+            ['art', "The Dragowlis - Brushed Art", '#3a3f4a', null, true],
+            ['art', "The Oxbow - Classic Art", '#3a3f4a', null, true],
+            ['art', "The Snortle - Brushed Art", '#3a3f4a', null, true],
+            ['art', "The Whiskerwing - Brushed Art", '#3a3f4a', null, true],
+            ['art', "The Wufdragon - Brushed Art", '#3a3f4a', null, false],
+            ['dual', "Truth", '#c9a227', '#f7efc0', true],
+            ['matte', "Turquoise", '#1fb5ad', null, true],
+            ['art', "Valentine 2024 - Brushed Art", '#3a3f4a', null, true],
+            ['art', "Valentine Dragons 2022 - Brushed Art", '#3a3f4a', null, false],
+            ['art', "Valentine Dragons 2023 - Brushed Art", '#3a3f4a', null, true],
+            ['dual', "Valor", '#d9a521', '#f0e0a0', true],
+            ['art', "Viserai, Usurper - Matte Art", '#3a3f4a', null, true],
+            ['art', "Voltbound Duality - Matte Art", '#3a3f4a', null, true],
+            ['classic', "White", '#f2f2f2', null, true],
+            ['matte', "White", '#f2f2f2', null, true],
+            ['dual', "Wisdom", '#2a6fbf', '#8fd0f0', true],
+            ['art', "Wood Dragon 2024 - Matte Dual Art", '#3a3f4a', null, true],
+            ['art', "Wood Snake 2025 - Matte Dual Art", '#3a3f4a', null, true],
+            ['dual', "Wraith", '#3a3a48', '#8a8aa0', true],
+            ['dual', "Yellow & Silver", '#f2d230', '#b8bcc2', true],
+            ['matte', "Yellow", '#f2d230', null, true]
+        ].map(([line, name, hex, hex2, avail]) => ({ id: `${line}:${name}`, line, name, hex, hex2: hex2 || null, avail, custom: false }));
         const SLEEVE_STATUS = { active: 'Active', out: 'Out of stock', gone: 'Not carried' };
         const sleeveUI = { line: 'all', showAll: false };
 
@@ -16482,10 +16669,13 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         }
         function sleeveSave(s) { try { localStorage.setItem('dsSleeves', JSON.stringify(s)); } catch (e) { /* the page still works without saving */ } }
         function allSleeves() { return [...DS_SLEEVES, ...sleeveStore().custom.map(c => ({ ...c, custom: true }))]; }
-        function sleeveStatus(id) { return sleeveStore().status[id] || 'active'; }
+        function sleeveDefault(sl) { return sl.avail === false ? 'out' : 'active'; }
+        function sleeveStatus(sl, store) { return (store || sleeveStore()).status[sl.id] || sleeveDefault(sl); }
 
         // Rainbow order: colors by hue from red round to pink, then the
         // neutrals (white to black) at the end. Two-color sleeves sort by their outside color.
+        function sleeveLinesShown() { return sleeveUI.line === 'all' ? SLEEVE_LINES.filter(l => !l.noRainbow) : SLEEVE_LINES.filter(l => l.key === sleeveUI.line); }
+        function sleeveByName(a, b) { return a.name.localeCompare(b.name); }
         function sleeveSortKey(hex) {
             const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
             const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
@@ -16504,7 +16694,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         }
         function sleeveVisible(sl) {
             if (sleeveUI.line !== 'all' && sl.line !== sleeveUI.line) return false;
-            return sleeveUI.showAll || sleeveStatus(sl.id) !== 'gone';
+            return sleeveUI.showAll || sleeveStatus(sl) !== 'gone';
         }
         function renderSleeves() {
             const root = document.getElementById('sleevesApp');
@@ -16512,14 +16702,15 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const store = sleeveStore();
             const list = allSleeves();
             const counts = { active: 0, out: 0, gone: 0 };
-            list.forEach(sl => { counts[store.status[sl.id] || 'active']++; });
+            const shownKeys = sleeveLinesShown().map(l => l.key);
+            list.filter(sl => shownKeys.includes(sl.line)).forEach(sl => { counts[sleeveStatus(sl, store)]++; });
             const lineChips = [{ key: 'all', label: 'All lines' }, ...SLEEVE_LINES].map(l =>
                 `<button type="button" class="guide-tab${sleeveUI.line === l.key ? ' active' : ''}" onclick="sleeveSetLine('${l.key}')">${l.label}</button>`).join('');
-            const lines = (sleeveUI.line === 'all' ? SLEEVE_LINES : SLEEVE_LINES.filter(l => l.key === sleeveUI.line));
+            const lines = sleeveLinesShown();
             const sections = lines.map(l => {
-                const items = list.filter(sl => sl.line === l.key && sleeveVisible(sl)).sort(sleeveCompare);
+                const items = list.filter(sl => sl.line === l.key && sleeveVisible(sl)).sort(l.noRainbow ? sleeveByName : sleeveCompare);
                 const tiles = items.map(sl => {
-                    const st = store.status[sl.id] || 'active';
+                    const st = sleeveStatus(sl, store);
                     return `<div class="sl-tile sl-${st}">
                         <button type="button" class="sl-swatch" style="${sleeveSwatchStyle(sl)}" onclick="sleeveCycle('${sl.id.replace(/'/g, "\\'")}')" aria-label="${escapeAttr(sl.name)}: ${SLEEVE_STATUS[st]}. Tap to change."><span class="sl-flag">${st === 'out' ? 'OUT' : st === 'gone' ? 'NOT CARRIED' : ''}</span></button>
                         <div class="sl-name">${escapeAttr(sl.name)}</div>
@@ -16530,7 +16721,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             }).join('');
             root.innerHTML = `
                 <div class="formats-intro">A rainbow layout of the Dragon Shield sleeve colors, so the wall can always be laid out in the same order. Tap a color to cycle it: Active, Out of stock, Not carried. Your changes are saved on this device only.</div>
-                <div class="sl-note">⚠️ This list is <b>unverified</b>. Dragon Shield's own site can't be reached from here, so it was put together from retailer listings on ${SLEEVES_AS_OF} and can be out of date. Fix it as you go: mark what you don't carry and add anything missing. Swatch colors are approximate.</div>
+                <div class="sl-note">ℹ️ This list was read from Dragon Shield's own product list on ${SLEEVES_AS_OF} (standard-size solid colors, Dual Matte, Non-Glare, Perfect Fit and art sleeves). Colors Dragon Shield showed as out of stock start as <b>Out of stock</b>. That is their stock, not yours, so change it to match the shelf. Their site has no color values, so the swatch colors are approximate. Art sleeves list by design name under their own button.</div>
                 <div class="guide-tabs sl-chips">${lineChips}</div>
                 <div class="sl-bar">
                     <span class="sl-stats"><b>${counts.active}</b> active · ${counts.out} out of stock · ${counts.gone} not carried</span>
@@ -16551,9 +16742,10 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         function sleeveSetLine(k) { sleeveUI.line = k; renderSleeves(); }
         function sleeveToggleAll(v) { sleeveUI.showAll = !!v; renderSleeves(); }
         function sleeveCycle(id) {
-            const s = sleeveStore(), order = ['active', 'out', 'gone'], cur = s.status[id] || 'active';
-            const next = order[(order.indexOf(cur) + 1) % order.length];
-            if (next === 'active') delete s.status[id]; else s.status[id] = next;
+            const s = sleeveStore(), order = ['active', 'out', 'gone'], sl = allSleeves().find(x => x.id === id);
+            if (!sl) return;
+            const next = order[(order.indexOf(sleeveStatus(sl, s)) + 1) % order.length];
+            if (next === sleeveDefault(sl)) delete s.status[id]; else s.status[id] = next;
             sleeveSave(s); renderSleeves();
         }
         function sleeveAdd() {
@@ -16577,11 +16769,11 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const store = sleeveStore();
             let area = document.getElementById('slPrintArea'); if (area) area.remove();
             area = document.createElement('div'); area.id = 'slPrintArea';
-            const lines = (sleeveUI.line === 'all' ? SLEEVE_LINES : SLEEVE_LINES.filter(l => l.key === sleeveUI.line));
+            const lines = sleeveLinesShown();
             area.innerHTML = `<h1>Dragon Shield sleeve wall</h1><p>Rainbow order. Printed ${new Date().toLocaleDateString()}. Fan-made layout list, not checked against Dragon Shield's own list.</p>` + lines.map(l => {
-                const items = allSleeves().filter(sl => sl.line === l.key && (store.status[sl.id] || 'active') !== 'gone').sort(sleeveCompare);
+                const items = allSleeves().filter(sl => sl.line === l.key && sleeveStatus(sl, store) !== 'gone').sort(l.noRainbow ? sleeveByName : sleeveCompare);
                 if (!items.length) return '';
-                return `<h2>${l.label}</h2><div class="slp-grid">${items.map(sl => `<div class="slp-tile${(store.status[sl.id] || 'active') === 'out' ? ' out' : ''}"><div class="slp-sw" style="${sleeveSwatchStyle(sl)}"></div><div>${escapeAttr(sl.name)}${(store.status[sl.id] || 'active') === 'out' ? ' (out)' : ''}</div></div>`).join('')}</div>`;
+                return `<h2>${l.label}</h2><div class="slp-grid">${items.map(sl => `<div class="slp-tile${sleeveStatus(sl, store) === 'out' ? ' out' : ''}"><div class="slp-sw" style="${sleeveSwatchStyle(sl)}"></div><div>${escapeAttr(sl.name)}${sleeveStatus(sl, store) === 'out' ? ' (out)' : ''}</div></div>`).join('')}</div>`;
             }).join('');
             document.body.appendChild(area);
             document.body.classList.add('sl-printing');
