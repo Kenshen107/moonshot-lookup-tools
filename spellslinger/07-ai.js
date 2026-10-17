@@ -5,7 +5,8 @@
 // =====================================================================
 const creatureValueCard = o => (Number(o.card.power) || 0) + (Number(o.card.toughness) || 0) + (o.card.cmc || 0);
 function creatureValue(o) {
-    return pow(o) * 1.5 + tou(o) + (has(o, 'flying') ? 2 : 0) + (has(o, 'deathtouch') ? 2 : 0) + (has(o, 'lifelink') ? 1 : 0)
+    const reachBlocks = has(o, 'reach') && !has(o, 'flying') && G && G.players && G.players.some(X => X.i !== o.owner && X.bf.some(c => isCreature(c) && has(c, 'flying'))); // reach is the answer to their fliers
+    return (reachBlocks ? 1.5 : 0) + pow(o) * 1.5 + tou(o) + (has(o, 'flying') ? 2 : 0) + (has(o, 'deathtouch') ? 2 : 0) + (has(o, 'lifelink') ? 1 : 0)
         + (has(o, 'first strike') || has(o, 'double strike') ? 1.5 : 0) + (has(o, 'trample') ? 1 : 0) + (o.card.cmc || 0) * 0.3 + (o.isCommander ? 3 : 0);
 }
 
@@ -149,7 +150,7 @@ function scoreEffects(P, effects, target, src) {
             }
             case 'teamPump': { const n = P.bf.filter(canAttackWith).length; score += G.phase === 'main1' && n >= 3 ? n * 1.5 : 0; break; }
             case 'teamCounters': score += 2 + P.bf.filter(isCreature).length * 2; break;
-            case 'edict': score += e.who === 'each player' ? (O.bf.some(isCreature) && !P.bf.some(isCreature) ? 6 : 0) : (O.bf.some(isCreature) ? 5 : 0); break;
+            case 'edict': { const theirC = O.bf.filter(isCreature), worth = P.aiLevel === 'easy' || (theirC.length <= 2 && Math.max(0, ...theirC.map(creatureValue)) >= removalThreshold(P)); score += !worth ? 0 : e.who === 'each player' ? (O.bf.some(isCreature) && !P.bf.some(isCreature) ? 6 : 0) : (O.bf.some(isCreature) ? 5 : 0); break; }
             case 'loot': score += 3; break;
             case 'drawAll': score += 1; break;
             case 'loseAll': score += O.life <= e.n ? 1000 : P.life > O.life ? 2 : 0; break;
@@ -330,7 +331,7 @@ function aiRespond(P, top) {
     const opts = P.hand.filter(o => (Rx(o).kind === 'instant' || Rx(o).flash) && canCastNow(P, o) && canPay(P, o));
     for (const o of [...opts, ...P.hand.filter(x => !opts.includes(x) && Rx(x).alt && Rx(x).kind === 'instant' && canCastNow(P, x) && altOk(P, x))]) {
         const ce = (Rx(o).spell || []).find(e => e.t === 'counter');
-        if (ce && !noCounter && stackMatches(top, ce.filter) && stackThreat(top, P) >= (opts.includes(o) ? 5 : 7)) { if (!opts.includes(o)) o.altCast = true; return { o, target: { item: top } }; }
+        if (ce && !noCounter && stackMatches(top, ce.filter) && stackThreat(top, P) >= (opts.includes(o) ? 5 : 7) + (P.life > 12 ? 1.5 : 0)) { /* counters are saved for the big plays too */ if (!opts.includes(o)) o.altCast = true; return { o, target: { item: top } }; }
     }
     const mine = top.target && top.target.o && top.target.o.owner === P.i && onBf(top.target.o.uid) ? top.target.o : null;
     if (mine && top.kind === 'spell') {
@@ -412,7 +413,7 @@ function aiBestPlay(P) {
         const target = te ? aiPickTarget(P, te, o) : null;
         if (te && !target) continue;
         let s = aiScore(P, o, target);
-        if (P.aiLevel === 'hard' && target && target.o && target.o.owner !== P.i && ['destroy', 'exile', 'dmg'].includes(te.t) && creatureValue(target.o) < 5 && !(te.t === 'dmg' && target.p)) s = 0; // save it
+        if (target && target.o && target.o.owner !== P.i && isRemovalEffect(te) && !removalWorthIt(P, target.o)) s = 0; // save it for a real threat (2026-10-17)
         if (ev) s = s * 0.5 - 1;
         if (alt) s = s * 0.7 - 1;
         if (md === 'warp' || md === 'blitz' || md === 'dash' || md === 'impending' || md === 'morph') { o.castAs = null; const full = canPay(P, o) && !P.gy.includes(o); o.castAs = md; s = full ? 0 : s * 0.6; } // the real thing when it can
@@ -429,6 +430,22 @@ function aiBestPlay(P) {
     pick.o.altCast = pick.alt;
     pick.o.castAs = pick.md || null;
     return pick;
+}
+// Reserved removal and interaction (2026-10-17, owner's request: "more reserved with removal and interaction").
+// Removal and bounce are spent on a real threat, not on the first creature in range. A creature that is
+// worth at least `removalThreshold` (a vanilla 2/2 is about 5.6, a 3/3 about 7.5, a flier or a deathtoucher
+// a couple more) or a commander qualifies; so does anything when the AI is under pressure.
+function isRemovalEffect(e) { return !!e && (['destroy', 'exile', 'bounce', 'fight'].includes(e.t) || (e.t === 'dmg' && e.target !== 'player') || (e.t === 'pump' && !e.good)); }
+function removalThreshold(P) {
+    const sumPow = X => X.bf.filter(isCreature).reduce((a, c) => a + Math.max(0, pow(c)), 0);
+    const theirPow = foes(P).reduce((a, F) => a + sumPow(F), 0), ourPow = sumPow(P);
+    if (P.life <= 12 || theirPow >= P.life / 2) return 4.5; // under pressure: use it
+    return (P.aiLevel === 'hard' ? 7 : 6.5) + (P.life > 20 && ourPow >= theirPow * 1.5 ? 1.5 : 0); // ahead on board: save it even more
+}
+function removalWorthIt(P, o) {
+    if (P.aiLevel === 'easy') return true;
+    if (isCreature(o)) return creatureValue(o) + (o.isCommander ? 2 : 0) >= removalThreshold(P);
+    return permValue(o) >= 8; // an artifact or enchantment: only the expensive ones
 }
 // Hard AI: when you attack, kill the biggest attacker with instant removal before blocks
 async function aiRemoveAttacker(P) {

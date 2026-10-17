@@ -11,6 +11,7 @@ const ABOUT_FEATURES = [
     ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log.']
 ];
 const ABOUT_LOG = [
+    ['Oct 17 (reserved AI)', ['Computer players are now more reserved with removal and counterspells: they save them for real threats instead of firing at the first small creature, and loosen up only when they are under pressure or low on life. Edicts wait until the board is small. Reach creatures are valued higher when the other side has fliers (the AI already knew reach blocks flying, and now a test checks it).']],
     ['Oct 16 (no gifts)', ['Removed "kingmaking": a bot that is knocked out no longer hands its cards to the player it likes.']],
     ['Oct 16 (Samut deck)', ['New fully working Commander deck: Samut, Hazoret\'s Champion (mono-red ramp into bombs, about $284 in real cards), tuned in the test lab against 4-player pods. A deck can now name the playstyle the computer uses when it plays it. Also fixed: Cut a Deal drew you a card for every card the opponents drew; it now draws one per opponent who drew. Ramp-style computer players now cast mana rocks sooner when they hold expensive cards.']],
     ['Oct 16 (planeswalker commanders)', ['Planeswalkers that say "can be your commander" (like Jace, Multiverse Architect) can now lead a Commander deck, so the Multiverse Reforged precon works as a starter and in the deck builder and importer.']],
