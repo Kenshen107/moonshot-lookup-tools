@@ -16450,7 +16450,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             { key: 'matte',   label: 'Matte' },
             { key: 'classic', label: 'Classic' },
             { key: 'dual',    label: 'Dual Matte' },
-            { key: 'other',   label: 'Non-Glare, Outer & Clear' },
+            { key: 'other',   label: 'Non-Glare, Outer & Clear', byName: true },
             { key: 'art',     label: 'Art sleeves', noRainbow: true }
         ];
         // [line, name, swatch hex, second hex for two-color sleeves (inside color), in stock at Dragon Shield]
@@ -16460,8 +16460,8 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             ['art', "Alaric - Constellations - Brushed Art", '#3a3f4a', null, false],
             ['matte', "Amazonite", '#5fc7b8', null, true],
             ['matte', "Amber", '#e0a23a', null, true],
-            ['other', "American Mini (board game, clear/non-glare)", '#dfe9ee', null, true],
-            ['other', "American Standard (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "Board game: American Mini", '#dfe9ee', null, true],
+            ['other', "Board game: American Standard", '#dfe9ee', null, true],
             ['matte', "Amethyst", '#8e5bc4', null, true],
             ['dual', "Apple Green & Silver", '#86c440', '#b8bcc2', true],
             ['matte', "Apple Green", '#86c440', null, true],
@@ -16487,16 +16487,13 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             ['art', "Christmas 2025 - Brushed Art", '#3a3f4a', null, true],
             ['classic', "Clear", '#dfe9ee', null, true],
             ['other', "Matte Outer Clear", '#dfe9ee', null, true],
-            ['other', "Matte Outer Clear #2", '#dfe9ee', null, true],
             ['matte', "Clear", '#dfe9ee', null, true],
             ['other', "Non-Glare Matte Clear", '#dfe9ee', null, true],
-            ['other', "Clear - Sealable Perfect Fit", '#dfe9ee', null, true],
-            ['other', "Clear - Sealable Perfect Fit #2", '#dfe9ee', null, true],
-            ['other', "Clear - Sideloading Perfect Fit", '#dfe9ee', null, true],
-            ['other', "Clear - Toploading Perfect Fit", '#dfe9ee', null, true],
-            ['other', "Clear - Toploading Perfect Fit #2", '#dfe9ee', null, true],
+            ['other', "Perfect Fit: Clear Sealable", '#dfe9ee', null, true],
+            ['other', "Perfect Fit: Clear Sideloading", '#dfe9ee', null, true],
+            ['other', "Perfect Fit: Clear Toploading", '#dfe9ee', null, true],
             ['dual', "Cobalt & Silver", '#1f4fbf', '#b8bcc2', true],
-            ['other', "Common Standard (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "Board game: Common Standard", '#dfe9ee', null, true],
             ['classic', "Copper", '#b5642e', null, false],
             ['matte', "Copper", '#b5642e', null, true],
             ['dual', "Crimson & Silver", '#8f1d2c', '#b8bcc2', true],
@@ -16515,9 +16512,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             ['art', "Emperor Scion Portrait - Matte Art", '#3a3f4a', null, false],
             ['art', "Enigma - Matte Art", '#3a3f4a', null, true],
             ['dual', "Eucalyptus", '#5aa78a', '#cfe8d8', true],
-            ['other', "European Mini (board game, clear/non-glare)", '#dfe9ee', null, true],
-            ['other', "European Standard (board game, clear/non-glare)", '#dfe9ee', null, true],
-            ['other', "Extra Large (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "Board game: European Mini", '#dfe9ee', null, true],
+            ['other', "Board game: European Standard", '#dfe9ee', null, true],
+            ['other', "Board game: Extra Large", '#dfe9ee', null, true],
             ['art', "Fai - Matte Art", '#3a3f4a', null, true],
             ['art', "Fire Horse 2026 - Matte Dual Art", '#3a3f4a', null, true],
             ['matte', "Forest Green", '#1f5a33', null, true],
@@ -16542,7 +16539,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             ['art', "Grand Archive - Lorraine, Arclight Saber - Matte Dual Art", '#3a3f4a', null, true],
             ['art', "Grand Archive - Merlin Veritor - Matte Dual Art", '#3a3f4a', null, true],
             ['art', "Grand Archive - Raziel, Archangel of Libra - Matte Dual Art", '#3a3f4a', null, true],
-            ['other', "Grand Standard (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "Board game: Grand Standard", '#dfe9ee', null, true],
             ['classic', "Green", '#2e9a4a', null, true],
             ['matte', "Green", '#2e9a4a', null, false],
             ['art', "Guildpact Series - Azorius Senate - Matte Dual Art", '#3a3f4a', null, true],
@@ -16587,7 +16584,6 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             ['art', "Melody - Matte Art", '#3a3f4a', null, true],
             ['matte', "Midnight Blue", '#14214f', null, true],
             ['dual', "Might", '#c0392b', '#e0b64a', true],
-            ['dual', "Might #2", '#c0392b', '#e0b64a', true],
             ['matte', "Mint", '#9ee3c0', null, true],
             ['art', "Miragai - Matte Art", '#3a3f4a', null, false],
             ['art', "Mothar Vanguard Portrait - Matte Art", '#3a3f4a', null, true],
@@ -16595,10 +16591,10 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             ['art', "Oldhim - Matte Art", '#3a3f4a', null, true],
             ['matte', "Orange", '#ef7d1a', null, true],
             ['dual', "Orchid", '#b27bd6', '#f0d3f5', true],
-            ['other', "Oversize (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "Board game: Oversize", '#dfe9ee', null, true],
             ['dual', "Peach", '#f6a98a', '#fde0cf', true],
-            ['other', "Perfect Fit - Thick Inner Sleeves - Black", '#6e7378', null, true],
-            ['other', "Perfect Fit - Thick Inner Sleeves - Clear", '#dfe9ee', null, true],
+            ['other', "Perfect Fit: Thick Inner Black", '#6e7378', null, true],
+            ['other', "Perfect Fit: Thick Inner Clear", '#dfe9ee', null, true],
             ['matte', "Petrol", '#1d5e6b', null, true],
             ['matte', "Pink", '#ee86b6', null, true],
             ['matte', "Pink Diamond", '#f2a1c8', null, true],
@@ -16625,16 +16621,16 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             ['matte', "Silver", '#b8bcc2', null, true],
             ['art', "Silvie, Slime Sovereign - Matte Art", '#3a3f4a', null, false],
             ['dual', "Sky Blue & Silver", '#6cb8e8', '#b8bcc2', true],
-            ['other', "Smoke - Sealable Perfect Fit", '#6e7378', null, true],
-            ['other', "Smoke - Sideloading Perfect Fit Sleeves - Standard Size", '#6e7378', null, true],
-            ['other', "Smoke - Toploading Perfect Fit", '#6e7378', null, true],
+            ['other', "Perfect Fit: Smoke Sealable", '#6e7378', null, true],
+            ['other', "Perfect Fit: Smoke Sideloading", '#6e7378', null, true],
+            ['other', "Perfect Fit: Smoke Toploading", '#6e7378', null, true],
             ['dual', "Snow", '#f2f4f7', '#c9d1da', true],
             ['dual', "Soul & Petrol", '#8a4fc0', '#1d5e6b', true],
             ['dual', "Soul", '#8a4fc0', '#d9b8f0', true],
-            ['other', "Square (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "Board game: Square", '#dfe9ee', null, true],
             ['art', "Super Slam - Matte Art", '#3a3f4a', null, true],
             ['classic', "Tangerine", '#f07a1a', null, false],
-            ['other', "Tarot (board game, clear/non-glare)", '#dfe9ee', null, true],
+            ['other', "Board game: Tarot", '#dfe9ee', null, true],
             ['art', "The Burnbug - Brushed Art", '#3a3f4a', null, false],
             ['art', "The Bushdrake - Brushed Art", '#3a3f4a', null, true],
             ['art', "The Cinderfin - Brushed Art", '#3a3f4a', null, true],
@@ -16708,7 +16704,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 `<button type="button" class="guide-tab${sleeveUI.line === l.key ? ' active' : ''}" onclick="sleeveSetLine('${l.key}')">${l.label}</button>`).join('');
             const lines = sleeveLinesShown();
             const sections = lines.map(l => {
-                const items = list.filter(sl => sl.line === l.key && sleeveVisible(sl)).sort(l.noRainbow ? sleeveByName : sleeveCompare);
+                const items = list.filter(sl => sl.line === l.key && sleeveVisible(sl)).sort((l.noRainbow || l.byName) ? sleeveByName : sleeveCompare);
                 const tiles = items.map(sl => {
                     const st = sleeveStatus(sl, store);
                     return `<div class="sl-tile sl-${st}">
@@ -16771,7 +16767,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             area = document.createElement('div'); area.id = 'slPrintArea';
             const lines = sleeveLinesShown();
             area.innerHTML = `<h1>Dragon Shield sleeve wall</h1><p>Rainbow order. Printed ${new Date().toLocaleDateString()}. Fan-made layout list, not checked against Dragon Shield's own list.</p>` + lines.map(l => {
-                const items = allSleeves().filter(sl => sl.line === l.key && sleeveStatus(sl, store) !== 'gone').sort(l.noRainbow ? sleeveByName : sleeveCompare);
+                const items = allSleeves().filter(sl => sl.line === l.key && sleeveStatus(sl, store) !== 'gone').sort((l.noRainbow || l.byName) ? sleeveByName : sleeveCompare);
                 if (!items.length) return '';
                 return `<h2>${l.label}</h2><div class="slp-grid">${items.map(sl => `<div class="slp-tile${sleeveStatus(sl, store) === 'out' ? ' out' : ''}"><div class="slp-sw" style="${sleeveSwatchStyle(sl)}"></div><div>${escapeAttr(sl.name)}${sleeveStatus(sl, store) === 'out' ? ' (out)' : ''}</div></div>`).join('')}</div>`;
             }).join('');
