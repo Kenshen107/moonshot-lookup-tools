@@ -103,17 +103,16 @@ function simpleLand(c) {
             pool.push({ ...base, type: 'spell', kind: sp.kind, n: sp.n, power: +(w - c.cmc * 0.5).toFixed(2) });
         }
     }
-    // rarity and tier by strength inside each group (percentiles), not Magic's own rarity
-    const groups = {};
-    pool.filter(c => c.type !== 'land').forEach(c => (groups[c.type] = groups[c.type] || []).push(c));
-    for (const arr of Object.values(groups)) {
-        arr.sort((a, b) => a.power - b.power || a.name.localeCompare(b.name));
-        arr.forEach((c, i) => {
-            const q = i / (arr.length - 1 || 1);
-            c.rarity = q > .97 ? 'mythic' : q > .83 ? 'rare' : q > .55 ? 'uncommon' : 'common';
-            c.tier = q > .75 ? 3 : q > .35 ? 2 : 1;
-        });
-    }
+    // rarity and tier by strength. Rarity is ranked inside each type and color group (so every color has its own rares and mythics):
+    // top 8% mythic, next 18% rare, next 30% uncommon, the rest common. Tier is ranked inside the type: top quarter tier 3, next 40% tier 2.
+    const byGroup = {}, byType = {};
+    pool.filter(c => c.type !== 'land').forEach(c => {
+        (byGroup[c.type + '|' + (c.colors[0] || 'C')] = byGroup[c.type + '|' + (c.colors[0] || 'C')] || []).push(c);
+        (byType[c.type] = byType[c.type] || []).push(c);
+    });
+    const rank = arr => { arr.sort((a, b) => a.power - b.power || a.name.localeCompare(b.name)); return arr.map((c, i) => [c, i / (arr.length - 1 || 1)]); };
+    for (const arr of Object.values(byGroup)) for (const [c, q] of rank(arr)) c.rarity = q > .92 ? 'mythic' : q > .74 ? 'rare' : q > .44 ? 'uncommon' : 'common';
+    for (const arr of Object.values(byType)) for (const [c, q] of rank(arr)) c.tier = q > .75 ? 3 : q > .35 ? 2 : 1;
     pool.filter(c => c.type === 'land').forEach(c => { c.rarity = c.kind === 'basic' ? 'basic' : 'uncommon'; c.tier = c.kind === 'basic' ? 1 : 2; });
     pool.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
     const out = { made: new Date().toISOString().slice(0, 10), note: 'Planeswalkers Ascent roster. Rarity and tier are set by strength (tests/ascent_roster.js), not Magic\'s printing.', cards: pool };

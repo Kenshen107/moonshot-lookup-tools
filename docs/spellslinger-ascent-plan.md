@@ -8,6 +8,6 @@ Owner's request 2026-10-18: rebuild the Campaign as a single-player gauntlet wit
 ## Build steps
 2. (done 2026-10-18, `spellslinger/13c-ascent.js`, `tests/suites/ascent.js`) Pack generator: the 14-slot Play Booster from the roster (6 commons, 3 uncommons, rare with 1-in-7 mythic, foil, wildcard, basic, list slot), Collector Booster for boss wins.
 3. (core done with step 2: `ascentAddCards`, `craftAscentCard`, `dustAscentCard`; the screen comes with step 5) Aether and crafting: 5th copy dusts, craft costs by rarity, Campaign only.
-4. Gauntlet: three tiers of five matches plus a Planeswalker boss; each AI gets a themed deck from the roster and a signature "grind" card set only it drops.
+4. (done 2026-10-18: `spellslinger/13d-ascent-gauntlet.js`, `tests/suites/ascentdecks.js`, lab `--kind ascent`; rarity rebalanced to about 8% mythic) Gauntlet: three tiers of five matches plus a Planeswalker boss; each AI gets a themed deck from the roster and a signature "grind" card set only it drops.
 5. Campaign screen, saved progress, own deck list (Campaign decks separate from Sandbox).
 6. Tests (lab games with roster decks, pack odds, crafting), About log, CLAUDE.md.

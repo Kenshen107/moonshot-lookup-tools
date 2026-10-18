@@ -34,7 +34,9 @@ function ascentState() {
 // pools by group; the roster has no tokens, so The List slot uses a rare/mythic card
 function ascentPools() {
     if (ASCENT.pools) return ASCENT.pools;
-    const nonLand = ASCENT.roster.filter(c => c.type !== 'land');
+    // signature cards (13d) only drop from their opponent, so they stay out of packs
+    const sigs = typeof ascentSignatures === 'function' ? (ascentSignatures(), ASCENT.sigSet) : new Set();
+    const nonLand = ASCENT.roster.filter(c => c.type !== 'land' && !sigs.has(c.id));
     const by = r => nonLand.filter(c => c.rarity === r);
     ASCENT.pools = {
         common: by('common'), uncommon: by('uncommon'), rare: by('rare'), mythic: by('mythic'),

@@ -152,7 +152,14 @@ window.LAB = (() => {
             const styles = mode === 'none' ? Array(n).fill(null) : mode === 'random' ? hshuf(PLAYSTYLE_KEYS).slice(0, n) : Array(n).fill(mode);
             out.styles = styles;
             let A, B, more;
-            if (opts.themes) {
+            if (kind === 'ascent') {
+                // Planeswalker's Ascent: two opponents' decks from the roster (seed picks the pair, and each seat's tier sets its AI level)
+                await loadAscentRoster();
+                const i = opts.seed % ASCENT_OPPONENTS.length, j = (i + 1 + Math.floor(opts.seed / ASCENT_OPPONENTS.length) % (ASCENT_OPPONENTS.length - 1)) % ASCENT_OPPONENTS.length;
+                const mk = o => { const d = ascentDeckEntries(o.name, ascentOpponentDeck(o)); d.aiStyle = o.style; return d; };
+                A = mk(ASCENT_OPPONENTS[i]); B = mk(ASCENT_OPPONENTS[j]); more = [];
+                out.styles = [A.aiStyle, B.aiStyle];
+            } else if (opts.themes) {
                 // Political decks: 'random' = a different theme at every seat, or a list like fort,thief,hug,drain
                 const keys = opts.themes === 'random' ? hshuf(L.THEME_KEYS).slice(0, n) : String(opts.themes).split(',');
                 out.themes = keys.slice(0, n);
