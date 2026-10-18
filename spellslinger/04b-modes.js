@@ -15,7 +15,7 @@ const MODES = {
     sandbox: { icon: '🧪', name: 'Sandbox', bucket: 'sandbox', views: ['home', 'packs', 'decks', 'play', 'precons', 'draft', 'welcome', 'rules'],
         desc: 'Try anything: open packs, build decks, play any opponent, draft. Its coins and record are separate from Campaign and Shop.' },
     campaign: { icon: '🗺️', name: 'Campaign', bucket: 'main', views: ['home', 'packs', 'decks', 'campaign', 'rules'],
-        desc: 'Climb the ladder from the Kitchen Table to the Regional Qualifier. Each tier has a deck-value limit.' },
+        desc: 'Planeswalker\'s Ascent: climb three leagues with a slow, simple card pool, your own packs, decks and upgrades.' },
     shop: { icon: '🏪', name: 'Shop Simulator', bucket: 'main', views: ['home', 'decks', 'shop', 'dist', 'rules'],
         desc: 'Run the card shop: the case, the distributor, the stockroom and grading.' }
 };

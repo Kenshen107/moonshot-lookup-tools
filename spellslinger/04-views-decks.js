@@ -20,7 +20,7 @@ function showView(v) {
     if (v === 'rules') renderRulesView();
     if (v === 'shop') renderShop();
     if (v === 'dist') renderDist();
-    if (v === 'campaign') renderCampaign();
+    if (v === 'campaign') renderAscent();
     if (v === 'draft') renderDraft();
     try { history.replaceState(null, '', `#${v}`); } catch (e) { /* fine */ }
 }

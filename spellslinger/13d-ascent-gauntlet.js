@@ -155,6 +155,7 @@ function ascentStarter(color) {
         .map(c => ({ c, k: c.power + rng() * 2 })).sort((a, b) => b.k - a.k).map(x => x.c);
     const cards = {}; let left = ASCENT_DECK_SIZE - ASCENT_LANDS, spells = 0;
     for (const c of pool) { if (left <= 0) break; if (c.type === 'spell') { if (spells >= 2) continue; spells++; } const n = Math.min(c.cmc <= 3 ? 3 : 2, left); cards[c.id] = n; left -= n; }
+    for (let pass = 0; pass < 2 && left > 0; pass++) for (const c of pool) { if (left <= 0) break; if (c.type === 'spell' || !cards[c.id] || cards[c.id] >= ASCENT_COPY_LIMIT) continue; cards[c.id]++; left--; } // top up the best creatures instead of piling on lands
     const basic = ASCENT.roster.find(c => c.kind === 'basic' && { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' }[color] === c.name);
     Object.entries(cards).forEach(([id, n]) => { const o = ascentOwnedEntry(id); for (let i = 0; i < n; i++) o.c.push(ascentNewCopy(false)); ascentSyncOwned(o); });
     cards[basic.id] = ASCENT_LANDS;

@@ -45,7 +45,7 @@ const BODY = async function () {
 
     // ---- the Precon Circuit in Campaign ----
     G.over = true; leaveGame();
-    setMode('campaign', { quiet: true }); showView('campaign');
+    setMode('campaign', { quiet: true }); showView('campaign'); $('oldCampaign').open = true; renderCampaign(); // the circuit lives in the folded old-ladder section now
     await new Promise(r => setTimeout(r, 5000));
     ok('the circuit has a lane for each kind with ready decks', document.querySelectorAll('#circuitBody .pl-group').length >= 3, [...document.querySelectorAll('#circuitBody summary strong')].map(x => x.textContent));
     ok('it says how many stops are beaten', /0 of \d+ stops beaten/.test($('circuitNote').textContent), $('circuitNote').textContent);
@@ -59,7 +59,7 @@ const BODY = async function () {
     ok('first win pays the lane prize and ticks the stop', campaignResult(true).includes('+20') && profile.coins === before + 20 && profile.campaignProgress.includes('pc-' + wd.file), profile.coins - before);
     ok('a repeat win pays 10', (campaignResult(true), profile.coins === before + 30));
     ok('a loss pays 5', (campaignResult(false), profile.coins === before + 35));
-    G.over = true; leaveGame(); showView('campaign');
+    G.over = true; leaveGame(); showView('campaign'); renderCampaign();
     await new Promise(r => setTimeout(r, 1500));
     ok('the beaten stop shows a tick', /✓/.test($('circuitBody').textContent));
     return out;
