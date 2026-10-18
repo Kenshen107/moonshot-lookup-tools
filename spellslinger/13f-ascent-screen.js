@@ -11,6 +11,7 @@ async function renderAscent() {
     if (!host) return;
     try { await loadAscentRoster(); } catch (e) { host.innerHTML = `<p class="warn">${esc(e.message)}</p>`; return; }
     ascentSignatures();
+    ascProbeArt();
     const st = ascentState();
     const ids = Object.keys(st.owned).filter(id => ASCENT.byId.has(id) && !CARDS.has(id));
     if (ids.length) cardsByIds(ids).then(() => { if (ASC.tab !== 'map') renderAscent(); }).catch(() => {});
@@ -24,12 +25,20 @@ async function renderAscent() {
                 <div><span class="pos-k">Opponents beaten</span><strong>${st.progress.length} / ${ASCENT_OPPONENTS.length}</strong></div>
                 <div><span class="pos-k">Cards owned</span><strong>${cards}</strong></div>
             </div>
+            <label class="note asc-fxtoggle"><input type="checkbox" ${ascFxPref() ? 'checked' : ''} onchange="ascFxSet(this.checked)"> Play pixel-art effects in games</label>
             <div class="tabs" role="tablist">${[['map', '🗺️ Map'], ['packs', '📦 Packs'], ['coll', '🃏 Collection'], ['decks', '🛠️ Decks']].map(([k, l]) => `<button class="tab" role="tab" aria-selected="${ASC.tab === k}" onclick="ascTab('${k}')">${l}</button>`).join('')}</div>
             <div id="ascBody"></div>
         </div>`;
     ({ map: ascMap, packs: ascPacks, coll: ascColl, decks: ascDecks })[ASC.tab]();
 }
 function ascTab(t) { ASC.tab = t; ASC.page = 0; renderAscent(); }
+
+// A helper character who talks on each tab (placeholder art until the sprite files exist)
+const ASC_NPC = { map: 'npc-guide', packs: 'npc-packmaster', coll: 'npc-smith', decks: 'npc-deckwright' };
+function ascNpcHTML(tab) {
+    const id = ASC_NPC[tab], seed = ascentState().progress.length + (ascentState().packs || 0);
+    return id ? `<div class="asc-npc">${ascSpeechHTML(id, 'intro', seed)}<p class="note asc-tipline">💡 ${esc(ascLine(id, 'tip', 0))}</p></div>` : '';
+}
 
 // ---------- Map ----------
 function ascMap() {
@@ -40,7 +49,7 @@ function ascMap() {
             <div class="asc-colors">${Object.entries(ASC_COLORS).map(([c, [e, n]]) => `<button class="btn" onclick="ascChooseStarter('${c}')"><span class="asc-big">${e}</span> ${n}</button>`).join('')}</div></div>`;
         return;
     }
-    body.innerHTML = ASCENT_TIERS.map(t => {
+    body.innerHTML = ascNpcHTML('map') + ASCENT_TIERS.map(t => {
         const open = ascentTierOpen(t.tier), opps = ASCENT_OPPONENTS.filter(o => o.tier === t.tier);
         return `<div class="tier-band tier-${t.tier}${open ? '' : ' locked'}">
             <div class="tier-head"><span class="tier-icon" aria-hidden="true">${t.icon}</span><div><strong>Tier ${t.tier}: ${esc(t.name)}</strong>
@@ -66,7 +75,9 @@ async function ascOppPanel() {
     await cardsByIds(sigs).catch(() => {});
     const archName = { stomp: 'Big creatures', weenie: 'Small fast creatures', fliers: 'Fliers', value: 'Deathtouch and life gain', burn: 'Burn and haste', control: 'Removal and walls', tempo: 'Bounce and evasion' }[o.arch];
     box.innerHTML = `<div class="pos asc-opp"><div class="pos-title"><h3>${o.boss ? '👑 ' : ''}${esc(o.name)}</h3><span class="note">${ascPips(o.colors)} · ${esc(archName)} · ${t.level} AI</span></div>
+        ${ascSpeechHTML(o.id, 'intro', st.progress.length)}
         <p>${esc(o.blurb)}</p>
+        <p class="note">💡 ${esc(ASCENT_CHAR[o.id].lines.tip)}</p>
         <p class="note">Prize for a win: ${o.boss ? '2 Play Boosters and a Collector Booster' : 'a Play Booster'}. ${ascentBeaten(o.id) ? 'Beaten before.' : 'First win guarantees a signature card.'} Later wins drop a signature card ${Math.round(ASCENT_PRIZE.sigRepeatChance * 100)}% of the time. A loss pays ${ASCENT_PRIZE.lossAether} Aether.</p>
         <h4>Signature cards (only this opponent drops them)</h4>
         <div class="asc-grid">${sigs.map(id => ascTile(id, { sig: true })).join('')}</div>
@@ -75,10 +86,14 @@ async function ascOppPanel() {
             ${open ? '' : `<span class="note">${o.boss ? 'Beat the other five of this league first.' : 'Locked.'}</span>`}</div></div>`;
 }
 async function ascPlay(oppId) {
-    const idx = Number($('ascDeckPick').value) || 0;
-    ASC.deck = idx;
+    ASC.deck = Number($('ascDeckPick').value) || 0;
+    const o = ASCENT_OPP[oppId];
+    showModal(`<h2>${esc(o.name)}</h2>${ascSpeechHTML(oppId, 'intro', Math.floor(Math.random() * 8))}
+        <div class="actions"><button class="btn primary" onclick="ascGo('${oppId}')">⚔️ Let's play</button><button class="btn" onclick="closeModal()">Not yet</button></div>`);
+}
+async function ascGo(oppId) {
     showModal('<h2>Shuffling up...</h2><p class="loading">Loading both decks...</p>');
-    try { await startAscentMatch(oppId, idx); closeModal(); }
+    try { await startAscentMatch(oppId, ASC.deck); closeModal(); }
     catch (e) { closeModal(); toast(e.message || 'Could not start the game.'); }
 }
 
@@ -118,7 +133,7 @@ async function ascColl(keepFocus) {
     const need = shown.map(c => c.id).filter(id => !CARDS.has(id));
     const draw = () => {
         const focus = keepFocus && document.activeElement && document.activeElement.type === 'search';
-        body.innerHTML = `${ascFilterBar()}<p class="note">${list.length} cards. ✦ = upgrades on your copies, ⭐ = a signature card. Tap a card to craft, upgrade or dust.</p>
+        body.innerHTML = `${ascNpcHTML('coll')}${ascFilterBar()}<p class="note">${list.length} cards. ✦ = upgrades on your copies, ⭐ = a signature card. Tap a card to craft, upgrade or dust.</p>
             <div class="asc-grid">${shown.map(c => ascTile(c.id)).join('') || '<p class="note">No cards match.</p>'}</div>
             <div class="row" style="justify-content:center;margin-top:10px;"><button class="btn small" ${ASC.page ? '' : 'disabled'} onclick="ASC.page--; ascColl()">◀</button><span class="note">Page ${ASC.page + 1} of ${pages}</span><button class="btn small" ${ASC.page < pages - 1 ? '' : 'disabled'} onclick="ASC.page++; ascColl()">▶</button></div>`;
         if (focus) { const el = body.querySelector('input[type=search]'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
@@ -181,7 +196,7 @@ function ascRemoveUpgrade(key, slot) { const res = swapAscentUpgrade(key, slot, 
 // ---------- Packs ----------
 function ascPacks() {
     const st = ascentState(), s = st.sealed || { play: 0, collector: 0 }, body = $('ascBody');
-    body.innerHTML = `<div class="row"><button class="btn primary" ${s.play ? '' : 'disabled'} onclick="ascOpenPack('play')">📦 Open a Play Booster (${s.play})</button>
+    body.innerHTML = ascNpcHTML('packs') + `<div class="row"><button class="btn primary" ${s.play ? '' : 'disabled'} onclick="ascOpenPack('play')">📦 Open a Play Booster (${s.play})</button>
         <button class="btn gold" ${s.collector ? '' : 'disabled'} onclick="ascOpenPack('collector')">🌟 Open a Collector Booster (${s.collector})</button></div>
         <p class="note">Win matches for Play Boosters; bosses also give a Collector Booster (all foils, 5+ rares). The 5th copy of any card turns into Aether.</p>
         <div id="ascReveal">${ASC.pack ? ascRevealHTML(ASC.pack) : '<p class="note">Nothing opened yet.</p>'}</div>`;
@@ -217,7 +232,7 @@ function ascDecks() {
     const entries = Object.entries(deck.cards).map(([id, n]) => [ASCENT.byId.get(id), id, n]).filter(([r]) => r)
         .sort((a, b) => (a[0].type === 'land') - (b[0].type === 'land') || a[0].cmc - b[0].cmc || a[0].name.localeCompare(b[0].name));
     const basics = ASCENT.roster.filter(c => c.kind === 'basic');
-    body.innerHTML = `<div class="row"><select aria-label="Deck" onchange="ASC.deck=Number(this.value); ascDecks()">${st.decks.map((d, i) => `<option value="${i}" ${i === ASC.deck ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
+    body.innerHTML = `${ascNpcHTML('decks')}<div class="row"><select aria-label="Deck" onchange="ASC.deck=Number(this.value); ascDecks()">${st.decks.map((d, i) => `<option value="${i}" ${i === ASC.deck ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
         <button class="btn small" onclick="ascNewDeck()">＋ New deck</button><button class="btn small" onclick="ascRenameDeck()">Rename</button><button class="btn small" ${st.decks.length > 1 ? '' : 'disabled'} onclick="ascDeleteDeck()">Delete</button></div>
         <div class="asc-deckhead"><strong>${total} / ${ASCENT_DECK_SIZE}+</strong> cards ${problems.length ? `<span class="warn">${esc(problems[0])}</span>` : '<span class="ok">✔ Ready to play</span>'}</div>
         <div class="asc-twocol"><div class="asc-decklist"><h4>In this deck</h4>

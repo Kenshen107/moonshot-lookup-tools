@@ -534,6 +534,7 @@ function castFilter(f, o) {
 function landsUntappedFor(X) { return X.bf.some(a => Rx(a).landsUntapped && !lostAbilities(a)); }
 function fire(ev, ctx = {}) {
     if (!G || G.over) return;
+    if (typeof ascFxHook === 'function') ascFxHook(ev, ctx); // pixel-art effects (13h); never affects the game
     if (ev === 'enters' && ctx.o && G.reflection && G.reflection.turn === G.turn && (isCreature(ctx.o) || isPlaneswalker(ctx.o))) {
         const rf = G.reflection, x = ctx.o;
         x.copyOf = x.copyOf || x.card; x.card = { ...rf.card, id: `${rf.card.id}-copy${uidSeq++}` };

@@ -146,6 +146,7 @@ function renderCoins() {
     // Shop cash next to the coins (2026-10-07, owner's request)
     const full = `$${usdAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const cash = phone && usdAmt >= 1000 ? `$${usdAmt >= 1e4 ? shortNum(usdAmt) : `${(usdAmt / 1e3).toFixed(1)}k`}` : phone ? `$${Math.round(usdAmt)}` : full;
+    if ($('aetherCount') && profile && profile.ascent) { const a = profile.ascent.aether.toLocaleString(); if ($('aetherCount').textContent !== a) $('aetherCount').textContent = a; }
     if ($('cashCount') && $('cashCount').textContent !== cash) { $('cashCount').textContent = cash; $('cashPill').setAttribute('aria-label', `Shop cash ${full}. Open the Shop`); }
 }
 // Cash changes in many places (sales, rent, grading...): keep the pill current

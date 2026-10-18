@@ -26,7 +26,7 @@ const BODY = async function () {
 
     // ---- switching ----
     ok('starts in Campaign', modeKey() === 'campaign');
-    ok('Campaign shows Home, Packs, Decks, Campaign, Rules', JSON.stringify(shown()) === JSON.stringify(['home', 'packs', 'decks', 'campaign', 'rules']), shown());
+    ok('Campaign shows Home, Campaign, Rules (Ascent has its own packs and decks inside)', JSON.stringify(shown()) === JSON.stringify(['home', 'campaign', 'rules']), shown());
     setMode('sandbox', { quiet: true });
     ok('Sandbox starts fresh: 500 coins, no wins', profile.coins === START_COINS && profile.wins === 0 && profile.losses === 0, money());
     ok('Sandbox shows Packs, Play, Precons, Draft, Welcome Decks, no Shop or Campaign', JSON.stringify(shown()) === JSON.stringify(['home', 'packs', 'decks', 'play', 'precons', 'draft', 'welcome', 'rules']), shown());
@@ -49,7 +49,7 @@ const BODY = async function () {
     setMode('shop', { quiet: true });
     ok('Shop Simulator shows the cash pill', cashOn() && !$('cashPill').classList.contains('hidden'));
     setMode('campaign', { quiet: true });
-    ok('Campaign shows the cash pill', cashOn() && !$('cashPill').classList.contains('hidden'));
+    ok('Campaign shows Aether instead of coins and cash', cashOn() && $('cashPill').classList.contains('hidden') && !$('aetherPill').classList.contains('hidden'));
     ok('the stash holds only the parked bucket', Object.keys(profile.stash).join() === 'sandbox', Object.keys(profile.stash));
 
     // ---- a save survives a reload in the right mode ----

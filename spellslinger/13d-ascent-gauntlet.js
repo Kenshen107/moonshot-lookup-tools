@@ -181,7 +181,8 @@ function ascentDeckProblems(deck) {
 // Called when a game from the Ascent ends (campaignResult in 13-campaign.js hands over). Returns the line shown on the result screen.
 function ascentResult(won) {
     const c = G.campaign, opp = ASCENT_OPP[c.node], st = ascentState();
-    if (!won) { st.aether += ASCENT_PRIZE.lossAether; saveProfile(); return `Ascent: ${ASCENT_PRIZE.lossAether} Aether for trying.`; }
+    const quote = kind => (typeof ascLine === 'function' && ASCENT_CHAR[c.node]) ? `“${ascLine(c.node, kind)}” - ${opp.name}. ` : '';
+    if (!won) { st.aether += ASCENT_PRIZE.lossAether; saveProfile(); return `${quote('lose')}Ascent: ${ASCENT_PRIZE.lossAether} Aether for trying.`; }
     const first = !st.progress.includes(c.node);
     if (first) st.progress.push(c.node);
     const prize = opp.boss ? ASCENT_PRIZE.boss : ASCENT_PRIZE.win;
@@ -197,7 +198,7 @@ function ascentResult(won) {
         parts.push(`signature card ${ASCENT.byId.get(id).name}`);
     }
     saveProfile();
-    return `Ascent: ${first ? 'beaten for the first time! ' : ''}${parts.join(', ')}.${first && opp.boss && opp.tier < 3 ? ` ${ASCENT_TIERS[opp.tier].name} is open.` : ''}`;
+    return `${quote('win')}Ascent: ${first ? 'beaten for the first time! ' : ''}${parts.join(', ')}.${first && opp.boss && opp.tier < 3 ? ` ${ASCENT_TIERS[opp.tier].name} is open.` : ''}`;
 }
 async function startAscentMatch(oppId, deckIndex = 0) {
     await loadAscentRoster();

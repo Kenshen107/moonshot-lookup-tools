@@ -947,3 +947,35 @@
         .asc-chip { min-width: 34px; min-height: 30px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-panel-raised); color: var(--text-primary); }
         .asc-chip.on { border-color: var(--color-success); background: color-mix(in srgb, var(--color-success) 22%, var(--bg-panel-raised)); }
         @media (max-width: 700px) { .asc-dlg, .asc-twocol { grid-template-columns: minmax(0, 1fr); } }
+
+        /* ---- Ascent characters and effects (13g / 13h) ---- */
+        .asc-fxtoggle { display: block; margin: 4px 0 8px; }
+        .asc-npc { margin-bottom: 10px; }
+        .asc-tipline { margin: 4px 0 0; }
+        .asc-say { display: flex; gap: 12px; align-items: flex-end; margin: 8px 0; }
+        .asc-bubble { background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 12px; position: relative; min-width: 0; flex: 1; }
+        .asc-bubble p { margin: 4px 0 0; font-size: 1rem; }
+        .asc-portrait { flex: none; width: 64px; height: 96px; image-rendering: pixelated; }
+        .asc-portrait.ph { display: grid; place-items: center; border-radius: var(--radius-md); border: 2px solid var(--accent, var(--border)); background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--accent, var(--brand)) 45%, var(--bg-inset)), var(--bg-inset)); }
+        .asc-portrait.ph span { font-size: 2.2rem; }
+        .asc-portrait.ph.boss { box-shadow: 0 0 12px -2px var(--gold); border-color: var(--gold); }
+        .asc-portrait.ph.talk span { animation: asc-bob 0.5s ease-in-out infinite; }
+        .asc-portrait.sprite { background-size: 256px 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle 0.8s steps(4) infinite; }
+        .asc-portrait.sprite.talk { background-position-y: -96px; animation-name: asc-idle; animation-duration: 0.6s; }
+        @keyframes asc-idle { to { background-position-x: -256px; } }
+        @keyframes asc-bob { 50% { transform: translateY(-4px) scale(1.06); } }
+        .fx-item { position: fixed; z-index: var(--z-banner, 60); pointer-events: none; image-rendering: pixelated; }
+        .fx-item.sprite { background-repeat: no-repeat; animation: fx-strip var(--dur) steps(var(--frames)) 1 forwards; }
+        @keyframes fx-strip { from { background-position-x: 0; } to { background-position-x: calc(var(--strip) * -1); } }
+        .fx-item.ph { display: grid; place-items: center; border-radius: 50%; animation: fx-ph var(--dur) ease-out 1 forwards; }
+        .fx-item.ph span { font-size: 2.4rem; }
+        .fx-item.ph[data-kind$="-W"] { background: radial-gradient(circle, var(--mana-W) 0, transparent 70%); }
+        .fx-item.ph[data-kind$="-U"] { background: radial-gradient(circle, var(--mana-U) 0, transparent 70%); }
+        .fx-item.ph[data-kind$="-B"] { background: radial-gradient(circle, var(--mana-B) 0, transparent 70%); }
+        .fx-item.ph[data-kind$="-R"] { background: radial-gradient(circle, var(--mana-R) 0, transparent 70%); }
+        .fx-item.ph[data-kind$="-G"] { background: radial-gradient(circle, var(--mana-G) 0, transparent 70%); }
+        .fx-item.ph[data-kind$="-colorless"], .fx-item.ph[data-kind="spell-artifact"] { background: radial-gradient(circle, var(--text-soft) 0, transparent 70%); }
+        .fx-item.ph[data-kind$="-multi"], .fx-item.ph[data-kind="land-nonbasic"] { background: conic-gradient(var(--mana-W), var(--mana-U), var(--mana-B), var(--mana-R), var(--mana-G), var(--mana-W)); -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); }
+        .fx-item.ph[data-kind^="spell-"] { background: radial-gradient(circle, color-mix(in srgb, var(--brand-light) 60%, transparent) 0, transparent 70%); }
+        @keyframes fx-ph { 0% { transform: scale(0.3); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .asc-portrait.ph.talk span, .asc-portrait.sprite { animation: none; } }
