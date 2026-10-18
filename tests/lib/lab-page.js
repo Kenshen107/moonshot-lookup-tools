@@ -156,7 +156,24 @@ window.LAB = (() => {
                 // Planeswalker's Ascent: two opponents' decks from the roster (seed picks the pair, and each seat's tier sets its AI level)
                 await loadAscentRoster();
                 const i = opts.seed % ASCENT_OPPONENTS.length, j = (i + 1 + Math.floor(opts.seed / ASCENT_OPPONENTS.length) % (ASCENT_OPPONENTS.length - 1)) % ASCENT_OPPONENTS.length;
-                const mk = o => { const d = ascentDeckEntries(o.name, ascentOpponentDeck(o)); d.aiStyle = o.style; return d; };
+                const mk = o => {
+                    // about 40% of the spell slots carry a random upgrade, so the lab also exercises upgraded cards (13e)
+                    const cards = {};
+                    for (const [id, n] of Object.entries(ascentOpponentDeck(o))) {
+                        const base = CARDS.get(id), r = ASCENT.byId.get(id);
+                        if (!base || r.type === 'land') { cards[id] = (cards[id] || 0) + n; continue; }
+                        for (let k = 0; k < n; k++) {
+                            let vid = id;
+                            if (rnd() < 0.4) {
+                                const fake = { card: r, copy: { u: [] } }, pick = Object.keys(ASCENT_UPGRADES).filter(u => !ascentUpgradeBlocked(fake, u));
+                                const u1 = pick[Math.floor(rnd() * pick.length)];
+                                if (u1) vid = ascentVariantCard(base, [u1]).id;
+                            }
+                            cards[vid] = (cards[vid] || 0) + 1;
+                        }
+                    }
+                    const d = ascentDeckEntries(o.name, cards); d.aiStyle = o.style; return d;
+                };
                 A = mk(ASCENT_OPPONENTS[i]); B = mk(ASCENT_OPPONENTS[j]); more = [];
                 out.styles = [A.aiStyle, B.aiStyle];
             } else if (opts.themes) {

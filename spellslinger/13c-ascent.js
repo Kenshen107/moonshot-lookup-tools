@@ -87,15 +87,24 @@ function rollAscentCollectorBooster(rng = Math.random) {
     take(P.basics, 14);
     return cards;
 }
+// Every non-basic copy you own is its own record { k, f, u }: k a unique key, f 1 if foil, u its upgrades (13e-ascent-upgrades.js).
+// owned[id] = { n, f, c: [copies] }; n and f stay in step with c so older code can still read the counts. Basics are only counted.
+function ascentSyncOwned(o) { if (!o.c) return; o.n = o.c.length; o.f = o.c.filter(x => x.f).length; }
+function ascentNewCopy(foil) { const st = ascentState(); st.nextKey = (st.nextKey || 0) + 1; return { k: st.nextKey, f: foil ? 1 : 0, u: [] }; }
+function ascentOwnedEntry(id) {
+    const st = ascentState(), o = st.owned[id] || (st.owned[id] = { n: 0, f: 0, c: [] });
+    if (!o.c) { o.c = []; for (let i = 0; i < o.n; i++) o.c.push(ascentNewCopy(i < o.f)); } // an older save with counts only
+    return o;
+}
 // Adds cards to the Ascent collection. The 5th and later copy of a card is dusted into Aether on the spot (the rule of 4).
 function ascentAddCards(picks) {
     const st = ascentState(), report = { kept: [], dusted: [], aether: 0 };
     for (const p of picks) {
         const c = ASCENT.byId.get(p.id);
         if (!c) continue;
-        const o = st.owned[p.id] || (st.owned[p.id] = { n: 0, f: 0 });
-        if (c.kind === 'basic') { o.n += 1; if (p.foil) o.f += 1; report.kept.push(p); continue; } // basics are free and unlimited
-        if (o.n < ASCENT_COPY_LIMIT) { o.n += 1; if (p.foil) o.f += 1; report.kept.push(p); continue; }
+        if (c.kind === 'basic') { const o = st.owned[p.id] || (st.owned[p.id] = { n: 0, f: 0 }); o.n += 1; if (p.foil) o.f += 1; report.kept.push(p); continue; } // basics are free and unlimited
+        const o = ascentOwnedEntry(p.id);
+        if (o.c.length < ASCENT_COPY_LIMIT) { o.c.push(ascentNewCopy(p.foil)); ascentSyncOwned(o); report.kept.push(p); continue; }
         const v = ASCENT_DUST[c.rarity] * (p.foil ? 2 : 1);
         report.dusted.push({ ...p, aether: v }); report.aether += v;
     }
@@ -118,19 +127,40 @@ function craftAscentCard(id, foil = false) {
     const cost = ascentCraftCost(c, foil);
     if (st.aether < cost) return { ok: false, why: `Needs ${cost} Aether (you have ${st.aether}).` };
     st.aether -= cost; st.craftedTotal += cost;
-    const o = st.owned[id] || (st.owned[id] = { n: 0, f: 0 });
-    o.n++; if (foil) o.f++;
+    const o = ascentOwnedEntry(id);
+    o.c.push(ascentNewCopy(foil)); ascentSyncOwned(o);
     return { ok: true, cost };
 }
-// Dust copies by hand: only copies you do not need are offered (anything over what your Ascent decks use)
-function ascentUsedIn(id) { return Math.max(0, ...ascentState().decks.map(d => (d.cards && d.cards[id]) || 0)); }
-function dustAscentCard(id, n = 1) {
+// Which copy keys are in a deck. A deck lists its copies in deck.sel[id]; one without a list gets one made, upgraded copies first.
+function ascentNormalizeDeck(deck) {
+    deck.sel = deck.sel || {};
+    for (const [id, n] of Object.entries(deck.cards)) {
+        const c = ASCENT.byId.get(id);
+        if (!c || c.kind === 'basic') continue;
+        const o = ascentOwnedEntry(id), have = (deck.sel[id] || []).filter(k => o.c.some(x => x.k === k));
+        const rest = o.c.filter(x => !have.includes(x.k)).sort((a, b) => b.u.length - a.u.length || a.k - b.k);
+        while (have.length < n && rest.length) have.push(rest.shift().k);
+        deck.sel[id] = have.slice(0, n);
+    }
+    return deck;
+}
+function ascentKeysInDecks(except) {
+    const keys = new Set();
+    ascentState().decks.forEach(d => { if (d === except) return; ascentNormalizeDeck(d); Object.values(d.sel).flat().forEach(k => keys.add(k)); });
+    return keys;
+}
+// Dust copies by hand: only copies that are in no deck and carry no upgrades, unless you name the copies (keys) yourself
+function dustAscentCard(id, n = 1, keys = null) {
     const c = ASCENT.byId.get(id), st = ascentState(), o = st.owned[id];
     if (!c || !o || c.kind === 'basic') return { ok: false, why: 'Nothing to dust.' };
-    const spare = o.n - ascentUsedIn(id);
-    if (spare < n) return { ok: false, why: spare <= 0 ? 'Every copy is in a deck.' : `Only ${spare} spare.` };
+    ascentOwnedEntry(id);
+    const used = ascentKeysInDecks();
+    let list = o.c.filter(x => !used.has(x.k) && (keys ? keys.includes(x.k) : !x.u.length)).sort((a, b) => a.f - b.f || a.k - b.k);
+    if (list.length < n) return { ok: false, why: list.length === 0 ? 'Every copy is in a deck or upgraded.' : `Only ${list.length} spare.` };
+    list = list.slice(0, n);
     let gain = 0;
-    for (let i = 0; i < n; i++) { const foil = o.f > 0 && o.n - o.f <= 0; gain += ASCENT_DUST[c.rarity] * (foil ? 2 : 1); o.n--; if (foil) o.f--; }
+    list.forEach(x => { gain += ASCENT_DUST[c.rarity] * (x.f ? 2 : 1); o.c.splice(o.c.indexOf(x), 1); });
+    ascentSyncOwned(o);
     st.aether += gain; st.dustedTotal += gain;
     return { ok: true, aether: gain };
 }

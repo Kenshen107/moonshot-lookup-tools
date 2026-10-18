@@ -11,3 +11,6 @@ Owner's request 2026-10-18: rebuild the Campaign as a single-player gauntlet wit
 4. (done 2026-10-18: `spellslinger/13d-ascent-gauntlet.js`, `tests/suites/ascentdecks.js`, lab `--kind ascent`; rarity rebalanced to about 8% mythic) Gauntlet: three tiers of five matches plus a Planeswalker boss; each AI gets a themed deck from the roster and a signature "grind" card set only it drops.
 5. Campaign screen, saved progress, own deck list (Campaign decks separate from Sandbox).
 6. Tests (lab games with roster decks, pack odds, crafting), About log, CLAUDE.md.
+
+## Card upgrades (owner's request 2026-10-18)
+Every owned copy can carry up to 2 upgrades (3 on a mythic): keywords, one stat boost, one simple trigger for creatures; a cantrip or 3 life for spells. Per copy (four Bears can all differ). Paid with Aether and/or by feeding in spare plain copies of the same card (each covers 2x its dust value). Swapping or removing costs a quarter of the old upgrade's price. Built in `spellslinger/13e-ascent-upgrades.js`: an upgraded copy plays as its own card whose text has the upgrade written in, so the card reader needs no new rules. The deck editor and upgrade screen come with step 5.

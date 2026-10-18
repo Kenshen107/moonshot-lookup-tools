@@ -156,9 +156,9 @@ function ascentStarter(color) {
     const cards = {}; let left = ASCENT_DECK_SIZE - ASCENT_LANDS, spells = 0;
     for (const c of pool) { if (left <= 0) break; if (c.type === 'spell') { if (spells >= 2) continue; spells++; } const n = Math.min(c.cmc <= 3 ? 3 : 2, left); cards[c.id] = n; left -= n; }
     const basic = ASCENT.roster.find(c => c.kind === 'basic' && { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' }[color] === c.name);
-    Object.entries(cards).forEach(([id, n]) => { st.owned[id] = { n, f: 0 }; });
+    Object.entries(cards).forEach(([id, n]) => { const o = ascentOwnedEntry(id); for (let i = 0; i < n; i++) o.c.push(ascentNewCopy(false)); ascentSyncOwned(o); });
     cards[basic.id] = ASCENT_LANDS;
-    const deck = { name: 'Starter deck', cards };
+    const deck = ascentNormalizeDeck({ name: 'Starter deck', cards });
     st.decks.push(deck); st.started = true; st.sealed = { play: 3, collector: 0 };
     return deck;
 }
@@ -206,7 +206,7 @@ async function startAscentMatch(oppId, deckIndex = 0) {
     if (problems.length) throw new Error(problems[0]);
     if (!ascentOpponentOpen(opp)) throw new Error('That opponent is still locked.');
     await cardsByIds(Object.keys(deck.cards));
-    const mine = ascentDeckEntries(deck.name, deck.cards);
+    const mine = ascentDeckEntries(deck.name, ascentPlayableCards(deck)); // upgraded copies become their own cards (13e)
     const oppDeck = await buildAscentOpponent(oppId);
     newGame(mine, oppDeck);
 }

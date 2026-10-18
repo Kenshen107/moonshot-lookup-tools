@@ -66,7 +66,7 @@ function trimCardCache() {
     profile.decks.forEach(d => { Object.keys(d.cards).forEach(id => keep.add(id)); if (d.commander) keep.add(d.commander); });
     try { Object.values(BASIC_IDS).forEach(id => keep.add(id)); } catch (e) { /* not loaded yet */ }
     store.remove('cards');
-    store.set('cards', Object.fromEntries([...CARDS].filter(([id]) => keep.has(id))));
+    store.set('cards', Object.fromEntries([...CARDS].filter(([id]) => keep.has(id) && !id.includes('~'))));
 }
 // Redraws that happen often (the game table, the shop floor): only touch the page when the HTML really changed.
 // Keeps hover, scroll, a half-typed price and an open <details> as they were, and skips the layout work.
@@ -181,7 +181,7 @@ let cardsDirty = false;
 function persistCards() {
     if (!cardsDirty) return;
     cardsDirty = false;
-    const obj = Object.fromEntries(CARDS);
+    const obj = Object.fromEntries([...CARDS].filter(([id]) => !id.includes('~'))); // upgraded copies (Ascent) are rebuilt, never saved
     // Browser storage full: keep the cards the collection and decks use
     if (!store.set('cards', obj)) trimCardCache();
 }
