@@ -79,7 +79,7 @@ async function ascOppPanel() {
         ${ascSpeechHTML(o.id, 'intro', st.progress.length)}
         <p>${esc(o.blurb)}</p>
         <p class="note">💡 ${esc(ASCENT_CHAR[o.id].lines.tip)}</p>
-        <p class="note">Prize for a win: ${o.boss ? '2 Play Boosters and a Collector Booster' : 'a Play Booster'}. ${ascentBeaten(o.id) ? 'Beaten before.' : 'First win guarantees a signature card.'} Later wins drop a signature card ${Math.round(ASCENT_PRIZE.sigRepeatChance * 100)}% of the time. A loss pays ${ASCENT_PRIZE.lossAether} Aether.</p>
+        <p class="note">Prize for a win: ${o.boss ? '2 Play Boosters and a Collector Booster' : 'a Play Booster'}. ${ascentBeaten(o.id) ? 'Beaten before.' : 'First win guarantees a signature card.'} Later wins drop a signature card ${Math.round(ASCENT_PRIZE.sigRepeatChance * 100)}% of the time. A loss pays ${ASCENT_PRIZE.lossAether} Aether (${ASCENT_PRIZE.weakDeckLossAether} while your deck has under ${ASCENT_PRIZE.weakDeckRares} rare cards), and every second loss in a row also gives a Play Booster.</p>
         <h4>Signature cards (only this opponent drops them)</h4>
         <div class="asc-grid">${sigs.map(id => ascTile(id, { sig: true })).join('')}</div>
         <h4>🏆 Trophies: win ${ASCENT_TROPHY_WINS[ASCENT_TROPHY_WINS.length - 1]} times to earn them all (you have ${ascentWins(o.id)} wins)</h4>

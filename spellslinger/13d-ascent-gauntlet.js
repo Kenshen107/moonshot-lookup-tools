@@ -29,7 +29,7 @@ const ASCENT_OPPONENTS = [
 ];
 const ASCENT_OPP = Object.fromEntries(ASCENT_OPPONENTS.map(o => [o.id, o]));
 const ASCENT_DECK_SIZE = 40, ASCENT_LANDS = 17;
-const ASCENT_PRIZE = { win: { play: 1 }, boss: { play: 2, collector: 1 }, lossAether: 5, sigRepeatChance: 0.35 };
+const ASCENT_PRIZE = { win: { play: 1 }, boss: { play: 2, collector: 1 }, lossAether: 5, weakDeckLossAether: 15, weakDeckRares: 3, lossStreakPack: 2, sigRepeatChance: 0.35 };
 
 // ---- Trophies: very strong cards won only by beating one opponent many times ----
 const ASCENT_TROPHY_WINS = [3, 6, 10, 15, 20, 25, 30, 40, 50, 75];
@@ -74,6 +74,7 @@ function ascentArchScore(arch, c) {
         const tg = c.tags || [];
         if (tg.includes('etb-draw') || tg.includes('die-draw')) s += { control: 1.5, tempo: 1.5, value: 1.5, fliers: 1 }[arch] || 0.5;
         if (tg.includes('etb-burn')) s += arch === 'burn' ? 2 : 0.5;
+        if (c.kind === 'lord' || c.kind === 'tokencreature') s += { weenie: 3.5, fliers: 1.5, value: 1.5, tempo: 1, control: 0.5 }[arch] || 0;
         if (tg.includes('pump-ability')) s += ['stomp', 'burn', 'weenie'].includes(arch) ? 1 : 0;
         if (tg.includes('etb-life') || tg.includes('die-life') || tg.includes('etb-drain')) s += ['value', 'control'].includes(arch) ? 1 : 0;
         if (arch === 'stomp') s += (p + t) * 0.45 + (has('trample') ? 2 : 0) + (c.cmc >= 4 ? 1 : 0) - (c.cmc <= 2 ? 1.5 : 0);
@@ -87,7 +88,7 @@ function ascentArchScore(arch, c) {
         const k = c.kind;
         if (k === 'rock') return ({ stomp: 3, tempo: 2.5, control: 2, value: 1.5, burn: 0.5, weenie: 0, fliers: 1 }[arch] || 0) + 1;
         if (k === 'ramp') return ({ stomp: 3, tempo: 2, control: 1.5, value: 2 }[arch] || 0) + 0.5;
-        const want = { stomp: { pump: 2, teamPump: 2 }, weenie: { pump: 3, teamPump: 3, shrink: 1 }, fliers: { pump: 3, bounce: 2 }, value: { destroy: 4, life: 2, draw: 2, recur: 3, exile: 4 }, burn: { burn: 5, shrink: 3, draw: 2 }, control: { destroy: 5, exile: 5, bounce: 3, draw: 4, burn: 3 }, tempo: { bounce: 5, draw: 3, pump: 1, shrink: 2 } }[arch] || {};
+        const want = { stomp: { pump: 2, teamPump: 2, tokens: 1 }, weenie: { pump: 3, teamPump: 3, shrink: 1, tokens: 5, anthem: 5, grant: 2.5, destroy: 1, exile: 1 }, fliers: { pump: 3, bounce: 2, tokens: 2.5, anthem: 2.5, grant: 1.5 }, value: { destroy: 4, life: 2, draw: 2, recur: 3, exile: 4, tokens: 2 }, burn: { burn: 5, shrink: 3, draw: 2 }, control: { destroy: 5, exile: 5, bounce: 3, draw: 4, burn: 3, tokens: 1.5 }, tempo: { bounce: 5, draw: 3, pump: 1, shrink: 2, tokens: 1 } }[arch] || {};
         s += (want[k] || 0) - 1;
     }
     return s;
@@ -184,18 +185,35 @@ function ascentOpponentOpen(opp) {
     return ASCENT_OPPONENTS.filter(o => o.tier === opp.tier && !o.boss).every(o => ascentBeaten(o.id)); // the boss waits for the other five
 }
 // Starter: a one-color deck of tier-1 cards, 4 copies of the best, plus three free Play Boosters' worth of cards later via the pack box
-function ascentStarter(color) {
-    const st = ascentState();
-    if (st.started) return null;
+// White starts with a plan, not just small bodies: token makers, an anthem (the cheapest team boost in white) and two cheap fliers.
+// Lab check (100 games each, starter vs the easy opponent): W 89% vs Mick, 55% vs Annie, 72% vs Gus; without this help W won 47% / 20%.
+function ascentStarterHelp(color) {
+    if (color !== 'W') return [];
+    const w = ASCENT.roster.filter(c => c.colors === 'W');
+    const toks = w.filter(c => c.kind === 'tokens' && c.cmc <= 3 && c.rarity !== 'mythic').sort((a, b) => b.power - a.power || a.name.localeCompare(b.name));
+    const anth = w.filter(c => c.kind === 'anthem').sort((a, b) => a.cmc - b.cmc || b.power - a.power || a.name.localeCompare(b.name));
+    const fly = w.filter(c => c.type === 'creature' && c.rarity === 'uncommon' && (c.kws || []).includes('flying') && c.cmc <= 3 && !(c.tags || []).length).sort((a, b) => b.power - a.power || a.cmc - b.cmc || a.name.localeCompare(b.name));
+    return [[toks[0], 3], [toks[1], 2], [anth[0], 2], [fly[0], 2], [fly[1], 2]].filter(x => x[0]);
+}
+// The cards of a starter deck (no state changed): { cards: id -> count, basicId }
+function ascentStarterCards(color) {
     const rng = ascentRng('starter:' + color);
-    const pool = ASCENT.roster.filter(c => c.type !== 'land' && c.tier === 1 && c.rarity === 'common' && c.colors === color)
+    const help = ascentStarterHelp(color);
+    const pool = ASCENT.roster.filter(c => c.type !== 'land' && c.tier === 1 && c.rarity === 'common' && c.colors === color && !help.some(h => h[0].id === c.id))
         .map(c => ({ c, k: c.power + rng() * 2 })).sort((a, b) => b.k - a.k).map(x => x.c);
     const cards = {}; let left = ASCENT_DECK_SIZE - ASCENT_LANDS, spells = 0;
+    help.forEach(([c, n]) => { cards[c.id] = n; left -= n; });
     for (const c of pool) { if (left <= 0) break; if (c.type === 'spell') { if (spells >= 2) continue; spells++; } const n = Math.min(c.cmc <= 3 ? 3 : 2, left); cards[c.id] = n; left -= n; }
     for (let pass = 0; pass < 2 && left > 0; pass++) for (const c of pool) { if (left <= 0) break; if (c.type === 'spell' || !cards[c.id] || cards[c.id] >= ASCENT_COPY_LIMIT) continue; cards[c.id]++; left--; } // top up the best creatures instead of piling on lands
     const basic = ASCENT.roster.find(c => c.kind === 'basic' && { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' }[color] === c.name);
+    return { cards, basicId: basic.id };
+}
+function ascentStarter(color) {
+    const st = ascentState();
+    if (st.started) return null;
+    const { cards, basicId } = ascentStarterCards(color);
     Object.entries(cards).forEach(([id, n]) => { const o = ascentOwnedEntry(id); for (let i = 0; i < n; i++) o.c.push(ascentNewCopy(false)); ascentSyncOwned(o); });
-    cards[basic.id] = ASCENT_LANDS;
+    cards[basicId] = ASCENT_LANDS;
     const deck = ascentNormalizeDeck({ name: 'Starter deck', cards });
     st.decks.push(deck); st.started = true; st.sealed = { play: 3, collector: 0 };
     return deck;
@@ -216,10 +234,27 @@ function ascentDeckProblems(deck) {
 
 // ---- Prizes ----
 // Called when a game from the Ascent ends (campaignResult in 13-campaign.js hands over). Returns the line shown on the result screen.
+// A rough deck: fewer than a few rare (or better) non-basic cards. Losing with one pays extra Aether so a new player keeps moving.
+function ascentDeckIsRough(deck) {
+    if (!deck) return true;
+    let n = 0;
+    for (const [id, k] of Object.entries(deck.cards)) { const c = ASCENT.byId.get(id); if (c && c.kind !== 'basic' && ['rare', 'mythic', 'trophy'].includes(c.rarity)) n += k; }
+    return n < ASCENT_PRIZE.weakDeckRares;
+}
 function ascentResult(won) {
     const c = G.campaign, opp = ASCENT_OPP[c.node], st = ascentState();
     const quote = kind => (typeof ascLine === 'function' && ASCENT_CHAR[c.node]) ? `“${ascLine(c.node, kind)}” - ${opp.name}. ` : '';
-    if (!won) { st.aether += ASCENT_PRIZE.lossAether; saveProfile(); return `${quote('lose')}Ascent: ${ASCENT_PRIZE.lossAether} Aether for trying.`; }
+    if (!won) {
+        // a loss still pays: Aether (more while the deck is still rough) and a Play Booster after every second loss in a row
+        const weak = ascentDeckIsRough(st.decks[c.deckIndex]), aether = weak ? ASCENT_PRIZE.weakDeckLossAether : ASCENT_PRIZE.lossAether;
+        st.aether += aether;
+        st.lossStreak = (st.lossStreak || 0) + 1;
+        let pack = '';
+        if (st.lossStreak >= ASCENT_PRIZE.lossStreakPack) { st.lossStreak = 0; st.sealed = st.sealed || { play: 0, collector: 0 }; st.sealed.play += 1; pack = ' and a Play Booster (two losses in a row)'; }
+        saveProfile();
+        return `${quote('lose')}Ascent: ${aether} Aether${pack} for trying.${weak ? ' (Extra Aether while your deck has fewer than ' + ASCENT_PRIZE.weakDeckRares + ' rare cards.)' : ''}`;
+    }
+    st.lossStreak = 0;
     const first = !st.progress.includes(c.node);
     if (first) st.progress.push(c.node);
     st.wins = st.wins || {}; st.wins[c.node] = (st.wins[c.node] || 0) + 1;
@@ -253,6 +288,7 @@ async function startAscentMatch(oppId, deckIndex = 0) {
     if (missing.length) throw new Error(`Could not load ${missing.length} of your cards from Scryfall. Try again in a moment.`);
     const mine = ascentDeckEntries(deck.name, ascentPlayableCards(deck)); // upgraded copies become their own cards (13e)
     const oppDeck = await buildAscentOpponent(oppId);
+    oppDeck.campaign.deckIndex = deckIndex;
     closeModal(); // the "shuffling" panel must be gone before the game opens its own (opening hand) panel
     newGame(mine, oppDeck);
 }

@@ -52,6 +52,7 @@ function ascentUpgradeBlocked(found, upId, replacingIndex = -1) {
     if (up.kind === 'stat' && rest.some(u => ASCENT_UPGRADES[u].kind === 'stat')) return 'One stat boost per copy.';
     if (up.kind === 'trig' && rest.some(u => ASCENT_UPGRADES[u].kind === 'trig')) return 'One trigger per copy.';
     if (up.kind === 'abil' && (rest.some(u => ASCENT_UPGRADES[u].kind === 'abil') || (card.tags || []).some(t => t.startsWith('mana') || t === 'anymana'))) return card.tags && card.tags.length && card.tags.some(t => t.startsWith('mana') || t === 'anymana') ? 'Already taps for mana.' : 'One ability upgrade per copy.';
+    if (up.on === 'spell' && card.perm) return 'Enchantments cannot take spell extras.';
     if (up.on === 'spell' && card.kind === 'rock') return 'Mana rocks cannot be upgraded.';
     return null;
 }

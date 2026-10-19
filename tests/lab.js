@@ -14,6 +14,7 @@ const LA = arg('la', 'normal'), LB = arg('lb', 'normal'), TMO = Number(arg('time
 
 async function openLab(h) {
     await h.ctx.addInitScript(() => { window.__LAB = true; });
+    if (process.env.LAB_PAIR) await h.ctx.addInitScript(p => { window.__PAIR = p; }, process.env.LAB_PAIR); // ascent: 'W,t1-mick' = the W starter deck against that opponent
     await h.ctx.route(/api\.scryfall\.com|mtgjson\.com|edhrec\.com|data\.scryfall\.io/, route => route.abort());
     const cardsFile = path.join(ROOT, 'tests', 'data', 'cards_all.json');
     if (!fs.existsSync(cardsFile)) throw new Error('tests/data/cards_all.json is missing: run python3 tests/fetch_cards.py once (needs Scryfall)');

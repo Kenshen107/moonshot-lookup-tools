@@ -61,9 +61,30 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
             const before = { play: st.sealed.play, col: st.sealed.collector };
             const line2 = ascentResult(true);
             ok('a boss pays 2 Play Boosters and a Collector Booster and opens the next tier', st.sealed.play === before.play + 2 && st.sealed.collector === before.col + 1 && ascentTierOpen(2) && /Friday Grinders/.test(line2), line2);
-            const aether = st.aether; G.campaign.node = 't1-mick';
+            // losses: Aether (more while the deck is rough), and a Play Booster after every second loss in a row
+            const aether = st.aether; G.campaign.node = 't1-mick'; G.campaign.deckIndex = 0;
+            const play0 = st.sealed.play;
+            ok('the starter deck counts as rough (under 3 rare cards)', ascentDeckIsRough(st.decks[0]));
             const line3 = ascentResult(false);
-            ok('a loss pays 5 Aether and no pack', st.aether === aether + 5 && /5 Aether/.test(line3));
+            ok('a first loss with a rough deck pays 15 Aether and no pack', st.aether === aether + ASCENT_PRIZE.weakDeckLossAether && st.sealed.play === play0 && /15 Aether/.test(line3) && !/Booster/.test(line3), line3);
+            const line3b = ascentResult(false);
+            ok('the second loss in a row also gives a Play Booster', st.sealed.play === play0 + 1 && /Play Booster/.test(line3b) && st.lossStreak === 0, line3b);
+            ascentResult(false); ascentResult(true);
+            ok('a win resets the loss streak', st.lossStreak === 0);
+            ascentResult(false);
+            const rares = ASCENT.roster.filter(c => c.rarity === 'rare' && c.type === 'creature').slice(0, 3);
+            rares.forEach(c => { st.decks[0].cards[c.id] = 1; });
+            ok('a deck with 3 rares is no longer rough', !ascentDeckIsRough(st.decks[0]));
+            const a2 = st.aether; st.lossStreak = 0; const line3c = ascentResult(false);
+            ok('a loss with a decent deck pays the normal 5 Aether', st.aether === a2 + ASCENT_PRIZE.lossAether && /5 Aether/.test(line3c) && !/Extra/.test(line3c), line3c);
+            rares.forEach(c => { delete st.decks[0].cards[c.id]; });
+            // white's plan: token makers, anthems, lords; its starter has them
+            const kinds = k => ASCENT.roster.filter(c => c.kind === k && c.colors === 'W').length;
+            ok('white has token spells, anthems, lords, token creatures and cheap removal in the roster', kinds('tokens') >= 10 && kinds('anthem') >= 2 && kinds('lord') >= 3 && kinds('tokencreature') >= 10 && ASCENT.roster.some(c => c.colors === 'W' && c.kind === 'exile'), ['tokens', 'anthem', 'lord', 'tokencreature'].map(kinds));
+            const ws = ascentStarterCards('W'), wk = Object.keys(ws.cards).map(id => ASCENT.byId.get(id));
+            ok('the white starter has token makers, an anthem and fliers, 23 spells, nothing outside white', wk.some(c => c.kind === 'tokens') && wk.some(c => c.kind === 'anthem') && wk.some(c => (c.kws || []).includes('flying')) && Object.values(ws.cards).reduce((a, b) => a + b, 0) === ASCENT_DECK_SIZE - ASCENT_LANDS && wk.every(c => c.colors === 'W'), wk.map(c => c.name));
+            const anth = ASCENT.roster.find(c => c.kind === 'anthem'), tokS = ASCENT.roster.find(c => c.kind === 'tokens');
+            ok('an anthem cannot take a spell extra (it is not a one-shot spell)', /Enchantments/.test(ascentUpgradeBlocked({ card: anth, copy: { u: [] } }, 'sdraw')) && !ascentUpgradeBlocked({ card: tokS, copy: { u: [] } }, 'sdraw'));
             ok('the result hook is wired into the campaign (13-campaign.js)', /G\.campaign\.ascent\) return ascentResult/.test(campaignResult.toString()));
             // ---- trophies ----
             const tro = ascentTrophies(), allT = Object.values(tro).flat();

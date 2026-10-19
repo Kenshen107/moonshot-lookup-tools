@@ -28,7 +28,13 @@ const ABILITY_RULES = [
     [/^When ~ dies, you gain \d life\.$/, 'die-life', 0.75],
     [/^When ~ dies, draw a card\.$/, 'die-draw', 2],
     [/^(\{\d\})?(\{[WUBRG]\})+: ~ gets \+\d\/\+\d until end of turn\.$/, 'pump-ability', 1.5],
-    [/^\{[WUBRG]\}: Regenerate ~\.$/, 'regenerate', 1]
+    [/^\{[WUBRG]\}: Regenerate ~\.$/, 'regenerate', 1],
+    // tokens and team boosts (white's plan: wide boards plus anthems)
+    [/^When ~ enters, create (a|an|two) \d\/\d [A-Za-z ]+ creature tokens?( with (flying|vigilance|lifelink|first strike))?\.$/, 'etb-token', 2.5],
+    [/^Other creatures you control get \+1\/\+1\.$/, 'lord', 5],
+    [/^Other creatures you control get \+[01]\/\+[01]\.$/, 'lord-small', 2.5],
+    [/^Other (Soldier|Knight|Human|Spirit|Cleric|Warrior|Kithkin) creatures you control get \+1\/\+1\.$/, 'tribal-lord', 2],
+    [/^Other creatures you control have (vigilance|first strike|lifelink|flying)\.$/, 'grant-lord', 2.5]
 ];
 function readCreatureText(c) {
     const lines = stripReminder(c.oracle_text || '').replace(new RegExp(c.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '~').replace(/\bthis creature\b/gi, '~').split('\n').map(l => l.trim()).filter(Boolean);
@@ -57,8 +63,21 @@ function readRock(c) {
 function simpleSpell(c) {
     const t = stripReminder(c.oracle_text || '').replace(/\n+/g, ' ').trim(), name = c.name;
     const tl = c.type_line;
-    if (!/^(Instant|Sorcery)$/.test(tl)) return null;
     let m;
+    // permanents that boost the whole team (anthems) or give it a keyword
+    if (/^Enchantment$/.test(tl)) {
+        if ((m = t.match(/^(Creatures you control|White creatures you control) get \+(\d)\/\+(\d)\.$/))) return { kind: 'anthem', n: +m[2] + +m[3], perm: true };
+        if ((m = t.match(/^Creatures you control have (first strike|vigilance|lifelink|flying)\.$/))) return { kind: 'grant', n: m[1] === 'flying' ? 3 : m[1] === 'vigilance' ? 1 : 2, perm: true };
+        return null;
+    }
+    if (!/^(Instant|Sorcery)$/.test(tl)) return null;
+    // token makers: Create <N> <P>/<T> ... creature tokens (optionally with one keyword)
+    if ((m = t.match(/^Create (a|an|two|three|four) (\d)\/(\d) [A-Za-z ]+ creature tokens?( with (flying|vigilance|lifelink|first strike))?\.$/))) {
+        const cnt = { a: 1, an: 1, two: 2, three: 3, four: 4 }[m[1]];
+        return { kind: 'tokens', n: +(cnt * ((+m[2] + +m[3]) * 0.9 + (m[5] ? 1 : 0))).toFixed(1) };
+    }
+    if ((m = t.match(/^Destroy target (attacking |tapped )?creature with (power|toughness) (\d) or greater\.$/))) return { kind: 'destroy', n: 1 };
+    if (/^Exile target (attacking |tapped |attacking or blocking )creature\.$/.test(t)) return { kind: 'exile', n: 1 };
     if ((m = t.match(/^Draw (a|two|three) cards?\.$/))) return { kind: 'draw', n: { a: 1, two: 2, three: 3 }[m[1]] };
     if (/^Destroy target creature\.$/.test(t)) return { kind: 'destroy', n: 0 };
     if (/^Destroy target nonblack creature\.$/.test(t) || /^Destroy target nonartifact, nonblack creature\.$/.test(t)) return { kind: 'destroy', n: 0 };
@@ -128,7 +147,7 @@ function simpleLand(c) {
             const { kws, tags, bonus } = rd;
             const p = +c.power, t = +c.toughness;
             const impact = p + t + 1.6 * kws.reduce((a, k) => a + (KW_VALUE[k] || 0), 0) + bonus + (c.cmc >= 5 ? 1 : 0), power = impact * 0.6 + (impact - 2 * c.cmc) * 0.4;
-            const kind = tags.some(x => x === 'anymana') ? 'anydork' : tags.some(x => x.startsWith('mana')) ? 'dork' : tags.length ? 'ability' : kws.length ? 'keyword' : 'vanilla';
+            const kind = tags.some(x => x === 'anymana') ? 'anydork' : tags.some(x => ['lord', 'lord-small', 'tribal-lord', 'grant-lord'].includes(x)) ? 'lord' : tags.includes('etb-token') ? 'tokencreature' : tags.some(x => x.startsWith('mana')) ? 'dork' : tags.length ? 'ability' : kws.length ? 'keyword' : 'vanilla';
             pool.push({ ...base, type: 'creature', kind, pt: `${p}/${t}`, kws, tags, power: +power.toFixed(2) });
             continue;
         }
@@ -136,8 +155,8 @@ function simpleLand(c) {
         if (rock) { pool.push({ ...base, type: 'spell', kind: 'rock', tags: [rock.tag], n: 0, power: +((rock.tag === 'anymana' ? 6 : rock.tag === 'mana2' ? 7 : 4) - c.cmc * 0.5).toFixed(2) }); continue; }
         const sp = simpleSpell(c);
         if (sp && c.cmc <= 6) {
-            const w = { draw: sp.n * 2, destroy: 5, exile: 5.5, bounce: 2, burn: sp.n * 1.5, pump: 1 + sp.n * .3, teamPump: 2 + sp.n, life: 1, shrink: sp.n * 1.2, recur: 3, ramp: 3 }[sp.kind];
-            pool.push({ ...base, type: 'spell', kind: sp.kind, n: sp.n, power: +(w - c.cmc * 0.5).toFixed(2) });
+            const w = { tokens: sp.n, anthem: 3 + sp.n * 2.5, grant: 1.5 + sp.n, draw: sp.n * 2, destroy: 5 - (sp.n ? 1 : 0), exile: 5.5 - (sp.n ? 1 : 0), bounce: 2, burn: sp.n * 1.5, pump: 1 + sp.n * .3, teamPump: 2 + sp.n, life: 1, shrink: sp.n * 1.2, recur: 3, ramp: 3 }[sp.kind];
+            pool.push({ ...base, type: 'spell', kind: sp.kind, n: sp.n, perm: !!sp.perm, power: +(w - c.cmc * 0.5).toFixed(2) });
         }
     }
     // ---- Trophy pool: cards far stronger than anything in a pack. Earned only by winning many games against one opponent. ----

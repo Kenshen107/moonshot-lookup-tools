@@ -175,6 +175,11 @@ window.LAB = (() => {
                     const d = ascentDeckEntries(o.name, cards); d.aiStyle = o.style; return d;
                 };
                 A = mk(ASCENT_OPPONENTS[i]); B = mk(ASCENT_OPPONENTS[j]); more = [];
+                if (window.__PAIR) { // a new player's starter deck (color) against one opponent
+                    const [col, oid] = window.__PAIR.split(','), sc = ascentStarterCards(col), cards = { ...sc.cards, [sc.basicId]: ASCENT_LANDS };
+                    A = ascentDeckEntries('Starter ' + col, cards); A.aiStyle = null;
+                    B = mk(ASCENT_OPP[oid]);
+                }
                 out.styles = [A.aiStyle, B.aiStyle];
             } else if (opts.themes) {
                 // Political decks: 'random' = a different theme at every seat, or a list like fort,thief,hug,drain
