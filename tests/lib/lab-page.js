@@ -165,9 +165,14 @@ window.LAB = (() => {
                         for (let k = 0; k < n; k++) {
                             let vid = id;
                             if (rnd() < 0.4) {
-                                const fake = { card: r, copy: { u: [] } }, pick = Object.keys(ASCENT_UPGRADES).filter(u => !ascentUpgradeBlocked(fake, u));
-                                const u1 = pick[Math.floor(rnd() * pick.length)];
-                                if (u1) vid = ascentVariantCard(base, [u1]).id;
+                                // one to three random modules of the card's grade and colors (the big ones only show on 6+ mana cards)
+                                const fake = { card: r, copy: { u: [] } }, ups = [], howMany = 1 + Math.floor(rnd() * 3);
+                                for (let q = 0; q < howMany; q++) {
+                                    const pick = Object.keys(ASCENT_UPGRADES).filter(u => !ups.includes(u) && !ascentUpgradeBlocked({ card: r, copy: { u: ups.slice() } }, u));
+                                    const u1 = pick[Math.floor(rnd() * pick.length)];
+                                    if (u1) ups.push(u1);
+                                }
+                                if (ups.length) vid = ascentVariantCard(base, ups).id;
                             }
                             cards[vid] = (cards[vid] || 0) + 1;
                         }

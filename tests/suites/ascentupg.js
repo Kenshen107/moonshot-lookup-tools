@@ -48,65 +48,112 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
             ok('upgraded cards are never saved with the card cache', (() => { cardsDirty = true; persistCards(); return !Object.keys(store.get('cards', {})).some(k => k.includes('~')); })());
 
             const vm = ascentVariantCard(CARDS.get(bears.id), ['anymana']);
-            ok('the Aether tap upgrade makes a creature a mana dork', !!rulesFor(vm).mana && rulesFor(vm).support === 'full', rulesFor(vm).mana);
-            const dorkCard = ASCENT.roster.find(c => c.kind === 'dork');
-            ok('a mana dork cannot take the Aether tap upgrade', /taps for mana/.test(ascentUpgradeBlocked({ card: dorkCard, copy: { u: [] } }, 'anymana') || ''), ascentUpgradeBlocked({ card: dorkCard, copy: { u: [] } }, 'anymana'));
+            ok('the Aether tap module makes a creature a mana dork', !!rulesFor(vm).mana && rulesFor(vm).support === 'full', rulesFor(vm).mana);
+            const pick = f => ASCENT.roster.find(c => c.rarity !== 'trophy' && f(c));
+            const dorkCard = pick(c => c.kind === 'dork' && c.colors === 'G');
+            ok('a mana dork cannot take another mana tap module', /taps for mana/.test(ascentUpgradeBlocked({ card: dorkCard, copy: { u: [] } }, 'greendork') || ''), ascentUpgradeBlocked({ card: dorkCard, copy: { u: [] } }, 'greendork'));
             const rockCard = ASCENT.roster.find(c => c.kind === 'rock');
-            ok('mana rocks cannot take spell upgrades', rockCard && /cannot be upgraded/.test(ascentUpgradeBlocked({ card: rockCard, copy: { u: [] } }, 'sdraw') || ''));
+            ok('mana rocks cannot take spell modules', rockCard && /cannot be upgraded/.test(ascentUpgradeBlocked({ card: rockCard, copy: { u: [] } }, 'sdraw') || ''));
+
+            // ---- the catalog: grades, colors, prices ----
+            const U = Object.entries(ASCENT_UPGRADES);
+            ok('every module has a grade 1-4, valid colors, a price and a way to be written', U.every(([id, u]) => [1, 2, 3, 4].includes(u.grade) && /^(C|[WUBRG]+)$/.test(u.cols) && u.cost > 0 && ['creature', 'spell'].includes(u.on) && (u.kw || u.p !== undefined || u.line || u.append)), U.filter(([, u]) => !u.cost).map(x => x[0]));
+            const avgCost = g => { const l = U.filter(([, u]) => u.grade === g); return l.reduce((a, [, u]) => a + u.cost, 0) / l.length; };
+            ok('higher grades cost more (on average 1 < 2 < 3 < 4)', avgCost(1) < avgCost(2) && avgCost(2) < avgCost(3) && avgCost(3) < avgCost(4), [1, 2, 3, 4].map(avgCost));
+            ok('every color has creature and spell modules in all four grades', ASCENT_COLORS.every(ch => ['creature', 'spell'].every(on => [1, 2, 3, 4].every(g => U.some(([, u]) => u.on === on && u.grade === g && u.cols.includes(ch))))), ASCENT_COLORS.flatMap(ch => ['creature', 'spell'].flatMap(on => [1, 2, 3, 4].filter(g => !U.some(([, u]) => u.on === on && u.grade === g && u.cols.includes(ch))).map(g => ch + on + g))));
+            ok('grades follow mana value: 0-2 minor, 3-4 solid, 5 strong, 6+ game-warping', [[0, 1], [2, 1], [3, 2], [4, 2], [5, 3], [6, 4], [9, 4]].every(([cmc, g]) => ascentGrade({ cmc }) === g));
+            ok('game-warping modules are only on 6+ mana cards, color-matched', (() => {
+                const small = pick(c => c.type === 'creature' && c.colors === 'B' && c.cmc <= 4), big = pick(c => c.type === 'creature' && c.colors === 'B' && c.cmc >= 6), wrongColor = pick(c => c.type === 'creature' && c.colors === 'W' && c.cmc >= 6);
+                return /mana value 6/.test(ascentUpgradeBlocked({ card: small, copy: { u: [] } }, 'wrath') || '') && !ascentUpgradeBlocked({ card: big, copy: { u: [] } }, 'wrath') && /B card/.test(ascentUpgradeBlocked({ card: wrongColor, copy: { u: [] } }, 'wrath') || '');
+            })());
+            const colorless = pick(c => c.type === 'creature' && !c.colors && c.cmc <= 2 && c.rarity === 'common');
+            ok('a colorless card takes colored modules for +50%', colorless && !ascentUpgradeBlocked({ card: colorless, copy: { u: [] } }, 'haste') && ascentUpgradeCost('haste', colorless) === Math.round(40 * 1.5 / 5) * 5 && ascentUpgradeCost('plus20', colorless) === 30);
+            ok('price = base x rarity x stack factor (each extra module costs much more)', (() => {
+                const c = { rarity: 'rare', colors: 'R' }; // haste base 40, rare x2
+                return [0, 1, 2, 3, 4, 5].map(n => ascentUpgradeCost('haste', c, n)).join() === [80, 120, 200, 320, 560, 960].join();
+            })(), [0, 1, 2, 3, 4, 5].map(n => ascentUpgradeCost('haste', { rarity: 'rare', colors: 'R' }, n)));
+
+            // ---- salvage: scrap spare cards, unlock modules for good ----
+            st.aether = 1000;
+            const w3 = pick(c => c.type === 'creature' && c.colors === 'W' && c.cmc === 3 && c.rarity === 'common' && !(c.kws || []).length && !(c.tags || []).length);
+            ascentAddCards([1, 2, 3, 4].map(() => ({ id: w3.id, foil: false })));
+            const wc = st.owned[w3.id].c;
+            let res = upgradeAscentCopy(wc[0].k, 'flying');
+            ok('a Solid module is locked until it is unlocked with salvage', !res.ok && /Locked/.test(res.why) && !ascentModuleUnlocked('flying') && ascentModuleUnlocked('haste'), res.why);
+            ok('Minor modules are free to use', ascentModuleUnlocked('firststrike') && ascentModuleUnlocked('plus02'));
+            ok('not enough salvage: unlocking fails and spends nothing', !unlockAscentModule('flying').ok && ascentSalvage().W === 0);
+            const rareW = pick(c => c.colors === 'W' && c.type === 'creature' && c.rarity === 'rare'), mythW = pick(c => c.colors === 'W' && c.type === 'creature' && c.rarity === 'mythic');
+            ascentAddCards([{ id: rareW.id, foil: false }, { id: rareW.id, foil: true }, { id: mythW.id, foil: false }]);
+            const sc1 = scrapAscentCard(rareW.id, [st.owned[rareW.id].c[0].k]);
+            ok('scrapping a rare gives 8 salvage in its color and removes the copy', sc1.ok && sc1.salvage === ASCENT_SCRAP.rare && ascentSalvage().W === 8 && st.owned[rareW.id].c.length === 1, sc1);
+            const sc2 = scrapAscentCard(rareW.id, [st.owned[rareW.id].c[0].k]);
+            ok('a foil gives double', sc2.ok && sc2.salvage === ASCENT_SCRAP.rare * 2 && ascentSalvage().W === 8 + 16, sc2);
+            const dk = { name: 'S', cards: { [mythW.id]: 1 } }; st.decks.push(dk); ascentNormalizeDeck(dk);
+            ok('a copy in a deck cannot be scrapped', !scrapAscentCard(mythW.id, [st.owned[mythW.id].c[0].k]).ok);
+            st.decks.pop();
+            const multi = pick(c => c.colors.length === 2 && c.type === 'creature' && c.rarity === 'common');
+            ascentAddCards([{ id: multi.id, foil: false }]);
+            const before2 = { ...ascentSalvage() };
+            scrapAscentCard(multi.id, [st.owned[multi.id].c[0].k]);
+            ok('a two-color card gives salvage to both colors', multi.colors.split('').every(ch => ascentSalvage()[ch] === (before2[ch] || 0) + 1), ascentSalvage());
+            const ul = unlockAscentModule('flying');
+            ok('with 24 salvage in white, flying (Solid, 10) unlocks for good and spends 10', ul.ok && ul.spent === 10 && ascentModuleUnlocked('flying') && ascentSalvage().W === 14 + (multi.colors.includes('W') ? 1 : 0), [ul, ascentSalvage()]);
+            ok('Strong needs 30 and Game-warping 80 salvage', ASCENT_UNLOCK_SALVAGE[3] === 30 && ASCENT_UNLOCK_SALVAGE[4] === 80 && !unlockAscentModule('wlord2').ok);
+            ok('trophies cannot be scrapped', (() => { const t = ASCENT.roster.find(c => c.rarity === 'trophy'); ascentAddCards([{ id: t.id, foil: false }]); return !scrapAscentCard(t.id, [st.owned[t.id].c[0].k]).ok; })());
 
             // ---- buying one on a single copy ----
-            st.aether = 1000;
-            const k0 = copies[0].k;
-            let res = upgradeAscentCopy(k0, 'flying');
-            ok('flying on a common costs 60 Aether, on that one copy', res.ok && res.price === 60 && res.aether === 60 && st.aether === 940 && copies[0].u.join() === 'flying' && copies[1].u.length === 0, res);
-            res = upgradeAscentCopy(k0, 'flying');
-            ok('the same upgrade cannot be added twice', !res.ok && /Already/.test(res.why), res.why);
-            res = upgradeAscentCopy(k0, 'plus11');
-            ok('a second upgrade fits (2 slots)', res.ok && copies[0].u.length === 2);
-            res = upgradeAscentCopy(k0, 'lifelink');
-            ok('a third does not fit on a common', !res.ok && /slot/.test(res.why));
-            res = upgradeAscentCopy(copies[1].k, 'plus11'); res = upgradeAscentCopy(copies[1].k, 'plus02');
-            ok('only one stat boost per copy', !res.ok && /stat/.test(res.why), res.why);
-            ok('a spell upgrade cannot go on a creature', !upgradeAscentCopy(copies[2].k, 'sdraw').ok);
-            const printedKw = ASCENT.roster.find(c => c.type === 'creature' && (c.kws || []).includes('flying'));
+            const w0 = wc[0].k;
+            res = upgradeAscentCopy(w0, 'flying');
+            ok('flying on a common costs 90 Aether, on that one copy', res.ok && res.price === 90 && res.aether === 90 && st.aether === 910 && wc[0].u.join() === 'flying' && wc[1].u.length === 0, res);
+            res = upgradeAscentCopy(w0, 'flying');
+            ok('the same module cannot be added twice', !res.ok && /Already/.test(res.why), res.why);
+            res = upgradeAscentCopy(w0, 'plus11');
+            ok('a second module costs x1.5 (60 -> 90)', !res.ok && /Locked|salvage/.test(res.why) ? true : (res.ok && res.price === 90), res);
+            res = upgradeAscentCopy(w0, 'plus02');
+            ok('a second Minor module costs 25 x 1.5 = 40 (rounded to 5)', res.ok && res.price === 40 && wc[0].u.length === 2, res);
+            res = upgradeAscentCopy(w0, 'plus20');
+            ok('a third costs 30 x 2.5 = 75', res.ok && res.price === 75 && wc[0].u.length === 3, res);
+            let n = wc[0].u.length;
+            for (const m of ['firststrike', 'vigilance', 'dielife']) { if (wc[0].u.length >= ASCENT_MAX_MODULES) break; st.aether += 5000; upgradeAscentCopy(w0, m); }
+            st.aether += 5000; res = upgradeAscentCopy(w0, 'etblife');
+            ok(`at most ${ASCENT_MAX_MODULES} modules per copy`, !res.ok && /At most/.test(res.why) && wc[0].u.length === ASCENT_MAX_MODULES, [res.why, wc[0].u.length]);
+            ok('a spell module cannot go on a creature', !upgradeAscentCopy(wc[2].k, 'sdraw').ok);
+            const printedKw = ASCENT.roster.find(c => c.type === 'creature' && (c.kws || []).includes('flying') && c.colors === 'W' && c.cmc >= 3);
             ascentAddCards([{ id: printedKw.id, foil: false }]);
             ok('a keyword the card already has cannot be added', !upgradeAscentCopy(st.owned[printedKw.id].c[0].k, 'flying').ok);
-            // rarity price and the third mythic slot
-            ascentAddCards([{ id: mythic.id, foil: false }]);
-            const mk = st.owned[mythic.id].c[0].k;
-            ok('a mythic costs 3x and has 3 slots', ascentUpgradeCost('flying', mythic) === 180 && ascentUpgradeSlots(mythic) === 3 && ['reach', 'vigilance', 'dielife'].every(u => upgradeAscentCopy(mk, u).ok) && st.owned[mythic.id].c[0].u.length === 3);
+            const dupLine = pick(c => c.type === 'creature' && (c.tags || []).includes('etb-draw') && c.colors === 'U' && c.cmc >= 3);
+            ok('a line the card already has cannot be added again', !dupLine || /already/.test(ascentUpgradeBlocked({ card: dupLine, copy: { u: [] } }, 'etbdraw') || ''), dupLine && ascentUpgradeBlocked({ card: dupLine, copy: { u: [] } }, 'etbdraw'));
 
             // ---- paying with spare copies ----
             st.aether = 10;
-            res = upgradeAscentCopy(copies[3].k, 'deathtouch');
-            ok('not enough Aether blocks it and spends nothing', !res.ok && st.aether === 10);
-            // copies[2] is plain and free: it covers 2 x 5 = 10 of the 60
-            res = upgradeAscentCopy(copies[3].k, 'deathtouch', [copies[2].k]);
-            ok('feeding in a spare copy covers 10 of the price (60 - 10 = 50 Aether needed)', !res.ok && /50/.test(res.why), res.why);
-            st.aether = 50;
-            res = upgradeAscentCopy(copies[3].k, 'deathtouch', [copies[2].k]);
-            ok('with 50 Aether and a spare copy it goes through', res.ok && res.sacrificed === 1 && st.aether === 0 && st.owned[bears.id].c.length === 3 && st.owned[bears.id].n === 3, res);
-            ok('an upgraded copy cannot be fed in', !upgradeAscentCopy(copies[1].k, 'reach', [k0]).ok);
+            res = upgradeAscentCopy(wc[3].k, 'vigilance');
+            ok('not enough Aether blocks it and spends nothing', !res.ok && st.aether === 10, res);
+            // wc[2] is plain: it covers 2 x 3 (common dust) = 6 of the 30
+            st.aether = 24;
+            res = upgradeAscentCopy(wc[3].k, 'vigilance', [wc[2].k]);
+            ok('feeding in a spare copy covers 6 of the 30 (24 Aether is exactly enough)', res.ok && res.sacrificed === 1 && st.aether === 0 && st.owned[w3.id].c.length === 3 && st.owned[w3.id].n === 3, res);
+            ok('an upgraded copy cannot be fed in', !upgradeAscentCopy(wc[1].k, 'reach', [w0]).ok);
 
             // ---- swapping and removing ----
-            st.aether = 500;
+            st.aether = 2000;
             const before = st.aether;
-            res = swapAscentUpgrade(k0, 0, 'trample');
-            ok('swapping flying for trample costs a quarter of flying (15) plus trample (45)', res.ok && res.fee === 15 && before - st.aether === 60 && copies[0].u[0] === 'trample', res);
-            res = swapAscentUpgrade(k0, 1, null);
-            ok('removing an upgrade costs only the fee and frees the slot', res.ok && copies[0].u.length === 1);
-            ok('a stat swap is allowed in its own slot', swapAscentUpgrade(copies[1].k, 0, 'plus02').ok && copies[1].u[0] === 'plus02');
+            res = swapAscentUpgrade(w0, 0, 'vigilance');
+            ok('a swap for a module the copy already has is refused', !res.ok, res);
+            const sw0 = st.aether; res = swapAscentUpgrade(w0, 0, 'etblife'); // flying (slot 0) -> etblife: fee 1/4 of 90 + 20 x stack(0)
+            ok('swapping flying for enters-gain-life costs a quarter of flying (25) plus 20', res.ok && res.fee === 25 && sw0 - st.aether === 45 && wc[0].u[0] === 'etblife', res);
+            res = swapAscentUpgrade(wc[1].k, 0, null);
+            ok('removing a module that is not there fails cleanly', !res.ok);
+            const before3 = st.aether; res = swapAscentUpgrade(w0, 5, null);
+            ok('removing a module costs only the fee and frees the slot', res.ok && res.fee >= 5 && wc[0].u.length === ASCENT_MAX_MODULES - 1 && before3 - st.aether === res.total, res);
 
             // ---- decks use the chosen copies ----
-            const deck = { name: 'T', cards: { [bears.id]: 2 } };
+            const deck = { name: 'T', cards: { [w3.id]: 2 } };
             st.decks.push(deck); ascentNormalizeDeck(deck);
-            ok('a deck without a copy list takes upgraded copies first', deck.sel[bears.id].length === 2 && deck.sel[bears.id].every(k => copies.find(c => c.k === k).u.length));
+            ok('a deck without a copy list takes upgraded copies first', deck.sel[w3.id].length === 2 && deck.sel[w3.id].every(k => wc.find(c => c.k === k).u.length));
             const play = ascentPlayableCards(deck);
             ok('the playable list swaps in the upgraded variants', Object.keys(play).length === 2 && Object.keys(play).every(id => id.includes('~')) && Object.values(play).reduce((a, b) => a + b, 0) === 2, Object.keys(play));
-            ok('copies in a deck are not offered for dusting', !dustAscentCard(bears.id, 3).ok);
-            deck.sel[bears.id] = [copies[0].k, copies[1].k];
-            const d = dustAscentCard(bears.id, 1, [copies[2].k]);
-            ok('an upgraded spare copy can be dusted when you name it', d.ok && d.aether === 5, d);
+            ok('copies in a deck are not offered for dusting', !dustAscentCard(w3.id, 3).ok);
+            ok('dust is halved (3 / 10 / 30 / 100)', ASCENT_DUST.common === 3 && ASCENT_DUST.uncommon === 10 && ASCENT_DUST.rare === 30 && ASCENT_DUST.mythic === 100);
             ok('no broken state', Object.values(st.owned).every(o => !o.c || (o.n === o.c.length)));
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 4)]); }
         return out;

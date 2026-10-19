@@ -936,6 +936,9 @@
         .asc-up { display: inline-block; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: 999px; padding: 0 8px; margin-right: 4px; font-size: 0.8rem; }
         .asc-copy-btns { display: flex; gap: 6px; }
         .asc-uplist { max-height: 40vh; overflow: auto; }
+        .asc-grade { display: inline-block; font-size: 0.72rem; border-radius: 999px; padding: 0 7px; border: 1px solid var(--border); background: var(--bg-panel-raised); color: var(--text-soft); }
+        .asc-grade.g2 { border-color: var(--color-link); } .asc-grade.g3 { border-color: var(--color-warning); color: var(--color-warning); } .asc-grade.g4 { border-color: var(--color-warning); background: var(--color-warning); color: var(--bg-canvas); font-weight: 700; }
+        .asc-salv { display: inline-flex; flex-wrap: wrap; gap: 8px; font-size: 0.85rem; }
         .asc-pack { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; margin-top: 12px; }
         .asc-flip { position: relative; min-height: 146px; border: 2px solid var(--border); border-radius: var(--radius-md); background: var(--bg-inset); color: var(--text-primary); padding: 0; overflow: hidden; display: grid; }
         .asc-flip img { width: 100%; display: block; }

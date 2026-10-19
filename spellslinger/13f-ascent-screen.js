@@ -137,7 +137,7 @@ async function ascColl(keepFocus) {
     const need = shown.map(c => c.id).filter(id => !CARDS.has(id));
     const draw = () => {
         const focus = keepFocus && document.activeElement && document.activeElement.type === 'search';
-        body.innerHTML = `${ascNpcHTML('coll')}${ascFilterBar()}<p class="note">${list.length} cards. ✦ = upgrades on your copies, ⭐ = a signature card. Tap a card to craft, upgrade or dust.</p>
+        body.innerHTML = `${ascNpcHTML('coll')}${ascFilterBar()}<div class="row"><button class="btn small" onclick="ascModules()">🧩 Modules</button><span class="note">Salvage: ${ascSalvageBar()}</span></div><p class="note">${list.length} cards. ✦ = modules on your copies, ⭐ = a signature card. Tap a card to craft, upgrade, dust or scrap.</p>
             <div class="asc-grid">${shown.map(c => ascTile(c.id)).join('') || '<p class="note">No cards match.</p>'}</div>
             <div class="row" style="justify-content:center;margin-top:10px;"><button class="btn small" ${ASC.page ? '' : 'disabled'} onclick="ASC.page--; ascColl()">◀</button><span class="note">Page ${ASC.page + 1} of ${pages}</span><button class="btn small" ${ASC.page < pages - 1 ? '' : 'disabled'} onclick="ASC.page++; ascColl()">▶</button></div>`;
         if (focus) { const el = body.querySelector('input[type=search]'); el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
@@ -159,37 +159,74 @@ function ascCardDialog(id) {
         ${r.type === 'land' ? '<p class="note">Lands come from packs. Basics are free.</p>' : `
         <h4>Your copies (${copies.length}/${ASCENT_COPY_LIMIT})</h4>
         ${copies.length ? copies.map(x => `<div class="asc-copy"><span>${x.f ? '✨ ' : ''}Copy ${x.k}${inDecks.has(x.k) ? ' · in a deck' : ''}</span><span class="asc-ups">${ascUpChips(x)}</span>
-            <span class="asc-copy-btns">${trophy ? '' : `<button class="btn small" onclick="ascUpgradeDialog(${x.k})">✦ Upgrades</button>`}${!inDecks.has(x.k) && !trophy ? `<button class="btn small" onclick="ascDust('${id}', ${x.k})">Dust</button>` : ''}</span></div>`).join('') : '<p class="note">You do not own this card yet.</p>'}
+            <span class="asc-copy-btns">${trophy ? '' : `<button class="btn small" onclick="ascUpgradeDialog(${x.k})">✦ Upgrades</button>`}${!inDecks.has(x.k) && !trophy ? `<button class="btn small" onclick="ascDust('${id}', ${x.k})" title="Dust: ✨ ${ASCENT_DUST[r.rarity] * (x.f ? 2 : 1)} Aether">Dust</button><button class="btn small" onclick="ascScrap('${id}', ${x.k})" title="Scrap: ${ASCENT_SCRAP[r.rarity] * (x.f ? 2 : 1)} salvage in ${esc(r.colors || 'colorless')}, to unlock modules">Scrap</button>` : ''}</span></div>`).join('') : '<p class="note">You do not own this card yet.</p>'}
         ${trophy ? '<p class="note">Trophy cards cannot be crafted, dusted or upgraded. Win them.</p>' : ''}
         <div class="row" style="margin-top:10px;"${trophy ? ' hidden' : ''}><button class="btn gold small" ${craftable && st.aether >= ascentCraftCost(r) ? '' : 'disabled'} onclick="ascCraft('${id}', false)">Craft · ✨ ${ascentCraftCost(r)}</button>
             <button class="btn small" ${craftable && st.aether >= ascentCraftCost(r, true) ? '' : 'disabled'} onclick="ascCraft('${id}', true)">Craft foil · ✨ ${ascentCraftCost(r, true)}</button></div>
-        <p class="note">Dust gives ✨ ${ASCENT_DUST[r.rarity]} (foil double). You have ✨ ${st.aether}.</p>`}</div></div>
+        <p class="note">Dust gives ✨ ${ASCENT_DUST[r.rarity]} Aether (foil double). Scrap gives ${ASCENT_SCRAP[r.rarity]} salvage in this card's color${r.colors.length > 1 ? 's' : ''} (foil double), which unlocks modules. You have ✨ ${st.aether}.</p>`}</div></div>
         <div class="actions"><button class="btn" onclick="closeModal()">Close</button></div>`);
 }
 function ascCraft(id, foil) { const res = craftAscentCard(id, foil); if (!res.ok) toast(res.why); else { saveProfile(); toast('Crafted!'); } ascCardDialog(id); renderAscent(); }
+function ascScrap(id, key) { const res = scrapAscentCard(id, [key]); if (!res.ok) toast(res.why); else { saveProfile(); toast(`+${res.salvage} salvage (${res.colors})`); } ascCardDialog(id); renderAscent(); }
 function ascDust(id, key) { const res = dustAscentCard(id, 1, [key]); if (!res.ok) toast(res.why); else { saveProfile(); toast(`+${res.aether} Aether`); } ascCardDialog(id); renderAscent(); }
+// What a module does, in words (for the lists)
+function ascModuleText(up) {
+    if (up.kind === 'kw' || up.kind === 'stat') return up.label;
+    if (up.kind === 'line') return up.line('this card').replace(/~/g, 'this card');
+    return up.append.trim();
+}
+function ascGradeBadge(g) { return `<span class="asc-grade g${g}" title="Grade ${g}: ${ASCENT_GRADES[g]}">${ASCENT_GRADES[g]}</span>`; }
+function ascSalvageBar() {
+    const sv = ascentSalvage();
+    return `<span class="asc-salv">${ASCENT_COLORS.concat('C').map(ch => `<span title="${ch === 'C' ? 'Colorless' : ASC_COLORS[ch][1]} salvage">${ch === 'C' ? '◇' : ASC_COLORS[ch][0]} ${sv[ch] || 0}</span>`).join('')}</span>`;
+}
 function ascUpgradeDialog(key) {
     const f = ascentFindCopy(key), st = ascentState();
     if (!f) return;
-    const slots = ascentUpgradeSlots(f.card), spare = ascentSacrificeCandidates(f);
-    const rows = Object.entries(ASCENT_UPGRADES).filter(([, u]) => u.on === f.card.type).map(([id, u]) => {
-        const why = ascentUpgradeBlocked(f, id), cost = ascentUpgradeCost(id, f.card);
-        return `<div class="asc-uprow${why ? ' blocked' : ''}"><span>${u.icon} <strong>${esc(u.label)}</strong> <small class="note">${u.kind}</small></span>
-            <span>${why ? `<small class="note">${esc(why)}</small>` : `<button class="btn small" onclick="ascBuyUpgrade(${key}, '${id}')">✨ ${cost}</button>`}</span></div>`;
+    const n = f.copy.u.length, spare = ascentSacrificeCandidates(f), grade = ascentGrade(f.card), next = ASCENT_STACK_COST[Math.min(n, ASCENT_MAX_MODULES - 1)];
+    const mods = Object.entries(ASCENT_UPGRADES).filter(([id, u]) => u.on === f.card.type && ascentColorFit(f.card, u) && !f.copy.u.includes(id))
+        .sort((a, b) => a[1].grade - b[1].grade || a[1].label.localeCompare(b[1].label));
+    const rows = mods.map(([id, u]) => {
+        const why = ascentUpgradeBlocked(f, id), locked = !why && !ascentModuleUnlocked(id), cost = ascentUpgradeCost(id, f.card, n);
+        const act = why ? `<small class="note">${esc(why)}</small>` : locked ? `<button class="btn small" onclick="ascUnlock('${id}', ${key})" title="Unlock for good with salvage">🔒 Unlock · ${ASCENT_UNLOCK_SALVAGE[u.grade]}</button>` : `<button class="btn small" onclick="ascBuyUpgrade(${key}, '${id}')">✨ ${cost}</button>`;
+        return `<div class="asc-uprow${why || locked ? ' blocked' : ''}"><span>${u.icon} <strong>${esc(u.label)}</strong> ${ascGradeBadge(u.grade)}<br><small class="note">${esc(ascModuleText(u))}</small></span><span>${act}</span></div>`;
     }).join('');
     showModal(`<h2>${esc(f.card.name)} · copy ${key}</h2>
-        <p class="note">${f.copy.u.length} of ${slots} slots used. ✨ ${st.aether} Aether.</p>
-        <h4>On this copy</h4>${f.copy.u.map((u, i) => `<div class="asc-uprow"><span>${ASCENT_UPGRADES[u].icon} ${esc(ASCENT_UPGRADES[u].label)}</span><button class="btn small" onclick="ascRemoveUpgrade(${key}, ${i})" title="Costs a quarter of its price">Remove · ✨ ${Math.max(5, Math.round(ascentUpgradeCost(u, f.card) * ASCENT_SWAP_FEE / 5) * 5)}</button></div>`).join('') || '<p class="note">None yet.</p>'}
-        <h4>Add an upgrade</h4>
+        <p class="note">Mana value ${f.card.cmc}: ${ascGradeBadge(grade)} (can take modules up to this grade). ${n} of ${ASCENT_MAX_MODULES} modules. The next one costs ×${next} of its base price. ✨ ${st.aether} Aether. Salvage: ${ascSalvageBar()}</p>
+        <h4>On this copy</h4>${f.copy.u.map((u, i) => `<div class="asc-uprow"><span>${ASCENT_UPGRADES[u].icon} ${esc(ASCENT_UPGRADES[u].label)} ${ascGradeBadge(ASCENT_UPGRADES[u].grade)}</span><button class="btn small" onclick="ascRemoveUpgrade(${key}, ${i})" title="Costs a quarter of its price">Remove · ✨ ${Math.max(5, Math.round(ascentUpgradeCost(u, f.card, i) * ASCENT_SWAP_FEE / 5) * 5)}</button></div>`).join('') || '<p class="note">None yet.</p>'}
+        <h4>Add a module</h4>
         ${spare.length ? `<label class="note"><input type="checkbox" id="ascFeed"> Feed in ${Math.min(spare.length, 4)} spare plain cop${spare.length === 1 ? 'y' : 'ies'} of this card (each covers ✨ ${ascentSacrificeValue(f.card, spare[0])})</label>` : '<p class="note">Spare plain copies of this card can cover part of the price.</p>'}
-        <div class="asc-uplist">${rows}</div>
-        <p class="note">To swap, remove the old upgrade first (a quarter of its price), then add the new one.</p>
-        <div class="actions"><button class="btn" onclick="ascCardDialog('${f.id}')">Back</button></div>`);
+        <div class="asc-uplist">${rows || '<p class="note">No modules fit this card.</p>'}</div>
+        <p class="note">Bigger mana values take bigger effects. Locked modules are unlocked for good with salvage: scrap spare cards of that color. To swap, remove the old module first (a quarter of its price).</p>
+        <div class="actions"><button class="btn" onclick="ascModules()">🧩 All modules</button><button class="btn" onclick="ascCardDialog('${f.id}')">Back</button></div>`);
+}
+function ascUnlock(id, key) {
+    const res = unlockAscentModule(id);
+    toast(res.ok ? `Unlocked ${ASCENT_UPGRADES[id].label}!` : res.why);
+    if (res.ok) saveProfile();
+    if (key) ascUpgradeDialog(key); else ascModules(ASC.modColor);
+}
+// The module library: every module by color, locked or unlocked
+function ascModules(color) {
+    ASC.modColor = color || ASC.modColor || 'W';
+    const col = ASC.modColor, list = Object.entries(ASCENT_UPGRADES).filter(([, u]) => col === 'C' ? u.cols === 'C' : u.cols.includes(col))
+        .sort((a, b) => a[1].grade - b[1].grade || a[1].on.localeCompare(b[1].on) || a[1].label.localeCompare(b[1].label));
+    const sv = ascentSalvage();
+    const rows = list.map(([id, u]) => {
+        const open = ascentModuleUnlocked(id);
+        return `<div class="asc-uprow${open ? '' : ' blocked'}"><span>${u.icon} <strong>${esc(u.label)}</strong> ${ascGradeBadge(u.grade)} <small class="note">${u.on === 'spell' ? 'spells' : 'creatures'}${u.cols.length > 1 && u.cols !== 'C' ? ' · ' + u.cols.split('').join('/') : ''} · base ✨ ${u.cost}</small><br><small class="note">${esc(ascModuleText(u))}</small></span>
+            <span>${open ? '<small class="note">✔ unlocked</small>' : `<button class="btn small" ${ascentSalvageFor(u) >= ASCENT_UNLOCK_SALVAGE[u.grade] ? '' : 'disabled'} onclick="ascUnlock('${id}')">🔒 Unlock · ${ASCENT_UNLOCK_SALVAGE[u.grade]}</button>`}</span></div>`;
+    }).join('');
+    showModal(`<h2>🧩 Modules</h2>
+        <p class="note">Modules are effects you can put on single copies of your cards. Minor ones are free; the rest are unlocked for good with salvage, which you get by scrapping spare cards. Bigger mana values take bigger effects. Salvage: ${ascSalvageBar()}</p>
+        <div class="row">${ASCENT_COLORS.concat('C').map(ch => `<button class="btn small${ch === col ? ' primary' : ''}" onclick="ascModules('${ch}')">${ch === 'C' ? '◇ Colorless' : ASC_COLORS[ch][0] + ' ' + ASC_COLORS[ch][1]} <small>${sv[ch] || 0}</small></button>`).join('')}</div>
+        <div class="asc-uplist" style="max-height:50vh;">${rows}</div>
+        <div class="actions"><button class="btn" onclick="closeModal()">Close</button></div>`);
 }
 function ascBuyUpgrade(key, upId) {
     const f = ascentFindCopy(key), feed = $('ascFeed') && $('ascFeed').checked ? ascentSacrificeCandidates(f).slice(0, 4).map(x => x.k) : [];
     // feed in only as many copies as the price needs
-    let needed = [], price = ascentUpgradeCost(upId, f.card), cover = 0;
+    let needed = [], price = ascentUpgradeCost(upId, f.card, f.copy.u.length), cover = 0;
     for (const k of feed) { if (cover >= price) break; needed.push(k); cover += ascentSacrificeValue(f.card, f.o.c.find(x => x.k === k)); }
     const res = upgradeAscentCopy(key, upId, needed);
     toast(res.ok ? `Upgraded! ${res.aether ? `✨ ${res.aether} spent` : 'Paid with spare copies'}` : res.why);

@@ -88,7 +88,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
             ok('blue has counterspells, bounce spells, tempo creatures and flying creatures in the roster', ukinds('counter') >= 8 && ukinds('bounce') >= 8 && ukinds('tempocreature') >= 25 && ASCENT.roster.filter(c => c.colors === 'U' && (c.kws || []).includes('flying')).length >= 30, ['counter', 'bounce', 'tempocreature'].map(ukinds));
             const us = ascentStarterCards('U'), uk = Object.keys(us.cards).map(id => ASCENT.byId.get(id));
             ok('the blue starter has fliers, a bounce spell, a tempo creature, a draw spell and a counterspell, 23 spells, nothing outside blue', uk.some(c => (c.kws || []).includes('flying')) && uk.some(c => c.kind === 'bounce') && uk.some(c => c.kind === 'tempocreature') && uk.some(c => c.kind === 'draw') && uk.some(c => c.kind === 'counter') && Object.values(us.cards).reduce((a, b) => a + b, 0) === ASCENT_DECK_SIZE - ASCENT_LANDS && uk.every(c => c.colors === 'U'), uk.map(c => c.name));
-            const anth = ASCENT.roster.find(c => c.kind === 'anthem'), tokS = ASCENT.roster.find(c => c.kind === 'tokens');
+            const anth = ASCENT.roster.find(c => c.kind === 'anthem'), tokS = ASCENT.roster.find(c => c.kind === 'tokens' && c.colors === 'U');
             ok('an anthem cannot take a spell extra (it is not a one-shot spell)', /Enchantments/.test(ascentUpgradeBlocked({ card: anth, copy: { u: [] } }, 'sdraw')) && !ascentUpgradeBlocked({ card: tokS, copy: { u: [] } }, 'sdraw'));
             ok('the result hook is wired into the campaign (13-campaign.js)', /G\.campaign\.ascent\) return ascentResult/.test(campaignResult.toString()));
             // ---- trophies ----

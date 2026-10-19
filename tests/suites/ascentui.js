@@ -59,8 +59,8 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
         const key = st.owned[id].c[0].k; st.aether = 500;
         ascUpgradeDialog(key);
         ok('the upgrade dialog lists upgrades with prices', document.querySelectorAll('.asc-uprow').length >= 10 && /✨/.test($('modalHost').textContent));
-        const before = st.aether; ascBuyUpgrade(key, 'plus11');
-        ok('buying an upgrade spends Aether and puts it on that copy', st.aether < before && st.owned[id].c[0].u.includes('plus11'));
+        const before = st.aether; ascBuyUpgrade(key, 'plus20');
+        ok('buying an upgrade spends Aether and puts it on that copy', st.aether < before && st.owned[id].c[0].u.includes('plus20'));
         ascRemoveUpgrade(key, 0);
         ok('removing it costs a fee and frees the slot', st.owned[id].c[0].u.length === 0);
         ascCraft(Object.keys(st.owned).includes(id) ? ASCENT.roster.find(c => c.type === 'creature' && !st.owned[c.id]).id : id, false);
