@@ -152,7 +152,17 @@ window.LAB = (() => {
             const styles = mode === 'none' ? Array(n).fill(null) : mode === 'random' ? hshuf(PLAYSTYLE_KEYS).slice(0, n) : Array(n).fill(mode);
             out.styles = styles;
             let A, B, more;
-            if (kind === 'ascent') {
+            if (kind === 'ascentpool') {
+                // Deck-power calibration: a fixed pool of ~100 varied decks (the 18 opponents, 5 starters, random mixes, each with 0 / 6 / 14 upgraded cards);
+                // each seed plays two of them against each other and reports both decks' features, so tests/ascent_power_fit.js can fit the power weights.
+                await loadAscentRoster();
+                const pool = L.buildPool(), prng = ascentRng('pair:' + opts.seed), n = pool.length;
+                let i = Math.floor(prng() * n), j = Math.floor(prng() * (n - 1)); if (j >= i) j++;
+                if (opts.seed % 2) [i, j] = [j, i]; // alternate seats so a seat advantage cancels out
+                const mk = pd => { const d = ascentDeckEntries(pd.name, pd.cards); d.aiStyle = pd.style; return d; };
+                A = mk(pool[i]); B = mk(pool[j]); more = [];
+                out.ia = i; out.ib = j; out.fa = pool[i].features; out.fb = pool[j].features; out.styles = [A.aiStyle, B.aiStyle];
+            } else if (kind === 'ascent') {
                 // Planeswalker's Ascent: two opponents' decks from the roster (seed picks the pair, and each seat's tier sets its AI level)
                 await loadAscentRoster();
                 const i = opts.seed % ASCENT_OPPONENTS.length, j = (i + 1 + Math.floor(opts.seed / ASCENT_OPPONENTS.length) % (ASCENT_OPPONENTS.length - 1)) % ASCENT_OPPONENTS.length;
@@ -245,6 +255,53 @@ window.LAB = (() => {
         if (errs.length) out.errors = errs.slice(0, 3);
         out.ms = Math.round(performance.now() - t0);
         return out;
+    };
+    // The calibration pool (cached): deterministic, so every page builds the same decks
+    L.buildPool = () => {
+        if (L.deckPool) return L.deckPool;
+        const rng = ascentRng('pool'), bases = [], pool = [];
+        ASCENT_OPPONENTS.forEach(o => bases.push({ name: o.id, cards: ascentOpponentDeck(o), style: o.style }));
+        ['W', 'U', 'B', 'R', 'G'].forEach(c => { const sc = ascentStarterCards(c); bases.push({ name: 'starter-' + c, cards: { ...sc.cards, [sc.basicId]: ASCENT_LANDS }, style: null }); });
+        const basics = { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' }, spellsAll = ASCENT.roster.filter(c => c.type !== 'land' && c.rarity !== 'trophy' && c.kind !== 'rock');
+        for (let m = 0; m < 28; m++) { // random mixes: two colors, a tier cap, 23 random spells that fit, the rest basics
+            const cols = ['W', 'U', 'B', 'R', 'G'].sort(() => rng() - 0.5).slice(0, 1 + (rng() < 0.7 ? 1 : 0)).join(''), cap = 1 + Math.floor(rng() * 3);
+            const fits = spellsAll.filter(c => c.tier <= cap && c.colors.split('').every(ch => cols.includes(ch)) && (c.colors || cols.length));
+            const cards = {}; let left = ASCENT_DECK_SIZE - ASCENT_LANDS, guard = 0;
+            while (left > 0 && guard++ < 400) { const c = fits[Math.floor(rng() * fits.length)]; if (!c) break; const add = Math.min(left, 1 + Math.floor(rng() * 3), ASCENT_COPY_LIMIT - (cards[c.id] || 0)); if (add > 0) { cards[c.id] = (cards[c.id] || 0) + add; left -= add; } }
+            const per = Math.floor(ASCENT_LANDS / cols.length);
+            cols.split('').forEach((ch, k) => { const b = ASCENT.roster.find(c => c.kind === 'basic' && c.name === basics[ch]); cards[b.id] = k === cols.length - 1 ? ASCENT_LANDS - per * (cols.length - 1) : per; });
+            bases.push({ name: 'mix' + m, cards, style: null });
+        }
+        for (let m = 0; m < 20; m++) { // top-heavy decks, so the big (grade 3 and 4) modules are measured too: 10 cards of mana value 5+, the rest cheap
+            const cols = ['W', 'U', 'B', 'R', 'G'].sort(() => rng() - 0.5).slice(0, 1 + (rng() < 0.6 ? 1 : 0)).join('');
+            const fit = c => c.colors.split('').every(ch => cols.includes(ch)) && (c.colors || cols.length);
+            const bigs = spellsAll.filter(c => c.cmc >= 5 && c.type === 'creature' && fit(c)), smalls = spellsAll.filter(c => c.cmc <= 4 && fit(c) && c.tier <= 2);
+            const cards = {}; let left = ASCENT_DECK_SIZE - ASCENT_LANDS, guard = 0, bigLeft = 10;
+            while (left > 0 && guard++ < 600) { const useBig = bigLeft > 0 && rng() < 0.45, pool2 = useBig ? bigs : smalls, c = pool2[Math.floor(rng() * pool2.length)]; if (!c) break; const add = Math.min(left, 1 + Math.floor(rng() * 2), ASCENT_COPY_LIMIT - (cards[c.id] || 0)); if (add > 0) { cards[c.id] = (cards[c.id] || 0) + add; left -= add; if (useBig) bigLeft -= add; } }
+            const per = Math.floor(ASCENT_LANDS / cols.length);
+            cols.split('').forEach((ch, k) => { const b = ASCENT.roster.find(c => c.kind === 'basic' && c.name === basics[ch]); cards[b.id] = k === cols.length - 1 ? ASCENT_LANDS - per * (cols.length - 1) : per; });
+            bases.push({ name: 'big' + m, cards, style: null });
+        }
+        for (const b of bases) for (const load of [0, 6, 14]) {
+            const cards = {}, copies = [];
+            Object.entries(b.cards).forEach(([id, n]) => { for (let k = 0; k < n; k++) copies.push(id); });
+            const idxs = copies.map((id, k) => k).filter(k => ASCENT.byId.get(copies[k]).type !== 'land').sort(() => rng() - 0.5).slice(0, load), up = new Set(idxs);
+            copies.forEach((id, k) => {
+                let vid = id;
+                if (up.has(k)) {
+                    const r = ASCENT.byId.get(id), ups = [], want = 1 + (rng() < 0.4 ? 1 : 0) + (rng() < 0.15 ? 1 : 0);
+                    for (let q = 0; q < want; q++) {
+                        const pick = Object.keys(ASCENT_UPGRADES).filter(u => !ups.includes(u) && !ascentUpgradeBlocked({ card: r, copy: { u: ups.slice() } }, u));
+                        const u1 = pick[Math.floor(rng() * pick.length)]; if (u1) ups.push(u1);
+                    }
+                    if (ups.length && CARDS.get(id)) vid = ascentVariantCard(CARDS.get(id), ups).id;
+                }
+                cards[vid] = (cards[vid] || 0) + 1;
+            });
+            pool.push({ name: `${b.name}+${load}`, cards, style: b.style, features: ascentDeckFeatures(cards) });
+        }
+        L.deckPool = pool;
+        return pool;
     };
     // Many games in a row
     L.batch = async (from, count, opts) => {

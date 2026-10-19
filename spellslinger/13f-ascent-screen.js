@@ -75,7 +75,7 @@ async function ascOppPanel() {
     const trophyIds = ascentTrophies()[o.id];
     await cardsByIds([...sigs, ...trophyIds]).catch(() => {});
     const archName = { stomp: 'Big creatures', weenie: 'Small fast creatures', fliers: 'Fliers', value: 'Deathtouch and life gain', burn: 'Burn and haste', control: 'Removal and walls', tempo: 'Bounce and evasion' }[o.arch];
-    box.innerHTML = `<div class="pos asc-opp"><div class="pos-title"><h3>${o.boss ? '👑 ' : ''}${esc(o.name)}</h3><span class="note">${ascPips(o.colors)} · ${esc(archName)} · ${t.level} AI</span></div>
+    box.innerHTML = `<div class="pos asc-opp"><div class="pos-title"><h3>${o.boss ? '👑 ' : ''}${esc(o.name)}</h3><span class="note">${ascPips(o.colors)} · ${esc(archName)} · ${t.level} AI · ⚡ power ${ascentOpponentPower(o.id)}</span></div>
         ${ascSpeechHTML(o.id, 'intro', st.progress.length)}
         <p>${esc(o.blurb)}</p>
         <p class="note">💡 ${esc(ASCENT_CHAR[o.id].lines.tip)}</p>
@@ -85,9 +85,17 @@ async function ascOppPanel() {
         <h4>🏆 Trophies: win ${ASCENT_TROPHY_WINS[ASCENT_TROPHY_WINS.length - 1]} times to earn them all (you have ${ascentWins(o.id)} wins)</h4>
         <p class="note">The strongest cards in the pool. They can only be won this way, one copy each: the first at ${ASCENT_TROPHY_WINS[0]} wins against ${esc(o.name)}.</p>
         <div class="asc-grid asc-trophies">${trophyIds.map((id, i) => `<div class="asc-trophy${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? ' earned' : ''}">${ascTile(id, { trophy: true })}<small class="note">${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? '✔ earned' : `${ASCENT_TROPHY_WINS[i]} wins`}</small></div>`).join('')}</div>
-        <div class="row" style="margin-top:12px;"><select id="ascDeckPick" aria-label="Your deck">${st.decks.map((d, i) => `<option value="${i}" ${i === ASC.deck ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
+        ${ascMatchupHTML(o)}
+        <div class="row" style="margin-top:12px;"><select id="ascDeckPick" aria-label="Your deck" onchange="ASC.deck=Number(this.value)||0; ascOppPanel()">${st.decks.map((d, i) => `<option value="${i}" ${i === ASC.deck ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
             <button class="btn primary" onclick="ascPlay('${o.id}')" ${open ? '' : 'disabled'}>⚔️ Battle ${esc(o.name)}</button>
             ${open ? '' : `<span class="note">${o.boss ? 'Beat the other five of this league first.' : 'Locked.'}</span>`}</div></div>`;
+}
+// "Your deck: power 118 vs 100: you are favored (about 56%)" for the selected deck and opponent
+function ascMatchupHTML(o) {
+    const st = ascentState(), deck = st.decks[Math.min(ASC.deck, st.decks.length - 1)];
+    if (!deck) return '';
+    const mine = ascentDeckPower(deck), theirs = ascentOpponentPower(o.id), m = ascentMatchupWords(mine, theirs);
+    return `<p class="asc-matchup" title="Deck power is fitted from lab games: a gap of 100 points is about a 64% win chance for the stronger deck. It is a guide, not a promise.">⚡ <strong>${esc(deck.name)}</strong> power <strong>${mine}</strong> vs ${esc(o.name)} <strong>${theirs}</strong>: ${esc(m.label)} (about ${m.percent}%).</p>`;
 }
 async function ascPlay(oppId) {
     ASC.deck = Number($('ascDeckPick').value) || 0;
@@ -265,6 +273,12 @@ function ascFlip(i) { ASC.pack.flipped.add(i); $('ascReveal').innerHTML = ascRev
 function ascFlipAll() { ASC.pack.picks.forEach((_, i) => ASC.pack.flipped.add(i)); $('ascReveal').innerHTML = ascRevealHTML(ASC.pack); }
 
 // ---------- Decks ----------
+// "⚡ Power 118" plus how it compares with the next opponent you can fight
+function ascPowerLineHTML(deck) {
+    const mine = ascentDeckPower(deck), next = ASCENT_OPPONENTS.find(o => ascentOpponentOpen(o) && !ascentBeaten(o.id));
+    const vs = next ? `Next up, ${esc(next.name)} (⚡ ${ascentOpponentPower(next.id)}): ${esc(ascentMatchupWords(mine, ascentOpponentPower(next.id)).label.toLowerCase())}.` : '';
+    return `<span class="asc-power" title="Deck power: how strong this deck is, fitted from lab games. 100 points apart is about a 64% win chance for the stronger deck.">⚡ Power <strong>${mine}</strong></span> <small class="note">${vs}</small>`;
+}
 function ascDecks() {
     const st = ascentState(), body = $('ascBody');
     if (!st.decks.length) { body.innerHTML = '<p class="note">Choose a starter deck on the Map tab first.</p>'; return; }
@@ -276,7 +290,7 @@ function ascDecks() {
     const basics = ASCENT.roster.filter(c => c.kind === 'basic');
     body.innerHTML = `${ascNpcHTML('decks')}<div class="row"><select aria-label="Deck" onchange="ASC.deck=Number(this.value); ascDecks()">${st.decks.map((d, i) => `<option value="${i}" ${i === ASC.deck ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
         <button class="btn small" onclick="ascNewDeck()">＋ New deck</button><button class="btn small" onclick="ascRenameDeck()">Rename</button><button class="btn small" ${st.decks.length > 1 ? '' : 'disabled'} onclick="ascDeleteDeck()">Delete</button></div>
-        <div class="asc-deckhead"><strong>${total} / ${ASCENT_DECK_SIZE}+</strong> cards ${problems.length ? `<span class="warn">${esc(problems[0])}</span>` : '<span class="ok">✔ Ready to play</span>'}</div>
+        <div class="asc-deckhead"><strong>${total} / ${ASCENT_DECK_SIZE}+</strong> cards ${problems.length ? `<span class="warn">${esc(problems[0])}</span>` : '<span class="ok">✔ Ready to play</span>'} · ${ascPowerLineHTML(deck)}</div>
         <div class="asc-twocol"><div class="asc-decklist"><h4>In this deck</h4>
             ${entries.map(([r, id, n]) => `<div class="asc-row ${ascRarityClass(r.rarity)}"><span><strong>${n}×</strong> ${esc(r.name)} <small class="note">${esc(r.cost)}</small></span>
                 <span class="asc-row-ups">${(deck.sel[id] || []).map(k => { const f = ascentFindCopy(k); return f && f.copy.u.length ? `<small title="${esc(f.copy.u.map(u => ASCENT_UPGRADES[u].label).join(', '))}">✦${f.copy.u.length}</small>` : ''; }).join('')}</span>

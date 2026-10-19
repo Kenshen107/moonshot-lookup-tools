@@ -23,6 +23,7 @@ async function loadAscentRoster() {
         const data = await r.json();
         ASCENT.roster = data.cards;
         data.cards.forEach(c => { ASCENT.byId.set(c.id, c); ASCENT.byName.set(c.name, c); });
+        if (typeof loadAscentPower === 'function') await loadAscentPower(); // the fitted deck-power weights (13i), optional
         return ASCENT.roster;
     })();
     return ASCENT.loading;
