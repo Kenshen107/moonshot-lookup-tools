@@ -42,6 +42,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
             ok('upgrading a card in the deck raises the deck power', ascentDeckPower(deck) > p0, [p0, ascentDeckPower(deck)]);
             ok('power does not need the card data to be loaded', (() => { const saved = CARDS.get(nonBasic); CARDS.delete(nonBasic); const v = ascentDeckPower(deck); CARDS.set(nonBasic, saved); return v === ascentDeckPower(deck); })());
             // the screen
+            profile.mode = 'campaign'; showView('campaign'); await renderAscent();
             ASC.tab = 'decks'; ASC.deck = 0; ascDecks();
             ok('the Decks tab shows the deck power and the next opponent', /Power/.test(document.querySelector('.asc-deckhead').textContent) && /Next up/.test(document.querySelector('.asc-deckhead').textContent), document.querySelector('.asc-deckhead').textContent);
             ASC.opp = 't1-mick'; ASC.tab = 'map'; ascMap(); await ascOppPanel();
