@@ -126,7 +126,7 @@ function basePT(o, which) {
 const pow = o => basePT(o, 'p') + o.counters + o.tp + buffsOn(o).p;
 const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q;
 const hasBase = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (k === 'indestructible' && !!o.ctr && o.ctr.indestructible > 0) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
-const has = (o, k) => (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
+const has = (o, k) => (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
 const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackCond && !condOk(Rx(o).attackCond, ctrl(o), o)) && !(typeof cmdCantAttack === 'function' && cmdCantAttack(o)) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !has(o, 'defender') && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
@@ -441,6 +441,7 @@ function umbraSave(o) {
 }
 function destroy(o, why) {
     if (has(o, 'indestructible')) { log(`${o.card.name} is indestructible.`); return; }
+    if (o.ctr && o.ctr.shield > 0) { o.ctr.shield--; log(`${o.card.name} loses a shield counter instead of being destroyed.`); return; }
     if (o.regen) { o.regen--; o.tapped = true; o.dmg = 0; G.attackers = G.attackers.filter(u => u !== o.uid); log(`${o.card.name} regenerates (rule 701.19).`); return; }
     if (umbraSave(o)) return;
     log(`${o.card.name} ${why || 'is destroyed'}.`);
@@ -458,6 +459,13 @@ function damage(target, n, src) {
     { const owner = target.life !== undefined ? target : (target.card && target.uid !== undefined ? G.players[target.owner] : null);
       if (owner && owner.hsRedirect && owner.hsRedirect.turn === G.turn && target.uid !== owner.hsRedirect.uid && (target.life !== undefined || isCreature(target))) { const ch = onBf(owner.hsRedirect.uid); if (ch) { log(`${n} damage is dealt to ${ch.card.name} instead (Heroic Sacrifice).`); damage(ch, n, src); return; } } }
     if (target.card && isCreature(target) && allPerms().some(a => a.attachedTo === target.uid && Rx(a).pantherHabit && !lostAbilities(a)) && G.noPrevent !== G.turn) { log(`${n} damage to ${target.card.name} is prevented and becomes ${n} +1/+1 counter${n === 1 ? '' : 's'} (Panther Habit).`); putCounters(target, n, G.players[target.owner]); return; }
+    // Eerie Interference / Surge of Salvation (Odric deck), shield counters
+    { const own = target.life !== undefined ? target : (target.card && target.uid !== undefined ? G.players[target.owner] : null);
+      if (own && src && src.card && G.noPrevent !== G.turn && (target.life !== undefined || isCreature(target))) {
+          if (own.eerieTurn === G.turn && src.uid !== undefined && isCreature(src)) { log(`${n} damage from ${src.card.name} is prevented (Eerie Interference).`); return; }
+          if (own.surgeTurn === G.turn && target.life === undefined && (src.card.colors || []).some(c => c === 'B' || c === 'R')) { log(`${n} damage from ${src.card.name} is prevented (Surge of Salvation).`); return; }
+      }
+      if (target.card && target.uid !== undefined && target.ctr && target.ctr.shield > 0 && G.noPrevent !== G.turn) { target.ctr.shield--; log(`${target.card.name} loses a shield counter instead of being dealt ${n} damage.`); return; } }
     n = preconDamage(target, n, src); if (n <= 0) return;
     // The Mindskinner: damage a source you control would deal to an opponent is prevented; each opponent mills that many cards
     if (target.life !== undefined && src && src.card && src.uid !== undefined && G.players[src.owner] && src.owner !== target.i && G.players[src.owner].bf.some(a => Rx(a).mindskin && !lostAbilities(a))) { log(`${n} damage from ${src.card.name} is prevented (The Mindskinner).`); foes(G.players[src.owner]).forEach(F => doMill(F, n)); return; } // replacement and prevention effects of the precon rounds (15b-precon-effects.js)
@@ -626,6 +634,7 @@ function manaOf(o) {
     const R = Rx(o);
     let m = R.mana;
     if (!G || !o.uid) return m;
+    if (m && m.devotionBest) { const X0 = G.players[o.owner]; let bc = 'W', bn = -1; for (const c of COLORS) { const d = devotion(X0, [c]); if (d > bn) { bn = d; bc = c; } } return bn > 0 ? { colors: [bc], n: bn, fixed: true } : { colors: ['W'], n: 0 }; } // Nyx Lotus
     if (m && G && m.colors && m.colors.length === 1 && m.colors[0] === 'C' && o.uid) { const k = G.players[o.owner].bf.filter(a => Rx(a).monumentC && !lostAbilities(a)).length; if (k) m = { ...m, n: (m.n || 1) + k }; } // Forsaken Monument: an additional {C}
     if (m && /\bLand\b/.test(o.card.type)) { // Virtue of Strength: a basic land makes three times as much; Regal Behemoth: the monarch's lands add one more mana of any color
         const X1 = G.players[o.owner];
@@ -1141,7 +1150,7 @@ function validTargets(P, e, src) {
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'spellOrCreature') { out.push(...creatures.map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); }
-    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(p.protAll && G.turn < p.protAll) && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a)))).map(p => ({ p })));
+    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(p.protAll && G.turn < p.protAll) && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a))) && !(p !== P && p.hexTurn === G.turn)).map(p => ({ p })));
     if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P) && !(e.filter === 'oppInstSorc' && it.P === P) && !(e.filter === 'myInstSorc' && it.P !== P) && !(e.filter === 'targetsMine' && !(it.target && it.target.o && it.target.o.owner === P.i))).map(item => ({ item })));
     return out;
 }
@@ -3957,6 +3966,7 @@ function blockTaxFix() {
     if (drop.length) log(`${drop.length} block${drop.length === 1 ? '' : 's'} can't be made - the {${per}} each isn't paid (${taxers[0].card.name}).`);
 }
 function fixMenace() {
+    if (typeof odricActive === 'function' && odricActive()) odricBlocks();
     preconLure();
     blockTaxFix();
     Object.entries(G.blocks).forEach(([a, bs]) => {
@@ -4410,7 +4420,8 @@ async function confirmAttack() {
     if (G.over) return;
     const att = me(), D = foe();
     if (D.isAI && D.aiLevel === 'hard') { await aiRemoveAttacker(D); if (G.over) return; }
-    if (D.isAI) G.blocks = aiChooseBlocks(D, att);
+    if (odricActive()) { /* Odric, Master Tactician: the attacker chooses the blocks */ }
+    else if (D.isAI) G.blocks = aiChooseBlocks(D, att);
     else if (D.bf.some(o => isCreature(o) && !o.tapped) || D.hand.some(o => canCastNow(D, o) && canPay(D, o))) {
         G.busy = false;
         await new Promise(resolve => { G.mode = { type: 'block', who: D.i, picked: null, resolve }; renderGame(); });

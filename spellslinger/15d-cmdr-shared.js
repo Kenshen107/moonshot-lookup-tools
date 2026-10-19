@@ -3,6 +3,7 @@
 // ---- End-step queue: things that happen "at the beginning of the next end step" ----
 function atEndStep(fn, label) { (G.endQ = G.endQ || []).push({ fn, label }); }
 async function runEndQueue() {
+    if (typeof wandererReturns === 'function') wandererReturns(); // The Eternal Wanderer
     const q = (G.endQ || []).splice(0); for (const it of q) { if (it.label) log(it.label); await it.fn(); }
     const due = (G.endAt || []).filter(x => x.turn <= G.turn); G.endAt = (G.endAt || []).filter(x => x.turn > G.turn); for (const it of due) await it.fn(); // "until the end of your next turn"
 }

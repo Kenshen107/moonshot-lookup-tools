@@ -232,6 +232,7 @@ Akroma's Memorial
 Akroma's Will
 Akroma, Angel of Fury
 Akroma, Angel of Wrath
+Akroma, Vision of Ixidor
 Al Bhed Salvagers
 Alabaster Dragon
 Alabaster Host Intercessor
@@ -1564,6 +1565,7 @@ Brassclaw Orcs
 Braulios of Pheres Band
 Bravado
 Brave Brawler
+Brave the Sands
 Brave-Kin Duo
 Brawl-Bash Ogre
 Brawler's Plate
@@ -1965,6 +1967,7 @@ Celestial Ancient
 Celestial Archon
 Celestial Armor
 Celestial Colonnade
+Celestial Crusader
 Celestial Enforcer
 Celestial Force
 Celestial Messenger
@@ -3630,6 +3633,7 @@ Edgewall Pack
 Eel Umbra
 Eel-Hounds
 Eerie Gravestone
+Eerie Interference
 Eerie Procession
 Efficient Construction
 Eidolon of Blossoms
@@ -3698,8 +3702,10 @@ Elite Scaleguard
 Elite Skirmisher
 Elite Vanguard
 Elixir of Vitality
+Elspeth Resplendent
 Elspeth's Devotee
 Elspeth's Smite
+Elspeth, Knight-Errant
 Elspeth, Sun's Champion
 Elturgard Ranger
 Elusive Krasis
@@ -5506,6 +5512,7 @@ Guardian of Faith
 Guardian of Pilgrims
 Guardian of Tazeem
 Guardian of Vitu-Ghazi
+Guardian of the Gateless
 Guardian of the Great Conduit
 Guardian of the Halls
 Guardians of Akrasa
@@ -5841,6 +5848,7 @@ Hieroglyphic Illumination
 Hieromancer's Cage
 Hierophant's Chalice
 High Fae Trickster
+High Ground
 High Market
 High Noon
 High Priest of Penance
@@ -6574,6 +6582,7 @@ Kalakscion, Hunger Tyrant
 Kalastria Healer
 Kalastria Highborn
 Kalastria Nightwatch
+Kaldra Compleat
 Kaleidostone
 Kalitas, Traitor of Ghet
 Kalonian Behemoth
@@ -6902,6 +6911,7 @@ Kulrath Mystic
 Kulrath Zealot
 Kuro's Taken
 Kuro, Pitlord
+Kwende, Pride of Femeref
 Kykar, Wind's Fury
 Kyodai, Soul of Kamigawa
 Kyoshi
@@ -7248,6 +7258,7 @@ Loot, the Pathfinder
 Looter il-Kor
 Loporrit Scout
 Loran of the Third Path
+Loran's Escape
 Lord Skitter's Butcher
 Lord Skitter, Sewer King
 Lord of Atlantis
@@ -8487,6 +8498,7 @@ Nylea's Emissary
 Nylea's Forerunner
 Nylea's Intervention
 Nylea, God of the Hunt
+Nyx Lotus
 Nyx Weaver
 Nyx-Fleece Ram
 Nyxborn Brute
@@ -8547,6 +8559,7 @@ Oculus
 Odious Trow
 Odric's Outrider
 Odric, Lunarch Marshal
+Odric, Master Tactician
 Odylic Wraith
 Of Herbs and Stewed Rabbit
 Of the Coast
@@ -11694,6 +11707,7 @@ Splitting Headache
 Spock, Logical Choice
 Spoils of the Vault
 Spontaneous Combustion
+Spontaneous Flight
 Spontaneous Generation
 Spooky
 Spore Crawler
@@ -12179,6 +12193,7 @@ Sureshot Sower
 Surge Conductor
 Surge Mare
 Surge Node
+Surge of Salvation
 Surge of Thoughtweft
 Surge to Victory
 Surgespanner
@@ -12596,6 +12611,7 @@ The Earth Crystal
 The Earth King
 The Echoverse Fulcrum
 The Elder Dragon War
+The Eternal Wanderer
 The Explorer
 The Fabulous Frog-Man
 The Fair Basilica
@@ -13265,6 +13281,7 @@ Unauthorized Exit
 Unbender Tine
 Unbound Flourishing
 Unbounded Potential
+Unbreakable Formation
 Unbridled Growth
 Unburden
 Unburial Rites
@@ -13425,6 +13442,7 @@ Urza's Incubator
 Urza's Mine
 Urza's Power Plant
 Urza's Rebuff
+Urza's Ruinous Blast
 Urza's Tower
 Usher of the Fallen
 Uthden Troll
