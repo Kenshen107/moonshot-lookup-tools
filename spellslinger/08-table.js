@@ -44,9 +44,10 @@ function permHTML(o, count = 1) {
         pt = `<span class="pt${o.dmg ? ' hurt' : up ? ' up' : ''}">${p}/${t - o.dmg}</span>`;
     }
     const blockedAtk = blocking && onBf(Number(blocking[0]));
+    const atkLabel = G.players.length > 2 && o.atkTo != null && G.attackers.includes(o.uid) && G.players[o.atkTo] ? `<span class="blocklabel">→ ${esc(who(G.players[o.atkTo]).split(',')[0])}</span>` : '';
     const blockLabel = blockedAtk ? `<span class="blocklabel">blocks ${esc(blockedAtk.card.name.split(',')[0])}</span>` : '';
     if (count > 1) cls.push('pile');
-    return `<button type="button" class="${cls.join(' ')}" data-uid="${o.uid}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}${count > 1 ? ` ×${count}` : ''}">${cardImg(o.card)}<span class="chips">${chips.join('')}</span>${pt}${blockLabel}${count > 1 ? `<span class="pile-n">×${count}</span>` : ''}</button>`;
+    return `<button type="button" class="${cls.join(' ')}" data-uid="${o.uid}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}${count > 1 ? ` ×${count}` : ''}">${cardImg(o.card)}<span class="chips">${chips.join('')}</span>${pt}${blockLabel || atkLabel}${count > 1 ? `<span class="pile-n">×${count}</span>` : ''}</button>`;
 }
 // Identical permanents share one pile (lands and others from 2, creatures
 // from 3, only while nothing is being chosen) so a full board fits.
@@ -104,7 +105,7 @@ function manaSourcesSummary(P) {
 function podStripHTML() {
     const v = me(), m = G.mode;
     const chips = G.players.filter(X => X !== v).map(X => {
-        const on = foe() === X, turn = G.active === X.i && !G.over, hitsMe = G.defender === v.i && G.active === X.i, tgt = m && m.type === 'target' && m.valid.some(t => t.p && t.p.i === X.i);
+        const on = foe() === X, turn = G.active === X.i && !G.over, hitsMe = G.active === X.i && (G.defender === v.i || G.attackers.some(u => { const a = onBf(u); return a && a.atkTo === v.i; })), tgt = m && m.type === 'target' && m.valid.some(t => t.p && t.p.i === X.i);
         const dmg = G.format === 'commander' ? (v.cmdBy[X.i] || 0) : 0;
         return `<button type="button" class="pod-chip${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
             title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${X.hand.length} cards in hand, ${X.bf.filter(isCreature).length} creatures${dmg ? `, you have taken ${dmg} commander damage from them` : ''}">
@@ -126,6 +127,7 @@ function barHTML(P) {
         ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
  ${P === me() && P.bf.some(o => Rx(o).peekTop) && P.library.length ? `<span class="pc" title="You may look at the top card of your library any time">👁 ${esc(P.library[P.library.length - 1].card.name)}</span>` : ''}
         <button type="button" class="btn small desk-only" onclick="playerSheet(${P.i})" title="Track life, poison, energy and experience">🧮</button>
+        <button type="button" class="btn small" onclick="boardOverview(${P.i})" title="See every permanent on this side in one place">👁 Board</button>
         <span class="zone-count" title="Library">📚 ${P.library.length}</span>
         <button type="button" class="zone-count zone-btn" title="Graveyard: tap to look" onclick="showGraveyard(${P.i})">🪦 ${P.gy.length}</button>
         ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
@@ -137,6 +139,7 @@ function barHTML(P) {
 function gameMenu() {
     menuSheet('Game', `<div class="menu-list">
         <button class="btn" onclick="logSheet()">📜 Game log</button>
+        <button class="btn" onclick="closeSheet(); boardOverview(0)">👁 Board: every creature</button>
         <button class="btn" onclick="closeSheet(); playerSheet(0)">🧮 Your life & counters</button>
         <button class="btn" onclick="closeSheet(); playerSheet(1)">🧮 ${esc(foe().name)}'s life & counters</button>
         <div class="seg" role="group" aria-label="Paying mana" style="width:100%;"><button type="button" style="flex:1; padding:10px;" data-mm="manual" aria-pressed="${manaMode === 'manual'}" onclick="setManaMode('manual'); gameMenu()">🖐 Tap lands myself</button><button type="button" style="flex:1; padding:10px;" data-mm="auto" aria-pressed="${manaMode === 'auto'}" onclick="setManaMode('auto'); gameMenu()">⚡ Auto-pay</button></div>

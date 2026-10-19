@@ -3914,14 +3914,17 @@ function attackTax(P) {
 }
 function declareAttackers(P, list) {
     if (G.players.length > 2 && (G.defender == null || G.players[G.defender].out)) G.defender = aiPickDefender(P).i; // the player this attack goes at
+    if (G.players.length > 2) list.forEach(o => { if (o.atkTo == null || !G.players[o.atkTo] || G.players[o.atkTo].out || o.atkTo === P.i) o.atkTo = G.defender; }); // each attacker has its own target player
     if (typeof cmdAttackFilter === 'function') list = cmdAttackFilter(P, list);
     if (list.length === 1 && has(list[0], 'notalone')) { log(`${list[0].card.name} can't attack alone.`); list = []; }
-    const tax = list.length ? attackTax(P) : 0;
-    if (tax) {
-        let n = list.length;
-        while (n > 0 && !planPayment(P, parseCost(''), tax * n)) n--;
-        if (n < list.length) { log(`${P.name} can only pay the attack tax for ${n} creature${n === 1 ? '' : 's'}.`); list = list.slice().sort((a, b) => pow(b) - pow(a)).slice(0, n); }
-        if (n) { planPayment(P, parseCost(''), tax * n).forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${tax * n}} to attack.`); }
+    const taxFor = o => { if (G.players.length === 2 || o.atkTo == null || o.atkTo === G.defender) return attackTax(P); const old = G.defender; G.defender = o.atkTo; try { return attackTax(P); } finally { G.defender = old; } }; // Propaganda and friends belong to the player an attacker goes at
+    const taxOf = l => l.reduce((a, o) => a + taxFor(o), 0);
+    if (list.length && taxOf(list)) {
+        let cur = list.slice().sort((a, b) => pow(b) - pow(a));
+        while (cur.length && !planPayment(P, parseCost(''), taxOf(cur))) cur.pop();
+        const n = cur.length;
+        if (n < list.length) { log(`${P.name} can only pay the attack tax for ${n} creature${n === 1 ? '' : 's'}.`); list = cur; }
+        if (n) { const tax = taxOf(cur); planPayment(P, parseCost(''), tax).forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${tax}} to attack.`); }
     }
     // Nils, Discipline Enforcer: a creature with counters pays {X} (its counters) to attack its controller's opponent who controls Nils
     list = list.filter(o => { const k = (o.counters > 0 ? o.counters : 0) + Object.entries(o.ctr || {}).filter(([n]) => n !== 'loyalty' && n !== 'defense').reduce((s, [, v]) => s + (v > 0 ? v : 0), 0); if (!k) return true; if (!foes(P).some(F => (G.players.length === 2 || G.defender === F.i) && F.bf.some(x => Rx(x).nilsTax && !lostAbilities(x)))) return true; const plan = planPayment(P, parseCost(''), k); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${k}} (Nils).`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${k}} for ${o.card.name} to attack (Nils).`); return true; });
@@ -3929,13 +3932,14 @@ function declareAttackers(P, list) {
     list = list.filter(o => { if (!Rx(o).protoTax || o.counters <= 0) return true; const plan = planPayment(P, parseCost(''), o.counters); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${o.counters}}.`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${o.counters}} for ${o.card.name} to attack.`); return true; });
     list = list.filter(o => { const t = auraTaxOn(o); if (!t) return true; const plan = planPayment(P, parseCost(''), t); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${t}}.`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${t}} for ${o.card.name} to attack.`); return true; });
     G.attackedN = { turn: G.turn, p: P.i, n: list.length };
-    if (list.length) (G.players.length === 2 ? [opp(P)] : [G.players[G.defender]]).filter(Boolean).forEach(D => { D.attackedAt = G.turn; D.attackedBy = P.i; }); // "a player attacked you during their last turn"
-    if (G.players.length > 2 && list.length) politicsAttacked(P, G.players[G.defender], list.length);
+    const hitPlayers = G.players.length === 2 ? [opp(P)] : [...new Set(list.map(o => o.atkTo))].map(i => G.players[i]);
+    if (list.length) hitPlayers.filter(Boolean).forEach(D => { D.attackedAt = G.turn; D.attackedBy = P.i; }); // "a player attacked you during their last turn"
+    if (G.players.length > 2 && list.length) hitPlayers.forEach(D => politicsAttacked(P, D, list.filter(o => o.atkTo === D.i).length));
     G.attackers = list.map(o => o.uid);
     list.forEach(o => { o.attackedTurn = G.turn; if (has(o, 'decayed')) o.sacEndCombat = true; }); // decayed: sacrificed at end of combat
     list.forEach(o => { if (!has(o, 'vigilance')) { o.tapped = true; fire('tapped', { o }); } });
     G.blocks = {};
-    log(`${P.name} ${you(P) ? 'attack' : 'attacks'} with ${list.map(o => `${o.card.name}${o.attackPW && onBf(o.attackPW) ? ` (at ${onBf(o.attackPW).card.name})` : ''}`).join(', ')}.`);
+    log(`${P.name} ${you(P) ? 'attack' : 'attacks'} with ${list.map(o => `${o.card.name}${o.attackPW && onBf(o.attackPW) ? ` (at ${onBf(o.attackPW).card.name})` : hitPlayers.length > 1 && G.players[o.atkTo] ? ` (at ${G.players[o.atkTo].name})` : ''}`).join(', ')}.`);
     // Exalted: a creature attacking alone gets +1/+1 for each exalted instance (702.83)
     if (list.length === 1) { const n = P.bf.filter(o => has(o, 'exalted')).length; if (n) { list[0].tp += n; list[0].tq += n; log(`Exalted: ${list[0].card.name} gets +${n}/+${n} until end of turn.`); } }
     fire('attacks', { list });
@@ -3977,13 +3981,13 @@ function fixMenace() {
     });
     // "Must be blocked this turn if able": one creature able to block it does
     G.attackers.map(onBf).filter(o => o && has(o, 'mustbeblocked') && !(G.blocks[o.uid] || []).length).forEach(atk => {
-        const D = opp(G.players[atk.owner]);
+        const D = atkDef(atk);
         const free = D.bf.find(b => canBlock(b, atk) && !Object.values(G.blocks).some(bs => bs.includes(b.uid)));
         if (free) { (G.blocks[atk.uid] = G.blocks[atk.uid] || []).push(free.uid); log(`${free.card.name} must block ${atk.card.name}.`); }
     });
     const lure = G.attackers.map(onBf).find(o => o && has(o, 'lure'));
     if (lure) {
-        const D = opp(G.players[lure.owner]);
+        const D = atkDef(lure);
         D.bf.filter(b => canBlock(b, lure)).forEach(b => {
             if ((G.blocks[lure.uid] || []).includes(b.uid)) return;
             Object.keys(G.blocks).forEach(k => { G.blocks[k] = G.blocks[k].filter(u => u !== b.uid); if (!G.blocks[k].length) delete G.blocks[k]; });
@@ -3996,6 +4000,7 @@ function fixMenace() {
 }
 function combatDamage(A) {
     const D = opp(A);
+    const defOf = atk => (atk.atkTo != null && G.players[atk.atkTo] && !G.players[atk.atkTo].out) ? G.players[atk.atkTo] : D; // attackers can each go at a different opponent
     const atks = G.attackers.map(onBf).filter(Boolean);
     const blockersOf = atk => (G.blocks[atk.uid] || []).map(onBf).filter(Boolean);
     const everyone = [...atks, ...atks.flatMap(blockersOf)];
@@ -4012,7 +4017,7 @@ function combatDamage(A) {
                 let dmg = pow(atk);
                 if (dmg > 0) {
                     const pw = atk.attackPW && onBf(atk.attackPW);
-                    if (!blocked) events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : D, dmg]);
+                    if (!blocked) events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : defOf(atk), dmg]);
                     else {
                         blks.forEach((b, i) => {
                             if (dmg <= 0) return;
@@ -4021,7 +4026,7 @@ function combatDamage(A) {
                             if (give > 0) events.push([atk, b, give]);
                             dmg -= give;
                         });
-                        if (dmg > 0 && has(atk, 'trample')) { const pw = atk.attackPW && onBf(atk.attackPW); events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : D, dmg]); }
+                        if (dmg > 0 && has(atk, 'trample')) { const pw = atk.attackPW && onBf(atk.attackPW); events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : defOf(atk), dmg]); }
                     }
                 }
             }
@@ -4047,11 +4052,16 @@ function combatDamage(A) {
         // Freerunning (702.173): an Assassin or commander dealt combat damage to a player this turn
         events.filter(([src, t]) => t.life !== undefined && (hasType(src, 'Assassin') || src.isCommander)).forEach(([src]) => { G.players[src.owner].freerunTurn = G.turn; });
         [...new Set(events.filter(([, t]) => t.life !== undefined).map(([src]) => src))].forEach(src => {
-            if (G.monarch === D.i && src.owner !== D.i) { G.monarch = src.owner; log(`${G.players[src.owner].name} ${you(G.players[src.owner]) ? 'become' : 'becomes'} the monarch.`); }
-            if (Rx(src).toxic) { D.poison += Rx(src).toxic; log(`${src.card.name}: toxic ${Rx(src).toxic} (${D.name} ${you(D) ? 'have' : 'has'} ${D.poison} poison).`); }
+            [...new Set(events.filter(([s2, t]) => s2 === src && t.life !== undefined).map(([, t]) => t))].forEach(H => {
+                if (G.monarch === H.i && src.owner !== H.i) { G.monarch = src.owner; log(`${G.players[src.owner].name} ${you(G.players[src.owner]) ? 'become' : 'becomes'} the monarch.`); }
+                if (Rx(src).toxic) { H.poison += Rx(src).toxic; log(`${src.card.name}: toxic ${Rx(src).toxic} (${H.name} ${you(H) ? 'have' : 'has'} ${H.poison} poison).`); }
+            });
             fire('hitPlayer', { src, n: events.filter(([s2, t]) => s2 === src && t.life !== undefined).reduce((a, [, , n]) => a + n, 0) });
         });
-        if (toPlayer) { log(`${D.name} ${you(D) ? 'take' : 'takes'} ${toPlayer} combat damage.`); D.combatHitTurn = G.turn; }
+        [...new Set(events.filter(([, t]) => t.life !== undefined).map(([, t]) => t))].forEach(H => {
+            const n = events.filter(([, t]) => t === H).reduce((a, [, , k]) => a + k, 0);
+            if (n) { log(`${H.name} ${you(H) ? 'take' : 'takes'} ${n} combat damage.`); H.combatHitTurn = G.turn; }
+        });
         if (toPlayer) fire('combatHitAny', { P: A, list: [...new Set(events.filter(([, t]) => t.life !== undefined).map(([src]) => src))] });
         // Cipher (702.99): a creature with an encoded spell casts a copy when it hits a player
         events.filter(([src, t]) => t.life !== undefined && src.ciphered && src.ciphered.length).forEach(([src]) => src.ciphered.forEach(c => { (G.trigQ = G.trigQ || []).push({ P: A, o: src, effects: rulesFor(c).spell || [] }); log(`${src.card.name} casts a copy of ${c.name} (cipher).`); }));
@@ -4060,7 +4070,7 @@ function combatDamage(A) {
         sba();
         if (G.over) return;
     }
-    atks.forEach(a => { delete a.attackPW; });
+    atks.forEach(a => { delete a.attackPW; delete a.atkTo; });
     [...new Set([...G.attackers, ...Object.values(G.blocks || {}).flat()])].map(onBf).filter(x => x && Rx(x).clockwork && x.counters > 0 && !lostAbilities(x)).forEach(x => { x.counters--; log(`${x.card.name} loses a +1/+1 counter (end of combat).`); });
     allPerms().filter(o => o.sacEndCombat).forEach(o => { log(`${o.card.name} is sacrificed at end of combat.`); dieOrLeave(o, 'gy'); });
     G.attackers = [];
@@ -4406,11 +4416,20 @@ async function confirmAttack() {
     me().bf.filter(o => canAttackWith(o) && forcedAttack(o) && !sel.includes(o)).forEach(o => sel.push(o)); // they must attack if able
     G.mode = null;
     if (!sel.length) { G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame(); return; }
-    const pws = [...foe().bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me())), ...me().bf.filter(isBattle)];
-    if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
+    const pod = G.players.length > 2 && foes(me()).length > 1;
+    const pws = pod ? [...foes(me()).flatMap(F => F.bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me()))), ...me().bf.filter(isBattle)] : [...foe().bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me())), ...me().bf.filter(isBattle)];
+    if (pod) { const ok = await choosePodTargets(sel, foes(me()), pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
+    else if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
     G.busy = true;
-    if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected
-    if (G.players.length > 2 && hasPeace(me().i, G.defender) && !(await askYes(me(), `You have a peace deal with ${nm(foe())}. Attack anyway? (You break your word and they will remember.)`, { card: foe().command[0] && foe().command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
+    if (pod) { // the player most of the attackers go at is the main defender; ask about each peace deal that would be broken
+        const cnt = {}; sel.forEach(o => { cnt[o.atkTo] = (cnt[o.atkTo] || 0) + 1; });
+        G.defender = Number(Object.entries(cnt).sort((a, b) => b[1] - a[1])[0][0]);
+        for (const i of Object.keys(cnt).map(Number)) {
+            const F = G.players[i];
+            if (hasPeace(me().i, i) && !(await askYes(me(), `You have a peace deal with ${nm(F)}. Attack anyway? (You break your word and they will remember.)`, { card: F.command[0] && F.command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { sel.forEach(o => { delete o.atkTo; delete o.attackPW; }); G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
+        }
+    } else if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected
+    if (!pod && G.players.length > 2 && hasPeace(me().i, G.defender) && !(await askYes(me(), `You have a peace deal with ${nm(foe())}. Attack anyway? (You break your word and they will remember.)`, { card: foe().command[0] && foe().command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
     declareAttackers(me(), sel);
     await exertChoices(me(), sel);
     G.phase = 'declareBlocks';
@@ -4418,16 +4437,7 @@ async function confirmAttack() {
     await pause(400);
     await settle();
     if (G.over) return;
-    const att = me(), D = foe();
-    if (D.isAI && D.aiLevel === 'hard') { await aiRemoveAttacker(D); if (G.over) return; }
-    if (odricActive()) { /* Odric, Master Tactician: the attacker chooses the blocks */ }
-    else if (D.isAI) G.blocks = aiChooseBlocks(D, att);
-    else if (D.bf.some(o => isCreature(o) && !o.tapped) || D.hand.some(o => canCastNow(D, o) && canPay(D, o))) {
-        G.busy = false;
-        await new Promise(resolve => { G.mode = { type: 'block', who: D.i, picked: null, resolve }; renderGame(); });
-        G.busy = true;
-        if (G.over) return;
-    }
+    if (!(await chooseBlocksAll(me(), { hardRemoval: true }))) return;
     fixMenace(); fireBlocked();
     logBlocks();
     fire('blocks', { list: Object.values(G.blocks).flat().map(onBf).filter(Boolean) });

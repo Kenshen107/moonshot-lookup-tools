@@ -652,6 +652,7 @@ async function aiTurn(P) {
     if (typeof cmdForcedAttackers === 'function' && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...cmdForcedAttackers(P)])]; // Graaz: Juggernauts must attack
     for (let round = 0; round < 4 && attackers.length && !G.over; round++) {
         G.phase = 'declareAttackers';
+        aiAssignTargets(P, attackers);
         declareAttackers(P, attackers);
         await exertChoices(P, attackers);
         await settle();
@@ -660,19 +661,7 @@ async function aiTurn(P) {
         await actDrain();
         G.phase = 'declareBlocks';
         renderGame();
-        const D = opp(P);
-        const canDoAnything = D.bf.some(o => isCreature(o) && !o.tapped) || D.hand.some(o => canCastNow(D, o) && canPay(D, o));
-        if (D.isAI) {
-            await pause(400);
-            G.blocks = aiChooseBlocks(D, P);
-        } else if (canDoAnything) {
-            G.busy = false;
-            await new Promise(resolve => { G.mode = { type: 'block', who: D.i, picked: null, resolve }; renderGame(); });
-            G.busy = true;
-        } else {
-            await pause(700);
-        }
-        if (G.over) return;
+        if (!(await chooseBlocksAll(P, { aiPause: 400, idlePause: 700 })) || G.over) return;
         fixMenace(); fireBlocked();
         logBlocks();
         await aiNinjutsu(P);
