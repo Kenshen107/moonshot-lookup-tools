@@ -33,7 +33,13 @@ const ABILITY_RULES = [
     [/^When ~ enters, create (a|an|two) \d\/\d [A-Za-z ]+ creature tokens?( with (flying|vigilance|lifelink|first strike))?\.$/, 'etb-token', 2.5],
     [/^Other creatures you control get \+1\/\+1\.$/, 'lord', 5],
     [/^Other creatures you control get \+[01]\/\+[01]\.$/, 'lord-small', 2.5],
-    [/^Other (Soldier|Knight|Human|Spirit|Cleric|Warrior|Kithkin) creatures you control get \+1\/\+1\.$/, 'tribal-lord', 2],
+    [/^Other (Soldier|Knight|Human|Spirit|Cleric|Warrior|Kithkin|Merfolk|Wizard|Faerie|Pirate|Bird|Illusion|Sphinx|Drake|Rogue) creatures you control get \+1\/\+1\.$/, 'tribal-lord', 2],
+    // blue's tools: evasion, tempo and card flow
+    [/^~ can't be blocked\.$/, 'unblockable', 3],
+    [/^Whenever ~ deals combat damage to a player, (you may )?draw a card\.$/, 'hit-draw', 3],
+    [/^When ~ enters, return target creature to its owner's hand\.$/, 'etb-bounce', 3],
+    [/^When ~ enters, tap target creature\.$/, 'etb-tap', 1.5],
+    [/^When ~ enters, draw a card, then discard a card\.$/, 'etb-loot', 1.5],
     [/^Other creatures you control have (vigilance|first strike|lifelink|flying)\.$/, 'grant-lord', 2.5]
 ];
 function readCreatureText(c) {
@@ -76,6 +82,10 @@ function simpleSpell(c) {
         const cnt = { a: 1, an: 1, two: 2, three: 3, four: 4 }[m[1]];
         return { kind: 'tokens', n: +(cnt * ((+m[2] + +m[3]) * 0.9 + (m[5] ? 1 : 0))).toFixed(1) };
     }
+    if ((m = t.match(/^Counter target (spell|creature spell|noncreature spell)( unless its controller pays \{(\d)\})?\.$/))) return { kind: 'counter', n: m[3] ? +m[3] : m[1] === 'spell' ? 9 : 8 };
+    if (/^Return target creature to its owner's hand\. Draw a card\.$/.test(t)) return { kind: 'bounce', n: 1 };
+    if (/^Tap target creature\. It doesn't untap during its controller's next untap step\.$/.test(t)) return { kind: 'tap', n: 2 };
+    if (/^Tap target creature\.$/.test(t)) return { kind: 'tap', n: 1 };
     if ((m = t.match(/^Destroy target (attacking |tapped )?creature with (power|toughness) (\d) or greater\.$/))) return { kind: 'destroy', n: 1 };
     if (/^Exile target (attacking |tapped |attacking or blocking )creature\.$/.test(t)) return { kind: 'exile', n: 1 };
     if ((m = t.match(/^Draw (a|two|three) cards?\.$/))) return { kind: 'draw', n: { a: 1, two: 2, three: 3 }[m[1]] };
@@ -147,7 +157,7 @@ function simpleLand(c) {
             const { kws, tags, bonus } = rd;
             const p = +c.power, t = +c.toughness;
             const impact = p + t + 1.6 * kws.reduce((a, k) => a + (KW_VALUE[k] || 0), 0) + bonus + (c.cmc >= 5 ? 1 : 0), power = impact * 0.6 + (impact - 2 * c.cmc) * 0.4;
-            const kind = tags.some(x => x === 'anymana') ? 'anydork' : tags.some(x => ['lord', 'lord-small', 'tribal-lord', 'grant-lord'].includes(x)) ? 'lord' : tags.includes('etb-token') ? 'tokencreature' : tags.some(x => x.startsWith('mana')) ? 'dork' : tags.length ? 'ability' : kws.length ? 'keyword' : 'vanilla';
+            const kind = tags.some(x => x === 'anymana') ? 'anydork' : tags.some(x => ['lord', 'lord-small', 'tribal-lord', 'grant-lord'].includes(x)) ? 'lord' : tags.some(x => ['unblockable', 'hit-draw', 'etb-bounce', 'etb-tap', 'etb-loot'].includes(x)) ? 'tempocreature' : tags.includes('etb-token') ? 'tokencreature' : tags.some(x => x.startsWith('mana')) ? 'dork' : tags.length ? 'ability' : kws.length ? 'keyword' : 'vanilla';
             pool.push({ ...base, type: 'creature', kind, pt: `${p}/${t}`, kws, tags, power: +power.toFixed(2) });
             continue;
         }
@@ -155,7 +165,7 @@ function simpleLand(c) {
         if (rock) { pool.push({ ...base, type: 'spell', kind: 'rock', tags: [rock.tag], n: 0, power: +((rock.tag === 'anymana' ? 6 : rock.tag === 'mana2' ? 7 : 4) - c.cmc * 0.5).toFixed(2) }); continue; }
         const sp = simpleSpell(c);
         if (sp && c.cmc <= 6) {
-            const w = { tokens: sp.n, anthem: 3 + sp.n * 2.5, grant: 1.5 + sp.n, draw: sp.n * 2, destroy: 5 - (sp.n ? 1 : 0), exile: 5.5 - (sp.n ? 1 : 0), bounce: 2, burn: sp.n * 1.5, pump: 1 + sp.n * .3, teamPump: 2 + sp.n, life: 1, shrink: sp.n * 1.2, recur: 3, ramp: 3 }[sp.kind];
+            const w = { tokens: sp.n, anthem: 3 + sp.n * 2.5, grant: 1.5 + sp.n, draw: sp.n * 2, destroy: 5 - (sp.n ? 1 : 0), exile: 5.5 - (sp.n ? 1 : 0), bounce: 2 + sp.n * 2, counter: sp.n >= 8 ? (sp.n === 9 ? 5 : 3.5) : 1.5 + sp.n * 0.4, tap: 1 + sp.n * 0.7, burn: sp.n * 1.5, pump: 1 + sp.n * .3, teamPump: 2 + sp.n, life: 1, shrink: sp.n * 1.2, recur: 3, ramp: 3 }[sp.kind];
             pool.push({ ...base, type: 'spell', kind: sp.kind, n: sp.n, perm: !!sp.perm, power: +(w - c.cmc * 0.5).toFixed(2) });
         }
     }
