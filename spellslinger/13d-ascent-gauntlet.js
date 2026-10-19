@@ -129,6 +129,8 @@ async function buildAscentOpponent(oppId) {
     await loadAscentRoster();
     const opp = ASCENT_OPP[oppId], cards = ascentOpponentDeck(opp);
     await cardsByIds(Object.keys(cards));
+    const lost = Object.keys(cards).filter(id => !CARDS.has(id));
+    if (lost.length) throw new Error(`Could not load ${lost.length} of ${opp.name}'s cards from Scryfall. Try again in a moment.`);
     const d = ascentDeckEntries(opp.name, cards);
     d.aiLevel = ASCENT_TIERS[opp.tier - 1].level; d.aiStyle = opp.style; d.source = `Ascent: ${ASCENT_TIERS[opp.tier - 1].name}`;
     d.campaign = { ascent: true, node: opp.id, tier: opp.tier, name: opp.name, boss: !!opp.boss };
@@ -208,7 +210,10 @@ async function startAscentMatch(oppId, deckIndex = 0) {
     if (problems.length) throw new Error(problems[0]);
     if (!ascentOpponentOpen(opp)) throw new Error('That opponent is still locked.');
     await cardsByIds(Object.keys(deck.cards));
+    const missing = Object.keys(deck.cards).filter(id => !CARDS.has(id));
+    if (missing.length) throw new Error(`Could not load ${missing.length} of your cards from Scryfall. Try again in a moment.`);
     const mine = ascentDeckEntries(deck.name, ascentPlayableCards(deck)); // upgraded copies become their own cards (13e)
     const oppDeck = await buildAscentOpponent(oppId);
+    closeModal(); // the "shuffling" panel must be gone before the game opens its own (opening hand) panel
     newGame(mine, oppDeck);
 }

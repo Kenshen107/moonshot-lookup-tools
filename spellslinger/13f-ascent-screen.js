@@ -93,7 +93,7 @@ async function ascPlay(oppId) {
 }
 async function ascGo(oppId) {
     showModal('<h2>Shuffling up...</h2><p class="loading">Loading both decks...</p>');
-    try { await startAscentMatch(oppId, ASC.deck); closeModal(); }
+    try { await startAscentMatch(oppId, ASC.deck); }
     catch (e) { closeModal(); toast(e.message || 'Could not start the game.'); }
 }
 

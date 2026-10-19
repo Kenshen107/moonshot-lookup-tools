@@ -90,7 +90,12 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
         const total = Object.values(deck.cards).reduce((a, b) => a + b, 0);
         const basic = ASCENT.roster.find(c => c.kind === 'basic'); deck.cards[basic.id] = (deck.cards[basic.id] || 0) + (40 - total);
         ok('the deck is legal again', ascentDeckProblems(deck).length === 0, ascentDeckProblems(deck));
+        // the "Shuffling up" panel must be closed BEFORE the game opens (the opening-hand panel replaces it; closing afterwards wiped it)
+        let seen = null; const realNew = window.newGame; window.newGame = (...a) => { seen = $('modalHost').innerHTML; return realNew(...a); };
+        showModal('<h2>Shuffling up...</h2>');
         await startAscentMatch('t1-mick', 0);
+        window.newGame = realNew;
+        ok('the shuffling panel is closed before the game starts, so the opening hand panel is not wiped', seen === '', seen);
         ok('a game started against the opponent with the Ascent campaign marker', G && G.campaign && G.campaign.ascent && G.campaign.node === 't1-mick' && G.players.length === 2, G && G.campaign);
         ok('the opponent plays its 40 cards', G.players[1].library.length + G.players[1].hand.length >= 33);
         return out;
