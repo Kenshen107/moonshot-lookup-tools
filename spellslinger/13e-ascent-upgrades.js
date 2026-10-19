@@ -22,6 +22,8 @@ const ASCENT_UPGRADES = {
     etbdraw: { label: 'Enters: draw a card', icon: '📖', kind: 'trig', line: n => `When ${n} enters, draw a card.`, cost: 70, on: 'creature' },
     dielife: { label: 'Dies: gain 3 life', icon: '🌱', kind: 'trig', line: n => `When ${n} dies, you gain 3 life.`, cost: 25, on: 'creature' },
     etblife: { label: 'Enters: gain 2 life', icon: '🍀', kind: 'trig', line: n => `When ${n} enters, you gain 2 life.`, cost: 20, on: 'creature' },
+    // an ability that makes any creature a universal mana dork (one per copy)
+    anymana: { label: 'Aether tap: {T} for any color', icon: '🌈', kind: 'abil', line: () => '{T}: Add one mana of any color.', cost: 80, on: 'creature' },
     // spells
     sdraw: { label: 'Cantrip: draw a card', icon: '📖', kind: 'spell', append: ' Draw a card.', cost: 50, on: 'spell' },
     slife: { label: 'Gain 3 life', icon: '🍀', kind: 'spell', append: ' You gain 3 life.', cost: 25, on: 'spell' }
@@ -48,6 +50,8 @@ function ascentUpgradeBlocked(found, upId, replacingIndex = -1) {
     if (up.kind === 'kw' && (card.kws || []).includes(up.kw)) return `Already has ${up.label.toLowerCase()}.`;
     if (up.kind === 'stat' && rest.some(u => ASCENT_UPGRADES[u].kind === 'stat')) return 'One stat boost per copy.';
     if (up.kind === 'trig' && rest.some(u => ASCENT_UPGRADES[u].kind === 'trig')) return 'One trigger per copy.';
+    if (up.kind === 'abil' && (rest.some(u => ASCENT_UPGRADES[u].kind === 'abil') || (card.tags || []).some(t => t.startsWith('mana') || t === 'anymana'))) return card.tags && card.tags.length && card.tags.some(t => t.startsWith('mana') || t === 'anymana') ? 'Already taps for mana.' : 'One ability upgrade per copy.';
+    if (up.on === 'spell' && card.kind === 'rock') return 'Mana rocks cannot be upgraded.';
     return null;
 }
 // Spare plain copies of the same card that could be fed in (not in a deck, no upgrades, not the target)
@@ -100,7 +104,7 @@ function ascentVariantCard(base, ups) {
         const up = ASCENT_UPGRADES[u];
         if (up.kind === 'kw') kws.push(up.kw);
         else if (up.kind === 'stat') { p = String(Number(p) + up.p); t = String(Number(t) + up.t); }
-        else if (up.kind === 'trig') text += (text ? '\n' : '') + up.line(base.name);
+        else if (up.kind === 'trig' || up.kind === 'abil') text += (text ? '\n' : '') + up.line(base.name);
         else if (up.kind === 'spell') text = text.replace(/\n+/g, ' ').trim() + up.append;
     }
     if (kws.length) text = (text ? text + '\n' : '') + kws.map(k => k[0].toUpperCase() + k.slice(1)).join(', ');

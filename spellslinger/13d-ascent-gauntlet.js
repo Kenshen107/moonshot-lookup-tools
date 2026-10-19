@@ -43,6 +43,12 @@ function ascentArchScore(arch, c) {
     const kw = c.kws || [], has = k => kw.includes(k), [p, t] = (c.pt || '0/0').split('/').map(Number);
     let s = 0;
     if (c.type === 'creature') {
+        if (c.kind === 'dork' || c.kind === 'anydork') s += { stomp: 3, tempo: 2.5, control: 2, value: 1.5, burn: 0.5, weenie: -1, fliers: 1 }[arch] || 0;
+        const tg = c.tags || [];
+        if (tg.includes('etb-draw') || tg.includes('die-draw')) s += { control: 1.5, tempo: 1.5, value: 1.5, fliers: 1 }[arch] || 0.5;
+        if (tg.includes('etb-burn')) s += arch === 'burn' ? 2 : 0.5;
+        if (tg.includes('pump-ability')) s += ['stomp', 'burn', 'weenie'].includes(arch) ? 1 : 0;
+        if (tg.includes('etb-life') || tg.includes('die-life') || tg.includes('etb-drain')) s += ['value', 'control'].includes(arch) ? 1 : 0;
         if (arch === 'stomp') s += (p + t) * 0.45 + (has('trample') ? 2 : 0) + (c.cmc >= 4 ? 1 : 0) - (c.cmc <= 2 ? 1.5 : 0);
         if (arch === 'weenie') s += (c.cmc <= 3 ? 2.5 : -2) + (has('first strike') || has('vigilance') || has('lifelink') ? 1.5 : 0);
         if (arch === 'fliers') s += (has('flying') ? 5 : -3) + (c.cmc <= 4 ? 1 : 0);
@@ -52,6 +58,8 @@ function ascentArchScore(arch, c) {
         if (arch === 'tempo') s += (has('flying') ? 3 : 0) + (has('reach') ? 2 : 0) + (has('hexproof') ? 2 : 0) + (c.cmc <= 4 ? 1 : 0);
     } else {
         const k = c.kind;
+        if (k === 'rock') return ({ stomp: 3, tempo: 2.5, control: 2, value: 1.5, burn: 0.5, weenie: 0, fliers: 1 }[arch] || 0) + 1;
+        if (k === 'ramp') return ({ stomp: 3, tempo: 2, control: 1.5, value: 2 }[arch] || 0) + 0.5;
         const want = { stomp: { pump: 2, teamPump: 2 }, weenie: { pump: 3, teamPump: 3, shrink: 1 }, fliers: { pump: 3, bounce: 2 }, value: { destroy: 4, life: 2, draw: 2, recur: 3, exile: 4 }, burn: { burn: 5, shrink: 3, draw: 2 }, control: { destroy: 5, exile: 5, bounce: 3, draw: 4, burn: 3 }, tempo: { bounce: 5, draw: 3, pump: 1, shrink: 2 } }[arch] || {};
         s += (want[k] || 0) - 1;
     }

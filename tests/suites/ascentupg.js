@@ -47,6 +47,13 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
             ok('an enters trigger is read as a trigger', rulesFor(v2).etb.length > 0 || rulesFor(v2).trig.length > 0, v2.text);
             ok('upgraded cards are never saved with the card cache', (() => { cardsDirty = true; persistCards(); return !Object.keys(store.get('cards', {})).some(k => k.includes('~')); })());
 
+            const vm = ascentVariantCard(CARDS.get(bears.id), ['anymana']);
+            ok('the Aether tap upgrade makes a creature a mana dork', !!rulesFor(vm).mana && rulesFor(vm).support === 'full', rulesFor(vm).mana);
+            const dorkCard = ASCENT.roster.find(c => c.kind === 'dork');
+            ok('a mana dork cannot take the Aether tap upgrade', /taps for mana/.test(ascentUpgradeBlocked({ card: dorkCard, copy: { u: [] } }, 'anymana') || ''), ascentUpgradeBlocked({ card: dorkCard, copy: { u: [] } }, 'anymana'));
+            const rockCard = ASCENT.roster.find(c => c.kind === 'rock');
+            ok('mana rocks cannot take spell upgrades', rockCard && /cannot be upgraded/.test(ascentUpgradeBlocked({ card: rockCard, copy: { u: [] } }, 'sdraw') || ''));
+
             // ---- buying one on a single copy ----
             st.aether = 1000;
             const k0 = copies[0].k;

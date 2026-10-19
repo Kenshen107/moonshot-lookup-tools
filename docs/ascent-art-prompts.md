@@ -18,7 +18,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 ## Counts
 - 22 characters (18 opponents, 4 helpers)
 - 19 in-game effects (+ 9 ideas for later)
-- 70 icons, banners and backgrounds
+- 71 icons, banners and backgrounds
 
 
 ## Characters
@@ -635,6 +635,7 @@ Lands play a color effect, creatures play a mono-color or multicolor effect when
 - **Enters: draw upgrade icon** (`spellslinger/art/ui/up-etbdraw.png`, 24 x 24): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 24 x 24 pixels: a tiny icon of a card with a down arrow, bold dark outline, readable at 24 pixels.
 - **Dies: gain life upgrade icon** (`spellslinger/art/ui/up-dielife.png`, 24 x 24): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 24 x 24 pixels: a tiny icon of a sprout growing from a skull, bold dark outline, readable at 24 pixels.
 - **Enters: gain life upgrade icon** (`spellslinger/art/ui/up-etblife.png`, 24 x 24): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 24 x 24 pixels: a tiny icon of a heart with a leaf, bold dark outline, readable at 24 pixels.
+- **Aether tap (any color mana) upgrade icon** (`spellslinger/art/ui/up-anymana.png`, 24 x 24): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 24 x 24 pixels: a tiny icon of a rainbow gem with a small tap arrow, bold dark outline, readable at 24 pixels.
 - **Cantrip upgrade icon** (`spellslinger/art/ui/up-sdraw.png`, 24 x 24): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 24 x 24 pixels: a tiny icon of a card with a star, bold dark outline, readable at 24 pixels.
 - **Gain 3 life upgrade icon** (`spellslinger/art/ui/up-slife.png`, 24 x 24): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 24 x 24 pixels: a tiny icon of a heart with a three, bold dark outline, readable at 24 pixels.
 
