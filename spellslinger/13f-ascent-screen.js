@@ -72,7 +72,8 @@ async function ascOppPanel() {
     const o = ASCENT_OPP[ASC.opp], st = ascentState(), box = $('ascOpp');
     if (!o || !box) return;
     const sigs = ascentSignatures()[o.id], t = ASCENT_TIERS[o.tier - 1], open = ascentOpponentOpen(o);
-    await cardsByIds(sigs).catch(() => {});
+    const trophyIds = ascentTrophies()[o.id];
+    await cardsByIds([...sigs, ...trophyIds]).catch(() => {});
     const archName = { stomp: 'Big creatures', weenie: 'Small fast creatures', fliers: 'Fliers', value: 'Deathtouch and life gain', burn: 'Burn and haste', control: 'Removal and walls', tempo: 'Bounce and evasion' }[o.arch];
     box.innerHTML = `<div class="pos asc-opp"><div class="pos-title"><h3>${o.boss ? '👑 ' : ''}${esc(o.name)}</h3><span class="note">${ascPips(o.colors)} · ${esc(archName)} · ${t.level} AI</span></div>
         ${ascSpeechHTML(o.id, 'intro', st.progress.length)}
@@ -81,6 +82,9 @@ async function ascOppPanel() {
         <p class="note">Prize for a win: ${o.boss ? '2 Play Boosters and a Collector Booster' : 'a Play Booster'}. ${ascentBeaten(o.id) ? 'Beaten before.' : 'First win guarantees a signature card.'} Later wins drop a signature card ${Math.round(ASCENT_PRIZE.sigRepeatChance * 100)}% of the time. A loss pays ${ASCENT_PRIZE.lossAether} Aether.</p>
         <h4>Signature cards (only this opponent drops them)</h4>
         <div class="asc-grid">${sigs.map(id => ascTile(id, { sig: true })).join('')}</div>
+        <h4>🏆 Trophies: win ${ASCENT_TROPHY_WINS[ASCENT_TROPHY_WINS.length - 1]} times to earn them all (you have ${ascentWins(o.id)} wins)</h4>
+        <p class="note">The strongest cards in the pool. They can only be won this way, one copy each: the first at ${ASCENT_TROPHY_WINS[0]} wins against ${esc(o.name)}.</p>
+        <div class="asc-grid asc-trophies">${trophyIds.map((id, i) => `<div class="asc-trophy${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? ' earned' : ''}">${ascTile(id, { trophy: true })}<small class="note">${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? '✔ earned' : `${ASCENT_TROPHY_WINS[i]} wins`}</small></div>`).join('')}</div>
         <div class="row" style="margin-top:12px;"><select id="ascDeckPick" aria-label="Your deck">${st.decks.map((d, i) => `<option value="${i}" ${i === ASC.deck ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
             <button class="btn primary" onclick="ascPlay('${o.id}')" ${open ? '' : 'disabled'}>⚔️ Battle ${esc(o.name)}</button>
             ${open ? '' : `<span class="note">${o.boss ? 'Beat the other five of this league first.' : 'Locked.'}</span>`}</div></div>`;
@@ -105,7 +109,7 @@ function ascTile(id, opts = {}) {
     const img = c && (c.imgS || c.img);
     return `<button type="button" class="asc-tile ${ascRarityClass(r.rarity)}${n ? '' : ' unowned'}" onclick="ascCardDialog('${id}')" title="${esc(r.name)}">
         ${img ? `<img src="${img}" alt="${esc(r.name)}" loading="lazy">` : `<span class="asc-noimg"><strong>${esc(r.name)}</strong><small>${esc(r.cost)}</small><small>${esc(r.pt || r.kind)}</small></span>`}
-        <span class="asc-badge">${r.type === 'land' ? '' : `${n}/${ASCENT_COPY_LIMIT}`}${up ? ` ✦${up}` : ''}${opts.sig ? ' ⭐' : ''}</span></button>`;
+        <span class="asc-badge">${r.type === 'land' ? '' : r.rarity === 'trophy' ? (n ? 'owned' : 'locked') : `${n}/${ASCENT_COPY_LIMIT}`}${up ? ` ✦${up}` : ''}${opts.sig ? ' ⭐' : ''}${r.rarity === 'trophy' ? ' 🏆' : ''}</span></button>`;
 }
 function ascFiltered() {
     let list = ASCENT.roster.filter(c => c.kind !== 'basic');
@@ -114,7 +118,7 @@ function ascFiltered() {
     if (ASC.color !== 'all') list = list.filter(c => ASC.color === 'C' ? !c.colors : c.colors.includes(ASC.color));
     if (ASC.rar !== 'all') list = list.filter(c => c.rarity === ASC.rar);
     if (ASC.q) list = list.filter(c => c.name.toLowerCase().includes(ASC.q.toLowerCase()));
-    const ro = { mythic: 0, rare: 1, uncommon: 2, common: 3, basic: 4 };
+    const ro = { trophy: -1, mythic: 0, rare: 1, uncommon: 2, common: 3, basic: 4 };
     return list.sort((a, b) => ro[a.rarity] - ro[b.rarity] || a.name.localeCompare(b.name));
 }
 function ascFilterBar(prefix = '') {
@@ -122,7 +126,7 @@ function ascFilterBar(prefix = '') {
     return `<div class="row asc-filters"><input type="search" placeholder="Search by name" value="${esc(ASC.q)}" oninput="ASC.q=this.value; ASC.page=0; ascRefresh()" aria-label="Search">
         ${sel('type', [['all', 'All types'], ['creature', 'Creatures'], ['spell', 'Spells'], ['land', 'Lands']])}
         ${sel('color', [['all', 'All colors'], ...Object.entries(ASC_COLORS).map(([c, [e, n]]) => [c, `${e} ${n}`]), ['C', '◇ Colorless']])}
-        ${sel('rar', [['all', 'All rarities'], ['mythic', 'Mythic'], ['rare', 'Rare'], ['uncommon', 'Uncommon'], ['common', 'Common']])}
+        ${sel('rar', [['all', 'All rarities'], ['trophy', '🏆 Trophy'], ['mythic', 'Mythic'], ['rare', 'Rare'], ['uncommon', 'Uncommon'], ['common', 'Common']])}
         <label class="note"><input type="checkbox" ${ASC.owned ? 'checked' : ''} onchange="ASC.owned=this.checked; ASC.page=0; ascRefresh()"> Only cards I own</label></div>`;
 }
 function ascRefresh() { if (ASC.tab === 'coll') ascColl(true); }
@@ -147,16 +151,17 @@ function ascUpChips(copy) { return copy.u.map(u => `<span class="asc-up" title="
 function ascCardDialog(id) {
     const r = ASCENT.byId.get(id), st = ascentState(), o = st.owned[id], c = CARDS.get(id), copies = (o && o.c) || [];
     const inDecks = ascentKeysInDecks(), sigOwner = ascentOwnerOf(id);
-    const craftable = r.type !== 'land' && copies.length < ASCENT_COPY_LIMIT;
+    const craftable = r.type !== 'land' && r.rarity !== 'trophy' && copies.length < ASCENT_COPY_LIMIT, trophy = r.rarity === 'trophy' ? ascentTrophyOwner(id) : null;
     showModal(`<h2>${esc(r.name)}</h2>
         <div class="asc-dlg"><div>${c && c.img ? `<img src="${c.img}" alt="${esc(r.name)}" class="asc-big-img">` : `<div class="asc-noimg big"><strong>${esc(r.name)}</strong><small>${esc(r.cost)}</small></div>`}</div>
-        <div><p class="note">${esc(r.type)}${r.pt ? ' · ' + r.pt : ''} · ${esc(r.rarity)} · tier ${r.tier}${sigOwner ? ` · ⭐ dropped by ${esc(ASCENT_OPP[sigOwner].name)}` : ''}</p>
+        <div><p class="note">${esc(r.type)}${r.pt ? ' · ' + r.pt : ''} · ${esc(r.rarity)} · tier ${r.tier}${sigOwner ? ` · ⭐ dropped by ${esc(ASCENT_OPP[sigOwner].name)}` : ''}${trophy ? ` · 🏆 trophy: ${trophy.wins} wins against ${esc(ASCENT_OPP[trophy.oppId].name)} (you have ${ascentWins(trophy.oppId)})` : ''}</p>
         ${c ? `<div class="otext">${esc(c.text || '(no text)')}</div>` : ''}
         ${r.type === 'land' ? '<p class="note">Lands come from packs. Basics are free.</p>' : `
         <h4>Your copies (${copies.length}/${ASCENT_COPY_LIMIT})</h4>
         ${copies.length ? copies.map(x => `<div class="asc-copy"><span>${x.f ? '✨ ' : ''}Copy ${x.k}${inDecks.has(x.k) ? ' · in a deck' : ''}</span><span class="asc-ups">${ascUpChips(x)}</span>
-            <span class="asc-copy-btns"><button class="btn small" onclick="ascUpgradeDialog(${x.k})">✦ Upgrades</button>${!inDecks.has(x.k) ? `<button class="btn small" onclick="ascDust('${id}', ${x.k})">Dust</button>` : ''}</span></div>`).join('') : '<p class="note">You do not own this card yet.</p>'}
-        <div class="row" style="margin-top:10px;"><button class="btn gold small" ${craftable && st.aether >= ascentCraftCost(r) ? '' : 'disabled'} onclick="ascCraft('${id}', false)">Craft · ✨ ${ascentCraftCost(r)}</button>
+            <span class="asc-copy-btns">${trophy ? '' : `<button class="btn small" onclick="ascUpgradeDialog(${x.k})">✦ Upgrades</button>`}${!inDecks.has(x.k) && !trophy ? `<button class="btn small" onclick="ascDust('${id}', ${x.k})">Dust</button>` : ''}</span></div>`).join('') : '<p class="note">You do not own this card yet.</p>'}
+        ${trophy ? '<p class="note">Trophy cards cannot be crafted, dusted or upgraded. Win them.</p>' : ''}
+        <div class="row" style="margin-top:10px;"${trophy ? ' hidden' : ''}><button class="btn gold small" ${craftable && st.aether >= ascentCraftCost(r) ? '' : 'disabled'} onclick="ascCraft('${id}', false)">Craft · ✨ ${ascentCraftCost(r)}</button>
             <button class="btn small" ${craftable && st.aether >= ascentCraftCost(r, true) ? '' : 'disabled'} onclick="ascCraft('${id}', true)">Craft foil · ✨ ${ascentCraftCost(r, true)}</button></div>
         <p class="note">Dust gives ✨ ${ASCENT_DUST[r.rarity]} (foil double). You have ✨ ${st.aether}.</p>`}</div></div>
         <div class="actions"><button class="btn" onclick="closeModal()">Close</button></div>`);

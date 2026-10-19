@@ -40,7 +40,8 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
         const out = [], ok = (l, c, d) => out.push([l, !!c, d]);
         ok('the map has 18 opponents in three tiers and tiers 2 and 3 are locked', document.querySelectorAll('.trail-node').length === 18 && document.querySelectorAll('.tier-band.locked').length === 2);
         ascSelectOpp('t1-mick'); await ascOppPanel();
-        ok('an opponent panel shows 3 signature cards and a Battle button', document.querySelectorAll('#ascOpp .asc-tile').length === 3 && /Battle/.test($('ascOpp').textContent));
+        ok('an opponent panel shows 3 signature cards and a Battle button', document.querySelectorAll('#ascOpp .asc-grid:not(.asc-trophies) .asc-tile').length === 3 && /Battle/.test($('ascOpp').textContent));
+        ok('the opponent panel lists 10 trophies with their win counts', document.querySelectorAll('#ascOpp .asc-trophy').length === 10 && /3 wins/.test($('ascOpp').textContent));
         ascSelectOpp('t1-boss'); await ascOppPanel();
         ok('the boss is locked until the other five are beaten', $('ascOpp').querySelector('button.primary').disabled);
         return out;

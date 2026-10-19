@@ -4,7 +4,7 @@
 // The roster is spellslinger/data/ascent-roster.json, written by `node tests/ascent_roster.js`.
 const ASCENT = { roster: null, byId: new Map(), byName: new Map(), loading: null };
 const ASCENT_COPY_LIMIT = 4;
-const ASCENT_RARITIES = ['common', 'uncommon', 'rare', 'mythic'];
+const ASCENT_RARITIES = ['common', 'uncommon', 'rare', 'mythic']; // packs; 'trophy' cards (13d) are won only, one copy each
 // Aether: leftover copies dust into it, missing cards are crafted with it (foils count double when dusted, cost 2x to craft)
 const ASCENT_DUST = { common: 5, uncommon: 20, rare: 60, mythic: 200 };
 const ASCENT_CRAFT = { common: 20, uncommon: 80, rare: 240, mythic: 800 };
@@ -36,7 +36,7 @@ function ascentPools() {
     if (ASCENT.pools) return ASCENT.pools;
     // signature cards (13d) only drop from their opponent, so they stay out of packs
     const sigs = typeof ascentSignatures === 'function' ? (ascentSignatures(), ASCENT.sigSet) : new Set();
-    const nonLand = ASCENT.roster.filter(c => c.type !== 'land' && !sigs.has(c.id));
+    const nonLand = ASCENT.roster.filter(c => c.type !== 'land' && c.rarity !== 'trophy' && !sigs.has(c.id)); // trophy cards are never in packs
     const by = r => nonLand.filter(c => c.rarity === r);
     ASCENT.pools = {
         common: by('common'), uncommon: by('uncommon'), rare: by('rare'), mythic: by('mythic'),
@@ -104,6 +104,7 @@ function ascentAddCards(picks) {
         if (!c) continue;
         if (c.kind === 'basic') { const o = st.owned[p.id] || (st.owned[p.id] = { n: 0, f: 0 }); o.n += 1; if (p.foil) o.f += 1; report.kept.push(p); continue; } // basics are free and unlimited
         const o = ascentOwnedEntry(p.id);
+        if (c.rarity === 'trophy') { if (!o.c.length) { o.c.push(ascentNewCopy(false)); ascentSyncOwned(o); report.kept.push(p); } continue; } // one of each, never dusted
         if (o.c.length < ASCENT_COPY_LIMIT) { o.c.push(ascentNewCopy(p.foil)); ascentSyncOwned(o); report.kept.push(p); continue; }
         const v = ASCENT_DUST[c.rarity] * (p.foil ? 2 : 1);
         report.dusted.push({ ...p, aether: v }); report.aether += v;
@@ -122,6 +123,7 @@ function ascentCraftCost(card, foil = false) { return ASCENT_CRAFT[card.rarity] 
 function craftAscentCard(id, foil = false) {
     const c = ASCENT.byId.get(id), st = ascentState();
     if (!c || c.type === 'land') return { ok: false, why: 'Lands are free: basics are unlimited and duals come from packs.' };
+    if (c.rarity === 'trophy') return { ok: false, why: 'Trophy cards cannot be crafted: win them against their opponent.' };
     const have = st.owned[id] ? st.owned[id].n : 0;
     if (have >= ASCENT_COPY_LIMIT) return { ok: false, why: `You already own ${ASCENT_COPY_LIMIT} copies.` };
     const cost = ascentCraftCost(c, foil);
@@ -153,6 +155,7 @@ function ascentKeysInDecks(except) {
 function dustAscentCard(id, n = 1, keys = null) {
     const c = ASCENT.byId.get(id), st = ascentState(), o = st.owned[id];
     if (!c || !o || c.kind === 'basic') return { ok: false, why: 'Nothing to dust.' };
+    if (c.rarity === 'trophy') return { ok: false, why: 'Trophy cards cannot be dusted.' };
     ascentOwnedEntry(id);
     const used = ascentKeysInDecks();
     let list = o.c.filter(x => !used.has(x.k) && (keys ? keys.includes(x.k) : !x.u.length)).sort((a, b) => a.f - b.f || a.k - b.k);

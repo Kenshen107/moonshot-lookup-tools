@@ -31,6 +31,33 @@ const ASCENT_OPP = Object.fromEntries(ASCENT_OPPONENTS.map(o => [o.id, o]));
 const ASCENT_DECK_SIZE = 40, ASCENT_LANDS = 17;
 const ASCENT_PRIZE = { win: { play: 1 }, boss: { play: 2, collector: 1 }, lossAether: 5, sigRepeatChance: 0.35 };
 
+// ---- Trophies: very strong cards won only by beating one opponent many times ----
+const ASCENT_TROPHY_WINS = [3, 6, 10, 15, 20, 25, 30, 40, 50, 75];
+// Each opponent has ten, in its colors, never in packs and never played by the computer. Tier 3 opponents hold the strongest. Same every time.
+function ascentTrophies() {
+    if (ASCENT.trophies) return ASCENT.trophies;
+    const all = ASCENT.roster.filter(c => c.rarity === 'trophy').sort((a, b) => a.power - b.power || a.name.localeCompare(b.name));
+    const taken = new Set(), out = {};
+    for (const opp of ASCENT_OPPONENTS) {
+        const fits = all.filter(c => ascentFits(c, opp.colors) && !taken.has(c.id));
+        const lo = [0.15, 0.3, 0.45][opp.tier - 1] + (opp.boss ? 0.1 : 0), hi = Math.min(1, [0.55, 0.75, 1][opp.tier - 1] + (opp.boss ? 0.1 : 0));
+        const picks = [];
+        ASCENT_TROPHY_WINS.forEach((w, i) => {
+            const want = Math.round((lo + (hi - lo) * i / (ASCENT_TROPHY_WINS.length - 1)) * (fits.length - 1));
+            for (let d = 0; d < fits.length; d++) for (const j of [want + d, want - d]) { const c = fits[j]; if (c && !taken.has(c.id)) { taken.add(c.id); picks.push(c.id); d = fits.length; break; } }
+        });
+        out[opp.id] = picks;
+    }
+    ASCENT.trophies = out;
+    return out;
+}
+function ascentTrophyOwner(id) {
+    const t = ascentTrophies();
+    for (const [oppId, ids] of Object.entries(t)) { const i = ids.indexOf(id); if (i >= 0) return { oppId, wins: ASCENT_TROPHY_WINS[i], index: i }; }
+    return null;
+}
+function ascentWins(oppId) { const st = ascentState(); return (st.wins && st.wins[oppId]) || 0; }
+
 // A small seeded random generator, so an opponent's deck and signature cards never change
 function ascentRng(seedText) {
     let h = 2166136261;
@@ -67,7 +94,7 @@ function ascentArchScore(arch, c) {
 }
 function ascentOpponentPool(opp) {
     const t = ASCENT_TIERS[opp.tier - 1];
-    return ASCENT.roster.filter(c => c.type !== 'land' && c.tier <= t.maxTier && ascentFits(c, opp.colors));
+    return ASCENT.roster.filter(c => c.type !== 'land' && c.rarity !== 'trophy' && c.tier <= t.maxTier && ascentFits(c, opp.colors));
 }
 // Signature cards: rare or mythic cards in the opponent's colors that only this opponent drops. Chosen once, never repeated across opponents.
 function ascentSignatures() {
@@ -195,6 +222,7 @@ function ascentResult(won) {
     if (!won) { st.aether += ASCENT_PRIZE.lossAether; saveProfile(); return `${quote('lose')}Ascent: ${ASCENT_PRIZE.lossAether} Aether for trying.`; }
     const first = !st.progress.includes(c.node);
     if (first) st.progress.push(c.node);
+    st.wins = st.wins || {}; st.wins[c.node] = (st.wins[c.node] || 0) + 1;
     const prize = opp.boss ? ASCENT_PRIZE.boss : ASCENT_PRIZE.win;
     st.sealed = st.sealed || { play: 0, collector: 0 };
     st.sealed.play += prize.play || 0; st.sealed.collector += prize.collector || 0;
@@ -207,6 +235,9 @@ function ascentResult(won) {
         ascentAddCards([{ id, foil: false }]);
         parts.push(`signature card ${ASCENT.byId.get(id).name}`);
     }
+    // a trophy at each milestone of wins against this opponent
+    const ti = ASCENT_TROPHY_WINS.indexOf(st.wins[c.node]);
+    if (ti >= 0) { const tid = ascentTrophies()[c.node][ti]; if (tid) { ascentAddCards([{ id: tid, foil: false }]); parts.push(`🏆 TROPHY for ${st.wins[c.node]} wins: ${ASCENT.byId.get(tid).name}`); } }
     saveProfile();
     return `${quote('win')}Ascent: ${first ? 'beaten for the first time! ' : ''}${parts.join(', ')}.${first && opp.boss && opp.tier < 3 ? ` ${ASCENT_TIERS[opp.tier].name} is open.` : ''}`;
 }

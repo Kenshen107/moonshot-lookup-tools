@@ -43,6 +43,7 @@ function ascentFindCopy(key) {
 function ascentUpgradeBlocked(found, upId, replacingIndex = -1) {
     const up = ASCENT_UPGRADES[upId], { card, copy } = found;
     if (!up) return 'No such upgrade.';
+    if (card.rarity === 'trophy') return 'Trophy cards cannot be upgraded.';
     if (up.on !== card.type) return up.on === 'creature' ? 'Creatures only.' : 'Spells only.';
     const rest = copy.u.filter((_, i) => i !== replacingIndex);
     if (rest.includes(upId)) return 'Already on this copy.';

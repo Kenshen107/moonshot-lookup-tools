@@ -140,6 +140,31 @@ function simpleLand(c) {
             pool.push({ ...base, type: 'spell', kind: sp.kind, n: sp.n, power: +(w - c.cmc * 0.5).toFixed(2) });
         }
     }
+    // ---- Trophy pool: cards far stronger than anything in a pack. Earned only by winning many games against one opponent. ----
+    // Any fully Automated card in at most two colors that is among the most played in Commander (EDHREC rank) and is not already in the roster.
+    // Auras, Sagas, Classes, Equipment, Vehicles, planeswalkers and battles are left out to keep them simple. Not used by the computer opponents.
+    const inPool = new Set(pool.map(c => c.id));
+    const TROPHY_MAX_RANK = 1200;
+    const trophies = [];
+    for (const c of best.values()) {
+        if (inPool.has(c.id) || (c.color_identity || []).length > 2 || !c.edhrec_rank || c.edhrec_rank > TROPHY_MAX_RANK) continue;
+        if (/Land|Token|Aura|Saga|Class|Equipment|Vehicle|Planeswalker|Battle|Conspiracy|Attraction/.test(c.type_line)) continue;
+        if (/\{[^}]*\/[^}]*\}/.test(c.mana_cost || '') || c.cmc > 9) continue;
+        const colors = (c.color_identity || []).join('');
+        const base = { id: c.id, name: c.name, cost: c.mana_cost || '', cmc: c.cmc, colors };
+        const rankPower = 30 - 4 * Math.log10(c.edhrec_rank);
+        if (/Creature/.test(c.type_line)) {
+            if (!/^\d+$/.test(c.power) || !/^\d+$/.test(c.toughness)) continue;
+            trophies.push({ ...base, type: 'creature', kind: 'trophy', pt: `${c.power}/${c.toughness}`, kws: c.keywords || [], tags: [], power: +(rankPower + (+c.power + +c.toughness) * 0.1).toFixed(2), legendary: /Legendary/.test(c.type_line) });
+        } else if (/^(Instant|Sorcery|Artifact|Enchantment)( —.*)?$/.test(c.type_line)) {
+            trophies.push({ ...base, type: 'spell', kind: 'trophy', n: 0, tags: [], power: +rankPower.toFixed(2), permanent: /Artifact|Enchantment/.test(c.type_line) });
+        }
+    }
+    trophies.sort((a, b) => b.power - a.power || a.name.localeCompare(b.name));
+    trophies.forEach(c => { c.rarity = 'trophy'; c.tier = 3; });
+    console.log('trophy cards', trophies.length, '(creatures', trophies.filter(c => c.type === 'creature').length + ')');
+    const trophyByColor = {}; trophies.forEach(c => { const k = c.colors || 'C'; trophyByColor[k] = (trophyByColor[k] || 0) + 1; });
+    console.log('trophy colors', trophyByColor);
     // rarity and tier by strength. Rarity is ranked inside each type and color group (so every color has its own rares and mythics):
     // top 8% mythic, next 18% rare, next 30% uncommon, the rest common. Tier is ranked inside the type: top quarter tier 3, next 40% tier 2.
     const byGroup = {}, byType = {};
@@ -153,6 +178,7 @@ function simpleLand(c) {
     // mana makers are never in the Locals' decks, and universal ones are for the top league
     pool.forEach(c => { if (['dork', 'rock'].includes(c.kind) && c.tier < 2) c.tier = 2; if ((c.kind === 'anydork' || (c.kind === 'rock' && c.tags[0] !== 'mana')) && c.tier < 3) c.tier = 3; });
     pool.filter(c => c.type === 'land').forEach(c => { c.rarity = c.kind === 'basic' ? 'basic' : 'uncommon'; c.tier = c.kind === 'basic' ? 1 : 2; });
+    pool.push(...trophies);
     pool.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
     const out = { made: new Date().toISOString().slice(0, 10), note: 'Planeswalkers Ascent roster. Rarity and tier are set by strength (tests/ascent_roster.js), not Magic\'s printing.', cards: pool };
     fs.writeFileSync(path.join(ROOT, 'spellslinger', 'data', 'ascent-roster.json'), JSON.stringify(out));

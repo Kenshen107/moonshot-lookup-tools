@@ -65,6 +65,27 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
             const line3 = ascentResult(false);
             ok('a loss pays 5 Aether and no pack', st.aether === aether + 5 && /5 Aether/.test(line3));
             ok('the result hook is wired into the campaign (13-campaign.js)', /G\.campaign\.ascent\) return ascentResult/.test(campaignResult.toString()));
+            // ---- trophies ----
+            const tro = ascentTrophies(), allT = Object.values(tro).flat();
+            ok('every opponent has 10 trophies and none are shared', ASCENT_OPPONENTS.every(o => tro[o.id].length === 10) && new Set(allT).size === allT.length, allT.length);
+            ok('trophies are in their opponent\'s colors and are trophy rarity', ASCENT_OPPONENTS.every(o => tro[o.id].every(id => ascentFits(ASCENT.byId.get(id), o.colors) && ASCENT.byId.get(id).rarity === 'trophy')));
+            const avg = tier => { const ids = ASCENT_OPPONENTS.filter(o => o.tier === tier).flatMap(o => tro[o.id]); return ids.reduce((a, id) => a + ASCENT.byId.get(id).power, 0) / ids.length; };
+            ok('higher leagues hold stronger trophies', avg(1) < avg(2) && avg(2) < avg(3), [avg(1), avg(2), avg(3)].map(x => x.toFixed(1)));
+            ok('trophies are never in packs or in any opponent\'s deck', ['common', 'uncommon', 'rare', 'mythic'].every(k => ascentPools()[k].every(c => c.rarity !== 'trophy')) && ASCENT_OPPONENTS.every(o => Object.keys(ascentOpponentDeck(o)).every(id => ASCENT.byId.get(id).rarity !== 'trophy')));
+            ok('the roster has 100+ trophy cards to choose from', ASCENT.roster.filter(c => c.rarity === 'trophy').length >= 400, ASCENT.roster.filter(c => c.rarity === 'trophy').length);
+            // wins and milestones
+            const st2 = ascentState(); st2.wins = {}; st2.owned = {};
+            G = { campaign: { ascent: true, node: 't3-boss', tier: 3, name: 'Sarah', boss: true } };
+            const got = [];
+            for (let w = 1; w <= 75; w++) { const line = ascentResult(true); if (/TROPHY/.test(line)) got.push(w); }
+            ok('a trophy is won at exactly 3, 6, 10, 15, 20, 25, 30, 40, 50 and 75 wins', JSON.stringify(got) === JSON.stringify(ASCENT_TROPHY_WINS), got);
+            ok('all ten are owned, one copy each', tro['t3-boss'].every(id => st2.owned[id] && st2.owned[id].n === 1) && ascentWins('t3-boss') === 75);
+            const tid = tro['t3-boss'][0];
+            ok('a trophy cannot be crafted, dusted or upgraded', !craftAscentCard(tid).ok && !dustAscentCard(tid, 1, [st2.owned[tid].c[0].k]).ok && !upgradeAscentCopy(st2.owned[tid].c[0].k, 'flying').ok && /Trophy/.test(ascentUpgradeBlocked(ascentFindCopy(st2.owned[tid].c[0].k), 'flying')));
+            const aeBefore = st2.aether;
+            ascentAddCards([{ id: tid, foil: false }]);
+            ok('another copy of a trophy is not added and does not become Aether', st2.owned[tid].n === 1 && st2.aether === aeBefore, [st2.owned[tid].n, st2.aether, aeBefore]);
+            G = null;
             ok('building an opponent for a real game works', (await buildAscentOpponent('t2-leo')).entries.length > 5);
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 4)]); }
         return out;
