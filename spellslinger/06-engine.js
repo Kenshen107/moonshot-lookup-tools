@@ -2300,13 +2300,13 @@ async function chooseDiscard(X, why) {
     return (await pickCard(X, X.hand, `${why}: discard a card`, { required: true })) || low;
 }
 async function applyEffect(P, e, t, src) {
-    if (G.players.length > 2 && !e._O && (EACH_OPP_EFFECTS.has(e.t) || (e.t === 'dmg' && (e.target === 'opponents' || e.target === 'oppAll')))) {
+    if (G.players.length > 2 && !e._O && e.target !== 'player' && (EACH_OPP_EFFECTS.has(e.t) || (e.t === 'dmg' && (e.target === 'opponents' || e.target === 'oppAll')))) {
         const fs = foes(P);
         for (const F of fs) await applyEffect(P, { ...e, _O: F }, t, src);
         if (e.t === 'drain') G.lastLost = e.n * fs.length; // "gain life equal to the life lost this way"
         return;
     }
-    const O = e._O || opp(P);
+    const O = e._O || (e.target === 'player' && t && t.p ? t.p : opp(P)); // "target player": the player that was chosen, yourself included
     if (G.players.length > 2 && t && t.o && t.o.owner !== P.i && ['destroy', 'exile', 'bounce', 'dmg', 'tap', 'steal'].includes(e.t)) politicsTargeted(P, G.players[t.o.owner], t.o);
     const name = src.card.name;
     switch (e.t) {

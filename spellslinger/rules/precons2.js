@@ -11,7 +11,7 @@ registerRules({
         [/^counter target spell unless its controller pays \{97\}$/i, () => ({ t: 'counter', target: 'spell', filter: 'any', unless: 97, good: false })],
         [/^if that player doesn't, they tap all lands with mana abilities they control and lose all unspent mana$/i, () => ({ t: 'noop' })],
         // ---- discard, tap, untap ----
-        [/^~ deals (\w+) damage to target player or planeswalker$/i, m => ({ t: 'dmg', n: num(m[1]), target: 'player', oppOnly: true })],
+        [/^~ deals (\w+) damage to target player or planeswalker$/i, m => ({ t: 'dmg', n: num(m[1]), target: 'player' })],
         [/^that player or that planeswalker's controller discards (\w+) cards$/i, m => ({ t: 'discard', n: num(m[1]) })],
         [/^creatures and lands target opponent controls don't untap during their next untap step$/i, () => ({ t: 'exhaustion', target: 'player', oppOnly: true })],
         [/^tap or untap target artifact, creature, or land$/i, () => ({ t: 'tapOrUntap', target: 'perm', filter: 'artifact, creature, or land' })],
@@ -19,7 +19,7 @@ registerRules({
         // ---- removal and damage ----
         [/^destroy target nonblack creature$/i, () => ({ t: 'destroy', target: 'perm', filter: 'nonblack creature', good: false })],
         [/^you gain life equal to its toughness$/i, () => ({ t: 'gainLastTou', you: true })],
-        [/^~ deals damage to target player or planeswalker equal to the number of Goblins you control$/i, () => ({ t: 'dmg', n: 0, nCount: 'the number of Goblins you control', target: 'player', oppOnly: true })],
+        [/^~ deals damage to target player or planeswalker equal to the number of Goblins you control$/i, () => ({ t: 'dmg', n: 0, nCount: 'the number of Goblins you control', target: 'player' })],
         [/^look at the top three cards of your library\. put one of them into your hand and the rest into your graveyard$/i, () => ({ t: 'lookSort', n: 3, hand: 1, gy: true })],
         [/^return up to two target creatures to their owner's hand$/i, () => ({ t: 'bounce', target: 'creature', multi: 2 })],
         [/^return two target creatures to their owners' hands$/i, () => ({ t: 'bounce', target: 'creature', multi: 2 })],

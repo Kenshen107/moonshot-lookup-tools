@@ -13,7 +13,7 @@ registerRules({
         [/^return target artifact, creature, enchantment, or planeswalker to its owner's hand$/i, () => ({ t: 'bounce', target: 'perm', filter: 'artifact, creature, enchantment, or planeswalker' })],
         [/^mill (\w+) cards, then return an? ([a-z ]+?) card from your graveyard to your hand$/i, m => [{ t: 'millSelf', n: num(m[1]) }, { t: 'regrow', what: m[2] }]],
         [/^draw a card, then you lose life equal to the number of cards in your hand$/i, () => [{ t: 'draw', n: 1 }, { t: 'loseSelf', n: 0, nCount: 'the number of cards in your hand' }]],
-        [/^target player draws (\w+) cards, then discards (\w+) cards$/i, m => ({ t: 'loot', n: num(m[1]), d: num(m[2]) })],
+        [/^target player draws (\w+) cards, then discards (\w+) cards$/i, m => ({ t: 'loot', n: num(m[1]), d: num(m[2]), target: 'player', good: true })],
         [/^double the number of \+1\/\+1 counters on each creature you control$/i, () => ({ t: 'doubleCountersAll' })],
         [/^put (a|an|one|two|three|four) -1\/-1 counters? on target creature(?: and draw a card)?$/i, m => [{ t: 'minusCounters', n: num(m[1] === 'a' || m[1] === 'an' ? 'one' : m[1]), target: 'creature' }, ...(/draw a card$/i.test(m[0]) ? [{ t: 'draw', n: 1 }] : [])]],
         [/^return another target artifact card from your graveyard to your hand$/i, () => ({ t: 'regrow', what: 'artifact', notSelf: true })],

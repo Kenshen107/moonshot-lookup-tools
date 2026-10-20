@@ -4,7 +4,7 @@ registerRules({
     name: 'precons4',
     effects: [
         [/^create a (\d+)\/(\d+) ([a-z ]+?) creature token for each time (?:it|~) was kicked$/i, m => ({ t: 'token', n: 0, nCount: 'the number of times it was kicked', p: +m[1], q: +m[2], name: m[3], kw: [] })],
-        [/^(?:it|~) deals damage to target player or planeswalker equal to twice the number of times (?:it|~) was kicked$/i, () => ({ t: 'dmg', n: 0, nCount: 'twice the number of times it was kicked', target: 'player', oppOnly: true })],
+        [/^(?:it|~) deals damage to target player or planeswalker equal to twice the number of times (?:it|~) was kicked$/i, () => ({ t: 'dmg', n: 0, nCount: 'twice the number of times it was kicked', target: 'player' })],
         [/^target opponent discards a card for each time (?:it|~) was kicked$/i, () => ({ t: 'discard', n: 0, nCount: 'the number of times it was kicked' })],
         [/^you gain 2 life for each time (?:it|~) was kicked$/i, () => ({ t: 'gain', n: 0, nCount: 'twice the number of times it was kicked' })]
     ],
