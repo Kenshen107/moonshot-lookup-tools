@@ -551,7 +551,11 @@ function aiChooseAttackersFree(P) {
     const cands = P.bf.filter(o => canAttackWith(o) && pow(o) > 0);
     if (!cands.length) return [];
     const blockers = D.bf.filter(o => isCreature(o) && !o.tapped);
-    const canBeBlocked = a => blockers.some(b => canBlock(b, a));
+    // Identical creatures (a hundred tokens) answer every block question the same way: ask once per kind (2026-10-20, a 250-permanent board took 85 seconds)
+    const sigOf = o => `${o.card.id}|${pow(o)}|${tou(o)}|${o.dmg}|${o.tkw.join(',')}|${Object.keys(o.ctr || {}).length}|${o.attachedTo || ''}|${allPerms().some(x => x.attachedTo === o.uid) ? o.uid : ''}`;
+    const seen = new Set(), blockReps = blockers.length > 12 ? blockers.filter(b => { const k = sigOf(b); if (seen.has(k)) return false; seen.add(k); return true; }) : blockers;
+    const canBeCache = new Map(), blockedBy = a => { const k = blockers.length > 12 ? sigOf(a) : a.uid; if (!canBeCache.has(k)) canBeCache.set(k, blockReps.filter(b => canBlock(b, a))); return canBeCache.get(k); };
+    const canBeBlocked = a => blockedBy(a).length > 0;
     // Lethal on board? Assume they block our biggest blockable attackers.
     const unblockable = cands.filter(a => !canBeBlocked(a));
     const blockable = cands.filter(a => canBeBlocked(a)).sort((a, b) => pow(b) - pow(a));
@@ -560,7 +564,7 @@ function aiChooseAttackersFree(P) {
     if (P.aiLevel === 'easy') return cands.filter(a => !canBeBlocked(a) || Math.random() < 0.5);
     return cands.filter(a => {
         if (!canBeBlocked(a)) return true;
-        const threats = blockers.filter(b => canBlock(b, a) && combatKills(b, a));
+        const threats = blockedBy(a).filter(b => combatKills(b, a));
         if (!threats.length) return true;
         // Even or better trades: our attacker kills every creature that could kill it
         if (threats.every(b => combatKills(a, b) && creatureValue(a) <= creatureValue(b) + 0.5)) return true;

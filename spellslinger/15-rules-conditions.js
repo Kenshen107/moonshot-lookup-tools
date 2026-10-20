@@ -338,21 +338,21 @@ function pickScry(P, cards, surveil, src) {
 }
 // ---- Static abilities: lords and anthems ----
 function hasType(o, type) {
-    if (Rx(o).kw.has('changeling') || new RegExp(`\\b${type}\\b`).test(o.card.type)) return true;
+    if (Rx(o).kw.has('changeling') || typeRx(type).test(o.card.type)) return true;
     if (o.tempSub && o.tempSub.turn === G.turn && o.tempSub.sub === type) return true; // Nogi, Sarkhan: becomes a Dragon until end of turn
-    if (G && /\bCreature\b/.test(o.card.type) && allPerms().some(a => a !== o && a.owner === o.owner && Rx(a).lordAddSub === type && !lostAbilities(a))) return true; // Graaz: other creatures are Juggernauts
+    if (G && /\bCreature\b/.test(o.card.type) && permsBy('lordSub', a => !!Rx(a).lordAddSub).some(a => a !== o && a.owner === o.owner && Rx(a).lordAddSub === type && !lostAbilities(a))) return true; // Graaz: other creatures are Juggernauts
     if (type === 'Island' && o.ctr && o.ctr.flood > 0) return true; // Quicksilver Fountain
     if (Rx(o).duplicant && o.imprinted && new RegExp(`\\b${type}\\b`).test(o.imprinted.card.type.split(' — ')[1] || '')) return true;
     if (Rx(o).chosenSelf && o.chosenType === type) return true;
     if (!G) return false;
     if (LAND_COLOR[type] && /\bLand\b/.test(o.card.type) && G.players[o.owner].bf.some(a => Rx(a).landTypeMine === type && !lostAbilities(a))) return true;
-    if (LAND_COLOR[type] && /\bLand\b/.test(o.card.type) && allPerms().some(a => Rx(a).landTypeAll === type || (Rx(a).landsAnyColor && a.owner === o.owner && /every basic land type/.test(a.card.text || '')))) return true;
+    if (LAND_COLOR[type] && /\bLand\b/.test(o.card.type) && permsBy('landAll', a => !!Rx(a).landTypeAll || !!Rx(a).landsAnyColor).some(a => Rx(a).landTypeAll === type || (Rx(a).landsAnyColor && a.owner === o.owner && /every basic land type/.test(a.card.text || '')))) return true;
     // "... and is a Cleric in addition to its other types" (Equipment, Auras) and "As long as ..., it is an Assassin"
-    return allPerms().some(a => a.attachedTo === o.uid && Rx(a).addType === type) || (Rx(o).selfCond || []).some(c => c.addType === type && condOk(c.cond, ctrl(o), o));
+    return attachmentsOf(o.uid).some(a => Rx(a).addType === type) || (Rx(o).selfCond || []).some(c => c.addType === type && condOk(c.cond, ctrl(o), o));
 }
 const isEquipped = o => allPerms().some(a => a.attachedTo === o.uid && Rx(a).isEquipment);
 // "Enchanted creature ... loses all other abilities" (Stasis Field)
-function lostAbilities(o) { if (!G || !o || o.uid === undefined) return false; const ps = allPerms(); for (let i = 0; i < ps.length; i++) { const a = ps[i]; if (a.attachedTo === o.uid && Rx(a).buffLose) return true; } return false; }
+function lostAbilities(o) { if (!G || !o || o.uid === undefined) return false; const ps = attachmentsOf(o.uid); for (let i = 0; i < ps.length; i++) if (Rx(ps[i]).buffLose) return true; return false; }
 function staticMatch(o, what) {
     switch (what) {
         case 'token': return !!o.token;
@@ -375,7 +375,7 @@ function staticBuffs(o) {
     try {
     if (((G.players[o.owner].emblems) || []).includes('sunsChampion')) { b.p += 2; b.q += 2; b.kw.push('flying'); } // Elspeth, Sun's Champion's emblem
     { const X = G.players[o.owner]; for (const c of X.gy) { const gs = Rx(c).gyStatic; if (gs && X.bf.some(l => hasType(l, gs.type))) b.kw.push(...gs.kw); } }
-    for (const a of allPerms()) {
+    for (const a of staticSources()) {
         const st = Rx(a).statics;
         if (!st || !st.length || lostAbilities(a)) continue;
         for (const s of st) {
@@ -692,7 +692,7 @@ function gyCastOk(P, o) { const ty = Rx(o).gyCastIf; return (!!ty && P.gy.includ
 const serraHere = P => P.paragonTurn !== G.turn && P.bf.some(x => Rx(x).serraParagon && !lostAbilities(x));
 function serraOk(P, o) { return serraHere(P) && P.gy.includes(o) && ['artifact', 'creature', 'enchantment', 'planeswalker', 'battle', 'other'].includes(Rx(o).kind) && Rx(o).kind !== 'land' && (o.card.cmc || 0) <= 3 && !/Instant|Sorcery/.test(o.card.type); }
 function mayhemOk(P, o) { return !!Rx(o).mayhem && o.discardTurn === G.turn && P.gy.includes(o); }
-function grantsOn(o) { return allPerms().filter(a => a.attachedTo === o.uid && Rx(a).grant).map(a => Rx(a).grant); }
+function grantsOn(o) { return attachmentsOf(o.uid).filter(a => Rx(a).grant).map(a => Rx(a).grant); }
 function actsOf(o) {
     const R = Rx(o);
     const zoneP = G && G.players.find(X => X.hand.includes(o) || X.gy.includes(o));
