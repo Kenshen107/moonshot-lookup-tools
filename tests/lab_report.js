@@ -46,6 +46,11 @@ console.log('\nPer playstyle: attacks per own turn / creatures per attack / comb
 const st = {}; rows.forEach(r => { const o = st[r.style] = st[r.style] || { a: [], c: [], h: [], l: [], t: [], g: 0 }; o.a.push(r.f['attacks per own turn']); o.c.push(r.f['creatures per attack']); o.h.push(r.f['combat damage dealt per own turn']); o.l.push(r.f['creatures lost']); o.t.push(r.first); o.g++; });
 Object.entries(st).forEach(([k, o]) => console.log(`  ${k.padEnd(13)} ${f2(mean(o.a))} / ${f1(mean(o.c))} / ${f1(mean(o.h))} / ${f1(mean(o.l))} / ${f1(mean(o.t))}   (${o.g} seats)`));
 
+const ab = {}; rows.forEach((r, k) => { });
+done.forEach(g => g.stats.seats.forEach((x, i) => { const k = (g.styles || [])[i] || '-', o = ab[k] = ab[k] || { turns: 0, able: 0, atk: 0, sum: 0, atkC: 0 }; o.turns += x.tl.length; o.able += x.able || 0; o.atk += x.atk; o.sum += x.ableSum || 0; o.atkC += x.atkC; }));
+console.log('\nWhen a creature could attack: share of own turns with an able attacker / share of those turns that had an attack / able creatures sent (%)');
+Object.entries(ab).forEach(([k, o]) => console.log(`  ${k.padEnd(13)} ${pct(o.able, o.turns)} / ${pct(o.atk, o.able)} / ${pct(o.atkC, o.sum)}`));
+
 // 5. Eliminations
 const firstOut = done.map(g => g.stats.elim[0]).filter(Boolean), outBy = {};
 done.forEach(g => g.stats.elim.forEach(e => { const s = (g.styles || [])[e.seat] || '-'; (outBy[s] = outBy[s] || []).push(e.turn); }));

@@ -47,7 +47,9 @@ window.LAB = (() => {
         const commander = pickOf(cmdPool());
         const ci = commander.ci;
         const cand = L.auto.filter(c => c.legal.commander === 'legal' && c.id !== commander.id && inCI(c, ci) && rulesFor(c).kind !== 'land' && c.cmc < 7);
-        const pool = style ? styleSort(style, shuf(cand), 3, rnd) : shuf(cand);
+        // L.ranked (--decks ranked): only the 260 most played cards (EDHREC rank) in the colors, so decks look like real ones; the style still orders them
+        const base = L.ranked ? cand.filter(c => c.rank).sort((x, y) => x.rank - y.rank).slice(0, 260) : cand;
+        const pool = style ? styleSort(style, shuf(base), 3, rnd) : shuf(base);
         const caps = style ? PLAYSTYLES[style].caps : CAPS;
         const lands = shuf(L.auto.filter(c => c.legal.commander === 'legal' && inCI(c, ci) && /Land/.test(c.type) && rulesFor(c).mana)).slice(0, ci.length > 1 ? 8 : 3);
         const picked = [], counts = {}, seen = new Set();
@@ -141,7 +143,10 @@ window.LAB = (() => {
         const errs = [];
         const onErr = e => errs.push(String(e.message || e));
         window.addEventListener('error', onErr);
+        const onRej = e => errs.push('unhandled rejection: ' + String((e.reason && e.reason.stack) || e.reason).split('\n').slice(0, 4).join(' | '));
+        window.addEventListener('unhandledrejection', onRej);
         try {
+            L.ranked = opts.decks === 'ranked';
             const kind = opts.kind === 'mix' ? (opts.seed % 2 ? 'modern' : 'commander') : opts.kind; out.kind = kind;
             const build = kind === 'modern' ? L.modernDeck : L.commanderDeck;
             // Styles: 'none' (the old way), 'random' (a different style for every seat) or one style name for every seat
@@ -238,13 +243,15 @@ window.LAB = (() => {
                 };
                 unprobe = () => { window.fire = of; };
             }
+            const tuneSeat = [A, B, ...more].map(() => null); if (opts.tune) { const tv = {}; String(opts.tune).split(',').forEach(kv => { const [k, v] = kv.split('='); tv[k] = Number(v); }); A.tune = tv; } // seat A only
             const stats = opts.stats === false ? null : L.collect(out, n);
             await newGame(A, B, null, more);
+            if (A.tune) G.players[0].tune = A.tune;
             const limit = opts.timeout || 60000, maxTurns = opts.maxTurns || 150;
             while (!window.lastResult && performance.now() - t0 < limit && !(G.turn > maxTurns)) await new Promise(r => setTimeout(r, 0));
             if (stats) stats.stop();
             if (!window.lastResult && G.turn > maxTurns) { out.stalled = true; out.turns = G.turn; out.winner = null; out.reason = 'stalled past turn ' + maxTurns; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); window.lastResult = { stalled: true }; }
-            if (!window.lastResult) { out.hang = true; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); out.turn = G.turn; out.phase = G.phase; out.diag = { pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
+            if (!window.lastResult) { out.hang = true; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); out.turn = G.turn; out.phase = G.phase; out.diag = { stack: (G.stack || []).map(it => (it.o && it.o.card ? it.o.card.name : it.kind)), mode: G.mode ? G.mode.type : null, priority: G.priority, busy: G.busy, trigQ: (G.trigQ || []).length, active: G.active, pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
             else Object.assign(out, window.lastResult);
             if (opts.watch) { // a card with one enters-the-battlefield trigger: more triggers than entries means it fired twice (lab.js --watch "Card Name")
                 const lines = G.log.map(l => l.text || l), name = opts.watch;
@@ -256,7 +263,7 @@ window.LAB = (() => {
             out.bad = T.invariants(); if (G.dealStats) out.deals = G.dealStats; if (G.pol) out.pol = G.pol;
             if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
         } catch (e) { out.error = String(e && e.stack || e).slice(0, 400); }
-        window.removeEventListener('error', onErr);
+        window.removeEventListener('error', onErr); window.removeEventListener('unhandledrejection', onRej);
         Math.random = realRandom;
         if (errs.length) out.errors = errs.slice(0, 3);
         out.ms = Math.round(performance.now() - t0);
@@ -287,6 +294,7 @@ window.LAB = (() => {
                         for (const x of P.bf) { const mo = manaOf(x); if (mo && !(isCreature(x) && x.sick && !has(x, 'haste'))) cap += mo.n || 1; }
                         seats[G.active].tl.push([G.turn, P.life, cap, P.hand.length, cs.length, cs.reduce((a, x) => a + Math.max(0, pow(x)), 0), P.bf.filter(x => Rx(x).kind === 'land').length, G.players.filter(q => !q.out).length]);
                         if (G.arch === G.active) seats[G.active].arch++;
+                        { const able = P.bf.filter(x => isCreature(x) && canAttackWith(x) && pow(x) > 0).length; const t = seats[G.active]; if (able) { t.able = (t.able || 0) + 1; t.ableSum = (t.ableSum || 0) + able; } }
                     }
                 }
             } catch (e) { /* stats must never break a game */ }

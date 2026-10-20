@@ -11,7 +11,7 @@ const { launch, ROOT } = require('./lib/harness');
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : (process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : true); };
 const CHUNK = Number(arg('chunk', 4));
 const N = Number(arg('n', 200)), KIND = arg('kind', 'mix'), SEED = Number(arg('seed', 1)), CONC = arg('conc', 3) === 'auto' ? Math.min(require('os').cpus().length, 6) : Number(arg('conc', 3));
-const LEVELS = arg('levels', null), MAXTURNS = Number(arg('maxturns', 150)), STATS = arg('stats', 'on') !== 'off', SWEEP = arg('sweep', null), PATCH = arg('patch', null), OUTFILE = arg('out', null);
+const LEVELS = arg('levels', null), MAXTURNS = Number(arg('maxturns', 150)), STATS = arg('stats', 'on') !== 'off', SWEEP = arg('sweep', null), PATCH = arg('patch', null), OUTFILE = arg('out', null), TUNE = arg('tune', null), DECKS = arg('decks', null);
 const LA = arg('la', 'normal'), LB = arg('lb', 'normal'), TMO = Number(arg('timeout', 15000)), PLAYERS = Number(arg('players', 2)), STYLES = arg('styles', null), THEMES = arg('themes', null), WATCH = arg('watch', null), DECKA = arg('decka', null) ? require('fs').readFileSync(arg('decka', null), 'utf8') : null, REPLAY = arg('replay', null);
 
 async function openLab(h) {
@@ -63,7 +63,7 @@ async function main() {
             const cdp = await h.ctx.newCDPSession(page);
             await cdp.send('Debugger.enable');
             const paused = new Promise(res => cdp.on('Debugger.paused', res));
-            page.evaluate(([s, k, la, lb, tmo, pl, st, th, da, wa, lv]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa, levels: lv }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH, LEVELS || null]).catch(() => {});
+            page.evaluate(([s, k, la, lb, tmo, pl, st, th, da, wa, lv, tu, dk]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa, levels: lv, tune: tu, decks: dk, maxTurns: 150 }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH, LEVELS || null, TUNE, DECKS]).catch(() => {});
             await new Promise(r => setTimeout(r, Number(process.env.LAB_PAUSE)));
             await cdp.send('Debugger.pause');
             const ev = await paused;
@@ -72,7 +72,7 @@ async function main() {
             console.log(info2.result.value);
             await h.close(); return;
         }
-        const r = await page.evaluate(([s, k, la, lb, tmo, pl, st, th, da, wa, lv]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa, levels: lv }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH, LEVELS || null]);
+        const r = await page.evaluate(([s, k, la, lb, tmo, pl, st, th, da, wa, lv, tu, dk]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa, levels: lv, tune: tu, decks: dk, maxTurns: 150 }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH, LEVELS || null, TUNE, DECKS]);
         console.log(JSON.stringify(r, null, 1));
         if (errors.length) console.log('PAGE ERRORS:\n' + errors.join('\n'));
         { const full = await page.evaluate(() => G.log.map(l => l.text || l).join('\n')); console.log(process.env.LAB_HEAD ? full.slice(0, Number(process.env.LAB_HEAD)) : full.slice(-6000)); } // LAB_HEAD=N prints the first N characters of the log instead of the last 6000
@@ -82,7 +82,7 @@ async function main() {
     // Pages load in parallel and stay open; games come off one shared queue, so a fast page never waits for a slow one
     const pages = await Promise.all(Array.from({ length: CONC }, () => openLab(h)));
     console.log(`Loaded ${pages[0].info.cards} cards offline (${pages[0].info.automated} fully Automated) in ${pages[0].info.ms} ms`);
-    const OPTS = { kind: KIND, la: LA, lb: LB, timeout: TMO, players: PLAYERS, styles: STYLES, themes: THEMES, deckA: DECKA, watch: WATCH, levels: LEVELS || null, maxTurns: MAXTURNS, stats: STATS };
+    const OPTS = { kind: KIND, la: LA, lb: LB, timeout: TMO, players: PLAYERS, styles: STYLES, themes: THEMES, deckA: DECKA, watch: WATCH, levels: LEVELS || null, tune: TUNE, decks: DECKS, maxTurns: MAXTURNS, stats: STATS };
     const pageErrors = () => pages.flatMap(p => p.errors);
     let cdp = null;
     if (PROFILE) { cdp = await h.ctx.newCDPSession(pages[0].page); await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 500 }); await cdp.send('Profiler.start'); }
@@ -105,20 +105,22 @@ async function main() {
     if (SWEEP) {
         // --sweep "PLAYSTYLES.aggro.atk=0.3,0.6,0.9": the same seeds and decks for every value, one row per value (a paired comparison)
         const eq = SWEEP.indexOf('='), lhs = SWEEP.slice(0, eq), vals = SWEEP.slice(eq + 1).split(',');
-        const orig = await pages[0].page.evaluate(l => JSON.stringify(eval(l)), lhs);
+        const seatTune = lhs.startsWith('tune.'); // --sweep "tune.holdShare=1,0.5": only seat A uses the value (the others keep the default)
+        const orig = seatTune ? null : await pages[0].page.evaluate(l => JSON.stringify(eval(l)), lhs);
         const focus = (lhs.match(/PLAYSTYLES\.(\w+)/) || [])[1] || null;
         const rows = [];
         for (const v of vals) {
-            const rs = await runSet(`${lhs} = ${v}`, v);
+            if (seatTune) OPTS.tune = `${lhs.slice(5)}=${v}`;
+            const rs = await runSet(seatTune ? null : `${lhs} = ${v}`, v);
             const done = rs.filter(r => r.winner !== undefined && !r.hang && !r.error);
             const tally = {}; done.forEach(r => (r.styles || []).forEach((st, i) => { if (!st) return; const t = tally[st] = tally[st] || { g: 0, w: 0 }; t.g++; if (r.winner === i) t.w++; }));
             const turns = done.map(r => r.turns || r.turn).sort((a, b) => a - b);
-            rows.push({ v, done: done.length, tally, med: turns[turns.length >> 1], hung: rs.filter(r => r.hang || r.error).length, stalled: rs.filter(r => r.stalled).length });
+            rows.push({ v, done: done.length, seatA: done.filter(r => r.winner === 0).length, tally, med: turns[turns.length >> 1], hung: rs.filter(r => r.hang || r.error).length, stalled: rs.filter(r => r.stalled).length });
             all = rs;
         }
-        await Promise.all(pages.map(p => p.page.evaluate(([l, o]) => { eval(l + ' = ' + o); }, [lhs, orig])));
+        if (!seatTune) await Promise.all(pages.map(p => p.page.evaluate(([l, o]) => { eval(l + ' = ' + o); }, [lhs, orig])));
         console.log(`\nSweep of ${lhs} (${N} games per value, same seeds; fair share ${(100 / PLAYERS).toFixed(0)}%):`);
-        rows.forEach(r => { const t = focus && r.tally[focus]; const p = t ? t.w / t.g : null; console.log(`  ${String(r.v).padEnd(8)} ${focus ? `${focus} wins ${p === null ? '-' : (100 * p).toFixed(1) + '% ± ' + (196 * Math.sqrt(p * (1 - p) / t.g)).toFixed(1)} (${t ? t.w + '/' + t.g : 0})` : ''}  median ${r.med} turns, hung ${r.hung}, stalled ${r.stalled}   all: ${Object.entries(r.tally).sort((a, b) => b[1].w / b[1].g - a[1].w / a[1].g).map(([k, t]) => `${k} ${(100 * t.w / t.g).toFixed(0)}%`).join(' ')}`); });
+        rows.forEach(r => { const t = focus && r.tally[focus]; const p = t ? t.w / t.g : null; console.log(`  ${String(r.v).padEnd(8)} seat A ${(100 * r.seatA / r.done).toFixed(1)}% ± ${(196 * Math.sqrt((r.seatA / r.done) * (1 - r.seatA / r.done) / r.done)).toFixed(1)} (${r.seatA}/${r.done}) ${focus ? `${focus} wins ${p === null ? '-' : (100 * p).toFixed(1) + '% ± ' + (196 * Math.sqrt(p * (1 - p) / t.g)).toFixed(1)} (${t ? t.w + '/' + t.g : 0})` : ''}  median ${r.med} turns, hung ${r.hung}, stalled ${r.stalled}   all: ${Object.entries(r.tally).sort((a, b) => b[1].w / b[1].g - a[1].w / a[1].g).map(([k, t]) => `${k} ${(100 * t.w / t.g).toFixed(0)}%`).join(' ')}`); });
     } else all = await runSet(null, '');
     if (cdp) { const { profile } = await cdp.send('Profiler.stop'); profileTop(profile); }
     report(all, pageErrors(), (Date.now() - t0) / 1000);

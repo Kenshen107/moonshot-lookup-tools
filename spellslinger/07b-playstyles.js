@@ -157,7 +157,7 @@ function podPickDefender(P) {
     const free = fs.filter(F => !hasPeace(P.i, F.i));
     if (free.length && free.length < fs.length) fs = free;
     const arch = G.arch != null ? G.players[G.arch] : null;
-    if (arch && !arch.out && arch !== P && fs.includes(arch)) {
+    if (arch && !arch.out && arch !== P && fs.includes(arch) && !tn(P, 'ignoreArch')) {
         const wounded = fs.filter(F => F !== arch && F.life <= 10).sort((a, b) => a.life - b.life)[0];
         const angry = fs.filter(F => F !== arch && grudge(F) >= 8).sort((a, b) => grudge(b) - grudge(a))[0];
         if (st && st.target === 'weak' && wounded) return wounded;
@@ -170,16 +170,20 @@ function podPickDefender(P) {
         weak: (a, b) => a.life - b.life || podThreat(b) - podThreat(a) || rel(a) - rel(b),
         revenge: (a, b) => grudge(b) - grudge(a) || podThreat(b) - podThreat(a) || rel(a) - rel(b)
     };
-    return fs.slice().sort(by[(st && st.target) || 'threat'])[0];
+    const tm = tn(P, 'targetMode');
+    return fs.slice().sort(by[tm ? ['threat', 'weak', 'revenge'][tm - 1] : (st && st.target) || 'threat'])[0];
 }
 // Pods: keep creatures home when the other players could kill us next turn. Each creature held back absorbs the biggest attacker.
+// Numbers the lab tunes (tests/lab.js --patch "AI_TUNE.holdShare=0.5", or --tune "holdShare=0.5" for seat A only; a player's own P.tune wins)
+const AI_TUNE = { holdShare: 1, stallTurn: 14, stallRatio: 1.4, targetMode: 0, ignoreArch: 0 }; // targetMode 0 = the style's own habit, 1 threat, 2 weak, 3 revenge; ignoreArch 1 = don't pile on the archenemy
+const tn = (P, k) => (P && P.tune && P.tune[k] !== undefined ? P.tune[k] : AI_TUNE[k]);
 function aiHoldBack(P, chosen, D) {
     if (G.players.length <= 2 || !chosen.length || P.aiLevel === 'easy') return chosen;
     if (chosen.reduce((s, a) => s + Math.max(0, pow(a)), 0) >= D.life && !D.bf.some(o => isCreature(o) && !o.tapped)) return chosen; // lethal
     const st = styleOf(P), factor = (st ? st.hold : 0.75) * (G.arch === P.i ? 0.8 : 1); // the archenemy keeps more at home
     const theirs = foes(P).flatMap(F => F.bf.filter(isCreature)).map(o => Math.max(0, pow(o))).sort((a, b) => b - a);
     let home = P.bf.filter(o => isCreature(o) && !o.tapped && !chosen.includes(o)).length;
-    const through = () => theirs.slice(home).reduce((a, b) => a + b, 0);
+    const through = () => theirs.slice(home).reduce((a, b) => a + b, 0) * tn(P, 'holdShare'); // holdShare: how much of the other players' combined power is expected to come at me
     const keep = chosen.slice().sort((a, b) => creatureValue(b) - creatureValue(a));
     while (keep.length > 1 && through() >= P.life * factor) { keep.pop(); home++; }
     return keep;

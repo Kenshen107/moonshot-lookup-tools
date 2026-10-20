@@ -140,7 +140,7 @@ function scoreEffects(P, effects, target, src) {
                     score += theirs - ours > 5 ? theirs - ours : 0;
                 } else if (t && t.o) score += t.o.owner !== P.i && tou(t.o) - t.o.dmg <= e.n ? 6 + creatureValue(t.o) : 0;
                 break;
-            case 'destroy': case 'exile': score += t && t.o.owner !== P.i && permValue(t.o) >= 4 ? 7 + permValue(t.o) : 0; break;
+            case 'destroy': case 'exile': score += t && t.o && t.o.owner !== P.i && permValue(t.o) >= 4 ? 7 + permValue(t.o) : 0; break;
             case 'bounce': score += t && t.o.owner !== P.i && permValue(t.o) >= 6 ? 4 + permValue(t.o) / 2 : 0; break;
             case 'wipe': case 'massBounce': {
                 const hit = x => wipeMatches(x, e.what, P) && (e.t === 'massBounce' || e.how === 'exile' || !has(x, 'indestructible'));
@@ -569,7 +569,7 @@ function aiChooseAttackersFree(P) {
         if (D.life <= 6 && cands.length > blockers.length) return true;
         const ourPow = P.bf.filter(isCreature).reduce((s, o) => s + pow(o), 0);
         const theirPow = D.bf.filter(isCreature).reduce((s, o) => s + pow(o), 0);
-        return G.turn >= 14 && ourPow >= theirPow * 1.4 && cands.length >= blockers.length;
+        return G.turn >= tn(P, 'stallTurn') && ourPow >= theirPow * tn(P, 'stallRatio') && cands.length >= blockers.length;
     });
 }
 
