@@ -51,6 +51,9 @@ done.forEach(g => g.stats.seats.forEach((x, i) => { const k = (g.styles || [])[i
 console.log('\nWhen a creature could attack: share of own turns with an able attacker / share of those turns that had an attack / able creatures sent (%)');
 Object.entries(ab).forEach(([k, o]) => console.log(`  ${k.padEnd(13)} ${pct(o.able, o.turns)} / ${pct(o.atk, o.able)} / ${pct(o.atkC, o.sum)}`));
 
+const wa = {}; done.forEach(g => g.stats.seats.forEach((x, i) => { const k = (g.styles || [])[i] || '-', o = wa[k] = wa[k] || { n: 0, un: 0, cl: 0, clt: 0, he: 0, lh: 0 }; o.n += x.endN || 0; o.un += x.unspent || 0; o.cl += x.castLeft || 0; o.clt += x.castLeftTurns || 0; o.he += x.handEnd || 0; o.lh += x.landsHeld || 0; }));
+console.log('\nAt the end of own turns: mana still untapped / castable spells left in hand / share of turns ending with a castable spell unused / cards in hand / lands in hand');
+Object.entries(wa).forEach(([k, o]) => console.log(`  ${k.padEnd(13)} ${f1(o.un / o.n)} / ${f2(o.cl / o.n)} / ${pct(o.clt, o.n)} / ${f1(o.he / o.n)} / ${f1(o.lh / o.n)}`));
 // 5. Eliminations
 const firstOut = done.map(g => g.stats.elim[0]).filter(Boolean), outBy = {};
 done.forEach(g => g.stats.elim.forEach(e => { const s = (g.styles || [])[e.seat] || '-'; (outBy[s] = outBy[s] || []).push(e.turn); }));

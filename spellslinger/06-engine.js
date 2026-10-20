@@ -193,7 +193,7 @@ const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, startLife: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
         landsPlayed: 0, tax: 0, cmdDmg: 0, cmdBy: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
-        aiLevel: deck.aiLevel === 'random' ? 'easy' : deck.aiLevel || 'normal', aiRandom: deck.aiLevel === 'random', aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
+        aiLevel: /^random/.test(deck.aiLevel || '') ? 'easy' : /^r:/.test(deck.aiLevel || '') ? 'normal' : deck.aiLevel || 'normal', aiRand: /^random/.test(deck.aiLevel || '') ? { cast: 1, atk: 1, blk: 1, def: 1 } : /^r:/.test(deck.aiLevel || '') ? Object.fromEntries(deck.aiLevel.slice(2).split('+').map(k => [k, 1])) : null, aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
     { let bfArr = watchBf(P.bf); Object.defineProperty(P, 'bf', { enumerable: true, configurable: true, get() { return bfArr; }, set(v) { bfArr = watchBf(v); } }); } // see allPerms
     { let lifeNow = P.life; Object.defineProperty(P, 'life', { enumerable: true, configurable: true, get() { return lifeNow; }, set(v) { if (v > lifeNow && typeof noLifeGainActive === 'function' && noLifeGainActive()) return; lifeNow = v; } }); } // "Players can't gain life" (Rampaging Ferocidon)
     trackGraveyard(P);
