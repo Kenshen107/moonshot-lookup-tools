@@ -352,7 +352,7 @@ function hasType(o, type) {
 }
 const isEquipped = o => allPerms().some(a => a.attachedTo === o.uid && Rx(a).isEquipment);
 // "Enchanted creature ... loses all other abilities" (Stasis Field)
-function lostAbilities(o) { return !!G && !!o && o.uid !== undefined && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buffLose); }
+function lostAbilities(o) { if (!G || !o || o.uid === undefined) return false; const ps = allPerms(); for (let i = 0; i < ps.length; i++) { const a = ps[i]; if (a.attachedTo === o.uid && Rx(a).buffLose) return true; } return false; }
 function staticMatch(o, what) {
     switch (what) {
         case 'token': return !!o.token;

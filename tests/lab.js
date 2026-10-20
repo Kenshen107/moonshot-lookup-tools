@@ -9,7 +9,9 @@ const path = require('path');
 const { launch, ROOT } = require('./lib/harness');
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : (process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : true); };
-const N = Number(arg('n', 200)), KIND = arg('kind', 'mix'), SEED = Number(arg('seed', 1)), CONC = Number(arg('conc', 3));
+const CHUNK = Number(arg('chunk', 4));
+const N = Number(arg('n', 200)), KIND = arg('kind', 'mix'), SEED = Number(arg('seed', 1)), CONC = arg('conc', 3) === 'auto' ? Math.min(require('os').cpus().length, 6) : Number(arg('conc', 3));
+const LEVELS = arg('levels', null), MAXTURNS = Number(arg('maxturns', 150)), STATS = arg('stats', 'on') !== 'off', SWEEP = arg('sweep', null), PATCH = arg('patch', null), OUTFILE = arg('out', null);
 const LA = arg('la', 'normal'), LB = arg('lb', 'normal'), TMO = Number(arg('timeout', 15000)), PLAYERS = Number(arg('players', 2)), STYLES = arg('styles', null), THEMES = arg('themes', null), WATCH = arg('watch', null), DECKA = arg('decka', null) ? require('fs').readFileSync(arg('decka', null), 'utf8') : null, REPLAY = arg('replay', null);
 
 async function openLab(h) {
@@ -38,6 +40,20 @@ async function openLab(h) {
     return { page, errors, info };
 }
 
+// --profile: a CPU profile of the first page's games; prints where the time goes (self time per function, and per game file)
+const PROFILE = !!arg('profile', false);
+function profileTop(profile) {
+    const byId = new Map(profile.nodes.map(n => [n.id, n])), self = new Map();
+    const dt = profile.timeDeltas; let total = 0;
+    profile.samples.forEach((id, i) => { const d = dt[i] || 0; total += d; self.set(id, (self.get(id) || 0) + d); });
+    const byFn = {}, byFile = {};
+    for (const [id, t] of self) { const n = byId.get(id), f = n.callFrame, k = `${f.functionName || '(anonymous)'} ${(f.url || '').split('/').pop()}:${f.lineNumber + 1}`; byFn[k] = (byFn[k] || 0) + t; const fk = (f.url || '(native)').split('/').pop() || '(native)'; byFile[fk] = (byFile[fk] || 0) + t; }
+    const top = o => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 18).map(([k, t]) => `  ${(100 * t / total).toFixed(1).padStart(5)}%  ${k}`).join('\n');
+    fs.mkdirSync(path.join(ROOT, 'tests', '.out'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'tests', '.out', 'lab.cpuprofile'), JSON.stringify(profile));
+    console.log(`\nWhere the time goes (page 1, ${(total / 1e6).toFixed(1)}s sampled):\nBy function:\n${top(byFn)}\nBy file:\n${top(byFile)}\n(full profile: tests/.out/lab.cpuprofile, open in Chrome DevTools)`);
+}
+
 async function main() {
     const h = await launch({ profileDir: path.join(ROOT, 'tests', '.cache', 'lab' + (process.env.TEST_PROFILE || '')) });
     const t0 = Date.now();
@@ -47,7 +63,7 @@ async function main() {
             const cdp = await h.ctx.newCDPSession(page);
             await cdp.send('Debugger.enable');
             const paused = new Promise(res => cdp.on('Debugger.paused', res));
-            page.evaluate(([s, k, la, lb, tmo, pl, st, th, da, wa]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH]).catch(() => {});
+            page.evaluate(([s, k, la, lb, tmo, pl, st, th, da, wa, lv]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa, levels: lv }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH, LEVELS || null]).catch(() => {});
             await new Promise(r => setTimeout(r, Number(process.env.LAB_PAUSE)));
             await cdp.send('Debugger.pause');
             const ev = await paused;
@@ -56,32 +72,56 @@ async function main() {
             console.log(info2.result.value);
             await h.close(); return;
         }
-        const r = await page.evaluate(([s, k, la, lb, tmo, pl, st, th, da, wa]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH]);
+        const r = await page.evaluate(([s, k, la, lb, tmo, pl, st, th, da, wa, lv]) => LAB.play({ seed: s, kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa, levels: lv }), [Number(REPLAY), KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH, LEVELS || null]);
         console.log(JSON.stringify(r, null, 1));
         if (errors.length) console.log('PAGE ERRORS:\n' + errors.join('\n'));
         { const full = await page.evaluate(() => G.log.map(l => l.text || l).join('\n')); console.log(process.env.LAB_HEAD ? full.slice(0, Number(process.env.LAB_HEAD)) : full.slice(-6000)); } // LAB_HEAD=N prints the first N characters of the log instead of the last 6000
         await h.close(); return;
     }
-    console.log(`Lab: ${N} games, kind ${KIND}, seeds ${SEED}..${SEED + N - 1}, ${CONC} pages, AI A=${LA} B=${LB}`);
-    const per = Math.ceil(N / CONC), all = [];
-    const info0 = [];
-    await Promise.all(Array.from({ length: CONC }, async (_, w) => {
-        const from = SEED + w * per, count = Math.min(per, N - w * per);
-        if (count <= 0) return;
-        const { page, errors, info } = await openLab(h);
-        if (!w) console.log(`Loaded ${info.cards} cards offline (${info.automated} fully Automated) in ${info.ms} ms`);
-        for (let done = 0; done < count; done += 25) {
-            const n = Math.min(25, count - done);
-            const rs = await page.evaluate(([f, c, k, la, lb, tmo, pl, st, th, da, wa]) => LAB.batch(f, c, { kind: k, la, lb, timeout: tmo, players: pl, styles: st, themes: th, deckA: da, watch: wa }), [from + done, n, KIND, LA, LB, TMO, PLAYERS, STYLES, THEMES, DECKA, WATCH]);
-            // mix: alternate kinds by seed
-            all.push(...rs);
-            process.stdout.write(`\r${all.length}/${N} games, ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+    console.log(`Lab: ${N} games, kind ${KIND}, seeds ${SEED}..${SEED + N - 1}, ${CONC} pages, AI A=${LA} B=${LB}${LEVELS ? ', levels ' + LEVELS : ''}`);
+    // Pages load in parallel and stay open; games come off one shared queue, so a fast page never waits for a slow one
+    const pages = await Promise.all(Array.from({ length: CONC }, () => openLab(h)));
+    console.log(`Loaded ${pages[0].info.cards} cards offline (${pages[0].info.automated} fully Automated) in ${pages[0].info.ms} ms`);
+    const OPTS = { kind: KIND, la: LA, lb: LB, timeout: TMO, players: PLAYERS, styles: STYLES, themes: THEMES, deckA: DECKA, watch: WATCH, levels: LEVELS || null, maxTurns: MAXTURNS, stats: STATS };
+    const pageErrors = () => pages.flatMap(p => p.errors);
+    let cdp = null;
+    if (PROFILE) { cdp = await h.ctx.newCDPSession(pages[0].page); await cdp.send('Profiler.enable'); await cdp.send('Profiler.setSamplingInterval', { interval: 500 }); await cdp.send('Profiler.start'); }
+    const runSet = async (patch, label) => {
+        if (patch) await Promise.all(pages.map(p => p.page.evaluate(patch)));
+        const all = []; let next = 0; const t1 = Date.now();
+        await Promise.all(pages.map(async p => {
+            while (next < N) {
+                const from = SEED + next, n = Math.min(CHUNK, N - next); next += n;
+                const rs = await p.page.evaluate(([f, c, o]) => LAB.batch(f, c, o), [from, n, OPTS]);
+                all.push(...rs);
+                process.stdout.write(`\r${label ? label + ': ' : ''}${all.length}/${N} games, ${((Date.now() - t1) / 1000).toFixed(0)}s   `);
+            }
+        }));
+        console.log('');
+        return all.sort((x, y) => x.seed - y.seed);
+    };
+    if (PATCH) { await Promise.all(pages.map(p => p.page.evaluate(PATCH))); console.log('Patched: ' + PATCH); }
+    let all;
+    if (SWEEP) {
+        // --sweep "PLAYSTYLES.aggro.atk=0.3,0.6,0.9": the same seeds and decks for every value, one row per value (a paired comparison)
+        const eq = SWEEP.indexOf('='), lhs = SWEEP.slice(0, eq), vals = SWEEP.slice(eq + 1).split(',');
+        const orig = await pages[0].page.evaluate(l => JSON.stringify(eval(l)), lhs);
+        const focus = (lhs.match(/PLAYSTYLES\.(\w+)/) || [])[1] || null;
+        const rows = [];
+        for (const v of vals) {
+            const rs = await runSet(`${lhs} = ${v}`, v);
+            const done = rs.filter(r => r.winner !== undefined && !r.hang && !r.error);
+            const tally = {}; done.forEach(r => (r.styles || []).forEach((st, i) => { if (!st) return; const t = tally[st] = tally[st] || { g: 0, w: 0 }; t.g++; if (r.winner === i) t.w++; }));
+            const turns = done.map(r => r.turns || r.turn).sort((a, b) => a - b);
+            rows.push({ v, done: done.length, tally, med: turns[turns.length >> 1], hung: rs.filter(r => r.hang || r.error).length, stalled: rs.filter(r => r.stalled).length });
+            all = rs;
         }
-        if (errors.length) info0.push(...errors);
-        await page.close();
-    }));
-    console.log('');
-    report(all, info0, (Date.now() - t0) / 1000);
+        await Promise.all(pages.map(p => p.page.evaluate(([l, o]) => { eval(l + ' = ' + o); }, [lhs, orig])));
+        console.log(`\nSweep of ${lhs} (${N} games per value, same seeds; fair share ${(100 / PLAYERS).toFixed(0)}%):`);
+        rows.forEach(r => { const t = focus && r.tally[focus]; const p = t ? t.w / t.g : null; console.log(`  ${String(r.v).padEnd(8)} ${focus ? `${focus} wins ${p === null ? '-' : (100 * p).toFixed(1) + '% ± ' + (196 * Math.sqrt(p * (1 - p) / t.g)).toFixed(1)} (${t ? t.w + '/' + t.g : 0})` : ''}  median ${r.med} turns, hung ${r.hung}, stalled ${r.stalled}   all: ${Object.entries(r.tally).sort((a, b) => b[1].w / b[1].g - a[1].w / a[1].g).map(([k, t]) => `${k} ${(100 * t.w / t.g).toFixed(0)}%`).join(' ')}`); });
+    } else all = await runSet(null, '');
+    if (cdp) { const { profile } = await cdp.send('Profiler.stop'); profileTop(profile); }
+    report(all, pageErrors(), (Date.now() - t0) / 1000);
     await h.close();
 }
 
@@ -126,6 +166,7 @@ function report(all, pageErrors, secs) {
     }
     fs.mkdirSync(path.join(ROOT, 'tests', '.out'), { recursive: true });
     fs.writeFileSync(path.join(ROOT, 'tests', '.out', 'lab.json'), JSON.stringify(all));
+    fs.writeFileSync(OUTFILE && OUTFILE !== true ? OUTFILE : path.join(ROOT, 'tests', '.out', 'lab.jsonl'), all.map(r => JSON.stringify(r)).join('\n') + '\n'); // one game per line, with the per-seat stats (tests/lab_report.js reads it)
     process.exitCode = hung.length || err.length || bad.length || logged.length ? 1 : 0;
 }
 main().catch(e => { console.error(e); process.exit(2); });

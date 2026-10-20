@@ -14,7 +14,7 @@ function makeObj(card, owner, extra) {
     // counters: net +1/+1 (negative = -1/-1; the two cancel, rule 704.5q); ctr: other named counters
     return Object.assign({ uid: uidSeq++, card, front: card, owner, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, token: false, isCommander: false }, extra || {});
 }
-const Rx = o => rulesFor(o.card);
+const Rx = o => o.card._r || rulesFor(o.card);
 // The player holding the device (G.view; always 0 except in a pass-and-play game) and the other one
 const me = () => G.players[G.view || 0];
 // The opponent whose board and bar are shown: the only one in a 1v1; in a pod, the one you tapped, else whose turn it is, else the one being attacked
@@ -42,8 +42,21 @@ function opp(P) {
     if (G.defender != null && !G.players[G.defender].out) { if (P.i === G.active && P.i !== G.defender) return G.players[G.defender]; if (P.i === G.defender) return G.players[G.active]; }
     return seatAfter(P.i);
 }
-const allPerms = () => G.players.flatMap(P => P.bf);
-const onBf = uid => allPerms().find(o => o.uid === uid) || null;
+// allPerms() is called inside every power / keyword / static check, so its list is kept until a battlefield changes (2026-10-20, lab profile:
+// it was 29% of a 4-player game). Each player's `bf` array counts its own changes (watchBf); a replaced array or a changed length is noticed too.
+// The returned array is shared: don't change it (copy with [...allPerms()] first).
+let permVer = 0, permCache = null, permCacheVer = -1, permCacheN = -1, permCacheG = null;
+const WATCHED = ['push', 'splice', 'unshift', 'pop', 'shift', 'sort', 'reverse', 'fill', 'copyWithin'];
+function watchBf(arr) { WATCHED.forEach(m => { const f = Array.prototype[m]; Object.defineProperty(arr, m, { value: function (...a) { permVer++; return f.apply(this, a); }, enumerable: false, configurable: true, writable: true }); }); permVer++; return arr; }
+function allPerms() {
+    const ps = G.players; let n = 0;
+    for (let i = 0; i < ps.length; i++) n += ps[i].bf.length;
+    if (permCache !== null && permCacheVer === permVer && permCacheN === n && permCacheG === G) return permCache;
+    const out = []; for (let i = 0; i < ps.length; i++) { const b = ps[i].bf; for (let j = 0; j < b.length; j++) out.push(b[j]); }
+    permCache = out; permCacheVer = permVer; permCacheN = n; permCacheG = G;
+    return out;
+}
+const onBf = uid => { const ps = G.players; for (let i = 0; i < ps.length; i++) { const b = ps[i].bf; for (let j = 0; j < b.length; j++) if (b[j].uid === uid) return b[j]; } return null; };
 function findObj(uid) {
     const onStack = G.stack.find(it => it.kind === 'spell' && it.o.uid === uid);
     if (onStack) return onStack.o;
@@ -54,16 +67,19 @@ const ctrl = o => G.players[o.owner];
 const isCreature = o => !o.enchOnly && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
 function buffsOn(o) {
     const b = { p: 0, q: 0, kw: [] };
-    allPerms().forEach(a => {
-        if (a.attachedTo !== o.uid || !(Rx(a).buff || Rx(a).buffCond)) return;
+    const perms0 = allPerms();
+    for (let pi = 0; pi < perms0.length; pi++) {
+        const a = perms0[pi];
+        if (a.attachedTo !== o.uid) continue;
+        if (!(Rx(a).buff || Rx(a).buffCond)) continue;
         const R = Rx(a);
         if (R.buffCond && condOk(R.buffCond.cond, ctrl(a), a)) b.kw.push(...R.buffCond.kw);
-        if (!R.buff) return;
+        if (!R.buff) continue;
         b.p += R.buff.p; b.q += R.buff.q; b.kw.push(...R.buff.kw);
         if (R.buffCmdr) { const x = Math.max(0, ...[...G.players[a.owner].command, ...G.players[a.owner].bf].filter(c => c.isCommander && c.owner === a.owner).map(c => c.card.cmc || 0)); b.p += x; b.q += x; } // Tangleweave Armor
         if (R.buffPer) { const k = countFn(R.buffPer.what)(R.buffPer.host ? o : a); b.p += R.buffPer.p * k; b.q += R.buffPer.q * k; }
         if (R.eidolon) { const k = eidolonN(a); b.p += k; b.q += k; } // Eidolon of Countless Battles, on its host
-    });
+    }
     if (G && !lostAbilities(o)) {
         if (Rx(o).eidolon) { const k = eidolonN(o); b.p += k; b.q += k; }
         if (Rx(o).spiritdancer) { const k = allPerms().filter(a => a.attachedTo === o.uid && (hasType(a, 'Aura') || a.bestowed)).length; b.p += 2 * k; b.q += 2 * k; } // Kor Spiritdancer
@@ -146,7 +162,8 @@ const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, startLife: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
         landsPlayed: 0, tax: 0, cmdDmg: 0, cmdBy: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
-        aiLevel: deck.aiLevel || 'normal', aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
+        aiLevel: deck.aiLevel === 'random' ? 'easy' : deck.aiLevel || 'normal', aiRandom: deck.aiLevel === 'random', aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
+    { let bfArr = watchBf(P.bf); Object.defineProperty(P, 'bf', { enumerable: true, configurable: true, get() { return bfArr; }, set(v) { bfArr = watchBf(v); } }); } // see allPerms
     { let lifeNow = P.life; Object.defineProperty(P, 'life', { enumerable: true, configurable: true, get() { return lifeNow; }, set(v) { if (v > lifeNow && typeof noLifeGainActive === 'function' && noLifeGainActive()) return; lifeNow = v; } }); } // "Players can't gain life" (Rampaging Ferocidon)
     trackGraveyard(P);
     deck.entries.forEach(e => { for (let k = 0; k < e.n; k++) P.library.push(makeObj(e.card, i)); });

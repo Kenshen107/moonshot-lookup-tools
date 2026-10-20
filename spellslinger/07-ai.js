@@ -423,7 +423,7 @@ function aiBestPlay(P) {
     }
     faces.forEach(([o]) => { o.card = o.front || o.card; o.overloaded = false; o.evoked = false; o.altCast = false; o.castAs = null; });
     if (!cands.length) return null;
-    const pick = P.aiLevel === 'easy' && Math.random() < 0.4 ? cands[rand(cands.length)] : cands.sort((a, b) => b.s - a.s)[0];
+    const pick = P.aiRandom || (P.aiLevel === 'easy' && Math.random() < 0.4) ? cands[rand(cands.length)] : cands.sort((a, b) => b.s - a.s)[0];
     pick.o.card = pick.face; // cast the half it chose
     pick.o.overloaded = pick.ov;
     pick.o.evoked = pick.ev;
@@ -505,6 +505,7 @@ async function aiMain(P) {
 function aiPickDefender(P) {
     const fs = foes(P);
     if (fs.length === 1) return fs[0];
+    if (P.aiRandom) return fs[rand(fs.length)];
     if (P.aiStyle || P.aiLevel !== 'easy') return podPickDefender(P);
     const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
     const blockers = F => F.bf.filter(o => isCreature(o) && !o.tapped).length;
@@ -515,6 +516,7 @@ function aiPickDefender(P) {
 }
 function aiChooseAttackers(P) {
     const must = P.bf.filter(o => canAttackWith(o) && forcedAttack(o));
+    if (P.aiRandom) return [...new Set([...P.bf.filter(o => canAttackWith(o) && pow(o) > 0 && Math.random() < 0.5), ...must])]; // the lab's random baseline (level 'random')
     let chosen = [...new Set([...aiChooseAttackersFree(P), ...must])];
     const D = opp(P), cands = P.bf.filter(o => canAttackWith(o) && pow(o) > 0);
     if (P.aiStyle) chosen = [...new Set([...styleAttackers(P, chosen, cands, D), ...must])];
@@ -593,6 +595,7 @@ function aiChooseBlocks(D, A) {
     const free = D.bf.filter(o => isCreature(o) && !o.tapped);
     const blocks = {};
     const take = b => pull(free, b);
+    if (D.aiRandom) { atks.forEach(a => { const b = free.filter(x => canBlock(x, a))[0]; if (b && Math.random() < 0.4) { take(b); blocks[a.uid] = [b.uid]; } }); return blocks; } // random baseline
     let incoming = atks.reduce((s, a) => s + dmgOf(a), 0);
     const st = styleOf(D), blkTol = st ? st.blk : 0; // control and midrange block more eagerly, aggro less
     for (const atk of atks) {

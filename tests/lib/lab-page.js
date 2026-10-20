@@ -30,12 +30,13 @@ window.LAB = (() => {
             CARDS.set(s.id, s);
             if (c.edhrec_rank) s.rank = c.edhrec_rank;
         }
+        const tSlim = performance.now() - t0;
         L.pool = [...CARDS.values()].filter(c => !c.id.endsWith('-b') && c.layout !== 'token');
         L.basics = {};
         for (const [col, name] of Object.entries(BASIC_FOR)) { const c = L.pool.find(x => x.name === name && isBasic(x) && !/Snow/.test(x.type)); if (c) { L.basics[col] = c.id; BASIC_IDS[col] = c.id; } }
         L.auto = L.pool.filter(c => !isBasic(c) && ok.has(c.fullName) && rulesFor(c).support === 'full');
         L.loadMs = Math.round(performance.now() - t0);
-        return { cards: L.pool.length, automated: L.auto.length, ms: L.loadMs };
+        return { cards: L.pool.length, automated: L.auto.length, ms: L.loadMs, slimMs: Math.round(tSlim) };
     };
 
     const cmdPool = () => L.cmdPool || (L.cmdPool = L.auto.filter(c => /Legendary/.test(c.type) && /Creature/.test(c.type) && rulesFor(c).kind === 'creature' && c.legal.commander === 'legal' && c.ci.length >= 1 && c.ci.length <= 3 && c.cmc <= 7));
@@ -210,6 +211,8 @@ window.LAB = (() => {
             if (opts.deckA) { A = L.listDeck(opts.deckA); out.styles[0] = A.aiStyle || null; }
             A.aiLevel = opts.la || 'normal'; B.aiLevel = opts.lb || 'normal';
             more.forEach(d => { d.aiLevel = opts.lb || 'normal'; });
+            if (opts.levels) { const lv = String(opts.levels).split(','); [A, B, ...more].forEach((d, i) => { if (lv[i]) d.aiLevel = lv[i]; }); out.levels = [A, B, ...more].map(d => d.aiLevel); } // per-seat AI level: normal, hard, easy or random (the random baseline)
+            out.decks = [A, B, ...more].map(d => L.deckFeatures(d));
             out.cmds = [A, B, ...more].map(d => d.commander ? d.commander.name : d.name);
             out.a = A.commander ? A.commander.name : A.name; out.b = B.commander ? B.commander.name : B.name;
             if (more.length) out.pod = [A, B, ...more].map(d => d.commander ? d.commander.name : d.name);
@@ -235,9 +238,12 @@ window.LAB = (() => {
                 };
                 unprobe = () => { window.fire = of; };
             }
+            const stats = opts.stats === false ? null : L.collect(out, n);
             await newGame(A, B, null, more);
-            const limit = opts.timeout || 60000;
-            while (!window.lastResult && performance.now() - t0 < limit) await new Promise(r => setTimeout(r, 0));
+            const limit = opts.timeout || 60000, maxTurns = opts.maxTurns || 150;
+            while (!window.lastResult && performance.now() - t0 < limit && !(G.turn > maxTurns)) await new Promise(r => setTimeout(r, 0));
+            if (stats) stats.stop();
+            if (!window.lastResult && G.turn > maxTurns) { out.stalled = true; out.turns = G.turn; out.winner = null; out.reason = 'stalled past turn ' + maxTurns; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); window.lastResult = { stalled: true }; }
             if (!window.lastResult) { out.hang = true; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); out.turn = G.turn; out.phase = G.phase; out.diag = { pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
             else Object.assign(out, window.lastResult);
             if (opts.watch) { // a card with one enters-the-battlefield trigger: more triggers than entries means it fired twice (lab.js --watch "Card Name")
@@ -255,6 +261,39 @@ window.LAB = (() => {
         if (errs.length) out.errors = errs.slice(0, 3);
         out.ms = Math.round(performance.now() - t0);
         return out;
+    };
+    // A deck in numbers, for the report: lands, average mana value, how many of each kind, mana makers
+    L.deckFeatures = d => {
+        const kinds = {}; let n = 0, cmc = 0, lands = 0, ramp = 0, draw = 0, removal = 0;
+        (d.entries || []).forEach(({ card: c, n: k }) => { const r = rulesFor(c); kinds[r.kind] = (kinds[r.kind] || 0) + k; if (r.kind === 'land') { lands += k; return; } n += k; cmc += (c.cmc || 0) * k; if (r.mana) ramp += k; const t = String(c.text || ''); if (/\bdraws? (a|two|three|\d) cards?/i.test(t)) draw += k; if (/(destroy|exile) target|deals? \d+ damage to (any|target)/i.test(t)) removal += k; });
+        return { name: d.commander ? d.commander.name : d.name, style: d.aiStyle || null, ci: d.commander ? d.commander.ci.join('') : '', cmdCmc: d.commander ? d.commander.cmc : 0, lands, avgCmc: n ? +(cmc / n).toFixed(2) : 0, kinds, ramp, draw, removal };
+    };
+    // Per-game stats from the game's own events (no extra work in the engine): a snapshot of every seat at the start of its combat, plus counts
+    L.collect = (out, nPlayers) => {
+        const of = window.fire, oe = window.eliminate;
+        const seats = Array.from({ length: nPlayers }, () => ({ cast: 0, creat: 0, spell: 0, lands: 0, atk: 0, atkC: 0, hit: 0, lost: 0, arch: 0, tl: [] }));
+        const S = { seats, splits: 0, elim: [] };
+        out.stats = S;
+        window.fire = function (ev, ctx) {
+            try {
+                if (G && G.players) {
+                    if (ev === 'cast' && ctx && ctx.P && seats[ctx.P.i]) { const t = seats[ctx.P.i]; t.cast++; if (ctx.o && Rx(ctx.o).kind === 'creature') t.creat++; else t.spell++; }
+                    else if (ev === 'landfall' && ctx && ctx.o && seats[ctx.o.owner]) seats[ctx.o.owner].lands++;
+                    else if (ev === 'attacks' && ctx && ctx.list && ctx.list.length) { const t = seats[ctx.list[0].owner]; if (t) { t.atk++; t.atkC += ctx.list.length; if (new Set(ctx.list.map(o => o.atkTo)).size > 1) S.splits++; } }
+                    else if (ev === 'hitPlayer' && ctx && ctx.src && seats[ctx.src.owner]) seats[ctx.src.owner].hit += ctx.n || 0;
+                    else if (ev === 'dies' && ctx && ctx.o && seats[ctx.o.owner] && isCreature(ctx.o)) seats[ctx.o.owner].lost++;
+                    else if (ev === 'combat' && G.phase !== 'setup' && G.active != null && seats[G.active] && !G.players[G.active].out) {
+                        const P = G.players[G.active], cs = P.bf.filter(isCreature); let cap = 0;
+                        for (const x of P.bf) { const mo = manaOf(x); if (mo && !(isCreature(x) && x.sick && !has(x, 'haste'))) cap += mo.n || 1; }
+                        seats[G.active].tl.push([G.turn, P.life, cap, P.hand.length, cs.length, cs.reduce((a, x) => a + Math.max(0, pow(x)), 0), P.bf.filter(x => Rx(x).kind === 'land').length, G.players.filter(q => !q.out).length]);
+                        if (G.arch === G.active) seats[G.active].arch++;
+                    }
+                }
+            } catch (e) { /* stats must never break a game */ }
+            return of.apply(this, arguments);
+        };
+        if (typeof oe === 'function') window.eliminate = function (P) { try { S.elim.push({ seat: P.i, turn: G.turn, by: G.active }); } catch (e) { } return oe.apply(this, arguments); };
+        return { stop() { window.fire = of; if (oe) window.eliminate = oe; } };
     };
     // The calibration pool (cached): deterministic, so every page builds the same decks
     L.buildPool = () => {
