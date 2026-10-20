@@ -13,6 +13,11 @@ console.log(`${a ? 'PASS' : 'FAIL'} two-player games match the baseline and none
 console.log('== 40 four-player pods');
 const b = run(['--n', '40', '--conc', '3', '--kind', 'commander', '--players', '4', '--seed', '1', '--timeout', '30000']);
 console.log(`${b ? 'PASS' : 'FAIL'} four-player pods all finish with no errors`);
-ok = a && b;
-console.log(`lab: ${ok ? 2 : (a ? 1 : 0) + (b ? 1 : 0)}/2 passed`);
+console.log('== 12 pods with a random-baseline table, then the report');
+const c = run(['--n', '12', '--conc', '3', '--kind', 'commander', '--players', '4', '--seed', '1', '--levels', 'normal,random,random,random', '--timeout', '30000']);
+const rep = spawnSync('node', [path.join(__dirname, '..', 'lab_report.js')], { encoding: 'utf8' });
+const reportOk = rep.status === 0 && /Wins by AI level: .*random/.test(rep.stdout) && /What separates winners/.test(rep.stdout);
+console.log(`${c && reportOk ? 'PASS' : 'FAIL'} random-level seats play, and the report reads the games`);
+ok = a && b && c && reportOk;
+console.log(`lab: ${(a ? 1 : 0) + (b ? 1 : 0) + (c && reportOk ? 1 : 0)}/3 passed`);
 process.exit(ok ? 0 : 1);

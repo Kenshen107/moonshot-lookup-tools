@@ -735,7 +735,7 @@ TRIG_FN.enchantedAttack = (o, ctx) => (ctx.list || []).some(x => x.owner === o.o
 TRIG_FN.enchantedDies = (o, ctx) => { const n = allPerms().filter(a => a.attachedTo === ctx.o.uid && a.owner === o.owner && isAuraLike(a)).length; const any = allPerms().some(a => a.attachedTo === ctx.o.uid && isAuraLike(a)); if (!any) return false; ctx.o._hatefulN = n; return true; };
 TRIG_FN.auraOnModified = (o, ctx) => { const t = ctx.target; const x = t && t.o; return !!x && x.owner === o.owner && (x.counters > 0 || Object.values(x.ctr || {}).some(v => v > 0) || allPerms().some(a => a.attachedTo === x.uid)); };
 COUNT_EXTRA.push([/^(?:the number of )?instant and sorcery cards in your graveyard$/, () => o => G.players[o.owner].gy.filter(x => ['instant', 'sorcery'].includes(Rx(x).kind)).length]);
-COUNT_EXTRA.push([/^the number of Auras you control that are attached to a creature$/, () => o => G.players[o.owner].bf.filter(x => isAuraLike(x) && x.attachedTo && isCreature(onBf(x.attachedTo) || {})).length]);
+COUNT_EXTRA.push([/^the number of Auras you control that are attached to a creature$/, () => o => G.players[o.owner].bf.filter(x => isAuraLike(x) && x.attachedTo && (c => !!c && isCreature(c))(onBf(x.attachedTo))).length]);
 // An Aura (or Equipment) put onto the battlefield attaches to a creature its controller picks (the computer picks its best creature)
 async function attachTo(P, aura, label) {
     const pool = allPerms().filter(isCreature);

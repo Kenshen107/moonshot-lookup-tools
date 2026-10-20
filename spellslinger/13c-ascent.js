@@ -6,7 +6,7 @@ const ASCENT = { roster: null, byId: new Map(), byName: new Map(), loading: null
 const ASCENT_COPY_LIMIT = 4;
 const ASCENT_RARITIES = ['common', 'uncommon', 'rare', 'mythic']; // packs; 'trophy' cards (13d) are won only, one copy each
 // Aether: leftover copies dust into it, missing cards are crafted with it (foils count double when dusted, cost 2x to craft)
-const ASCENT_DUST = { common: 5, uncommon: 20, rare: 60, mythic: 200 };
+const ASCENT_DUST = { common: 3, uncommon: 10, rare: 30, mythic: 100 }; // halved 2026-10-19: Aether now comes in slower (a pack is about 100, not 200)
 const ASCENT_CRAFT = { common: 20, uncommon: 80, rare: 240, mythic: 800 };
 // How rarity is rolled in the open slots (weights, a game choice)
 const ASCENT_FOIL_SLOT = { common: 56, uncommon: 30, rare: 11, mythic: 3 };
@@ -23,6 +23,7 @@ async function loadAscentRoster() {
         const data = await r.json();
         ASCENT.roster = data.cards;
         data.cards.forEach(c => { ASCENT.byId.set(c.id, c); ASCENT.byName.set(c.name, c); });
+        if (typeof loadAscentPower === 'function') await loadAscentPower(); // the fitted deck-power weights (13i), optional
         return ASCENT.roster;
     })();
     return ASCENT.loading;

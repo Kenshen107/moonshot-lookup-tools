@@ -140,7 +140,7 @@ function scoreEffects(P, effects, target, src) {
                     score += theirs - ours > 5 ? theirs - ours : 0;
                 } else if (t && t.o) score += t.o.owner !== P.i && tou(t.o) - t.o.dmg <= e.n ? 6 + creatureValue(t.o) : 0;
                 break;
-            case 'destroy': case 'exile': score += t && t.o.owner !== P.i && permValue(t.o) >= 4 ? 7 + permValue(t.o) : 0; break;
+            case 'destroy': case 'exile': score += t && t.o && t.o.owner !== P.i && permValue(t.o) >= 4 ? 7 + permValue(t.o) : 0; break;
             case 'bounce': score += t && t.o.owner !== P.i && permValue(t.o) >= 6 ? 4 + permValue(t.o) / 2 : 0; break;
             case 'wipe': case 'massBounce': {
                 const hit = x => wipeMatches(x, e.what, P) && (e.t === 'massBounce' || e.how === 'exile' || !has(x, 'indestructible'));
@@ -423,7 +423,7 @@ function aiBestPlay(P) {
     }
     faces.forEach(([o]) => { o.card = o.front || o.card; o.overloaded = false; o.evoked = false; o.altCast = false; o.castAs = null; });
     if (!cands.length) return null;
-    const pick = P.aiLevel === 'easy' && Math.random() < 0.4 ? cands[rand(cands.length)] : cands.sort((a, b) => b.s - a.s)[0];
+    const pick = P.aiRandom || (P.aiLevel === 'easy' && Math.random() < 0.4) ? cands[rand(cands.length)] : cands.sort((a, b) => b.s - a.s)[0];
     pick.o.card = pick.face; // cast the half it chose
     pick.o.overloaded = pick.ov;
     pick.o.evoked = pick.ev;
@@ -505,6 +505,7 @@ async function aiMain(P) {
 function aiPickDefender(P) {
     const fs = foes(P);
     if (fs.length === 1) return fs[0];
+    if (P.aiRandom) return fs[rand(fs.length)];
     if (P.aiStyle || P.aiLevel !== 'easy') return podPickDefender(P);
     const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
     const blockers = F => F.bf.filter(o => isCreature(o) && !o.tapped).length;
@@ -515,6 +516,7 @@ function aiPickDefender(P) {
 }
 function aiChooseAttackers(P) {
     const must = P.bf.filter(o => canAttackWith(o) && forcedAttack(o));
+    if (P.aiRandom) return [...new Set([...P.bf.filter(o => canAttackWith(o) && pow(o) > 0 && Math.random() < 0.5), ...must])]; // the lab's random baseline (level 'random')
     let chosen = [...new Set([...aiChooseAttackersFree(P), ...must])];
     const D = opp(P), cands = P.bf.filter(o => canAttackWith(o) && pow(o) > 0);
     if (P.aiStyle) chosen = [...new Set([...styleAttackers(P, chosen, cands, D), ...must])];
@@ -567,7 +569,7 @@ function aiChooseAttackersFree(P) {
         if (D.life <= 6 && cands.length > blockers.length) return true;
         const ourPow = P.bf.filter(isCreature).reduce((s, o) => s + pow(o), 0);
         const theirPow = D.bf.filter(isCreature).reduce((s, o) => s + pow(o), 0);
-        return G.turn >= 14 && ourPow >= theirPow * 1.4 && cands.length >= blockers.length;
+        return G.turn >= tn(P, 'stallTurn') && ourPow >= theirPow * tn(P, 'stallRatio') && cands.length >= blockers.length;
     });
 }
 
@@ -593,6 +595,7 @@ function aiChooseBlocks(D, A) {
     const free = D.bf.filter(o => isCreature(o) && !o.tapped);
     const blocks = {};
     const take = b => pull(free, b);
+    if (D.aiRandom) { atks.forEach(a => { const b = free.filter(x => canBlock(x, a))[0]; if (b && Math.random() < 0.4) { take(b); blocks[a.uid] = [b.uid]; } }); return blocks; } // random baseline
     let incoming = atks.reduce((s, a) => s + dmgOf(a), 0);
     const st = styleOf(D), blkTol = st ? st.blk : 0; // control and midrange block more eagerly, aggro less
     for (const atk of atks) {
@@ -652,6 +655,7 @@ async function aiTurn(P) {
     if (typeof cmdForcedAttackers === 'function' && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...cmdForcedAttackers(P)])]; // Graaz: Juggernauts must attack
     for (let round = 0; round < 4 && attackers.length && !G.over; round++) {
         G.phase = 'declareAttackers';
+        aiAssignTargets(P, attackers);
         declareAttackers(P, attackers);
         await exertChoices(P, attackers);
         await settle();
@@ -660,19 +664,7 @@ async function aiTurn(P) {
         await actDrain();
         G.phase = 'declareBlocks';
         renderGame();
-        const D = opp(P);
-        const canDoAnything = D.bf.some(o => isCreature(o) && !o.tapped) || D.hand.some(o => canCastNow(D, o) && canPay(D, o));
-        if (D.isAI) {
-            await pause(400);
-            G.blocks = aiChooseBlocks(D, P);
-        } else if (canDoAnything) {
-            G.busy = false;
-            await new Promise(resolve => { G.mode = { type: 'block', who: D.i, picked: null, resolve }; renderGame(); });
-            G.busy = true;
-        } else {
-            await pause(700);
-        }
-        if (G.over) return;
+        if (!(await chooseBlocksAll(P, { aiPause: 400, idlePause: 700 })) || G.over) return;
         fixMenace(); fireBlocked();
         logBlocks();
         await aiNinjutsu(P);

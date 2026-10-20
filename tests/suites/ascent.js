@@ -46,7 +46,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             let rep = ascentAddCards([1, 2, 3, 4].map(() => ({ id: cm.id, foil: false })));
             ok('four copies are kept', st.owned[cm.id].n === 4 && rep.dusted.length === 0);
             rep = ascentAddCards([{ id: cm.id, foil: false }, { id: cm.id, foil: true }]);
-            ok('the 5th and 6th copy dust (foil counts double)', st.owned[cm.id].n === 4 && rep.aether === ASCENT_DUST.common * 3 && st.aether === 15, [st.aether, rep.aether]);
+            ok('the 5th and 6th copy dust (foil counts double)', st.owned[cm.id].n === 4 && rep.aether === ASCENT_DUST.common * 3 && st.aether === ASCENT_DUST.common * 3, [st.aether, rep.aether]);
             rep = ascentAddCards(Array.from({ length: 9 }, () => ({ id: base.id, foil: false })));
             ok('basic lands are unlimited and never dust', st.owned[base.id].n === 9 && rep.aether === 0);
             // crafting

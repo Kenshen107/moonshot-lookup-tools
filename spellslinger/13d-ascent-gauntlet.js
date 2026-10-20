@@ -74,6 +74,7 @@ function ascentArchScore(arch, c) {
         const tg = c.tags || [];
         if (tg.includes('etb-draw') || tg.includes('die-draw')) s += { control: 1.5, tempo: 1.5, value: 1.5, fliers: 1 }[arch] || 0.5;
         if (tg.includes('etb-burn')) s += arch === 'burn' ? 2 : 0.5;
+        if (c.kind === 'tempocreature') s += { tempo: 3.5, fliers: 2, control: 1.5, value: 1, stomp: 0.5, weenie: 0.5 }[arch] || 0;
         if (c.kind === 'lord' || c.kind === 'tokencreature') s += { weenie: 3.5, fliers: 1.5, value: 1.5, tempo: 1, control: 0.5 }[arch] || 0;
         if (tg.includes('pump-ability')) s += ['stomp', 'burn', 'weenie'].includes(arch) ? 1 : 0;
         if (tg.includes('etb-life') || tg.includes('die-life') || tg.includes('etb-drain')) s += ['value', 'control'].includes(arch) ? 1 : 0;
@@ -88,7 +89,7 @@ function ascentArchScore(arch, c) {
         const k = c.kind;
         if (k === 'rock') return ({ stomp: 3, tempo: 2.5, control: 2, value: 1.5, burn: 0.5, weenie: 0, fliers: 1 }[arch] || 0) + 1;
         if (k === 'ramp') return ({ stomp: 3, tempo: 2, control: 1.5, value: 2 }[arch] || 0) + 0.5;
-        const want = { stomp: { pump: 2, teamPump: 2, tokens: 1 }, weenie: { pump: 3, teamPump: 3, shrink: 1, tokens: 5, anthem: 5, grant: 2.5, destroy: 1, exile: 1 }, fliers: { pump: 3, bounce: 2, tokens: 2.5, anthem: 2.5, grant: 1.5 }, value: { destroy: 4, life: 2, draw: 2, recur: 3, exile: 4, tokens: 2 }, burn: { burn: 5, shrink: 3, draw: 2 }, control: { destroy: 5, exile: 5, bounce: 3, draw: 4, burn: 3, tokens: 1.5 }, tempo: { bounce: 5, draw: 3, pump: 1, shrink: 2, tokens: 1 } }[arch] || {};
+        const want = { stomp: { pump: 2, teamPump: 2, tokens: 1 }, weenie: { pump: 3, teamPump: 3, shrink: 1, tokens: 5, anthem: 5, grant: 2.5, destroy: 1, exile: 1 }, fliers: { pump: 3, bounce: 2, tokens: 2.5, anthem: 2.5, grant: 1.5, counter: 1.5, tap: 1.5 }, value: { destroy: 4, life: 2, draw: 2, recur: 3, exile: 4, tokens: 2, counter: 1.5 }, burn: { burn: 5, shrink: 3, draw: 2 }, control: { destroy: 5, exile: 5, bounce: 3, draw: 4, burn: 3, tokens: 1.5, counter: 5, tap: 2 }, tempo: { bounce: 5, draw: 3, pump: 1, shrink: 2, tokens: 1, counter: 5, tap: 3 } }[arch] || {};
         s += (want[k] || 0) - 1;
     }
     return s;
@@ -188,12 +189,22 @@ function ascentOpponentOpen(opp) {
 // White starts with a plan, not just small bodies: token makers, an anthem (the cheapest team boost in white) and two cheap fliers.
 // Lab check (100 games each, starter vs the easy opponent): W 89% vs Mick, 55% vs Annie, 72% vs Gus; without this help W won 47% / 20%.
 function ascentStarterHelp(color) {
+    if (color === 'U') {
+        // blue's plan: fliers to race, bounce and tempo to swing combat, a counterspell and some card flow
+        const u = ASCENT.roster.filter(c => c.colors === 'U'), by = (f, ...rar) => u.filter(c => f(c) && (!rar.length || rar.includes(c.rarity))).sort((a, b) => b.power - a.power || a.cmc - b.cmc || a.name.localeCompare(b.name));
+        const fly = by(c => c.type === 'creature' && (c.kws || []).includes('flying') && c.cmc <= 3 && !(c.tags || []).length, 'common', 'uncommon');
+        const tempo = by(c => c.kind === 'tempocreature' && c.cmc <= 3 && (c.tags || []).includes('etb-bounce'));
+        const bounce = by(c => c.kind === 'bounce' && c.cmc <= 3, 'common');
+        const draw = by(c => c.kind === 'draw' && c.cmc <= 3, 'common');
+        const counter = by(c => c.kind === 'counter' && c.cmc <= 2, 'common').sort((a, b) => b.n - a.n); // the biggest tax first (Mana Leak over Spell Pierce)
+        return [[fly[0], 2], [fly[1], 2], [tempo[0], 2], [bounce[0], 2], [draw[0], 1], [counter[0], 1]].filter(x => x[0]);
+    }
     if (color !== 'W') return [];
     const w = ASCENT.roster.filter(c => c.colors === 'W');
     const toks = w.filter(c => c.kind === 'tokens' && c.cmc <= 3 && c.rarity !== 'mythic').sort((a, b) => b.power - a.power || a.name.localeCompare(b.name));
     const anth = w.filter(c => c.kind === 'anthem').sort((a, b) => a.cmc - b.cmc || b.power - a.power || a.name.localeCompare(b.name));
     const fly = w.filter(c => c.type === 'creature' && c.rarity === 'uncommon' && (c.kws || []).includes('flying') && c.cmc <= 3 && !(c.tags || []).length).sort((a, b) => b.power - a.power || a.cmc - b.cmc || a.name.localeCompare(b.name));
-    return [[toks[0], 3], [toks[1], 2], [anth[0], 2], [fly[0], 2], [fly[1], 2]].filter(x => x[0]);
+    return [[toks[0], 3], [toks[1], 1], [anth[0], 1], [fly[0], 1], [fly[1], 1]].filter(x => x[0]);
 }
 // The cards of a starter deck (no state changed): { cards: id -> count, basicId }
 function ascentStarterCards(color) {

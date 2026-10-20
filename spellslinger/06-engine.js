@@ -14,7 +14,7 @@ function makeObj(card, owner, extra) {
     // counters: net +1/+1 (negative = -1/-1; the two cancel, rule 704.5q); ctr: other named counters
     return Object.assign({ uid: uidSeq++, card, front: card, owner, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, token: false, isCommander: false }, extra || {});
 }
-const Rx = o => rulesFor(o.card);
+const Rx = o => o.card._r || rulesFor(o.card);
 // The player holding the device (G.view; always 0 except in a pass-and-play game) and the other one
 const me = () => G.players[G.view || 0];
 // The opponent whose board and bar are shown: the only one in a 1v1; in a pod, the one you tapped, else whose turn it is, else the one being attacked
@@ -42,8 +42,21 @@ function opp(P) {
     if (G.defender != null && !G.players[G.defender].out) { if (P.i === G.active && P.i !== G.defender) return G.players[G.defender]; if (P.i === G.defender) return G.players[G.active]; }
     return seatAfter(P.i);
 }
-const allPerms = () => G.players.flatMap(P => P.bf);
-const onBf = uid => allPerms().find(o => o.uid === uid) || null;
+// allPerms() is called inside every power / keyword / static check, so its list is kept until a battlefield changes (2026-10-20, lab profile:
+// it was 29% of a 4-player game). Each player's `bf` array counts its own changes (watchBf); a replaced array or a changed length is noticed too.
+// The returned array is shared: don't change it (copy with [...allPerms()] first).
+let permVer = 0, permCache = null, permCacheVer = -1, permCacheN = -1, permCacheG = null;
+const WATCHED = ['push', 'splice', 'unshift', 'pop', 'shift', 'sort', 'reverse', 'fill', 'copyWithin'];
+function watchBf(arr) { WATCHED.forEach(m => { const f = Array.prototype[m]; Object.defineProperty(arr, m, { value: function (...a) { permVer++; return f.apply(this, a); }, enumerable: false, configurable: true, writable: true }); }); permVer++; return arr; }
+function allPerms() {
+    const ps = G.players; let n = 0;
+    for (let i = 0; i < ps.length; i++) n += ps[i].bf.length;
+    if (permCache !== null && permCacheVer === permVer && permCacheN === n && permCacheG === G) return permCache;
+    const out = []; for (let i = 0; i < ps.length; i++) { const b = ps[i].bf; for (let j = 0; j < b.length; j++) out.push(b[j]); }
+    permCache = out; permCacheVer = permVer; permCacheN = n; permCacheG = G;
+    return out;
+}
+const onBf = uid => { const ps = G.players; for (let i = 0; i < ps.length; i++) { const b = ps[i].bf; for (let j = 0; j < b.length; j++) if (b[j].uid === uid) return b[j]; } return null; };
 function findObj(uid) {
     const onStack = G.stack.find(it => it.kind === 'spell' && it.o.uid === uid);
     if (onStack) return onStack.o;
@@ -54,16 +67,19 @@ const ctrl = o => G.players[o.owner];
 const isCreature = o => !o.enchOnly && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
 function buffsOn(o) {
     const b = { p: 0, q: 0, kw: [] };
-    allPerms().forEach(a => {
-        if (a.attachedTo !== o.uid || !(Rx(a).buff || Rx(a).buffCond)) return;
+    const perms0 = allPerms();
+    for (let pi = 0; pi < perms0.length; pi++) {
+        const a = perms0[pi];
+        if (a.attachedTo !== o.uid) continue;
+        if (!(Rx(a).buff || Rx(a).buffCond)) continue;
         const R = Rx(a);
         if (R.buffCond && condOk(R.buffCond.cond, ctrl(a), a)) b.kw.push(...R.buffCond.kw);
-        if (!R.buff) return;
+        if (!R.buff) continue;
         b.p += R.buff.p; b.q += R.buff.q; b.kw.push(...R.buff.kw);
         if (R.buffCmdr) { const x = Math.max(0, ...[...G.players[a.owner].command, ...G.players[a.owner].bf].filter(c => c.isCommander && c.owner === a.owner).map(c => c.card.cmc || 0)); b.p += x; b.q += x; } // Tangleweave Armor
         if (R.buffPer) { const k = countFn(R.buffPer.what)(R.buffPer.host ? o : a); b.p += R.buffPer.p * k; b.q += R.buffPer.q * k; }
         if (R.eidolon) { const k = eidolonN(a); b.p += k; b.q += k; } // Eidolon of Countless Battles, on its host
-    });
+    }
     if (G && !lostAbilities(o)) {
         if (Rx(o).eidolon) { const k = eidolonN(o); b.p += k; b.q += k; }
         if (Rx(o).spiritdancer) { const k = allPerms().filter(a => a.attachedTo === o.uid && (hasType(a, 'Aura') || a.bestowed)).length; b.p += 2 * k; b.q += 2 * k; } // Kor Spiritdancer
@@ -126,7 +142,7 @@ function basePT(o, which) {
 const pow = o => basePT(o, 'p') + o.counters + o.tp + buffsOn(o).p;
 const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q;
 const hasBase = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (k === 'indestructible' && !!o.ctr && o.ctr.indestructible > 0) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
-const has = (o, k) => (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
+const has = (o, k) => (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
 const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackCond && !condOk(Rx(o).attackCond, ctrl(o), o)) && !(typeof cmdCantAttack === 'function' && cmdCantAttack(o)) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !has(o, 'defender') && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
@@ -146,7 +162,8 @@ const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, startLife: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
         landsPlayed: 0, tax: 0, cmdDmg: 0, cmdBy: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
-        aiLevel: deck.aiLevel || 'normal', aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
+        aiLevel: deck.aiLevel === 'random' ? 'easy' : deck.aiLevel || 'normal', aiRandom: deck.aiLevel === 'random', aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
+    { let bfArr = watchBf(P.bf); Object.defineProperty(P, 'bf', { enumerable: true, configurable: true, get() { return bfArr; }, set(v) { bfArr = watchBf(v); } }); } // see allPerms
     { let lifeNow = P.life; Object.defineProperty(P, 'life', { enumerable: true, configurable: true, get() { return lifeNow; }, set(v) { if (v > lifeNow && typeof noLifeGainActive === 'function' && noLifeGainActive()) return; lifeNow = v; } }); } // "Players can't gain life" (Rampaging Ferocidon)
     trackGraveyard(P);
     deck.entries.forEach(e => { for (let k = 0; k < e.n; k++) P.library.push(makeObj(e.card, i)); });
@@ -441,6 +458,7 @@ function umbraSave(o) {
 }
 function destroy(o, why) {
     if (has(o, 'indestructible')) { log(`${o.card.name} is indestructible.`); return; }
+    if (o.ctr && o.ctr.shield > 0) { o.ctr.shield--; log(`${o.card.name} loses a shield counter instead of being destroyed.`); return; }
     if (o.regen) { o.regen--; o.tapped = true; o.dmg = 0; G.attackers = G.attackers.filter(u => u !== o.uid); log(`${o.card.name} regenerates (rule 701.19).`); return; }
     if (umbraSave(o)) return;
     log(`${o.card.name} ${why || 'is destroyed'}.`);
@@ -458,6 +476,13 @@ function damage(target, n, src) {
     { const owner = target.life !== undefined ? target : (target.card && target.uid !== undefined ? G.players[target.owner] : null);
       if (owner && owner.hsRedirect && owner.hsRedirect.turn === G.turn && target.uid !== owner.hsRedirect.uid && (target.life !== undefined || isCreature(target))) { const ch = onBf(owner.hsRedirect.uid); if (ch) { log(`${n} damage is dealt to ${ch.card.name} instead (Heroic Sacrifice).`); damage(ch, n, src); return; } } }
     if (target.card && isCreature(target) && allPerms().some(a => a.attachedTo === target.uid && Rx(a).pantherHabit && !lostAbilities(a)) && G.noPrevent !== G.turn) { log(`${n} damage to ${target.card.name} is prevented and becomes ${n} +1/+1 counter${n === 1 ? '' : 's'} (Panther Habit).`); putCounters(target, n, G.players[target.owner]); return; }
+    // Eerie Interference / Surge of Salvation (Odric deck), shield counters
+    { const own = target.life !== undefined ? target : (target.card && target.uid !== undefined ? G.players[target.owner] : null);
+      if (own && src && src.card && G.noPrevent !== G.turn && (target.life !== undefined || isCreature(target))) {
+          if (own.eerieTurn === G.turn && src.uid !== undefined && isCreature(src)) { log(`${n} damage from ${src.card.name} is prevented (Eerie Interference).`); return; }
+          if (own.surgeTurn === G.turn && target.life === undefined && (src.card.colors || []).some(c => c === 'B' || c === 'R')) { log(`${n} damage from ${src.card.name} is prevented (Surge of Salvation).`); return; }
+      }
+      if (target.card && target.uid !== undefined && target.ctr && target.ctr.shield > 0 && G.noPrevent !== G.turn) { target.ctr.shield--; log(`${target.card.name} loses a shield counter instead of being dealt ${n} damage.`); return; } }
     n = preconDamage(target, n, src); if (n <= 0) return;
     // The Mindskinner: damage a source you control would deal to an opponent is prevented; each opponent mills that many cards
     if (target.life !== undefined && src && src.card && src.uid !== undefined && G.players[src.owner] && src.owner !== target.i && G.players[src.owner].bf.some(a => Rx(a).mindskin && !lostAbilities(a))) { log(`${n} damage from ${src.card.name} is prevented (The Mindskinner).`); foes(G.players[src.owner]).forEach(F => doMill(F, n)); return; } // replacement and prevention effects of the precon rounds (15b-precon-effects.js)
@@ -626,6 +651,7 @@ function manaOf(o) {
     const R = Rx(o);
     let m = R.mana;
     if (!G || !o.uid) return m;
+    if (m && m.devotionBest) { const X0 = G.players[o.owner]; let bc = 'W', bn = -1; for (const c of COLORS) { const d = devotion(X0, [c]); if (d > bn) { bn = d; bc = c; } } return bn > 0 ? { colors: [bc], n: bn, fixed: true } : { colors: ['W'], n: 0 }; } // Nyx Lotus
     if (m && G && m.colors && m.colors.length === 1 && m.colors[0] === 'C' && o.uid) { const k = G.players[o.owner].bf.filter(a => Rx(a).monumentC && !lostAbilities(a)).length; if (k) m = { ...m, n: (m.n || 1) + k }; } // Forsaken Monument: an additional {C}
     if (m && /\bLand\b/.test(o.card.type)) { // Virtue of Strength: a basic land makes three times as much; Regal Behemoth: the monarch's lands add one more mana of any color
         const X1 = G.players[o.owner];
@@ -942,7 +968,7 @@ async function payAddCost(P, o) {
         const life = !others.length || (P.life > a.orLife && (P.isAI ? P.life > 10 : !(await askYes(P, `${o.card.name}: discard a card? (Cancel = pay ${a.orLife} life instead)`, { card: o.card, yes: 'Discard a card', no: `Pay ${a.orLife} life` }))));
         if (life) { P.life -= a.orLife; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${a.orLife} life to cast ${o.card.name}.`); return; }
     }
-    if (a.discard) { const d = P.hand.filter(x => x !== o).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} to cast ${o.card.name}.`); }
+    if (a.discard) { const d = P.hand.filter(x => x !== o).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0]; if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} to cast ${o.card.name}.`);  } }
     if (a.life) { P.life -= a.life; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${a.life} life to cast ${o.card.name}.`); }
 }
 const xMult = o => Rx(o).cost.xn || 1;
@@ -1141,7 +1167,7 @@ function validTargets(P, e, src) {
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'spellOrCreature') { out.push(...creatures.map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); }
-    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(p.protAll && G.turn < p.protAll) && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a)))).map(p => ({ p })));
+    if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(p.protAll && G.turn < p.protAll) && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a))) && !(p !== P && p.hexTurn === G.turn)).map(p => ({ p })));
     if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P) && !(e.filter === 'oppInstSorc' && it.P === P) && !(e.filter === 'myInstSorc' && it.P !== P) && !(e.filter === 'targetsMine' && !(it.target && it.target.o && it.target.o.owner === P.i))).map(item => ({ item })));
     return out;
 }
@@ -3905,14 +3931,17 @@ function attackTax(P) {
 }
 function declareAttackers(P, list) {
     if (G.players.length > 2 && (G.defender == null || G.players[G.defender].out)) G.defender = aiPickDefender(P).i; // the player this attack goes at
+    if (G.players.length > 2) list.forEach(o => { if (o.atkTo == null || !G.players[o.atkTo] || G.players[o.atkTo].out || o.atkTo === P.i) o.atkTo = G.defender; }); // each attacker has its own target player
     if (typeof cmdAttackFilter === 'function') list = cmdAttackFilter(P, list);
     if (list.length === 1 && has(list[0], 'notalone')) { log(`${list[0].card.name} can't attack alone.`); list = []; }
-    const tax = list.length ? attackTax(P) : 0;
-    if (tax) {
-        let n = list.length;
-        while (n > 0 && !planPayment(P, parseCost(''), tax * n)) n--;
-        if (n < list.length) { log(`${P.name} can only pay the attack tax for ${n} creature${n === 1 ? '' : 's'}.`); list = list.slice().sort((a, b) => pow(b) - pow(a)).slice(0, n); }
-        if (n) { planPayment(P, parseCost(''), tax * n).forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${tax * n}} to attack.`); }
+    const taxFor = o => { if (G.players.length === 2 || o.atkTo == null || o.atkTo === G.defender) return attackTax(P); const old = G.defender; G.defender = o.atkTo; try { return attackTax(P); } finally { G.defender = old; } }; // Propaganda and friends belong to the player an attacker goes at
+    const taxOf = l => l.reduce((a, o) => a + taxFor(o), 0);
+    if (list.length && taxOf(list)) {
+        let cur = list.slice().sort((a, b) => pow(b) - pow(a));
+        while (cur.length && !planPayment(P, parseCost(''), taxOf(cur))) cur.pop();
+        const n = cur.length;
+        if (n < list.length) { log(`${P.name} can only pay the attack tax for ${n} creature${n === 1 ? '' : 's'}.`); list = cur; }
+        if (n) { const tax = taxOf(cur); planPayment(P, parseCost(''), tax).forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${tax}} to attack.`); }
     }
     // Nils, Discipline Enforcer: a creature with counters pays {X} (its counters) to attack its controller's opponent who controls Nils
     list = list.filter(o => { const k = (o.counters > 0 ? o.counters : 0) + Object.entries(o.ctr || {}).filter(([n]) => n !== 'loyalty' && n !== 'defense').reduce((s, [, v]) => s + (v > 0 ? v : 0), 0); if (!k) return true; if (!foes(P).some(F => (G.players.length === 2 || G.defender === F.i) && F.bf.some(x => Rx(x).nilsTax && !lostAbilities(x)))) return true; const plan = planPayment(P, parseCost(''), k); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${k}} (Nils).`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${k}} for ${o.card.name} to attack (Nils).`); return true; });
@@ -3920,13 +3949,14 @@ function declareAttackers(P, list) {
     list = list.filter(o => { if (!Rx(o).protoTax || o.counters <= 0) return true; const plan = planPayment(P, parseCost(''), o.counters); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${o.counters}}.`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${o.counters}} for ${o.card.name} to attack.`); return true; });
     list = list.filter(o => { const t = auraTaxOn(o); if (!t) return true; const plan = planPayment(P, parseCost(''), t); if (!plan) { log(`${o.card.name} can't attack - ${P.name} can't pay {${t}}.`); return false; } plan.forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${t}} for ${o.card.name} to attack.`); return true; });
     G.attackedN = { turn: G.turn, p: P.i, n: list.length };
-    if (list.length) (G.players.length === 2 ? [opp(P)] : [G.players[G.defender]]).filter(Boolean).forEach(D => { D.attackedAt = G.turn; D.attackedBy = P.i; }); // "a player attacked you during their last turn"
-    if (G.players.length > 2 && list.length) politicsAttacked(P, G.players[G.defender], list.length);
+    const hitPlayers = G.players.length === 2 ? [opp(P)] : [...new Set(list.map(o => o.atkTo))].map(i => G.players[i]);
+    if (list.length) hitPlayers.filter(Boolean).forEach(D => { D.attackedAt = G.turn; D.attackedBy = P.i; }); // "a player attacked you during their last turn"
+    if (G.players.length > 2 && list.length) hitPlayers.forEach(D => politicsAttacked(P, D, list.filter(o => o.atkTo === D.i).length));
     G.attackers = list.map(o => o.uid);
     list.forEach(o => { o.attackedTurn = G.turn; if (has(o, 'decayed')) o.sacEndCombat = true; }); // decayed: sacrificed at end of combat
     list.forEach(o => { if (!has(o, 'vigilance')) { o.tapped = true; fire('tapped', { o }); } });
     G.blocks = {};
-    log(`${P.name} ${you(P) ? 'attack' : 'attacks'} with ${list.map(o => `${o.card.name}${o.attackPW && onBf(o.attackPW) ? ` (at ${onBf(o.attackPW).card.name})` : ''}`).join(', ')}.`);
+    log(`${P.name} ${you(P) ? 'attack' : 'attacks'} with ${list.map(o => `${o.card.name}${o.attackPW && onBf(o.attackPW) ? ` (at ${onBf(o.attackPW).card.name})` : hitPlayers.length > 1 && G.players[o.atkTo] ? ` (at ${G.players[o.atkTo].name})` : ''}`).join(', ')}.`);
     // Exalted: a creature attacking alone gets +1/+1 for each exalted instance (702.83)
     if (list.length === 1) { const n = P.bf.filter(o => has(o, 'exalted')).length; if (n) { list[0].tp += n; list[0].tq += n; log(`Exalted: ${list[0].card.name} gets +${n}/+${n} until end of turn.`); } }
     fire('attacks', { list });
@@ -3957,6 +3987,7 @@ function blockTaxFix() {
     if (drop.length) log(`${drop.length} block${drop.length === 1 ? '' : 's'} can't be made - the {${per}} each isn't paid (${taxers[0].card.name}).`);
 }
 function fixMenace() {
+    if (typeof odricActive === 'function' && odricActive()) odricBlocks();
     preconLure();
     blockTaxFix();
     Object.entries(G.blocks).forEach(([a, bs]) => {
@@ -3967,13 +3998,13 @@ function fixMenace() {
     });
     // "Must be blocked this turn if able": one creature able to block it does
     G.attackers.map(onBf).filter(o => o && has(o, 'mustbeblocked') && !(G.blocks[o.uid] || []).length).forEach(atk => {
-        const D = opp(G.players[atk.owner]);
+        const D = atkDef(atk);
         const free = D.bf.find(b => canBlock(b, atk) && !Object.values(G.blocks).some(bs => bs.includes(b.uid)));
         if (free) { (G.blocks[atk.uid] = G.blocks[atk.uid] || []).push(free.uid); log(`${free.card.name} must block ${atk.card.name}.`); }
     });
     const lure = G.attackers.map(onBf).find(o => o && has(o, 'lure'));
     if (lure) {
-        const D = opp(G.players[lure.owner]);
+        const D = atkDef(lure);
         D.bf.filter(b => canBlock(b, lure)).forEach(b => {
             if ((G.blocks[lure.uid] || []).includes(b.uid)) return;
             Object.keys(G.blocks).forEach(k => { G.blocks[k] = G.blocks[k].filter(u => u !== b.uid); if (!G.blocks[k].length) delete G.blocks[k]; });
@@ -3986,6 +4017,7 @@ function fixMenace() {
 }
 function combatDamage(A) {
     const D = opp(A);
+    const defOf = atk => (atk.atkTo != null && G.players[atk.atkTo] && !G.players[atk.atkTo].out) ? G.players[atk.atkTo] : D; // attackers can each go at a different opponent
     const atks = G.attackers.map(onBf).filter(Boolean);
     const blockersOf = atk => (G.blocks[atk.uid] || []).map(onBf).filter(Boolean);
     const everyone = [...atks, ...atks.flatMap(blockersOf)];
@@ -4002,7 +4034,7 @@ function combatDamage(A) {
                 let dmg = pow(atk);
                 if (dmg > 0) {
                     const pw = atk.attackPW && onBf(atk.attackPW);
-                    if (!blocked) events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : D, dmg]);
+                    if (!blocked) events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : defOf(atk), dmg]);
                     else {
                         blks.forEach((b, i) => {
                             if (dmg <= 0) return;
@@ -4011,7 +4043,7 @@ function combatDamage(A) {
                             if (give > 0) events.push([atk, b, give]);
                             dmg -= give;
                         });
-                        if (dmg > 0 && has(atk, 'trample')) { const pw = atk.attackPW && onBf(atk.attackPW); events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : D, dmg]); }
+                        if (dmg > 0 && has(atk, 'trample')) { const pw = atk.attackPW && onBf(atk.attackPW); events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : defOf(atk), dmg]); }
                     }
                 }
             }
@@ -4037,11 +4069,16 @@ function combatDamage(A) {
         // Freerunning (702.173): an Assassin or commander dealt combat damage to a player this turn
         events.filter(([src, t]) => t.life !== undefined && (hasType(src, 'Assassin') || src.isCommander)).forEach(([src]) => { G.players[src.owner].freerunTurn = G.turn; });
         [...new Set(events.filter(([, t]) => t.life !== undefined).map(([src]) => src))].forEach(src => {
-            if (G.monarch === D.i && src.owner !== D.i) { G.monarch = src.owner; log(`${G.players[src.owner].name} ${you(G.players[src.owner]) ? 'become' : 'becomes'} the monarch.`); }
-            if (Rx(src).toxic) { D.poison += Rx(src).toxic; log(`${src.card.name}: toxic ${Rx(src).toxic} (${D.name} ${you(D) ? 'have' : 'has'} ${D.poison} poison).`); }
+            [...new Set(events.filter(([s2, t]) => s2 === src && t.life !== undefined).map(([, t]) => t))].forEach(H => {
+                if (G.monarch === H.i && src.owner !== H.i) { G.monarch = src.owner; log(`${G.players[src.owner].name} ${you(G.players[src.owner]) ? 'become' : 'becomes'} the monarch.`); }
+                if (Rx(src).toxic) { H.poison += Rx(src).toxic; log(`${src.card.name}: toxic ${Rx(src).toxic} (${H.name} ${you(H) ? 'have' : 'has'} ${H.poison} poison).`); }
+            });
             fire('hitPlayer', { src, n: events.filter(([s2, t]) => s2 === src && t.life !== undefined).reduce((a, [, , n]) => a + n, 0) });
         });
-        if (toPlayer) { log(`${D.name} ${you(D) ? 'take' : 'takes'} ${toPlayer} combat damage.`); D.combatHitTurn = G.turn; }
+        [...new Set(events.filter(([, t]) => t.life !== undefined).map(([, t]) => t))].forEach(H => {
+            const n = events.filter(([, t]) => t === H).reduce((a, [, , k]) => a + k, 0);
+            if (n) { log(`${H.name} ${you(H) ? 'take' : 'takes'} ${n} combat damage.`); H.combatHitTurn = G.turn; }
+        });
         if (toPlayer) fire('combatHitAny', { P: A, list: [...new Set(events.filter(([, t]) => t.life !== undefined).map(([src]) => src))] });
         // Cipher (702.99): a creature with an encoded spell casts a copy when it hits a player
         events.filter(([src, t]) => t.life !== undefined && src.ciphered && src.ciphered.length).forEach(([src]) => src.ciphered.forEach(c => { (G.trigQ = G.trigQ || []).push({ P: A, o: src, effects: rulesFor(c).spell || [] }); log(`${src.card.name} casts a copy of ${c.name} (cipher).`); }));
@@ -4050,7 +4087,7 @@ function combatDamage(A) {
         sba();
         if (G.over) return;
     }
-    atks.forEach(a => { delete a.attackPW; });
+    atks.forEach(a => { delete a.attackPW; delete a.atkTo; });
     [...new Set([...G.attackers, ...Object.values(G.blocks || {}).flat()])].map(onBf).filter(x => x && Rx(x).clockwork && x.counters > 0 && !lostAbilities(x)).forEach(x => { x.counters--; log(`${x.card.name} loses a +1/+1 counter (end of combat).`); });
     allPerms().filter(o => o.sacEndCombat).forEach(o => { log(`${o.card.name} is sacrificed at end of combat.`); dieOrLeave(o, 'gy'); });
     G.attackers = [];
@@ -4194,7 +4231,7 @@ async function endTurn(P) {
     sba();
     // Daretti's emblem; Treasure Nabber's borrowed artifacts go back
     G.players.forEach(X => X.gy.filter(o => o.returnAtEnd).forEach(o => { o.returnAtEnd = false; log(`${o.card.name} returns to the battlefield (Daretti's emblem).`); putOntoBattlefield(X, o, false); }));
-    allPerms().filter(o => o.nabbedUntil === G.turn).forEach(o => { const from = G.players[o.owner], to = G.players[o.realOwner]; pull(from.bf, o); o.owner = o.realOwner; delete o.realOwner; delete o.nabbedUntil; to.bf.push(o); log(`${o.card.name} returns to ${to.name}.`); });
+    allPerms().filter(o => o.nabbedUntil === G.turn).forEach(o => { const from = G.players[o.owner], to = G.players[o.realOwner]; if (!to) { delete o.nabbedUntil; return; } pull(from.bf, o); o.owner = o.realOwner; delete o.realOwner; delete o.nabbedUntil; to.bf.push(o); log(`${o.card.name} returns to ${to.name}.`); });
     allPerms().filter(o => o.exileAtEnd === G.turn).forEach(o => { leaveBattlefield(o, 'exile'); });
     allPerms().filter(o => o.warpExile === G.turn).forEach(o => { log(`${o.card.name} is exiled (warp); it can be cast from exile on a later turn.`); leaveBattlefield(o, 'exile'); if (G.players[o.owner].exile.includes(o)) o.warpedTurn = G.turn; });
     allPerms().filter(o => o.copyOf && o.copyTurn === G.turn).forEach(o => { o.card = o.copyOf; delete o.copyOf; delete o.copyTurn; log(`${o.card.name} is itself again.`); });
@@ -4396,11 +4433,20 @@ async function confirmAttack() {
     me().bf.filter(o => canAttackWith(o) && forcedAttack(o) && !sel.includes(o)).forEach(o => sel.push(o)); // they must attack if able
     G.mode = null;
     if (!sel.length) { G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame(); return; }
-    const pws = [...foe().bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me())), ...me().bf.filter(isBattle)];
-    if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
+    const pod = G.players.length > 2 && foes(me()).length > 1;
+    const pws = pod ? [...foes(me()).flatMap(F => F.bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me()))), ...me().bf.filter(isBattle)] : [...foe().bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me())), ...me().bf.filter(isBattle)];
+    if (pod) { const ok = await choosePodTargets(sel, foes(me()), pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
+    else if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
     G.busy = true;
-    if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected
-    if (G.players.length > 2 && hasPeace(me().i, G.defender) && !(await askYes(me(), `You have a peace deal with ${nm(foe())}. Attack anyway? (You break your word and they will remember.)`, { card: foe().command[0] && foe().command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
+    if (pod) { // the player most of the attackers go at is the main defender; ask about each peace deal that would be broken
+        const cnt = {}; sel.forEach(o => { cnt[o.atkTo] = (cnt[o.atkTo] || 0) + 1; });
+        G.defender = Number(Object.entries(cnt).sort((a, b) => b[1] - a[1])[0][0]);
+        for (const i of Object.keys(cnt).map(Number)) {
+            const F = G.players[i];
+            if (hasPeace(me().i, i) && !(await askYes(me(), `You have a peace deal with ${nm(F)}. Attack anyway? (You break your word and they will remember.)`, { card: F.command[0] && F.command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { sel.forEach(o => { delete o.atkTo; delete o.attackPW; }); G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
+        }
+    } else if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected
+    if (!pod && G.players.length > 2 && hasPeace(me().i, G.defender) && !(await askYes(me(), `You have a peace deal with ${nm(foe())}. Attack anyway? (You break your word and they will remember.)`, { card: foe().command[0] && foe().command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
     declareAttackers(me(), sel);
     await exertChoices(me(), sel);
     G.phase = 'declareBlocks';
@@ -4408,15 +4454,7 @@ async function confirmAttack() {
     await pause(400);
     await settle();
     if (G.over) return;
-    const att = me(), D = foe();
-    if (D.isAI && D.aiLevel === 'hard') { await aiRemoveAttacker(D); if (G.over) return; }
-    if (D.isAI) G.blocks = aiChooseBlocks(D, att);
-    else if (D.bf.some(o => isCreature(o) && !o.tapped) || D.hand.some(o => canCastNow(D, o) && canPay(D, o))) {
-        G.busy = false;
-        await new Promise(resolve => { G.mode = { type: 'block', who: D.i, picked: null, resolve }; renderGame(); });
-        G.busy = true;
-        if (G.over) return;
-    }
+    if (!(await chooseBlocksAll(me(), { hardRemoval: true }))) return;
     fixMenace(); fireBlocked();
     logBlocks();
     fire('blocks', { list: Object.values(G.blocks).flat().map(onBf).filter(Boolean) });

@@ -30,12 +30,13 @@ window.LAB = (() => {
             CARDS.set(s.id, s);
             if (c.edhrec_rank) s.rank = c.edhrec_rank;
         }
+        const tSlim = performance.now() - t0;
         L.pool = [...CARDS.values()].filter(c => !c.id.endsWith('-b') && c.layout !== 'token');
         L.basics = {};
         for (const [col, name] of Object.entries(BASIC_FOR)) { const c = L.pool.find(x => x.name === name && isBasic(x) && !/Snow/.test(x.type)); if (c) { L.basics[col] = c.id; BASIC_IDS[col] = c.id; } }
         L.auto = L.pool.filter(c => !isBasic(c) && ok.has(c.fullName) && rulesFor(c).support === 'full');
         L.loadMs = Math.round(performance.now() - t0);
-        return { cards: L.pool.length, automated: L.auto.length, ms: L.loadMs };
+        return { cards: L.pool.length, automated: L.auto.length, ms: L.loadMs, slimMs: Math.round(tSlim) };
     };
 
     const cmdPool = () => L.cmdPool || (L.cmdPool = L.auto.filter(c => /Legendary/.test(c.type) && /Creature/.test(c.type) && rulesFor(c).kind === 'creature' && c.legal.commander === 'legal' && c.ci.length >= 1 && c.ci.length <= 3 && c.cmc <= 7));
@@ -46,7 +47,9 @@ window.LAB = (() => {
         const commander = pickOf(cmdPool());
         const ci = commander.ci;
         const cand = L.auto.filter(c => c.legal.commander === 'legal' && c.id !== commander.id && inCI(c, ci) && rulesFor(c).kind !== 'land' && c.cmc < 7);
-        const pool = style ? styleSort(style, shuf(cand), 3, rnd) : shuf(cand);
+        // L.ranked (--decks ranked): only the 260 most played cards (EDHREC rank) in the colors, so decks look like real ones; the style still orders them
+        const base = L.ranked ? cand.filter(c => c.rank).sort((x, y) => x.rank - y.rank).slice(0, 260) : cand;
+        const pool = style ? styleSort(style, shuf(base), 3, rnd) : shuf(base);
         const caps = style ? PLAYSTYLES[style].caps : CAPS;
         const lands = shuf(L.auto.filter(c => c.legal.commander === 'legal' && inCI(c, ci) && /Land/.test(c.type) && rulesFor(c).mana)).slice(0, ci.length > 1 ? 8 : 3);
         const picked = [], counts = {}, seen = new Set();
@@ -140,7 +143,10 @@ window.LAB = (() => {
         const errs = [];
         const onErr = e => errs.push(String(e.message || e));
         window.addEventListener('error', onErr);
+        const onRej = e => errs.push('unhandled rejection: ' + String((e.reason && e.reason.stack) || e.reason).split('\n').slice(0, 4).join(' | '));
+        window.addEventListener('unhandledrejection', onRej);
         try {
+            L.ranked = opts.decks === 'ranked';
             const kind = opts.kind === 'mix' ? (opts.seed % 2 ? 'modern' : 'commander') : opts.kind; out.kind = kind;
             const build = kind === 'modern' ? L.modernDeck : L.commanderDeck;
             // Styles: 'none' (the old way), 'random' (a different style for every seat) or one style name for every seat
@@ -152,7 +158,17 @@ window.LAB = (() => {
             const styles = mode === 'none' ? Array(n).fill(null) : mode === 'random' ? hshuf(PLAYSTYLE_KEYS).slice(0, n) : Array(n).fill(mode);
             out.styles = styles;
             let A, B, more;
-            if (kind === 'ascent') {
+            if (kind === 'ascentpool') {
+                // Deck-power calibration: a fixed pool of ~100 varied decks (the 18 opponents, 5 starters, random mixes, each with 0 / 6 / 14 upgraded cards);
+                // each seed plays two of them against each other and reports both decks' features, so tests/ascent_power_fit.js can fit the power weights.
+                await loadAscentRoster();
+                const pool = L.buildPool(), prng = ascentRng('pair:' + opts.seed), n = pool.length;
+                let i = Math.floor(prng() * n), j = Math.floor(prng() * (n - 1)); if (j >= i) j++;
+                if (opts.seed % 2) [i, j] = [j, i]; // alternate seats so a seat advantage cancels out
+                const mk = pd => { const d = ascentDeckEntries(pd.name, pd.cards); d.aiStyle = pd.style; return d; };
+                A = mk(pool[i]); B = mk(pool[j]); more = [];
+                out.ia = i; out.ib = j; out.fa = pool[i].features; out.fb = pool[j].features; out.styles = [A.aiStyle, B.aiStyle];
+            } else if (kind === 'ascent') {
                 // Planeswalker's Ascent: two opponents' decks from the roster (seed picks the pair, and each seat's tier sets its AI level)
                 await loadAscentRoster();
                 const i = opts.seed % ASCENT_OPPONENTS.length, j = (i + 1 + Math.floor(opts.seed / ASCENT_OPPONENTS.length) % (ASCENT_OPPONENTS.length - 1)) % ASCENT_OPPONENTS.length;
@@ -165,9 +181,14 @@ window.LAB = (() => {
                         for (let k = 0; k < n; k++) {
                             let vid = id;
                             if (rnd() < 0.4) {
-                                const fake = { card: r, copy: { u: [] } }, pick = Object.keys(ASCENT_UPGRADES).filter(u => !ascentUpgradeBlocked(fake, u));
-                                const u1 = pick[Math.floor(rnd() * pick.length)];
-                                if (u1) vid = ascentVariantCard(base, [u1]).id;
+                                // one to three random modules of the card's grade and colors (the big ones only show on 6+ mana cards)
+                                const fake = { card: r, copy: { u: [] } }, ups = [], howMany = 1 + Math.floor(rnd() * 3);
+                                for (let q = 0; q < howMany; q++) {
+                                    const pick = Object.keys(ASCENT_UPGRADES).filter(u => !ups.includes(u) && !ascentUpgradeBlocked({ card: r, copy: { u: ups.slice() } }, u));
+                                    const u1 = pick[Math.floor(rnd() * pick.length)];
+                                    if (u1) ups.push(u1);
+                                }
+                                if (ups.length) vid = ascentVariantCard(base, ups).id;
                             }
                             cards[vid] = (cards[vid] || 0) + 1;
                         }
@@ -195,6 +216,8 @@ window.LAB = (() => {
             if (opts.deckA) { A = L.listDeck(opts.deckA); out.styles[0] = A.aiStyle || null; }
             A.aiLevel = opts.la || 'normal'; B.aiLevel = opts.lb || 'normal';
             more.forEach(d => { d.aiLevel = opts.lb || 'normal'; });
+            if (opts.levels) { const lv = String(opts.levels).split(','); [A, B, ...more].forEach((d, i) => { if (lv[i]) d.aiLevel = lv[i]; }); out.levels = [A, B, ...more].map(d => d.aiLevel); } // per-seat AI level: normal, hard, easy or random (the random baseline)
+            out.decks = [A, B, ...more].map(d => L.deckFeatures(d));
             out.cmds = [A, B, ...more].map(d => d.commander ? d.commander.name : d.name);
             out.a = A.commander ? A.commander.name : A.name; out.b = B.commander ? B.commander.name : B.name;
             if (more.length) out.pod = [A, B, ...more].map(d => d.commander ? d.commander.name : d.name);
@@ -220,10 +243,15 @@ window.LAB = (() => {
                 };
                 unprobe = () => { window.fire = of; };
             }
+            const tuneSeat = [A, B, ...more].map(() => null); if (opts.tune) { const tv = {}; String(opts.tune).split(',').forEach(kv => { const [k, v] = kv.split('='); tv[k] = Number(v); }); A.tune = tv; } // seat A only
+            const stats = opts.stats === false ? null : L.collect(out, n);
             await newGame(A, B, null, more);
-            const limit = opts.timeout || 60000;
-            while (!window.lastResult && performance.now() - t0 < limit) await new Promise(r => setTimeout(r, 0));
-            if (!window.lastResult) { out.hang = true; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); out.turn = G.turn; out.phase = G.phase; out.diag = { pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
+            if (A.tune) G.players[0].tune = A.tune;
+            const limit = opts.timeout || 60000, maxTurns = opts.maxTurns || 150;
+            while (!window.lastResult && performance.now() - t0 < limit && !(G.turn > maxTurns)) await new Promise(r => setTimeout(r, 0));
+            if (stats) stats.stop();
+            if (!window.lastResult && G.turn > maxTurns) { out.stalled = true; out.turns = G.turn; out.winner = null; out.reason = 'stalled past turn ' + maxTurns; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); window.lastResult = { stalled: true }; }
+            if (!window.lastResult) { out.hang = true; out.alive = G.players.map(P => P.out ? 'x' : P.life).join(','); out.turn = G.turn; out.phase = G.phase; out.diag = { stack: (G.stack || []).map(it => (it.o && it.o.card ? it.o.card.name : it.kind)), mode: G.mode ? G.mode.type : null, priority: G.priority, busy: G.busy, trigQ: (G.trigQ || []).length, active: G.active, pending: Object.entries(L.pending).filter(e => e[1] > 0).map(e => e.join(':')).join(','), active: G.active, busy: G.busy, mode: G.mode && G.mode.type, stack: G.stack.length, running: G.stackRunning, hand: G.players.map(P => P.hand.length), last: G.log.slice(-4) }; G.over = true; }
             else Object.assign(out, window.lastResult);
             if (opts.watch) { // a card with one enters-the-battlefield trigger: more triggers than entries means it fired twice (lab.js --watch "Card Name")
                 const lines = G.log.map(l => l.text || l), name = opts.watch;
@@ -235,11 +263,92 @@ window.LAB = (() => {
             out.bad = T.invariants(); if (G.dealStats) out.deals = G.dealStats; if (G.pol) out.pol = G.pol;
             if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
         } catch (e) { out.error = String(e && e.stack || e).slice(0, 400); }
-        window.removeEventListener('error', onErr);
+        window.removeEventListener('error', onErr); window.removeEventListener('unhandledrejection', onRej);
         Math.random = realRandom;
         if (errs.length) out.errors = errs.slice(0, 3);
         out.ms = Math.round(performance.now() - t0);
         return out;
+    };
+    // A deck in numbers, for the report: lands, average mana value, how many of each kind, mana makers
+    L.deckFeatures = d => {
+        const kinds = {}; let n = 0, cmc = 0, lands = 0, ramp = 0, draw = 0, removal = 0;
+        (d.entries || []).forEach(({ card: c, n: k }) => { const r = rulesFor(c); kinds[r.kind] = (kinds[r.kind] || 0) + k; if (r.kind === 'land') { lands += k; return; } n += k; cmc += (c.cmc || 0) * k; if (r.mana) ramp += k; const t = String(c.text || ''); if (/\bdraws? (a|two|three|\d) cards?/i.test(t)) draw += k; if (/(destroy|exile) target|deals? \d+ damage to (any|target)/i.test(t)) removal += k; });
+        return { name: d.commander ? d.commander.name : d.name, style: d.aiStyle || null, ci: d.commander ? d.commander.ci.join('') : '', cmdCmc: d.commander ? d.commander.cmc : 0, lands, avgCmc: n ? +(cmc / n).toFixed(2) : 0, kinds, ramp, draw, removal };
+    };
+    // Per-game stats from the game's own events (no extra work in the engine): a snapshot of every seat at the start of its combat, plus counts
+    L.collect = (out, nPlayers) => {
+        const of = window.fire, oe = window.eliminate;
+        const seats = Array.from({ length: nPlayers }, () => ({ cast: 0, creat: 0, spell: 0, lands: 0, atk: 0, atkC: 0, hit: 0, lost: 0, arch: 0, tl: [] }));
+        const S = { seats, splits: 0, elim: [] };
+        out.stats = S;
+        window.fire = function (ev, ctx) {
+            try {
+                if (G && G.players) {
+                    if (ev === 'cast' && ctx && ctx.P && seats[ctx.P.i]) { const t = seats[ctx.P.i]; t.cast++; if (ctx.o && Rx(ctx.o).kind === 'creature') t.creat++; else t.spell++; }
+                    else if (ev === 'landfall' && ctx && ctx.o && seats[ctx.o.owner]) seats[ctx.o.owner].lands++;
+                    else if (ev === 'attacks' && ctx && ctx.list && ctx.list.length) { const t = seats[ctx.list[0].owner]; if (t) { t.atk++; t.atkC += ctx.list.length; if (new Set(ctx.list.map(o => o.atkTo)).size > 1) S.splits++; } }
+                    else if (ev === 'hitPlayer' && ctx && ctx.src && seats[ctx.src.owner]) seats[ctx.src.owner].hit += ctx.n || 0;
+                    else if (ev === 'dies' && ctx && ctx.o && seats[ctx.o.owner] && isCreature(ctx.o)) seats[ctx.o.owner].lost++;
+                    else if (ev === 'combat' && G.phase !== 'setup' && G.active != null && seats[G.active] && !G.players[G.active].out) {
+                        const P = G.players[G.active], cs = P.bf.filter(isCreature); let cap = 0;
+                        for (const x of P.bf) { const mo = manaOf(x); if (mo && !(isCreature(x) && x.sick && !has(x, 'haste'))) cap += mo.n || 1; }
+                        seats[G.active].tl.push([G.turn, P.life, cap, P.hand.length, cs.length, cs.reduce((a, x) => a + Math.max(0, pow(x)), 0), P.bf.filter(x => Rx(x).kind === 'land').length, G.players.filter(q => !q.out).length]);
+                        if (G.arch === G.active) seats[G.active].arch++;
+                        { const able = P.bf.filter(x => isCreature(x) && canAttackWith(x) && pow(x) > 0).length; const t = seats[G.active]; if (able) { t.able = (t.able || 0) + 1; t.ableSum = (t.ableSum || 0) + able; } }
+                    }
+                }
+            } catch (e) { /* stats must never break a game */ }
+            return of.apply(this, arguments);
+        };
+        if (typeof oe === 'function') window.eliminate = function (P) { try { S.elim.push({ seat: P.i, turn: G.turn, by: G.active }); } catch (e) { } return oe.apply(this, arguments); };
+        return { stop() { window.fire = of; if (oe) window.eliminate = oe; } };
+    };
+    // The calibration pool (cached): deterministic, so every page builds the same decks
+    L.buildPool = () => {
+        if (L.deckPool) return L.deckPool;
+        const rng = ascentRng('pool'), bases = [], pool = [];
+        ASCENT_OPPONENTS.forEach(o => bases.push({ name: o.id, cards: ascentOpponentDeck(o), style: o.style }));
+        ['W', 'U', 'B', 'R', 'G'].forEach(c => { const sc = ascentStarterCards(c); bases.push({ name: 'starter-' + c, cards: { ...sc.cards, [sc.basicId]: ASCENT_LANDS }, style: null }); });
+        const basics = { W: 'Plains', U: 'Island', B: 'Swamp', R: 'Mountain', G: 'Forest' }, spellsAll = ASCENT.roster.filter(c => c.type !== 'land' && c.rarity !== 'trophy' && c.kind !== 'rock');
+        for (let m = 0; m < 28; m++) { // random mixes: two colors, a tier cap, 23 random spells that fit, the rest basics
+            const cols = ['W', 'U', 'B', 'R', 'G'].sort(() => rng() - 0.5).slice(0, 1 + (rng() < 0.7 ? 1 : 0)).join(''), cap = 1 + Math.floor(rng() * 3);
+            const fits = spellsAll.filter(c => c.tier <= cap && c.colors.split('').every(ch => cols.includes(ch)) && (c.colors || cols.length));
+            const cards = {}; let left = ASCENT_DECK_SIZE - ASCENT_LANDS, guard = 0;
+            while (left > 0 && guard++ < 400) { const c = fits[Math.floor(rng() * fits.length)]; if (!c) break; const add = Math.min(left, 1 + Math.floor(rng() * 3), ASCENT_COPY_LIMIT - (cards[c.id] || 0)); if (add > 0) { cards[c.id] = (cards[c.id] || 0) + add; left -= add; } }
+            const per = Math.floor(ASCENT_LANDS / cols.length);
+            cols.split('').forEach((ch, k) => { const b = ASCENT.roster.find(c => c.kind === 'basic' && c.name === basics[ch]); cards[b.id] = k === cols.length - 1 ? ASCENT_LANDS - per * (cols.length - 1) : per; });
+            bases.push({ name: 'mix' + m, cards, style: null });
+        }
+        for (let m = 0; m < 20; m++) { // top-heavy decks, so the big (grade 3 and 4) modules are measured too: 10 cards of mana value 5+, the rest cheap
+            const cols = ['W', 'U', 'B', 'R', 'G'].sort(() => rng() - 0.5).slice(0, 1 + (rng() < 0.6 ? 1 : 0)).join('');
+            const fit = c => c.colors.split('').every(ch => cols.includes(ch)) && (c.colors || cols.length);
+            const bigs = spellsAll.filter(c => c.cmc >= 5 && c.type === 'creature' && fit(c)), smalls = spellsAll.filter(c => c.cmc <= 4 && fit(c) && c.tier <= 2);
+            const cards = {}; let left = ASCENT_DECK_SIZE - ASCENT_LANDS, guard = 0, bigLeft = 10;
+            while (left > 0 && guard++ < 600) { const useBig = bigLeft > 0 && rng() < 0.45, pool2 = useBig ? bigs : smalls, c = pool2[Math.floor(rng() * pool2.length)]; if (!c) break; const add = Math.min(left, 1 + Math.floor(rng() * 2), ASCENT_COPY_LIMIT - (cards[c.id] || 0)); if (add > 0) { cards[c.id] = (cards[c.id] || 0) + add; left -= add; if (useBig) bigLeft -= add; } }
+            const per = Math.floor(ASCENT_LANDS / cols.length);
+            cols.split('').forEach((ch, k) => { const b = ASCENT.roster.find(c => c.kind === 'basic' && c.name === basics[ch]); cards[b.id] = k === cols.length - 1 ? ASCENT_LANDS - per * (cols.length - 1) : per; });
+            bases.push({ name: 'big' + m, cards, style: null });
+        }
+        for (const b of bases) for (const load of [0, 6, 14]) {
+            const cards = {}, copies = [];
+            Object.entries(b.cards).forEach(([id, n]) => { for (let k = 0; k < n; k++) copies.push(id); });
+            const idxs = copies.map((id, k) => k).filter(k => ASCENT.byId.get(copies[k]).type !== 'land').sort(() => rng() - 0.5).slice(0, load), up = new Set(idxs);
+            copies.forEach((id, k) => {
+                let vid = id;
+                if (up.has(k)) {
+                    const r = ASCENT.byId.get(id), ups = [], want = 1 + (rng() < 0.4 ? 1 : 0) + (rng() < 0.15 ? 1 : 0);
+                    for (let q = 0; q < want; q++) {
+                        const pick = Object.keys(ASCENT_UPGRADES).filter(u => !ups.includes(u) && !ascentUpgradeBlocked({ card: r, copy: { u: ups.slice() } }, u));
+                        const u1 = pick[Math.floor(rng() * pick.length)]; if (u1) ups.push(u1);
+                    }
+                    if (ups.length && CARDS.get(id)) vid = ascentVariantCard(CARDS.get(id), ups).id;
+                }
+                cards[vid] = (cards[vid] || 0) + 1;
+            });
+            pool.push({ name: `${b.name}+${load}`, cards, style: b.style, features: ascentDeckFeatures(cards) });
+        }
+        L.deckPool = pool;
+        return pool;
     };
     // Many games in a row
     L.batch = async (from, count, opts) => {

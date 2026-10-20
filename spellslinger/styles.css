@@ -382,6 +382,32 @@
         .perm.selectable { cursor: pointer; }
         .perm.selectable img, .perm.selectable .noimg { box-shadow: 0 0 0 2px var(--gold), 0 0 12px var(--gold); }
         .perm.picked img { box-shadow: 0 0 0 3px var(--text-heading), 0 0 16px var(--brand-light); }
+        /* Board overview (👁 Board): every permanent of one player in a roomy grid or a compact list */
+        .ov { text-align: left; }
+        .ov .seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+        .ov .seg button { background: var(--bg-panel); color: var(--text-primary); border: 0; padding: 4px 10px; font-size: 0.85em; cursor: pointer; }
+        .ov .seg button[aria-pressed="true"] { background: var(--brand); color: var(--text-heading); }
+        .ov-sum { font-size: 0.9em; margin-bottom: 6px; color: var(--text-soft); }
+        .ov h4 { margin: 12px 0 6px; font-size: 1em; }
+        .ov-grid.pics { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+        .ov-grid.list { display: flex; flex-direction: column; gap: 4px; }
+        .ov-tile { position: relative; padding: 0; border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-inset); color: var(--text-primary); cursor: pointer; overflow: hidden; }
+        .ov-tile img { display: block; width: 100%; height: auto; }
+        .ov-tile.tapped img { transform: rotate(8deg) scale(0.9); opacity: 0.75; }
+        .ov-tile.attacking { border-color: var(--color-warning); }
+        .ov-tile.sel { border-color: var(--brand-light); box-shadow: 0 0 0 2px var(--brand-light); }
+        .ov-tile .pt { position: absolute; right: 2px; bottom: 2px; background: var(--bg-canvas); color: var(--text-heading); border-radius: var(--radius-sm); padding: 0 5px; font-size: 0.85em; font-weight: 700; }
+        .ov-tile .pt.hurt { color: var(--color-warning); }
+        .ov-badges { position: absolute; left: 2px; top: 2px; background: var(--bg-canvas); border-radius: var(--radius-sm); padding: 0 3px; font-size: 0.85em; }
+        .ov-tile.row-tile { display: grid; grid-template-columns: minmax(0, 1.4fr) auto minmax(0, 1fr); gap: 4px 10px; align-items: center; text-align: left; padding: 6px 10px; }
+        .ov-tile.row-tile .pt { position: static; }
+        .ov-tile.row-tile .ov-st { grid-column: 1 / -1; font-size: 0.8em; color: var(--text-soft); }
+        .ov-kw { font-size: 0.8em; color: var(--text-soft); }
+        .ov-detail { display: flex; gap: 12px; margin: 8px 0; padding: 10px; background: var(--bg-inset); border-radius: var(--radius-md); }
+        .ov-detail img { width: 150px; height: auto; border-radius: var(--radius-sm); flex: none; }
+        .ov-detail h3 { margin: 0 0 4px; }
+        .ov-text { white-space: pre-line; font-size: 0.85em; color: var(--text-soft); margin: 6px 0; }
+        @media (max-width: 600px) { .ov-detail { flex-direction: column; align-items: center; } .ov-detail img { width: 120px; } .ov-grid.pics { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); } }
         .perm .blocklabel { position: absolute; left: 0; right: 0; bottom: -18px; font-size: 0.72rem; text-align: center; color: var(--mana-U); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .hand { display: flex; gap: 6px; padding: 6px 12px 8px; overflow-x: auto; background: color-mix(in srgb, var(--bg-canvas) 85%, transparent); min-height: 60px; }
         /* The game's hand dock: S / M / L sizes, fanned and overlapping when full */
@@ -936,6 +962,11 @@
         .asc-up { display: inline-block; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: 999px; padding: 0 8px; margin-right: 4px; font-size: 0.8rem; }
         .asc-copy-btns { display: flex; gap: 6px; }
         .asc-uplist { max-height: 40vh; overflow: auto; }
+        .asc-grade { display: inline-block; font-size: 0.72rem; border-radius: 999px; padding: 0 7px; border: 1px solid var(--border); background: var(--bg-panel-raised); color: var(--text-soft); }
+        .asc-grade.g2 { border-color: var(--color-link); } .asc-grade.g3 { border-color: var(--color-warning); color: var(--color-warning); } .asc-grade.g4 { border-color: var(--color-warning); background: var(--color-warning); color: var(--bg-canvas); font-weight: 700; }
+        .asc-power strong { color: var(--color-warning); }
+        .asc-matchup { margin: 8px 0; padding: 6px 10px; border-left: 4px solid var(--color-warning); background: var(--bg-panel-raised); border-radius: var(--radius-sm); font-size: 0.9rem; }
+        .asc-salv { display: inline-flex; flex-wrap: wrap; gap: 8px; font-size: 0.85rem; }
         .asc-pack { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; margin-top: 12px; }
         .asc-flip { position: relative; min-height: 146px; border: 2px solid var(--border); border-radius: var(--radius-md); background: var(--bg-inset); color: var(--text-primary); padding: 0; overflow: hidden; display: grid; }
         .asc-flip img { width: 100%; display: block; }
