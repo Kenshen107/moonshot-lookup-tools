@@ -29,6 +29,7 @@ async function buildRandomCommanderDeck(commander, style, themeArg) {
     let theme = themeArg === 'none' ? null : pickDeckTheme(style, forced);
     let themedCards = [];
     const tried = [];
+    try {
     for (let attempt = 0; attempt < 4 && theme; attempt++) {
         tried.push(theme.key);
         let c = commander;
@@ -38,6 +39,7 @@ async function buildRandomCommanderDeck(commander, style, themeArg) {
         if (forced) continue; // a forced theme gets another commander
         theme = pickDeckTheme(style, null, tried);
     }
+    } catch (e) { console.warn('Deck theme lookup failed, building an unthemed deck:', e); theme = null; themedCards = []; } // Scryfall unreachable or busy: the old shuffle still works
     if (themedCards.length < 3) theme = null;
     style = styleGiven ? style : theme ? pickOne(theme.styles) : PLAYSTYLE_KEYS[Math.floor(Math.random() * PLAYSTYLE_KEYS.length)];
     commander = commander || await pickRandomCommander();
