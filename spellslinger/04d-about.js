@@ -11,6 +11,7 @@ const ABOUT_FEATURES = [
     ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log.']
 ];
 const ABOUT_LOG = [
+    ['Oct 20 (practice-game counter)', ['The About page now shows how many practice games the computer has played against itself while we tested the AI and the rules.']],
     ['Oct 20 (target yourself)', ['"Target player" cards can now target you, not only your opponents (burn, mill, draw, life loss and more). Singularity Rupture lets you choose any number of players, yourself included, so a mill or graveyard deck can build around it. Traumatize-style "half their library" now rounds down, as printed.']],
     ['Oct 20 (game records)', ['Every 3- or 4-player Commander game you play is now saved on your device: the play log, the choices you made and whether you won. Nothing is sent anywhere. Open 📋 Game records (page footer, the phone More menu, or the button on the game-over screen) and press Copy to get a short text version you can paste into a message.']],
     ['Oct 19 (attack several opponents, 👁 Board)', ['In a 3- or 4-player game you can now send each attacker at a different opponent (or at a planeswalker): when you attack, a list lets you pick a target per creature, with "All →" shortcuts. Each opponent blocks only the creatures coming at them, and the computer will send enough attackers at a second player it can finish off. Attacking creatures show who they are going at. A new 👁 Board button on every player bar (and in the phone game menu) opens every permanent of that player in one panel: pictures or a compact list, sorted by power, mana value or name, with a pane that shows any creature big with its rules text.']],
@@ -39,12 +40,15 @@ const ABOUT_LOG = [
     ['Oct 6', ['Rules rounds 3 to 6: mana pool, kicker, sagas, storm, cascade, delve, protection, two-faced cards, planeswalker attacks and modes.', 'Stacked pack reveal, grading, the 10-minute shop day, pack prices from the cards inside, coin boxes and opening a whole box.', 'Every Welcome Deck and Starter Kit card automated; tap-your-own-lands payment; phone layout; play a friend on one device.', 'The Moxfield-style deck builder and decklist import; face any commander or a pasted list.']],
     ['Oct 5', ['Launch: packs, decks, and Modern and Commander against the computer.', 'The stack, priority and counterspells; a Rules tab; the playtester; multiple players; the card shop, distributor and sealed packs; precons, the campaign ladder and AI levels; a flexible game table with counters.']]
 ];
+// Practice games the computer has played against itself in the test lab (owner's request 2026-10-20: "interesting and funny"). Not counted live: a lower bound added up from the runs written down in CLAUDE.md / docs. Raise it (and `asOf`) when a big lab run is done.
+const SIM_GAMES = { count: 30000, asOf: '2026-10-20' };
 function aboutPanel() {
     const c = CARD_COVERAGE, pct = n => Math.round(100 * n / c.total);
     showModal(`<div class="about">
         <h2>🪄 About Spellslinger Duels</h2>
         <p class="about-lead">A free, fan-made Magic: The Gathering test game that runs in your browser. Open packs, build decks, run a card shop and play against the computer. No account, no download, no real money: coins and cash are for the game only. It is a test build, so expect rough edges, and it is not made or run by any store.</p>
         <p class="about-stat"><strong>${c.full.toLocaleString()}</strong> cards fully automated &middot; <strong>${pct(c.full + c.partial)}%</strong> of paper cards can be cast <span>(measured ${esc(c.measured)})</span></p>
+        <p class="about-stat">🤖 <strong>${SIM_GAMES.count.toLocaleString()}+</strong> practice games played by the computer against itself <span>(counted ${esc(SIM_GAMES.asOf)}; it never gets tired of losing to itself)</span></p>
         <h3>What it can do</h3>
         <div class="about-grid">${ABOUT_FEATURES.map(([t, d]) => `<div class="about-card"><strong>${t}</strong><p>${esc(d)}</p></div>`).join('')}</div>
         <h3>Update log</h3>
