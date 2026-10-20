@@ -1,0 +1,18 @@
+// Spellslinger Duels - rules pack: voting cards (2026-10-20, owner's go-ahead on "cards the bots can vote on").
+// Will of the council and Council's dilemma: starting with the caster, every player votes; the engine is in 15g-votes.js (holdVote and the VOTE_DEFS table).
+// Wordings only. Uses the cl / cmd helpers from rules/cmdr.js.
+const VOTE_PREFIX = '(?:(?:Will of the council|Council\'s dilemma) — )?';
+const vrx = body => new RegExp('^' + VOTE_PREFIX + body + '$');
+cl(vrx('Starting with you, each player votes for a nonland permanent you don\'t control\\. Exile each permanent with the most votes or tied for most votes\\.'), R => { R.spell = [cmd('voteJudgment')]; });
+cl(vrx('Starting with you, each player votes for death or torture\\. If death gets more votes, each opponent sacrifices a creature of their choice\\. If torture gets more votes or the vote is tied, each opponent loses 4 life\\.'), R => { R.spell = [cmd('voteTyrant')]; });
+cl(vrx('Starting with you, each player votes for death or taxes\\. Each opponent sacrifices a creature of their choice for each death vote and discards a card for each taxes vote\\.'), R => { R.spell = [cmd('voteCapital')]; });
+cl(vrx('Starting with you, each player votes for time or knowledge\\. If time gets more votes, take an extra turn after this one\\. If knowledge gets more votes or the vote is tied, draw three cards\\.'), R => { R.spell = [cmd('votePlea')]; });
+cl(vrx('Starting with you, each player votes for wild or free\\. Reveal cards from the top of your library until you reveal a creature card for each wild vote\\. Put those creature cards onto the battlefield, then shuffle the rest into your library\\. You may put a permanent card from your hand onto the battlefield for each free vote\\.'), R => { R.spell = [cmd('voteStampede')]; });
+cl(vrx('Choose target instant or sorcery spell\\. Starting with you, each player votes for denial or duplication\\. If denial gets more votes, counter the spell\\. If duplication gets more votes or the vote is tied, copy the spell\\. You may choose new targets for the copy\\.'), R => { R.spell = [cmd('voteSplit', { target: 'spell', filter: 'instant or sorcery' })]; });
+cl(vrx('When (?:this creature|~) enters, starting with you, each player votes for grace or condemnation\\. If grace gets more votes, each player returns each creature card from their graveyard to the battlefield\\. If condemnation gets more votes or the vote is tied, destroy all creatures other than (?:this creature|~)\\.'), R => { R.etb.push(cmd('voteMagister')); });
+cl(vrx('When (?:this creature|~) enters, starting with you, each player votes for sprout or harvest\\. Put two \\+1\\/\\+1 counters on (?:this creature|~) for each sprout vote\\. You gain 3 life for each harvest vote\\.'), R => { R.etb.push(cmd('voteOrchard')); });
+cl(vrx('At the beginning of your upkeep, starting with you, each player votes for carnage or homage\\. If carnage gets more votes, sacrifice (?:this artifact|~) and destroy all nonland permanents\\. If homage gets more votes or the vote is tied, draw a card\\.'), R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [cmd('voteCarnage')] }); });
+cl(/^While voting, you (?:get an additional vote|may vote an additional time)\.$/, R => { R.extraVote = true; });
+cl(/^Whenever players finish voting, each opponent who voted for a choice you didn't vote for loses 2 life\.$/, R => { R.voteWatch = 'grudge'; });
+cl(/^Whenever players finish voting, you and each opponent who voted for a choice you voted for may scry 2\.$/, R => { R.voteWatch = 'unity'; });
+registerRules({ name: 'votes', effects: [], triggers: [], lines: [] });

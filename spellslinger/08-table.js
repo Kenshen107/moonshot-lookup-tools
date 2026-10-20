@@ -141,6 +141,7 @@ function gameMenu() {
         <button class="btn" onclick="logSheet()">📜 Game log</button>
         <button class="btn" onclick="closeSheet(); boardOverview(0)">👁 Board: every creature</button>
         <button class="btn" onclick="closeSheet(); playerSheet(0)">🧮 Your life & counters</button>
+        <button class="btn" onclick="closeSheet(); tapAllLands()">💧 Tap all my lands (float the mana)</button>
         <button class="btn" onclick="closeSheet(); playerSheet(1)">🧮 ${esc(foe().name)}'s life & counters</button>
         <div class="seg" role="group" aria-label="Paying mana" style="width:100%;"><button type="button" style="flex:1; padding:10px;" data-mm="manual" aria-pressed="${manaMode === 'manual'}" onclick="setManaMode('manual'); gameMenu()">🖐 Tap lands myself</button><button type="button" style="flex:1; padding:10px;" data-mm="auto" aria-pressed="${manaMode === 'auto'}" onclick="setManaMode('auto'); gameMenu()">⚡ Auto-pay</button></div>
         <div class="seg" role="group" aria-label="Stops at the end of their turn" style="width:100%;"><button type="button" style="flex:1; padding:10px;" aria-pressed="${endStops === 'on'}" onclick="setEndStops('on'); gameMenu()" title="Ask me at the end of an opponent's turn when I can still cast an instant or use an ability">⏸ Ask at their end step</button><button type="button" style="flex:1; padding:10px;" aria-pressed="${endStops === 'off'}" onclick="setEndStops('off'); gameMenu()">⏩ Don't ask</button></div>

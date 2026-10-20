@@ -138,7 +138,6 @@ function noteGrudge(target, src, n) {
     if (!src || src.owner === undefined || !target || target.life === undefined || src.owner === target.i || !(n > 0)) return;
     target.grudge = target.grudge || {};
     target.grudge[src.owner] = (target.grudge[src.owner] || 0) + n;
-    if (typeof bountyProgress === 'function') bountyProgress(target, src, n);
 }
 // Which opponent to attack in a pod. Lethal on someone first; then by the style's habit.
 function podPickDefender(P) {
@@ -147,7 +146,7 @@ function podPickDefender(P) {
     const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
     const open = F => !F.bf.some(o => isCreature(o) && !o.tapped);
     // Lethal first - but a deal is a deal, unless this bot plays Aggro
-    const lethal = fs.filter(F => F.life <= power && open(F) && (!hasPeace(P.i, F.i) || P.aiStyle === 'aggro')).sort((a, b) => a.life - b.life)[0];
+    const lethal = fs.filter(F => F.life <= power && open(F) && (!hasPeace(P.i, F.i) || P.aiStyle === 'aggro' || (typeof charBreaksPeace === 'function' && charBreaksPeace(P, F, power, open(F))))).sort((a, b) => a.life - b.life)[0];
     if (lethal) return lethal;
     const grudge = F => (P.grudge && P.grudge[F.i]) || 0;
     // Politics: when one player is far ahead the whole table goes after them (a revenge-minded bot still hits whoever hurt it most; an aggro bot finishes a nearly dead player first)

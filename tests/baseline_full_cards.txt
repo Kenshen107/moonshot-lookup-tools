@@ -868,6 +868,7 @@ Ball Lightning
 Ballista Charger
 Ballista Squad
 Balloon Peddler
+Ballot Broker
 Ballroom
 Ballynock Cohort
 Ballynock Trapper
@@ -1534,6 +1535,7 @@ Bounty of Might
 Bovine Intervention
 Bow of the Hunter
 Brackish Trudge
+Brago's Representative
 Braidwood Cup
 Braidwood Sextant
 Brain Freeze
@@ -1831,6 +1833,7 @@ Capashen Templar
 Capashen Unicorn
 Capital City
 Capital Guard
+Capital Punishment
 Capricious Efreet
 Capricious Sorcerer
 Capsize
@@ -2297,6 +2300,7 @@ Cobbled Wings
 Codex Shredder
 Coercion
 Coercive Impetus
+Coercive Portal
 Coeurl
 Coffin Purge
 Cognivore
@@ -2502,6 +2506,7 @@ Cost of Brilliance
 Costly Plunder
 Council of Advisors
 Council of Reeds
+Council's Judgment
 Counsel of the Soratami
 Count on Luck
 Counterargument
@@ -5470,6 +5475,7 @@ Growing Ranks
 Growing Rites of Itlimoc // Itlimoc, Cradle of the Sun
 Growth Spiral
 Growth-Chamber Guardian
+Grudge Keeper
 Gruesome Deformity
 Gruesome Realization
 Gruul Clans
@@ -7404,6 +7410,7 @@ Maggot Therapy
 Magic Damper
 Magic Missile
 Magic Pot
+Magister of Worth
 Magitek Armor
 Magitek Scythe
 Magma Giant
@@ -7941,6 +7948,7 @@ Mobilize
 Mocking Sprite
 Mockingbird
 Mockingbird, Bobbi Morse
+Model of Unity
 Modified
 Mogg Fanatic
 Mogg Flunkies
@@ -8673,6 +8681,7 @@ Orazca Raptor
 Orazca Relic
 Orb of Dragonkind
 Orc Sureshot
+Orchard Elemental
 Orchard Spirit
 Orchard Strider
 Orcish
@@ -9112,6 +9121,7 @@ Platoon Dispenser
 Playful Shove
 Plaza of Heroes
 Plea for Guidance
+Plea for Power
 Pledge of Unity
 Plover Knights
 Plumb the Forbidden
@@ -10716,6 +10726,7 @@ Selhoff Occultist
 Selkie Hedge-Mage
 Sell-Sword Brute
 Seller of Songbirds
+Selvala's Stampede
 Senate Courier
 Senate Griffin
 Senate Guildmage
@@ -11702,6 +11713,7 @@ Splatter Goblin
 Splatter Thug
 Splendid Reclamation
 Splinterfright
+Split Decision
 Split-Tail Miko
 Splitting Headache
 Spock, Logical Choice
@@ -13234,6 +13246,7 @@ Typhoid Mary, Fractured
 Typhoid Rats
 Tyranid Prime
 Tyrant of Kher Ridges
+Tyrant's Choice
 Tyrant's Familiar
 Tyrant's Machine
 Tyrant's Scorn

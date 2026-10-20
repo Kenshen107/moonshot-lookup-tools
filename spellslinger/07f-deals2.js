@@ -2,21 +2,19 @@
 // More complex deals (2026-10-15, owner: "sharing information, making more complex deals"; plan in docs/spellslinger-table-talk-plan.md).
 // On top of Peace, Hands off and Gang up (07c-politics.js):
 //   Peace for 3 turns      - peace that lasts three of the maker's turns.
-//   Bounty                 - "if you hit them for 8 or knock them out, I give you a card" (the payer loses 2 life, the taker draws a card).
 //   Restraint              - for 2 turns neither of us counters the other's spells or aims removal at the other's commander.
 //   Tip for peace          - peace for a turn, and the bot tells you something it knows (07e-info.js; it may bluff).
 //   Alliance               - a peace and a gang-up on a named player for 3 turns. Breaking it costs more trust and the whole table notices.
+// (Bounty was removed 2026-10-20: it handed a player a card, which real Magic can't do.)
 // A bot that says no may make a counter-offer (a smaller deal it would take). Worried bots, rich bots and bots that like you make offers of their own.
 // Kingmaking: a bot that goes out and likes someone slides its hand across the table to them.
 // No random numbers anywhere, so seeded games replay the same.
 // =====================================================================
-DEAL_TYPES.bounty = { name: 'Bounty', emoji: '💰', desc: 'If you hit the target for 8 or knock them out before my turn comes round again, I give you a card.' };
 DEAL_TYPES.restraint = { name: 'Restraint', emoji: '⚖️', desc: "For two turns neither of us counters the other's spells or aims removal at the other's commander." };
 const DEAL_KINDS = {
     peace3: { label: '🕊️ Peace x3', desc: 'Neither of us attacks the other for three of my turns.' },
     restraint: { label: '⚖️ Restraint', desc: DEAL_TYPES.restraint.desc },
     tipPeace: { label: '📣 Tip for peace', desc: "Peace for a turn, and you tell me something you know." },
-    bounty: { label: '💰 Bounty…', desc: DEAL_TYPES.bounty.desc, needsTarget: true },
     alliance: { label: '🤝 Alliance…', desc: 'Peace and a gang-up on a named player for three turns. Breaking it costs a lot of trust.', needsTarget: true }
 };
 const hasRestraint = (i, j) => !!dealBetween(i, j, 'restraint');
@@ -35,7 +33,7 @@ function dealScore2(bot, from, kind, x) {
         const b = { control: 2, ramp: 1, midrange: 1, spellslinger: 0, tokens: 0, voltron: -1, aggro: -1 }[bot.aiStyle] || 0;
         s += b - 1; parts.style = b - 1;
     } else if (kind === 'tipPeace') { s += 0.5; }
-    else if (kind === 'bounty' || kind === 'alliance') {
+    else if (kind === 'alliance') {
         if (!X || X.out || X === bot || X === from) return { score: -99, parts, reason: "That doesn't make sense." };
         const t = G.arch === X.i ? 3 : podThreat(X) > mean ? 1.5 : -2;
         s += t; parts.target = t;
@@ -49,7 +47,6 @@ function dealScore2(bot, from, kind, x) {
 // A smaller deal the bot would take instead (or null)
 function counterFor(bot, from, kind, x) {
     const tries = kind === 'alliance' ? [['pact', x], ['peace', null]]
-        : kind === 'bounty' ? [['pact', x]]
         : kind === 'peace3' || kind === 'tipPeace' ? [['peace', null], ['spare', null]]
         : kind === 'restraint' ? [['spare', null], ['peace', null]]
         : [['spare', null]];
@@ -61,7 +58,6 @@ function counterFor(bot, from, kind, x) {
 function makeDealKind(from, to, kind, x) {
     if (kind === 'peace3') return makeDeal(from, to, 'peace', null, { len: 3 });
     if (kind === 'restraint') return makeDeal(from, to, 'restraint', null, { len: 2 });
-    if (kind === 'bounty') return makeDeal(from, to, 'bounty', x, { len: 3, extra: { progress: 0 } });
     if (kind === 'tipPeace') {
         const d = makeDeal(from, to, 'peace');
         // the bot tells the person something (if the bot is the one giving it)
@@ -93,28 +89,8 @@ function proposeDeal2(from, to, kind, x) {
     return { ok: false, reason: r.reason, counter };
 }
 
-// ---- Bounties ----
-function bountyProgress(target, src, n) {
-    (G.deals || []).filter(d => !d.over && d.type === 'bounty' && d.x === target.i && G.players[d.b] && src.owner === d.b).forEach(d => {
-        d.progress = (d.progress || 0) + n;
-        if (d.progress >= 8) payBounty(d, `hit ${nm(target)} for ${d.progress}`);
-    });
-}
-function bountyOnOut(P) {
-    (G.deals || []).filter(d => !d.over && d.type === 'bounty' && d.x === P.i && G.active === d.b).forEach(d => payBounty(d, `knocked out ${nm(P)}`));
-}
-function payBounty(d, why) {
-    if (d.over) return;
-    d.over = true; dealStats().kept++;
-    const payer = G.players[d.a], taker = G.players[d.b];
-    payer.life -= 2; drawCards(taker, 1);
-    log(`💰 Bounty paid: ${nm(taker)} ${why}. ${nm(payer)} ${you(payer) ? 'lose' : 'loses'} 2 life and ${nm(taker)} ${you(taker) ? 'draw' : 'draws'} a card.`);
-    [payer, taker].forEach(P => { const o = P === payer ? taker : payer; P.trust = P.trust || {}; P.trust[o.i] = (P.trust[o.i] || 0) + 1; });
-    if (payer.isAI) say(payer, 'bountyPaid', 'cheerful', { foe: nm(taker) }, null);
-}
 // Called when a deal runs out (return true when the ending was already described)
 function dealExpired(d) {
-    if (d.type === 'bounty') { log(`💰 The bounty on ${nm(G.players[d.x])} ran out: nobody collected.`); return true; }
     if (d.alliance) {
         if (d.link) return true; // the pact half: the peace half says how it ended
         dealStats().kept++;
@@ -176,17 +152,16 @@ function acceptCounter(i, type, x) {
 // ---- Offers from the bots ----
 // A bot proposes something to the person (a prompt) or to another bot (decided by the same scoring)
 async function offerKind(P, to, kind, x) {
-    if (!to || to.out || (dealBetween(P.i, to.i, kind === 'peace3' || kind === 'tipPeace' ? 'peace' : kind) && kind !== 'bounty') || (kind === 'alliance' && hasPeace(P.i, to.i))) return false;
+    if (!to || to.out || dealBetween(P.i, to.i, kind === 'peace3' || kind === 'tipPeace' ? 'peace' : kind) || (kind === 'alliance' && hasPeace(P.i, to.i))) return false;
     const text = {
         peace3: `${who(P)} offers peace for three turns: neither of you attacks the other. Accept?`,
         restraint: `${who(P)} offers restraint for two turns: no counterspells between you and no removal at each other's commander. Accept?`,
         tipPeace: `${who(P)} offers a tip for peace: neither of you attacks the other this turn, and ${who(P)} tells you something it knows (it might bluff). Accept?`,
-        bounty: `${who(P)} puts a bounty on ${x != null ? nm(G.players[x]) : 'someone'}: hit them for 8 or knock them out and ${who(P)} gives you a card (it costs ${who(P)} 2 life). Accept?`,
         alliance: `${who(P)} proposes an alliance against ${x != null ? nm(G.players[x]) : 'someone'}: peace between you and a gang-up on them for three turns. Breaking it costs a lot of trust. Accept?`
     }[kind];
     if (!to.isAI) {
         if (!talkOn()) return false;
-        say(P, kind === 'tipPeace' ? 'infoDeal' : kind === 'alliance' ? 'allianceOffer' : kind === 'bounty' ? 'bountyOffer' : kind === 'restraint' ? 'tradeRestraint' : 'peaceOffer', 'scheming', { foe: 'you', card: x != null ? who(G.players[x]) : '' }, null);
+        say(P, kind === 'tipPeace' ? 'infoDeal' : kind === 'alliance' ? 'allianceOffer' : kind === 'restraint' ? 'tradeRestraint' : 'peaceOffer', 'scheming', { foe: 'you', card: x != null ? who(G.players[x]) : '' }, null);
         const yes = await askYes(to, text, { yes: 'Accept', no: 'No deal' });
         if (yes) { makeDealKind(P, to, kind, x); return true; }
         dealStats().declined++;
@@ -211,11 +186,6 @@ async function moreOffers(P) {
     if (arch && friends.length && P.life >= 10 && !(arch.i === P.i)) {
         const ally = (human && friends.includes(human) && trustOf(P, human) >= 1 ? human : friends[0]);
         done = await offerKind(P, ally, 'alliance', arch.i);
-    }
-    // a bounty from the rich and the generous
-    else if (arch && ['arthur', 'brenda', 'luke', 'greg'].includes(key) && P.life > 8) {
-        const taker = friends[0] || live.find(X => X !== arch);
-        if (taker) done = await offerKind(P, taker, 'bounty', arch.i);
     }
     // restraint from a control bot that likes you
     else if (P.aiStyle === 'control' && human && trustOf(P, human) >= 1) done = await offerKind(P, human, 'restraint');

@@ -658,7 +658,6 @@ function sba() {
 // 800.4: a player who has lost leaves: their cards go away, what they were using of other players' goes back, their spells leave the stack
 function eliminate(P, reason) {
     P.out = true;
-    if (typeof bountyOnOut === 'function') bountyOnOut(P);
     if (typeof banterOut === 'function') banterOut(P, reason);
     if (typeof pol === 'function') pol().outAt.push(G.turn);
     log(`${P.name} ${you(P) ? 'lose' : 'loses'} the game and leaves the pod: ${reason}`);
@@ -1089,6 +1088,20 @@ function tapForMana(uid, color) {
     if (pay) pay.taps.push({ o, pool, life: lifeBefore - P.life, sac: !onBf(o.uid) });
     else log(`You tap ${o.card.name} for ${added.map(c => `{${c}}`).join('')} (it stays in your mana pool until the step ends).`);
     if (pay && poolCovers(P, pay.cost, pay.extra, pay.opts)) { pay.done(true); return; }
+    renderGame();
+}
+// Tap every untapped land that makes one color and float the mana (owner's request, 2026-10-20). Lands with a choice of colors are left for you.
+function tapAllLands() {
+    if (!G || G.over) return;
+    const P = me();
+    if (!P || P.isAI) return;
+    if (G.mode && G.mode.type === 'pay') { toast('Finish paying first.'); return; }
+    const lands = manaSources(P).filter(o => /\bLand\b/.test(o.card.type) && !isCreature(o));
+    const single = lands.filter(o => { const m = manaOf(o), c = landColorsOf(o); return m.fixed || c.length === 1; });
+    const skipped = lands.length - single.length;
+    if (!single.length) { toast(lands.length ? 'Those lands make a choice of colors: tap them yourself.' : 'No untapped lands.'); return; }
+    single.forEach(o => tapForMana(o.uid, landColorsOf(o)[0]));
+    if (skipped) toast(`${skipped} land${skipped === 1 ? '' : 's'} with a choice of colors left untapped.`);
     renderGame();
 }
 function pickManaColor(o, cols) {
@@ -4674,10 +4687,10 @@ function endGame(winner, reason) {
     const talk = !AUTOPLAY ? banterEnd(winner) : null; // style points, salt and cool report (07d-banter.js)
     if (!AUTOPLAY) {
         if (talk && talk.bonus) profile.coins += talk.bonus;
-        if (G.campaign || G.draftRound !== undefined) { if (won) profile.wins++; else profile.losses++; }
+        if (G.campaign || G.draftRound !== undefined) { if (won) profile.wins++; else if (winner !== null) profile.losses++; } // a draw is neither
         else {
             if (won) { reward = G.format === 'commander' ? REWARDS.winCommander : REWARDS.win; profile.wins++; }
-            else { reward = REWARDS.loss; profile.losses++; }
+            else { reward = REWARDS.loss; if (winner !== null) profile.losses++; }
             profile.coins += reward;
         }
         saveProfile();

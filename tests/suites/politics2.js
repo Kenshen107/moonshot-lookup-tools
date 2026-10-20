@@ -1,5 +1,5 @@
 // Information and complex deals (2026-10-15): tips and answers (and whether they were true), reliability, and the new deals:
-// peace for 3 turns, bounty, restraint, tip for peace, alliance, counter-offers, bot offers (and a bot that goes out gives nothing away).
+// peace for 3 turns, restraint, tip for peace, alliance, counter-offers, bot offers (and a bot that goes out gives nothing away).
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -82,20 +82,8 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             [A, B, Cc, D] = await fresh(['greg', 'marcus', 'sam']); B.trust = { 0: 0 }; Cc.grudge = { 0: 9 };
             const bad = proposeDeal2(A, Cc, 'peace3');
             ok('a bot that says no explains and may counter-offer (or just refuse)', bad.ok === false && typeof bad.reason === 'string', bad);
-            // bounty
-            [A, B, Cc, D] = await fresh(['greg', 'marcus', 'sam']); B.trust = { 0: 3 }; T.put(D, C['Serra Angel']); G.arch = D.i;
-            const bounty = proposeDeal2(A, B, 'bounty', D.i);
-            ok('a bot takes a bounty on the archenemy', bounty.ok && !!dealBetween(A.i, B.i, 'bounty'), bounty);
-            const hand0 = B.hand.length, life0 = A.life, shot = makeObj(C['Grizzly Bears'], B.i); shot.uid = 9990;
-            noteGrudge(D, { owner: B.i }, 5); ok('damage below 8 does not pay yet', !!dealBetween(A.i, B.i, 'bounty'));
-            noteGrudge(D, { owner: B.i }, 4);
-            ok('dealing 8 pays: the payer loses 2 life and the taker draws a card', !dealBetween(A.i, B.i, 'bounty') && A.life === life0 - 2 && B.hand.length === hand0 + 1, { life: A.life, hand: B.hand.length - hand0 });
-            [A, B, Cc, D] = await fresh(['greg', 'marcus', 'sam']); B.trust = { 0: 3 };
-            proposeDeal2(A, B, 'bounty', D.i); G.active = B.i; const h2 = B.hand.length; D.life = 0; eliminate(D, 'test');
-            ok('knocking out the target pays the bounty', B.hand.length === h2 + 1, B.hand.length - h2);
-            [A, B, Cc, D] = await fresh(['greg', 'marcus', 'sam']); B.trust = { 0: 3 };
-            proposeDeal2(A, B, 'bounty', D.i); G.turn += 1; expireDeals(A); G.turn += 1; expireDeals(A); G.turn += 1; expireDeals(A);
-            ok('an unclaimed bounty ends and says so', !dealBetween(A.i, B.i, 'bounty') && lines().some(l => /ran out/.test(l)));
+            // Bounty was removed (it gave a card to a player, which real Magic can't do)
+            ok('there is no Bounty deal any more', !('bounty' in DEAL_TYPES) && !('bounty' in DEAL_KINDS) && typeof payBounty === 'undefined');
             // restraint
             [A, B, Cc, D] = await fresh(['greg', 'marcus', 'sam']); B.trust = { 0: 3 };
             const rs = proposeDeal2(A, B, 'restraint');
