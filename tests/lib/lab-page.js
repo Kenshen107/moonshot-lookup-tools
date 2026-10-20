@@ -123,6 +123,36 @@ window.LAB = (() => {
         return { name: `${commander.name} (${th.name})`, format: 'commander', commander, entries, source: 'lab', aiStyle: th.style, theme: key };
     };
 
+    // ---- Tagged themes (2026-10-20): the same idea as the game's random themed decks (spellslinger/04f-deck-themes.js), built offline from the
+    // EDHREC-ordered Scryfall tag lists in tests/data/theme_names.json (python3 tests/theme_names.py, then tests/data/ is rebuilt from tests/.out) ---
+    L.taggedDeck = key => {
+        const th = deckThemeByKey(key), names = new Set((L.tn[key] || []));
+        const isTheme = c => names.has(c.name) || names.has(c.fullName);
+        let commander = null, themed = [], ci = null;
+        for (let attempt = 0; attempt < 40; attempt++) {
+            const tribal = th.tribe ? cmdPool().filter(x => new RegExp('\\b' + th.tribe + '\\b', 'i').test(x.type)) : [];
+            const c = pickOf(tribal.length ? tribal : cmdPool());
+            const cand = L.auto.filter(x => x.legal.commander === 'legal' && x.id !== c.id && inCI(x, c.ci) && rulesFor(x).kind !== 'land' && x.cmc < 7 && isTheme(x));
+            if (cand.length >= th.min || attempt === 39) { commander = c; ci = c.ci; themed = cand; break; }
+        }
+        const style = pickOf(th.styles);
+        const cand = L.auto.filter(c => c.legal.commander === 'legal' && c.id !== commander.id && inCI(c, ci) && rulesFor(c).kind !== 'land' && c.cmc < 7);
+        const base = cand.filter(c => c.rank).sort((x, y) => x.rank - y.rank).slice(0, 260);
+        const pool = styleSort(style, shuf(base), 3, rnd);
+        const caps = PLAYSTYLES[style].caps, capsT = Object.fromEntries(Object.entries(caps).map(([k, v]) => [k, v + 8]));
+        const lands = shuf(L.auto.filter(c => c.legal.commander === 'legal' && inCI(c, ci) && /Land/.test(c.type) && rulesFor(c).mana)).slice(0, ci.length > 1 ? 8 : 3);
+        const picked = [], counts = {}, seen = new Set();
+        const take = (c, cp) => { const k = rulesFor(c).kind; if (seen.has(c.fullName) || (counts[k] || 0) >= (cp[k] ?? 6)) return false; seen.add(c.fullName); counts[k] = (counts[k] || 0) + 1; picked.push(c); return true; };
+        let n = 0;
+        for (const c of shuf(themed.sort((a, b) => (a.rank || 1e9) - (b.rank || 1e9)).slice(0, 160))) { if (n >= th.take || picked.length >= 62) break; if (take(c, capsT)) n++; }
+        for (const c of pool) { if (picked.length >= 62) break; take(c, caps); }
+        for (const c of pool) { if (picked.length >= 62) break; if (!seen.has(c.fullName)) { seen.add(c.fullName); picked.push(c); } }
+        const entries = [...picked.map(card => ({ card, n: 1 })), ...lands.map(card => ({ card, n: 1 }))];
+        const split = landSplit(entries, ci, 99 - entries.length);
+        Object.entries(split).forEach(([col, k]) => { if (k > 0 && L.basics[col]) entries.push({ card: CARDS.get(L.basics[col]), n: k }); });
+        return { name: `${commander.name} (${th.name})`, format: 'commander', commander, entries, source: 'lab', aiStyle: style, theme: { key, name: th.name, cards: n } };
+    };
+
     // A fixed decklist for seat A (lab.js --decka file.txt): "N Name" lines, the commander in the last block. Cards come from the offline pool by name.
     L.listDeck = text => {
         const byName = new Map(); L.pool.forEach(c => { if (!byName.has(c.fullName)) byName.set(c.fullName, c); if (!byName.has(c.name)) byName.set(c.name, c); });
@@ -204,9 +234,12 @@ window.LAB = (() => {
                 out.styles = [A.aiStyle, B.aiStyle];
             } else if (opts.themes) {
                 // Political decks: 'random' = a different theme at every seat, or a list like fort,thief,hug,drain
-                const keys = opts.themes === 'random' ? hshuf(L.THEME_KEYS).slice(0, n) : String(opts.themes).split(',');
-                out.themes = keys.slice(0, n);
-                const ds = out.themes.map(k => L.themeDeck(k));
+                if (!L.tn) L.tn = await (await fetch('/tests/data/theme_names.json')).json();
+                // 'tagged' = a different tagged theme at every seat (04f-deck-themes.js); 'tag:infect,tag:group-hug' names them; plain keys are the text-based political decks
+                const TAGKEYS = DECK_THEMES.map(t => t.key).filter(k => L.tn[k]);
+                const keys = opts.themes === 'random' ? hshuf(L.THEME_KEYS).slice(0, n) : opts.themes === 'tagged' ? hshuf(TAGKEYS).slice(0, n) : String(opts.themes).split(',');
+                out.themes = keys.slice(0, n).map(k => (opts.themes === 'tagged' ? 'tag:' : '') + k);
+                const ds = out.themes.map(k => /^tag:/.test(k) ? L.taggedDeck(k.slice(4)) : L.themeDeck(k));
                 A = ds[0]; B = ds[1]; more = ds.slice(2);
                 out.styles = ds.map(d => d.aiStyle);
             } else {

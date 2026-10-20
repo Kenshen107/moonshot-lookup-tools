@@ -193,7 +193,7 @@ const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, startLife: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
         landsPlayed: 0, tax: 0, cmdDmg: 0, cmdBy: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
-        aiLevel: /^random/.test(deck.aiLevel || '') ? 'easy' : /^r:/.test(deck.aiLevel || '') ? 'normal' : deck.aiLevel || 'normal', aiRand: /^random/.test(deck.aiLevel || '') ? { cast: 1, atk: 1, blk: 1, def: 1 } : /^r:/.test(deck.aiLevel || '') ? Object.fromEntries(deck.aiLevel.slice(2).split('+').map(k => [k, 1])) : null, aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
+        aiLevel: /^random/.test(deck.aiLevel || '') ? 'easy' : /^r:/.test(deck.aiLevel || '') ? 'normal' : deck.aiLevel || 'normal', aiRand: /^random/.test(deck.aiLevel || '') ? { cast: 1, atk: 1, blk: 1, def: 1 } : /^r:/.test(deck.aiLevel || '') ? Object.fromEntries(deck.aiLevel.slice(2).split('+').map(k => [k, 1])) : null, aiStyle: deck.aiStyle || null, theme: deck.theme ? deck.theme.key : null, poison: 0, energy: 0, exp: 0 };
     { let bfArr = watchBf(P.bf); Object.defineProperty(P, 'bf', { enumerable: true, configurable: true, get() { return bfArr; }, set(v) { bfArr = watchBf(v); } }); } // see allPerms
     { let lifeNow = P.life; Object.defineProperty(P, 'life', { enumerable: true, configurable: true, get() { return lifeNow; }, set(v) { if (v > lifeNow && typeof noLifeGainActive === 'function' && noLifeGainActive()) return; lifeNow = v; } }); } // "Players can't gain life" (Rampaging Ferocidon)
     trackGraveyard(P);
@@ -234,7 +234,7 @@ async function startMatch(again) {
             oppDeck = await buildThemeDeck(theme);
             oppDeck.source = 'Scryfall theme deck';
         } else if (chosenOpponent.type === 'random') {
-            oppDeck = chosenOpponent.fmt === 'commander' ? await buildRandomCommanderDeck() : await buildRandomModernDeck();
+            oppDeck = chosenOpponent.fmt === 'commander' ? await buildRandomCommanderDeck(null, undefined, randomThemeChoice || undefined) : await buildRandomModernDeck();
         } else if (chosenOpponent.type === 'precon') {
             const pc = (await loadPreconList()).find(x => x.file === chosenOpponent.key);
             oppDeck = await preconForAI(await loadPreconDeck(pc));
@@ -687,6 +687,7 @@ function manaOf(o) {
         const X1 = G.players[o.owner];
         if (/\bBasic\b/.test(o.card.type) && X1.bf.some(a => Rx(a).tripleBasic && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 3 };
         if (G.monarch === o.owner && X1.bf.some(a => Rx(a).monarchMana && !lostAbilities(a))) m = { ...m, n: (m.n || 1) + 1, colors: [...new Set([...(m.colors || []), ...COLORS])] };
+        if (allPerms().some(a => Rx(a).landDoubleAll && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 2 }; // Mana Flare, Heartbeat of Spring: every land adds one more of the same type
     }
     if (m && m.identity) { const X0 = G.players[o.owner]; if ([...X0.command, ...X0.bf].some(x => x.isCommander && x.owner === o.owner)) { const id = cmdrIdentity(X0).filter(c => COLORS.includes(c)); return id.length ? { ...m, colors: id } : null; } } // Command Tower, Path of Ancestry: the commander's color identity
     if (o.ctr && o.ctr.flood > 0 && /\bLand\b/.test(o.card.type)) return { colors: ['U'], n: 1 }; // an Island while it has a flood counter
@@ -1169,7 +1170,7 @@ function canCastNow(P, o) {
     }
     return G.active === P.i && MAIN.includes(G.phase);
 }
-function landLimit(P) { if (P.skip && P.skip.turn === G.turn && P.skip.what === 'main') return 0; return 1 + P.bf.reduce((a, x) => a + (Rx(x).extraLand || 0), 0) + (P.extraLandTurn === G.turn ? P.extraLandN || 1 : 0); }
+function landLimit(P) { if (P.skip && P.skip.turn === G.turn && P.skip.what === 'main') return 0; return 1 + P.bf.reduce((a, x) => a + (Rx(x).extraLand || 0), 0) + allPerms().reduce((a, x) => a + (Rx(x).extraLandAll || 0), 0) + (P.extraLandTurn === G.turn ? P.extraLandN || 1 : 0); }
 function canPlayLand(P, o) { return Rx(o).kind === 'land' && G.active === P.i && MAIN.includes(G.phase) && P.landsPlayed < landLimit(P) && (P.hand.includes(o) || (P.exile.includes(o) && o.playUntil >= G.turn) || extraLandZones(P).includes(o)) && !G.over; }
 // Crucible of Worlds (lands from your graveyard), Courser-style (lands from the top of your library)
 function extraLandZones(P) {

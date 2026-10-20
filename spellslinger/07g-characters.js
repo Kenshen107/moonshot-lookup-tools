@@ -23,11 +23,14 @@ const CHARACTER_HABITS = {
 const habit = P => (P && P.char && CHARACTER_HABITS[P.char.key]) || null;
 
 // ---- Deals: each character's own taste ----
+// What a deck's theme (04f-deck-themes.js) wants from the table: group hug likes everyone getting along, a pillowfort wants to be left alone
+const THEME_DEALS = { 'group-hug': { peace: 1.5, spare: 1, pact: -1 }, politics: { pact: 0.5, alliance: 1 }, pillowfort: { peace: 1 }, stax: { peace: 0.5 }, infect: { pact: 0.5 }, toxic: { pact: 0.5 }, burn: { peace: -0.5 } };
 function charAdjust(r, bot, from, type) {
-    const h = habit(bot);
-    if (!h || r.score <= -90) return r;
+    if (r.score <= -90) return r;
+    const h = habit(bot) || {}, th = THEME_DEALS[bot.theme] || {};
+    if (!habit(bot) && !THEME_DEALS[bot.theme]) return r;
     const parts = { ...r.parts };
-    let d = (h[type] || 0) + (h.all || 0);
+    let d = (h[type] || 0) + (h.all || 0) + (th[type] || 0);
     const grudge = (bot.grudge && bot.grudge[from.i]) || 0;
     if (h.forgive) d += grudge * 0.4 * h.forgive;                    // undo part of the grudge penalty
     if (h.grudgeMul) d -= grudge * 0.4 * (h.grudgeMul - 1);          // hold it longer
@@ -46,9 +49,9 @@ function charAdjust(r, bot, from, type) {
     dealScore = function (bot, from, type, x) { return charAdjust(baseScore.apply(this, arguments), bot, from, type); };
     const baseScore2 = dealScore2;
     dealScore2 = function (bot, from, kind, x) {
-        const r = baseScore2.apply(this, arguments), h = habit(bot);
-        if (!h || r.score <= -90 || !['restraint', 'tipPeace', 'alliance'].includes(kind) || !h[kind]) return r;
-        return { ...r, score: r.score + h[kind], parts: { ...r.parts, character: (r.parts.character || 0) + h[kind] } };
+        const r = baseScore2.apply(this, arguments), add = ((habit(bot) || {})[kind] || 0) + (((THEME_DEALS[bot.theme]) || {})[kind] || 0);
+        if (r.score <= -90 || !['restraint', 'tipPeace', 'alliance'].includes(kind) || !add) return r;
+        return { ...r, score: r.score + add, parts: { ...r.parts, character: (r.parts.character || 0) + add } };
     };
 }
 // A bot that isn't loyal breaks a peace when the hit is lethal (or, for the least loyal, nearly lethal). Greg, Trevor and the careful ones keep their word.
@@ -180,5 +183,37 @@ Object.assign(TALK, {
     pactRevenge: {
         _: ["{foe}, {card} has it coming. Join me?", "Let's make {card} pay, {foe}."],
         sam: ["{foe}! {card} is mine! You in?!"], leo: ["{card} wronged me, {foe}. Help me."], greg: ["Hey {foe}, {card} was pretty rough on me. Want to team up?"], marcus: ["{foe}. {card}. Together."]
+    }
+});
+
+// ---- Kingmaking: a bot that can no longer win chooses its last hits by feeling (2026-10-20) ----
+function isDoomed(P) {
+    if (!G || G.over || G.players.length < 3 || !P.isAI || P.out || G.turn < 16) return false;
+    const live = G.players.filter(X => !X.out);
+    if (live.length < 3) return false;
+    const mean = live.reduce((a, X) => a + podThreat(X), 0) / live.length;
+    return P.life <= 12 && podThreat(P) < mean * 0.45;
+}
+// Whoever it holds the biggest grudge against, else whoever it trusts least (ties go to the next seat)
+function doomedTarget(P, list) {
+    const g = P.grudge || {}, rel = F => (F.i - P.i + G.players.length) % G.players.length;
+    return list.slice().sort((a, b) => (g[b.i] || 0) - (g[a.i] || 0) || trustOf(P, a) - trustOf(P, b) || rel(a) - rel(b))[0];
+}
+{
+    const baseTick = politicsTick;
+    politicsTick = function (P) {
+        const r = baseTick.apply(this, arguments);
+        if (P && P.isAI && !P._doomedSaid && isDoomed(P)) {
+            P._doomedSaid = true;
+            const t = doomedTarget(P, foes(P));
+            if (t) say(P, 'doomed', 'angry', { foe: nm(t) }, null);
+        }
+        return r;
+    };
+}
+Object.assign(TALK, {
+    doomed: {
+        _: ["I'm not winning this one. But {foe} isn't either.", "If I'm going down, {foe} is feeling it first.", "Nothing left to lose. Sorry, {foe}."],
+        sam: ["{foe}! You're getting all of it!"], luke: ["Well, {foe}, let's see who wins because of me."], greg: ["I don't like it, {foe}, but you're my last target."], marcus: ["{foe}. It's personal now."], arthur: ["I'll decide who wins this, {foe}. Don't forget it."], trevor: ["The numbers say I lose. So it's you, {foe}."]
     }
 });

@@ -1097,6 +1097,8 @@ function permMatches(o, f, P) {
     const k = Rx(o).kind, t = o.card.type, theirs = o.owner !== P.i;
     let m;
     if (f.startsWith('sf:')) { const F = structFilter(f); return !!F && structMatch(o, F, P); } // Phase 2b token reader
+    if (f === 'permanent you control') return !theirs; // donating (Harmless Offering, Donate)
+    if (f === 'artifact, creature, or land you control') return !theirs && (isCreature(o) || /\b(Artifact|Land)\b/.test(t)); // Bazaar Trader
     if (/ you don't control$/.test(f) && f !== "nonland permanent you don't control") return theirs && permMatches(o, f.replace(/ you don't control$/, ''), P);
     if ((m = f.match(/^(non)?(white|blue|black|red|green|artifact) creature$/))) {
         if (!isCreature(o)) return false;

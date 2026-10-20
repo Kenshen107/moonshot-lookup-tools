@@ -29,7 +29,8 @@ async function autoTest() {
         } else if (format === 'random') {
             // Two random playable decks: format=random&a=commander (or modern)
             const build = q.get('a') === 'modern' ? buildRandomModernDeck : buildRandomCommanderDeck;
-            A = await build(); B = await build();
+            const th = q.get('theme') || undefined; // format=random&a=commander&theme=group-hug (or none)
+            A = await build(null, undefined, th); B = await build(null, undefined, q.get('themeb') || th);
         } else if (format === 'precon') {
             // Real precons from MTGJSON by file name: format=precon&a=<file>&b=<file>
             const list = await loadPreconList();

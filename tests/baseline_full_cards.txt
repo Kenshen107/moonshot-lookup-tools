@@ -175,6 +175,7 @@ Agents of S.H.I.E.L.D.
 Aggressive Instinct
 Aggressive Mammoth
 Aggressive Urge
+Agitator Ant
 Agna Qel'a
 Agonizing Syphon
 Agony Warp
@@ -1014,6 +1015,7 @@ Bayou
 Bayou Groff
 Bazaar Krovod
 Bazaar Trademage
+Bazaar Trader
 Bazaar of Baghdad
 Beacon Behemoth
 Beacon Hawk
@@ -2538,6 +2540,7 @@ Court of Ire
 Covenant of Blood
 Covert Operative
 Coveted Jewel
+Coveted Peacock
 Covetous Castaway // Ghostly Castigator
 Cower in Fear
 Cowl Prowler
@@ -2574,6 +2577,7 @@ Craven Knight
 Craw Giant
 Craw Wurm
 Crawl from the Cellar
+Crawling Chorus
 Crawling Filth
 Crazed Goblin
 Crazed Skirge
@@ -2654,6 +2658,7 @@ Crush the Weak
 Crushing Canopy
 Crushing Disappointment
 Crushing Vines
+Crypt Cobra
 Crypt Creeper
 Crypt Feaster
 Crypt Ghast
@@ -3154,6 +3159,7 @@ Diamond Mare
 Diamond Pick-Axe
 Dictate of Erebos
 Dictate of Heliod
+Dictate of Karametra
 Dictate of Kruphix
 Dictate of the Twin Gods
 Didn't Say Please
@@ -3240,6 +3246,7 @@ Dispersal Technician
 Disperse
 Disposal Mummy
 Disrupt
+Disrupt Decorum
 Disrupting Scepter
 Disruptive Pitmage
 Disruptive Stormbrood // Petty Revenge
@@ -3304,6 +3311,7 @@ Dominion Supervisor
 Domri's Nodorog
 Domri, City Smasher
 Don't Move
+Donate
 Donatello
 Donatello, Turtle Techie
 Donatello, Way with Machines
@@ -4562,6 +4570,7 @@ Fomori Nomad
 Font of Fertility
 Font of Fortunes
 Font of Ire
+Font of Mythos
 Font of Vigor
 Food Coma
 Fool's Tome
@@ -5187,6 +5196,7 @@ Goblin Patrol
 Goblin Picker
 Goblin Piker
 Goblin Rabblemaster
+Goblin Racketeer
 Goblin Raider
 Goblin Rally
 Goblin Replica
@@ -5340,6 +5350,7 @@ Grasping Longneck
 Grasping Scoundrel
 Grasping Thrull
 Grasslands
+Grateful Apparition
 Gravblade Heavy
 Grave Exchange
 Grave Pact
@@ -5533,6 +5544,7 @@ Guiding Hydra
 Guild Summit
 Guild Thief
 Guildless Commons
+Guildpact Informant
 Gulping Scraptrap
 Guma
 Gumato
@@ -5635,6 +5647,7 @@ Hardened-Scale Armor
 Hardy Veteran
 Harm's Way
 Harmattan Efreet
+Harmless Offering
 Harmonic Prodigy
 Harmonious Grovestrider
 Harmonize
@@ -5721,6 +5734,7 @@ Heart Warden
 Heart of Ramos
 Heart-Piercer Manticore
 Heart-Shaped Herb
+Heartbeat of Spring
 Hearth Charm
 Hearth Kami
 Hearthborn Battler
@@ -5958,6 +5972,7 @@ Horizon Spellbomb
 Horizon Stone
 Hormagaunt Horde
 Horn of Gondor
+Horn of Greed
 Horn of Ramos
 Horn of Valhalla // Ysgard's Call
 Horn of the Mark
@@ -6029,6 +6044,7 @@ Hum of the Radix
 Human Torch
 Human Torch, Johnny Storm
 Humble Budoka
+Humble Defector
 Humble Naturalist
 Humble the Brute
 Humbler of Mortals
@@ -6517,6 +6533,8 @@ Jibbirik Omnivore
 Jidoor, Aristocratic Capital // Overture
 Jill, Shiva's Dominant // Shiva, Warden of Ice
 Jinxed Choker
+Jinxed Idol
+Jinxed Ring
 Jiwari, the Earth Aflame
 Jocasta, Automaton Avenger
 Johnny, Combo Player
@@ -7477,6 +7495,7 @@ Mana Bloom
 Mana Confluence
 Mana Cylix
 Mana Drain
+Mana Flare
 Mana Geode
 Mana Geyser
 Mana Leak
@@ -10048,6 +10067,7 @@ Risky Shortcut
 Rite of Flame
 Rite of Replication
 Rite of the Dragoncaller
+Rites of Flourishing
 Rites of Reaping
 Rith's Attendant
 Rith's Grove
@@ -11909,6 +11929,7 @@ Stimulus Package
 Stingerfling Spider
 Stingerquill Annex
 Stinging Barrier
+Stinging Hivemaster
 Stingmoggie
 Stingscourger
 Stinkdrinker Daredevil
@@ -11992,6 +12013,7 @@ Stormchaser Mage
 Stormclaw Rager
 Stormcloud Spirit
 Stormcrag Elemental
+Stormfist Crusader
 Stormfront Pegasus
 Stormkeld Prowler
 Stormkeld Vanguard // Bear Down
@@ -12199,6 +12221,7 @@ Supportive Parents
 Supreme Phantom
 Supreme Verdict
 Supreme Will
+Suq'Ata Assassin
 Suq'Ata Lancer
 Sure Strike
 Sureshot Sower
@@ -12239,6 +12262,7 @@ Swab Goblin
 Swaggering Corsair
 Swallowing Plague
 Swamp
+Swamp Mosquito
 Swampbenders
 Swampsnare Trap
 Swan Song
@@ -12522,6 +12546,11 @@ Temporal Machinations
 Temporal Manipulation
 Temporal Mastery
 Temporal Trespass
+Temporary Truce
+Tempt with Bunnies
+Tempt with Discovery
+Tempt with Glory
+Tempt with Immortality
 Tempt with Reflections
 Tempting Witch
 Temur Ascendancy
@@ -13149,6 +13178,7 @@ Trostani, Three Whispers
 Troubled Healer
 Trove Tracker
 Troyan, Gutsy Explorer
+Truce
 Truck Toss
 Trudge Garden
 True Ancestry
@@ -13584,6 +13614,7 @@ Venerable Warsinger
 Venerated Stormsinger
 Vengeance
 Vengeant Vampire
+Vengeful Ancestor
 Vengeful Archon
 Vengeful Bloodwitch
 Vengeful Creeper
@@ -14390,6 +14421,7 @@ Wriggling Grub
 Wring Flesh
 Writ of Return
 Writhing Necromass
+Wrong Turn
 Wu Admiral
 Wu Elite Cavalry
 Wu Infantry
@@ -14496,10 +14528,12 @@ Zealous Guardian
 Zealous Lorecaster
 Zealous Strike
 Zebra Unicorn
+Zedruu the Greathearted
 Zell Dincht
 Zendikar Farguide
 Zendikar Incarnate
 Zendikar's Roil
+Zenith Chronicler
 Zenith Festival
 Zephid
 Zephid's Embrace
@@ -14523,6 +14557,7 @@ Zhao, the Seething Flame
 Zhentarim Bandit
 Zhou Yu, Chief Commander
 Zhuge Jin, Wu Strategist
+Zhur-Taa Ancient
 Zhur-Taa Druid
 Zhur-Taa Goblin
 Zhur-Taa Swine
