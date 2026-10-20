@@ -10,7 +10,7 @@ registerRules({
         [/^(?:you may )?put a \+1\/\+1 counter on each ([a-z]+) creature you control$/, m => ({ t: 'teamCounters', n: 1, type: m[1][0].toUpperCase() + m[1].slice(1) })],
         [/^create a token that's a copy of ~$/, () => ({ t: 'tokenCopySelf' })],
         [/^(?:you may )?tap or untap target creature$/, () => ({ t: 'tapOrUntap', target: 'creature' })],
-        [/^(?:you may )?(?:have )?target player lose (\d+) life$/, m => ({ t: 'drain', n: +m[1] })],
+        [/^(?:you may )?(?:have )?target player lose (\d+) life$/, m => ({ t: 'drain', n: +m[1], target: 'player' })],
         [/^double ~'s power until end of turn$/, () => ({ t: 'doublePow', target: 'self' })],
         [/^double the power of target creature you control until end of turn$/, () => ({ t: 'doublePow', target: 'creature', mine: true, good: true })],
         [/^equipped creature gets \+(\d+)\/\+(\d+) until end of turn$/, m => ({ t: 'hostPump', p: +m[1], q: +m[2] })],

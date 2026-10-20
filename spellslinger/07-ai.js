@@ -107,10 +107,10 @@ function aiScoreBase(P, o, target) {
     const r = Rx(o);
     const O = opp(P);
     if (r.legendary && P.bf.some(x => x.card.name === o.card.name)) return 0; // the legend rule would bin one
-    if (r.kind === 'creature') return 10 + (o.card.cmc || 0) * 2 + creatureValue(o) * 0.5;
+    if (r.kind === 'creature') return tn(P, 'creatureBase') + (o.card.cmc || 0) * 2 + creatureValue(o) * 0.5;
     if (r.isAura) return target ? 6 + r.buff.p + r.buff.q : 0;
-    if (r.isEquipment) return P.bf.some(isCreature) ? 5 : 1;
-    if (r.kind === 'artifact' || r.kind === 'enchantment') return r.mana ? 9 : 4;
+    if (r.isEquipment) return P.bf.some(isCreature) ? tn(P, 'equipScore') : 1;
+    if (r.kind === 'artifact' || r.kind === 'enchantment') return r.mana ? tn(P, 'rockScore') : 4;
     if (r.kind === 'battle') return 6 + Math.max(r.etb.length ? scoreEffects(P, r.etb, null, o) : 0, ...(r.etbModes || []).map(fx => scoreEffects(P, fx, null, o)));
     let fx = spellEffects(o);
     if (r.cost.x) fx = withX(fx, o.xVal || maxX(P, o));
@@ -423,7 +423,7 @@ function aiBestPlay(P) {
     }
     faces.forEach(([o]) => { o.card = o.front || o.card; o.overloaded = false; o.evoked = false; o.altCast = false; o.castAs = null; });
     if (!cands.length) return null;
-    const pick = P.aiRandom || (P.aiLevel === 'easy' && Math.random() < 0.4) ? cands[rand(cands.length)] : cands.sort((a, b) => b.s - a.s)[0];
+    const pick = (P.aiRand && P.aiRand.cast) || (P.aiLevel === 'easy' && Math.random() < 0.4) ? cands[rand(cands.length)] : cands.sort((a, b) => b.s - a.s)[0];
     pick.o.card = pick.face; // cast the half it chose
     pick.o.overloaded = pick.ov;
     pick.o.evoked = pick.ev;
@@ -439,8 +439,8 @@ function isRemovalEffect(e) { return !!e && (['destroy', 'exile', 'bounce', 'fig
 function removalThreshold(P) {
     const sumPow = X => X.bf.filter(isCreature).reduce((a, c) => a + Math.max(0, pow(c)), 0);
     const theirPow = foes(P).reduce((a, F) => a + sumPow(F), 0), ourPow = sumPow(P);
-    if (P.life <= 12 || theirPow >= P.life / 2) return 4.5; // under pressure: use it
-    return (P.aiLevel === 'hard' ? 7 : 6.5) + (P.life > 20 && ourPow >= theirPow * 1.5 ? 1.5 : 0); // ahead on board: save it even more
+    if (P.life <= 12 || theirPow >= P.life / 2) return 4.5 + tn(P, 'thOff') * 0.5; // under pressure: use it
+    return tn(P, 'thOff') + (P.aiLevel === 'hard' ? 7 : 6.5) + (P.life > 20 && ourPow >= theirPow * 1.5 ? 1.5 : 0); // ahead on board: save it even more
 }
 function removalWorthIt(P, o) {
     if (P.aiLevel === 'easy') return true;
@@ -505,7 +505,7 @@ async function aiMain(P) {
 function aiPickDefender(P) {
     const fs = foes(P);
     if (fs.length === 1) return fs[0];
-    if (P.aiRandom) return fs[rand(fs.length)];
+    if (P.aiRand && P.aiRand.def) return fs[rand(fs.length)];
     if (P.aiStyle || P.aiLevel !== 'easy') return podPickDefender(P);
     const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
     const blockers = F => F.bf.filter(o => isCreature(o) && !o.tapped).length;
@@ -516,7 +516,7 @@ function aiPickDefender(P) {
 }
 function aiChooseAttackers(P) {
     const must = P.bf.filter(o => canAttackWith(o) && forcedAttack(o));
-    if (P.aiRandom) return [...new Set([...P.bf.filter(o => canAttackWith(o) && pow(o) > 0 && Math.random() < 0.5), ...must])]; // the lab's random baseline (level 'random')
+    if (P.aiRand && P.aiRand.atk) return [...new Set([...P.bf.filter(o => canAttackWith(o) && pow(o) > 0 && Math.random() < 0.5), ...must])]; // the lab's random baseline (level 'random')
     let chosen = [...new Set([...aiChooseAttackersFree(P), ...must])];
     const D = opp(P), cands = P.bf.filter(o => canAttackWith(o) && pow(o) > 0);
     if (P.aiStyle) chosen = [...new Set([...styleAttackers(P, chosen, cands, D), ...must])];
@@ -599,7 +599,7 @@ function aiChooseBlocks(D, A) {
     const free = D.bf.filter(o => isCreature(o) && !o.tapped);
     const blocks = {};
     const take = b => pull(free, b);
-    if (D.aiRandom) { atks.forEach(a => { const b = free.filter(x => canBlock(x, a))[0]; if (b && Math.random() < 0.4) { take(b); blocks[a.uid] = [b.uid]; } }); return blocks; } // random baseline
+    if (D.aiRand && D.aiRand.blk) { atks.forEach(a => { const b = free.filter(x => canBlock(x, a))[0]; if (b && Math.random() < 0.4) { take(b); blocks[a.uid] = [b.uid]; } }); return blocks; } // random baseline
     let incoming = atks.reduce((s, a) => s + dmgOf(a), 0);
     const st = styleOf(D), blkTol = st ? st.blk : 0; // control and midrange block more eagerly, aggro less
     for (const atk of atks) {

@@ -42,7 +42,7 @@ registerRules({
         [/^~ deals (\w+) damage to target player or planeswalker and each creature that player or that planeswalker's controller controls$/i, m => ({ t: 'dmgPlayerAndCreatures', n: num(m[1]) })],
         [/^prevent all damage that would be dealt to you and creatures you control this turn$/i, () => ({ t: 'safePassage' })],
         [/^~ deals x damage to target creature and you gain x life, where x is (the number of .+)$/i, m => (countFn(m[1]) ? [{ t: 'dmg', n: 0, target: 'creature', nCount: m[1] }, { t: 'gain', n: 0, nCount: m[1] }] : null)],
-        [/^target player mills half their library, rounded down$/i, () => ({ t: 'millHalf' })],
+        [/^target player mills half their library, rounded down$/i, () => ({ t: 'millHalf', down: true, target: 'player' })],
         [/^§warpworld$/, () => ({ t: 'warpWorld' })],
     ],
     triggers: [

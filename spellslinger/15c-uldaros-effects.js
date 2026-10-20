@@ -91,6 +91,14 @@ async function uldEffect(P, e, t, src, O, name) {
         }
         case 'millSelf': doMill(P, e.n); break;
         // Terisian Mindbreaker (up), Singularity Rupture (down)
+        // Singularity Rupture: "any number of target players": a person picks (themselves included), the computer picks by its deck
+        case 'millHalfChosen': {
+            const alive = G.players.filter(x => !x.out);
+            const chosen = (P.isAI || AUTOPLAY) ? aiMillTargets(P) : await pickPlayers(P, `${name}: choose any number of target players. Each mills half their library, rounded down.`, alive, foes(P).map(f => f.i));
+            if (!chosen.length) log(`${name}: no players were chosen.`);
+            for (const X of chosen) if (!X.out) doMill(X, Math.floor(X.library.length / 2));
+            break;
+        }
         case 'millHalf': case 'millHalfFoes': {
             const X = e.who === 'self' ? P : O;
             doMill(X, e.down ? Math.floor(X.library.length / 2) : Math.ceil(X.library.length / 2));
@@ -317,6 +325,22 @@ async function pickPlayer(P, list, title) {
     for (let i = 0; i < list.length - 1; i++) if (await askYes(P, `${title} ${list[i].name}?`, { yes: 'Yes', no: 'Next player' })) return list[i];
     return list[list.length - 1] || null;
 }
+// A person chooses any number of players (checkboxes; `pre` = the ids ticked at first). Resolves to the chosen players.
+function pickPlayers(P, title, list, pre) {
+    return new Promise(resolve => {
+        window.__ppOk = () => { const ids = [...document.querySelectorAll('#modalHost input[name=pp]:checked')].map(i => Number(i.value)); closeModal(); resolve(list.filter(x => ids.includes(x.i))); };
+        showModal(`<h2>${esc(title)}</h2><div class="row" style="flex-direction:column; align-items:stretch; gap:8px; text-align:left;">${list.map(x => `<label class="row" style="gap:8px; justify-content:flex-start;"><input type="checkbox" name="pp" value="${x.i}"${pre.includes(x.i) ? ' checked' : ''}> ${x.i === P.i ? '🧙 Yourself' : esc(x.name)} <span class="note">(${x.library.length} cards in library)</span></label>`).join('')}</div>
+            <div class="row" style="justify-content:center; margin-top:12px;"><button class="btn primary" onclick="__ppOk()">OK</button></div>`);
+    });
+}
+// The computer mills every opponent, and itself too when its deck wants cards in the graveyard
+function aiMillTargets(P) {
+    const own = [...P.library, ...P.hand, ...P.bf, ...P.gy];
+    const synergy = own.filter(c => /flashback|escape|delve|dredge|unearth|embalm|eternalize|disturb|from your graveyard|in your graveyard/i.test(String(c.card.text || ''))).length;
+    const out = foes(P).filter(F => F.library.length > 0);
+    if (synergy >= 5 && P.library.length > 20) out.push(P);
+    return out;
+}
 ['millFoes', 'millHalfFoes', 'millUntilLands', 'exileUntilMv'].forEach(k => EACH_OPP_EFFECTS.add(k));
 
 // Rad counters: the beginning of each player's precombat main phase (beginTurn calls radTick)
@@ -340,7 +364,7 @@ function uldScore(P, e, O, target) {
     const lib = O.library.length;
     switch (e.t) {
         case 'millFoes': return 2 + (Number(e.n) || 0) * 0.3 + (lib <= (Number(e.n) || 0) ? 1000 : 0) + (e.kickedHalf ? 2 : 0);
-        case 'millHalf': case 'millHalfFoes': return 2 + lib * 0.15;
+        case 'millHalf': case 'millHalfFoes': case 'millHalfChosen': return 2 + lib * 0.15;
         case 'millUntilLands': case 'revealLandsOne': return 3;
         case 'exileUntilMv': return 4 + (e.cast ? 4 : 0) + (lib < 12 ? 3 : 0);
         case 'fallout': { const theirs = allPerms().filter(c => isCreature(c) && c.owner !== P.i).reduce((a, c) => a + creatureValue(c), 0), ours = P.bf.filter(isCreature).reduce((a, c) => a + creatureValue(c), 0); return theirs - ours > 6 ? theirs - ours : 1; }

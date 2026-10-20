@@ -175,7 +175,7 @@ function podPickDefender(P) {
 }
 // Pods: keep creatures home when the other players could kill us next turn. Each creature held back absorbs the biggest attacker.
 // Numbers the lab tunes (tests/lab.js --patch "AI_TUNE.holdShare=0.5", or --tune "holdShare=0.5" for seat A only; a player's own P.tune wins)
-const AI_TUNE = { holdShare: 1, stallTurn: 14, stallRatio: 1.4, targetMode: 0, ignoreArch: 0 }; // targetMode 0 = the style's own habit, 1 threat, 2 weak, 3 revenge; ignoreArch 1 = don't pile on the archenemy
+const AI_TUNE = { holdShare: 1, stallTurn: 14, stallRatio: 1.4, targetMode: 0, ignoreArch: 0, creatureBase: 10, rockScore: 9, thOff: 0, equipScore: 5 }; // targetMode 0 = the style's own habit, 1 threat, 2 weak, 3 revenge; ignoreArch 1 = don't pile on the archenemy
 const tn = (P, k) => (P && P.tune && P.tune[k] !== undefined ? P.tune[k] : AI_TUNE[k]);
 function aiHoldBack(P, chosen, D) {
     if (G.players.length <= 2 || !chosen.length || P.aiLevel === 'easy') return chosen;

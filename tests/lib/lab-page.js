@@ -289,6 +289,12 @@ window.LAB = (() => {
                     else if (ev === 'attacks' && ctx && ctx.list && ctx.list.length) { const t = seats[ctx.list[0].owner]; if (t) { t.atk++; t.atkC += ctx.list.length; if (new Set(ctx.list.map(o => o.atkTo)).size > 1) S.splits++; } }
                     else if (ev === 'hitPlayer' && ctx && ctx.src && seats[ctx.src.owner]) seats[ctx.src.owner].hit += ctx.n || 0;
                     else if (ev === 'dies' && ctx && ctx.o && seats[ctx.o.owner] && isCreature(ctx.o)) seats[ctx.o.owner].lost++;
+                    else if (ev === 'end' && G.active != null && seats[G.active] && !G.players[G.active].out) {
+                        const P = G.players[G.active], t = seats[G.active]; let can = 0, canCmc = 0;
+                        for (const o of P.hand) { if (Rx(o).kind !== 'land' && Rx(o).kind !== 'instant' && !Rx(o).flash && Rx(o).support !== 'none' && canPay(P, o)) { can++; canCmc += o.card.cmc || 0; } }
+                        t.endN = (t.endN || 0) + 1; t.unspent = (t.unspent || 0) + availableMana(P); t.castLeft = (t.castLeft || 0) + can; t.castLeftTurns = (t.castLeftTurns || 0) + (can ? 1 : 0); t.handEnd = (t.handEnd || 0) + P.hand.length;
+                        t.landsHeld = (t.landsHeld || 0) + P.hand.filter(o => Rx(o).kind === 'land').length;
+                    }
                     else if (ev === 'combat' && G.phase !== 'setup' && G.active != null && seats[G.active] && !G.players[G.active].out) {
                         const P = G.players[G.active], cs = P.bf.filter(isCreature); let cap = 0;
                         for (const x of P.bf) { const mo = manaOf(x); if (mo && !(isCreature(x) && x.sick && !has(x, 'haste'))) cap += mo.n || 1; }
