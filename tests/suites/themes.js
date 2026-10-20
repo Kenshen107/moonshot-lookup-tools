@@ -54,6 +54,7 @@ async function main() {
     const h = await launch({ profileDir: dir });
     const { page, errors } = await openTestPage(h.ctx, h.server);
     await installHelpers(page);
+    page.on('requestfailed', r => console.log('request failed:', decodeURIComponent(r.url()).slice(0, 260), r.failure() && r.failure().errorText));
     const raw = await page.evaluate(`(${BODY.toString()})()`);
     const results = formatChecks(raw);
     const good = printResults('themes', results, errors);
