@@ -12,7 +12,9 @@ const AUTOPLAY = new URLSearchParams(location.search).has('autoplay'); // testin
 
 function makeObj(card, owner, extra) {
     // counters: net +1/+1 (negative = -1/-1; the two cancel, rule 704.5q); ctr: other named counters
-    return Object.assign({ uid: uidSeq++, card, front: card, owner, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, token: false, isCommander: false }, extra || {});
+    const o = Object.assign({ uid: uidSeq++, card, front: card, owner, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, token: false, isCommander: false }, extra || {});
+    { let at = o.attachedTo; Object.defineProperty(o, 'attachedTo', { enumerable: true, configurable: true, get() { return at; }, set(v) { if (v !== at) { at = v; attVer++; } } }); } // attachments are looked up by host (attachmentsOf), so changes are counted
+    return o;
 }
 const Rx = o => o.card._r || rulesFor(o.card);
 // The player holding the device (G.view; always 0 except in a pass-and-play game) and the other one
@@ -56,6 +58,36 @@ function allPerms() {
     permCache = out; permCacheVer = permVer; permCacheN = n; permCacheG = G;
     return out;
 }
+// The permanents that have static abilities (lords, anthems), kept like allPerms(): staticBuffs asks for them on every power / toughness check
+let attVer = 0, amCache = null, amVer = -1, amPerms = null;
+const NO_ATT = [];
+// The Auras and Equipment attached to one permanent (cached until a battlefield or an attachment changes)
+function attachmentsOf(uid) {
+    const all = allPerms();
+    if (amCache === null || amVer !== attVer || amPerms !== all) {
+        amCache = new Map();
+        for (let i = 0; i < all.length; i++) { const a = all[i], h = a.attachedTo; if (h != null) { const l = amCache.get(h); if (l) l.push(a); else amCache.set(h, [a]); } }
+        amVer = attVer; amPerms = all;
+    }
+    return amCache.get(uid) || NO_ATT;
+}
+// A filtered copy of allPerms() kept until the battlefield changes (permsBy('lord', a => Rx(a).lordAddSub)): for rare card properties asked about on every check
+const permsByCache = {};
+function permsBy(key, pred) {
+    const all = allPerms(), c = permsByCache[key];
+    if (c && c.all === all) return c.list;
+    const list = all.filter(pred); permsByCache[key] = { all, list };
+    return list;
+}
+const typeRxCache = new Map();
+const typeRx = t => { let r = typeRxCache.get(t); if (!r) { r = new RegExp(`\\b${t}\\b`); typeRxCache.set(t, r); } return r; };
+let srcCache = null, srcVer = -1, srcN = -1, srcG = null;
+function staticSources() {
+    const all = allPerms();
+    if (srcCache !== null && srcVer === permVer && srcN === all.length && srcG === G && permCache === all) return srcCache;
+    srcCache = all.filter(a => { const st = Rx(a).statics; return !!st && st.length > 0; }); srcVer = permVer; srcN = all.length; srcG = G;
+    return srcCache;
+}
 const onBf = uid => { const ps = G.players; for (let i = 0; i < ps.length; i++) { const b = ps[i].bf; for (let j = 0; j < b.length; j++) if (b[j].uid === uid) return b[j]; } return null; };
 function findObj(uid) {
     const onStack = G.stack.find(it => it.kind === 'spell' && it.o.uid === uid);
@@ -67,10 +99,9 @@ const ctrl = o => G.players[o.owner];
 const isCreature = o => !o.enchOnly && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
 function buffsOn(o) {
     const b = { p: 0, q: 0, kw: [] };
-    const perms0 = allPerms();
+    const perms0 = attachmentsOf(o.uid);
     for (let pi = 0; pi < perms0.length; pi++) {
         const a = perms0[pi];
-        if (a.attachedTo !== o.uid) continue;
         if (!(Rx(a).buff || Rx(a).buffCond)) continue;
         const R = Rx(a);
         if (R.buffCond && condOk(R.buffCond.cond, ctrl(a), a)) b.kw.push(...R.buffCond.kw);
