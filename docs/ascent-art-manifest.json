@@ -5477,29 +5477,6 @@
    ]
   },
   {
-   "id": "cursor-hand",
-   "group": "site",
-   "name": "mouse cursor, pointing hand",
-   "out": "art/site/cursor-hand.png",
-   "kind": "strip",
-   "frame": [
-    32,
-    32
-   ],
-   "frames": 1,
-   "seed": 166059,
-   "steps": [
-    {
-     "key": "gen",
-     "style": "rd_plus__low_res",
-     "width": 32,
-     "height": 32,
-     "prompt": "a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image",
-     "remove_bg": true
-    }
-   ]
-  },
-  {
    "id": "mascot",
    "group": "site",
    "name": "page mascot (waves, blinks)",
@@ -5680,29 +5657,6 @@
      "height": 128,
      "prompt": "a wide pixel art banner scene, a midnight city skyline with fireworks bursting, confetti and a glowing clock, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
      "remove_bg": false
-    }
-   ]
-  },
-  {
-   "id": "click-burst",
-   "group": "site",
-   "name": "click burst",
-   "out": "art/site/click-burst.png",
-   "kind": "strip",
-   "frame": [
-    64,
-    64
-   ],
-   "frames": 8,
-   "seed": 576244,
-   "steps": [
-    {
-     "key": "gen",
-     "style": "rd_animation__vfx",
-     "width": 64,
-     "height": 64,
-     "prompt": "a tiny satisfying click burst: a bright cyan and white ring of pixels expanding with a few gold sparks flying outward and fading, centered",
-     "remove_bg": true
     }
    ]
   },

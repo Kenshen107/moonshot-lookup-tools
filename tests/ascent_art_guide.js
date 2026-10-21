@@ -62,17 +62,13 @@ const SITE = [
         prompt: `a square ornate trading card border frame in ${d}, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text` })),
     { id: 'cursor-arrow', label: 'mouse cursor, arrow', size: [32, 32], frames: 1, style: 'rd_plus__low_res', remove_bg: true,
       prompt: 'a pixel art mouse pointer arrow, cream white fill with a thick dark outline and one small teal highlight pixel, pointing up and to the left, the tip at the very top-left corner of the image' },
-    { id: 'cursor-hand', label: 'mouse cursor, pointing hand', size: [32, 32], frames: 1, style: 'rd_plus__low_res', remove_bg: true,
-      prompt: 'a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image' },
     { id: 'mascot', label: 'page mascot (waves, blinks)', size: [64, 64], frames: 8, style: 'rd_animation__vfx', remove_bg: true,
       prompt: 'a tiny cute pixel mascot: a smiling crescent moon wearing a little rocket-nose-cone cap, floating with a gentle bob, blinking once and giving a small wave, a seamless 8 frame loop, centered' },
     { id: 'loading-card', label: 'loading spinner (a card flipping)', size: [48, 48], frames: 8, style: 'rd_animation__vfx', remove_bg: true,
       prompt: 'a single pixel playing card spinning around its vertical axis like a coin flip, teal back with a small gold star, seamless 8 frame loop, centered' },
     ...[['halloween', 'a spooky night street with a big orange moon, bats, a haunted house and glowing jack-o-lanterns'], ['autumn', 'a golden autumn hillside with red and orange trees, falling leaves and a warm low sun'], ['winter', 'a snowy village at dusk with lit windows, pine trees and falling snow'], ['christmas', 'a cozy Christmas night scene with a decorated tree, wrapped gifts, a sleigh and twinkling lights'], ['spring', 'a bright spring meadow with cherry blossoms, tulips, a pastel sky and small birds'], ['newyear', 'a midnight city skyline with fireworks bursting, confetti and a glowing clock']].map(([k, d]) => ({
         id: 'scene-' + k, label: `${k} scene banner`, size: [256, 128], frames: 1, style: 'rd_plus__environment', remove_bg: false,
-        prompt: `a wide pixel art banner scene, ${d}, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text` })),
-    { id: 'click-burst', label: 'click burst', size: [64, 64], frames: 8, style: 'rd_animation__vfx', remove_bg: true,
-      prompt: 'a tiny satisfying click burst: a bright cyan and white ring of pixels expanding with a few gold sparks flying outward and fading, centered' }
+        prompt: `a wide pixel art banner scene, ${d}, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text` }))
 ];
 for (const x of SITE) MANIFEST.assets.push({ id: x.id, group: 'site', name: x.label, out: `art/site/${x.id}.png`, kind: 'strip', frame: x.size, frames: x.frames, seed: hash(x.id),
     steps: [{ key: 'gen', style: x.style, width: x.size[0], height: x.size[1], prompt: x.prompt, remove_bg: x.remove_bg }] });
