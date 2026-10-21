@@ -11,7 +11,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 875957,
    "steps": [
@@ -29,7 +29,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -38,7 +38,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -53,7 +53,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 566766,
    "steps": [
@@ -71,7 +71,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -80,7 +80,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -95,7 +95,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 73964,
    "steps": [
@@ -113,7 +113,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -122,7 +122,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -137,7 +137,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 558850,
    "steps": [
@@ -155,7 +155,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -164,7 +164,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -179,7 +179,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 395211,
    "steps": [
@@ -197,7 +197,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -206,7 +206,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -221,7 +221,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 454864,
    "steps": [
@@ -239,7 +239,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -248,7 +248,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -263,7 +263,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 696596,
    "steps": [
@@ -281,7 +281,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -290,7 +290,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -305,7 +305,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 387081,
    "steps": [
@@ -323,7 +323,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -332,7 +332,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -347,7 +347,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 697307,
    "steps": [
@@ -365,7 +365,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -374,7 +374,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -389,7 +389,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 683109,
    "steps": [
@@ -407,7 +407,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -416,7 +416,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -431,7 +431,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 5998,
    "steps": [
@@ -449,7 +449,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -458,7 +458,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -473,7 +473,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 106547,
    "steps": [
@@ -491,7 +491,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -500,7 +500,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -515,7 +515,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 725951,
    "steps": [
@@ -533,7 +533,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -542,7 +542,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -557,7 +557,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 288627,
    "steps": [
@@ -575,7 +575,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -584,7 +584,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -599,7 +599,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 210174,
    "steps": [
@@ -617,7 +617,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -626,7 +626,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -641,7 +641,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 911456,
    "steps": [
@@ -659,7 +659,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -668,7 +668,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -683,7 +683,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 668475,
    "steps": [
@@ -701,7 +701,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -710,7 +710,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -725,7 +725,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 266846,
    "steps": [
@@ -743,7 +743,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -752,7 +752,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -767,7 +767,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 579365,
    "steps": [
@@ -785,7 +785,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -794,7 +794,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -809,7 +809,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 457904,
    "steps": [
@@ -827,7 +827,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -836,7 +836,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -851,7 +851,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 435426,
    "steps": [
@@ -869,7 +869,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -878,7 +878,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -893,7 +893,7 @@
     96,
     96
    ],
-   "cols": 4,
+   "cols": 8,
    "rows": 2,
    "seed": 304787,
    "steps": [
@@ -911,7 +911,7 @@
      "width": 96,
      "height": 96,
      "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     },
     {
@@ -920,7 +920,7 @@
      "width": 96,
      "height": 96,
      "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
-     "frames_duration": 4,
+     "frames_duration": 8,
      "from": "base"
     }
    ]
@@ -935,7 +935,7 @@
     64,
     64
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 834204,
    "steps": [
     {
@@ -958,7 +958,7 @@
     64,
     64
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 389442,
    "steps": [
     {
@@ -981,7 +981,7 @@
     64,
     64
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 59443,
    "steps": [
     {
@@ -1004,7 +1004,7 @@
     64,
     64
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 501347,
    "steps": [
     {
@@ -1027,7 +1027,7 @@
     64,
     64
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 392300,
    "steps": [
     {
@@ -1050,7 +1050,7 @@
     64,
     64
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 921640,
    "steps": [
     {
@@ -1073,7 +1073,7 @@
     96,
     96
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 188648,
    "steps": [
     {
@@ -1096,7 +1096,7 @@
     96,
     96
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 743886,
    "steps": [
     {
@@ -1119,7 +1119,7 @@
     96,
     96
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 634839,
    "steps": [
     {
@@ -1142,7 +1142,7 @@
     96,
     96
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 76743,
    "steps": [
     {
@@ -1165,7 +1165,7 @@
     96,
     96
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 746744,
    "steps": [
     {
@@ -1188,7 +1188,7 @@
     96,
     96
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 9031,
    "steps": [
     {
@@ -1234,7 +1234,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 693277,
    "steps": [
     {
@@ -1257,7 +1257,7 @@
     96,
     96
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 464293,
    "steps": [
     {
@@ -1280,7 +1280,7 @@
     96,
     96
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 637670,
    "steps": [
     {
@@ -1303,7 +1303,7 @@
     96,
     96
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 467501,
    "steps": [
     {
@@ -1349,7 +1349,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 3238,
    "steps": [
     {
@@ -1395,7 +1395,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 758308,
    "steps": [
     {
@@ -1418,7 +1418,7 @@
     64,
     64
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 272956,
    "steps": [
     {
@@ -1464,7 +1464,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 425642,
    "steps": [
     {
@@ -1487,7 +1487,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 231426,
    "steps": [
     {
@@ -1510,7 +1510,7 @@
     128,
     128
    ],
-   "frames": 10,
+   "frames": 12,
    "seed": 892898,
    "steps": [
     {
@@ -3235,7 +3235,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 904525,
    "steps": [
     {
@@ -3281,7 +3281,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 238753,
    "steps": [
     {
@@ -3327,7 +3327,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 852377,
    "steps": [
     {
@@ -3373,7 +3373,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 127980,
    "steps": [
     {
@@ -3419,7 +3419,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 250870,
    "steps": [
     {
@@ -3465,7 +3465,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 981005,
    "steps": [
     {
@@ -3511,7 +3511,7 @@
     96,
     96
    ],
-   "frames": 8,
+   "frames": 12,
    "seed": 604227,
    "steps": [
     {

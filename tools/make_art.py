@@ -98,8 +98,10 @@ def key_background(img):
 
 def pick(frames, n):
     """n frames spread evenly across the list."""
-    if len(frames) <= n:
-        return (frames * n)[:n] if len(frames) < n else frames
+    if len(frames) < n:  # fewer frames than wanted: hold each one a little longer (smoother than repeating the loop)
+        return [frames[i * len(frames) // n] for i in range(n)]
+    if len(frames) == n:
+        return frames
     return [frames[round(i * (len(frames) - 1) / (n - 1))] if n > 1 else frames[0] for i in range(n)]
 
 

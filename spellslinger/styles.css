@@ -685,8 +685,8 @@
         .pack3d.has-art .pk-flap { background-size: 100% 454.5%; background-position: 0 0; clip-path: none; }
         .pack3d.has-art .pk-body { background-size: 100% 126.6%; background-position: 0 100%; }
         .pack3d.has-art .pk-body::after { display: none; }
-        .pk-burst { position: absolute; left: 50%; top: 22%; width: 192px; height: 192px; margin: -96px 0 0 -96px; pointer-events: none; opacity: 0; image-rendering: pixelated; background-repeat: no-repeat; background-size: 800% 100%; transform: translateZ(30px); }
-        .pack3d.has-open.peeling .pk-burst { background-image: var(--pk-open); animation: pkBurstFrames 0.8s steps(7) 0.15s forwards; }
+        .pk-burst { position: absolute; left: 50%; top: 22%; width: 192px; height: 192px; margin: -96px 0 0 -96px; pointer-events: none; opacity: 0; image-rendering: pixelated; background-repeat: no-repeat; background-size: 1200% 100%; transform: translateZ(30px); }
+        .pack3d.has-open.peeling .pk-burst { background-image: var(--pk-open); animation: pkBurstFrames 0.8s steps(11) 0.15s forwards; }
         @keyframes pkBurstFrames { 0% { opacity: 1; background-position: 0 0; } 90% { opacity: 1; } 100% { opacity: 0; background-position: 100% 0; } }
         .pack3d::before { content: ''; position: absolute; inset: -30%; pointer-events: none; opacity: 0; border-radius: 50%; transform: translateZ(-2px) scale(0.3); }
         /* tear (Play Booster): the standard flap peel above */
@@ -1041,11 +1041,11 @@
         .asc-portrait.ph span { font-size: 2.2rem; }
         .asc-portrait.ph.boss { box-shadow: 0 0 12px -2px var(--gold); border-color: var(--gold); }
         .asc-portrait.ph.talk span { animation: asc-bob 0.5s ease-in-out infinite; }
-        .asc-portrait.sprite { background-size: 384px 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle 0.8s steps(4) infinite; }
-        /* talks for 3 seconds (the second row, 5 loops), then settles into the idle row for good */
-        .asc-portrait.sprite.talk { background-position-y: -96px; animation: asc-idle 0.6s steps(4) 5, asc-idle 0.8s steps(4) 3s infinite, asc-rest 0.01s linear 3s forwards; }
+        .asc-portrait.sprite { background-size: calc(var(--cols, 4) * 96px) 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) infinite; }
+        /* talks for 5 loops (about 3 seconds, the second row), then settles into the idle row for good */
+        .asc-portrait.sprite.talk { background-position-y: -96px; animation: asc-idle var(--tdur, 0.6s) steps(var(--cols, 4)) 5, asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) calc(var(--tdur, 0.6s) * 5) infinite, asc-rest 0.01s linear calc(var(--tdur, 0.6s) * 5) forwards; }
         @keyframes asc-rest { to { background-position-y: 0; } }
-        @keyframes asc-idle { to { background-position-x: -384px; } }
+        @keyframes asc-idle { to { background-position-x: calc(var(--cols, 4) * -96px); } } }
         /* sheets made before the portrait framing (256 x 192, full body, 64 x 96 frames) still display until they are remade */
         .asc-portrait.sprite.old { width: 64px; background-size: 256px 192px; }
           .asc-portrait.sprite.old, .asc-portrait.sprite.old.talk { animation: asc-idle-old 0.8s steps(4) infinite; }

@@ -1,7 +1,7 @@
 // Planeswalker's Ascent, art and animation runtime (data in 13g-ascent-art-data.js, guide in docs/ascent-art-prompts.md).
 // Portraits and effects use the pixel art in spellslinger/art/ when the files exist, and a placeholder until then.
 const ASCENT_CHAR = Object.fromEntries(ASCENT_CHARACTERS.map(c => [c.id, c]));
-const ASC_ART = { ok: {}, probed: false, size: { w: 96, h: 96 }, legacy: {} };
+const ASC_ART = { ok: {}, probed: false, size: { w: 96, h: 96 }, legacy: {}, cols: {} };
 const ASC_FX = { active: 0, max: 4 };
 const ASC_FX_KINDS_ART = {}; // kind -> true when its PNG strip exists
 function ascFxPref() { try { return store.get('ascentFx', true) !== false; } catch (e) { return true; } }
@@ -18,7 +18,7 @@ async function ascProbeArt() {
     if (ASC_ART.probed) return;
     ASC_ART.probed = true;
     const tasks = [
-        ...ASCENT_CHARACTERS.map(async c => { const p = `spellslinger/art/characters/${c.id}.png`; ASC_ART.ok[p] = await ascProbe(p, w => { if (w === 256) ASC_ART.legacy[p] = true; }); }),
+        ...ASCENT_CHARACTERS.map(async c => { const p = `spellslinger/art/characters/${c.id}.png`; ASC_ART.ok[p] = await ascProbe(p, w => { if (w === 256) ASC_ART.legacy[p] = true; else if (w >= 96) ASC_ART.cols[p] = Math.round(w / 96); }); }),
         ...Object.keys(ASCENT_FX).map(async k => { ASC_FX_KINDS_ART[k] = await ascProbe(`spellslinger/art/fx/${k}.png`); })
     ];
     await Promise.all(tasks);
@@ -30,7 +30,7 @@ function ascPortraitHTML(id, opts = {}) {
     const c = ASCENT_CHAR[id];
     if (!c) return '';
     const path = `spellslinger/art/characters/${id}.png`, talk = opts.talk ? ' talk' : '';
-    if (ASC_ART.ok[path]) return `<div class="asc-portrait sprite${talk}${ASC_ART.legacy[path] ? ' old' : ''}" style="background-image:url('${path}')" role="img" aria-label="${esc(c.name)}"></div>`;
+    if (ASC_ART.ok[path]) return `<div class="asc-portrait sprite${talk}${ASC_ART.legacy[path] ? ' old' : ''}" style="background-image:url('${path}')${ASC_ART.cols[path] ? `;--cols:${ASC_ART.cols[path]};--idle:${(ASC_ART.cols[path] / 10).toFixed(2)}s;--tdur:${(ASC_ART.cols[path] / 13).toFixed(2)}s` : ''}" role="img" aria-label="${esc(c.name)}"></div>`;
     return `<div class="asc-portrait ph${talk}${c.boss ? ' boss' : ''}" style="--accent:${c.accent}" role="img" aria-label="${esc(c.name)} (placeholder art)"><span>${c.emoji}</span></div>`;
 }
 function ascLine(id, kind, seed) {

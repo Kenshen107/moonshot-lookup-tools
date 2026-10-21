@@ -22835,10 +22835,10 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             if (!pxOn() || fxReducedMotion.matches) return;
             const live = document.querySelectorAll('.px-burst');
             if (live.length > 6) return;
-            if (PX.art['click-burst']) { // pixel art from the art pipeline: an 8-frame strip of 64 x 64
+            if (PX.art['click-burst']) { // pixel art from the art pipeline: a 12-frame strip of 64 x 64
                 const d = document.createElement('div');
                 d.className = 'px-burst';
-                d.style.cssText = `position:fixed;left:${x - 48}px;top:${y - 48}px;width:96px;height:96px;pointer-events:none;z-index:200;image-rendering:pixelated;background:url('art/site/click-burst.png') 0 0 / 800% 100% no-repeat;animation:px-burst-frames 0.5s steps(7) forwards;`;
+                d.style.cssText = `position:fixed;left:${x - 48}px;top:${y - 48}px;width:96px;height:96px;pointer-events:none;z-index:200;image-rendering:pixelated;background:url('art/site/click-burst.png') 0 0 / 1200% 100% no-repeat;animation:px-burst-frames 0.5s steps(11) forwards;`;
                 document.body.appendChild(d);
                 setTimeout(() => d.remove(), 560);
                 return;

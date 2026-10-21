@@ -1,7 +1,7 @@
 // Pack looks (2026-10-21, owner's request: "pack opening animations and some different pack looks with unique animations").
 // Every pack gets the look of its tier (PACK_TIERS in 12-distributor.js: the same table that prices it), and each look
 // opens its own way (CSS classes `anim-<name>` in styles.css). Optional pixel art from the Retro Diffusion pipeline:
-// spellslinger/art/packs/<look>.png is the wrapper (96 x 144) and <look>-open.png is an 8-frame burst strip (8 x 96 px wide, 96 tall).
+// spellslinger/art/packs/<look>.png is the wrapper (96 x 144) and <look>-open.png is a 12-frame burst strip (12 x 96 px wide, 96 tall).
 // Until a file exists the game uses the drawn CSS pack. Data only at the top level, so tests/ascent_art_guide.js can read it.
 const PACK_LOOKS = {
     standard: { label: 'Play Booster', anim: 'tear', ms: [650, 1150], wrap: 'a vertical foil booster pack wrapper in teal and silver with a swirling galaxy emblem in the middle, crimped zigzag top and bottom, no text',
