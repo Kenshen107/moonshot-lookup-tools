@@ -1380,43 +1380,6 @@
             cursor: text;
         }
 
-        /* ---- Click effect - a little mana burst everywhere you click,
-           matching the card cursor's theme ---- */
-        .mana-burst-particle {
-            position: fixed;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 800;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            pointer-events: none;
-            z-index: 9999;
-            box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
-            transform: translate(-50%, -50%);
-            animation: manaBurstOut 600ms cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
-        }
-
-        @keyframes manaBurstOut {
-            0% {
-                transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) rotate(220deg) scale(0.35);
-                opacity: 0;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .mana-burst-particle {
-                display: none;
-            }
-        }
-
         h1 {
             border-bottom: 3px solid var(--brand);
             padding-bottom: 10px;
@@ -21554,50 +21517,6 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 closeValues();
                 if (!e.closedCardModal) closeProductModal();
             }
-        });
-
-        // ---- Click effect: a little 5-color mana burst on every click,
-        // matching the card cursor's theme. Purely decorative (pointer-events
-        // none, self-removing after its animation), so it never interferes
-        // with the click that triggered it.
-        const MANA_BURST_COLORS = [
-            { c: 'W', bg: '#F9FAF4', fg: '#8a7f4f' },
-            { c: 'U', bg: '#0E68AB', fg: '#fff' },
-            { c: 'B', bg: '#3a3a3a', fg: '#e0e0e0' },
-            { c: 'R', bg: '#D3202A', fg: '#fff' },
-            { c: 'G', bg: '#00733E', fg: '#fff' }
-        ];
-
-        function spawnManaBurst(x, y) {
-            const n = MANA_BURST_COLORS.length;
-            MANA_BURST_COLORS.forEach((mana, i) => {
-                const angle = (Math.PI * 2 * i / n) - Math.PI / 2 + (Math.random() * 0.3 - 0.15);
-                const dist = 42 + Math.random() * 16;
-                const dx = Math.cos(angle) * dist;
-                const dy = Math.sin(angle) * dist;
-
-                const el = document.createElement('div');
-                el.className = 'mana-burst-particle';
-                el.textContent = mana.c;
-                el.style.left = `${x}px`;
-                el.style.top = `${y}px`;
-                el.style.background = mana.bg;
-                el.style.color = mana.fg;
-                el.style.setProperty('--dx', `${dx}px`);
-                el.style.setProperty('--dy', `${dy}px`);
-                el.addEventListener('animationend', () => el.remove());
-                document.body.appendChild(el);
-            });
-        }
-
-        document.addEventListener('click', function(e) {
-            // isTrusted filters out clicks synthesized by our own JS (e.g.
-            // .click() calls used to wire up keyboard/programmatic actions) so
-            // the burst only fires for actual mouse/touch clicks. Keyboard-
-            // activated clicks (Enter/Space on a button) report (0,0), which
-            // would otherwise spawn a burst in the corner - skip those too.
-            if (!e.isTrusted || (e.clientX === 0 && e.clientY === 0)) return;
-            spawnManaBurst(e.clientX, e.clientY);
         });
 
         // About Moonshot Games: store info and values, opened from the
