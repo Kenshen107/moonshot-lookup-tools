@@ -7,6 +7,18 @@ Fan-made tools, used at Moonshot Games' two stores (Noblesville and Plainfield).
 - **Price and market tools are allowed** (the owner lifted the old no-speculation rule on 2026-09-25). Spike alerts, price trends, reprint warnings and trending cards are all fine. Always show where the numbers come from and how current they are, so staff know what they're looking at.
 - **No new tabs, tools, or features without the owner's approval.** Build what was asked. If something extra seems useful, suggest it and wait for a yes before building it.
 - **Don't remove or rework existing features without asking first.**
+- **End every reply with a "Retro Diffusion session" block, then the links** (owner, 2026-10-21): just above the links, give the commands to start a working session on the owner's Windows PC (PowerShell), including the API-key step. Use this text, with the branch name filled in, and never ask for or write the real key (it stays in the owner's own terminal and is never committed or pasted into chat):
+  ```
+  Retro Diffusion session (PowerShell)
+  1. cd C:\Users\Herro\Documents\moonshot-lookup-tools
+  2. git pull --no-rebase origin <the branch you're working on>
+  3. $env:RD_API_KEY = "rdpk-PASTE-YOUR-KEY-HERE"      (this window only; never commit it)
+  4. py tools\make_art.py --group all                  (free dry run: checks styles and sizes, lists every step and its cost)
+  5. py tools\make_art.py --go --group <group> --max-spend 5    (spend; groups: characters, fx, packs, site, site-fall, moods, poses, ideas, icons)
+  6. git add spellslinger/art art
+     git commit -m "Add generated art"
+     git push origin <the branch you're working on>
+  ```
 - **End every reply with these links**, so the owner always has them:
   - Branch: `https://github.com/Kenshen107/moonshot-lookup-tools/tree/<the branch you're working on>`
   - Main: https://github.com/Kenshen107/moonshot-lookup-tools/tree/main
