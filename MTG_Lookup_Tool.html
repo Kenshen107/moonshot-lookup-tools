@@ -22556,6 +22556,16 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         }
 
         function fxGlyph(ctx, g, size, alpha) {
+            // Seasonal pixel art from the art pipeline (a 4-frame strip per theme emoji), when it exists
+            const art = typeof pxFallArt === 'function' ? pxFallArt(g.glyph) : null;
+            if (art) {
+                const d = Math.round(size * 1.5 / 4) * 4, frame = Math.floor(performance.now() / 170 + (g.x || 0) * 0.05) % 4;
+                ctx.imageSmoothingEnabled = false;
+                ctx.globalAlpha = Math.min(1, alpha * 1.3);
+                ctx.drawImage(art, frame * 32, 0, 32, 32, Math.round(g.x - d / 2), Math.round(g.y - d / 2), d, d);
+                ctx.globalAlpha = 1;
+                return;
+            }
             // Pixel art: the emoji is boiled down to a small sprite (pxGlyphSprite), drawn with hard pixels on a whole-pixel grid
             const sp = typeof pxGlyphSprite === 'function' ? pxGlyphSprite(g.glyph) : null;
             if (sp) {
@@ -22748,7 +22758,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         // season restyles it, and it follows the Effects level (Full and Subtle on, Off plain). If
         // pixel-art PNGs from the art pipeline exist in art/site/ they replace the drawn versions.
         // ---------------------------------------------------------------------
-        const PX = { glyphs: new Map(), art: {}, probed: false };
+        const PX = { glyphs: new Map(), art: {}, fallImg: {}, probed: false };
         const PX_ARROW = [
             'X...........', 'XX..........', 'XWX.........', 'XWWX........', 'XWWWX.......', 'XWWWWX......', 'XWWWWWX.....', 'XWWWWWWX....',
             'XWWWWWWWX...', 'XWWWWWXXXXX.', 'XWWXWWX.....', 'XWX.XWWX....', 'XX..XWWX....', 'X....XWWX...', '.....XWWX...', '......XX....'
@@ -22757,6 +22767,14 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             '....XX..........', '...XWWX.........', '...XWWX.........', '...XWWX.........', '...XWWXXX.......', '...XWWXWWXXX....', 'XX.XWWXWWXWWX...', 'XWXXWWWWWWWWWX..',
             'XWWXWWWWWWWWWX..', '.XWWWWWWWWWWWX..', '..XWWWWWWWWWWX..', '..XWWWWWWWWWX...', '...XWWWWWWWWX...', '...XWWWWWWWX....', '....XWWWWWWX....', '....XXXXXXXX....'
         ];
+        // Seasonal pixel art (optional): each theme emoji maps to a 4-frame sprite in art/site/fall-<id>.png (32 x 32 frames); the colored-dot lights are drawn in code
+        const PX_FALL_MAP = {
+            '🍂': 'leaf', '🍁': 'maple', '🍃': 'greenleaf', '🌱': 'sprout', '❄️': 'snowflake', '❄': 'snowflake', '🎃': 'pumpkin', '🦇': 'bat', '👻': 'ghost', '🧙‍♀️': 'witch', '🧹': 'broom',
+            '🌙': 'moon', '⭐': 'star', '✨': 'sparkle', '🎁': 'gift', '🎆': 'firework', '🎇': 'firework', '🎊': 'confetti', '🎉': 'confetti', '🕊️': 'dove', '🌲': 'tree', '🍪': 'cookie', '☕': 'cocoa',
+            '🎀': 'ribbon', '☃️': 'snowman', '🛷': 'sleigh', '🦌': 'reindeer', '🛍️': 'bag', '🏷️': 'tag', '🦃': 'turkey', '💕': 'heart', '💝': 'heart', '💜': 'heart', '💛': 'heart', '☘️': 'shamrock',
+            '🍀': 'shamrock', '🥚': 'egg', '🐣': 'chick', '🌷': 'tulip', '🌸': 'blossom', '💐': 'blossom', '👔': 'tie', '🌍': 'earth', '🥧': 'pie', '🧧': 'envelope', '🏮': 'lantern', '🪔': 'diya', '🕎': 'menorah', 'π': 'pi'
+        };
+        function pxFallArt(glyph) { const id = PX_FALL_MAP[glyph]; return id && PX.fallImg[id] ? PX.fallImg[id] : null; }
         function pxOn() { return fxIs('full', 'subtle'); }
         function pxFine() { return !!(window.matchMedia && window.matchMedia('(pointer: fine)').matches); }
         // An emoji boiled down to a 12 x 12 pixel sprite with a dark outline (14 x 14 with the outline)
@@ -22900,7 +22918,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             if (PX.probed) return Promise.resolve();
             PX.probed = true;
             const names = ['cursor-arrow', 'cursor-hand', 'click-burst', ...['common', 'uncommon', 'rare', 'mythic', 'special'].map(r => 'frame-' + r)];
-            return Promise.all(names.map(n => new Promise(res => { const i = new Image(); i.onload = () => { PX.art[n] = true; res(); }; i.onerror = res; i.src = `art/site/${n}.png`; })));
+            const falls = [...new Set(Object.values(PX_FALL_MAP))].map(id => 'fall-' + id);
+            return Promise.all([...names, ...falls].map(n => new Promise(res => { const i = new Image(); i.onload = () => { PX.art[n] = true; if (n.startsWith('fall-')) PX.fallImg[n.slice(5)] = i; res(); }; i.onerror = res; i.src = `art/site/${n}.png`; })));
         }
         function pxFlairRefresh() {
             PX.glyphs.clear();

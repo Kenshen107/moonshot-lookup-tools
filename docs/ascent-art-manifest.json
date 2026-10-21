@@ -3726,53 +3726,76 @@
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a tumbling orange autumn maple leaf, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a tumbling brown and orange autumn leaf, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]
   },
   {
-   "id": "fall-pumpkin",
+   "id": "fall-maple",
    "group": "site-fall",
-   "name": "falling pumpkin",
-   "out": "art/site/fall-pumpkin.png",
+   "name": "falling maple",
+   "out": "art/site/fall-maple.png",
    "kind": "strip",
    "frame": [
     32,
     32
    ],
    "frames": 4,
-   "seed": 249253,
+   "seed": 228556,
    "steps": [
     {
      "key": "gen",
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a tiny jack-o-lantern, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a red maple leaf, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]
   },
   {
-   "id": "fall-bat",
+   "id": "fall-greenleaf",
    "group": "site-fall",
-   "name": "falling bat",
-   "out": "art/site/fall-bat.png",
+   "name": "falling greenleaf",
+   "out": "art/site/fall-greenleaf.png",
    "kind": "strip",
    "frame": [
     32,
     32
    ],
    "frames": 4,
-   "seed": 339706,
+   "seed": 382026,
    "steps": [
     {
      "key": "gen",
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a small flapping black bat, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a fresh green leaf, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-sprout",
+   "group": "site-fall",
+   "name": "falling sprout",
+   "out": "art/site/fall-sprout.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 476230,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small green seedling with two leaves, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]
@@ -3801,139 +3824,139 @@
    ]
   },
   {
-   "id": "fall-ornament",
+   "id": "fall-pumpkin",
    "group": "site-fall",
-   "name": "falling ornament",
-   "out": "art/site/fall-ornament.png",
+   "name": "falling pumpkin",
+   "out": "art/site/fall-pumpkin.png",
    "kind": "strip",
    "frame": [
     32,
     32
    ],
    "frames": 4,
-   "seed": 9719,
+   "seed": 249253,
    "steps": [
     {
      "key": "gen",
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a shiny red hanging ornament ball, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a tiny jack-o-lantern with a glowing face, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]
   },
   {
-   "id": "fall-gift",
+   "id": "fall-bat",
    "group": "site-fall",
-   "name": "falling gift",
-   "out": "art/site/fall-gift.png",
+   "name": "falling bat",
+   "out": "art/site/fall-bat.png",
    "kind": "strip",
    "frame": [
     32,
     32
    ],
    "frames": 4,
-   "seed": 153545,
+   "seed": 339706,
    "steps": [
     {
      "key": "gen",
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a small wrapped gift with a bow, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a small black bat flapping its wings, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]
   },
   {
-   "id": "fall-heart",
+   "id": "fall-ghost",
    "group": "site-fall",
-   "name": "falling heart",
-   "out": "art/site/fall-heart.png",
+   "name": "falling ghost",
+   "out": "art/site/fall-ghost.png",
    "kind": "strip",
    "frame": [
     32,
     32
    ],
    "frames": 4,
-   "seed": 994605,
+   "seed": 617314,
    "steps": [
     {
      "key": "gen",
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a pink heart, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a cute white ghost, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]
   },
   {
-   "id": "fall-shamrock",
+   "id": "fall-witch",
    "group": "site-fall",
-   "name": "falling shamrock",
-   "out": "art/site/fall-shamrock.png",
+   "name": "falling witch",
+   "out": "art/site/fall-witch.png",
    "kind": "strip",
    "frame": [
     32,
     32
    ],
    "frames": 4,
-   "seed": 732791,
+   "seed": 897542,
    "steps": [
     {
      "key": "gen",
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a green shamrock, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a witch on a broomstick, tiny, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]
   },
   {
-   "id": "fall-petal",
+   "id": "fall-broom",
    "group": "site-fall",
-   "name": "falling petal",
-   "out": "art/site/fall-petal.png",
+   "name": "falling broom",
+   "out": "art/site/fall-broom.png",
    "kind": "strip",
    "frame": [
     32,
     32
    ],
    "frames": 4,
-   "seed": 462417,
+   "seed": 897288,
    "steps": [
     {
      "key": "gen",
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a pink cherry blossom petal, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a straw witch broom, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]
   },
   {
-   "id": "fall-spark",
+   "id": "fall-moon",
    "group": "site-fall",
-   "name": "falling spark",
-   "out": "art/site/fall-spark.png",
+   "name": "falling moon",
+   "out": "art/site/fall-moon.png",
    "kind": "strip",
    "frame": [
     32,
     32
    ],
    "frames": 4,
-   "seed": 213572,
+   "seed": 276334,
    "steps": [
     {
      "key": "gen",
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a gold firework spark, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a golden crescent moon, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]
@@ -3962,24 +3985,668 @@
    ]
   },
   {
-   "id": "fall-candy",
+   "id": "fall-sparkle",
    "group": "site-fall",
-   "name": "falling candy",
-   "out": "art/site/fall-candy.png",
+   "name": "falling sparkle",
+   "out": "art/site/fall-sparkle.png",
    "kind": "strip",
    "frame": [
     32,
     32
    ],
    "frames": 4,
-   "seed": 397932,
+   "seed": 630375,
    "steps": [
     {
      "key": "gen",
      "style": "rd_animation__vfx",
      "width": 32,
      "height": 32,
-     "prompt": "a candy cane, slowly spinning, a 4 frame loop, transparent background",
+     "prompt": "a white and gold sparkle with four points, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-gift",
+   "group": "site-fall",
+   "name": "falling gift",
+   "out": "art/site/fall-gift.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 153545,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small wrapped gift with a red bow, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-firework",
+   "group": "site-fall",
+   "name": "falling firework",
+   "out": "art/site/fall-firework.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 317614,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a bursting gold and red firework spark, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-confetti",
+   "group": "site-fall",
+   "name": "falling confetti",
+   "out": "art/site/fall-confetti.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 785839,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a few pieces of colorful confetti and a streamer, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-dove",
+   "group": "site-fall",
+   "name": "falling dove",
+   "out": "art/site/fall-dove.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 897483,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small white dove with wings spread, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-tree",
+   "group": "site-fall",
+   "name": "falling tree",
+   "out": "art/site/fall-tree.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 271355,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small green pine tree with a star, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-cookie",
+   "group": "site-fall",
+   "name": "falling cookie",
+   "out": "art/site/fall-cookie.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 115753,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a frosted gingerbread cookie, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-cocoa",
+   "group": "site-fall",
+   "name": "falling cocoa",
+   "out": "art/site/fall-cocoa.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 411974,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a steaming mug of hot cocoa, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-ribbon",
+   "group": "site-fall",
+   "name": "falling ribbon",
+   "out": "art/site/fall-ribbon.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 201567,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a red ribbon bow, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-snowman",
+   "group": "site-fall",
+   "name": "falling snowman",
+   "out": "art/site/fall-snowman.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 398624,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a tiny snowman with a scarf, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-sleigh",
+   "group": "site-fall",
+   "name": "falling sleigh",
+   "out": "art/site/fall-sleigh.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 790005,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small red sleigh, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-reindeer",
+   "group": "site-fall",
+   "name": "falling reindeer",
+   "out": "art/site/fall-reindeer.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 650441,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small reindeer with antlers, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-bag",
+   "group": "site-fall",
+   "name": "falling bag",
+   "out": "art/site/fall-bag.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 120183,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a shopping bag with a sale tag, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-tag",
+   "group": "site-fall",
+   "name": "falling tag",
+   "out": "art/site/fall-tag.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 438653,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a price tag on a string, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-turkey",
+   "group": "site-fall",
+   "name": "falling turkey",
+   "out": "art/site/fall-turkey.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 475017,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small cartoon turkey with fanned tail feathers, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-heart",
+   "group": "site-fall",
+   "name": "falling heart",
+   "out": "art/site/fall-heart.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 994605,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pink heart with a white shine, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-shamrock",
+   "group": "site-fall",
+   "name": "falling shamrock",
+   "out": "art/site/fall-shamrock.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 732791,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a green three-leaf shamrock, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-egg",
+   "group": "site-fall",
+   "name": "falling egg",
+   "out": "art/site/fall-egg.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 581708,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a painted pastel easter egg, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-chick",
+   "group": "site-fall",
+   "name": "falling chick",
+   "out": "art/site/fall-chick.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 244541,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a fluffy yellow chick, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-tulip",
+   "group": "site-fall",
+   "name": "falling tulip",
+   "out": "art/site/fall-tulip.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 514345,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pink tulip flower, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-blossom",
+   "group": "site-fall",
+   "name": "falling blossom",
+   "out": "art/site/fall-blossom.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 413984,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pink cherry blossom flower, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-tie",
+   "group": "site-fall",
+   "name": "falling tie",
+   "out": "art/site/fall-tie.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 45391,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a blue necktie, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-earth",
+   "group": "site-fall",
+   "name": "falling earth",
+   "out": "art/site/fall-earth.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 798449,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small blue and green planet earth, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-pie",
+   "group": "site-fall",
+   "name": "falling pie",
+   "out": "art/site/fall-pie.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 437619,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pumpkin pie slice, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-envelope",
+   "group": "site-fall",
+   "name": "falling envelope",
+   "out": "art/site/fall-envelope.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 304939,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a red envelope with a gold coin, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-lantern",
+   "group": "site-fall",
+   "name": "falling lantern",
+   "out": "art/site/fall-lantern.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 11161,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a red paper lantern with gold tassels, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-diya",
+   "group": "site-fall",
+   "name": "falling diya",
+   "out": "art/site/fall-diya.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 266734,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small glowing clay oil lamp, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-menorah",
+   "group": "site-fall",
+   "name": "falling menorah",
+   "out": "art/site/fall-menorah.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 179485,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a gold nine-branch menorah with flames, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-pi",
+   "group": "site-fall",
+   "name": "falling pi",
+   "out": "art/site/fall-pi.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 746244,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a golden pi symbol with a small shine, slowly spinning, a 4 frame loop, transparent background",
      "remove_bg": true
     }
    ]

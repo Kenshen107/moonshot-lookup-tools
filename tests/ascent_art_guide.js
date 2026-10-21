@@ -59,8 +59,29 @@ const SITE = [
 ];
 for (const x of SITE) MANIFEST.assets.push({ id: x.id, group: 'site', name: x.label, out: `art/site/${x.id}.png`, kind: 'strip', frame: x.size, frames: x.frames, seed: hash(x.id),
     steps: [{ key: 'gen', style: x.style, width: x.size[0], height: x.size[1], prompt: x.prompt, remove_bg: x.remove_bg }] });
-const FALL = [['leaf', 'a tumbling orange autumn maple leaf'], ['pumpkin', 'a tiny jack-o-lantern'], ['bat', 'a small flapping black bat'], ['snowflake', 'a six-armed white snowflake'], ['ornament', 'a shiny red hanging ornament ball'],
-    ['gift', 'a small wrapped gift with a bow'], ['heart', 'a pink heart'], ['shamrock', 'a green shamrock'], ['petal', 'a pink cherry blossom petal'], ['spark', 'a gold firework spark'], ['star', 'a twinkling yellow star'], ['candy', 'a candy cane']];
+// Falling and drifting sprites for the seasonal themes (the page maps each theme emoji to one of these ids: PX_FALL_MAP in MTG_Lookup_Tool.html)
+const FALL = [['leaf', 'a tumbling brown and orange autumn leaf'], ['maple', 'a red maple leaf'], ['greenleaf', 'a fresh green leaf'], ['sprout', 'a small green seedling with two leaves'], ['snowflake', 'a six-armed white snowflake'],
+    ['pumpkin', 'a tiny jack-o-lantern with a glowing face'], ['bat', 'a small black bat flapping its wings'], ['ghost', 'a cute white ghost'], ['witch', 'a witch on a broomstick, tiny'], ['broom', 'a straw witch broom'],
+    ['moon', 'a golden crescent moon'], ['star', 'a twinkling yellow star'], ['sparkle', 'a white and gold sparkle with four points'], ['gift', 'a small wrapped gift with a red bow'], ['firework', 'a bursting gold and red firework spark'],
+    ['confetti', 'a few pieces of colorful confetti and a streamer'], ['dove', 'a small white dove with wings spread'], ['tree', 'a small green pine tree with a star'], ['cookie', 'a frosted gingerbread cookie'], ['cocoa', 'a steaming mug of hot cocoa'],
+    ['ribbon', 'a red ribbon bow'], ['snowman', 'a tiny snowman with a scarf'], ['sleigh', 'a small red sleigh'], ['reindeer', 'a small reindeer with antlers'], ['bag', 'a shopping bag with a sale tag'],
+    ['tag', 'a price tag on a string'], ['turkey', 'a small cartoon turkey with fanned tail feathers'], ['heart', 'a pink heart with a white shine'], ['shamrock', 'a green three-leaf shamrock'], ['egg', 'a painted pastel easter egg'],
+    ['chick', 'a fluffy yellow chick'], ['tulip', 'a pink tulip flower'], ['blossom', 'a pink cherry blossom flower'], ['tie', 'a blue necktie'], ['earth', 'a small blue and green planet earth'],
+    ['pie', 'a pumpkin pie slice'], ['envelope', 'a red envelope with a gold coin'], ['lantern', 'a red paper lantern with gold tassels'], ['diya', 'a small glowing clay oil lamp'], ['menorah', 'a gold nine-branch menorah with flames'], ['pi', 'a golden pi symbol with a small shine']];
+
+// The page's glyph map must cover every emoji its themes use (the colored dots are drawn as pixel lights in code) and only name sprites in the list above
+{
+    const html = fs.readFileSync(path.join(ROOT, 'MTG_Lookup_Tool.html'), 'utf8');
+    const m = html.match(/const PX_FALL_MAP = (\{[\s\S]*?\n        \});/);
+    if (m) {
+        const map = vm.runInNewContext('(' + m[1] + ')');
+        const ids = new Set(FALL.map(f => f[0])), used = new Set(Object.values(map));
+        const glyphs = new Set([...html.matchAll(/\[\s*'([^'\w\s][^']*)',\s*'(?:fall|rise|drift|twinkle)'\s*\]/g)].map(x => x[1]));
+        const dots = new Set(['🔴', '🟢', '🔵', '🟡', '🟣', '⚪', '⚫']);
+        const missing = [...glyphs].filter(g => !map[g] && !dots.has(g)), unknown = [...used].filter(i => !ids.has(i)), unused = [...ids].filter(i => !used.has(i));
+        if (missing.length || unknown.length || unused.length) { console.error('FALL sprite map out of step with the page:', { missing, unknown, unused }); process.exit(1); }
+    }
+}
 for (const [k, d] of FALL) MANIFEST.assets.push({ id: 'fall-' + k, group: 'site-fall', name: 'falling ' + k, out: `art/site/fall-${k}.png`, kind: 'strip', frame: [32, 32], frames: 4, seed: hash('fall-' + k),
     steps: [{ key: 'gen', style: 'rd_animation__vfx', width: 32, height: 32, prompt: `${d}, slowly spinning, a 4 frame loop, transparent background`, remove_bg: true }] });
 fs.writeFileSync(path.join(ROOT, 'docs', 'ascent-art-manifest.json'), JSON.stringify(MANIFEST, null, 1) + '\n');
@@ -139,7 +160,7 @@ for (const [k, L] of Object.entries(PACKS)) out.push(`- **${L.label}** (opens wi
 out.push('\n## Website art (MTG lookup tool): frames, cursor, click\n');
 out.push('Drawn in code today from the theme colors; when these PNGs exist in `art/site/` the page uses them instead (cursor arrow and hand 32 x 32, click burst 8 frames of 64 x 64, card frames 64 x 64 as 9-slice with 12 px corners). Make them with `py tools\\make_art.py --go --group site`.\n');
 for (const x of SITE) out.push(`- **${x.label}** (\`art/site/${x.id}.png\`, ${x.size[0]} x ${x.size[1]}${x.frames > 1 ? `, ${x.frames} frames` : ''}, style \`${x.style}\`): ${x.prompt}`);
-out.push('\n### Falling sprites for the background (optional group `site-fall`, not used by the page yet; today the emoji are turned into pixel sprites in code)\n');
+out.push('\n### Seasonal falling sprites for the background (group `site-fall`, 32 x 32, 4 frames each: the page draws them in place of the pixelated emoji for each theme)\n');
 for (const [k, d] of FALL) out.push(`- **${k}**: ${d}, 32 x 32, 4 frames, \`art/site/fall-${k}.png\``);
 out.push('\n## Icons, banners and backgrounds\n');
 const groups = {};

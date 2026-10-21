@@ -623,20 +623,49 @@ Drawn in code today from the theme colors; when these PNGs exist in `art/site/` 
 - **mouse cursor, pointing hand** (`art/site/cursor-hand.png`, 32 x 32, style `rd_plus__low_res`): a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image
 - **click burst** (`art/site/click-burst.png`, 64 x 64, 8 frames, style `rd_animation__vfx`): a tiny satisfying click burst: a bright cyan and white ring of pixels expanding with a few gold sparks flying outward and fading, centered
 
-### Falling sprites for the background (optional group `site-fall`, not used by the page yet; today the emoji are turned into pixel sprites in code)
+### Seasonal falling sprites for the background (group `site-fall`, 32 x 32, 4 frames each: the page draws them in place of the pixelated emoji for each theme)
 
-- **leaf**: a tumbling orange autumn maple leaf, 32 x 32, 4 frames, `art/site/fall-leaf.png`
-- **pumpkin**: a tiny jack-o-lantern, 32 x 32, 4 frames, `art/site/fall-pumpkin.png`
-- **bat**: a small flapping black bat, 32 x 32, 4 frames, `art/site/fall-bat.png`
+- **leaf**: a tumbling brown and orange autumn leaf, 32 x 32, 4 frames, `art/site/fall-leaf.png`
+- **maple**: a red maple leaf, 32 x 32, 4 frames, `art/site/fall-maple.png`
+- **greenleaf**: a fresh green leaf, 32 x 32, 4 frames, `art/site/fall-greenleaf.png`
+- **sprout**: a small green seedling with two leaves, 32 x 32, 4 frames, `art/site/fall-sprout.png`
 - **snowflake**: a six-armed white snowflake, 32 x 32, 4 frames, `art/site/fall-snowflake.png`
-- **ornament**: a shiny red hanging ornament ball, 32 x 32, 4 frames, `art/site/fall-ornament.png`
-- **gift**: a small wrapped gift with a bow, 32 x 32, 4 frames, `art/site/fall-gift.png`
-- **heart**: a pink heart, 32 x 32, 4 frames, `art/site/fall-heart.png`
-- **shamrock**: a green shamrock, 32 x 32, 4 frames, `art/site/fall-shamrock.png`
-- **petal**: a pink cherry blossom petal, 32 x 32, 4 frames, `art/site/fall-petal.png`
-- **spark**: a gold firework spark, 32 x 32, 4 frames, `art/site/fall-spark.png`
+- **pumpkin**: a tiny jack-o-lantern with a glowing face, 32 x 32, 4 frames, `art/site/fall-pumpkin.png`
+- **bat**: a small black bat flapping its wings, 32 x 32, 4 frames, `art/site/fall-bat.png`
+- **ghost**: a cute white ghost, 32 x 32, 4 frames, `art/site/fall-ghost.png`
+- **witch**: a witch on a broomstick, tiny, 32 x 32, 4 frames, `art/site/fall-witch.png`
+- **broom**: a straw witch broom, 32 x 32, 4 frames, `art/site/fall-broom.png`
+- **moon**: a golden crescent moon, 32 x 32, 4 frames, `art/site/fall-moon.png`
 - **star**: a twinkling yellow star, 32 x 32, 4 frames, `art/site/fall-star.png`
-- **candy**: a candy cane, 32 x 32, 4 frames, `art/site/fall-candy.png`
+- **sparkle**: a white and gold sparkle with four points, 32 x 32, 4 frames, `art/site/fall-sparkle.png`
+- **gift**: a small wrapped gift with a red bow, 32 x 32, 4 frames, `art/site/fall-gift.png`
+- **firework**: a bursting gold and red firework spark, 32 x 32, 4 frames, `art/site/fall-firework.png`
+- **confetti**: a few pieces of colorful confetti and a streamer, 32 x 32, 4 frames, `art/site/fall-confetti.png`
+- **dove**: a small white dove with wings spread, 32 x 32, 4 frames, `art/site/fall-dove.png`
+- **tree**: a small green pine tree with a star, 32 x 32, 4 frames, `art/site/fall-tree.png`
+- **cookie**: a frosted gingerbread cookie, 32 x 32, 4 frames, `art/site/fall-cookie.png`
+- **cocoa**: a steaming mug of hot cocoa, 32 x 32, 4 frames, `art/site/fall-cocoa.png`
+- **ribbon**: a red ribbon bow, 32 x 32, 4 frames, `art/site/fall-ribbon.png`
+- **snowman**: a tiny snowman with a scarf, 32 x 32, 4 frames, `art/site/fall-snowman.png`
+- **sleigh**: a small red sleigh, 32 x 32, 4 frames, `art/site/fall-sleigh.png`
+- **reindeer**: a small reindeer with antlers, 32 x 32, 4 frames, `art/site/fall-reindeer.png`
+- **bag**: a shopping bag with a sale tag, 32 x 32, 4 frames, `art/site/fall-bag.png`
+- **tag**: a price tag on a string, 32 x 32, 4 frames, `art/site/fall-tag.png`
+- **turkey**: a small cartoon turkey with fanned tail feathers, 32 x 32, 4 frames, `art/site/fall-turkey.png`
+- **heart**: a pink heart with a white shine, 32 x 32, 4 frames, `art/site/fall-heart.png`
+- **shamrock**: a green three-leaf shamrock, 32 x 32, 4 frames, `art/site/fall-shamrock.png`
+- **egg**: a painted pastel easter egg, 32 x 32, 4 frames, `art/site/fall-egg.png`
+- **chick**: a fluffy yellow chick, 32 x 32, 4 frames, `art/site/fall-chick.png`
+- **tulip**: a pink tulip flower, 32 x 32, 4 frames, `art/site/fall-tulip.png`
+- **blossom**: a pink cherry blossom flower, 32 x 32, 4 frames, `art/site/fall-blossom.png`
+- **tie**: a blue necktie, 32 x 32, 4 frames, `art/site/fall-tie.png`
+- **earth**: a small blue and green planet earth, 32 x 32, 4 frames, `art/site/fall-earth.png`
+- **pie**: a pumpkin pie slice, 32 x 32, 4 frames, `art/site/fall-pie.png`
+- **envelope**: a red envelope with a gold coin, 32 x 32, 4 frames, `art/site/fall-envelope.png`
+- **lantern**: a red paper lantern with gold tassels, 32 x 32, 4 frames, `art/site/fall-lantern.png`
+- **diya**: a small glowing clay oil lamp, 32 x 32, 4 frames, `art/site/fall-diya.png`
+- **menorah**: a gold nine-branch menorah with flames, 32 x 32, 4 frames, `art/site/fall-menorah.png`
+- **pi**: a golden pi symbol with a small shine, 32 x 32, 4 frames, `art/site/fall-pi.png`
 
 ## Icons, banners and backgrounds
 
