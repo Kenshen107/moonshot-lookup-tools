@@ -283,12 +283,27 @@ def main():
             state[s['key'] + '_idem'] = idem
             save_state(d, state)
             print(f'  making {x["id"]} / {s["key"]} ({s["style"]}, ${cost:.2f}) ...', flush=True)
-            try:
-                data = api.run(step_body(x, s, seed, src), idem)[0]
-            except RuntimeError as e:
-                print('  ! ' + str(e))
-                if ' 402 ' in str(e):
-                    sys.exit('Out of balance. Add credit at retrodiffusion.ai and run again; finished steps are kept.')
+            data = None
+            for attempt in range(3):
+                try:
+                    data = api.run(step_body(x, s, seed, src), idem)[0]
+                    break
+                except RuntimeError as e:
+                    print('  ! ' + str(e))
+                    if ' 402 ' in str(e):
+                        sys.exit('Out of balance. Add credit at retrodiffusion.ai and run again; finished steps are kept.')
+                    if 'generation failed' in str(e):
+                        # The service gave up on this job (for example a 502). Its idempotency key would hand the same failure
+                        # back, so use a fresh one, wait a little and try again.
+                        idem = str(uuid.uuid4())
+                        state[s['key'] + '_idem'] = idem
+                        save_state(d, state)
+                        if attempt < 2:
+                            print(f'  retrying with a new request in {20 * (attempt + 1)}s ...', flush=True)
+                            time.sleep(20 * (attempt + 1))
+                            continue
+                    break
+            if data is None:
                 break
             spent += cost
             f.write_bytes(data)
