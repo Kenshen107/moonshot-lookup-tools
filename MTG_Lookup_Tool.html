@@ -23318,7 +23318,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const clear = () => ['--px-panel-frame', '--px-banner-frame', '--px-panel-slice', '--px-panel-bw'].forEach(k => root.style.removeProperty(k));
         if (!on) { clear(); return; }
         const name = pxfName(), art = PX.art['frame-panel-' + name] ? name : PX.art['frame-panel-default'] ? 'default' : null;
-        if (art) { root.style.setProperty('--px-panel-frame', `url('art/site/frame-panel-${art}.png')`); root.style.setProperty('--px-panel-slice', '12'); root.style.setProperty('--px-panel-bw', '12px'); }
+        if (art) { root.style.setProperty('--px-panel-frame', `url('art/site/frame-panel-${art}.png')`); root.style.setProperty('--px-panel-slice', '16'); root.style.setProperty('--px-panel-bw', '16px'); }
         else { root.style.setProperty('--px-panel-frame', `url("${pxfBuild(name, 'panel').toDataURL()}")`); root.style.setProperty('--px-panel-slice', '5'); root.style.setProperty('--px-panel-bw', '10px'); }
         root.style.setProperty('--px-banner-frame', `url("${pxfBuild(name, 'banner').toDataURL()}")`);
     }
