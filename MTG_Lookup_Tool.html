@@ -22888,45 +22888,27 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         }
         // The click: a ring of pixels and a handful of pixel sparks that fly out and fall
         function pxBurst(x, y) {
+            // 2026-10-21 (owner: smaller and calmer, no sparks): one thin pixel ring that grows a little and fades. The generated flame-ring art was dropped.
             if (!pxOn() || fxReducedMotion.matches) return;
-            const live = document.querySelectorAll('.px-burst');
-            if (live.length > 6) return;
-            if (PX.art['click-burst']) { // pixel art from the art pipeline: a strip of square 64 x 64 frames (8 or 12; the count is read from the image)
-                const d = document.createElement('div'), nf = PX.burstFrames || 12;
-                d.className = 'px-burst';
-                d.style.cssText = `position:fixed;left:${x - 48}px;top:${y - 48}px;width:96px;height:96px;pointer-events:none;z-index:200;image-rendering:pixelated;background:url('art/site/click-burst.png') 0 0 / ${nf * 100}% 100% no-repeat;animation:px-burst-frames 0.5s steps(${nf - 1}) forwards;`;
-                document.body.appendChild(d);
-                setTimeout(() => d.remove(), 560);
-                return;
-            }
-            const full = fxIs('full'), SIZE = 96;
+            if (document.querySelectorAll('.px-burst').length > 6) return;
+            const SIZE = 48, N = SIZE / 3; // drawn on a 16 x 16 canvas, shown at 3x: chunky pixels
             const wrap = document.createElement('canvas');
-            wrap.className = 'px-burst'; wrap.width = wrap.height = SIZE / 3; // drawn at a third of the size, shown at 3x: chunky pixels
+            wrap.className = 'px-burst'; wrap.width = wrap.height = N;
             wrap.style.cssText = `position:fixed;left:${x - SIZE / 2}px;top:${y - SIZE / 2}px;width:${SIZE}px;height:${SIZE}px;pointer-events:none;z-index:200;image-rendering:pixelated;`;
             document.body.appendChild(wrap);
-            const g = wrap.getContext('2d'), C = SIZE / 6, pal = fxPalette();
-            const colors = [pal.brandLight, pal.heading, pal.warn || pal.brandLight];
-            const n = full ? 10 : 6;
-            const parts = Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2 + Math.random() * 0.5, sp = 0.35 + Math.random() * 0.6; return { x: C, y: C, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.15, c: colors[i % 3], s: Math.random() < 0.35 ? 2 : 1 }; });
-            const t0 = performance.now(), DUR = full ? 520 : 380;
+            const g = wrap.getContext('2d'), C = N / 2, color = fxPalette().brandLight;
+            const t0 = performance.now(), DUR = 420;
             const frame = now => {
-                const k = (now - t0) / DUR;
-                g.clearRect(0, 0, wrap.width, wrap.height);
+                const k = Math.min(1, (now - t0) / DUR);
+                g.clearRect(0, 0, N, N);
                 if (k >= 1) { wrap.remove(); return; }
-                g.globalAlpha = 1 - k * k;
-                if (full) { // a square-ish pixel ring that grows
-                    const r = Math.round(2 + k * 11);
-                    g.fillStyle = pal.brandLight;
-                    for (let a = 0; a < 20; a++) {
-                        const ang = (a / 20) * Math.PI * 2;
-                        g.fillRect(Math.round(C + Math.cos(ang) * r), Math.round(C + Math.sin(ang) * r), 1, 1);
-                    }
+                const r = 1.5 + k * 5, ease = 1 - k;
+                g.globalAlpha = 0.8 * ease * ease;
+                g.fillStyle = color;
+                for (let a = 0; a < 16; a++) {
+                    const ang = (a / 16) * Math.PI * 2;
+                    g.fillRect(Math.round(C + Math.cos(ang) * r), Math.round(C + Math.sin(ang) * r), 1, 1);
                 }
-                parts.forEach(p => {
-                    p.x += p.vx; p.y += p.vy; p.vy += 0.03;
-                    g.fillStyle = p.c;
-                    g.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s);
-                });
                 requestAnimationFrame(frame);
             };
             requestAnimationFrame(frame);
@@ -22955,9 +22937,9 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         function pxProbeArt() {
             if (PX.probed) return Promise.resolve();
             PX.probed = true;
-            const names = ['cursor-arrow', 'cursor-hand', 'click-burst', 'mascot', 'loading-card', ...Object.keys(PX_SCENES).map(k => 'scene-' + k), ...['common', 'uncommon', 'rare', 'mythic', 'special'].map(r => 'frame-' + r)];
+            const names = ['cursor-arrow', 'cursor-hand', 'mascot', 'loading-card', ...Object.keys(PX_SCENES).map(k => 'scene-' + k), ...['common', 'uncommon', 'rare', 'mythic', 'special'].map(r => 'frame-' + r)];
             const falls = [...new Set(Object.values(PX_FALL_MAP))].map(id => 'fall-' + id);
-            return Promise.all([...names, ...falls].map(n => new Promise(res => { const i = new Image(); i.onload = () => { PX.art[n] = true; if (n.startsWith('fall-')) PX.fallImg[n.slice(5)] = i; if (n === 'click-burst') PX.burstFrames = Math.max(1, Math.round(i.naturalWidth / Math.max(1, i.naturalHeight))); if (n === 'mascot' || n === 'loading-card') PX.frames[n] = Math.max(1, Math.round(i.naturalWidth / Math.max(1, i.naturalHeight))); if (n.startsWith('scene-')) PX.sceneImg[n.slice(6)] = i; res(); }; i.onerror = res; i.src = `art/site/${n}.png`; })));
+            return Promise.all([...names, ...falls].map(n => new Promise(res => { const i = new Image(); i.onload = () => { PX.art[n] = true; if (n.startsWith('fall-')) PX.fallImg[n.slice(5)] = i; if (n === 'mascot' || n === 'loading-card') PX.frames[n] = Math.max(1, Math.round(i.naturalWidth / Math.max(1, i.naturalHeight))); if (n.startsWith('scene-')) PX.sceneImg[n.slice(6)] = i; res(); }; i.onerror = res; i.src = `art/site/${n}.png`; })));
         }
         function pxFlairRefresh() {
             PX.glyphs.clear();
