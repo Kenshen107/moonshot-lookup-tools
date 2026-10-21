@@ -2,3 +2,5 @@ tests/.cache/
 tests/.out/
 tests/data/
 tools/.art-cache/
+__pycache__/
+*.pyc
