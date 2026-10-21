@@ -150,6 +150,8 @@ function pactTarget(P) {
     return d ? G.players[d.x] : null;
 }
 const nm = P => (you(P) ? 'you' : P.name.split(',')[0]);
+// "Marcus (Guan Yu)": the character and the commander it plays, so a prompt or a texted record says which seat it means
+const whoFull = P => (you(P) ? 'you' : P.char ? `${P.char.name} (${P.name.split(',')[0]})` : P.name.split(',')[0]);
 
 function dealScore(bot, from, type, x) {
     const st = styleOf(bot);
@@ -190,7 +192,7 @@ function makeDeal(a, b, type, x, opts = {}) {
     (G.deals = G.deals || []).push(d);
     dealStats().made++;
     { const b = dealStats().by = dealStats().by || {}; b[type] = (b[type] || 0) + 1; }
-    const until = d.left > 1 ? `for ${d.left} of ${nm(a)}${you(a) ? 'r' : "'s"} turns` : `until ${nm(a)}${you(a) ? 'r' : "'s"} next turn`;
+    const until = d.left > 1 ? `for ${d.left} of ${nm(a)}${you(a) ? 'r' : "'s"} turns` : (G.active === a.i ? `for a full round, until ${nm(a)}${you(a) ? 'r' : "'s"} next turn` : `until ${nm(a)}${you(a) ? 'r' : "'s"} next turn`);
     log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make ${d.alliance ? 'an alliance ' : 'a '}${DEAL_TYPES[type].name.toLowerCase()} deal${type === 'pact' ? ` against ${G.players[x].name.split(',')[0]}` : ''} (${until}).`);
     return d;
 }
@@ -270,7 +272,7 @@ async function dealsTick(P) {
     if (G.dealAsk && G.turn - (G.dealAsk[P.i] ?? -99) < 8) return;
     (G.dealAsk = G.dealAsk || {})[P.i] = G.turn;
     if (!ask.isAI && talkOn()) {
-        const yes = await askYes(ask, `${P.name.split(',')[0]} (${(MOODS[m] || MOODS.calm).emoji} ${(MOODS[m] || MOODS.calm).name}) offers peace: neither of you attacks the other until their next turn. Accept? You can still change your mind, but a broken deal is remembered.`, { card: P.command[0] && P.command[0].card, yes: 'Accept the deal', no: 'No deal' });
+        const yes = await askYes(ask, `${whoFull(P)} (${(MOODS[m] || MOODS.calm).emoji} ${(MOODS[m] || MOODS.calm).name}) offers peace: neither of you attacks the other until their next turn. Accept? You can still change your mind, but a broken deal is remembered.`, { card: P.command[0] && P.command[0].card, yes: 'Accept the deal', no: 'No deal' });
         if (yes) { makeDeal(P, ask, 'peace'); say(P, 'peaceYes', 'calm', { foe: 'you' }, null); }
         else { dealStats().declined++; say(P, 'peaceNo', 'annoyed', { foe: 'you' }, null); }
     } else {

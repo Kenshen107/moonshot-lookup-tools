@@ -3975,7 +3975,7 @@ function attackTax(P) {
     return opp(P).bf.reduce((a, x) => { const t = Rx(x).attackTax || (Rx(x).attackTaxUntapped && !x.tapped ? Rx(x).attackTaxUntapped : 0); if (!t || lostAbilities(x)) return a; return a + (t === 'enchantments' ? opp(P).bf.filter(e => /Enchantment/.test(e.card.type)).length : t); }, 0);
 }
 function declareAttackers(P, list) {
-    if (G.players.length > 2 && (G.defender == null || G.players[G.defender].out)) G.defender = aiPickDefender(P).i; // the player this attack goes at
+    if (G.players.length > 2 && (G.defender == null || G.players[G.defender].out)) G.defender = (aiPickDefender(P) || foes(P)[0]).i; // the player this attack goes at
     if (G.players.length > 2) list.forEach(o => { if (o.atkTo == null || !G.players[o.atkTo] || G.players[o.atkTo].out || o.atkTo === P.i) o.atkTo = G.defender; }); // each attacker has its own target player
     if (typeof cmdAttackFilter === 'function') list = cmdAttackFilter(P, list);
     if (list.length === 1 && has(list[0], 'notalone')) { log(`${list[0].card.name} can't attack alone.`); list = []; }
@@ -4148,7 +4148,6 @@ async function beginTurn() {
     G.phase = 'beginning';
     G.focusPick = null; // the pod view follows whoever's turn it is
     politicsTick(P);
-    await dealsTick(P);
     P.landsPlayed = 0;
     P.turnsTaken = (P.turnsTaken || 0) + 1;
     if (typeof phaseInAll === 'function') phaseInAll(P);
@@ -4168,6 +4167,7 @@ async function beginTurn() {
     G.castBy = Z();
     emptyPools();
     log(`— Turn ${G.turn}: ${you(P) ? 'your' : `${P.name}'s`} turn —`);
+    await dealsTick(P); // after the header, so deals made or ended at the start of a turn read under that turn
     G.phase = 'upkeep';
     await runDelayed('upkeep', P);
     await suspendTick(P);
