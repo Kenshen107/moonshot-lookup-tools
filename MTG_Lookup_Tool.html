@@ -23189,15 +23189,36 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         return out;
     }
     // Draws text to a canvas, one canvas pixel per font pixel (scaled up with CSS, so the pixels stay crisp)
+    // Ink edges of the generated gold sheet, used when the browser won't let the page read the picture (a page opened from disk)
+    const PXL_BOX_DEFAULT = [[5,27],[5,26],[3,29],[4,28],[4,28],[5,27],[4,28],[5,27],[6,26],[6,26],[5,26],[5,27],[5,27],[5,27],[4,28],[4,28],[4,30],[5,28],[7,26],[4,28],[5,27],[4,28],[2,29],[5,27],[5,27],[4,28],[5,27],[9,24],[7,27],[6,26],[5,26],[8,26],[7,25],[5,26],[7,25],[7,25]];
+    const PXL_BOX_CACHE = new WeakMap();
+    function pxlSheetBoxes(sheet) { // the left and right ink edge of each 32-pixel glyph cell
+        if (PXL_BOX_CACHE.has(sheet)) return PXL_BOX_CACHE.get(sheet);
+        let d, out = [];
+        try { const c = document.createElement('canvas'); c.width = sheet.naturalWidth || sheet.width; c.height = 32; const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(sheet, 0, 0); d = g.getImageData(0, 0, c.width, 32).data; c.dataset.w = c.width; var cw = c.width; }
+        catch (e) { PXL_BOX_CACHE.set(sheet, PXL_BOX_DEFAULT); return PXL_BOX_DEFAULT; }
+        for (let i = 0; i < PXL_ORDER.length; i++) {
+            let lo = 32, hi = -1;
+            for (let x = 0; x < 32; x++) for (let y = 0; y < 32; y++) if (d[((y * cw) + i * 32 + x) * 4 + 3] > 40) { if (x < lo) lo = x; if (x > hi) hi = x; }
+            out.push(hi >= lo ? [lo, hi + 1] : null);
+        }
+        PXL_BOX_CACHE.set(sheet, out); return out;
+    }
     function pxlCanvas(text, o = {}) {
         const glyphs = pxlGlyphs(text), fx = o.fx === undefined ? pxlFxName() : o.fx, P = pxrPal(), PAD = 3;
         const sheet = PX.letterImg && (PX.letterImg[PXL_SHEET_NAME[fx]] || PX.letterImg.gold);
         let W = 0; glyphs.forEach(g => { W += g ? 6 : 3; }); W = Math.max(1, W - 1);
         const cv = document.createElement('canvas');
-        if (sheet) { // generated lettering: A-Z and 0-9 only, each 32 x 32 in one strip
-            const cell = 8; cv.width = Math.max(1, [...String(text).toUpperCase()].reduce((n, ch) => n + (ch === ' ' ? 4 : PXL_ORDER.includes(ch) ? cell : 0), 0)); cv.height = cell;
+        if (sheet) { // generated lettering: A-Z and 0-9 only, each glyph 32 x 32 in one strip. Drawn at full size, trimmed to its ink so letters sit close
+            const bb = pxlSheetBoxes(sheet), GAP = 2, SPACE = 10; let total = 0, any = false;
+            for (const ch of String(text).toUpperCase()) { if (ch === ' ') total += SPACE; else { const i = PXL_ORDER.indexOf(ch); if (i >= 0 && bb[i]) { total += bb[i][1] - bb[i][0] + GAP; any = true; } } }
+            cv.width = Math.max(1, total - GAP); cv.height = 32;
             const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; let x = 0;
-            for (const ch of String(text).toUpperCase()) { if (ch === ' ') { x += 4; continue; } const i = PXL_ORDER.indexOf(ch); if (i < 0) continue; g.drawImage(sheet, i * 32, 0, 32, 32, x, 0, cell, cell); x += cell; }
+            for (const ch of String(text).toUpperCase()) {
+                if (ch === ' ') { x += SPACE; continue; }
+                const i = PXL_ORDER.indexOf(ch); if (i < 0 || !bb[i]) continue;
+                g.drawImage(sheet, i * 32 + bb[i][0], 0, bb[i][1] - bb[i][0], 32, x, 0, bb[i][1] - bb[i][0], 32); x += bb[i][1] - bb[i][0] + GAP;
+            }
             cv.dataset.cell = '1'; return cv;
         }
         // Procedural lettering: the 5 x 7 glyphs are doubled with the Scale2x rule (diagonals turn into smooth 2-pixel steps instead of
@@ -23247,9 +23268,9 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (!fxIs('full', 'subtle')) { if (el.dataset.pxOn) { el.textContent = raw; delete el.dataset.pxOn; if (PXL.obs) PXL.obs.takeRecords(); } return; }
         const m = String(raw).match(/^([^A-Za-z0-9]*)(.*)$/), prefix = m[1].trim(), body = m[2];
         if (!pxlGlyphs(body).length) return;
-        const cv = pxlCanvas(body), scale = (window.innerWidth < 700 ? 3 : 4) / (cv.dataset.px2 ? 2 : 1), wrap = document.createElement('span');
+        const cv = pxlCanvas(body), scale = cv.dataset.cell ? (window.innerWidth < 700 ? 0.75 : 1) : (window.innerWidth < 700 ? 3 : 4) / 2, wrap = document.createElement('span');
         wrap.className = 'px-letters'; wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', raw.trim());
-        cv.style.width = cv.width * (cv.dataset.cell ? scale : scale) + 'px'; cv.style.height = cv.height * scale + 'px'; wrap.appendChild(cv);
+        cv.style.width = cv.width * scale + 'px'; cv.style.height = cv.height * scale + 'px'; if (cv.dataset.cell && scale < 1) cv.style.imageRendering = 'auto'; wrap.appendChild(cv);
         el.textContent = ''; if (prefix) { const e = document.createElement('span'); e.className = 'px-letters-emoji'; e.textContent = prefix + ' '; el.appendChild(e); } el.appendChild(wrap); el.dataset.pxOn = '1';
         if (PXL.obs) PXL.obs.takeRecords(); // our own edit is not a title change
     }
@@ -23297,7 +23318,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const clear = () => ['--px-panel-frame', '--px-banner-frame', '--px-panel-slice', '--px-panel-bw'].forEach(k => root.style.removeProperty(k));
         if (!on) { clear(); return; }
         const name = pxfName(), art = PX.art['frame-panel-' + name] ? name : PX.art['frame-panel-default'] ? 'default' : null;
-        if (art) { root.style.setProperty('--px-panel-frame', `url('art/site/frame-panel-${art}.png')`); root.style.setProperty('--px-panel-slice', '16'); root.style.setProperty('--px-panel-bw', '12px'); }
+        if (art) { root.style.setProperty('--px-panel-frame', `url('art/site/frame-panel-${art}.png')`); root.style.setProperty('--px-panel-slice', '12'); root.style.setProperty('--px-panel-bw', '12px'); }
         else { root.style.setProperty('--px-panel-frame', `url("${pxfBuild(name, 'panel').toDataURL()}")`); root.style.setProperty('--px-panel-slice', '5'); root.style.setProperty('--px-panel-bw', '10px'); }
         root.style.setProperty('--px-banner-frame', `url("${pxfBuild(name, 'banner').toDataURL()}")`);
     }
