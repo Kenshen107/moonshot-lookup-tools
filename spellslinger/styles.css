@@ -1041,9 +1041,12 @@
         .asc-portrait.ph span { font-size: 2.2rem; }
         .asc-portrait.ph.boss { box-shadow: 0 0 12px -2px var(--gold); border-color: var(--gold); }
         .asc-portrait.ph.talk span { animation: asc-bob 0.5s ease-in-out infinite; }
-        .asc-portrait.sprite { background-size: calc(var(--cols, 4) * 96px) 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) infinite; }
+        .asc-portrait.sprite { background-size: calc(var(--cols, 4) * 96px) 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) infinite, asc-breathe var(--breath, 3.4s) steps(1, end) var(--ph, 0s) infinite, asc-sway var(--sway, 9s) steps(1, end) var(--ph, 0s) infinite; }
+        /* extra life (2026-10-21): the whole portrait rises a pixel on each breath and now and then leans a pixel to one side; whole pixels only, so the art stays crisp. Each character has its own phase (--ph) so a row of them never breathes in unison. */
+        @keyframes asc-breathe { 0% { translate: 0 0; } 45% { translate: 0 -1px; } 55% { translate: 0 -2px; } 100% { translate: 0 0; } }
+        @keyframes asc-sway { 0%, 80% { transform: translateX(0); } 84% { transform: translateX(1px); } 92% { transform: translateX(-1px); } 96%, 100% { transform: translateX(0); } }
         /* talks for 3 loops (about 3 seconds, the second row), then settles into the idle row for good */
-        .asc-portrait.sprite.talk { background-position-y: -96px; animation: asc-idle var(--tdur, 0.6s) steps(var(--cols, 4)) 3, asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) calc(var(--tdur, 0.6s) * 3) infinite, asc-rest 0.01s linear calc(var(--tdur, 0.6s) * 3) forwards; }
+        .asc-portrait.sprite.talk { background-position-y: -96px; animation: asc-idle var(--tdur, 0.6s) steps(var(--cols, 4)) 3, asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) calc(var(--tdur, 0.6s) * 3) infinite, asc-rest 0.01s linear calc(var(--tdur, 0.6s) * 3) forwards, asc-breathe var(--breath, 3.4s) steps(1, end) var(--ph, 0s) infinite; }
         @keyframes asc-rest { to { background-position-y: 0; } }
         @keyframes asc-idle { to { background-position-x: calc(var(--cols, 4) * -96px); } } }
         /* sheets made before the portrait framing (256 x 192, full body, 64 x 96 frames) still display until they are remade */
@@ -1052,7 +1055,9 @@
         @keyframes asc-idle-old { to { background-position-x: -256px; } }
         @keyframes asc-bob { 50% { transform: translateY(-4px) scale(1.06); } }
         .fx-item { position: fixed; z-index: var(--z-banner, 60); pointer-events: none; image-rendering: pixelated; }
-        .fx-item.sprite { background-repeat: no-repeat; animation: fx-strip var(--dur) steps(var(--frames)) 1 forwards; }
+        .fx-item.sprite { background-repeat: no-repeat; animation: fx-strip var(--dur) steps(var(--frames)) 1 forwards, fx-life var(--dur) ease-out 1 forwards; }
+        /* effects pop in a little small and fade out over their last third instead of vanishing on a full frame (2026-10-21) */
+        @keyframes fx-life { 0% { transform: scale(0.8); opacity: 0.6; } 15% { transform: scale(1); opacity: 1; } 65% { opacity: 1; } 100% { transform: scale(1.04); opacity: 0; } }
         @keyframes fx-strip { from { background-position-x: 0; } to { background-position-x: calc(var(--strip) * -1); } }
         .fx-item.ph { display: grid; place-items: center; border-radius: 50%; animation: fx-ph var(--dur) ease-out 1 forwards; }
         .fx-item.ph span { font-size: 2.4rem; }
@@ -1065,7 +1070,7 @@
         .fx-item.ph[data-kind$="-multi"], .fx-item.ph[data-kind="land-nonbasic"] { background: conic-gradient(var(--mana-W), var(--mana-U), var(--mana-B), var(--mana-R), var(--mana-G), var(--mana-W)); -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); }
         .fx-item.ph[data-kind^="spell-"] { background: radial-gradient(circle, color-mix(in srgb, var(--brand-light) 60%, transparent) 0, transparent 70%); }
         @keyframes fx-ph { 0% { transform: scale(0.3); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
-        @media (prefers-reduced-motion: reduce) { .asc-portrait.ph.talk span, .asc-portrait.sprite { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { .asc-portrait.ph.talk span, .asc-portrait.sprite { animation: none; translate: none; } }
 
         .asc-r-trophy { border-color: var(--gold); box-shadow: 0 0 14px -2px var(--gold); }
         .asc-trophies { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
