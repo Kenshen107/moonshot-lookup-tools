@@ -222,6 +222,8 @@ def main():
     if 'all' in groups:
         groups = {x['group'] for x in man['assets']}
     only = {o.strip() for o in a.only.split(',') if o.strip()}
+    if only and a.group == ap.get_default('group'):  # --only names exact assets, so it doesn't need a group too
+        groups = {x['group'] for x in man['assets']}
     redo = {o.strip() for o in a.redo.split(',') if o.strip()}
     assets = [x for x in man['assets'] if x['group'] in groups and (not only or x['id'] in only)]
     if not assets:
