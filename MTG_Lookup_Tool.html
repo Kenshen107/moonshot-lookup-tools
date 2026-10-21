@@ -23499,7 +23499,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (now > CARDY.nextBlink) { CARDY.blinkUntil = now + 140; CARDY.nextBlink = now + 3200 + Math.random() * 3800; }
         const bubbleOpen = !!document.getElementById('cardyBubble') && !document.getElementById('cardyBubble').hidden;
         if (!CARDY.sleeping && !bubbleOpen && CARDY.pose === 'idle' && now > CARDY.nextFidget) {
-            const pick = ['look', 'look', 'wave', 'think', 'cheer'][Math.floor(Math.random() * 5)]; cardyPose(pick, pick === 'wave' ? 2600 : pick === 'cheer' ? 2200 : pick === 'think' ? 3000 : 2200); CARDY.nextFidget = now + 12000 + Math.random() * 6000;
+            const pick = (CARDY.art ? ['wave', 'wave', 'think', 'cheer'] : ['look', 'look', 'wave', 'think', 'cheer'])[Math.floor(Math.random() * (CARDY.art ? 4 : 5))]; cardyPose(pick, pick === 'wave' ? 2600 : pick === 'cheer' ? 2200 : pick === 'think' ? 3000 : 2200); CARDY.nextFidget = now + 12000 + Math.random() * 6000;
         }
         if (!CARDY.sleeping && !bubbleOpen && now - CARDY.lastInput > 90000) { CARDY.sleeping = true; cardyPose('sleep'); }
         if (!bubbleOpen && !CARDY.sleeping && CARDY.pose === 'idle' && now > CARDY.nextQuip && now - CARDY.lastInput < 60000 && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))) { CARDY.nextQuip = now + 240000 + Math.random() * 180000; cardyQuip(); }
@@ -23525,7 +23525,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         else { b.classList.remove('narrow'); b.style.right = 'auto'; b.style.left = Math.min(innerWidth - 300, r.right + 10) + 'px'; b.style.top = Math.max(6, r.top + 4) + 'px'; }
     }
     function cardyAct(id) { const f = CARDY.actions[id]; if (f) f(); }
-    function cardyClose() { const b = document.getElementById('cardyBubble'); if (b) b.hidden = true; clearTimeout(CARDY.bubbleT); CARDY.bubbleT = 0; CARDY.talking = false; if (CARDY.pose === 'talk') cardyPose(CARDY.sleeping ? 'sleep' : 'idle'); }
+    function cardyClose() { const b = document.getElementById('cardyBubble'); if (b) b.hidden = true; clearTimeout(CARDY.bubbleT); CARDY.bubbleT = 0; CARDY.talking = false; if (!CARDY.until && ['talk', 'wave', 'think', 'cheer', 'look', 'point', 'surprised'].includes(CARDY.pose)) cardyPose(CARDY.sleeping ? 'sleep' : 'idle'); }
     function cardySay(text, o = {}) {
         if (!CARDY.cv || !cardyAllowed()) return;
         const b = cardyBubbleEl(); clearTimeout(CARDY.bubbleT); CARDY.actions = {};
