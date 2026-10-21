@@ -3523,6 +3523,466 @@
      "remove_bg": true
     }
    ]
+  },
+  {
+   "id": "frame-common",
+   "group": "site",
+   "name": "common card frame",
+   "out": "art/site/frame-common.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 154280,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in plain grey steel, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-uncommon",
+   "group": "site",
+   "name": "uncommon card frame",
+   "out": "art/site/frame-uncommon.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 513783,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in polished silver-blue, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-rare",
+   "group": "site",
+   "name": "rare card frame",
+   "out": "art/site/frame-rare.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 169809,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in bright gold, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-mythic",
+   "group": "site",
+   "name": "mythic card frame",
+   "out": "art/site/frame-mythic.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 825095,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in fiery orange-red with tiny flame edges, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-special",
+   "group": "site",
+   "name": "special card frame",
+   "out": "art/site/frame-special.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 778276,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in magenta and violet with star studs, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "cursor-arrow",
+   "group": "site",
+   "name": "mouse cursor, arrow",
+   "out": "art/site/cursor-arrow.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 265867,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pixel art mouse pointer arrow, cream white fill with a thick dark outline and one small teal highlight pixel, pointing up and to the left, the tip at the very top-left corner of the image",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "cursor-hand",
+   "group": "site",
+   "name": "mouse cursor, pointing hand",
+   "out": "art/site/cursor-hand.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 166059,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "click-burst",
+   "group": "site",
+   "name": "click burst",
+   "out": "art/site/click-burst.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 8,
+   "seed": 576244,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a tiny satisfying click burst: a bright cyan and white ring of pixels expanding with a few gold sparks flying outward and fading, centered",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-leaf",
+   "group": "site-fall",
+   "name": "falling leaf",
+   "out": "art/site/fall-leaf.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 786883,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a tumbling orange autumn maple leaf, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-pumpkin",
+   "group": "site-fall",
+   "name": "falling pumpkin",
+   "out": "art/site/fall-pumpkin.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 249253,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a tiny jack-o-lantern, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-bat",
+   "group": "site-fall",
+   "name": "falling bat",
+   "out": "art/site/fall-bat.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 339706,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small flapping black bat, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-snowflake",
+   "group": "site-fall",
+   "name": "falling snowflake",
+   "out": "art/site/fall-snowflake.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 545605,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a six-armed white snowflake, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-ornament",
+   "group": "site-fall",
+   "name": "falling ornament",
+   "out": "art/site/fall-ornament.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 9719,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a shiny red hanging ornament ball, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-gift",
+   "group": "site-fall",
+   "name": "falling gift",
+   "out": "art/site/fall-gift.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 153545,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small wrapped gift with a bow, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-heart",
+   "group": "site-fall",
+   "name": "falling heart",
+   "out": "art/site/fall-heart.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 994605,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pink heart, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-shamrock",
+   "group": "site-fall",
+   "name": "falling shamrock",
+   "out": "art/site/fall-shamrock.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 732791,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a green shamrock, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-petal",
+   "group": "site-fall",
+   "name": "falling petal",
+   "out": "art/site/fall-petal.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 462417,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pink cherry blossom petal, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-spark",
+   "group": "site-fall",
+   "name": "falling spark",
+   "out": "art/site/fall-spark.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 213572,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a gold firework spark, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-star",
+   "group": "site-fall",
+   "name": "falling star",
+   "out": "art/site/fall-star.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 630235,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a twinkling yellow star, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-candy",
+   "group": "site-fall",
+   "name": "falling candy",
+   "out": "art/site/fall-candy.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 397932,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a candy cane, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
   }
  ]
 }

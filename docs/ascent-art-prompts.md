@@ -610,6 +610,34 @@ Each pack tier has its own look and opening animation in the game (drawn in CSS 
 - **Unlimited-era Booster** (opens with "unseal"): wrapper `spellslinger/art/packs/early.png`: a vertical dark blue and gold booster pack wrapper in an ornate old style with glowing rune marks around a central gem, no text. Burst `spellslinger/art/packs/early-open.png`: glowing blue runes spinning up out of a pack with floating golden sparks.
 - **Alpha / Beta Booster** (opens with "unveil"): wrapper `spellslinger/art/packs/power.png`: a vertical black booster pack wrapper with a heavy ornate gold border and a radiant gold five-pointed star, looking priceless and ancient, no text. Burst `spellslinger/art/packs/power-open.png`: a slow rising column of golden light with spinning rays, drifting embers and a heavenly glow.
 
+## Website art (MTG lookup tool): frames, cursor, click
+
+Drawn in code today from the theme colors; when these PNGs exist in `art/site/` the page uses them instead (cursor arrow and hand 32 x 32, click burst 8 frames of 64 x 64, card frames 64 x 64 as 9-slice with 12 px corners). Make them with `py tools\make_art.py --go --group site`.
+
+- **common card frame** (`art/site/frame-common.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in plain grey steel, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **uncommon card frame** (`art/site/frame-uncommon.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in polished silver-blue, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **rare card frame** (`art/site/frame-rare.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in bright gold, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **mythic card frame** (`art/site/frame-mythic.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in fiery orange-red with tiny flame edges, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **special card frame** (`art/site/frame-special.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in magenta and violet with star studs, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **mouse cursor, arrow** (`art/site/cursor-arrow.png`, 32 x 32, style `rd_plus__low_res`): a pixel art mouse pointer arrow, cream white fill with a thick dark outline and one small teal highlight pixel, pointing up and to the left, the tip at the very top-left corner of the image
+- **mouse cursor, pointing hand** (`art/site/cursor-hand.png`, 32 x 32, style `rd_plus__low_res`): a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image
+- **click burst** (`art/site/click-burst.png`, 64 x 64, 8 frames, style `rd_animation__vfx`): a tiny satisfying click burst: a bright cyan and white ring of pixels expanding with a few gold sparks flying outward and fading, centered
+
+### Falling sprites for the background (optional group `site-fall`, not used by the page yet; today the emoji are turned into pixel sprites in code)
+
+- **leaf**: a tumbling orange autumn maple leaf, 32 x 32, 4 frames, `art/site/fall-leaf.png`
+- **pumpkin**: a tiny jack-o-lantern, 32 x 32, 4 frames, `art/site/fall-pumpkin.png`
+- **bat**: a small flapping black bat, 32 x 32, 4 frames, `art/site/fall-bat.png`
+- **snowflake**: a six-armed white snowflake, 32 x 32, 4 frames, `art/site/fall-snowflake.png`
+- **ornament**: a shiny red hanging ornament ball, 32 x 32, 4 frames, `art/site/fall-ornament.png`
+- **gift**: a small wrapped gift with a bow, 32 x 32, 4 frames, `art/site/fall-gift.png`
+- **heart**: a pink heart, 32 x 32, 4 frames, `art/site/fall-heart.png`
+- **shamrock**: a green shamrock, 32 x 32, 4 frames, `art/site/fall-shamrock.png`
+- **petal**: a pink cherry blossom petal, 32 x 32, 4 frames, `art/site/fall-petal.png`
+- **spark**: a gold firework spark, 32 x 32, 4 frames, `art/site/fall-spark.png`
+- **star**: a twinkling yellow star, 32 x 32, 4 frames, `art/site/fall-star.png`
+- **candy**: a candy cane, 32 x 32, 4 frames, `art/site/fall-candy.png`
+
 ## Icons, banners and backgrounds
 
 

@@ -45,6 +45,24 @@ for (const [k, L] of Object.entries(PACKS)) {
     MANIFEST.assets.push({ id: 'pack-' + k + '-open', group: 'packs', name: L.label + ' opening burst', out: `spellslinger/art/packs/${k}-open.png`, kind: 'strip', frame: [96, 96], frames: 8, seed: hash('pack-' + k + '-open'),
         steps: [{ key: 'gen', style: 'rd_animation__vfx', width: 96, height: 96, prompt: L.open, remove_bg: true }] });
 }
+// ---- Website art (MTG lookup tool): pixel card frames, cursor and click burst; PNGs go in art/site/ and are used automatically ----
+const SITE = [
+    ...[['common', 'plain grey steel'], ['uncommon', 'polished silver-blue'], ['rare', 'bright gold'], ['mythic', 'fiery orange-red with tiny flame edges'], ['special', 'magenta and violet with star studs']].map(([r, d]) => ({
+        id: 'frame-' + r, label: `${r} card frame`, size: [64, 64], frames: 1, style: 'rd_plus__ui_element', remove_bg: true,
+        prompt: `a square ornate trading card border frame in ${d}, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text` })),
+    { id: 'cursor-arrow', label: 'mouse cursor, arrow', size: [32, 32], frames: 1, style: 'rd_plus__low_res', remove_bg: true,
+      prompt: 'a pixel art mouse pointer arrow, cream white fill with a thick dark outline and one small teal highlight pixel, pointing up and to the left, the tip at the very top-left corner of the image' },
+    { id: 'cursor-hand', label: 'mouse cursor, pointing hand', size: [32, 32], frames: 1, style: 'rd_plus__low_res', remove_bg: true,
+      prompt: 'a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image' },
+    { id: 'click-burst', label: 'click burst', size: [64, 64], frames: 8, style: 'rd_animation__vfx', remove_bg: true,
+      prompt: 'a tiny satisfying click burst: a bright cyan and white ring of pixels expanding with a few gold sparks flying outward and fading, centered' }
+];
+for (const x of SITE) MANIFEST.assets.push({ id: x.id, group: 'site', name: x.label, out: `art/site/${x.id}.png`, kind: 'strip', frame: x.size, frames: x.frames, seed: hash(x.id),
+    steps: [{ key: 'gen', style: x.style, width: x.size[0], height: x.size[1], prompt: x.prompt, remove_bg: x.remove_bg }] });
+const FALL = [['leaf', 'a tumbling orange autumn maple leaf'], ['pumpkin', 'a tiny jack-o-lantern'], ['bat', 'a small flapping black bat'], ['snowflake', 'a six-armed white snowflake'], ['ornament', 'a shiny red hanging ornament ball'],
+    ['gift', 'a small wrapped gift with a bow'], ['heart', 'a pink heart'], ['shamrock', 'a green shamrock'], ['petal', 'a pink cherry blossom petal'], ['spark', 'a gold firework spark'], ['star', 'a twinkling yellow star'], ['candy', 'a candy cane']];
+for (const [k, d] of FALL) MANIFEST.assets.push({ id: 'fall-' + k, group: 'site-fall', name: 'falling ' + k, out: `art/site/fall-${k}.png`, kind: 'strip', frame: [32, 32], frames: 4, seed: hash('fall-' + k),
+    steps: [{ key: 'gen', style: 'rd_animation__vfx', width: 32, height: 32, prompt: `${d}, slowly spinning, a 4 frame loop, transparent background`, remove_bg: true }] });
 fs.writeFileSync(path.join(ROOT, 'docs', 'ascent-art-manifest.json'), JSON.stringify(MANIFEST, null, 1) + '\n');
 
 const out = [];
@@ -118,6 +136,11 @@ for (const [k, f] of Object.entries(IDEAS)) out.push(`- **${f.label}** (\`${k}\`
 out.push('\n## Booster pack looks (wrapper and opening burst)\n');
 out.push('Each pack tier has its own look and opening animation in the game (drawn in CSS today). When these PNGs exist the wrapper art replaces the drawn pack and the burst plays over it while it opens. Wrapper: 96 x 144, one frame. Burst: 8 frames in a strip, each 96 x 96.\n');
 for (const [k, L] of Object.entries(PACKS)) out.push(`- **${L.label}** (opens with "${L.anim}"): wrapper \`spellslinger/art/packs/${k}.png\`: ${L.wrap}. Burst \`spellslinger/art/packs/${k}-open.png\`: ${L.open}.`);
+out.push('\n## Website art (MTG lookup tool): frames, cursor, click\n');
+out.push('Drawn in code today from the theme colors; when these PNGs exist in `art/site/` the page uses them instead (cursor arrow and hand 32 x 32, click burst 8 frames of 64 x 64, card frames 64 x 64 as 9-slice with 12 px corners). Make them with `py tools\\make_art.py --go --group site`.\n');
+for (const x of SITE) out.push(`- **${x.label}** (\`art/site/${x.id}.png\`, ${x.size[0]} x ${x.size[1]}${x.frames > 1 ? `, ${x.frames} frames` : ''}, style \`${x.style}\`): ${x.prompt}`);
+out.push('\n### Falling sprites for the background (optional group `site-fall`, not used by the page yet; today the emoji are turned into pixel sprites in code)\n');
+for (const [k, d] of FALL) out.push(`- **${k}**: ${d}, 32 x 32, 4 frames, \`art/site/fall-${k}.png\``);
 out.push('\n## Icons, banners and backgrounds\n');
 const groups = {};
 for (const [k, i] of Object.entries(ICONS)) (groups[i.group] = groups[i.group] || []).push([k, i]);
