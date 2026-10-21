@@ -33,6 +33,19 @@ const PAGE = 'file://' + path.resolve(__dirname, '..', 'MTG_Lookup_Tool.html');
         return { cell: cv.dataset.cell, w: cv.width, frame: getComputedStyle(document.documentElement).getPropertyValue('--px-panel-frame').trim().slice(0, 36) };
     });
     ok('generated art replaces the drawn lettering, frame and Realm layer when present', art.cell === '1' && art.w === 8 + 8 + 4 + 8 && /frame-panel-default/.test(art.frame), art);
+    const cd = await p.evaluate(async () => {
+        const set = l => { document.documentElement.setAttribute('data-fx', l); pxFlairRefresh(); };
+        const out = {}; set('full'); await new Promise(r => setTimeout(r, 200));
+        const vis = () => { const c = document.getElementById('cardy'); return !!c && getComputedStyle(c).display !== 'none'; };
+        out.full = vis(); cardySay('Hello <b>there</b>', { stay: true }); await new Promise(r => setTimeout(r, 400));
+        const b = document.getElementById('cardyBubble'); out.bubble = !b.hidden && !b.querySelector('b'); cardyClose(); out.closed = b.hidden;
+        cardySet(false); out.hidden = !vis() && localStorage.getItem('cardyOff') === '1'; cardySet(true); out.back = vis();
+        set('subtle'); out.subtle = vis(); set('off'); out.off = !vis(); set('full'); // off = true means Cardy is hidden at Off
+        return out;
+    });
+    ok('Cardy shows at Full and Subtle, not Off; the bubble escapes text; hiding is remembered', cd.full && cd.subtle && cd.off && cd.bubble && cd.closed && cd.hidden && cd.back, cd);
+    await p.mouse.move(100, 100); await p.mouse.move(300, 220, { steps: 10 });
+    ok('the cursor trail draws while the mouse moves (Full)', await p.evaluate(() => !!document.getElementById('pxTrail') && TRAIL.pts.length > 0));
     await p.context().close();
     const ph = await open('?theme=halloween', 360, 740);
     const m = await ph.evaluate(() => { switchGame(Object.keys(APP_VIEWS)[1]); return { sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }; });

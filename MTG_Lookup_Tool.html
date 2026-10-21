@@ -800,12 +800,10 @@
         html[data-fx="full"] #sceneBanner { border-radius: 3px; }
         html[data-fx="full"] #sceneBanner::after { box-sizing: border-box; background-origin: border-box; border: 18px solid transparent; border-image: var(--px-banner-frame) 9 / 18px / 0 stretch; image-rendering: pixelated; }
         @media (prefers-reduced-motion: reduce) { #fxRealm { opacity: 0.9; } }
-        /* Pixel mascot and loading card (optional art, 2026-10-21): used only when art/site/mascot.png and loading-card.png exist */
-        .ms-mark.has-art { width: 56px; height: 56px; display: inline-block; }
-        .px-mascot { display: block; width: 56px; height: 56px; background: url('art/site/mascot.png') 0 0 / calc(var(--n, 8) * 100%) 100% no-repeat; image-rendering: pixelated; animation: px-strip 1s steps(var(--n, 8)) infinite; }
+        /* Pixel loading card (optional art, 2026-10-21): used only when art/site/loading-card.png exists */
         @keyframes px-strip { to { background-position-x: 100%; } }
         html.px-loading-art .loading:not([style*="padding:0"]):not([style*="padding: 0"])::after { content: ''; display: block; width: 48px; height: 48px; margin: 10px auto 0; background: var(--px-loading) 0 0 / calc(var(--px-loading-n, 8) * 100%) 100% no-repeat; image-rendering: pixelated; animation: px-strip 0.9s steps(var(--px-loading-n, 8)) infinite; }
-        @media (prefers-reduced-motion: reduce) { .px-mascot, html.px-loading-art .loading::after { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { html.px-loading-art .loading::after { animation: none; } }
         .loading {
             text-align: center;
             color: var(--text-secondary);
@@ -1475,6 +1473,25 @@
             border-color: var(--brand-light);
             background: var(--bg-panel-raised);
         }
+
+        /* ---- Cursor trail and Cardy, the helper card (2026-10-21) ---- */
+        #pxTrail { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; image-rendering: pixelated; }
+        #cardy { position: absolute; left: 10px; bottom: 4px; z-index: 3; cursor: pointer; image-rendering: pixelated; filter: drop-shadow(0 2px 0 var(--bg-canvas)); border-radius: var(--radius-sm); }
+        #cardy:focus-visible { outline: 2px solid var(--brand-light); outline-offset: 2px; }
+        #cardyBubble { position: fixed; z-index: 70; width: 280px; max-width: calc(100vw - 20px); box-sizing: border-box; padding: 10px 28px 10px 12px; background: var(--panel-base, var(--bg-panel)); color: var(--text-primary); border: 2px solid var(--brand-light); border-radius: var(--radius-md); box-shadow: 0 4px 0 var(--bg-canvas), 0 8px 24px rgba(0,0,0,0.45); font-size: 0.9em; line-height: 1.4; }
+        #cardyBubble[hidden] { display: none; }
+        #cardyBubble p { margin: 0; }
+        #cardyBubble .cardy-name { font-family: var(--font-display, inherit); color: var(--text-heading); font-weight: 700; }
+        #cardyBubble .cardy-vis { display: inline; }
+        #cardyBubble .cardy-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+        #cardyBubble .cardy-x { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; padding: 0; margin: 0; background: transparent; border: 0; color: var(--text-soft); cursor: pointer; font-size: 0.9em; }
+        #cardyBubble .cardy-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        #cardyBubble .cardy-btn { width: auto; margin: 0; padding: 4px 10px; font-size: 0.85em; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: 999px; color: var(--text-primary); cursor: pointer; }
+        #cardyBubble .cardy-btn:hover { border-color: var(--brand-light); }
+        .cardy-spot { outline: 3px solid var(--color-warning) !important; outline-offset: 4px; border-radius: var(--radius-sm); }
+        .util-bar-btn.is-off { opacity: 0.7; }
+        @media (max-width: 519px) { #cardy { left: 3px; bottom: 2px; } }
+        @media (prefers-reduced-motion: reduce) { #pxTrail { display: none; } }
 
         /* ---- Store info bar (logo + locations/hours) ---- */
         .store-bar {
@@ -7890,6 +7907,7 @@
             <a class="util-shop" href="https://moonshotgamestore.com" target="_blank" rel="noopener">🛒 Shop<span class="util-long"> moonshotgamestore.com</span> →</a>
             <button type="button" class="util-bar-btn" onclick="openValues()" title="About Moonshot Games: hours, locations, events and values">🏪<span class="util-long"> About Moonshot Games</span><span class="util-short"> Store</span></button>
             <button type="button" class="util-bar-btn" id="fxLevelBtn" onclick="cycleFxLevel()">✨ Effects</button>
+            <button type="button" class="util-bar-btn" id="cardyBtn" onclick="cardyToggle()" aria-pressed="true">🃏 Cardy</button>
         </div>
 
         <!-- Moonshot Games store info bar -->
@@ -22798,13 +22816,8 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         const PX_SCENES = { halloween: 1, autumn: 1, winter: 1, christmas: 1, spring: 1, newyear: 1 };
         const PX_THEME_SCENE = { halloween: 'halloween', spooky: 'halloween', witching: 'halloween', pumpkin: 'halloween', harvest: 'autumn', harvestmoon: 'autumn', thanksgiving: 'autumn', wonderland: 'winter', snowday: 'winter', evergreen: 'winter', cocoa: 'winter', twinkle: 'winter', hanukkah: 'winter', christmas: 'christmas', christmaseve: 'christmas', festive: 'christmas', newyear: 'newyear', newyearseve: 'newyear', easter: 'spring', earthday: 'spring', stpatricks: 'spring', mothersday: 'spring', holi: 'spring' };
         function pxSceneImg() { const k = PX_THEME_SCENE[document.documentElement.getAttribute('data-theme') || '']; return k && PX.sceneImg[k] ? PX.sceneImg[k] : null; }
-        // Mascot and loading spinner from the art pipeline, when their files exist
+        // Loading spinner from the art pipeline, when their files exist
         function pxApplyExtras() {
-            const mark = document.getElementById('msMark');
-            if (mark && PX.art.mascot && !mark.classList.contains('has-art')) {
-                mark.classList.add('has-art');
-                mark.innerHTML = `<span class="px-mascot" style="--n:${PX.frames.mascot || 8}"></span>`;
-            }
             if (PX.art['loading-card']) {
                 const st = document.documentElement.style;
                 st.setProperty('--px-loading', "url('art/site/loading-card.png')");
@@ -22952,7 +22965,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         function pxProbeArt() {
             if (PX.probed) return Promise.resolve();
             PX.probed = true;
-            const names = ['cursor-arrow', 'cursor-hand', 'mascot', 'loading-card', ...Object.keys(PX_SCENES).map(k => 'scene-' + k), ...['common', 'uncommon', 'rare', 'mythic', 'special'].map(r => 'frame-' + r)];
+            const names = ['cursor-arrow', 'cursor-hand', 'loading-card', ...Object.keys(PX_SCENES).map(k => 'scene-' + k), ...['common', 'uncommon', 'rare', 'mythic', 'special'].map(r => 'frame-' + r)];
             const falls = [...new Set(Object.values(PX_FALL_MAP))].map(id => 'fall-' + id);
             return Promise.all([...names, ...falls].map(n => new Promise(res => { const i = new Image(); i.onload = () => { PX.art[n] = true; if (n.startsWith('fall-')) PX.fallImg[n.slice(5)] = i; if (n === 'mascot' || n === 'loading-card') PX.frames[n] = Math.max(1, Math.round(i.naturalWidth / Math.max(1, i.naturalHeight))); if (n.startsWith('scene-')) PX.sceneImg[n.slice(6)] = i; res(); }; i.onerror = res; i.src = `art/site/${n}.png`; })));
         }
@@ -23053,7 +23066,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function pxrSeed(s) { let a = s >>> 0; return () => ((a = (a * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
     // ---------- The Realm: layered pixel landscapes that drift and change ----------
-    const REALM = { biomes: ['castle', 'frontier', 'gothic', 'grove'], cur: 0, prev: -1, fadeT: 1, t0: 0, last: 0, switchAt: 0, built: null, W: 0, H: 180, cv: null, cx: null, running: false, forced: null, art: {} };
+    const REALM = { biomes: ['castle', 'frontier', 'gothic', 'grove'], cur: 0, prev: -1, fadeT: 1, t0: 0, last: 0, switchAt: 0, built: null, W: 0, H: 180, cv: null, cx: null, running: false, forced: null, art: {}, off: { far: 0, mid: 0, near: 0, cloud: 0 }, lastT: 0, boost: 0, mx: 0, my: 0, tx: 0, ty: 0, nstars: [] };
     const REALM_STAY = 80000, REALM_FADE = 4500, REALM_FPS = 24;
     function pxrBiomeColors(biome, P) {
         const m = pxrMix, dk = m(P.canvas, [0, 0, 0], 0.55);
@@ -23114,7 +23127,6 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         pxrFillRidge(mg, pxrRidge(LW, H * 0.78, 6, rnd, 3), C.mid, H);
         pxrFillRidge(ng, pxrRidge(LW, H * 0.93, 3, rnd, 6), C.near, H);
         if (biome === 'castle') {
-            { const sx = Math.round(W * 0.78), sy = Math.round(H * 0.56); for (const [r, a] of [[34, 0.07], [26, 0.1], [18, 0.16]]) pxrCircle(sg, sx, sy, r, C.glow, a); pxrCircle(sg, sx, sy, 11, pxrMix(C.glow, C.moon, 0.55)); }
             pxrCastle(mg, 170, Math.round(H * 0.8), C.mid, C.glow, 1); pxrCastle(mg, 440, Math.round(H * 0.8), pxrMix(C.mid, C.far, 0.4), pxrMix(C.glow, C.mid, 0.4), 0.6);
             for (let i = 0; i < 9; i++) pxrTree(ng, Math.floor(rnd() * LW), Math.round(H * 0.95), 16 + rnd() * 14, C.near, rnd, false);
             for (let i = 0; i < 7; i++) pxrTri(fg, Math.floor(rnd() * LW), Math.round(H * 0.5 - rnd() * 18), 26, 12, pxrMix(C.far, C.top, 0.25)); // far peaks
@@ -23156,7 +23168,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function pxrDrawActors(g, L, t, W, H) {
         const C = L.C, sec = t / 1000;
         for (const a of L.actors) {
-            if (a.k === 'cloud') { const x = ((a.x + sec * a.v) % (W + 60)) - 30; g.fillStyle = pxrCss(pxrMix(C.moon, C.bottom, 0.3), 0.55); for (let i = 0; i < 4; i++) g.fillRect(Math.round(x + i * 5 * a.s - 8), Math.round(a.y - (i === 1 || i === 2 ? 2 : 0)), Math.round(10 * a.s), Math.round(4 * a.s)); }
+            if (a.k === 'cloud') { const x = ((a.x + REALM.off.cloud * a.v) % (W + 60)) - 30; g.fillStyle = pxrCss(pxrMix(C.moon, C.bottom, 0.3), 0.55); for (let i = 0; i < 4; i++) g.fillRect(Math.round(x + i * 5 * a.s - 8), Math.round(a.y - (i === 1 || i === 2 ? 2 : 0)), Math.round(10 * a.s), Math.round(4 * a.s)); }
             else if (a.k === 'dragon' || a.k === 'ship' || a.k === 'airship' || a.k === 'birds') {
                 const p = ((sec + a.off) % a.period) / a.period, span = W + 80, x = p * span - 40, flap = Math.floor(sec * 4) % 2;
                 if (a.k === 'dragon') { const y = 38 + Math.sin(sec * 0.6) * 5; g.fillStyle = pxrCss(C.near); g.fillRect(Math.round(x), Math.round(y), 10, 3); g.fillRect(Math.round(x + 9), Math.round(y - 1), 3, 2); g.fillRect(Math.round(x - 6), Math.round(y + 1), 6, 1); for (let i = 0; i < 6; i++) g.fillRect(Math.round(x + 3 - i), Math.round(y - 1 - (flap ? i : Math.floor(i / 2))), 1, 1 + (flap ? 0 : i)); g.fillStyle = pxrCss(C.glow); g.fillRect(Math.round(x + 11), Math.round(y - 1), 1, 1); }
@@ -23173,12 +23185,43 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         }
         if (L.stars.length) for (const s of L.stars) { const al = 0.25 + 0.6 * s.b * (0.55 + 0.45 * Math.sin(sec * 1.1 + s.ph)); g.fillStyle = pxrCss(C.moon, al); g.fillRect(s.x, s.y, 1, 1); }
     }
+    // The store's time of day and weather (the same feed as the title banner), or the device clock. ?realmtime=day|dusk|night and ?realmwx=rain|snow|storm|fog|clouds preview them.
+    function pxrNow() {
+        const q = new URLSearchParams(location.search), qt = q.get('realmtime'), qw = q.get('realmwx');
+        const d = new Date(), hr = d.getHours() + d.getMinutes() / 60, ramp = (a, b, x) => Math.max(0, Math.min(1, (x - a) / (b - a)));
+        let light = Math.min(ramp(5.5, 8, hr), 1 - ramp(17, 19.5, hr)), kind = 'clear';
+        let w = null; try { w = fxWeather[wxSelectedStore().key] || Object.values(fxWeather)[0] || null; } catch (e) { /* no weather yet */ }
+        if (w) { kind = w.kind || 'clear'; if (!!w.day !== (light > 0.5)) light = w.day ? 0.85 : 0.15; }
+        if (qt) light = { day: 1, dusk: 0.5, night: 0 }[qt] === undefined ? light : { day: 1, dusk: 0.5, night: 0 }[qt];
+        if (qw) kind = qw;
+        return { light, kind, dusk: light > 0.04 && light < 0.96 ? 1 - Math.abs(light - 0.5) * 2 : 0 };
+    }
+    function pxrWeather(g, t, kind, W, H) {
+        const sec = t / 1000, P = REALM.pal;
+        if (kind === 'rain' || kind === 'storm') {
+            g.fillStyle = pxrCss(P.light, 0.5);
+            for (let i = 0; i < 80; i++) { const y = (sec * (95 + (i % 7) * 14) + i * 29) % (H + 10) - 5, x = ((i * 61) % W) - y * 0.22; g.fillRect(Math.round(((x % W) + W) % W), Math.round(y), 1, 3); }
+            if (kind === 'storm' && Math.sin(sec * 0.9) > 0.985) { g.fillStyle = pxrCss(P.heading, 0.22); g.fillRect(0, 0, W, H); }
+        } else if (kind === 'snow') {
+            g.fillStyle = pxrCss(P.heading, 0.85);
+            for (let i = 0; i < 64; i++) { const y = (sec * (8 + (i % 5) * 3) + i * 31) % (H + 6) - 3, x = (i * 47) % W + Math.sin(sec * 0.8 + i) * 4; g.fillRect(Math.round(((x % W) + W) % W), Math.round(y), i % 4 ? 1 : 2, i % 4 ? 1 : 2); }
+        } else if (kind === 'fog') {
+            for (let k = 0; k < 3; k++) { const y = Math.round(H * (0.52 + k * 0.13)), o = (sec * (2 + k)) % W; g.fillStyle = pxrCss(P.gray, 0.11); g.fillRect(0, y, W, 14 + k * 4); g.fillStyle = pxrCss(P.heading, 0.05); g.fillRect(Math.round(o) - W / 2, y + 2, W, 6); }
+        } else if (kind === 'clouds') { g.fillStyle = pxrCss(P.gray, 0.1); g.fillRect(0, 0, W, H); }
+    }
     function pxrDrawLayer(g, strip, W, H, off) { const LW = strip.width, o = ((Math.round(off) % LW) + LW) % LW; for (let x = -o; x < W; x += LW) g.drawImage(strip, x, 0); }
-    function pxrDrawBiome(g, L, t, W, H) {
+    function pxrDrawBiome(g, L, t, W, H, N) {
+        N = N || pxrNow(); const C = L.C, sec = t / 1000, O = REALM.off;
         g.drawImage(L.sky, 0, 0);
+        const starA = L.stars.length ? 1 - 0.6 * N.light : 1 - N.light;
+        if (starA > 0.02) for (const s of (L.stars.length ? L.stars : REALM.nstars)) { const al = starA * (0.25 + 0.6 * s.b * (0.55 + 0.45 * Math.sin(sec * 1.1 + s.ph))); g.fillStyle = pxrCss(C.moon, al); g.fillRect(s.x, s.y, 1, 1); }
+        if (L.biome === 'castle') { // the sun follows the time of day and sets behind the hills; a crescent moon rises at night
+            const sx = Math.round(W * 0.78), sy = Math.round(H * 0.56 + (1 - N.light) * 52);
+            if (N.light > 0.04) { for (const [r, a] of [[34, 0.07], [26, 0.1], [18, 0.16]]) pxrCircle(g, sx, sy, r, C.glow, a * Math.min(1, N.light * 1.6)); pxrCircle(g, sx, sy, 11, pxrMix(C.glow, C.moon, 0.55), Math.min(1, N.light * 1.6)); }
+            if (N.light < 0.6) { const a = (0.6 - N.light) / 0.6, mx = Math.round(W * 0.28), my = Math.round(H * 0.24); pxrCircle(g, mx, my, 9, C.moon, a); pxrCircle(g, mx + 4, my - 2, 8, pxrMix(C.top, C.bottom, 0.3), a); }
+        }
         pxrDrawActors(g, L, t, W, H);
-        const sec = t / 1000;
-        pxrDrawLayer(g, L.far, W, H, sec * 1.6); pxrDrawLayer(g, L.mid, W, H, sec * 3.4); pxrDrawLayer(g, L.near, W, H, sec * 7);
+        pxrDrawLayer(g, L.far, W, H, O.far + REALM.mx * 3); pxrDrawLayer(g, L.mid, W, H, O.mid + REALM.mx * 7); pxrDrawLayer(g, L.near, W, H, O.near + REALM.mx * 14);
     }
     function pxrSize() {
         const vw = Math.max(320, window.innerWidth), vh = Math.max(240, window.innerHeight);
@@ -23188,6 +23231,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function pxrBuild() {
         if (!REALM.cv) return;
         pxrSize(); const P = pxrPal(); REALM.pal = P;
+        { const r = pxrSeed(99); REALM.nstars = Array.from({ length: 70 }, () => ({ x: Math.floor(r() * REALM.W), y: Math.floor(r() * REALM.H * 0.55), b: r(), ph: r() * 6 })); }
         REALM.built = REALM.biomes.map((b, i) => (i === REALM.cur || i === REALM.prev) ? pxrBuildBiome(b, P, REALM.W, REALM.H, i) : null);
     }
     function pxrEnsure(i) { if (!REALM.built[i]) REALM.built[i] = pxrBuildBiome(REALM.biomes[i], REALM.pal, REALM.W, REALM.H, i); return REALM.built[i]; }
@@ -23200,20 +23244,35 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function pxrPaint(t) {
         const g = REALM.cx, W = REALM.W, H = REALM.H;
         if (!REALM.built) pxrBuild();
+        const dt = Math.min(0.2, Math.max(0, (t - (REALM.lastT || t)) / 1000)); REALM.lastT = t;
+        REALM.boost *= Math.pow(0.35, dt); const wind = 1 + REALM.boost;   // hovering a menu tab sends a gust through the scene
+        REALM.off.far += dt * 1.6 * wind; REALM.off.mid += dt * 3.4 * wind; REALM.off.near += dt * 7 * wind; REALM.off.cloud += dt * wind;
+        REALM.mx += (REALM.tx - REALM.mx) * 0.06; REALM.my += (REALM.ty - REALM.my) * 0.06;
         if (!REALM.forced && t > REALM.switchAt && REALM.fadeT >= 1) { REALM.prev = REALM.cur; REALM.cur = (REALM.cur + 1) % REALM.biomes.length; REALM.fadeT = 0; REALM.fadeStart = t; REALM.switchAt = t + REALM_STAY; pxrEnsure(REALM.cur); }
         if (REALM.fadeT < 1) REALM.fadeT = Math.min(1, (t - REALM.fadeStart) / REALM_FADE);
+        const N = pxrNow(), P = REALM.pal;
         g.globalAlpha = 1;
-        if (REALM.fadeT < 1 && REALM.prev >= 0) { pxrDrawBiome(g, pxrEnsure(REALM.prev), t, W, H); g.globalAlpha = REALM.fadeT; }
-        pxrDrawBiome(g, pxrEnsure(REALM.cur), t, W, H);
+        if (REALM.fadeT < 1 && REALM.prev >= 0) { pxrDrawBiome(g, pxrEnsure(REALM.prev), t, W, H, N); g.globalAlpha = REALM.fadeT; }
+        pxrDrawBiome(g, pxrEnsure(REALM.cur), t, W, H, N);
         g.globalAlpha = 1;
-        // a veil keeps the interface readable: the scene is a backdrop, not the subject
-        g.fillStyle = pxrCss(REALM.pal.canvas, 0.42); g.fillRect(0, 0, W, H);
+        // day, dusk and night: a cool darkening after sunset, a warm glow along the horizon at dusk and dawn
+        if (N.light < 1) { g.fillStyle = pxrCss(pxrMix(P.brand, [0, 0, 0], 0.82), 0.4 * (1 - N.light)); g.fillRect(0, 0, W, H); }
+        if (N.dusk > 0) { const gr = g.createLinearGradient(0, H * 0.3, 0, H); gr.addColorStop(0, pxrCss(P.warn, 0)); gr.addColorStop(1, pxrCss(P.warn, 0.22 * N.dusk)); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+        pxrWeather(g, t, N.kind, W, H);
+        // a veil keeps the interface readable: the scene is a backdrop, not the subject (a little lighter in daylight)
+        g.fillStyle = pxrCss(P.canvas, 0.46 - 0.06 * N.light); g.fillRect(0, 0, W, H);
     }
     function pxrRefresh() {
         const full = fxIs('full');
         if (!REALM.cv) {
             const cv = document.createElement('canvas'); cv.id = 'fxRealm'; cv.setAttribute('aria-hidden', 'true');
             document.body.insertBefore(cv, document.body.firstChild); REALM.cv = cv; REALM.cx = cv.getContext('2d'); REALM.cx.imageSmoothingEnabled = false;
+        }
+        if (!REALM.wired) {
+            REALM.wired = true;
+            document.addEventListener('pointermove', e => { if (e.pointerType === 'touch') return; REALM.tx = (e.clientX / Math.max(1, innerWidth) - 0.5) * 2; REALM.ty = (e.clientY / Math.max(1, innerHeight) - 0.5) * 2; }, { passive: true });
+            document.addEventListener('mouseover', e => { if (e.target.closest && e.target.closest('.app-nav-btn, .app-nav-menu button, .app-bottom-bar button')) REALM.boost = Math.min(7, REALM.boost + 4); }, { passive: true });
+            const lw = window.loadWeather; if (typeof lw === 'function') window.loadWeather = async function () { const r = await lw.apply(this, arguments); if (REALM.cv && fxIs('full') && !REALM.running) pxrPaint(performance.now()); return r; };
         }
         const q = new URLSearchParams(location.search).get('realm');
         if (q === 'off') { REALM.running = false; REALM.cv.style.display = 'none'; return; }
@@ -23376,6 +23435,287 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         let rt = null; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { REALM.built = null; pxlRefresh(); }, 250); });
         document.addEventListener('DOMContentLoaded', () => { pxrAll(); pxrProbe(); });
         if (document.readyState !== 'loading') { pxrAll(); pxrProbe(); }
+    }
+    </script>
+
+    <script id="pxCardyScript">
+    // =====================================================================
+    // Cursor trail and Cardy, the talking-card helper (2026-10-21, owner: "a faint pixel trail that follows the mouse" and "a play on
+    // Clippy ... a talking card full of spunk that just wants to help, with multiple animations, that does various things on the page").
+    // Cardy lives in the title banner (so he never covers the tools), shows tips in a speech bubble, can give a short tour (he
+    // highlights things, nothing is moved or clicked for you), tells MTG facts, wears a seasonal accessory, naps when idle and can be
+    // hidden (🃏 button in the top row, or "Hide Cardy" in his menu; remembered on this device). Drawn in code from the theme tokens;
+    // art/site/cardy.png (6 rows of 16 frames of 96 x 96: idle, wave, talk, think, cheer, sleep) replaces the drawing when it exists.
+    // Cardy is this fan-made tool's helper, not the store's: he never speaks about prices, hours or store policy.
+    // =====================================================================
+    const CARDY_NAME = 'Cardy';
+
+    // ---------- Cursor trail (Full only, mouse only) ----------
+    const TRAIL = { cv: null, g: null, pts: [], running: false, w: 0, h: 0 };
+    function trailOn() { return fxIs('full') && !fxReducedMotion.matches && window.matchMedia && window.matchMedia('(pointer: fine)').matches; }
+    function trailEnsure() {
+        if (TRAIL.cv) return;
+        const cv = document.createElement('canvas'); cv.id = 'pxTrail'; cv.setAttribute('aria-hidden', 'true'); document.body.appendChild(cv); TRAIL.cv = cv; TRAIL.g = cv.getContext('2d');
+    }
+    function trailSize() { const cv = TRAIL.cv, w = Math.ceil(innerWidth / 3), h = Math.ceil(innerHeight / 3); if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } TRAIL.w = w; TRAIL.h = h; }
+    function trailMove(e) {
+        if (!trailOn() || e.pointerType === 'touch') return;
+        trailEnsure(); const now = performance.now(), last = TRAIL.pts[TRAIL.pts.length - 1];
+        if (last && Math.abs(last.x - e.clientX / 3) + Math.abs(last.y - e.clientY / 3) < 1.2) return;
+        TRAIL.pts.push({ x: e.clientX / 3, y: e.clientY / 3, t: now }); if (TRAIL.pts.length > 28) TRAIL.pts.shift();
+        if (!TRAIL.running) { TRAIL.running = true; requestAnimationFrame(trailFrame); }
+    }
+    function trailFrame(now) {
+        const g = TRAIL.g; trailSize(); g.clearRect(0, 0, TRAIL.w, TRAIL.h);
+        const life = 520, P = pxrPal(), col = pxrMix(P.light, P.heading, 0.25);
+        TRAIL.pts = TRAIL.pts.filter(p => now - p.t < life);
+        TRAIL.pts.forEach((p, i) => { const k = 1 - (now - p.t) / life; g.fillStyle = pxrCss(col, 0.5 * k * k); const s = k > 0.55 ? 2 : 1; g.fillRect(Math.round(p.x), Math.round(p.y), s, s); if (i % 5 === 0 && k > 0.4) { g.fillStyle = pxrCss(P.heading, 0.55 * k); g.fillRect(Math.round(p.x) + 2, Math.round(p.y) - 1, 1, 1); } });
+        if (TRAIL.pts.length && trailOn()) requestAnimationFrame(trailFrame); else { TRAIL.running = false; TRAIL.pts = []; g.clearRect(0, 0, TRAIL.w, TRAIL.h); }
+    }
+
+    // ---------- Cardy: state ----------
+    const CARDY = { cv: null, g: null, W: 44, H: 48, scale: 2, pose: 'idle', until: 0, sleeping: false, lastInput: performance.now(), blinkUntil: 0, nextBlink: 0, nextFidget: 0, nextQuip: 0,
+        lx: 0, ly: 0, px: 0, py: 0, bubbleT: 0, bubbleHide: 0, actions: {}, seen: new Set(), lastTip: 0, tour: null, factN: -1, art: null, lastDraw: 0, running: false };
+    function cardyHidden() { try { return localStorage.getItem('cardyOff') === '1'; } catch (e) { return false; } }
+    function cardyAllowed() { return fxIs('full', 'subtle') && !cardyHidden() && new URLSearchParams(location.search).get('cardy') !== 'off'; }
+
+    // ---------- Cardy: the drawing (a trading card with a face, arms, legs and a seasonal accessory) ----------
+    function cardyCols() {
+        const P = pxrPal(), m = pxrMix;
+        return { ink: m(P.canvas, [0, 0, 0], 0.62), card: m(P.heading, P.warn, 0.14), shade: m(P.heading, P.gray, 0.4), win1: P.light, win2: m(P.light, P.brand, 0.6), plate: P.brand, white: [255, 255, 255], blush: m(P.warn, P.bad, 0.5), bad: P.bad, warn: P.warn, ok: P.ok, shoe: m(P.canvas, [0, 0, 0], 0.5), brand: P.brand, light: P.light, heading: P.heading };
+    }
+    function cardyLine(R, x0, y0, x1, y1, col) { const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let err = dx + dy, x = x0, y = y0; for (let n = 0; n < 60; n++) { R(x, y, 1, 1, col); if (x === x1 && y === y1) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } } }
+    function cardyGlove(R, x, y, C) { R(x - 1, y - 1, 4, 4, C.ink); R(x - 1, y - 1, 1, 1, null); R(x + 2, y - 1, 1, 1, null); R(x, y, 2, 2, C.white); }
+    const CARDY_ARMS = { // [shoulder-relative points..., glove] for the right arm; the left arm mirrors it
+        down: [[28, 17], [29, 20], [29, 23]], wave1: [[28, 15], [30, 12], [30, 8]], wave2: [[28, 15], [31, 13], [32, 9]], up: [[28, 15], [30, 10], [30, 5]], upsmall: [[28, 15], [30, 13], [30, 10]],
+        gesture: [[28, 17], [30, 16], [31, 13]], chin: [[28, 17], [25, 20], [22, 19]], point: [[28, 16], [31, 16], [35, 15]]
+    };
+    function cardyDraw(g, o, hat) {
+        const C = cardyCols(), ox = 6, by = 10 + (o.bob || 0) + (o.jump || 0), W = CARDY.W, H = CARDY.H;
+        g.clearRect(0, 0, W, H);
+        const R = (x, y, w, h, c) => { if (c === null) { g.clearRect(Math.round(x), Math.round(y), w, h); return; } g.fillStyle = pxrCss(c); g.fillRect(Math.round(x), Math.round(y), w, h); };
+        const arm = (name, left) => {
+            const pts = CARDY_ARMS[name] || CARDY_ARMS.down, mir = x => left ? (2 * ox + 31) - x : x;
+            for (let i = 0; i < pts.length - 1; i++) cardyLine(R, mir(ox + pts[i][0]), by + pts[i][1], mir(ox + pts[i + 1][0]), by + pts[i + 1][1], C.ink);
+            const e = pts[pts.length - 1]; cardyGlove(R, mir(ox + e[0]) - (left ? 1 : 0), by + e[1] - 1, C);
+        };
+        // legs and shoes
+        const tuck = (o.jump || 0) < -1 ? 2 : 0;
+        R(ox + 10, by + 32, 2, 5 - tuck, C.ink); R(ox + 18, by + 32, 2, 5 - tuck, C.ink); R(ox + 9, by + 36 - tuck, 4, 2, C.shoe); R(ox + 17, by + 36 - tuck, 4, 2, C.shoe);
+        arm(o.armL || 'down', true); arm(o.armR || 'down', false);
+        // the card: outline, face of the card, bevel, name plate, art window, text box
+        R(ox + 4, by, 24, 32, C.ink); R(ox + 4, by, 1, 1, null); R(ox + 27, by, 1, 1, null); R(ox + 4, by + 31, 1, 1, null); R(ox + 27, by + 31, 1, 1, null);
+        R(ox + 5, by + 1, 22, 30, C.card); R(ox + 5, by + 30, 22, 1, C.shade); R(ox + 26, by + 1, 1, 30, C.shade);
+        R(ox + 7, by + 3, 18, 4, C.plate); R(ox + 8, by + 4, 7, 1, C.card); R(ox + 8, by + 5, 4, 1, C.shade); R(ox + 21, by + 4, 3, 2, C.warn);
+        R(ox + 7, by + 8, 18, 15, C.ink); R(ox + 8, by + 9, 16, 13, C.win1); R(ox + 8, by + 16, 16, 6, C.win2);
+        R(ox + 7, by + 24, 18, 5, C.shade); R(ox + 9, by + 25, 12, 1, C.card); R(ox + 9, by + 27, 8, 1, C.card);
+        // face
+        const lx = o.lx || 0, ly = o.ly || 0, exL = ox + 11 + (lx > 0 ? 1 : 0), exR = ox + 19 + (lx > 0 ? 1 : 0), eyL = exL - (lx < 0 ? 1 : 0), eyR = exR - (lx < 0 ? 1 : 0), ey = by + 12 + (ly < 0 ? -1 : ly > 0 ? 1 : 0);
+        const eye = x => {
+            if (o.eyes === 'blink') R(x, ey + 1, 2, 1, C.ink);
+            else if (o.eyes === 'closed') R(x, ey + 2, 2, 1, C.ink);
+            else if (o.eyes === 'happy') { R(x, ey, 2, 1, C.ink); R(x - 1, ey + 1, 1, 1, C.ink); R(x + 2, ey + 1, 1, 1, C.ink); }
+            else if (o.eyes === 'wide') { R(x, ey - 1, 2, 4, C.ink); R(x, ey - 1, 1, 1, C.white); }
+            else { R(x, ey, 2, 3, C.ink); R(x, ey, 1, 1, C.white); }
+        };
+        eye(eyL); eye(eyR);
+        if (o.brow) { R(eyL, ey - 3, 2, 1, C.ink); R(eyR, ey - 3, 2, 1, C.ink); }
+        if (o.mouth === 'grin' || o.eyes === 'happy') { R(ox + 9, by + 16, 2, 1, C.blush); R(ox + 21, by + 16, 2, 1, C.blush); }
+        const mx = ox + 13, my = by + 17;
+        if (o.mouth === 'open') { R(mx, my, 6, 1, C.ink); R(mx + 1, my + 1, 4, 2, C.ink); R(mx + 2, my + 2, 2, 1, C.bad); }
+        else if (o.mouth === 'o') R(mx + 2, my, 2, 2, C.ink);
+        else if (o.mouth === 'grin') { R(mx - 1, my, 8, 1, C.ink); R(mx, my + 1, 6, 2, C.ink); R(mx, my + 1, 6, 1, C.white); }
+        else if (o.mouth === 'flat') R(mx + 1, my + 1, 4, 1, C.ink);
+        else { R(mx, my, 1, 1, C.ink); R(mx + 1, my + 1, 4, 1, C.ink); R(mx + 5, my, 1, 1, C.ink); }
+        // an accessory for the season
+        const col = n => ({ red: C.bad, white: C.white, dark: pxrMix(C.brand, [0, 0, 0], 0.62), warn: C.warn, light: C.light, blush: C.blush, ok: C.ok }[n]);
+        if (hat === 'santa') { R(ox + 6, by - 1, 20, 2, C.white); R(ox + 9, by - 3, 14, 2, C.bad); R(ox + 11, by - 5, 10, 2, C.bad); R(ox + 14, by - 7, 6, 2, C.bad); R(ox + 19, by - 9, 3, 3, C.white); }
+        else if (hat === 'witch') { R(ox + 3, by - 1, 26, 2, col('dark')); R(ox + 10, by - 3, 12, 2, col('dark')); R(ox + 12, by - 5, 8, 2, col('dark')); R(ox + 14, by - 8, 5, 3, col('dark')); R(ox + 10, by - 3, 12, 1, C.warn); }
+        else if (hat === 'party') { R(ox + 12, by - 2, 8, 2, C.warn); R(ox + 13, by - 4, 6, 2, C.light); R(ox + 14, by - 6, 4, 2, C.warn); R(ox + 15, by - 9, 2, 3, C.white); }
+        else if (hat === 'bunny') { R(ox + 9, by - 9, 3, 9, C.card); R(ox + 20, by - 9, 3, 9, C.card); R(ox + 10, by - 8, 1, 6, C.blush); R(ox + 21, by - 8, 1, 6, C.blush); }
+        else if (hat === 'winter') { R(ox + 7, by - 1, 18, 3, C.light); R(ox + 9, by - 4, 14, 3, C.light); R(ox + 11, by - 6, 10, 2, C.light); R(ox + 14, by - 9, 4, 3, C.white); R(ox + 5, by + 29, 22, 3, C.bad); R(ox + 21, by + 31, 3, 6, C.bad); }
+        else if (hat === 'leaf') { R(ox + 20, by - 3, 4, 3, C.warn); R(ox + 21, by - 4, 2, 1, C.warn); R(ox + 19, by - 1, 1, 1, C.ink); }
+        // thoughts and effects
+        const glyph = (rows, x, y, c) => rows.forEach((r, j) => [...r].forEach((ch, i) => { if (ch === '#') R(x + i, y + j, 1, 1, c); }));
+        if (o.fx === '?') glyph(['.###.', '#...#', '....#', '...#.', '..#..', '.....', '..#..'], ox + 28, by - 8, C.warn);
+        if (o.fx === 'z') { const k = Math.floor(o.t * 1.2) % 3; glyph(['###', '..#', '.#.', '###'], ox + 26 + k, by - 4 - k * 3, C.white); }
+        if (o.fx === 'sparkle') for (const [sx, sy, ph] of [[ox + 1, by + 2, 0], [ox + 30, by + 6, 1], [ox + 3, by + 20, 2], [ox + 31, by + 22, 3]]) if (Math.floor(o.t * 6 + ph) % 4 < 2) { R(sx, sy, 1, 3, C.warn); R(sx - 1, sy + 1, 3, 1, C.warn); }
+        if (o.fx === '!') glyph(['#', '#', '#', '#', '.', '#'].map(r => r), ox + 30, by - 4, C.bad);
+    }
+    function cardyParams(pose, t) {
+        const o = { eyes: 'open', mouth: 'smile', armL: 'down', armR: 'down', bob: Math.sin(t * 2.4) > 0.55 ? -1 : 0, jump: 0, lx: CARDY.lx, ly: CARDY.ly, brow: 0, fx: null, t };
+        const blink = performance.now() < CARDY.blinkUntil;
+        if (pose === 'idle' && blink) o.eyes = 'blink';
+        if (pose === 'talk') { o.mouth = Math.floor(t * 7) % 2 ? 'open' : 'smile'; o.armR = Math.floor(t * 2) % 2 ? 'gesture' : 'down'; if (blink) o.eyes = 'blink'; }
+        else if (pose === 'wave') { o.eyes = 'happy'; o.mouth = 'grin'; o.armR = Math.floor(t * 5) % 2 ? 'wave1' : 'wave2'; }
+        else if (pose === 'think') { o.lx = 1; o.ly = -1; o.mouth = 'flat'; o.armR = 'chin'; o.fx = '?'; }
+        else if (pose === 'cheer') { o.eyes = 'happy'; o.mouth = 'grin'; o.armL = 'up'; o.armR = 'up'; o.jump = -Math.round(Math.abs(Math.sin(t * 9)) * 3); o.bob = 0; o.fx = 'sparkle'; }
+        else if (pose === 'sleep') { o.eyes = 'closed'; o.mouth = 'flat'; o.bob = Math.sin(t * 1.1) > 0.6 ? 1 : 0; o.fx = 'z'; o.lx = 0; o.ly = 0; }
+        else if (pose === 'surprised') { o.eyes = 'wide'; o.mouth = 'o'; o.brow = 1; o.armL = 'upsmall'; o.armR = 'upsmall'; o.jump = -2; o.fx = '!'; }
+        else if (pose === 'point') { o.armR = 'point'; o.lx = 1; }
+        else if (pose === 'look') { o.lx = Math.sin(t * 2.2) > 0.3 ? 1 : Math.sin(t * 2.2) < -0.3 ? -1 : 0; }
+        return o;
+    }
+    const CARDY_HATS = { halloween: 'witch', christmas: 'santa', winter: 'winter', newyear: 'party', spring: 'bunny', autumn: 'leaf' };
+    const CARDY_ROW = { idle: 0, look: 0, point: 1, wave: 1, talk: 2, think: 3, cheer: 4, surprised: 4, sleep: 5 };
+    function cardyRender(now) {
+        const t = now / 1000, g = CARDY.g; if (!g) return;
+        if (CARDY.art) { // generated sheet: 16 frames per row, 96 x 96
+            const row = CARDY_ROW[CARDY.pose] || 0, f = Math.floor(t * 12) % 16; g.clearRect(0, 0, 96, 96); g.imageSmoothingEnabled = false; g.drawImage(CARDY.art, f * 96, row * 96, 96, 96, 0, 0, 96, 96); return;
+        }
+        cardyDraw(g, cardyParams(CARDY.pose, t), CARDY_HATS[pxfName()] || null);
+    }
+
+    // ---------- Cardy: behavior ----------
+    function cardyNow() { return performance.now(); }
+    function cardyPose(name, ms) { CARDY.pose = name; CARDY.until = ms ? cardyNow() + ms : 0; }
+    function cardyWake() { CARDY.lastInput = cardyNow(); if (CARDY.sleeping) { CARDY.sleeping = false; cardyPose('surprised', 900); } }
+    function cardyTick(now) {
+        if (!CARDY.cv || !cardyAllowed()) return;
+        if (CARDY.until && now > CARDY.until) { CARDY.until = 0; CARDY.pose = CARDY.sleeping ? 'sleep' : CARDY.bubbleT && CARDY.talking ? 'talk' : 'idle'; }
+        if (now > CARDY.nextBlink) { CARDY.blinkUntil = now + 140; CARDY.nextBlink = now + 2400 + Math.random() * 3200; }
+        const bubbleOpen = !!document.getElementById('cardyBubble') && !document.getElementById('cardyBubble').hidden;
+        if (!CARDY.sleeping && !bubbleOpen && CARDY.pose === 'idle' && now > CARDY.nextFidget) {
+            const pick = ['look', 'look', 'wave', 'think', 'cheer'][Math.floor(Math.random() * 5)]; cardyPose(pick, pick === 'wave' ? 1800 : pick === 'cheer' ? 1200 : 2400); CARDY.nextFidget = now + 9000 + Math.random() * 14000;
+        }
+        if (!CARDY.sleeping && !bubbleOpen && now - CARDY.lastInput > 90000) { CARDY.sleeping = true; cardyPose('sleep'); }
+        if (!bubbleOpen && !CARDY.sleeping && CARDY.pose === 'idle' && now > CARDY.nextQuip && now - CARDY.lastInput < 60000 && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))) { CARDY.nextQuip = now + 240000 + Math.random() * 180000; cardyQuip(); }
+        // eyes follow the mouse when it is near
+        if (CARDY.pose === 'idle' || CARDY.pose === 'talk') { const r = CARDY.cv.getBoundingClientRect(), dx = CARDY.px - (r.left + r.width / 2), dy = CARDY.py - (r.top + r.height / 2), near = Math.hypot(dx, dy) < 520; CARDY.lx = near ? (dx > 60 ? 1 : dx < -60 ? -1 : 0) : 0; CARDY.ly = near ? (dy > 90 ? 1 : dy < -90 ? -1 : 0) : 0; }
+    }
+    function cardyLoop(now) {
+        if (!CARDY.running) return;
+        requestAnimationFrame(cardyLoop);
+        if (document.hidden || now - CARDY.lastDraw < 83) return;
+        CARDY.lastDraw = now; cardyTick(now); cardyRender(now);
+    }
+
+    // speech bubble (fixed, near Cardy; it never moves the page and goes away by itself unless it has choices)
+    function cardyBubbleEl() {
+        let b = document.getElementById('cardyBubble');
+        if (!b) { b = document.createElement('div'); b.id = 'cardyBubble'; b.hidden = true; b.setAttribute('role', 'status'); b.setAttribute('aria-live', 'polite'); document.body.appendChild(b); }
+        return b;
+    }
+    function cardyPlace() {
+        const b = cardyBubbleEl(), r = CARDY.cv.getBoundingClientRect(), narrow = innerWidth < 700;
+        if (narrow) { b.style.left = '10px'; b.style.right = '10px'; b.style.top = Math.min(innerHeight - 60, r.bottom + 6) + 'px'; b.classList.add('narrow'); }
+        else { b.classList.remove('narrow'); b.style.right = 'auto'; b.style.left = Math.min(innerWidth - 300, r.right + 10) + 'px'; b.style.top = Math.max(6, r.top + 4) + 'px'; }
+    }
+    function cardyAct(id) { const f = CARDY.actions[id]; if (f) f(); }
+    function cardyClose() { const b = document.getElementById('cardyBubble'); if (b) b.hidden = true; clearTimeout(CARDY.bubbleT); CARDY.bubbleT = 0; CARDY.talking = false; if (CARDY.pose === 'talk') cardyPose(CARDY.sleeping ? 'sleep' : 'idle'); }
+    function cardySay(text, o = {}) {
+        if (!CARDY.cv || !cardyAllowed()) return;
+        const b = cardyBubbleEl(); clearTimeout(CARDY.bubbleT); CARDY.actions = {};
+        const btns = (o.buttons || []).map((x, i) => { CARDY.actions['b' + i] = () => { if (x.keep !== true) cardyClose(); x.fn && x.fn(); }; return `<button type="button" class="cardy-btn" onclick="cardyAct('b${i}')">${x.label}</button>`; }).join('');
+        b.innerHTML = `<button type="button" class="cardy-x" aria-label="Close" onclick="cardyClose()">✕</button><p><span class="cardy-name">${CARDY_NAME}</span> <span class="cardy-vis" aria-hidden="true"></span><span class="cardy-sr">${cardyEsc(text)}</span></p>${btns ? `<div class="cardy-actions">${btns}</div>` : ''}`;
+        b.hidden = false; cardyPlace();
+        const vis = b.querySelector('.cardy-vis'), motion = !fxReducedMotion.matches, speed = 42;
+        CARDY.talking = true; if (CARDY.pose !== 'surprised') cardyPose(o.pose || 'talk', 0);
+        const done = () => { CARDY.talking = false; if (CARDY.pose === 'talk') cardyPose(o.after || (CARDY.sleeping ? 'sleep' : 'idle'), o.afterMs || 0); const stay = (o.buttons && o.buttons.length) || o.stay; if (!stay) CARDY.bubbleT = setTimeout(cardyClose, Math.max(6500, text.length * 55 + 3500)); else CARDY.bubbleT = setTimeout(cardyClose, 40000); };
+        if (!motion) { vis.textContent = text; done(); return; }
+        let n = 0; const step = () => { n = Math.min(text.length, n + 1); vis.textContent = text.slice(0, n); if (n < text.length) CARDY.bubbleT = setTimeout(step, 1000 / speed); else done(); }; step();
+    }
+    function cardyEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+    // tips, facts, quips
+    const CARDY_FACTS = [
+        'Fun fact: a Commander deck is exactly 100 cards, and one of them is your commander.',
+        'Fun fact: Magic\'s very first set, Alpha, came out in August 1993.',
+        'Fun fact: a prerelease deck is 40 cards, usually 17 lands and 23 spells.',
+        'Fun fact: foils come in many flavors. Try the finish buttons under a card picture in Card Lookup.',
+        'Fun fact: Standard rotates, so the sets that are legal change over time. Format Rules keeps the list.',
+        'Fun fact: a sealed Commander precon\'s value is mostly a few cards. Open a decklist under Products to see which.',
+        'Fun fact: Scryfall rulings usually show up on release day, so new sets get their rulings automatically.'
+    ];
+    const CARDY_QUIPS = ['I\'m only a Common, but I\'ve got Mythic energy.', 'Psst... press / any time to jump to a tool.', 'Tap the weather chip under the title to switch which store\'s sky you see.', 'The ✨ Effects button turns my whole world up or down.', 'I\'m a card with opinions. Mostly helpful ones.', 'Did you know I change hats with the seasons?'];
+    function cardyFact() { CARDY.factN = (CARDY.factN + 1 + Math.floor(Math.random() * (CARDY_FACTS.length - 1))) % CARDY_FACTS.length; cardySay(CARDY_FACTS[CARDY.factN], { pose: 'talk', after: 'cheer', afterMs: 1000 }); }
+    function cardyQuip() { cardySay(CARDY_QUIPS[Math.floor(Math.random() * CARDY_QUIPS.length)]); }
+    function cardyTipFor(view) {
+        const v = (typeof APP_VIEWS !== 'undefined') && APP_VIEWS[view]; if (!v) return null;
+        return `${v.icon} ${v.navLabel}: ${v.desc}`;
+    }
+    function cardyTab(view) {
+        if (!CARDY.cv || !cardyAllowed() || CARDY.seen.has(view)) return;
+        CARDY.seen.add(view); try { sessionStorage.setItem('cardySeen', JSON.stringify([...CARDY.seen])); } catch (e) { /* fine */ }
+        if (cardyNow() - CARDY.lastTip < 20000 || CARDY.tour) return;
+        const tip = cardyTipFor(view); if (!tip) return;
+        setTimeout(() => { if (cardyAllowed() && !CARDY.tour) { CARDY.lastTip = cardyNow(); cardySay(tip); } }, 1100);
+    }
+    function cardyMenu() {
+        cardyWake();
+        cardySay('What can I help with?', { pose: 'wave', after: 'idle', buttons: [
+            { label: '💡 Tip for this tab', fn: () => { const k = (typeof currentGameMode !== 'undefined' && currentGameMode) || 'mtg'; cardySay(cardyTipFor(k) || 'Look around, everything has a tooltip!'); } },
+            { label: '🗺️ Show me around', fn: cardyTour },
+            { label: '🎲 Fun fact', fn: cardyFact },
+            { label: '🔎 Jump to a tool', fn: () => { if (typeof openQuickJump === 'function') openQuickJump(); } },
+            { label: '🙈 Hide me', fn: () => cardySet(false) }
+        ] });
+    }
+    // the tour: he highlights things one at a time; nothing is clicked or moved for you
+    function cardySpot(el) {
+        document.querySelectorAll('.cardy-spot').forEach(e => e.classList.remove('cardy-spot'));
+        if (el) { el.classList.add('cardy-spot'); try { el.scrollIntoView({ behavior: fxReducedMotion.matches ? 'auto' : 'smooth', block: 'center' }); } catch (e) { /* old browser */ } }
+    }
+    function cardyVisible(el) { return !!el && el.offsetParent !== null && el.getBoundingClientRect().width > 0; }
+    function cardyTour() {
+        const steps = [
+            { el: () => document.getElementById('cardSearch'), text: 'Start here: type a card name, or a set code like FRA to open the whole set. Misspellings are fine.', pre: () => { if (typeof switchGame === 'function') switchGame('mtg'); } },
+            { el: () => [document.getElementById('appNav'), document.getElementById('appBottomBar')].find(cardyVisible), text: 'These menus hold every tool: At the counter, Rules & events, and Learn & train.' },
+            { el: () => document.querySelector('.app-nav-stock, #appBottomBar button:last-child'), text: 'Moonshot Search opens the store\'s own stock search. Stock isn\'t checked live here, so that link is the way to look.' },
+            { el: () => document.getElementById('fxLevelBtn'), text: 'Effects turns the animations up or down. At Full you get the moving background, the trail behind your mouse, and me!' },
+            { el: () => { const w = document.getElementById('sceneWeather'); return cardyVisible(w) ? w : null; }, text: 'Tap the weather chip to switch which store\'s weather the sky follows. Weather is from the National Weather Service.' }
+        ];
+        CARDY.tour = { i: -1 };
+        const go = () => {
+            const T = CARDY.tour; if (!T) return; T.i++;
+            while (T.i < steps.length) { if (steps[T.i].pre) steps[T.i].pre(); const el = steps[T.i].el(); if (cardyVisible(el)) break; T.i++; }
+            if (T.i >= steps.length) { cardySpot(null); CARDY.tour = null; cardySay('That\'s the tour! Click me any time you want a tip.', { pose: 'cheer', after: 'idle', afterMs: 0 }); return; }
+            const s = steps[T.i], el = s.el(); setTimeout(() => cardySpot(el), 50);
+            cardySay(`${T.i + 1}/${steps.length}. ${s.text}`, { pose: 'point', after: 'point', afterMs: 0, buttons: [{ label: T.i + 1 >= steps.length ? 'Finish' : 'Next →', fn: go, keep: true }, { label: 'Stop', fn: () => { cardySpot(null); CARDY.tour = null; } }] });
+        };
+        go();
+    }
+    function cardyHello() {
+        let first = true; try { first = sessionStorage.getItem('cardyHello') !== '1'; sessionStorage.setItem('cardyHello', '1'); } catch (e) { /* show */ }
+        if (!first) return;
+        setTimeout(() => { if (cardyAllowed()) cardySay(`Hi! I'm ${CARDY_NAME}, a little helper card for this fan-made tool. Click me any time for tips.`, { pose: 'wave', after: 'idle', buttons: [{ label: '🗺️ Show me around', fn: cardyTour }, { label: 'Not now', fn: () => {} }, { label: '🙈 Hide me', fn: () => cardySet(false) }] }); }, 1800);
+    }
+
+    // ---------- Cardy: showing, hiding, starting ----------
+    function cardySet(on) { try { localStorage.setItem('cardyOff', on ? '0' : '1'); } catch (e) { /* this session only */ } cardyRefresh(); if (on && CARDY.cv) { cardyPose('wave', 1800); cardySay('I\'m back!', { pose: 'wave', after: 'idle' }); } }
+    function cardyToggle() { cardySet(cardyHidden()); }
+    function cardyRefresh() {
+        const btn = document.getElementById('cardyBtn'), hidden = cardyHidden() || !fxIs('full', 'subtle');
+        if (btn) { btn.setAttribute('aria-pressed', hidden ? 'false' : 'true'); btn.title = hidden ? `Bring back ${CARDY_NAME}, the helper card` : `Hide ${CARDY_NAME}, the helper card`; btn.classList.toggle('is-off', hidden); btn.hidden = !fxIs('full', 'subtle'); }
+        const banner = document.getElementById('sceneBanner');
+        if (!cardyAllowed() || !banner) { if (CARDY.cv) CARDY.cv.style.display = 'none'; CARDY.running = false; cardyClose(); return; }
+        if (!CARDY.cv) {
+            const cv = document.createElement('canvas'); cv.id = 'cardy'; cv.setAttribute('role', 'button'); cv.setAttribute('tabindex', '0'); cv.setAttribute('aria-label', `${CARDY_NAME}, the helper card. Activate for tips`);
+            banner.appendChild(cv); CARDY.cv = cv; CARDY.g = cv.getContext('2d'); CARDY.g.imageSmoothingEnabled = false;
+            cv.addEventListener('click', () => { cardyWake(); if (CARDY.pose !== 'surprised') cardyPose('surprised', 700); setTimeout(cardyMenu, 350); });
+            cv.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cv.click(); } });
+            try { JSON.parse(sessionStorage.getItem('cardySeen') || '[]').forEach(k => CARDY.seen.add(k)); } catch (e) { /* none */ }
+            CARDY.seen.add('mtg'); CARDY.nextBlink = cardyNow() + 2000; CARDY.nextFidget = cardyNow() + 6000; CARDY.nextQuip = cardyNow() + 150000;
+            const pm = e => { CARDY.px = e.clientX; CARDY.py = e.clientY; CARDY.lastInput = cardyNow(); if (CARDY.sleeping) cardyWake(); };
+            document.addEventListener('pointermove', pm, { passive: true }); document.addEventListener('keydown', () => cardyWake(), { passive: true });
+            cardyHello();
+        }
+        const art = PX.art && PX.art.cardy && CARDY.sheet; CARDY.art = art ? CARDY.sheet : null;
+        const s = innerWidth < 520 ? 1 : 2; CARDY.scale = s;
+        const w = art ? 96 : CARDY.W, h = art ? 96 : CARDY.H; if (CARDY.cv.width !== w || CARDY.cv.height !== h) { CARDY.cv.width = w; CARDY.cv.height = h; CARDY.g.imageSmoothingEnabled = false; }
+        CARDY.cv.style.width = (w * (art ? 1 : s)) + 'px'; CARDY.cv.style.height = (h * (art ? 1 : s)) + 'px'; CARDY.cv.style.display = 'block';
+        if (fxReducedMotion.matches) { CARDY.running = false; cardyRender(performance.now()); }
+        else if (!CARDY.running) { CARDY.running = true; requestAnimationFrame(cardyLoop); }
+    }
+    function cardyProbe() { const i = new Image(); i.onload = () => { CARDY.sheet = i; PX.art.cardy = true; cardyRefresh(); }; i.onerror = () => {}; i.src = 'art/site/cardy.png'; }
+    function trailRefresh() { if (!trailOn() && TRAIL.cv) { TRAIL.pts = []; TRAIL.cv.getContext('2d').clearRect(0, 0, TRAIL.cv.width, TRAIL.cv.height); } }
+    {
+        const prev = window.pxFlairRefresh;
+        window.pxFlairRefresh = function () { if (prev) prev.apply(this, arguments); cardyRefresh(); trailRefresh(); };
+        const sw = window.switchGame; if (typeof sw === 'function') window.switchGame = function (m) { const r = sw.apply(this, arguments); try { cardyTab(m); } catch (e) { /* a helper must never break navigation */ } return r; };
+        document.addEventListener('pointermove', trailMove, { passive: true });
+        const start = () => { cardyRefresh(); cardyProbe(); };
+        document.addEventListener('DOMContentLoaded', start); if (document.readyState !== 'loading') start();
     }
     </script>
 </body>

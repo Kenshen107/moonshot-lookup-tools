@@ -5339,6 +5339,91 @@
    ]
   },
   {
+   "id": "cardy",
+   "group": "site",
+   "name": "Cardy, the helper card (6 animation rows)",
+   "out": "art/site/cardy.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "idle",
+    "wave",
+    "talk",
+    "think",
+    "cheer",
+    "sleep"
+   ],
+   "seed": 413970,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A friendly living trading card mascot called Cardy, full body, facing the viewer: the card is the body, a cream-colored card with a teal frame, a big simple face (two round eyes, a wide smile, rosy cheeks) where the card art would be, small stick arms with white cartoon gloves and little legs with shoes. Spunky, eager, kind, a little goofy. Palette: cream, teal, gold, dark navy outline. Plain background, centered, no text, no logos, no real card art",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: bouncing very slightly on tiptoe, one blink, the eyes glancing left and right, the smile unchanged, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "wave",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "waving one glove high with a big happy grin and a small hop, then settling, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking enthusiastically: the mouth opens and closes, a glove gestures, the body bobs, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "think",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "thinking: one glove on the chin, eyes looking up and to the side, a small tilt of the body, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "cheer",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "cheering: both gloves in the air, jumping with a huge grin and tiny sparkles, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "sleep",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "sleeping: eyes closed, the body slumped and gently breathing, a little Z floating up, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
    "id": "frame-common",
    "group": "site",
    "name": "common card frame",
@@ -5472,29 +5557,6 @@
      "width": 32,
      "height": 32,
      "prompt": "a pixel art mouse pointer arrow, cream white fill with a thick dark outline and one small teal highlight pixel, pointing up and to the left, the tip at the very top-left corner of the image",
-     "remove_bg": true
-    }
-   ]
-  },
-  {
-   "id": "mascot",
-   "group": "site",
-   "name": "page mascot (waves, blinks)",
-   "out": "art/site/mascot.png",
-   "kind": "strip",
-   "frame": [
-    64,
-    64
-   ],
-   "frames": 8,
-   "seed": 708602,
-   "steps": [
-    {
-     "key": "gen",
-     "style": "rd_animation__vfx",
-     "width": 64,
-     "height": 64,
-     "prompt": "a tiny cute pixel mascot: a smiling crescent moon wearing a little rocket-nose-cone cap, floating with a gentle bob, blinking once and giving a small wave, a seamless 8 frame loop, centered",
      "remove_bg": true
     }
    ]
