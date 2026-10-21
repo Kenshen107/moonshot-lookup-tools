@@ -191,7 +191,7 @@ function makeDeal(a, b, type, x, opts = {}) {
     dealStats().made++;
     { const b = dealStats().by = dealStats().by || {}; b[type] = (b[type] || 0) + 1; }
     const until = d.left > 1 ? `for ${d.left} of ${nm(a)}${you(a) ? 'r' : "'s"} turns` : `until ${nm(a)}${you(a) ? 'r' : "'s"} next turn`;
-    log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make a ${d.alliance ? 'alliance ' : ''}${DEAL_TYPES[type].name.toLowerCase()} deal${type === 'pact' ? ` against ${G.players[x].name.split(',')[0]}` : ''} (${until}).`);
+    log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make ${d.alliance ? 'an alliance ' : 'a '}${DEAL_TYPES[type].name.toLowerCase()} deal${type === 'pact' ? ` against ${G.players[x].name.split(',')[0]}` : ''} (${until}).`);
     return d;
 }
 // `from` proposes to `to`. A bot answers at once; the result is { ok, reason }.
