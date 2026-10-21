@@ -3201,6 +3201,328 @@
      "remove_bg": true
     }
    ]
+  },
+  {
+   "id": "pack-standard",
+   "group": "packs",
+   "name": "Play Booster wrapper",
+   "out": "spellslinger/art/packs/standard.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 947094,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical foil booster pack wrapper in teal and silver with a swirling galaxy emblem in the middle, crimped zigzag top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-standard-open",
+   "group": "packs",
+   "name": "Play Booster opening burst",
+   "out": "spellslinger/art/packs/standard-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 8,
+   "seed": 904525,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a quick burst of cyan and white sparkles and a few torn foil scraps flying outward",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-collector",
+   "group": "packs",
+   "name": "Collector Booster wrapper",
+   "out": "spellslinger/art/packs/collector.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 504962,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical gold and black foil booster pack wrapper with a shining sunburst emblem and a thin gold border, crimped zigzag top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-collector-open",
+   "group": "packs",
+   "name": "Collector Booster opening burst",
+   "out": "spellslinger/art/packs/collector-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 8,
+   "seed": 238753,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a blinding golden flash with rays and glittering gold confetti bursting outward",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-masters",
+   "group": "packs",
+   "name": "Masters Booster wrapper",
+   "out": "spellslinger/art/packs/masters.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 222074,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical booster pack wrapper in deep violet and silver with a polished chrome emblem and a diagonal shine, crimped zigzag top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-masters-open",
+   "group": "packs",
+   "name": "Masters Booster opening burst",
+   "out": "spellslinger/art/packs/masters-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 8,
+   "seed": 852377,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a silver and violet foil shimmer sweeping across with floating prismatic sparkles",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-classic",
+   "group": "packs",
+   "name": "Classic Booster (2000-2008) wrapper",
+   "out": "spellslinger/art/packs/classic.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 343753,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical retro booster pack wrapper in red and cream with a bold simple emblem and a painted-style border, crimped zigzag top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-classic-open",
+   "group": "packs",
+   "name": "Classic Booster (2000-2008) opening burst",
+   "out": "spellslinger/art/packs/classic-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 8,
+   "seed": 127980,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a ragged paper tear with flying scraps and a small puff of dust",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-vintage",
+   "group": "packs",
+   "name": "Vintage Booster wrapper",
+   "out": "spellslinger/art/packs/vintage.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 224639,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical old booster pack wrapper in weathered brown and parchment tones with a red wax seal at the top, worn edges and a faded emblem, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-vintage-open",
+   "group": "packs",
+   "name": "Vintage Booster opening burst",
+   "out": "spellslinger/art/packs/vintage-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 8,
+   "seed": 250870,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a red wax seal cracking apart with flying wax chips and a puff of old dust",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-early",
+   "group": "packs",
+   "name": "Unlimited-era Booster wrapper",
+   "out": "spellslinger/art/packs/early.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 446678,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical dark blue and gold booster pack wrapper in an ornate old style with glowing rune marks around a central gem, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-early-open",
+   "group": "packs",
+   "name": "Unlimited-era Booster opening burst",
+   "out": "spellslinger/art/packs/early-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 8,
+   "seed": 981005,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "glowing blue runes spinning up out of a pack with floating golden sparks",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-power",
+   "group": "packs",
+   "name": "Alpha / Beta Booster wrapper",
+   "out": "spellslinger/art/packs/power.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 641480,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical black booster pack wrapper with a heavy ornate gold border and a radiant gold five-pointed star, looking priceless and ancient, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-power-open",
+   "group": "packs",
+   "name": "Alpha / Beta Booster opening burst",
+   "out": "spellslinger/art/packs/power-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 8,
+   "seed": 604227,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a slow rising column of golden light with spinning rays, drifting embers and a heavenly glow",
+     "remove_bg": true
+    }
+   ]
   }
  ]
 }

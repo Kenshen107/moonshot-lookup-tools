@@ -257,10 +257,19 @@ async function ascOpenPack(kind) {
     st.sealed[kind]--;
     const res = openAscentPack(kind);
     await cardsByIds(res.picks.map(p => p.id)).catch(() => {});
-    ASC.pack = { ...res, flipped: new Set() };
+    // The wrapper tears open first, with the look of its kind (standard for Play, gold for Collector); tests and the lab skip it
+    ASC.pack = { ...res, flipped: new Set(), kind, opened: (AUTOPLAY || !!window.__LAB) && !window.__PK_FORCE };
     saveProfile(); renderAscent();
 }
+function ascTear() {
+    const el = document.querySelector('#ascReveal .pack3d'), pk = ASC.pack;
+    packTear(el, null, () => { if (ASC.pack === pk) { pk.opened = true; $('ascReveal').innerHTML = ascRevealHTML(pk); } });
+}
 function ascRevealHTML(pk) {
+    if (!pk.opened) {
+        const key = pk.kind === 'collector' ? 'collector' : 'standard';
+        return `<div class="crack-stage">${packWrapperHTML(key, 'ASC', PACK_LOOKS[key].label, "Planeswalker's Ascent", `role="button" tabindex="0" aria-label="Tear the pack open" onclick="ascTear()" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); ascTear(); }"`)}</div>`;
+    }
     const dust = new Set(pk.report.dusted.map(p => p.slot + ':' + p.id));
     return `<div class="asc-pack">${pk.picks.map((p, i) => {
         const r = ASCENT.byId.get(p.id), c = CARDS.get(p.id), up = pk.flipped.has(i), img = c && (c.imgS || c.img), d = dust.has(p.slot + ':' + p.id);

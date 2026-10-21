@@ -173,7 +173,7 @@ def build_output(asset, steps_png):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--go', action='store_true', help='really generate (spends money); without it, only a free dry run')
-    ap.add_argument('--group', default='characters,fx', help='characters, fx, ideas, icons (comma list; default characters,fx)')
+    ap.add_argument('--group', default='characters,fx,packs', help='characters, fx, packs, ideas, icons (comma list; default characters,fx,packs)')
     ap.add_argument('--only', default='', help='comma list of asset ids')
     ap.add_argument('--max-spend', type=float, default=20.0, help='stop before spending more than this many dollars in this run')
     ap.add_argument('--force', action='store_true', help='redo assets whose PNG already exists')

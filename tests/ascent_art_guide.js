@@ -6,6 +6,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.resolve(__dirname, '..');
 const data = vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'spellslinger', '13g-ascent-art-data.js'), 'utf8') + '\n;({ STYLE: ASCENT_ART_STYLE, RULES: ASCENT_ART_RULES, CH: ASCENT_CHARACTERS, FX: ASCENT_FX, IDEAS: ASCENT_FX_IDEAS, ICONS: ASCENT_ICONS })');
 const { STYLE, RULES, CH, FX, IDEAS, ICONS } = data;
+const PACKS = vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'spellslinger', '12b-pack-looks.js'), 'utf8') + '\n;PACK_LOOKS');
 
 const charPrompt = c => `${STYLE}. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of ${c.look}. Palette: ${c.palette}. Expression: ${c.mood}. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 96 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.`;
 const fxPrompt = (k, f) => `${STYLE}. Animated effect, ${f.frames} frames in one horizontal strip, each frame ${f.size} x ${f.size} pixels, centered, transparent background: ${f.prompt}.`;
@@ -38,6 +39,12 @@ for (const [k, i] of Object.entries(ICONS)) {
         steps: [{ key: 'gen', style: i.frames > 1 ? 'rd_animation__vfx' : big ? 'rd_plus__environment' : 'rd_plus__low_res', width: i.frames > 1 ? Math.min(i.size, 96) : Math.max(i.size, 16), height: i.frames > 1 ? Math.min(i.size, 96) : Math.max(i.size, 16), prompt: i.prompt, remove_bg: !bg }]
     });
 }
+for (const [k, L] of Object.entries(PACKS)) {
+    MANIFEST.assets.push({ id: 'pack-' + k, group: 'packs', name: L.label + ' wrapper', out: `spellslinger/art/packs/${k}.png`, kind: 'strip', frame: [96, 144], frames: 1, seed: hash('pack-' + k),
+        steps: [{ key: 'gen', style: 'rd_pro__default', width: 96, height: 144, prompt: L.wrap, remove_bg: true }] });
+    MANIFEST.assets.push({ id: 'pack-' + k + '-open', group: 'packs', name: L.label + ' opening burst', out: `spellslinger/art/packs/${k}-open.png`, kind: 'strip', frame: [96, 96], frames: 8, seed: hash('pack-' + k + '-open'),
+        steps: [{ key: 'gen', style: 'rd_animation__vfx', width: 96, height: 96, prompt: L.open, remove_bg: true }] });
+}
 fs.writeFileSync(path.join(ROOT, 'docs', 'ascent-art-manifest.json'), JSON.stringify(MANIFEST, null, 1) + '\n');
 
 const out = [];
@@ -63,7 +70,7 @@ python3 tools/make_art.py                     # free dry run: checks the styles,
 python3 tools/make_art.py --go --only t1-mick # make one character first (about $0.57) and look at the result
 python3 tools/make_art.py --go                # then make everything the game uses now (characters + effects)
 \`\`\`
-Options: \`--group characters|fx|ideas|icons\` (default: characters and fx; ideas and icons are not in the game yet), \`--only id1,id2\`, \`--max-spend 20\` (stops before going over, in dollars), \`--force\` (redo finished assets), \`--seed-bump N\` (a new look for the same prompt). Finished PNGs go to \`spellslinger/art/...\`; every step is kept in \`tools/.art-cache/\`, so a rerun only does what is missing and never pays twice for a step. Commit the PNGs, not the cache.
+Options: \`--group characters|fx|ideas|icons\` (default: characters, fx and packs; ideas and icons are not in the game yet), \`--only id1,id2\`, \`--max-spend 20\` (stops before going over, in dollars), \`--force\` (redo finished assets), \`--seed-bump N\` (a new look for the same prompt). Finished PNGs go to \`spellslinger/art/...\`; every step is kept in \`tools/.art-cache/\`, so a rerun only does what is missing and never pays twice for a step. Commit the PNGs, not the cache.
 
 **How a character is made** (22 of them, $0.57 each, about $12.5 in all): RD Pro \`rd_pro__fantasy\` draws the head-and-shoulders portrait at 96 x 96 ($0.18), \`rd_advanced_animation__idle\` animates breathing and a blink from it ($0.14), and \`rd_advanced_animation__custom_action\` animates talking ($0.25). The script keeps 4 frames of each and builds the 384 x 192 sheet (row 1 idle, row 2 talking). Because both animations start from the same drawing, the character looks the same in every frame.
 **How an effect is made** (19 of them, $0.07 each, about $1.35 in all): \`rd_animation__vfx\` (24 to 96 px) makes the animation; the script picks the right number of frames, scales it up with hard pixels if the game wants it bigger (the Planeswalker portal is 128 px), and writes the strip.
@@ -108,6 +115,9 @@ out.push('');
 for (const [k, f] of Object.entries(FX)) out.push(`#### ${f.label} (\`${k}\`)\n\`\`\`\n${fxPrompt(k, f)}\n\`\`\`\n`);
 out.push('\n### Ideas for later (not in the game yet)\n');
 for (const [k, f] of Object.entries(IDEAS)) out.push(`- **${f.label}** (\`${k}\`, ${f.size} x ${f.size}, ${f.frames} frames): ${fxPrompt(k, f)}`);
+out.push('\n## Booster pack looks (wrapper and opening burst)\n');
+out.push('Each pack tier has its own look and opening animation in the game (drawn in CSS today). When these PNGs exist the wrapper art replaces the drawn pack and the burst plays over it while it opens. Wrapper: 96 x 144, one frame. Burst: 8 frames in a strip, each 96 x 96.\n');
+for (const [k, L] of Object.entries(PACKS)) out.push(`- **${L.label}** (opens with "${L.anim}"): wrapper \`spellslinger/art/packs/${k}.png\`: ${L.wrap}. Burst \`spellslinger/art/packs/${k}-open.png\`: ${L.open}.`);
 out.push('\n## Icons, banners and backgrounds\n');
 const groups = {};
 for (const [k, i] of Object.entries(ICONS)) (groups[i.group] = groups[i.group] || []).push([k, i]);

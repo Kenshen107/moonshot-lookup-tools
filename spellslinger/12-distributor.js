@@ -288,10 +288,7 @@ function renderPackReveal(pack, areaId = 'packArea') {
     const n = order.length;
     $(areaId).innerHTML = `
         <div class="crack-stage">
-            <div class="pack3d" id="p3d-${areaId}" role="button" tabindex="0" aria-label="Tear the pack open" onclick="peelPack('${areaId}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); peelPack('${areaId}'); }">
-                <div class="pk-flap"><span>${esc(code)}</span></div>
-                <div class="pk-body"><span class="pk-spark" aria-hidden="true">✨</span><strong>${esc(pack.set.name)}</strong><small>${esc(pack.name || '')}</small><em>Tap to tear open</em></div>
-            </div>
+            ${packWrapperHTML(packLookKey(pack), code, pack.set.name, pack.name || '', `id="p3d-${areaId}" role="button" tabindex="0" aria-label="Tear the pack open" onclick="peelPack('${areaId}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); peelPack('${areaId}'); }"`)}
             <div class="stack-stage hidden" id="ss-${areaId}">
                 <button type="button" class="pstack" id="ps-${areaId}" onclick="nextPackCard('${areaId}')" aria-label="Next card">
                     <span class="rays" aria-hidden="true"></span>
@@ -311,14 +308,7 @@ function renderPackReveal(pack, areaId = 'packArea') {
 }
 function peelPack(areaId) {
     const el = $(`p3d-${areaId}`);
-    if (!el || el.classList.contains('peeling')) return;
-    el.classList.add('peeling');
-    setTimeout(() => el.classList.add('opened'), 650);
-    setTimeout(() => {
-        el.classList.add('hidden');
-        $(`ss-${areaId}`).classList.remove('hidden');
-        showTopCard(areaId);
-    }, 1150);
+    packTear(el, null, () => { $(`ss-${areaId}`).classList.remove('hidden'); showTopCard(areaId); });
 }
 function topEl(areaId) { const R = REVEALS[areaId]; return document.querySelector(`#ps-${areaId} .scard[data-k="${R.pos}"]`); }
 // The card now on top of the stack: name, value and its celebration
