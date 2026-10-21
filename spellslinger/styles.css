@@ -1070,6 +1070,34 @@
         .fx-item.ph[data-kind$="-multi"], .fx-item.ph[data-kind="land-nonbasic"] { background: conic-gradient(var(--mana-W), var(--mana-U), var(--mana-B), var(--mana-R), var(--mana-G), var(--mana-W)); -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); }
         .fx-item.ph[data-kind^="spell-"] { background: radial-gradient(circle, color-mix(in srgb, var(--brand-light) 60%, transparent) 0, transparent 70%); }
         @keyframes fx-ph { 0% { transform: scale(0.3); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
+
+        /* Planeswalker's Ascent extra art (2026-10-21): every rule below applies only when the matching PNG exists (13j sets the classes and variables) */
+        .asc-ico { image-rendering: pixelated; vertical-align: -0.2em; }
+        .cur .asc-ico { vertical-align: -0.3em; }
+        .phase-strip li .asc-ico { margin-right: 4px; vertical-align: -3px; }
+        .asc-barface { display: inline-block; width: 48px; height: 48px; margin-right: 6px; vertical-align: middle; border-radius: var(--radius-sm); border: 2px solid var(--border); background-size: 144px 48px; background-repeat: no-repeat; image-rendering: pixelated; }
+        .asc-barface.idle { background-size: calc(var(--cols, 4) * 48px) 96px; animation: asc-idle48 var(--idle, 1.3s) steps(var(--cols, 4)) infinite; }
+        @keyframes asc-idle48 { to { background-position-x: calc(var(--cols, 4) * -48px); } }
+        .asc-pose-wrap { display: flex; justify-content: center; margin: 6px 0; }
+        .asc-pose { width: 144px; height: 144px; border-radius: var(--radius-md); border: 2px solid var(--border); background-repeat: no-repeat; background-size: 2304px 288px; background-position-y: calc(var(--prow, 0) * -144px); image-rendering: pixelated; animation: asc-pose 1.3s steps(16) infinite; }
+        @keyframes asc-pose { to { background-position-x: -2304px; } }
+        .tier-band.has-bg { background-image: linear-gradient(color-mix(in srgb, var(--bg-panel) 80%, transparent), color-mix(in srgb, var(--bg-panel) 80%, transparent)), var(--ui-bg-tier-1); background-size: cover; background-position: center; }
+        .tier-band.tier-2.has-bg { background-image: linear-gradient(color-mix(in srgb, var(--bg-panel) 80%, transparent), color-mix(in srgb, var(--bg-panel) 80%, transparent)), var(--ui-bg-tier-2); }
+        .tier-band.tier-3.has-bg { background-image: linear-gradient(color-mix(in srgb, var(--bg-panel) 80%, transparent), color-mix(in srgb, var(--bg-panel) 80%, transparent)), var(--ui-bg-tier-3); }
+        body.asc-has-mat #game .side { background-image: linear-gradient(color-mix(in srgb, var(--bg-canvas) 70%, transparent), color-mix(in srgb, var(--bg-canvas) 70%, transparent)), var(--ui-mat-table); background-size: cover; background-position: center; image-rendering: pixelated; }
+        .asc-trophy { text-align: center; }
+        .asc-trophy > .asc-ico { display: block; margin: 0 auto 4px; }
+        .asc-back.art { background: none; border: 0; }
+        .asc-back.art .asc-ico { width: 100%; height: auto; }
+        .asc-flame { position: absolute; right: 2px; top: 2px; width: 40px; height: 40px; background: var(--ui-mythic-flame) 0 0 / 600% 100% no-repeat; image-rendering: pixelated; pointer-events: none; animation: asc-strip6 0.8s steps(5) infinite; z-index: 2; }
+        @keyframes asc-strip6 { to { background-position-x: 100%; } }
+        body.asc-has-frames .asc-tile::after { content: ''; position: absolute; inset: -2px; pointer-events: none; border: 8px solid transparent; border-image-slice: 24; image-rendering: pixelated; }
+        body.asc-has-frames .asc-tile.asc-r-common::after, body.asc-has-frames .asc-tile.asc-r-uncommon::after { border-image-source: var(--ui-card-frame-common); }
+        body.asc-has-frames .asc-tile.asc-r-rare::after { border-image-source: var(--ui-card-frame-rare); }
+        body.asc-has-frames .asc-tile.asc-r-mythic::after, body.asc-has-frames .asc-tile.asc-r-trophy::after { border-image-source: var(--ui-card-frame-mythic); }
+        .asc-flip.foil::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: var(--ui-foil-sheen) 0 0 / 800% 100% no-repeat; mix-blend-mode: screen; opacity: 0.55; image-rendering: pixelated; animation: asc-strip8 1s steps(7) infinite; }
+        @keyframes asc-strip8 { to { background-position-x: 100%; } }
+        @media (prefers-reduced-motion: reduce) { .asc-barface.idle, .asc-pose, .asc-flame, .asc-flip.foil::after { animation: none; } }
         @media (prefers-reduced-motion: reduce) { .asc-portrait.ph.talk span, .asc-portrait.sprite { animation: none; translate: none; } }
 
         .asc-r-trophy { border-color: var(--gold); box-shadow: 0 0 14px -2px var(--gold); }

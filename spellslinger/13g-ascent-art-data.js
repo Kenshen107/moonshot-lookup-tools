@@ -152,7 +152,7 @@ const ASCENT_ICONS = (() => {
     add('cur-cash', 'Currency', 'cash', 24, 'a green banknote with a coin');
     add('pack-play', 'Packs', 'Play Booster wrapper', 96, 'a vertical foil booster pack wrapper in teal and silver with a swirling galaxy emblem, crimped top and bottom, no text', 1);
     add('pack-collector', 'Packs', 'Collector Booster wrapper', 96, 'a vertical gold and black foil booster pack wrapper with a shining sunburst emblem, crimped top and bottom, no text', 1);
-    add('card-back', 'Cards', 'card back', 96, 'a trading card back in deep blue with a gold galaxy swirl border pattern, no text');
+    add('card-back', 'Cards', 'card back', 96, 'one upright portrait trading card back (5:7 shape, about 60 percent of the image width, centered, with empty transparent space around it) in deep blue with a gold galaxy swirl border pattern and rounded corners, no text');
     add('card-frame-common', 'Cards', 'card frame, common', 96, 'an empty trading card frame border in plain grey with a transparent middle and a transparent name bar');
     add('card-frame-rare', 'Cards', 'card frame, rare', 96, 'an empty trading card frame border in gold with a transparent middle');
     add('card-frame-mythic', 'Cards', 'card frame, mythic', 96, 'an empty trading card frame border in fiery orange with flame edges and a transparent middle');
@@ -177,5 +177,7 @@ const ASCENT_ICONS = (() => {
     add('life', 'Counters', 'life heart', 24, 'a red pixel heart with a white shine');
     add('mythic-flame', 'Rarity', 'mythic glow flames (loop)', 96, 'a loop of flickering orange flames around a transparent middle, to sit behind a mythic card', 6);
     add('foil-sheen', 'Rarity', 'foil sheen sweep', 96, 'a diagonal rainbow shimmer sweeping across a transparent card shape', 8);
+        // Trophy milestone badges (2026-10-21): one per ASCENT_TROPHY_WINS step, shown in an opponent's trophy list when the art exists
+    [[3, 'bronze', 'a small bronze medal on a short red ribbon'], [6, 'bronze', 'a bronze medal with a tiny star on a red ribbon'], [10, 'silver', 'a silver medal on a blue ribbon'], [15, 'silver', 'a silver medal with a laurel on a blue ribbon'], [20, 'gold', 'a gold medal on a purple ribbon'], [25, 'gold', 'a gold medal with a crown on a purple ribbon'], [30, 'platinum', 'a shining platinum shield badge with wings'], [40, 'platinum', 'a platinum shield badge with wings and a gem'], [50, 'diamond', 'a sparkling blue-white diamond crest with wings'], [75, 'legend', 'a glowing gold and violet legend crest with a flaming halo']].forEach(([n, tier, d]) => add('badge-' + n, 'Trophy badges', `${n} wins badge (${tier})`, 32, `${d}, a pixel rank badge, bold and readable, slightly glowing`));
     return out;
 })();

@@ -183,6 +183,18 @@ def build_output(asset, steps_png):
             for c, f in enumerate(row):
                 sheet.paste(fit(f, fw, fh), (c * fw, r * fh))
         return sheet
+    if asset['kind'] == 'stills':  # one still per step: the last frame of each animation, where the expression is at its strongest
+        n = len(asset['stills'])
+        sheet = Image.new('RGBA', (fw * n, fh), (0, 0, 0, 0))
+        for i, k in enumerate(asset['stills']):
+            sheet.paste(fit(key_background(frames_of(steps_png[k])[-1]), fw, fh), (i * fw, 0))
+        return sheet
+    if asset['kind'] == 'rows':  # one row of cols frames per step (win, lose...)
+        sheet = Image.new('RGBA', (fw * asset['cols'], fh * len(asset['rows'])), (0, 0, 0, 0))
+        for r, k in enumerate(asset['rows']):
+            for c, f in enumerate(pick([key_background(f) for f in frames_of(steps_png[k])], asset['cols'])):
+                sheet.paste(fit(f, fw, fh), (c * fw, r * fh))
+        return sheet
     fr = pick([key_background(f) for f in frames_of(steps_png['gen'])], asset['frames'])
     strip = Image.new('RGBA', (fw * asset['frames'], fh), (0, 0, 0, 0))
     for i, f in enumerate(fr):
@@ -193,7 +205,7 @@ def build_output(asset, steps_png):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--go', action='store_true', help='really generate (spends money); without it, only a free dry run')
-    ap.add_argument('--group', default='characters,fx,packs,site,site-fall', help='characters, fx, packs, site, site-fall, ideas, icons (comma list; default characters,fx,packs,site,site-fall)')
+    ap.add_argument('--group', default='characters,fx,packs,site,site-fall', help='characters, fx, packs, site, site-fall, ideas, icons, moods, poses (comma list), or all. Default: characters,fx,packs,site,site-fall. moods and poses are made from each character\'s base drawing, so make the characters first.')
     ap.add_argument('--only', default='', help='comma list of asset ids')
     ap.add_argument('--max-spend', type=float, default=30.0, help='stop before spending more than this many dollars in this run')
     ap.add_argument('--force', action='store_true', help='redo assets whose PNG already exists')
@@ -207,6 +219,8 @@ def main():
     api = Api(key)
     man = json.loads(MANIFEST.read_text())
     groups = {g.strip() for g in a.group.split(',') if g.strip()}
+    if 'all' in groups:
+        groups = {x['group'] for x in man['assets']}
     only = {o.strip() for o in a.only.split(',') if o.strip()}
     redo = {o.strip() for o in a.redo.split(',') if o.strip()}
     assets = [x for x in man['assets'] if x['group'] in groups and (not only or x['id'] in only)]
@@ -266,6 +280,15 @@ def main():
                 png[s['key']] = f.read_bytes()
                 continue
             src = png.get(s['from']) if s.get('from') else None
+            if s.get('from_asset'):  # borrow another asset's base drawing (an expression or pose of an existing character)
+                bp = CACHE / s['from_asset'] / 'base.png'
+                if bp.exists():
+                    src = bp.read_bytes()
+                elif a.go:
+                    print(f'  ! {x["id"]}: {s["from_asset"]} has no base drawing yet. Make the character first (--group characters --only {s["from_asset"]}), then run this again.')
+                    break
+                else:
+                    src = blank_png(s['width'], s['height'])
             if src is not None:
                 src = frames_of(src)[0]
                 buf = io.BytesIO(); src.convert('RGB').save(buf, 'PNG'); src = buf.getvalue()  # advanced animations need RGB without transparency

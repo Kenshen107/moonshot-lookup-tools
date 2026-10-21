@@ -26,7 +26,7 @@ async function renderAscent() {
                 <div><span class="pos-k">Cards owned</span><strong>${cards}</strong></div>
             </div>
             <label class="note asc-fxtoggle"><input type="checkbox" ${ascFxPref() ? 'checked' : ''} onchange="ascFxSet(this.checked)"> Play pixel-art effects in games</label>
-            <div class="tabs" role="tablist">${[['map', '🗺️ Map'], ['packs', '📦 Packs'], ['coll', '🃏 Collection'], ['decks', '🛠️ Decks']].map(([k, l]) => `<button class="tab" role="tab" aria-selected="${ASC.tab === k}" onclick="ascTab('${k}')">${l}</button>`).join('')}</div>
+            <div class="tabs" role="tablist">${[['map', ascIco('tab-map', '🗺️', 18) + ' Map'], ['packs', ascIco('tab-packs', '📦', 18) + ' Packs'], ['coll', ascIco('tab-collection', '🃏', 18) + ' Collection'], ['decks', ascIco('tab-decks', '🛠️', 18) + ' Decks']].map(([k, l]) => `<button class="tab" role="tab" aria-selected="${ASC.tab === k}" onclick="ascTab('${k}')">${l}</button>`).join('')}</div>
             <div id="ascBody"></div>
         </div>`;
     ({ map: ascMap, packs: ascPacks, coll: ascColl, decks: ascDecks })[ASC.tab]();
@@ -46,18 +46,18 @@ function ascMap() {
     if (!st.started) {
         body.innerHTML = `<div class="asc-start"><h3>Choose your starter deck</h3>
             <p class="note">One color, 40 cards of simple creatures, plus 3 Play Boosters to open. You can only choose once, but every color is open to you later through packs and crafting.</p>
-            <div class="asc-colors">${Object.entries(ASC_COLORS).map(([c, [e, n]]) => `<button class="btn" onclick="ascChooseStarter('${c}')"><span class="asc-big">${e}</span> ${n}</button>`).join('')}</div></div>`;
+            <div class="asc-colors">${Object.entries(ASC_COLORS).map(([c, [e, n]]) => `<button class="btn" onclick="ascChooseStarter('${c}')"><span class="asc-big">${ascIco('mana-' + c, e, 28)}</span> ${n}</button>`).join('')}</div></div>`;
         return;
     }
     body.innerHTML = ascNpcHTML('map') + ASCENT_TIERS.map(t => {
         const open = ascentTierOpen(t.tier), opps = ASCENT_OPPONENTS.filter(o => o.tier === t.tier);
-        return `<div class="tier-band tier-${t.tier}${open ? '' : ' locked'}">
-            <div class="tier-head"><span class="tier-icon" aria-hidden="true">${t.icon}</span><div><strong>Tier ${t.tier}: ${esc(t.name)}</strong>
+        return `<div class="tier-band tier-${t.tier}${open ? '' : ' locked'}${ASC_UI.ok['bg-tier-' + t.tier] ? ' has-bg' : ''}">
+            <div class="tier-head"><span class="tier-icon" aria-hidden="true">${ascIco('tier-' + t.tier, t.icon, 44)}</span><div><strong>Tier ${t.tier}: ${esc(t.name)}</strong>
                 <div class="note">${esc(t.desc)}${open ? '' : ` 🔒 Beat the boss of ${esc(ASCENT_TIERS[t.tier - 2].name)} to open it.`}</div></div></div>
             <div class="trail">${opps.map((o, i) => {
                 const beaten = ascentBeaten(o.id), unlocked = ascentOpponentOpen(o);
                 return `<button type="button" class="trail-node${beaten ? ' beaten' : ''}${ASC.opp === o.id ? ' sel' : ''}${o.boss ? ' boss' : ''}" ${open ? '' : 'disabled'} onclick="ascSelectOpp('${o.id}')" aria-pressed="${ASC.opp === o.id}">
-                    <span class="dot" aria-hidden="true">${beaten ? '✓' : o.boss ? '👑' : i + 1}</span><span class="lbl">${esc(o.name)}${!unlocked && open ? ' 🔒' : ''}</span></button>`;
+                    <span class="dot" aria-hidden="true">${ascNodeDot(beaten, o.boss, !unlocked && open, i + 1)}</span><span class="lbl">${esc(o.name)}${!unlocked && open ? ' 🔒' : ''}</span></button>`;
             }).join('<span class="trail-line" aria-hidden="true"></span>')}</div></div>`;
     }).join('') + '<div id="ascOpp"></div>';
     if (ASC.opp) ascOppPanel();
@@ -84,7 +84,7 @@ async function ascOppPanel() {
         <div class="asc-grid">${sigs.map(id => ascTile(id, { sig: true })).join('')}</div>
         <h4>🏆 Trophies: win ${ASCENT_TROPHY_WINS[ASCENT_TROPHY_WINS.length - 1]} times to earn them all (you have ${ascentWins(o.id)} wins)</h4>
         <p class="note">The strongest cards in the pool. They can only be won this way, one copy each: the first at ${ASCENT_TROPHY_WINS[0]} wins against ${esc(o.name)}.</p>
-        <div class="asc-grid asc-trophies">${trophyIds.map((id, i) => `<div class="asc-trophy${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? ' earned' : ''}">${ascTile(id, { trophy: true })}<small class="note">${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? '✔ earned' : `${ASCENT_TROPHY_WINS[i]} wins`}</small></div>`).join('')}</div>
+        <div class="asc-grid asc-trophies">${trophyIds.map((id, i) => `<div class="asc-trophy${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? ' earned' : ''}">${ascIco('badge-' + ASCENT_TROPHY_WINS[i], '', 32)}${ascTile(id, { trophy: true })}<small class="note">${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? '✔ earned' : `${ASCENT_TROPHY_WINS[i]} wins`}</small></div>`).join('')}</div>
         ${ascMatchupHTML(o)}
         <div class="row" style="margin-top:12px;"><select id="ascDeckPick" aria-label="Your deck" onchange="ASC.deck=Number(this.value)||0; ascOppPanel()">${st.decks.map((d, i) => `<option value="${i}" ${i === ASC.deck ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
             <button class="btn primary" onclick="ascPlay('${o.id}')" ${open ? '' : 'disabled'}>⚔️ Battle ${esc(o.name)}</button>
@@ -117,7 +117,7 @@ function ascTile(id, opts = {}) {
     const img = c && (c.imgS || c.img);
     return `<button type="button" class="asc-tile ${ascRarityClass(r.rarity)}${n ? '' : ' unowned'}" onclick="ascCardDialog('${id}')" title="${esc(r.name)}">
         ${img ? `<img src="${img}" alt="${esc(r.name)}" loading="lazy">` : `<span class="asc-noimg"><strong>${esc(r.name)}</strong><small>${esc(r.cost)}</small><small>${esc(r.pt || r.kind)}</small></span>`}
-        <span class="asc-badge">${r.type === 'land' ? '' : r.rarity === 'trophy' ? (n ? 'owned' : 'locked') : `${n}/${ASCENT_COPY_LIMIT}`}${up ? ` ✦${up}` : ''}${opts.sig ? ' ⭐' : ''}${r.rarity === 'trophy' ? ' 🏆' : ''}</span></button>`;
+        ${r.rarity === 'mythic' && ASC_UI.ok['mythic-flame'] ? '<span class="asc-flame" aria-hidden="true"></span>' : ''}<span class="asc-badge">${r.type === 'land' || r.rarity === 'trophy' ? '' : ascIco('rarity-' + r.rarity, '', 14)}${r.type === 'land' ? '' : r.rarity === 'trophy' ? (n ? 'owned' : 'locked') : `${n}/${ASCENT_COPY_LIMIT}`}${up ? ` ✦${up}` : ''}${opts.sig ? ' ⭐' : ''}${r.rarity === 'trophy' ? ' 🏆' : ''}</span></button>`;
 }
 function ascFiltered() {
     let list = ASCENT.roster.filter(c => c.kind !== 'basic');
@@ -162,7 +162,7 @@ function ascCardDialog(id) {
     const craftable = r.type !== 'land' && r.rarity !== 'trophy' && copies.length < ASCENT_COPY_LIMIT, trophy = r.rarity === 'trophy' ? ascentTrophyOwner(id) : null;
     showModal(`<h2>${esc(r.name)}</h2>
         <div class="asc-dlg"><div>${c && c.img ? `<img src="${c.img}" alt="${esc(r.name)}" class="asc-big-img">` : `<div class="asc-noimg big"><strong>${esc(r.name)}</strong><small>${esc(r.cost)}</small></div>`}</div>
-        <div><p class="note">${esc(r.type)}${r.pt ? ' · ' + r.pt : ''} · ${esc(r.rarity)} · tier ${r.tier}${sigOwner ? ` · ⭐ dropped by ${esc(ASCENT_OPP[sigOwner].name)}` : ''}${trophy ? ` · 🏆 trophy: ${trophy.wins} wins against ${esc(ASCENT_OPP[trophy.oppId].name)} (you have ${ascentWins(trophy.oppId)})` : ''}</p>
+        <div><p class="note">${ascIco('type-' + r.type, '', 16)} ${esc(r.type)}${r.pt ? ' · ' + r.pt : ''} · ${esc(r.rarity)} · tier ${r.tier}${sigOwner ? ` · ⭐ dropped by ${esc(ASCENT_OPP[sigOwner].name)}` : ''}${trophy ? ` · 🏆 trophy: ${trophy.wins} wins against ${esc(ASCENT_OPP[trophy.oppId].name)} (you have ${ascentWins(trophy.oppId)})` : ''}</p>
         ${c ? `<div class="otext">${esc(c.text || '(no text)')}</div>` : ''}
         ${r.type === 'land' ? '<p class="note">Lands come from packs. Basics are free.</p>' : `
         <h4>Your copies (${copies.length}/${ASCENT_COPY_LIMIT})</h4>
@@ -238,7 +238,7 @@ function ascBuyUpgrade(key, upId) {
     for (const k of feed) { if (cover >= price) break; needed.push(k); cover += ascentSacrificeValue(f.card, f.o.c.find(x => x.k === k)); }
     const res = upgradeAscentCopy(key, upId, needed);
     toast(res.ok ? `Upgraded! ${res.aether ? `✨ ${res.aether} spent` : 'Paid with spare copies'}` : res.why);
-    if (res.ok) saveProfile();
+    if (res.ok) { saveProfile(); ascUpgradeFlair(); }
     ascUpgradeDialog(key); renderAscent();
 }
 function ascRemoveUpgrade(key, slot) { const res = swapAscentUpgrade(key, slot, null); toast(res.ok ? 'Removed.' : res.why); if (res.ok) saveProfile(); ascUpgradeDialog(key); renderAscent(); }
@@ -246,8 +246,8 @@ function ascRemoveUpgrade(key, slot) { const res = swapAscentUpgrade(key, slot, 
 // ---------- Packs ----------
 function ascPacks() {
     const st = ascentState(), s = st.sealed || { play: 0, collector: 0 }, body = $('ascBody');
-    body.innerHTML = ascNpcHTML('packs') + `<div class="row"><button class="btn primary" ${s.play ? '' : 'disabled'} onclick="ascOpenPack('play')">📦 Open a Play Booster (${s.play})</button>
-        <button class="btn gold" ${s.collector ? '' : 'disabled'} onclick="ascOpenPack('collector')">🌟 Open a Collector Booster (${s.collector})</button></div>
+    body.innerHTML = ascNpcHTML('packs') + `<div class="row"><button class="btn primary" ${s.play ? '' : 'disabled'} onclick="ascOpenPack('play')">${ascIco('pack-play', '📦', 22)} Open a Play Booster (${s.play})</button>
+        <button class="btn gold" ${s.collector ? '' : 'disabled'} onclick="ascOpenPack('collector')">${ascIco('pack-collector', '🌟', 22)} Open a Collector Booster (${s.collector})</button></div>
         <p class="note">Win matches for Play Boosters; bosses also give a Collector Booster (all foils, 5+ rares). The 5th copy of any card turns into Aether.</p>
         <div id="ascReveal">${ASC.pack ? ascRevealHTML(ASC.pack) : '<p class="note">Nothing opened yet.</p>'}</div>`;
 }
@@ -263,6 +263,7 @@ async function ascOpenPack(kind) {
 }
 function ascTear() {
     const el = document.querySelector('#ascReveal .pack3d'), pk = ASC.pack;
+    if (typeof ascPackFlair === 'function') ascPackFlair();
     packTear(el, null, () => { if (ASC.pack === pk) { pk.opened = true; $('ascReveal').innerHTML = ascRevealHTML(pk); } });
 }
 function ascRevealHTML(pk) {
@@ -274,7 +275,7 @@ function ascRevealHTML(pk) {
     return `<div class="asc-pack">${pk.picks.map((p, i) => {
         const r = ASCENT.byId.get(p.id), c = CARDS.get(p.id), up = pk.flipped.has(i), img = c && (c.imgS || c.img), d = dust.has(p.slot + ':' + p.id);
         return `<button type="button" class="asc-flip${up ? ' up' : ''} ${ascRarityClass(r.rarity)}${p.foil ? ' foil' : ''}" onclick="ascFlip(${i})" aria-label="${up ? esc(r.name) : 'Hidden card'}">
-            ${up ? `${img ? `<img src="${img}" alt="${esc(r.name)}">` : `<span class="asc-noimg"><strong>${esc(r.name)}</strong><small>${esc(r.cost)}</small></span>`}<span class="asc-badge">${p.foil ? '✨ ' : ''}${esc(r.rarity)}${d ? ' · dusted' : ''}</span>` : '<span class="asc-back">?</span>'}</button>`;
+            ${up ? `${img ? `<img src="${img}" alt="${esc(r.name)}">` : `<span class="asc-noimg"><strong>${esc(r.name)}</strong><small>${esc(r.cost)}</small></span>`}<span class="asc-badge">${p.foil ? '✨ ' : ''}${esc(r.rarity)}${d ? ' · dusted' : ''}</span>` : (ASC_UI.ok['card-back'] ? `<span class="asc-back art">${ascIco('card-back', '?', 96)}</span>` : '<span class="asc-back">?</span>')}</button>`;
     }).join('')}</div>
     <div class="row" style="margin-top:10px;"><button class="btn" onclick="ascFlipAll()">Flip all</button>${pk.report.aether ? `<span class="ok">✨ +${pk.report.aether} Aether from extra copies</span>` : ''}</div>`;
 }

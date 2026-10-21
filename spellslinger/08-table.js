@@ -121,7 +121,7 @@ function barHTML(P) {
     const targetable = m && m.type === 'target' && m.valid.some(v => v.p && v.p.i === P.i);
     const cmd = P.command.map(o => `<button type="button" class="btn small" onclick="showGameCard(${o.uid})">👑 ${esc(o.card.name.split(',')[0])}${P.tax ? ` (+${P.tax * 2})` : ''}</button>`).join('');
     return `
-        <span class="who">${you(P) ? '🧙 You' : `🤖 ${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
+        <span class="who">${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? '🧙 You' : `🤖 ${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
         <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}">❤️ ${P.life}</button>
         ${G.format === 'commander' ? `<span class="zone-count" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
         ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
@@ -288,7 +288,7 @@ const PHASE_STEPS = [['Upkeep', ['beginning', 'upkeep']], ['Main 1', ['main1']],
 function phaseStripHTML() {
     if (G.over || G.phase === 'setup') return '';
     return `<ol class="phase-strip ${G.active === G.view ? 'mine' : 'theirs'}" aria-label="Turn ${G.turn}: ${G.active === G.view ? 'your turn' : `${esc(foe().name)}'s turn`}">
-        <li class="whose">${G.active === G.view ? 'Your turn' : `${esc(foe().name)}'s turn`}</li>${PHASE_STEPS.map(([label, ids]) => `<li${ids.includes(G.phase) ? ' class="now" aria-current="step"' : ''}>${label}</li>`).join('')}</ol>`;
+        <li class="whose">${G.active === G.view ? 'Your turn' : `${esc(foe().name)}'s turn`}</li>${PHASE_STEPS.map(([label, ids], pi) => `<li${ids.includes(G.phase) ? ' class="now" aria-current="step"' : ''}>${typeof ascIco === 'function' ? ascIco(['phase-upkeep', 'phase-main', 'phase-combat', 'phase-main', 'phase-end'][pi], '', 16) : ''}${label}</li>`).join('')}</ol>`;
 }
 function turnButtonHTML() {
     if (G.over) return '';

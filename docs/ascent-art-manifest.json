@@ -926,6 +926,1590 @@
    ]
   },
   {
+   "id": "mood-t1-mick",
+   "group": "moods",
+   "name": "Mossback Mick: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-mick.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 367193,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-mick"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-mick"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-mick"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-mick",
+   "group": "poses",
+   "name": "Mossback Mick: win and lose poses",
+   "out": "spellslinger/art/poses/t1-mick.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 453223,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-mick"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-mick"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-annie",
+   "group": "moods",
+   "name": "Candle Annie: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-annie.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 405994,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-annie"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-annie"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-annie"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-annie",
+   "group": "poses",
+   "name": "Candle Annie: win and lose poses",
+   "out": "spellslinger/art/poses/t1-annie.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 790740,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-annie"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-annie"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-tess",
+   "group": "moods",
+   "name": "Tidepool Tess: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-tess.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 964728,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-tess"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-tess"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-tess"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-tess",
+   "group": "poses",
+   "name": "Tidepool Tess: win and lose poses",
+   "out": "spellslinger/art/poses/t1-tess.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 619830,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-tess"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-tess"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-gus",
+   "group": "moods",
+   "name": "Gravedigger Gus: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-gus.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 440790,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-gus"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-gus"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-gus"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-gus",
+   "group": "poses",
+   "name": "Gravedigger Gus: win and lose poses",
+   "out": "spellslinger/art/poses/t1-gus.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 647104,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-gus"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-gus"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-cal",
+   "group": "moods",
+   "name": "Cinder Cal: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-cal.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 710455,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-cal"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-cal"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-cal"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-cal",
+   "group": "poses",
+   "name": "Cinder Cal: win and lose poses",
+   "out": "spellslinger/art/poses/t1-cal.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 94821,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-cal"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-cal"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-boss",
+   "group": "moods",
+   "name": "Greg the Stomper: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-boss.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 449396,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-boss"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-boss"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-boss"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-boss",
+   "group": "poses",
+   "name": "Greg the Stomper: win and lose poses",
+   "out": "spellslinger/art/poses/t1-boss.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 823178,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-boss"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-boss"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-sasha",
+   "group": "moods",
+   "name": "Skyline Sasha: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-sasha.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 800856,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-sasha",
+   "group": "poses",
+   "name": "Skyline Sasha: win and lose poses",
+   "out": "spellslinger/art/poses/t2-sasha.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 997070,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-ike",
+   "group": "moods",
+   "name": "Ironhide Ike: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-ike.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 431365,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-ike"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-ike"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-ike"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-ike",
+   "group": "poses",
+   "name": "Ironhide Ike: win and lose poses",
+   "out": "spellslinger/art/poses/t2-ike.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 342463,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-ike"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-ike"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-marcus",
+   "group": "moods",
+   "name": "Marsh Marcus: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-marcus.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 428567,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-marcus",
+   "group": "poses",
+   "name": "Marsh Marcus: win and lose poses",
+   "out": "spellslinger/art/poses/t2-marcus.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 617637,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-sarah",
+   "group": "moods",
+   "name": "Spellsmith Sarah: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-sarah.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 888441,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-sarah",
+   "group": "poses",
+   "name": "Spellsmith Sarah: win and lose poses",
+   "out": "spellslinger/art/poses/t2-sarah.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 983583,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-leo",
+   "group": "moods",
+   "name": "Tangle Leo: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-leo.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 572106,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-leo"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-leo"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-leo"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-leo",
+   "group": "poses",
+   "name": "Tangle Leo: win and lose poses",
+   "out": "spellslinger/art/poses/t2-leo.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 757876,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-leo"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-leo"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-boss",
+   "group": "moods",
+   "name": "Marcus the Warden: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-boss.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 349559,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-boss"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-boss"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-boss"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-boss",
+   "group": "poses",
+   "name": "Marcus the Warden: win and lose poses",
+   "out": "spellslinger/art/poses/t2-boss.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 798497,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-boss"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-boss"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-brenda",
+   "group": "moods",
+   "name": "Dread Brenda: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-brenda.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 330259,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-brenda",
+   "group": "poses",
+   "name": "Dread Brenda: win and lose poses",
+   "out": "spellslinger/art/poses/t3-brenda.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 133457,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-trevor",
+   "group": "moods",
+   "name": "Titan Trevor: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-trevor.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 122687,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-trevor",
+   "group": "poses",
+   "name": "Titan Trevor: win and lose poses",
+   "out": "spellslinger/art/poses/t3-trevor.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 635521,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-sam",
+   "group": "moods",
+   "name": "Wallbuilder Sam: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-sam.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 328714,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-sam"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-sam"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-sam"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-sam",
+   "group": "poses",
+   "name": "Wallbuilder Sam: win and lose poses",
+   "out": "spellslinger/art/poses/t3-sam.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 766028,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-sam"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-sam"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-luke",
+   "group": "moods",
+   "name": "Bounce Luke: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-luke.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 679748,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-luke"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-luke"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-luke"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-luke",
+   "group": "poses",
+   "name": "Bounce Luke: win and lose poses",
+   "out": "spellslinger/art/poses/t3-luke.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 587202,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-luke"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-luke"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-arthur",
+   "group": "moods",
+   "name": "Arthur the Whale: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-arthur.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 983639,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-arthur",
+   "group": "poses",
+   "name": "Arthur the Whale: win and lose poses",
+   "out": "spellslinger/art/poses/t3-arthur.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 633745,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-boss",
+   "group": "moods",
+   "name": "Sarah, Storm Walker: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-boss.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 377570,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-boss"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-boss"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-boss"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-boss",
+   "group": "poses",
+   "name": "Sarah, Storm Walker: win and lose poses",
+   "out": "spellslinger/art/poses/t3-boss.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 304700,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-boss"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-boss"
+    }
+   ]
+  },
+  {
    "id": "land-W",
    "group": "fx",
    "name": "Plains: a gentle white glow",
@@ -2576,7 +4160,7 @@
      "style": "rd_plus__low_res",
      "width": 96,
      "height": 96,
-     "prompt": "a trading card back in deep blue with a gold galaxy swirl border pattern, no text",
+     "prompt": "one upright portrait trading card back (5:7 shape, about 60 percent of the image width, centered, with empty transparent space around it) in deep blue with a gold galaxy swirl border pattern and rounded corners, no text",
      "remove_bg": true
     }
    ]
@@ -3203,6 +4787,236 @@
    ]
   },
   {
+   "id": "badge-3",
+   "group": "icons",
+   "name": "3 wins badge (bronze)",
+   "out": "spellslinger/art/ui/badge-3.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 261492,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small bronze medal on a short red ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-6",
+   "group": "icons",
+   "name": "6 wins badge (bronze)",
+   "out": "spellslinger/art/ui/badge-6.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 928635,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a bronze medal with a tiny star on a red ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-10",
+   "group": "icons",
+   "name": "10 wins badge (silver)",
+   "out": "spellslinger/art/ui/badge-10.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 160478,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a silver medal on a blue ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-15",
+   "group": "icons",
+   "name": "15 wins badge (silver)",
+   "out": "spellslinger/art/ui/badge-15.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 48573,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a silver medal with a laurel on a blue ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-20",
+   "group": "icons",
+   "name": "20 wins badge (gold)",
+   "out": "spellslinger/art/ui/badge-20.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 347669,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a gold medal on a purple ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-25",
+   "group": "icons",
+   "name": "25 wins badge (gold)",
+   "out": "spellslinger/art/ui/badge-25.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 459574,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a gold medal with a crown on a purple ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-30",
+   "group": "icons",
+   "name": "30 wins badge (platinum)",
+   "out": "spellslinger/art/ui/badge-30.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 999628,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a shining platinum shield badge with wings, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-40",
+   "group": "icons",
+   "name": "40 wins badge (platinum)",
+   "out": "spellslinger/art/ui/badge-40.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 186819,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a platinum shield badge with wings and a gem, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-50",
+   "group": "icons",
+   "name": "50 wins badge (diamond)",
+   "out": "spellslinger/art/ui/badge-50.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 257818,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a sparkling blue-white diamond crest with wings, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-75",
+   "group": "icons",
+   "name": "75 wins badge (legend)",
+   "out": "spellslinger/art/ui/badge-75.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 952359,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a glowing gold and violet legend crest with a flaming halo, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
    "id": "pack-standard",
    "group": "packs",
    "name": "Play Booster wrapper",
@@ -3682,6 +5496,190 @@
      "height": 32,
      "prompt": "a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image",
      "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mascot",
+   "group": "site",
+   "name": "page mascot (waves, blinks)",
+   "out": "art/site/mascot.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 8,
+   "seed": 708602,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a tiny cute pixel mascot: a smiling crescent moon wearing a little rocket-nose-cone cap, floating with a gentle bob, blinking once and giving a small wave, a seamless 8 frame loop, centered",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "loading-card",
+   "group": "site",
+   "name": "loading spinner (a card flipping)",
+   "out": "art/site/loading-card.png",
+   "kind": "strip",
+   "frame": [
+    48,
+    48
+   ],
+   "frames": 8,
+   "seed": 57148,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 48,
+     "height": 48,
+     "prompt": "a single pixel playing card spinning around its vertical axis like a coin flip, teal back with a small gold star, seamless 8 frame loop, centered",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "scene-halloween",
+   "group": "site",
+   "name": "halloween scene banner",
+   "out": "art/site/scene-halloween.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 569369,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a spooky night street with a big orange moon, bats, a haunted house and glowing jack-o-lanterns, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-autumn",
+   "group": "site",
+   "name": "autumn scene banner",
+   "out": "art/site/scene-autumn.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 789984,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a golden autumn hillside with red and orange trees, falling leaves and a warm low sun, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-winter",
+   "group": "site",
+   "name": "winter scene banner",
+   "out": "art/site/scene-winter.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 889615,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a snowy village at dusk with lit windows, pine trees and falling snow, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-christmas",
+   "group": "site",
+   "name": "christmas scene banner",
+   "out": "art/site/scene-christmas.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 319186,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a cozy Christmas night scene with a decorated tree, wrapped gifts, a sleigh and twinkling lights, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-spring",
+   "group": "site",
+   "name": "spring scene banner",
+   "out": "art/site/scene-spring.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 218423,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a bright spring meadow with cherry blossoms, tulips, a pastel sky and small birds, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-newyear",
+   "group": "site",
+   "name": "newyear scene banner",
+   "out": "art/site/scene-newyear.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 679189,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a midnight city skyline with fireworks bursting, confetti and a glowing clock, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
     }
    ]
   },

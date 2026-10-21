@@ -785,6 +785,12 @@
             margin-bottom: 20px;
         }
 
+        /* Pixel mascot and loading card (optional art, 2026-10-21): used only when art/site/mascot.png and loading-card.png exist */
+        .ms-mark.has-art { width: 56px; height: 56px; display: inline-block; }
+        .px-mascot { display: block; width: 56px; height: 56px; background: url('art/site/mascot.png') 0 0 / calc(var(--n, 8) * 100%) 100% no-repeat; image-rendering: pixelated; animation: px-strip 1s steps(var(--n, 8)) infinite; }
+        @keyframes px-strip { to { background-position-x: 100%; } }
+        html.px-loading-art .loading:not([style*="padding:0"]):not([style*="padding: 0"])::after { content: ''; display: block; width: 48px; height: 48px; margin: 10px auto 0; background: var(--px-loading) 0 0 / calc(var(--px-loading-n, 8) * 100%) 100% no-repeat; image-rendering: pixelated; animation: px-strip 0.9s steps(var(--px-loading-n, 8)) infinite; }
+        @media (prefers-reduced-motion: reduce) { .px-mascot, html.px-loading-art .loading::after { animation: none; } }
         .loading {
             text-align: center;
             color: var(--text-secondary);
@@ -22606,6 +22612,20 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             g.addColorStop(1, sky.bottom);
             ctx.fillStyle = g;
             ctx.fillRect(0, 0, w, h);
+            // seasonal pixel scene behind the title (art/site/scene-<season>.png), mirrored tile to tile so the seams never show; veiled with the sky color so the title stays readable
+            const scn = pxSceneImg();
+            if (scn) {
+                const k = h / scn.naturalHeight, tw = scn.naturalWidth * k;
+                ctx.imageSmoothingEnabled = false;
+                for (let x = 0, i = 0; x < w; x += tw, i++) {
+                    ctx.save();
+                    if (i % 2) { ctx.translate(x + tw, 0); ctx.scale(-1, 1); } else ctx.translate(x, 0);
+                    ctx.drawImage(scn, 0, 0, tw, h);
+                    ctx.restore();
+                }
+                ctx.fillStyle = fxAlpha(sky.top, 0.35);
+                ctx.fillRect(0, 0, w, h);
+            }
             // stars
             s.stars.forEach(p => {
                 ctx.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(t / 1100 + p.ph));
@@ -22758,7 +22778,25 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         // season restyles it, and it follows the Effects level (Full and Subtle on, Off plain). If
         // pixel-art PNGs from the art pipeline exist in art/site/ they replace the drawn versions.
         // ---------------------------------------------------------------------
-        const PX = { glyphs: new Map(), art: {}, fallImg: {}, probed: false };
+        const PX = { glyphs: new Map(), art: {}, fallImg: {}, probed: false, frames: {}, sceneImg: {} };
+        // Seasonal scene banners (2026-10-21): which theme shows which scene (art/site/scene-<name>.png, 256 x 128, drawn behind the page title at Effects: Full)
+        const PX_SCENES = { halloween: 1, autumn: 1, winter: 1, christmas: 1, spring: 1, newyear: 1 };
+        const PX_THEME_SCENE = { halloween: 'halloween', spooky: 'halloween', witching: 'halloween', pumpkin: 'halloween', harvest: 'autumn', harvestmoon: 'autumn', thanksgiving: 'autumn', wonderland: 'winter', snowday: 'winter', evergreen: 'winter', cocoa: 'winter', twinkle: 'winter', hanukkah: 'winter', christmas: 'christmas', christmaseve: 'christmas', festive: 'christmas', newyear: 'newyear', newyearseve: 'newyear', easter: 'spring', earthday: 'spring', stpatricks: 'spring', mothersday: 'spring', holi: 'spring' };
+        function pxSceneImg() { const k = PX_THEME_SCENE[document.documentElement.getAttribute('data-theme') || '']; return k && PX.sceneImg[k] ? PX.sceneImg[k] : null; }
+        // Mascot and loading spinner from the art pipeline, when their files exist
+        function pxApplyExtras() {
+            const mark = document.getElementById('msMark');
+            if (mark && PX.art.mascot && !mark.classList.contains('has-art')) {
+                mark.classList.add('has-art');
+                mark.innerHTML = `<span class="px-mascot" style="--n:${PX.frames.mascot || 8}"></span>`;
+            }
+            if (PX.art['loading-card']) {
+                const st = document.documentElement.style;
+                st.setProperty('--px-loading', "url('art/site/loading-card.png')");
+                st.setProperty('--px-loading-n', PX.frames['loading-card'] || 8);
+                document.documentElement.classList.add('px-loading-art');
+            }
+        }
         const PX_ARROW = [
             'X...........', 'XX..........', 'XWX.........', 'XWWX........', 'XWWWX.......', 'XWWWWX......', 'XWWWWWX.....', 'XWWWWWWX....',
             'XWWWWWWWX...', 'XWWWWWXXXXX.', 'XWWXWWX.....', 'XWX.XWWX....', 'XX..XWWX....', 'X....XWWX...', '.....XWWX...', '......XX....'
@@ -22917,12 +22955,13 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         function pxProbeArt() {
             if (PX.probed) return Promise.resolve();
             PX.probed = true;
-            const names = ['cursor-arrow', 'cursor-hand', 'click-burst', ...['common', 'uncommon', 'rare', 'mythic', 'special'].map(r => 'frame-' + r)];
+            const names = ['cursor-arrow', 'cursor-hand', 'click-burst', 'mascot', 'loading-card', ...Object.keys(PX_SCENES).map(k => 'scene-' + k), ...['common', 'uncommon', 'rare', 'mythic', 'special'].map(r => 'frame-' + r)];
             const falls = [...new Set(Object.values(PX_FALL_MAP))].map(id => 'fall-' + id);
-            return Promise.all([...names, ...falls].map(n => new Promise(res => { const i = new Image(); i.onload = () => { PX.art[n] = true; if (n.startsWith('fall-')) PX.fallImg[n.slice(5)] = i; if (n === 'click-burst') PX.burstFrames = Math.max(1, Math.round(i.naturalWidth / Math.max(1, i.naturalHeight))); res(); }; i.onerror = res; i.src = `art/site/${n}.png`; })));
+            return Promise.all([...names, ...falls].map(n => new Promise(res => { const i = new Image(); i.onload = () => { PX.art[n] = true; if (n.startsWith('fall-')) PX.fallImg[n.slice(5)] = i; if (n === 'click-burst') PX.burstFrames = Math.max(1, Math.round(i.naturalWidth / Math.max(1, i.naturalHeight))); if (n === 'mascot' || n === 'loading-card') PX.frames[n] = Math.max(1, Math.round(i.naturalWidth / Math.max(1, i.naturalHeight))); if (n.startsWith('scene-')) PX.sceneImg[n.slice(6)] = i; res(); }; i.onerror = res; i.src = `art/site/${n}.png`; })));
         }
         function pxFlairRefresh() {
             PX.glyphs.clear();
+            pxApplyExtras();
             pxBuildCursor();
             pxBuildFrames();
         }

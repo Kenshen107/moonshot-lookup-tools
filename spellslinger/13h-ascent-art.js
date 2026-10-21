@@ -19,10 +19,12 @@ async function ascProbeArt() {
     ASC_ART.probed = true;
     const tasks = [
         ...ASCENT_CHARACTERS.map(async c => { const p = `spellslinger/art/characters/${c.id}.png`; ASC_ART.ok[p] = await ascProbe(p, w => { if (w === 256) ASC_ART.legacy[p] = true; else if (w >= 96) ASC_ART.cols[p] = Math.round(w / 96); }); }),
-        ...Object.keys(ASCENT_FX).map(async k => { ASC_FX_KINDS_ART[k] = await ascProbe(`spellslinger/art/fx/${k}.png`); })
+        ...Object.keys(ASCENT_FX).map(async k => { ASC_FX_KINDS_ART[k] = await ascProbe(`spellslinger/art/fx/${k}.png`); }),
+        ...(typeof ascExtraProbeTasks === 'function' ? ascExtraProbeTasks() : []) // icons, backdrops, combat effects (13j)
     ];
     await Promise.all(tasks);
-    if (Object.values(ASC_ART.ok).some(Boolean)) renderAscentIfOpen();
+    if (typeof ascUiApply === 'function') ascUiApply();
+    if (Object.values(ASC_ART.ok).some(Boolean) || (typeof ASC_UI !== 'undefined' && Object.values(ASC_UI.ok).some(Boolean))) renderAscentIfOpen();
 }
 
 // ---- Portraits and dialogue ----
@@ -70,21 +72,22 @@ function ascFxKindFor(ev, ctx) {
     return null;
 }
 function ascFxHook(ev, ctx) {
-    if (ev !== 'enters' && ev !== 'cast') return;
+    if (typeof ascMoodNote === 'function') ascMoodNote(ev, ctx); // keeps track of the opponent's mood, even with no art
+    if (ev !== 'enters' && ev !== 'cast') { if (typeof ascIdeaFxHook === 'function') ascIdeaFxHook(ev, ctx); return; }
     if (!ascFxEnabled() || !G || G.over) return;
     const kind = ascFxKindFor(ev, ctx);
     if (kind) ascFxPlay(kind, ev === 'enters' ? ctx.o.uid : null);
 }
-function ascFxPlay(kind, uid) {
-    const spec = ASCENT_FX[kind];
-    if (!spec || ASC_FX.active >= ASC_FX.max) return null;
+function ascFxPlay(kind, uid, rect) {
+    const spec = ASCENT_FX[kind] || ASCENT_FX_IDEAS[kind]; // the combat effects (fx-hit...) have no placeholder: they play only with art
+    if (!spec || ASC_FX.active >= ASC_FX.max || (!ASCENT_FX[kind] && !ASC_FX_KINDS_ART[kind])) return null;
     ASC_FX.active++;
     setTimeout(() => {
         try {
             const el = uid != null ? document.querySelector(`#game [data-uid="${uid}"]`) : null;
             const host = el || $('midBar') || $('game');
-            if (!host || $('game').classList.contains('hidden')) return;
-            const r = host.getBoundingClientRect(), px = spec.size * 2;
+            if (!rect && (!host || $('game').classList.contains('hidden'))) return;
+            const r = rect || host.getBoundingClientRect(), px = spec.size * 2;
             const node = document.createElement('div');
             const dur = spec.frames / spec.fps;
             node.className = `fx-item fx-${kind}`;

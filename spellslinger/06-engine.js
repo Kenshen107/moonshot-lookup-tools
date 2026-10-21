@@ -3894,6 +3894,7 @@ async function applyEffect(P, e, t, src) {
             G.lastCountered = it; G.lastPower = { P: it.P, n: 0 }; G.lastMv = it.o.card.cmc || 0;
             G.stack.splice(i, 1);
             log(`${it.name} is countered (rule 701.6a).`);
+            if (typeof ascFxHook === 'function') ascFxHook('countered', { o: it.o });
             if (it.kind === 'spell' && e.exileCast && !['instant', 'sorcery'].includes(Rx(it.o).kind)) {
                 const x = it.o; moveSpellCard(x, 'exile');
                 const X = G.players[x.owner]; pull(X.exile, x);
@@ -4701,7 +4702,7 @@ function endGame(winner, reason) {
     window.lastResult = { winner, reason, turns: G.turn };
     renderGame();
     if (AUTOPLAY) return;
-    showModal(`<h2>${winner === null ? '🤝 Draw' : won ? '🏆 You win!' : '💀 You lose'}</h2>
+    showModal(`<h2>${winner === null ? '🤝 Draw' : won ? '🏆 You win!' : '💀 You lose'}</h2>${typeof ascResultFlair === 'function' && winner !== null ? ascResultFlair(won) : ''}
         <p>${esc(reason)}</p><p class="note">${G.turn} turns${G.campaign || G.draftRound !== undefined ? '' : ` · 🪙 +${reward} coins`}</p>${talk ? talk.html : ''}${campLine ? `<p class="ok">${esc(campLine)}</p>` : ''}
         <div class="row" style="justify-content:center; margin-top:14px;">
             ${G.draftRound !== undefined ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'draft\');">🃏 Back to the draft</button>' : G.campaign ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'campaign\');">🗺️ Back to the map</button>' : '<button class="btn primary" onclick="closeModal(); leaveGame(); startMatch(true);">Play again</button>'}

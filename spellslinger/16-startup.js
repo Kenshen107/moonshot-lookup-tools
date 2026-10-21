@@ -8,6 +8,7 @@ async function init() {
     showView(VIEWS.includes(v) ? v : 'home');
     window.addEventListener('beforeunload', persistCards);
     loadBasics().catch(() => {});
+    if (!AUTOPLAY && !window.__LAB && typeof ascProbeArt === 'function') ascProbeArt(); // optional pixel art: icons, backdrops, effects (13h, 13j)
     if (AUTOPLAY) autoTest();
     else if (needsOnboarding()) preconPicker(true);
 }
