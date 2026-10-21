@@ -785,6 +785,21 @@
             margin-bottom: 20px;
         }
 
+
+        /* Realm background, pixel lettering and seasonal frames (2026-10-21): all optional layers of the Effects levels */
+        #fxRealm { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -3; pointer-events: none; image-rendering: pixelated; display: none; }
+        @media print { #fxRealm { display: none !important; } }
+        .px-letters { display: inline-block; line-height: 0; vertical-align: middle; }
+        .px-letters canvas { image-rendering: pixelated; display: block; max-width: 100%; }
+        .px-letters-emoji { vertical-align: middle; margin-right: 4px; }
+        /* Seasonal 9-slice frames: drawn over the panel's padding (the border itself keeps its 1px, so nothing moves) */
+        html[data-fx="full"] :is(.format-card, .guide-section, .bk-section, .history-section, .resource-section, .vv-section, .bracket-card, .lands-step, .prod-tile, .judge-card, .format-picker, .quick-ban-check),
+        html[data-fx="subtle"] :is(.format-card, .guide-section, .bk-section, .history-section, .resource-section, .vv-section, .bracket-card, .lands-step, .prod-tile, .judge-card, .format-picker, .quick-ban-check) {
+            border-image: var(--px-panel-frame) var(--px-panel-slice, 5) / var(--px-panel-bw, 10px) / 0 stretch; image-rendering: pixelated; border-radius: 2px;
+        }
+        html[data-fx="full"] #sceneBanner { border-radius: 3px; }
+        html[data-fx="full"] #sceneBanner::after { box-sizing: border-box; background-origin: border-box; border: 18px solid transparent; border-image: var(--px-banner-frame) 9 / 18px / 0 stretch; image-rendering: pixelated; }
+        @media (prefers-reduced-motion: reduce) { #fxRealm { opacity: 0.9; } }
         /* Pixel mascot and loading card (optional art, 2026-10-21): used only when art/site/mascot.png and loading-card.png exist */
         .ms-mark.has-art { width: 56px; height: 56px; display: inline-block; }
         .px-mascot { display: block; width: 56px; height: 56px; background: url('art/site/mascot.png') 0 0 / calc(var(--n, 8) * 100%) 100% no-repeat; image-rendering: pixelated; animation: px-strip 1s steps(var(--n, 8)) infinite; }
@@ -23012,6 +23027,356 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
 
         initVisualEffects();
         if (location.hash) applyRouteFromHash();
+    </script>
+    <script id="pxRealmScript">
+    // =====================================================================
+    // Realm background, pixel lettering and seasonal frames (2026-10-21, owner: "pixel alphabet sheets so we can use custom
+    // lettering ... custom frames we build ... a background that moves and is beautiful and professional across multiple
+    // genres of fantasy"). Everything is drawn in code from the theme tokens, so every season recolors it, and it follows
+    // the Effects level (the Realm only at Full; lettering and frames at Full and Subtle). Optional pixel art from the art
+    // pipeline replaces the drawn versions when the files exist in art/site/:
+    //   letters-<style>.png    36 glyphs (A-Z, 0-9) of 32 x 32 in one row; styles gold, ember, ice, leaf, garland, bloom
+    //   frame-panel-<name>.png 48 x 48 9-slice (12 px corners) for panels; names default, halloween, autumn, winter, christmas, spring, newyear
+    //   realm-<biome>-<layer>.png  320 x 180 layers (far, mid, near) for castle, frontier, gothic, grove
+    // =====================================================================
+
+    // ---------- Colors ----------
+    const PXR_CV = document.createElement('canvas'); PXR_CV.width = PXR_CV.height = 1;
+    const PXR_CX = PXR_CV.getContext('2d', { willReadFrequently: true });
+    function pxrRgb(c) { PXR_CX.clearRect(0, 0, 1, 1); PXR_CX.fillStyle = '#000'; PXR_CX.fillStyle = c; PXR_CX.fillRect(0, 0, 1, 1); const d = PXR_CX.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2]]; }
+    function pxrMix(a, b, t) { const A = Array.isArray(a) ? a : pxrRgb(a), B = Array.isArray(b) ? b : pxrRgb(b); return [Math.round(A[0] + (B[0] - A[0]) * t), Math.round(A[1] + (B[1] - A[1]) * t), Math.round(A[2] + (B[2] - A[2]) * t)]; }
+    const pxrCss = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+    function pxrPal() {
+        const t = n => pxrRgb(fxToken(n) || '#888');
+        return { canvas: t('--bg-canvas'), inset: t('--bg-inset'), brand: t('--brand'), light: t('--brand-light'), heading: t('--text-heading'), gray: t('--text-secondary'), warn: t('--color-warning'), ok: t('--color-success'), bad: t('--color-error'), link: t('--color-link') };
+    }
+    function pxrSeed(s) { let a = s >>> 0; return () => ((a = (a * 1664525 + 1013904223) >>> 0) / 4294967296); }
+
+    // ---------- The Realm: layered pixel landscapes that drift and change ----------
+    const REALM = { biomes: ['castle', 'frontier', 'gothic', 'grove'], cur: 0, prev: -1, fadeT: 1, t0: 0, last: 0, switchAt: 0, built: null, W: 0, H: 180, cv: null, cx: null, running: false, forced: null, art: {} };
+    const REALM_STAY = 80000, REALM_FADE = 4500, REALM_FPS = 24;
+    function pxrBiomeColors(biome, P) {
+        const m = pxrMix, dk = m(P.canvas, [0, 0, 0], 0.55);
+        const sky = {
+            castle: [m(P.light, P.canvas, 0.62), m(P.warn, P.brand, 0.5)],
+            frontier: [m(P.inset, [0, 0, 0], 0.55), m(P.brand, P.inset, 0.6)],
+            gothic: [m(P.inset, [0, 0, 0], 0.6), m(P.gray, P.inset, 0.78)],
+            grove: [m(P.brand, P.inset, 0.74), m(P.ok, P.brand, 0.55)]
+        }[biome];
+        const far = m(sky[1], P.canvas, 0.38), mid = m(sky[1], P.canvas, 0.66), near = m(sky[1], dk, 0.9);
+        return { top: sky[0], bottom: sky[1], far, mid, near, glow: biome === 'grove' ? P.ok : biome === 'frontier' ? P.light : P.warn, moon: m(P.heading, sky[1], 0.12) };
+    }
+    // a seamless ridge: a sum of sines whose frequencies are whole numbers of waves across the strip
+    function pxrRidge(W, base, amp, rnd, harm = 4) {
+        const ph = Array.from({ length: harm }, () => rnd() * 6.283), h = new Float32Array(W);
+        for (let x = 0; x < W; x++) { let v = base; for (let k = 1; k <= harm; k++) v += (amp / k) * Math.sin(6.283 * k * x / W + ph[k - 1]); h[x] = v; }
+        return h;
+    }
+    function pxrFillRidge(g, h, col, H) { g.fillStyle = pxrCss(col); for (let x = 0; x < h.length; x++) { const y = Math.round(h[x]); g.fillRect(x, y, 1, H - y); } }
+    function pxrRect(g, x, y, w, h, col, a) { g.fillStyle = pxrCss(col, a === undefined ? 1 : a); g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+    function pxrCircle(g, cx, cy, r, col, a) { g.fillStyle = pxrCss(col, a === undefined ? 1 : a); for (let y = -r; y <= r; y++) { const w = Math.round(Math.sqrt(r * r - y * y)); g.fillRect(Math.round(cx - w), Math.round(cy + y), w * 2 + 1, 1); } }
+    function pxrTri(g, cx, top, hh, hw, col) { g.fillStyle = pxrCss(col); for (let i = 0; i < hh; i++) { const w = Math.round(hw * i / hh); g.fillRect(cx - w, top + i, w * 2 + 1, 1); } }
+
+    function pxrCastle(g, x, gy, col, lit, s = 1) {
+        const R = (a, b, w, h) => g.fillRect(Math.round(x + a * s), Math.round(gy - b * s), Math.round(w * s), Math.round(h * s));
+        g.fillStyle = pxrCss(col);
+        R(-22, 18, 44, 18); R(-14, 34, 28, 16);                        // curtain wall and keep
+        for (let i = -22; i < 22; i += 4) R(i, 21, 2, 3);                // battlements
+        for (const tx of [-26, 20]) { R(tx, 40, 8, 40); for (let i = 0; i < 8; i += 4) R(tx + i, 43, 2, 3); pxrTri(g, Math.round(x + (tx + 4) * s), Math.round(gy - 62 * s), Math.round(18 * s), Math.round(7 * s), col); }
+        pxrTri(g, Math.round(x), Math.round(gy - 70 * s), Math.round(22 * s), Math.round(10 * s), col);   // keep roof
+        R(-1, 76, 1, 8);                                                  // flag pole
+        g.fillStyle = pxrCss(lit);
+        for (const [a, b] of [[-3, 40], [2, 40], [-23, 52], [23, 52], [-8, 28], [8, 28]]) R(a, b, 2, 3);  // lit windows
+        R(0, 76, 5, 3);                                                   // flag
+    }
+    function pxrTree(g, x, gy, hgt, col, rnd, bare) {
+        g.fillStyle = pxrCss(col); g.fillRect(x, gy - hgt, 2, hgt);
+        const br = (bx, by, len, dir, d) => { if (d > 2 || len < 4) return; const w = d === 0 ? 2 : 1; for (let i = 0; i < len; i++) g.fillRect(Math.round(bx + dir * i * 0.8), Math.round(by - i * 0.9), w, 1); const ex = bx + dir * len * 0.8, ey = by - len * 0.9; br(ex, ey, len * 0.62, dir, d + 1); br(ex, ey, len * 0.5, -dir, d + 1); };
+        if (bare) { g.fillRect(x - 1, gy - hgt, 4, hgt); br(x + 1, gy - hgt * 0.5, hgt * 0.42, 1, 0); br(x + 1, gy - hgt * 0.62, hgt * 0.4, -1, 0); br(x + 1, gy - hgt, hgt * 0.28, rnd() > 0.5 ? 1 : -1, 1); }
+        else { pxrCircle(g, x + 1, gy - hgt, Math.round(hgt * 0.36), col); pxrCircle(g, x - 6, gy - hgt * 0.8, Math.round(hgt * 0.26), col); pxrCircle(g, x + 8, gy - hgt * 0.78, Math.round(hgt * 0.28), col); }
+    }
+    function pxrMushroom(g, x, gy, hgt, cap, stem, spot) {
+        g.fillStyle = pxrCss(stem); g.fillRect(x - 2, gy - hgt, 5, hgt);
+        const w = Math.round(hgt * 0.9); g.fillStyle = pxrCss(cap);
+        for (let i = 0; i < Math.round(hgt * 0.55); i++) { const hw = Math.round(w * Math.sqrt(1 - Math.pow(1 - i / (hgt * 0.55), 2))); g.fillRect(x - hw, gy - hgt - i + 3, hw * 2 + 1, 1); }
+        g.fillStyle = pxrCss(spot); g.fillRect(x - Math.round(w * 0.4), gy - hgt - 2, 2, 2); g.fillRect(x + Math.round(w * 0.2), gy - hgt - 4, 2, 2);
+    }
+    // One biome's static layers (strips LW wide, repeated to fill the screen) and its sky
+    function pxrBuildBiome(biome, P, W, H, idx) {
+        const LW = 512, rnd = pxrSeed(1000 + idx * 77), C = pxrBiomeColors(biome, P);
+        const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+        const sky = mk(W, H), sg = sky.getContext('2d'), grad = sg.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, pxrCss(C.top)); grad.addColorStop(1, pxrCss(C.bottom)); sg.fillStyle = grad; sg.fillRect(0, 0, W, H);
+        const stars = [];
+        if (biome !== 'castle') for (let i = 0; i < 70; i++) { const x = Math.floor(rnd() * W), y = Math.floor(rnd() * H * 0.6), b = rnd(); stars.push({ x, y, b, ph: rnd() * 6 }); }
+        const far = mk(LW, H), mid = mk(LW, H), near = mk(LW, H), fg = far.getContext('2d'), mg = mid.getContext('2d'), ng = near.getContext('2d');
+        pxrFillRidge(fg, pxrRidge(LW, H * 0.62, 14, rnd, 5), C.far, H);
+        pxrFillRidge(mg, pxrRidge(LW, H * 0.78, 6, rnd, 3), C.mid, H);
+        pxrFillRidge(ng, pxrRidge(LW, H * 0.93, 3, rnd, 6), C.near, H);
+        if (biome === 'castle') {
+            { const sx = Math.round(W * 0.78), sy = Math.round(H * 0.56); for (const [r, a] of [[34, 0.07], [26, 0.1], [18, 0.16]]) pxrCircle(sg, sx, sy, r, C.glow, a); pxrCircle(sg, sx, sy, 11, pxrMix(C.glow, C.moon, 0.55)); }
+            pxrCastle(mg, 170, Math.round(H * 0.8), C.mid, C.glow, 1); pxrCastle(mg, 440, Math.round(H * 0.8), pxrMix(C.mid, C.far, 0.4), pxrMix(C.glow, C.mid, 0.4), 0.6);
+            for (let i = 0; i < 9; i++) pxrTree(ng, Math.floor(rnd() * LW), Math.round(H * 0.95), 16 + rnd() * 14, C.near, rnd, false);
+            for (let i = 0; i < 7; i++) pxrTri(fg, Math.floor(rnd() * LW), Math.round(H * 0.5 - rnd() * 18), 26, 12, pxrMix(C.far, C.top, 0.25)); // far peaks
+        } else if (biome === 'frontier') {
+            { const cx = Math.round(W * 0.72), cy = Math.round(H * 0.3), body = pxrMix(C.moon, C.top, 0.35), shade = pxrMix(C.glow, C.top, 0.6);
+              for (let a = 0; a < 360; a += 2) { const x = Math.round(cx + Math.cos(a * 0.01745) * 46), y = Math.round(cy + Math.sin(a * 0.01745) * 9 - 2); if (Math.sin(a * 0.01745) < 0) { sg.fillStyle = pxrCss(C.moon, 0.55); sg.fillRect(x, y, 1, 2); } }  // the ring behind the planet
+              pxrCircle(sg, cx, cy, 28, body); for (let y = -27; y <= 27; y++) { const w = Math.round(Math.sqrt(28 * 28 - y * y)); sg.fillStyle = pxrCss(shade, 0.5); sg.fillRect(cx - w + Math.round(w * 0.9), cy + y, Math.max(0, Math.round(w * 1.1)), 1); }  // the night side
+              for (const [bandY, a] of [[-12, 0.25], [-2, 0.2], [9, 0.25]]) { sg.fillStyle = pxrCss(shade, a); const w = Math.round(Math.sqrt(28 * 28 - bandY * bandY)); sg.fillRect(cx - w, cy + bandY, w * 2, 2); }
+              for (let a = 0; a < 360; a += 2) { const x = Math.round(cx + Math.cos(a * 0.01745) * 46), y = Math.round(cy + Math.sin(a * 0.01745) * 9 - 2); if (Math.sin(a * 0.01745) >= 0) { sg.fillStyle = pxrCss(C.moon, 0.85); sg.fillRect(x, y, 1, 2); } } }   // and in front
+            pxrCircle(sg, W * 0.2, H * 0.22, 7, pxrMix(C.glow, C.bottom, 0.4), 0.8);
+            for (let i = 0; i < 8; i++) { const x = Math.floor(rnd() * LW), w = 12 + rnd() * 20, h = 10 + rnd() * 16; mg.fillStyle = pxrCss(C.mid); mg.fillRect(x, Math.round(H * 0.82 - h), w, h); mg.fillRect(x + 2, Math.round(H * 0.82 - h - 3), w - 4, 3); }
+            for (let i = 0; i < 12; i++) pxrTri(ng, Math.floor(rnd() * LW), Math.round(H * 0.97 - 14 - rnd() * 8), 16 + Math.round(rnd() * 8), 3, C.near);
+            for (const x of [90, 300]) { fg.fillStyle = pxrCss(pxrMix(C.far, C.top, 0.3)); fg.fillRect(x, Math.round(H * 0.46), 26, 3); fg.fillRect(x + 11, Math.round(H * 0.4), 4, 16); pxrCircle(fg, x + 13, Math.round(H * 0.47), 5, pxrMix(C.far, C.glow, 0.25)); }
+        } else if (biome === 'gothic') {
+            pxrCircle(sg, W * 0.68, H * 0.28, 24, C.moon); for (const [dx, dy, r] of [[-8, -4, 4], [6, 6, 3], [4, -9, 2]]) pxrCircle(sg, W * 0.68 + dx, H * 0.28 + dy, r, pxrMix(C.moon, C.bottom, 0.3));
+            pxrCircle(sg, W * 0.68, H * 0.28, 34, C.moon, 0.08);
+            for (let i = 0; i < 6; i++) pxrTree(mg, Math.floor(rnd() * LW), Math.round(H * 0.85), 34 + rnd() * 26, C.mid, rnd, true);
+            pxrRect(mg, 300, H * 0.8 - 56, 14, 56, C.mid); pxrTri(mg, 307, Math.round(H * 0.8 - 78), 24, 9, C.mid); pxrRect(mg, 296, H * 0.8 - 30, 22, 30, C.mid);
+            for (let i = 0; i < 14; i++) { const x = Math.floor(rnd() * LW), h = 6 + Math.floor(rnd() * 5); ng.fillStyle = pxrCss(C.near); ng.fillRect(x, Math.round(H * 0.95 - h), 5, h); ng.fillRect(x + 1, Math.round(H * 0.95 - h - 1), 3, 1); }
+        } else { // grove
+            for (let i = 0; i < 6; i++) pxrTree(mg, Math.floor(rnd() * LW), Math.round(H * 0.86), 44 + rnd() * 30, C.mid, rnd, false);
+            for (let i = 0; i < 7; i++) pxrMushroom(ng, Math.floor(rnd() * LW), Math.round(H * 0.97), 10 + Math.round(rnd() * 18), pxrMix(C.glow, C.near, 0.5), pxrMix(C.near, C.mid, 0.4), pxrMix(C.glow, C.heading || C.glow, 0.5));
+            for (let i = 0; i < 6; i++) pxrTree(fg, Math.floor(rnd() * LW), Math.round(H * 0.7), 30 + rnd() * 22, pxrMix(C.far, C.top, 0.2), rnd, false);
+        }
+        // optional pixel-art layers from the art pipeline replace the drawn ones
+        const img = k => REALM.art[biome + '-' + k];
+        const swap = (cv, k) => { const im = img(k); if (!im) return; const g = cv.getContext('2d'); g.clearRect(0, 0, LW, H); const iw = Math.round(im.naturalWidth * H / im.naturalHeight); g.imageSmoothingEnabled = false; for (let x = 0, i = 0; x < LW; x += iw, i++) { g.save(); if (i % 2) { g.translate(x + iw, 0); g.scale(-1, 1); } else g.translate(x, 0); g.drawImage(im, 0, 0, iw, H); g.restore(); } };
+        swap(far, 'far'); swap(mid, 'mid'); swap(near, 'near');
+        return { biome, sky, far, mid, near, stars, C, LW, W, H, actors: pxrActors(biome, W, H, idx) };
+    }
+    function pxrActors(biome, W, H, idx) {
+        const rnd = pxrSeed(500 + idx), a = [];
+        if (biome === 'castle') { for (let i = 0; i < 5; i++) a.push({ k: 'cloud', x: rnd() * W, y: 12 + rnd() * 50, s: 0.5 + rnd(), v: 1.5 + rnd() * 2 }); a.push({ k: 'dragon', period: 52, off: 6 + idx * 0 }); a.push({ k: 'birds', period: 30, off: 14 }); }
+        if (biome === 'frontier') { a.push({ k: 'ship', period: 46, off: 9 }); a.push({ k: 'shoot', period: 17, off: 5 }); }
+        if (biome === 'gothic') { for (let i = 0; i < 6; i++) a.push({ k: 'bat', x: rnd() * W, y: 20 + rnd() * 60, v: 8 + rnd() * 10, ph: rnd() * 6 }); a.push({ k: 'shoot', period: 23, off: 9 }); }
+        if (biome === 'grove') { for (let i = 0; i < 26; i++) a.push({ k: 'fly', x: rnd() * W, y: H * 0.45 + rnd() * H * 0.5, ph: rnd() * 6, v: 0.5 + rnd() * 1.2 }); a.push({ k: 'airship', period: 61, off: 12 }); }
+        return a;
+    }
+    function pxrDrawActors(g, L, t, W, H) {
+        const C = L.C, sec = t / 1000;
+        for (const a of L.actors) {
+            if (a.k === 'cloud') { const x = ((a.x + sec * a.v) % (W + 60)) - 30; g.fillStyle = pxrCss(pxrMix(C.moon, C.bottom, 0.3), 0.55); for (let i = 0; i < 4; i++) g.fillRect(Math.round(x + i * 5 * a.s - 8), Math.round(a.y - (i === 1 || i === 2 ? 2 : 0)), Math.round(10 * a.s), Math.round(4 * a.s)); }
+            else if (a.k === 'dragon' || a.k === 'ship' || a.k === 'airship' || a.k === 'birds') {
+                const p = ((sec + a.off) % a.period) / a.period, span = W + 80, x = p * span - 40, flap = Math.floor(sec * 4) % 2;
+                if (a.k === 'dragon') { const y = 38 + Math.sin(sec * 0.6) * 5; g.fillStyle = pxrCss(C.near); g.fillRect(Math.round(x), Math.round(y), 10, 3); g.fillRect(Math.round(x + 9), Math.round(y - 1), 3, 2); g.fillRect(Math.round(x - 6), Math.round(y + 1), 6, 1); for (let i = 0; i < 6; i++) g.fillRect(Math.round(x + 3 - i), Math.round(y - 1 - (flap ? i : Math.floor(i / 2))), 1, 1 + (flap ? 0 : i)); g.fillStyle = pxrCss(C.glow); g.fillRect(Math.round(x + 11), Math.round(y - 1), 1, 1); }
+                else if (a.k === 'ship') { const y = 30 + Math.sin(sec * 0.5) * 3; g.fillStyle = pxrCss(pxrMix(C.moon, C.far, 0.3)); g.fillRect(Math.round(x), Math.round(y), 12, 3); g.fillRect(Math.round(x + 9), Math.round(y - 2), 3, 2); g.fillStyle = pxrCss(C.glow, 0.7); g.fillRect(Math.round(x - 12), Math.round(y + 1), 12, 1); }
+                else if (a.k === 'airship') { const y = 46 + Math.sin(sec * 0.4) * 4; g.fillStyle = pxrCss(C.near); g.fillRect(Math.round(x), Math.round(y), 14, 6); g.fillRect(Math.round(x + 2), Math.round(y + 6), 10, 2); g.fillStyle = pxrCss(C.glow, 0.8); g.fillRect(Math.round(x + 4), Math.round(y + 1), 2, 2); }
+                else for (let i = 0; i < 5; i++) { const bx = x + i * 7, by = 24 + (i % 2) * 5 + Math.sin(sec * 3 + i) * 1.5; g.fillStyle = pxrCss(C.near); g.fillRect(Math.round(bx), Math.round(by), 3, 1); g.fillRect(Math.round(bx - 1 + flap), Math.round(by - 1 + flap), 1, 1); g.fillRect(Math.round(bx + 3 - flap), Math.round(by - 1 + flap), 1, 1); }
+            } else if (a.k === 'shoot') {
+                const p = ((sec + a.off) % a.period) / a.period; if (p < 0.06) { const q = p / 0.06, x = W * 0.8 - q * 70, y = 6 + q * 36; for (let i = 0; i < 8; i++) { g.fillStyle = pxrCss(C.moon, 0.9 - i * 0.11); g.fillRect(Math.round(x + i * 2), Math.round(y - i * 1.1), 1, 1); } }
+            } else if (a.k === 'bat') {
+                const x = ((a.x + sec * a.v) % (W + 40)) - 20, y = a.y + Math.sin(sec * 1.7 + a.ph) * 5, up = Math.floor(sec * 5 + a.ph) % 2; g.fillStyle = pxrCss(C.near); g.fillRect(Math.round(x), Math.round(y), 2, 1); g.fillRect(Math.round(x - 2), Math.round(y - up), 2, 1); g.fillRect(Math.round(x + 2), Math.round(y - up), 2, 1);
+            } else if (a.k === 'fly') {
+                const x = (a.x + Math.sin(sec * a.v + a.ph) * 8 + W) % W, y = a.y + Math.cos(sec * a.v * 0.8 + a.ph) * 6, al = 0.25 + 0.75 * Math.abs(Math.sin(sec * 1.3 + a.ph)); g.fillStyle = pxrCss(C.glow, al); g.fillRect(Math.round(x), Math.round(y), 1, 1); if (al > 0.8) { g.fillStyle = pxrCss(C.glow, 0.25); g.fillRect(Math.round(x) - 1, Math.round(y), 3, 1); g.fillRect(Math.round(x), Math.round(y) - 1, 1, 3); }
+            }
+        }
+        if (L.stars.length) for (const s of L.stars) { const al = 0.25 + 0.6 * s.b * (0.55 + 0.45 * Math.sin(sec * 1.1 + s.ph)); g.fillStyle = pxrCss(C.moon, al); g.fillRect(s.x, s.y, 1, 1); }
+    }
+    function pxrDrawLayer(g, strip, W, H, off) { const LW = strip.width, o = ((Math.round(off) % LW) + LW) % LW; for (let x = -o; x < W; x += LW) g.drawImage(strip, x, 0); }
+    function pxrDrawBiome(g, L, t, W, H) {
+        g.drawImage(L.sky, 0, 0);
+        pxrDrawActors(g, L, t, W, H);
+        const sec = t / 1000;
+        pxrDrawLayer(g, L.far, W, H, sec * 1.6); pxrDrawLayer(g, L.mid, W, H, sec * 3.4); pxrDrawLayer(g, L.near, W, H, sec * 7);
+    }
+    function pxrSize() {
+        const vw = Math.max(320, window.innerWidth), vh = Math.max(240, window.innerHeight);
+        REALM.H = 180; REALM.W = Math.min(560, Math.max(240, Math.round(180 * vw / vh)));
+        const cv = REALM.cv; if (cv.width !== REALM.W || cv.height !== REALM.H) { cv.width = REALM.W; cv.height = REALM.H; }
+    }
+    function pxrBuild() {
+        if (!REALM.cv) return;
+        pxrSize(); const P = pxrPal(); REALM.pal = P;
+        REALM.built = REALM.biomes.map((b, i) => (i === REALM.cur || i === REALM.prev) ? pxrBuildBiome(b, P, REALM.W, REALM.H, i) : null);
+    }
+    function pxrEnsure(i) { if (!REALM.built[i]) REALM.built[i] = pxrBuildBiome(REALM.biomes[i], REALM.pal, REALM.W, REALM.H, i); return REALM.built[i]; }
+    function pxrFrame(t) {
+        if (!REALM.running) return;
+        requestAnimationFrame(pxrFrame);
+        if (document.hidden || t - REALM.last < 1000 / REALM_FPS) return;
+        REALM.last = t; pxrPaint(t);
+    }
+    function pxrPaint(t) {
+        const g = REALM.cx, W = REALM.W, H = REALM.H;
+        if (!REALM.built) pxrBuild();
+        if (!REALM.forced && t > REALM.switchAt && REALM.fadeT >= 1) { REALM.prev = REALM.cur; REALM.cur = (REALM.cur + 1) % REALM.biomes.length; REALM.fadeT = 0; REALM.fadeStart = t; REALM.switchAt = t + REALM_STAY; pxrEnsure(REALM.cur); }
+        if (REALM.fadeT < 1) REALM.fadeT = Math.min(1, (t - REALM.fadeStart) / REALM_FADE);
+        g.globalAlpha = 1;
+        if (REALM.fadeT < 1 && REALM.prev >= 0) { pxrDrawBiome(g, pxrEnsure(REALM.prev), t, W, H); g.globalAlpha = REALM.fadeT; }
+        pxrDrawBiome(g, pxrEnsure(REALM.cur), t, W, H);
+        g.globalAlpha = 1;
+        // a veil keeps the interface readable: the scene is a backdrop, not the subject
+        g.fillStyle = pxrCss(REALM.pal.canvas, 0.42); g.fillRect(0, 0, W, H);
+    }
+    function pxrRefresh() {
+        const full = fxIs('full');
+        if (!REALM.cv) {
+            const cv = document.createElement('canvas'); cv.id = 'fxRealm'; cv.setAttribute('aria-hidden', 'true');
+            document.body.insertBefore(cv, document.body.firstChild); REALM.cv = cv; REALM.cx = cv.getContext('2d'); REALM.cx.imageSmoothingEnabled = false;
+        }
+        const q = new URLSearchParams(location.search).get('realm');
+        if (q === 'off') { REALM.running = false; REALM.cv.style.display = 'none'; return; }
+        REALM.forced = REALM.biomes.indexOf(q) >= 0 ? REALM.biomes.indexOf(q) : null;
+        if (REALM.forced !== null) { REALM.cur = REALM.forced; REALM.prev = -1; REALM.fadeT = 1; }
+        else if (REALM.t0 === 0) { REALM.cur = (new Date().getDate()) % REALM.biomes.length; }
+        REALM.cv.style.display = full ? 'block' : 'none';
+        REALM.built = null;
+        if (!full) { REALM.running = false; return; }
+        pxrSize();
+        const now = performance.now(); if (!REALM.t0) { REALM.t0 = now; REALM.switchAt = now + REALM_STAY; }
+        pxrPaint(now);
+        const animate = !fxReducedMotion.matches;
+        if (animate && !REALM.running) { REALM.running = true; requestAnimationFrame(pxrFrame); }
+        if (!animate) REALM.running = false;
+    }
+
+    // ---------- Pixel lettering ----------
+    const PXL_FONT = {
+        A: '.###.|#...#|#...#|#####|#...#|#...#|#...#', B: '####.|#...#|#...#|####.|#...#|#...#|####.', C: '.###.|#...#|#....|#....|#....|#...#|.###.',
+        D: '####.|#...#|#...#|#...#|#...#|#...#|####.', E: '#####|#....|#....|####.|#....|#....|#####', F: '#####|#....|#....|####.|#....|#....|#....',
+        G: '.###.|#...#|#....|#.###|#...#|#...#|.###.', H: '#...#|#...#|#...#|#####|#...#|#...#|#...#', I: '#####|..#..|..#..|..#..|..#..|..#..|#####',
+        J: '..###|...#.|...#.|...#.|...#.|#..#.|.##..', K: '#...#|#..#.|#.#..|##...|#.#..|#..#.|#...#', L: '#....|#....|#....|#....|#....|#....|#####',
+        M: '#...#|##.##|#.#.#|#.#.#|#...#|#...#|#...#', N: '#...#|##..#|#.#.#|#..##|#...#|#...#|#...#', O: '.###.|#...#|#...#|#...#|#...#|#...#|.###.',
+        P: '####.|#...#|#...#|####.|#....|#....|#....', Q: '.###.|#...#|#...#|#...#|#.#.#|#..#.|.##.#', R: '####.|#...#|#...#|####.|#.#..|#..#.|#...#',
+        S: '.####|#....|#....|.###.|....#|....#|####.', T: '#####|..#..|..#..|..#..|..#..|..#..|..#..', U: '#...#|#...#|#...#|#...#|#...#|#...#|.###.',
+        V: '#...#|#...#|#...#|#...#|#...#|.#.#.|..#..', W: '#...#|#...#|#...#|#.#.#|#.#.#|##.##|#...#', X: '#...#|#...#|.#.#.|..#..|.#.#.|#...#|#...#',
+        Y: '#...#|#...#|.#.#.|..#..|..#..|..#..|..#..', Z: '#####|....#|...#.|..#..|.#...|#....|#####',
+        0: '.###.|#...#|#..##|#.#.#|##..#|#...#|.###.', 1: '..#..|.##..|..#..|..#..|..#..|..#..|.###.', 2: '.###.|#...#|....#|...#.|..#..|.#...|#####',
+        3: '.###.|#...#|....#|..##.|....#|#...#|.###.', 4: '...#.|..##.|.#.#.|#..#.|#####|...#.|...#.', 5: '#####|#....|####.|....#|....#|#...#|.###.',
+        6: '.###.|#....|#....|####.|#...#|#...#|.###.', 7: '#####|....#|...#.|..#..|.#...|.#...|.#...', 8: '.###.|#...#|#...#|.###.|#...#|#...#|.###.',
+        9: '.###.|#...#|#...#|.####|....#|....#|.###.',
+        '.': '.....|.....|.....|.....|.....|.....|..#..', ',': '.....|.....|.....|.....|.....|..#..|.#...', '!': '..#..|..#..|..#..|..#..|..#..|.....|..#..',
+        '?': '.###.|#...#|....#|...#.|..#..|.....|..#..', ':': '.....|..#..|.....|.....|.....|..#..|.....', '-': '.....|.....|.....|.###.|.....|.....|.....',
+        "'": '..#..|..#..|.....|.....|.....|.....|.....', '&': '.##..|#..#.|.##..|.#.#.|#..##|#...#|.##.#', '+': '.....|..#..|..#..|#####|..#..|..#..|.....',
+        '/': '....#|....#|...#.|..#..|.#...|#....|#....', '(': '..#..|.#...|#....|#....|#....|.#...|..#..', ')': '..#..|...#.|....#|....#|....#|...#.|..#..'
+    };
+    const PXL_ORDER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const PXL_THEME_FX = { halloween: 'drip', spooky: 'drip', witching: 'drip', pumpkin: 'drip', harvest: 'leaf', harvestmoon: 'leaf', thanksgiving: 'leaf', wonderland: 'snow', snowday: 'snow', evergreen: 'snow', cocoa: 'snow', twinkle: 'snow', hanukkah: 'snow', christmas: 'sparkle', christmaseve: 'sparkle', festive: 'sparkle', newyear: 'sparkle', newyearseve: 'sparkle', blackfriday: 'sparkle', easter: 'bloom', stpatricks: 'bloom', earthday: 'bloom', mothersday: 'bloom', holi: 'bloom', valentines: 'bloom' };
+    const PXL_SHEET_NAME = { drip: 'ember', leaf: 'leaf', snow: 'ice', sparkle: 'garland', bloom: 'bloom' };
+    function pxlFxName() { return PXL_THEME_FX[document.documentElement.getAttribute('data-theme') || ''] || null; }
+    function pxlGlyphs(text) {
+        const out = []; for (const ch of String(text).toUpperCase()) { if (ch === ' ') out.push(null); else if (PXL_FONT[ch]) out.push(PXL_FONT[ch].split('|')); }
+        return out;
+    }
+    // Draws text to a canvas, one canvas pixel per font pixel (scaled up with CSS, so the pixels stay crisp)
+    function pxlCanvas(text, o = {}) {
+        const glyphs = pxlGlyphs(text), fx = o.fx === undefined ? pxlFxName() : o.fx, P = pxrPal(), PAD = 3;
+        const sheet = PX.letterImg && (PX.letterImg[PXL_SHEET_NAME[fx]] || PX.letterImg.gold);
+        let W = 0; glyphs.forEach(g => { W += g ? 6 : 3; }); W = Math.max(1, W - 1);
+        const cv = document.createElement('canvas');
+        if (sheet) { // generated lettering: A-Z and 0-9 only, each 32 x 32 in one strip
+            const cell = 8; cv.width = Math.max(1, [...String(text).toUpperCase()].reduce((n, ch) => n + (ch === ' ' ? 4 : PXL_ORDER.includes(ch) ? cell : 0), 0)); cv.height = cell;
+            const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; let x = 0;
+            for (const ch of String(text).toUpperCase()) { if (ch === ' ') { x += 4; continue; } const i = PXL_ORDER.indexOf(ch); if (i < 0) continue; g.drawImage(sheet, i * 32, 0, 32, 32, x, 0, cell, cell); x += cell; }
+            cv.dataset.cell = '1'; return cv;
+        }
+        const mask = []; for (let y = 0; y < 7 + PAD * 2; y++) mask.push(new Uint8Array(W + PAD * 2));
+        let x = PAD; glyphs.forEach(g => { if (!g) { x += 3; return; } for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) if (g[r][c] === '#') mask[PAD + r][x + c] = 1; x += 6; });
+        const w = W + PAD * 2, h = 7 + PAD * 2; cv.width = w; cv.height = h;
+        const g = cv.getContext('2d'), outline = pxrMix(P.canvas, [0, 0, 0], 0.55), top = P.heading, mid = pxrMix(P.light, P.heading, 0.35), bot = P.brand;
+        const at = (xx, yy) => (yy >= 0 && yy < h && xx >= 0 && xx < w) ? mask[yy][xx] : 0;
+        const px = (xx, yy, col, a) => { g.fillStyle = pxrCss(col, a === undefined ? 1 : a); g.fillRect(xx, yy, 1, 1); };
+        for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) { // shadow, then outline
+            if (!at(xx, yy) && at(xx - 1, yy - 1)) px(xx, yy, outline, 0.5);
+        }
+        for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) if (!at(xx, yy) && (at(xx - 1, yy) || at(xx + 1, yy) || at(xx, yy - 1) || at(xx, yy + 1))) px(xx, yy, outline);
+        for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) if (at(xx, yy)) {
+            const r = yy - PAD; let col = r <= 1 ? top : r <= 3 ? mid : bot;
+            if (!at(xx - 1, yy) && r > 1) col = pxrMix(col, top, 0.35); // a lit left edge
+            px(xx, yy, col);
+        }
+        const rnd = pxrSeed(text.length * 31 + 7);
+        for (let xx = 0; xx < w; xx++) for (let yy = 0; yy < h; yy++) if (at(xx, yy)) {
+            if (fx === 'snow' && !at(xx, yy - 1)) px(xx, yy, [255, 255, 255]);
+            if (fx === 'drip' && !at(xx, yy + 1) && rnd() < 0.3) { const n = 1 + Math.floor(rnd() * 2); for (let d = 1; d <= n; d++) if (yy + d < h) px(xx, yy + d, P.ok); }
+            if (fx === 'leaf' && !at(xx, yy - 1) && rnd() < 0.18) px(xx, yy - 1, P.warn);
+            if (fx === 'bloom' && !at(xx, yy - 1) && rnd() < 0.2) px(xx, yy - 1, P.light);
+        }
+        if (fx === 'sparkle') for (let i = 0; i < Math.max(2, Math.round(w / 22)); i++) { const sx = 2 + Math.floor(rnd() * (w - 4)), sy = 1 + Math.floor(rnd() * 3); px(sx, sy, P.warn); px(sx - 1, sy, P.warn, 0.5); px(sx + 1, sy, P.warn, 0.5); px(sx, sy - 1, P.warn, 0.5); px(sx, sy + 1, P.warn, 0.5); }
+        return cv;
+    }
+    function pxlApply(el) {
+        if (!el) return;
+        const raw = el.dataset.pxSource !== undefined ? el.dataset.pxSource : el.textContent;
+        if (el.dataset.pxSource === undefined) el.dataset.pxSource = raw;
+        if (!fxIs('full', 'subtle')) { if (el.dataset.pxOn) { el.textContent = raw; delete el.dataset.pxOn; if (PXL.obs) PXL.obs.takeRecords(); } return; }
+        const m = String(raw).match(/^([^A-Za-z0-9]*)(.*)$/), prefix = m[1].trim(), body = m[2];
+        if (!pxlGlyphs(body).length) return;
+        const cv = pxlCanvas(body), scale = window.innerWidth < 700 ? 3 : 4, wrap = document.createElement('span');
+        wrap.className = 'px-letters'; wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', raw.trim());
+        cv.style.width = cv.width * (cv.dataset.cell ? scale : scale) + 'px'; cv.style.height = cv.height * scale + 'px'; wrap.appendChild(cv);
+        el.textContent = ''; if (prefix) { const e = document.createElement('span'); e.className = 'px-letters-emoji'; e.textContent = prefix + ' '; el.appendChild(e); } el.appendChild(wrap); el.dataset.pxOn = '1';
+        if (PXL.obs) PXL.obs.takeRecords(); // our own edit is not a title change
+    }
+    const PXL = { obs: null };
+    function pxlRefresh() {
+        const t = document.getElementById('pageTitle'); if (!t) return;
+        if (!PXL.obs) { PXL.obs = new MutationObserver(() => { t.dataset.pxSource = t.textContent; delete t.dataset.pxOn; pxlApply(t); }); PXL.obs.observe(t, { childList: true, characterData: true, subtree: false }); }
+        pxlApply(t); // also re-renders with the current theme
+    }
+
+    // ---------- Seasonal frames (9-slice borders from the theme colors) ----------
+    const PXF_THEME = { halloween: 'halloween', spooky: 'halloween', witching: 'halloween', pumpkin: 'halloween', harvest: 'autumn', harvestmoon: 'autumn', thanksgiving: 'autumn', wonderland: 'winter', snowday: 'winter', evergreen: 'winter', cocoa: 'winter', twinkle: 'winter', hanukkah: 'winter', christmas: 'christmas', christmaseve: 'christmas', festive: 'christmas', newyear: 'newyear', newyearseve: 'newyear', blackfriday: 'newyear', easter: 'spring', stpatricks: 'spring', earthday: 'spring', mothersday: 'spring', holi: 'spring', valentines: 'spring' };
+    function pxfName() { return PXF_THEME[document.documentElement.getAttribute('data-theme') || ''] || 'default'; }
+    function pxfColors(name, P) {
+        const m = pxrMix;
+        return { default: { main: P.brand, accent: P.light }, halloween: { main: P.warn, accent: P.ok }, autumn: { main: m(P.warn, P.canvas, 0.35), accent: P.warn }, winter: { main: P.light, accent: P.heading }, christmas: { main: P.ok, accent: P.bad }, spring: { main: m(P.ok, P.light, 0.4), accent: P.light }, newyear: { main: P.warn, accent: P.heading } }[name];
+    }
+    // corner ornament for the top-left, 9 x 9; the other corners mirror it
+    function pxfMotif(g, name, C, dark) {
+        const p = (x, y, col) => { g.fillStyle = pxrCss(col); g.fillRect(x, y, 1, 1); };
+        const A = C.accent, M = C.main;
+        if (name === 'default') { p(4, 4, A); p(3, 4, M); p(4, 3, M); p(5, 4, M); p(4, 5, M); }
+        else if (name === 'halloween') { for (let i = 0; i < 9; i++) p(i, i, A); for (let r of [4, 7]) for (let a = 0; a < 90; a += 8) { const x = Math.round(r * Math.cos(a * Math.PI / 180)), y = Math.round(r * Math.sin(a * Math.PI / 180)); if (x < 9 && y < 9) p(x, y, M); } p(5, 5, dark); p(6, 5, dark); p(5, 6, dark); }
+        else if (name === 'winter') { p(4, 4, A); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) p(4 + dx, 4 + dy, A); for (const [dx, dy] of [[2, 2], [-2, 2], [2, -2], [-2, -2]]) p(4 + dx, 4 + dy, M); p(4, 1, M); p(4, 7, M); p(1, 4, M); p(7, 4, M); }
+        else if (name === 'christmas') { for (const [x, y] of [[3, 3], [4, 4], [5, 5], [4, 3], [5, 4], [3, 4], [4, 5]]) p(x, y, M); p(6, 3, M); p(3, 6, M); p(5, 3, A); p(3, 5, A); p(4, 4, A); }
+        else if (name === 'autumn') { for (const [x, y] of [[4, 2], [3, 3], [4, 3], [5, 3], [3, 4], [4, 4], [5, 4], [4, 5], [4, 6]]) p(x, y, A); p(4, 7, M); p(4, 4, M); }
+        else if (name === 'spring') { p(4, 4, M); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) p(4 + dx, 4 + dy, A); p(4, 4, [255, 230, 120]); p(1, 1, M); p(7, 2, M); }
+        else if (name === 'newyear') { p(4, 4, [255, 255, 255]); for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2]]) p(4 + dx, 4 + dy, A); for (const [dx, dy] of [[1, 1], [-1, -1], [1, -1], [-1, 1]]) p(4 + dx, 4 + dy, M); }
+    }
+    // t = band thickness, motif = ornament in each corner; returns a canvas sized (2 x slice + stretch) square
+    function pxfBuild(name, kind) {
+        const P = pxrPal(), C = pxfColors(name, P), dark = pxrMix(P.canvas, [0, 0, 0], 0.5), banner = kind === 'banner';
+        const S = banner ? 9 : 5, N = S * 3, band = banner ? 3 : 2, cv = document.createElement('canvas'); cv.width = cv.height = N;
+        const g = cv.getContext('2d'), rect = (x, y, w, h, col) => { g.fillStyle = pxrCss(col); g.fillRect(x, y, w, h); };
+        const ring = (inset, col) => { rect(inset, inset, N - inset * 2, 1, col); rect(inset, N - inset - 1, N - inset * 2, 1, col); rect(inset, inset, 1, N - inset * 2, col); rect(inset, inset, 1, N - inset * 2, col); rect(N - inset - 1, inset, 1, N - inset * 2, col); };
+        ring(0, dark); ring(1, C.main); if (banner) ring(2, pxrMix(C.main, P.heading, 0.35));
+        if (!banner) { for (const [x, y] of [[1, 1], [N - 2, 1], [1, N - 2], [N - 2, N - 2]]) rect(x, y, 1, 1, C.accent); return cv; }
+        // ornaments in the four corners (the corner square is S x S; the band continues through it)
+        const tmp = document.createElement('canvas'); tmp.width = tmp.height = S; const tg = tmp.getContext('2d'); pxfMotif(tg, name, C, dark);
+        for (const [sx, sy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) { g.save(); g.translate(sx > 0 ? 0 : N, sy > 0 ? 0 : N); g.scale(sx, sy); g.drawImage(tmp, 0, 0); g.restore(); }
+        return cv;
+    }
+    function pxfRefresh() {
+        const root = document.documentElement, on = fxIs('full', 'subtle');
+        const clear = () => ['--px-panel-frame', '--px-banner-frame', '--px-panel-slice', '--px-panel-bw'].forEach(k => root.style.removeProperty(k));
+        if (!on) { clear(); return; }
+        const name = pxfName(), art = PX.art['frame-panel-' + name] ? name : PX.art['frame-panel-default'] ? 'default' : null;
+        if (art) { root.style.setProperty('--px-panel-frame', `url('art/site/frame-panel-${art}.png')`); root.style.setProperty('--px-panel-slice', '12'); root.style.setProperty('--px-panel-bw', '12px'); }
+        else { root.style.setProperty('--px-panel-frame', `url("${pxfBuild(name, 'panel').toDataURL()}")`); root.style.setProperty('--px-panel-slice', '5'); root.style.setProperty('--px-panel-bw', '10px'); }
+        root.style.setProperty('--px-banner-frame', `url("${pxfBuild(name, 'banner').toDataURL()}")`);
+    }
+
+    // ---------- Optional art probing and the refresh hook ----------
+    PX.letterImg = {};
+    function pxrProbe() {
+        const load = (name, cb) => new Promise(res => { const i = new Image(); i.onload = () => { cb(i); res(); }; i.onerror = res; i.src = `art/site/${name}.png`; });
+        const tasks = [
+            ...['gold', 'ember', 'ice', 'leaf', 'garland', 'bloom'].map(s => load('letters-' + s, i => { PX.letterImg[s] = i; })),
+            ...['default', 'halloween', 'autumn', 'winter', 'christmas', 'spring', 'newyear'].map(n => load('frame-panel-' + n, i => { PX.art['frame-panel-' + n] = true; })),
+            ...REALM.biomes.flatMap(b => ['far', 'mid', 'near'].map(l => new Promise(res => { const i = new Image(); i.onload = () => { REALM.art[b + '-' + l] = i; res(); }; i.onerror = res; i.src = `art/site/realm-${b}-${l}.png`; })))
+        ];
+        return Promise.all(tasks).then(() => { if (Object.keys(PX.letterImg).length || Object.keys(PX.art).some(k => k.startsWith('frame-panel')) || Object.keys(REALM.art).length) pxrAll(); });
+    }
+    function pxrAll() { pxfRefresh(); pxlRefresh(); pxrRefresh(); }
+    {
+        const prev = window.pxFlairRefresh;
+        window.pxFlairRefresh = function () { if (prev) prev.apply(this, arguments); pxrAll(); };
+        let rt = null; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { REALM.built = null; pxlRefresh(); }, 250); });
+        document.addEventListener('DOMContentLoaded', () => { pxrAll(); pxrProbe(); });
+        if (document.readyState !== 'loading') { pxrAll(); pxrProbe(); }
+    }
     </script>
 </body>
 </html>

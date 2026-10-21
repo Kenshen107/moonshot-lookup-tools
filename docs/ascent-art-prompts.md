@@ -625,6 +625,28 @@ Made from each opponent's own base drawing (the character must be made first), s
 Trophy milestone badges (`badge-3` to `badge-75`), tier backdrops, the table mat, the card back, map markers, phase icons, tab icons, currency icons, rarity gems and upgrade icons are all in the Icons section below; the game uses each one in its screen as soon as the PNG exists in `spellslinger/art/ui/`. The five mana gems and seven type icons are generic (not game symbols): they appear on the starter-color buttons and the card dialog.
 
 
+## Site lettering, panel frames and the Realm background (groups `letters`, `frames`, `realm`)
+
+The MTG tool already draws these in code: a pixel font for the page title (A-Z, 0-9 and common punctuation, restyled per season: slime drips for Halloween, snow caps for winter, sparkles for Christmas), 9-slice panel frames and a banner frame with seasonal corner ornaments, and **the Realm**, a slowly drifting pixel background that changes between four fantasy worlds (a castle kingdom, a sci-fi frontier, a gothic moonlit night, an enchanted grove) and takes its colors from the season. Generated art replaces the drawn versions when the files exist in `art/site/`. **Lettering is an experiment**: image models often draw wrong or garbled letters, so each glyph is its own image (36 per style, about $2.20 a style); look at `letters-gold` first (`py tools\make_art.py --go --group letters --only letters-gold`) and only keep it if every letter reads. Preview the Realm without art with `?realm=castle`, `frontier`, `gothic`, `grove` (or `off`).
+
+- **letters-gold** (`art/site/letters-gold.png`, 36 glyphs of 32 x 32 in one row, A-Z then 0-9): ornate fantasy gold with a dark outline and a bevelled highlight
+- **letters-ember** (`art/site/letters-ember.png`, 36 glyphs of 32 x 32 in one row, A-Z then 0-9): charred black stone edged with glowing orange embers and a few drips of green slime
+- **letters-ice** (`art/site/letters-ice.png`, 36 glyphs of 32 x 32 in one row, A-Z then 0-9): frosted blue ice crystal with white snow resting on top
+- **letters-leaf** (`art/site/letters-leaf.png`, 36 glyphs of 32 x 32 in one row, A-Z then 0-9): carved wood wrapped with red and orange autumn leaves
+- **letters-garland** (`art/site/letters-garland.png`, 36 glyphs of 32 x 32 in one row, A-Z then 0-9): green pine garland with red berries and tiny gold lights
+- **letters-bloom** (`art/site/letters-bloom.png`, 36 glyphs of 32 x 32 in one row, A-Z then 0-9): green vines with pink and white blossoms
+- **frame-panel-default** (`art/site/frame-panel-default.png`, 48 x 48, 9-slice with 12 px corners): plain steel with a teal inner edge and a small gem in each corner
+- **frame-panel-halloween** (`art/site/frame-panel-halloween.png`, 48 x 48, 9-slice with 12 px corners): twisted dark wood with orange glow, a cobweb and a tiny spider in each corner
+- **frame-panel-autumn** (`art/site/frame-panel-autumn.png`, 48 x 48, 9-slice with 12 px corners): brown carved wood with orange and red leaves tucked into each corner
+- **frame-panel-winter** (`art/site/frame-panel-winter.png`, 48 x 48, 9-slice with 12 px corners): pale blue ice with small icicles and a snowflake in each corner
+- **frame-panel-christmas** (`art/site/frame-panel-christmas.png`, 48 x 48, 9-slice with 12 px corners): red and green with holly leaves and berries in each corner
+- **frame-panel-spring** (`art/site/frame-panel-spring.png`, 48 x 48, 9-slice with 12 px corners): green vines with pink blossoms in each corner
+- **frame-panel-newyear** (`art/site/frame-panel-newyear.png`, 48 x 48, 9-slice with 12 px corners): polished gold with a four-point star and tiny confetti in each corner
+- **realm-castle-far / -mid / -near** (`art/site/realm-castle-<layer>.png`, 320 x 180 each): a high fantasy kingdom at sunset: a castle with towers on a hill, pine forest, distant mountains
+- **realm-frontier-far / -mid / -near** (`art/site/realm-frontier-<layer>.png`, 320 x 180 each): a science fiction frontier at night: a ringed planet, a moon, a distant space station, mesas and crystals
+- **realm-gothic-far / -mid / -near** (`art/site/realm-gothic-<layer>.png`, 320 x 180 each): a gothic moonlit night: a huge full moon, bare twisted trees, a chapel spire and gravestones
+- **realm-grove-far / -mid / -near** (`art/site/realm-grove-<layer>.png`, 320 x 180 each): an enchanted glowing grove: giant ancient trees, huge glowing mushrooms, fireflies
+
 ## Website art (MTG lookup tool): frames, cursor, click
 
 Drawn in code today from the theme colors; when these PNGs exist in `art/site/` the page uses them instead (the **mascot** (8 frames of 64 x 64) replaces the title moon mark, the **loading card** (8 frames of 48 x 48) shows under every loading message, and each **scene** (256 x 128) is drawn behind the page title for its season at Effects: Full, mirrored tile to tile; cursor arrow and hand 32 x 32, click burst 8 frames of 64 x 64, card frames 64 x 64 as 9-slice with 12 px corners). Make them with `py tools\make_art.py --go --group site`.
