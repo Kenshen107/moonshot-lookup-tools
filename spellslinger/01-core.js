@@ -84,7 +84,7 @@ function moreSheet() { menuSheet('More', `<div class="menu-list">${MORE_VIEWS.fi
 function accountSheet() {
     menuSheet('Player', `<label class="note" for="acctSel2">Who's playing</label>
         <select id="acctSel2" onchange="closeSheet(); pickAccount(this.value)" style="width:100%; margin-top:4px;">${$('acctSel').innerHTML}</select>
-        <div class="menu-list"><button class="btn primary" onclick="closeSheet(); setMode('sandbox')">🧪 Sandbox</button><button class="btn primary" onclick="closeSheet(); setMode('campaign')">🗺️ Campaign</button><button class="btn primary" onclick="closeSheet(); setMode('shop')">🏪 Shop Simulator</button>${modeKey() === 'sandbox' ? `<button class="btn" onclick="closeSheet(); addTestCoins()">＋🪙 Add coins (test build)</button><button class="btn" onclick="closeSheet(); restartPlayer()">↺ Start over (test build)</button>` : ''}</div>`);
+        <div class="menu-list"><button class="btn" onclick="closeSheet(); lookPanel()">🎨 Look and frames</button><button class="btn primary" onclick="closeSheet(); setMode('sandbox')">🧪 Sandbox</button><button class="btn primary" onclick="closeSheet(); setMode('campaign')">🗺️ Campaign</button><button class="btn primary" onclick="closeSheet(); setMode('shop')">🏪 Shop Simulator</button>${modeKey() === 'sandbox' ? `<button class="btn" onclick="closeSheet(); addTestCoins()">＋🪙 Add coins (test build)</button><button class="btn" onclick="closeSheet(); restartPlayer()">↺ Start over (test build)</button>` : ''}</div>`);
     $('acctSel2').value = accounts.current;
 }
 function renderAccounts() {

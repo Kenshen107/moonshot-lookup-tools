@@ -1110,3 +1110,26 @@
         .asc-trophy { display: grid; gap: 2px; text-align: center; }
         .asc-trophy:not(.earned) .asc-tile { opacity: 0.6; }
         .asc-trophy.earned small { color: var(--color-success); }
+
+        /* ---- Looks (2026-10-21): the picker in 04g-themes.js sets html[data-theme]. Only color tokens change; Classic is the :root block above. ---- */
+        html[data-theme="dungeon"] { --brand: #7b4bb0; --brand-light: #b07be0; --bg-canvas: #17121c; --bg-panel: #241b2d; --bg-panel-raised: #2f243b; --bg-inset: #120e17; --border: #4a3a5c; --border-subtle: #33283f; --color-link: #c9a2ff; --felt-1: #241532; --felt-2: #1a0f26; --gold: #e8a23a; }
+        html[data-theme="ember"] { --brand: #b8561f; --brand-light: #e8863a; --bg-canvas: #1c1410; --bg-panel: #2b1f18; --bg-panel-raised: #38291f; --bg-inset: #150f0b; --border: #5a4030; --border-subtle: #3c2b20; --color-link: #ffb070; --felt-1: #3a1d10; --felt-2: #2a140a; --gold: #ffd27a; }
+        html[data-theme="frost"] { --brand: #1f78a8; --brand-light: #7fd0ff; --bg-canvas: #121b24; --bg-panel: #1c2a38; --bg-panel-raised: #263646; --bg-inset: #0e151c; --border: #3f5a73; --border-subtle: #2b3f52; --color-link: #9bdcff; --felt-1: #12303f; --felt-2: #0b2230; --gold: #e6dfb8; }
+        html[data-theme="yule"] { --brand: #b52f3a; --brand-light: #e5636d; --bg-canvas: #14201a; --bg-panel: #1e2d24; --bg-panel-raised: #283a2f; --bg-inset: #0f1813; --border: #3f5a48; --border-subtle: #2c4034; --color-link: #ff9aa2; --felt-1: #123222; --felt-2: #0c241a; --gold: #f2cf6a; }
+        html[data-theme="grove"] { --brand: #2f7d40; --brand-light: #7fd58f; --bg-canvas: #131f17; --bg-panel: #1c2c20; --bg-panel-raised: #263a2a; --bg-inset: #0e1710; --border: #3d5a41; --border-subtle: #2a4030; --color-link: #a6e8b0; --felt-1: #12331f; --felt-2: #0b2415; --gold: #f0d77a; }
+        html[data-theme="royal"] { --brand: #8f6d12; --brand-light: #f0cf62; --bg-canvas: #1a1710; --bg-panel: #29241a; --bg-panel-raised: #352e21; --bg-inset: #141109; --border: #5f5230; --border-subtle: #3b3320; --color-link: #ffe08a; --felt-1: #2c2410; --felt-2: #201a0a; --gold: #ffd860; }
+        /* Pixel frames: the 9-slice is drawn over the panel's padding (the 1px border stays, so nothing moves). The picture is chosen with the look (--sp-frame). */
+        html[data-frames="on"] :is(.panel, .modal .box) { border-image: var(--sp-frame, none) 16 / 12px / 0 stretch; image-rendering: pixelated; border-radius: 2px; }
+        .looks h2 { font-size: 1.4rem; margin-bottom: 6px; }
+        .look-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; text-align: left; }
+        .look-card { display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-panel-raised); color: var(--text-primary); text-align: left; }
+        .look-card small { color: var(--text-soft); font-size: 0.8rem; }
+        .look-card.on { border-color: var(--brand-light); box-shadow: 0 0 0 1px var(--brand-light); }
+        .look-sw { height: 10px; border-radius: 3px; background: linear-gradient(90deg, #1777a1, #3aa3d1, #2a2a2a); }
+        .look-card[data-look="dungeon"] .look-sw { background: linear-gradient(90deg, #7b4bb0, #b07be0, #241b2d); }
+        .look-card[data-look="ember"] .look-sw { background: linear-gradient(90deg, #b8561f, #e8863a, #2b1f18); }
+        .look-card[data-look="frost"] .look-sw { background: linear-gradient(90deg, #1f78a8, #7fd0ff, #1c2a38); }
+        .look-card[data-look="yule"] .look-sw { background: linear-gradient(90deg, #b52f3a, #e5636d, #1e2d24); }
+        .look-card[data-look="grove"] .look-sw { background: linear-gradient(90deg, #2f7d40, #7fd58f, #1c2c20); }
+        .look-card[data-look="royal"] .look-sw { background: linear-gradient(90deg, #8f6d12, #f0cf62, #29241a); }
+        .look-frames { display: flex; align-items: center; gap: 8px; color: var(--text-soft); justify-content: center; }
