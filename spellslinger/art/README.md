@@ -2,7 +2,7 @@
 
 Drop PNG files here and the game uses them automatically (it shows a placeholder until a file exists):
 
-- `characters/<id>.png`: 256 x 192 sprite sheets (2 rows of 4 frames, 64 x 96 each): row 1 idle, row 2 talking
+- `characters/<id>.png`: 384 x 192 sprite sheets (2 rows of 4 frames, 96 x 96 head-and-shoulders portraits each): row 1 idle, row 2 talking
 - `fx/<kind>.png`: horizontal animation strips played over cards while a game runs
 - Make them with `tools/make_art.py` (see docs/ascent-art-prompts.md).
 - `ui/<id>.png`: icons, banners and backgrounds (listed in the guide; not all are wired into screens yet)

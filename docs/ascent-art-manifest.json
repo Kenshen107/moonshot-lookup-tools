@@ -8,7 +8,7 @@
    "out": "spellslinger/art/characters/t1-mick.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -18,26 +18,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin. Palette: forest greens, bark browns, a spot of warm skin tone. cheerful and proud, a gentle giant. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forest greens, bark browns, a spot of warm skin tone. Expression: cheerful and proud, a gentle giant. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -50,7 +50,7 @@
    "out": "spellslinger/art/characters/t1-annie.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -60,26 +60,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks. Palette: warm cream, soft gold, pale blue shadows. polite, earnest and fast-talking. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: warm cream, soft gold, pale blue shadows. Expression: polite, earnest and fast-talking. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -92,7 +92,7 @@
    "out": "spellslinger/art/characters/t1-tess.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -102,26 +102,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool. Palette: sea blues, foam white, sandy yellow. dreamy and a little smug. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: sea blues, foam white, sandy yellow. Expression: dreamy and a little smug. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -134,7 +134,7 @@
    "out": "spellslinger/art/characters/t1-gus.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -144,26 +144,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands. Palette: charcoal, violet, bone white. gravelly, gloomy, secretly warm. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: charcoal, violet, bone white. Expression: gravelly, gloomy, secretly warm. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -176,7 +176,7 @@
    "out": "spellslinger/art/characters/t1-cal.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -186,26 +186,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk. Palette: ember reds, orange, soot black. hot-headed and impatient. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ember reds, orange, soot black. Expression: hot-headed and impatient. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -218,7 +218,7 @@
    "out": "spellslinger/art/characters/t1-boss.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -228,26 +228,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh. Palette: forest green, ivory, warm gold crown. booming, generous, loves a fair fight. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forest green, ivory, warm gold crown. Expression: booming, generous, loves a fair fight. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -260,7 +260,7 @@
    "out": "spellslinger/art/characters/t2-sasha.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -270,26 +270,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge. Palette: sky blue, white, brass. calm, polite, quietly competitive. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: sky blue, white, brass. Expression: calm, polite, quietly competitive. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -302,7 +302,7 @@
    "out": "spellslinger/art/characters/t2-ike.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -312,26 +312,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks. Palette: iron grey, rust red, forge orange. gruff, direct, respects effort. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: iron grey, rust red, forge orange. Expression: gruff, direct, respects effort. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -344,7 +344,7 @@
    "out": "spellslinger/art/characters/t2-marcus.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -354,26 +354,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile. Palette: swamp green, deep purple, mud brown. slow and gentle, never in a hurry. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: swamp green, deep purple, mud brown. Expression: slow and gentle, never in a hurry. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -386,7 +386,7 @@
    "out": "spellslinger/art/characters/t2-sarah.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -396,26 +396,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin. Palette: electric blue, orange, parchment. chatty, excitable, clever. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: electric blue, orange, parchment. Expression: chatty, excitable, clever. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -428,7 +428,7 @@
    "out": "spellslinger/art/characters/t2-leo.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -438,26 +438,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat. Palette: teal, leaf green, silver thread. thoughtful, dry humour. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: teal, leaf green, silver thread. Expression: thoughtful, dry humour. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -470,7 +470,7 @@
    "out": "spellslinger/art/characters/t2-boss.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -480,26 +480,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff. Palette: midnight blue, black, silver. measured, patient, always three turns ahead. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: midnight blue, black, silver. Expression: measured, patient, always three turns ahead. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -512,7 +512,7 @@
    "out": "spellslinger/art/characters/t3-brenda.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -522,26 +522,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin. Palette: black, crimson, bone. aggressive, sarcastic, loves pressure. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: black, crimson, bone. Expression: aggressive, sarcastic, loves pressure. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -554,7 +554,7 @@
    "out": "spellslinger/art/characters/t3-trevor.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -564,26 +564,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice. Palette: moss green, granite grey, amber. slow, powerful, speaks in short sentences. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: moss green, granite grey, amber. Expression: slow, powerful, speaks in short sentences. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -596,7 +596,7 @@
    "out": "spellslinger/art/characters/t3-sam.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -606,26 +606,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes. Palette: white, silver, sunburst gold. patient, protective, immovable. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: white, silver, sunburst gold. Expression: patient, protective, immovable. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -638,7 +638,7 @@
    "out": "spellslinger/art/characters/t3-luke.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -648,26 +648,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck. Palette: ocean blue, teal, silver coins. playful, mocking, always flipping a coin. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ocean blue, teal, silver coins. Expression: playful, mocking, always flipping a coin. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -680,7 +680,7 @@
    "out": "spellslinger/art/characters/t3-arthur.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -690,26 +690,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh. Palette: ruby red, emerald green, gold. loud, generous, bragging. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ruby red, emerald green, gold. Expression: loud, generous, bragging. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -722,7 +722,7 @@
    "out": "spellslinger/art/characters/t3-boss.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -732,26 +732,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze. Palette: storm blue, crimson, white lightning. confident, elegant, a little bored of winning. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: storm blue, crimson, white lightning. Expression: confident, elegant, a little bored of winning. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -764,7 +764,7 @@
    "out": "spellslinger/art/characters/npc-guide.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -774,26 +774,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil. Palette: warm browns, teal, cream. friendly, encouraging. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: warm browns, teal, cream. Expression: friendly, encouraging. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -806,7 +806,7 @@
    "out": "spellslinger/art/characters/npc-packmaster.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -816,26 +816,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile. Palette: gold, red, deep blue. brisk and showy. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: gold, red, deep blue. Expression: brisk and showy. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -848,7 +848,7 @@
    "out": "spellslinger/art/characters/npc-smith.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -858,26 +858,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh. Palette: forge orange, aether blue, iron. booming, loves tinkering. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forge orange, aether blue, iron. Expression: booming, loves tinkering. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }
@@ -890,7 +890,7 @@
    "out": "spellslinger/art/characters/npc-deckwright.png",
    "kind": "sheet",
    "frame": [
-    64,
+    96,
     96
    ],
    "cols": 4,
@@ -900,26 +900,26 @@
     {
      "key": "base",
      "style": "rd_pro__fantasy",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes. Palette: blue-grey, cream, ink black. careful and precise. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: blue-grey, cream, ink black. Expression: careful and precise. Plain flat background, no text",
      "remove_bg": true
     },
     {
      "key": "idle",
      "style": "rd_advanced_animation__idle",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, feet and body stay in place",
+     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
     {
      "key": "talk",
      "style": "rd_advanced_animation__custom_action",
-     "width": 64,
+     "width": 96,
      "height": 96,
-     "prompt": "talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place",
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     }

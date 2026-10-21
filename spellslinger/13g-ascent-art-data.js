@@ -3,7 +3,7 @@
 // Art files go in spellslinger/art/ at the paths below; until a file exists the game shows a placeholder.
 const ASCENT_ART_STYLE = '16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background';
 const ASCENT_ART_RULES = {
-    characters: 'One PNG per character at spellslinger/art/characters/<id>.png. A sprite sheet with 2 rows of 4 frames, each frame 64 x 96 px (so the sheet is 256 x 192). Row 1 = idle loop (breathing, blinking). Row 2 = talking loop (mouth moving, a hand gesture). Same pose and framing in every frame, feet on the bottom edge, facing the viewer.',
+    characters: 'One PNG per character at spellslinger/art/characters/<id>.png. A sprite sheet with 2 rows of 4 frames, each frame a 96 x 96 px head-and-shoulders portrait (so the sheet is 384 x 192). Row 1 = idle loop (breathing, blinking). Row 2 = talking loop (mouth moving, a hand gesture). Same pose and framing in every frame, feet on the bottom edge, facing the viewer.',
     fx: 'One PNG per effect at spellslinger/art/fx/<id>.png: a single horizontal strip of frames, each frame the size listed. The game plays it once at 2x, pixelated, over the card.',
     ui: 'One PNG per icon at spellslinger/art/ui/<id>.png at the size listed (a single frame unless "frames" is listed, then a horizontal strip).'
 };

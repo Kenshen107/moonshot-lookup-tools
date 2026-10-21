@@ -1,7 +1,7 @@
 // Planeswalker's Ascent, art and animation runtime (data in 13g-ascent-art-data.js, guide in docs/ascent-art-prompts.md).
 // Portraits and effects use the pixel art in spellslinger/art/ when the files exist, and a placeholder until then.
 const ASCENT_CHAR = Object.fromEntries(ASCENT_CHARACTERS.map(c => [c.id, c]));
-const ASC_ART = { ok: {}, probed: false, size: { w: 64, h: 96 } };
+const ASC_ART = { ok: {}, probed: false, size: { w: 96, h: 96 }, legacy: {} };
 const ASC_FX = { active: 0, max: 4 };
 const ASC_FX_KINDS_ART = {}; // kind -> true when its PNG strip exists
 function ascFxPref() { try { return store.get('ascentFx', true) !== false; } catch (e) { return true; } }
@@ -11,14 +11,14 @@ function renderAscentIfOpen() { if ($('ascentApp') && !$('view-campaign').classL
 function ascFxEnabled() { return window.__FX_FORCE === true || (!AUTOPLAY && !window.__LAB && !reducedMotion() && ascFxPref()); }
 
 // ---- Probing for art files (once per page load) ----
-function ascProbe(path) {
-    return new Promise(res => { const img = new Image(); img.onload = () => res(true); img.onerror = () => res(false); img.src = path; });
+function ascProbe(path, note) {
+    return new Promise(res => { const img = new Image(); img.onload = () => { if (note) note(img.naturalWidth); res(true); }; img.onerror = () => res(false); img.src = path; });
 }
 async function ascProbeArt() {
     if (ASC_ART.probed) return;
     ASC_ART.probed = true;
     const tasks = [
-        ...ASCENT_CHARACTERS.map(async c => { const p = `spellslinger/art/characters/${c.id}.png`; ASC_ART.ok[p] = await ascProbe(p); }),
+        ...ASCENT_CHARACTERS.map(async c => { const p = `spellslinger/art/characters/${c.id}.png`; ASC_ART.ok[p] = await ascProbe(p, w => { if (w === 256) ASC_ART.legacy[p] = true; }); }),
         ...Object.keys(ASCENT_FX).map(async k => { ASC_FX_KINDS_ART[k] = await ascProbe(`spellslinger/art/fx/${k}.png`); })
     ];
     await Promise.all(tasks);
@@ -30,7 +30,7 @@ function ascPortraitHTML(id, opts = {}) {
     const c = ASCENT_CHAR[id];
     if (!c) return '';
     const path = `spellslinger/art/characters/${id}.png`, talk = opts.talk ? ' talk' : '';
-    if (ASC_ART.ok[path]) return `<div class="asc-portrait sprite${talk}" style="background-image:url('${path}')" role="img" aria-label="${esc(c.name)}"></div>`;
+    if (ASC_ART.ok[path]) return `<div class="asc-portrait sprite${talk}${ASC_ART.legacy[path] ? ' old' : ''}" style="background-image:url('${path}')" role="img" aria-label="${esc(c.name)}"></div>`;
     return `<div class="asc-portrait ph${talk}${c.boss ? ' boss' : ''}" style="--accent:${c.accent}" role="img" aria-label="${esc(c.name)} (placeholder art)"><span>${c.emoji}</span></div>`;
 }
 function ascLine(id, kind, seed) {

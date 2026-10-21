@@ -986,14 +986,18 @@
         .asc-say { display: flex; gap: 12px; align-items: flex-end; margin: 8px 0; }
         .asc-bubble { background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 12px; position: relative; min-width: 0; flex: 1; }
         .asc-bubble p { margin: 4px 0 0; font-size: 1rem; }
-        .asc-portrait { flex: none; width: 64px; height: 96px; image-rendering: pixelated; }
+        .asc-portrait { flex: none; width: 96px; height: 96px; image-rendering: pixelated; }
         .asc-portrait.ph { display: grid; place-items: center; border-radius: var(--radius-md); border: 2px solid var(--accent, var(--border)); background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--accent, var(--brand)) 45%, var(--bg-inset)), var(--bg-inset)); }
         .asc-portrait.ph span { font-size: 2.2rem; }
         .asc-portrait.ph.boss { box-shadow: 0 0 12px -2px var(--gold); border-color: var(--gold); }
         .asc-portrait.ph.talk span { animation: asc-bob 0.5s ease-in-out infinite; }
-        .asc-portrait.sprite { background-size: 256px 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle 0.8s steps(4) infinite; }
+        .asc-portrait.sprite { background-size: 384px 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle 0.8s steps(4) infinite; }
         .asc-portrait.sprite.talk { background-position-y: -96px; animation-name: asc-idle; animation-duration: 0.6s; }
-        @keyframes asc-idle { to { background-position-x: -256px; } }
+        @keyframes asc-idle { to { background-position-x: -384px; } }
+        /* sheets made before the portrait framing (256 x 192, full body, 64 x 96 frames) still display until they are remade */
+        .asc-portrait.sprite.old { width: 64px; background-size: 256px 192px; }
+        .asc-portrait.sprite.old { animation-name: asc-idle-old; }
+        @keyframes asc-idle-old { to { background-position-x: -256px; } }
         @keyframes asc-bob { 50% { transform: translateY(-4px) scale(1.06); } }
         .fx-item { position: fixed; z-index: var(--z-banner, 60); pointer-events: none; image-rendering: pixelated; }
         .fx-item.sprite { background-repeat: no-repeat; animation: fx-strip var(--dur) steps(var(--frames)) 1 forwards; }
