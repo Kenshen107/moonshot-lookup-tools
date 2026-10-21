@@ -7154,27 +7154,6 @@
             .scene-weather .wx-other { display: none; }
         }
 
-        /* ---- Moonshot mark: a moon with an orbiting rocket ---- */
-        .ms-mark { display: none; width: 46px; height: 46px; flex: none; }
-        html[data-fx="full"] .ms-mark, html[data-fx="subtle"] .ms-mark { display: inline-block; }
-        .ms-mark svg { width: 100%; height: 100%; overflow: visible; }
-        .ms-moon { fill: var(--text-heading); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--brand-light) 60%, transparent)); }
-        .ms-crater { fill: color-mix(in srgb, var(--text-heading) 75%, var(--bg-canvas)); }
-        .ms-body { fill: var(--text-heading); }
-        .ms-window { fill: var(--brand-light); }
-        .ms-fin { fill: var(--brand); }
-        .ms-flame { fill: var(--color-warning); transform-box: fill-box; transform-origin: top center; }
-        .ms-orbit { transform-origin: 24px 24px; }
-        .ms-star { fill: var(--brand-light); opacity: 0; }
-        .ms-mark.play .ms-orbit { animation: ms-orbit 1.8s cubic-bezier(.3, .1, .2, 1) both; }
-        .ms-mark.play .ms-flame { animation: ms-flame 0.12s ease-in-out 15 alternate; }
-        .ms-mark.play .ms-star { animation: ms-star 1.8s ease-out both; }
-        .ms-mark.play .ms-star:nth-of-type(2) { animation-delay: 0.3s; }
-        @keyframes ms-orbit { from { transform: rotate(-300deg) scale(0.6); } to { transform: rotate(0deg) scale(1); } }
-        @keyframes ms-flame { from { transform: scaleY(0.6); } to { transform: scaleY(1.4); } }
-        @keyframes ms-star { 0%, 55% { opacity: 0; transform: scale(0.3); } 75% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0.7; transform: scale(1); } }
-        .ms-star { transform-box: fill-box; transform-origin: center; }
-
         /* ---- Glow accents (full) ---- */
         @property --fx-ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
         html[data-fx="full"] .card-search-row {
@@ -7493,8 +7472,7 @@
         @media (prefers-reduced-motion: reduce) {
             #fxAurora, .scene-canvas { display: none !important; }
             .holo-tilt, .holo-flip, .roll-s, .pack-half, .pack-card-inner { transition: none !important; }
-            .holo-shine, .holo-tilt, .ms-orbit, .ms-flame, .ms-star, .card-search-row, .rarity-badge, .fx-enter, .pc-line, .pc-area, .pc-ping, .holo-card::before, .loading::before, .fx-shimmer::after { animation: none !important; }
-            .ms-star { opacity: 0.7; }
+            .holo-shine, .holo-tilt, .card-search-row, .rarity-badge, .fx-enter, .pc-line, .pc-area, .pc-ping, .holo-card::before, .loading::before, .fx-shimmer::after { animation: none !important; }
         }
     </style>
     <script>
@@ -7890,27 +7868,11 @@
             </div>
         </div>
 
-        <!-- Page title on a drawn scene (✨ Effects: Full): night sky with the
-             Moonshot moon, today's weather at the stores, and the season. -->
+        <!-- Page title on a drawn scene (✨ Effects: Full): night sky with
+             today's weather at the stores, and the season. -->
         <header class="scene-banner" id="sceneBanner">
             <canvas class="scene-canvas" id="sceneCanvas" aria-hidden="true"></canvas>
             <div class="scene-copy">
-                <span class="ms-mark" id="msMark" aria-hidden="true">
-                    <svg viewBox="0 0 48 48">
-                        <defs><mask id="msCrescent"><rect width="48" height="48" fill="white"/><circle cx="31" cy="19" r="12" fill="black"/></mask></defs>
-                        <circle class="ms-moon" cx="24" cy="24" r="14" mask="url(#msCrescent)"/>
-                        <circle class="ms-crater" cx="16" cy="28" r="2.2" mask="url(#msCrescent)"/>
-                        <circle class="ms-crater" cx="21" cy="33" r="1.3" mask="url(#msCrescent)"/>
-                        <circle class="ms-star" cx="40" cy="8" r="1.6"/>
-                        <circle class="ms-star" cx="6" cy="12" r="1.2"/>
-                        <g class="ms-orbit"><g transform="translate(36 10) rotate(45)">
-                            <path class="ms-flame" d="M-1.6 5.5 L0 10 L1.6 5.5 Z"/>
-                            <path class="ms-fin" d="M-2.2 2 L-4 6 L-1.5 4.8 Z M2.2 2 L4 6 L1.5 4.8 Z"/>
-                            <path class="ms-body" d="M0 -6.5 C2.8 -4 2.8 2.5 1.8 5.5 L-1.8 5.5 C-2.8 2.5 -2.8 -4 0 -6.5 Z"/>
-                            <circle class="ms-window" cx="0" cy="-1" r="1.2"/>
-                        </g></g>
-                    </svg>
-                </span>
                 <h1 id="pageTitle">🃏 MTG Card Lookup</h1>
             </div>
             <button type="button" class="scene-weather" id="sceneWeather" hidden onclick="cycleWeatherStore()"></button>
@@ -22930,23 +22892,12 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             el.classList.add('fx-enter');
         }
 
-        function playMoonshotMark() {
-            const mark = document.getElementById('msMark');
-            if (!mark || fxReducedMotion.matches) return;
-            mark.classList.remove('play');
-            void mark.offsetWidth;
-            mark.classList.add('play');
-        }
-
         function initVisualEffects() {
             renderFxButton();
             const banner = document.getElementById('sceneBanner');
             if (banner && 'IntersectionObserver' in window) {
                 new IntersectionObserver(entries => { fxState.sceneVisible = entries[0].isIntersecting; }).observe(banner);
             }
-            const mark = document.getElementById('msMark');
-            if (mark) mark.addEventListener('mouseenter', playMoonshotMark);
-            playMoonshotMark();
             let resizeTimer = null;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimer);
@@ -23249,19 +23200,34 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             for (const ch of String(text).toUpperCase()) { if (ch === ' ') { x += 4; continue; } const i = PXL_ORDER.indexOf(ch); if (i < 0) continue; g.drawImage(sheet, i * 32, 0, 32, 32, x, 0, cell, cell); x += cell; }
             cv.dataset.cell = '1'; return cv;
         }
-        const mask = []; for (let y = 0; y < 7 + PAD * 2; y++) mask.push(new Uint8Array(W + PAD * 2));
-        let x = PAD; glyphs.forEach(g => { if (!g) { x += 3; return; } for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) if (g[r][c] === '#') mask[PAD + r][x + c] = 1; x += 6; });
-        const w = W + PAD * 2, h = 7 + PAD * 2; cv.width = w; cv.height = h;
-        const g = cv.getContext('2d'), outline = pxrMix(P.canvas, [0, 0, 0], 0.55), top = P.heading, mid = pxrMix(P.light, P.heading, 0.35), bot = P.brand;
+        // Procedural lettering: the 5 x 7 glyphs are doubled with the Scale2x rule (diagonals turn into smooth 2-pixel steps instead of
+        // stair-steps), then given a bevelled fill, a clean 1-pixel outline and a soft drop shadow. It is drawn at twice the old resolution
+        // and shown at half the old scale, so the page size is the same but the edges are finer.
+        const mw = (W + PAD * 2), mh = 7 + PAD * 2, m1 = []; for (let y = 0; y < mh; y++) m1.push(new Uint8Array(mw));
+        let x0 = PAD; glyphs.forEach(g => { if (!g) { x0 += 3; return; } for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) if (g[r][c] === '#') m1[PAD + r][x0 + c] = 1; x0 += 6; });
+        const at1 = (xx, yy) => (yy >= 0 && yy < mh && xx >= 0 && xx < mw) ? m1[yy][xx] : 0, w = mw * 2, h = mh * 2, mask = []; for (let y = 0; y < h; y++) mask.push(new Uint8Array(w));
+        for (let y = 0; y < mh; y++) for (let xx = 0; xx < mw; xx++) {
+            const P0 = at1(xx, y), A = at1(xx, y - 1), B = at1(xx + 1, y), C = at1(xx - 1, y), D = at1(xx, y + 1);
+            let e0 = P0, e1 = P0, e2 = P0, e3 = P0;
+            if (C === A && C !== D && A !== B) e0 = A;
+            if (A === B && A !== C && B !== D) e1 = B;
+            if (D === C && D !== B && C !== A) e2 = C;
+            if (B === D && B !== A && D !== C) e3 = D;
+            mask[y * 2][xx * 2] = e0; mask[y * 2][xx * 2 + 1] = e1; mask[y * 2 + 1][xx * 2] = e2; mask[y * 2 + 1][xx * 2 + 1] = e3;
+        }
+        cv.width = w; cv.height = h; cv.dataset.px2 = '1';
+        const g = cv.getContext('2d'), outline = pxrMix(P.canvas, [0, 0, 0], 0.6), top = P.heading, mid = pxrMix(P.light, P.heading, 0.3), bot = pxrMix(P.brand, P.light, 0.25), under = pxrMix(P.brand, [0, 0, 0], 0.45);
         const at = (xx, yy) => (yy >= 0 && yy < h && xx >= 0 && xx < w) ? mask[yy][xx] : 0;
         const px = (xx, yy, col, a) => { g.fillStyle = pxrCss(col, a === undefined ? 1 : a); g.fillRect(xx, yy, 1, 1); };
-        for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) { // shadow, then outline
-            if (!at(xx, yy) && at(xx - 1, yy - 1)) px(xx, yy, outline, 0.5);
+        for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) { // drop shadow, two pixels down and right
+            if (!at(xx, yy) && (at(xx - 1, yy - 1) || at(xx - 2, yy - 2))) px(xx, yy, outline, 0.4);
         }
         for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) if (!at(xx, yy) && (at(xx - 1, yy) || at(xx + 1, yy) || at(xx, yy - 1) || at(xx, yy + 1))) px(xx, yy, outline);
         for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) if (at(xx, yy)) {
-            const r = yy - PAD; let col = r <= 1 ? top : r <= 3 ? mid : bot;
-            if (!at(xx - 1, yy) && r > 1) col = pxrMix(col, top, 0.35); // a lit left edge
+            const r = (yy - PAD * 2) / 14; // 0 at the top of the letter, 1 at the bottom
+            let col = r < 0.16 ? top : r < 0.5 ? pxrMix(top, mid, (r - 0.16) / 0.34) : pxrMix(mid, bot, Math.min(1, (r - 0.5) / 0.5));
+            if (!at(xx, yy + 1)) col = under; // a dark underside so each letter has weight
+            else if (!at(xx, yy - 1)) col = pxrMix(top, [255, 255, 255], 0.35); // a bright top edge
             px(xx, yy, col);
         }
         const rnd = pxrSeed(text.length * 31 + 7);
@@ -23281,7 +23247,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (!fxIs('full', 'subtle')) { if (el.dataset.pxOn) { el.textContent = raw; delete el.dataset.pxOn; if (PXL.obs) PXL.obs.takeRecords(); } return; }
         const m = String(raw).match(/^([^A-Za-z0-9]*)(.*)$/), prefix = m[1].trim(), body = m[2];
         if (!pxlGlyphs(body).length) return;
-        const cv = pxlCanvas(body), scale = window.innerWidth < 700 ? 3 : 4, wrap = document.createElement('span');
+        const cv = pxlCanvas(body), scale = (window.innerWidth < 700 ? 3 : 4) / (cv.dataset.px2 ? 2 : 1), wrap = document.createElement('span');
         wrap.className = 'px-letters'; wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', raw.trim());
         cv.style.width = cv.width * (cv.dataset.cell ? scale : scale) + 'px'; cv.style.height = cv.height * scale + 'px'; wrap.appendChild(cv);
         el.textContent = ''; if (prefix) { const e = document.createElement('span'); e.className = 'px-letters-emoji'; e.textContent = prefix + ' '; el.appendChild(e); } el.appendChild(wrap); el.dataset.pxOn = '1';
