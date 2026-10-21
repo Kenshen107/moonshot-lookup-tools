@@ -653,7 +653,8 @@
 
         /* ---- Pack reveal: 3D peel, then flip each card ---- */
         .crack-stage { perspective: 1200px; display: grid; gap: 14px; margin-top: 12px; position: relative; }
-        .pack3d { position: relative; width: 170px; height: 262px; margin: 10px auto; transform-style: preserve-3d; transform: rotateX(8deg) rotateY(-16deg);
+        /* Pack size (2026-10-21, owner: the pack and its animations were far too small): the wrapper art is 96 x 144 (2:3), so the pack is 3 x that on desktop and 2 x on narrower screens (whole multiples keep the pixels crisp); the opening burst grows with it */
+        .pack3d { --pk-w: 288px; position: relative; width: var(--pk-w); height: calc(var(--pk-w) * 1.5); margin: 14px auto; transform-style: preserve-3d; transform: rotateX(8deg) rotateY(-16deg);
             animation: packFloat 3.2s ease-in-out infinite alternate; cursor: pointer; transition: transform 0.5s ease, opacity 0.5s ease; }
         .pack3d:focus-visible { outline: 2px solid var(--brand-light); outline-offset: 6px; }
         @keyframes packFloat { to { transform: rotateX(4deg) rotateY(14deg) translateY(-6px); } }
@@ -685,7 +686,11 @@
         .pack3d.has-art .pk-flap { background-size: 100% 454.5%; background-position: 0 0; clip-path: none; }
         .pack3d.has-art .pk-body { background-size: 100% 126.6%; background-position: 0 100%; }
         .pack3d.has-art .pk-body::after { display: none; }
-        .pk-burst { position: absolute; left: 50%; top: 22%; width: 192px; height: 192px; margin: -96px 0 0 -96px; pointer-events: none; opacity: 0; image-rendering: pixelated; background-repeat: no-repeat; background-size: 1200% 100%; transform: translateZ(30px); }
+        /* with the drawn wrapper the emblem is the picture: no repeated title over it, and the hint sits at the bottom */
+        .pack3d.has-art .pk-body strong, .pack3d.has-art .pk-body small { display: none; }
+        .pack3d.has-art .pk-body { justify-content: flex-end; padding-bottom: 9%; }
+        @media (max-width: 900px), (max-height: 700px) { .pack3d { --pk-w: 192px; } }
+        .pk-burst { position: absolute; left: 50%; top: 22%; width: calc(var(--pk-w) * 1.4); height: calc(var(--pk-w) * 1.4); margin: calc(var(--pk-w) * -0.7) 0 0 calc(var(--pk-w) * -0.7); pointer-events: none; opacity: 0; image-rendering: pixelated; background-repeat: no-repeat; background-size: 1200% 100%; transform: translateZ(30px); }
         .pack3d.has-open.peeling .pk-burst { background-image: var(--pk-open); animation: pkBurstFrames 0.8s steps(11) 0.15s forwards; }
         @keyframes pkBurstFrames { 0% { opacity: 1; background-position: 0 0; } 90% { opacity: 1; } 100% { opacity: 0; background-position: 100% 0; } }
         .pack3d::before { content: ''; position: absolute; inset: -30%; pointer-events: none; opacity: 0; border-radius: 50%; transform: translateZ(-2px) scale(0.3); }

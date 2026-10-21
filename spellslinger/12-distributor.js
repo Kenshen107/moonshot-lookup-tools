@@ -305,6 +305,7 @@ function renderPackReveal(pack, areaId = 'packArea') {
             <div class="pull-announce" id="ann-${areaId}" aria-live="polite"></div>
             <p class="note hidden" id="sum-${areaId}"></p>
         </div>`;
+    if (!AUTOPLAY && !window.__LAB) setTimeout(() => { const el = $('p3d-' + areaId); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60); // the bigger pack comes into view
 }
 function peelPack(areaId) {
     const el = $(`p3d-${areaId}`);
