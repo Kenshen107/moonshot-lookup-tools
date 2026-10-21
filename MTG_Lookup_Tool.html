@@ -787,7 +787,7 @@
 
 
         /* Realm background, pixel lettering and seasonal frames (2026-10-21): all optional layers of the Effects levels */
-        #fxRealm { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -3; pointer-events: none; image-rendering: pixelated; display: none; }
+        #fxRealm { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -3; pointer-events: none; image-rendering: pixelated; object-fit: cover; object-position: 50% 100%; display: none; }
         @media print { #fxRealm { display: none !important; } }
         .px-letters { display: inline-block; line-height: 0; vertical-align: middle; }
         .px-letters canvas { image-rendering: pixelated; display: block; max-width: 100%; }
