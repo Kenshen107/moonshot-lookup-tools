@@ -96,7 +96,7 @@ function findObj(uid) {
     return null;
 }
 const ctrl = o => G.players[o.owner];
-const isCreature = o => !o.enchOnly && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
+const isCreature = o => !o.enchOnly && !o.artOnly && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
 function buffsOn(o) {
     const b = { p: 0, q: 0, kw: [] };
     const perms0 = attachmentsOf(o.uid);
@@ -170,8 +170,8 @@ function basePT(o, which) {
     if (R.cdaAdd) v += R.cdaAdd[which] * countFn(R.cdaAdd.what)(o);
     return v;
 }
-const pow = o => basePT(o, 'p') + o.counters + o.tp + buffsOn(o).p;
-const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q;
+const pow = o => basePT(o, 'p') + o.counters + o.tp + buffsOn(o).p + ptTimed(o, 'p');
+const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q + ptTimed(o, 'q');
 const hasBase = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (k === 'indestructible' && !!o.ctr && o.ctr.indestructible > 0) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
 const has = (o, k) => (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
@@ -578,6 +578,7 @@ function damage(target, n, src) {
         // Infect and wither: damage to a creature is -1/-1 counters (702.80a, 702.90b)
         if (infect || wither) target.counters -= n; else target.dmg += n;
         if (src && src.card && has(src, 'deathtouch')) target.dt = true;
+        if (target.willTurn === G.turn && isCreature(target)) { target.counters += n; log(`${target.card.name} gets ${n} +1/+1 counter${n === 1 ? '' : 's'} (Strength of Will).`); } // Strength of Will
     }
     if (src && src.card && isCreature(src) && has(src, 'lifelink') && !noLifeGainActive()) { n += lifeGainBonus(ctrl(src)); ctrl(src).life += n; fire('gainLife', { P: ctrl(src), n }); }
 }
@@ -891,7 +892,7 @@ const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.tes
 function altExileCard(P, o) { const a = Rx(o).alt; return a && a.exile ? P.hand.filter(x => x !== o && (x.card.colors || []).includes(a.exile)).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0] || null : null; }
 function altOk(P, o) {
     const a = Rx(o).alt;
-    return !!a && P.hand.includes(o) && (!a.cond || condOk(a.cond, P, o)) && (!a.life || P.life > a.life) && (!a.exile || !!altExileCard(P, o)) && (!a.tapFly || altTapFliers(P, o, a.tapFly).length >= a.tapFly);
+    return !!a && P.hand.includes(o) && (!a.cond || condOk(a.cond, P, o)) && (!a.life || P.life > a.life) && (!a.exile || !!altExileCard(P, o)) && (!a.tapFly || altTapFliers(P, o, a.tapFly).length >= a.tapFly) && (!a.sacKind || sacCandidates(P, o, a.sacKind).length > 0);
 }
 function altTapFliers(P, o, n) { return P.bf.filter(x => isCreature(x) && !x.tapped && has(x, 'flying') && x !== o).slice(0, n); }
 function canPay(P, o) { return (!o.altCast || altOk(P, o)) && addCostOk(P, o) && !!planPayment(P, costOf(P, o), extraCost(P, o) + (costOf(P, o).x ? xMult(o) : 0), null, payOpts(o)); }
@@ -963,6 +964,7 @@ async function payAddCost(P, o) {
         const al = Rx(o).alt, x = al.exile ? altExileCard(P, o) : null;
         if (al.life) P.life -= al.life;
         if (al.tapFly) altTapFliers(P, o, al.tapFly).forEach(f => { f.tapped = true; fire('tapped', { o: f }); });
+        if (al.sacKind) { const sf = await chooseSac(P, o, al.sacKind, o.card.name); if (sf) { G.lastSacMv = sf.card.cmc || 0; G.lastSacPow = Math.max(0, pow(sf)); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${sf.card.name} to cast ${o.card.name}.`); fire('sacrificed', { o: sf }); dieOrLeave(sf, 'gy'); } }
         if (x) { pull(P.hand, x); P.exile.push(x); }
         log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name} for its alternative cost${al.life ? `, paying ${al.life} life` : ''}${x ? ` and exiling ${x.card.name} from hand` : ''} (rule 118.9).`);
         o.altCast = false;
@@ -4080,7 +4082,7 @@ function combatDamage(A) {
                 let dmg = pow(atk);
                 if (dmg > 0) {
                     const pw = atk.attackPW && onBf(atk.attackPW);
-                    if (!blocked) events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : defOf(atk), dmg]);
+                    if (!blocked || (Rx(atk).assignUnblocked && !lostAbilities(atk) && assignAsUnblocked(atk, blks, dmg, defOf(atk)))) events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : defOf(atk), dmg]);
                     else {
                         blks.forEach((b, i) => {
                             if (dmg <= 0) return;
@@ -4521,6 +4523,7 @@ async function dealDamage() {
     await settle();
     if (!G.over && G.extraCombat > 0) { await startExtraCombat(); return; }
     G.phase = 'main2';
+    fireMain2(); await settle();
     G.busy = false;
     renderGame();
 }

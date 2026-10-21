@@ -194,7 +194,7 @@ const EFFECTS = [
     // Optional costs inside an effect ("you may pay {2}. If you do, ...")
     [/^pay ((?:\{[^}]+\})+)$/, m => { const c = parseCost(m[1]); return c.x || c.odd ? null : { t: 'optPay', cost: c }; }],
     [/^pay (\w+) life$/, m => ({ t: 'optLife', n: num(m[1]) })],
-    [/^sacrifice (?:a|another) (creature|artifact|land)$/, m => ({ t: 'optSac', what: m[1] })],
+    [/^sacrifice (?:a|another) (creature|artifact|land)$/, m => ({ t: 'optSac', what: m[1], ...(/^sacrifice another/.test(m[0]) ? { another: true } : {}) })],
     [/^return it to its owner's hand$/, () => ({ t: 'selfBounce' })],
     [/^(?:you )?untap all lands you control$/, () => ({ t: 'untapLands' })],
     [/^tap all (creatures your opponents control|creatures you don't control|creatures target opponent controls|creatures)$/, m => ({ t: 'tapAll', who: m[1] === 'creatures' ? 'all' : 'opp' })],

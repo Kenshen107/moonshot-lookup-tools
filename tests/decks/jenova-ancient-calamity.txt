@@ -1,0 +1,85 @@
+1 Accursed Marauder
+1 Agadeem's Awakening
+1 Aid the Fallen
+1 Archenemy's Charm
+1 Archfiend of Ifnir
+1 Badlands Revival
+1 Bala Ged Recovery
+1 Behold the Sinister Six!
+1 Black Market Connections
+1 Call Damage Control
+1 Campfire
+1 Command Tower
+1 Deadly Brew
+1 Deathcap Glade
+1 Desperate Plea
+1 Dina, Essence Brewer
+1 Dina's Guidance
+1 Doc Samson, Super Psychiatrist
+1 Dose of Dawnglow
+1 Dryad's Revival
+1 Dutiful Attendant
+1 Eldritch Evolution
+1 Elixir of Immortality
+1 Emeritus of Abundance
+1 Emeritus of Woe
+1 Evil Reawakened
+1 Evolution Witness
+1 Fell the Profane
+1 Find // Finality
+1 Flare of Malice
+1 Fleshbag Marauder
+9 Forest
+1 Galuf's Final Act
+1 Garruk, Veiled Butcher
+1 Golgari Rot Farm
+1 Groundchuck & Dirtbag
+1 Heroic Intervention
+1 High Market
+1 Kami of Whispered Hopes
+1 Leatherhead, Iron Gator
+1 Llanowar Wastes
+1 Malakir Rebirth
+1 Michelangelo, the Heart
+1 Mona Lisa, Ever Adaptable
+1 Mona Lisa, Science Geek
+1 Necroblossom Snarl
+1 Origin of Metalbending
+1 Overgrown Tomb
+1 Overkill
+1 Reanimate
+1 Regrowth
+1 Revitalizing Repast
+1 Rise of the Dark Realms
+1 Rise of the Witch-king
+1 Ruthless Technomancer
+1 Sephiroth, Fabled SOLDIER
+1 Sphere Grid
+1 Splinter, the Mentor
+1 Squirrelanoids
+1 Strength of Will
+1 Summon: Fenrir
+1 Super Shredder
+9 Swamp
+1 The Warring Triad
+1 Tom, Bert, and William
+1 Topiary Lecturer
+1 Travel Through Caradhras
+1 Troop of Ponies
+1 Turbulent Fen
+1 Twilight Mire
+1 Undergrowth Stadium
+1 Vastwood Fortification
+1 Victimize
+1 Viridescent Bog
+1 Warden of the Grove
+1 Winter, Tormented Loner
+1 Witherbloom, the Balancer
+1 Wolverine, Claws Out
+1 Woodland Cemetery
+1 X-23, Deadly Weapon
+1 Yavimaya, Cradle of Growth
+1 Zero Point Ballad
+1 Zodiark, Umbral God
+
+1 Jenova, Ancient Calamity

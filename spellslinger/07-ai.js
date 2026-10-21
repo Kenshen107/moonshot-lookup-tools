@@ -697,6 +697,7 @@ async function aiTurn(P) {
         } else attackers = [];
     }
     G.phase = 'main2';
+    fireMain2(); await settle(); if (G.over) return;
     await aiMain(P);
     if (G.over) return;
     await pause(300);
