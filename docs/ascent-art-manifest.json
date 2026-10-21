@@ -20,7 +20,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forest greens, bark browns, a spot of warm skin tone. Expression: cheerful and proud, a gentle giant. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forest greens, bark browns, a spot of warm skin tone. Expression: cheerful and proud, a gentle giant. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -28,7 +28,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -62,7 +62,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: warm cream, soft gold, pale blue shadows. Expression: polite, earnest and fast-talking. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: warm cream, soft gold, pale blue shadows. Expression: polite, earnest and fast-talking. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -70,7 +70,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -104,7 +104,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: sea blues, foam white, sandy yellow. Expression: dreamy and a little smug. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: sea blues, foam white, sandy yellow. Expression: dreamy and a little smug. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -112,7 +112,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -146,7 +146,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: charcoal, violet, bone white. Expression: gravelly, gloomy, secretly warm. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: charcoal, violet, bone white. Expression: gravelly, gloomy, secretly warm. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -154,7 +154,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -188,7 +188,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ember reds, orange, soot black. Expression: hot-headed and impatient. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ember reds, orange, soot black. Expression: hot-headed and impatient. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -196,7 +196,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -230,7 +230,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forest green, ivory, warm gold crown. Expression: booming, generous, loves a fair fight. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forest green, ivory, warm gold crown. Expression: booming, generous, loves a fair fight. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -238,7 +238,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -272,7 +272,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: sky blue, white, brass. Expression: calm, polite, quietly competitive. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: sky blue, white, brass. Expression: calm, polite, quietly competitive. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -280,7 +280,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -314,7 +314,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: iron grey, rust red, forge orange. Expression: gruff, direct, respects effort. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: iron grey, rust red, forge orange. Expression: gruff, direct, respects effort. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -322,7 +322,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -356,7 +356,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: swamp green, deep purple, mud brown. Expression: slow and gentle, never in a hurry. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: swamp green, deep purple, mud brown. Expression: slow and gentle, never in a hurry. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -364,7 +364,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -398,7 +398,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: electric blue, orange, parchment. Expression: chatty, excitable, clever. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: electric blue, orange, parchment. Expression: chatty, excitable, clever. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -406,7 +406,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -440,7 +440,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: teal, leaf green, silver thread. Expression: thoughtful, dry humour. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: teal, leaf green, silver thread. Expression: thoughtful, dry humour. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -448,7 +448,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -482,7 +482,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: midnight blue, black, silver. Expression: measured, patient, always three turns ahead. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: midnight blue, black, silver. Expression: measured, patient, always three turns ahead. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -490,7 +490,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -524,7 +524,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: black, crimson, bone. Expression: aggressive, sarcastic, loves pressure. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: black, crimson, bone. Expression: aggressive, sarcastic, loves pressure. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -532,7 +532,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -566,7 +566,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: moss green, granite grey, amber. Expression: slow, powerful, speaks in short sentences. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: moss green, granite grey, amber. Expression: slow, powerful, speaks in short sentences. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -574,7 +574,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -608,7 +608,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: white, silver, sunburst gold. Expression: patient, protective, immovable. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: white, silver, sunburst gold. Expression: patient, protective, immovable. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -616,7 +616,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -650,7 +650,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ocean blue, teal, silver coins. Expression: playful, mocking, always flipping a coin. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ocean blue, teal, silver coins. Expression: playful, mocking, always flipping a coin. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -658,7 +658,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -692,7 +692,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ruby red, emerald green, gold. Expression: loud, generous, bragging. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ruby red, emerald green, gold. Expression: loud, generous, bragging. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -700,7 +700,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -734,7 +734,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: storm blue, crimson, white lightning. Expression: confident, elegant, a little bored of winning. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: storm blue, crimson, white lightning. Expression: confident, elegant, a little bored of winning. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -742,7 +742,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -776,7 +776,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: warm browns, teal, cream. Expression: friendly, encouraging. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: warm browns, teal, cream. Expression: friendly, encouraging. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -784,7 +784,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -818,7 +818,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: gold, red, deep blue. Expression: brisk and showy. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: gold, red, deep blue. Expression: brisk and showy. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -826,7 +826,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -860,7 +860,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forge orange, aether blue, iron. Expression: booming, loves tinkering. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forge orange, aether blue, iron. Expression: booming, loves tinkering. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -868,7 +868,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },
@@ -902,7 +902,7 @@
      "style": "rd_pro__fantasy",
      "width": 96,
      "height": 96,
-     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: blue-grey, cream, ink black. Expression: careful and precise. Plain flat background, no text",
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: blue-grey, cream, ink black. Expression: careful and precise. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
      "remove_bg": true
     },
     {
@@ -910,7 +910,7 @@
      "style": "rd_advanced_animation__idle",
      "width": 96,
      "height": 96,
-     "prompt": "gentle breathing and one slow blink, the head barely moves, shoulders stay in place",
+     "prompt": "gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place",
      "frames_duration": 4,
      "from": "base"
     },

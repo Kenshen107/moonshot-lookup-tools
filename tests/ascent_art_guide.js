@@ -14,13 +14,13 @@ const iconPrompt = (k, i) => `${STYLE}. ${i.frames > 1 ? `Animated loop of ${i.f
 
 // ---- Machine-readable manifest for tools/make_art.py (styles checked against the Retro Diffusion API catalog, 2026-09) ----
 const hash = str => { let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1000000; };
-const charSubject = c => `Close-up head-and-shoulders portrait (a dialogue portrait) of ${c.look}. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ${c.palette}. Expression: ${c.mood}. Plain flat background, no text`;
+const charSubject = c => `Close-up head-and-shoulders portrait (a dialogue portrait) of ${c.look}. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ${c.palette}. Expression: ${c.mood}. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text`;
 const MANIFEST = { generated: 'by tests/ascent_art_guide.js; do not edit by hand', assets: [] };
 for (const c of CH) MANIFEST.assets.push({
     id: c.id, group: 'characters', name: c.name, out: `spellslinger/art/characters/${c.id}.png`, kind: 'sheet', frame: [96, 96], cols: 4, rows: 2, seed: hash(c.id),
     steps: [
         { key: 'base', style: 'rd_pro__fantasy', width: 96, height: 96, prompt: charSubject(c), remove_bg: true },
-        { key: 'idle', style: 'rd_advanced_animation__idle', width: 96, height: 96, prompt: 'gentle breathing and one slow blink, the head barely moves, shoulders stay in place', frames_duration: 4, from: 'base' },
+        { key: 'idle', style: 'rd_advanced_animation__idle', width: 96, height: 96, prompt: 'gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place', frames_duration: 4, from: 'base' },
         { key: 'talk', style: 'rd_advanced_animation__custom_action', width: 96, height: 96, prompt: 'talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place', frames_duration: 4, from: 'base' }
     ]
 });

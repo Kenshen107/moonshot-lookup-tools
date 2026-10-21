@@ -177,6 +177,7 @@ def main():
     ap.add_argument('--only', default='', help='comma list of asset ids')
     ap.add_argument('--max-spend', type=float, default=20.0, help='stop before spending more than this many dollars in this run')
     ap.add_argument('--force', action='store_true', help='redo assets whose PNG already exists')
+    ap.add_argument('--redo', default='', help='comma list of step names (base, idle, talk, gen) to make again for the chosen assets, keeping the other steps; use with --seed-bump for a different result')
     ap.add_argument('--seed-bump', type=int, default=0, help='added to every seed, for a different look from the same prompt')
     a = ap.parse_args()
 
@@ -187,6 +188,7 @@ def main():
     man = json.loads(MANIFEST.read_text())
     groups = {g.strip() for g in a.group.split(',') if g.strip()}
     only = {o.strip() for o in a.only.split(',') if o.strip()}
+    redo = {o.strip() for o in a.redo.split(',') if o.strip()}
     assets = [x for x in man['assets'] if x['group'] in groups and (not only or x['id'] in only)]
     if not assets:
         sys.exit('Nothing matches --group / --only.')
@@ -227,7 +229,7 @@ def main():
     todo = []
     for x in assets:
         out = ROOT / x['out']
-        if out.exists() and not a.force:
+        if out.exists() and not a.force and not redo:
             continue
         todo.append(x)
     print(f'{len(todo)} of {len(assets)} assets to make ({len(assets) - len(todo)} already done).')
@@ -236,11 +238,11 @@ def main():
         d = CACHE / x['id']
         d.mkdir(parents=True, exist_ok=True)
         state = load_state(d)
-        seed = x['seed'] + a.seed_bump
         png = {}
         for s in x['steps']:
+            seed = x['seed'] + (a.seed_bump if (not redo or s['key'] in redo) else 0)
             f = d / f'{s["key"]}.{"gif" if s["style"].startswith(("rd_animation", "rd_advanced_animation")) else "png"}'
-            if f.exists() and not a.force and state.get(s['key'] + '_seed') == seed:
+            if f.exists() and not a.force and s['key'] not in redo and state.get(s['key'] + '_seed') == seed:
                 png[s['key']] = f.read_bytes()
                 continue
             src = png.get(s['from']) if s.get('from') else None
