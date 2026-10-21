@@ -290,6 +290,13 @@ function fireMain2() { if (!G || G.main2Turn === G.turn) return; G.main2Turn = G
 // Counters on a creature, whatever kind (Warden of the Grove)
 const jvCounters = o => Math.max(0, o.counters || 0) + Object.values(o.ctr || {}).reduce((a, v) => a + Math.max(0, v), 0);
 function weakestFoe(P) { return foes(P).slice().sort((a, b) => a.life - b.life)[0] || null; }
+// "Target opponent": a person chooses when there is more than one (the computer takes the weakest)
+async function chooseOpponent(P, title) {
+    const fs = foes(P).filter(x => !x.out);
+    if (fs.length <= 1 || P.isAI || AUTOPLAY) return weakestFoe(P);
+    const w = await pickWord(P, title, fs.map(f => f.name));
+    return fs.find(f => f.name === w) || weakestFoe(P);
+}
 
 Object.assign(CMD_SCORE, { jenovaCombat: () => 0, jenovaDraw: () => 0, x23: () => 0, doubleMutants: () => 0, michelangeloRaid: () => 3, sphereCounter: () => 0, endureEntered: () => 0, sephirothDies: () => 0 });
 Object.assign(CMD, {
@@ -331,7 +338,7 @@ Object.assign(CMD, {
     },
     // Sephiroth, Fabled SOLDIER: drain 1; the fourth time this turn he transforms (Super Nova: an emblem with the same drain)
     async sephirothDies(P, e, t, src) {
-        const O = weakestFoe(P);
+        const O = await chooseOpponent(P, `${src.card.name}: choose a target opponent (they lose 1 life, you gain 1)`);
         if (O && !O.out) { O.life -= 1; log(`${O.name} ${you(O) ? 'lose' : 'loses'} 1 life.`); gainLifeFor(P, 1); }
         G.sephN = G.sephN && G.sephN.turn === G.turn && G.sephN.uid === src.uid ? { turn: G.turn, uid: src.uid, n: G.sephN.n + 1 } : { turn: G.turn, uid: src.uid, n: 1 };
         if (G.sephN.n === 4 && onBf(src.uid) && src.front && src.front.back && src.card === src.front) {
@@ -339,7 +346,7 @@ Object.assign(CMD, {
             await applyEffect(P, { t: 'transform' }, null, src);
         }
     },
-    superNovaDrain(P) { const O = weakestFoe(P); if (O && !O.out) { O.life -= 1; log(`${O.name} ${you(O) ? 'lose' : 'loses'} 1 life (Super Nova).`); gainLifeFor(P, 1); } }
+    async superNovaDrain(P) { const O = await chooseOpponent(P, 'Super Nova: choose a target opponent (they lose 1 life, you gain 1)'); if (O && !O.out) { O.life -= 1; log(`${O.name} ${you(O) ? 'lose' : 'loses'} 1 life (Super Nova).`); gainLifeFor(P, 1); } }
 });
 // Super Nova emblems: each one drains whenever any creature dies
 function superNovaWatch(ctx) {
@@ -361,7 +368,18 @@ Object.assign(CMD, {
 // Wolverine, Claws Out: "you may have ~ assign his combat damage as though he weren't blocked". Combat damage is worked out without asking,
 // so the choice is made by a rule: go to the player when it is lethal or when it can't kill the blockers anyway; otherwise kill the blockers.
 function assignAsUnblocked(atk, blks, dmg, D) {
+    if (atk.faceChoice && atk.faceChoice.turn === G.turn) return atk.faceChoice.v; // a person was asked when it became blocked
     if (D && D.life !== undefined && D.life <= dmg) return true;
     const need = blks.reduce((a, b) => a + Math.max(1, tou(b) - b.dmg), 0);
     return dmg < need || blks.every(b => creatureValue(b) < 2);
 }
+
+Object.assign(CMD_SCORE, { wolverineAsk: () => 0 });
+Object.assign(CMD, {
+    // Wolverine: a person chooses, when he becomes blocked, whether to assign his combat damage as though he weren't blocked
+    async wolverineAsk(P, e, t, src) {
+        if (P.isAI || AUTOPLAY || !onBf(src.uid)) return;
+        const v = await askYes(P, `${src.card.name} is blocked: assign his combat damage as though he weren't blocked (to the player)?`, { card: src.card, yes: 'To the player', no: 'To the blockers' });
+        src.faceChoice = { turn: G.turn, v: !!v };
+    }
+});

@@ -48,7 +48,7 @@ cl(/^At the beginning of combat on your turn, put a number of \+1\/\+1 counters 
 cl(/^Whenever a Mutant you control dies during your turn, you draw cards equal to its power\.$/, R => { R.trig.push({ ev: 'creatureDies', fn: 'mutantDiesMyTurn', effects: [cmd('jenovaDraw')] }); });
 cl(/^Whenever another Mutant you control enters, put a \+1\/\+1 counter on that creature and a \+1\/\+1 counter on ~\.$/, R => { R.trig.push(SPEC('enters', { another: true, type: 'Creature', sub: 'Mutant' }, { effects: [cmd('x23')] })); });
 cl(/^Whenever a Mutant you control attacks, double its power until end of turn\.$/, R => { R.trig.push({ ev: 'attacks', fn: 'mutantAttacks', effects: [cmd('doubleMutants')] }); });
-cl(/^You may have ~ assign his combat damage as though he weren't blocked\.$/, R => { R.assignUnblocked = true; });
+cl(/^You may have ~ assign his combat damage as though he weren't blocked\.$/, R => { R.assignUnblocked = true; R.trig.push({ ev: 'blocked', effects: [cmd('wolverineAsk')] }); });
 cl(/^Partner—Character select$/, () => {});
 cl(/^Raid\s+— At the beginning of your second main phase, if you attacked this turn, put a \+1\/\+1 counter on target creature and create a Food token\.$/, R => { R.trig.push({ ev: 'main2', fn: 'raidMain2', effects: [cmd('michelangeloRaid', { target: 'creature', good: true })] }); });
 cl(/^Whenever a player casts a creature spell, you create a Mutagen token\.$/, R => { R.trig.push({ ev: 'cast', who: 'any', filter: 'creature', effects: [{ t: 'artToken', kind: 'mutagen', n: 1 }] }); });
