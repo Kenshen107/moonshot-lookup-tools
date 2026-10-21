@@ -20,7 +20,7 @@ for (const c of CH) MANIFEST.assets.push({
     id: c.id, group: 'characters', name: c.name, out: `spellslinger/art/characters/${c.id}.png`, kind: 'sheet', frame: [96, 96], cols: 16, rows: 2, seed: hash(c.id),
     steps: [
         { key: 'base', style: 'rd_pro__fantasy', width: 96, height: 96, prompt: charSubject(c), remove_bg: true },
-        { key: 'idle', style: 'rd_advanced_animation__idle', width: 96, height: 96, prompt: 'gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place', frames_duration: 16, from: 'base' },
+        { key: 'idle', style: 'rd_advanced_animation__idle', width: 96, height: 96, prompt: 'a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes', frames_duration: 16, from: 'base' },
         { key: 'talk', style: 'rd_advanced_animation__custom_action', width: 96, height: 96, prompt: 'talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place', frames_duration: 16, from: 'base' }
     ]
 });
