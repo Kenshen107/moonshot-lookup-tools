@@ -5339,6 +5339,91 @@
    ]
   },
   {
+   "id": "cardy",
+   "group": "site",
+   "name": "Cardy, the helper card (6 animation rows)",
+   "out": "art/site/cardy.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "idle",
+    "wave",
+    "talk",
+    "think",
+    "cheer",
+    "sleep"
+   ],
+   "seed": 413970,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A friendly living trading card mascot called Cardy, full body, facing the viewer: the card is the body, a cream-colored card with a teal frame, a big simple face (two round eyes, a wide smile, rosy cheeks) where the card art would be, small stick arms with white cartoon gloves and little legs with shoes. Spunky, eager, kind, a little goofy. Palette: cream, teal, gold, dark navy outline. Plain background, centered, no text, no logos, no real card art",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: bouncing very slightly on tiptoe, one blink, the eyes glancing left and right, the smile unchanged, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "wave",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "waving one glove high with a big happy grin and a small hop, then settling, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking enthusiastically: the mouth opens and closes, a glove gestures, the body bobs, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "think",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "thinking: one glove on the chin, eyes looking up and to the side, a small tilt of the body, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "cheer",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "cheering: both gloves in the air, jumping with a huge grin and tiny sparkles, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "sleep",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "sleeping: eyes closed, the body slumped and gently breathing, a little Z floating up, the drawing, colors and framing stay identical to the starting picture",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
    "id": "frame-common",
    "group": "site",
    "name": "common card frame",
@@ -5472,29 +5557,6 @@
      "width": 32,
      "height": 32,
      "prompt": "a pixel art mouse pointer arrow, cream white fill with a thick dark outline and one small teal highlight pixel, pointing up and to the left, the tip at the very top-left corner of the image",
-     "remove_bg": true
-    }
-   ]
-  },
-  {
-   "id": "mascot",
-   "group": "site",
-   "name": "page mascot (waves, blinks)",
-   "out": "art/site/mascot.png",
-   "kind": "strip",
-   "frame": [
-    64,
-    64
-   ],
-   "frames": 8,
-   "seed": 708602,
-   "steps": [
-    {
-     "key": "gen",
-     "style": "rd_animation__vfx",
-     "width": 64,
-     "height": 64,
-     "prompt": "a tiny cute pixel mascot: a smiling crescent moon wearing a little rocket-nose-cone cap, floating with a gentle bob, blinking once and giving a small wave, a seamless 8 frame loop, centered",
      "remove_bg": true
     }
    ]
@@ -6599,6 +6661,2483 @@
      "width": 32,
      "height": 32,
      "prompt": "a golden pi symbol with a small shine, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "letters-gold",
+   "group": "letters",
+   "name": "lettering: gold (A-Z, 0-9)",
+   "out": "art/site/letters-gold.png",
+   "kind": "stills",
+   "frame": [
+    32,
+    32
+   ],
+   "stills": [
+    "g_A",
+    "g_B",
+    "g_C",
+    "g_D",
+    "g_E",
+    "g_F",
+    "g_G",
+    "g_H",
+    "g_I",
+    "g_J",
+    "g_K",
+    "g_L",
+    "g_M",
+    "g_N",
+    "g_O",
+    "g_P",
+    "g_Q",
+    "g_R",
+    "g_S",
+    "g_T",
+    "g_U",
+    "g_V",
+    "g_W",
+    "g_X",
+    "g_Y",
+    "g_Z",
+    "g_0",
+    "g_1",
+    "g_2",
+    "g_3",
+    "g_4",
+    "g_5",
+    "g_6",
+    "g_7",
+    "g_8",
+    "g_9"
+   ],
+   "seed": 469907,
+   "steps": [
+    {
+     "key": "g_A",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"A\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_B",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"B\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_C",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"C\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_D",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"D\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_E",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"E\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_F",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"F\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_G",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"G\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_H",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"H\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_I",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"I\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_J",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"J\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_K",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"K\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_L",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"L\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_M",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"M\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_N",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"N\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_O",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"O\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_P",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"P\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Q",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Q\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_R",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"R\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_S",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"S\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_T",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"T\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_U",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"U\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_V",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"V\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_W",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"W\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_X",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"X\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Y",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Y\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Z",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Z\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_0",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"0\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_1",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"1\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_2",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"2\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_3",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"3\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_4",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"4\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_5",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"5\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_6",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"6\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_7",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"7\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_8",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"8\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_9",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"9\", centered and filling most of the image, ornate fantasy gold with a dark outline and a bevelled highlight, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "letters-ember",
+   "group": "letters",
+   "name": "lettering: ember (A-Z, 0-9)",
+   "out": "art/site/letters-ember.png",
+   "kind": "stills",
+   "frame": [
+    32,
+    32
+   ],
+   "stills": [
+    "g_A",
+    "g_B",
+    "g_C",
+    "g_D",
+    "g_E",
+    "g_F",
+    "g_G",
+    "g_H",
+    "g_I",
+    "g_J",
+    "g_K",
+    "g_L",
+    "g_M",
+    "g_N",
+    "g_O",
+    "g_P",
+    "g_Q",
+    "g_R",
+    "g_S",
+    "g_T",
+    "g_U",
+    "g_V",
+    "g_W",
+    "g_X",
+    "g_Y",
+    "g_Z",
+    "g_0",
+    "g_1",
+    "g_2",
+    "g_3",
+    "g_4",
+    "g_5",
+    "g_6",
+    "g_7",
+    "g_8",
+    "g_9"
+   ],
+   "seed": 383044,
+   "steps": [
+    {
+     "key": "g_A",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"A\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_B",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"B\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_C",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"C\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_D",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"D\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_E",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"E\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_F",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"F\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_G",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"G\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_H",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"H\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_I",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"I\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_J",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"J\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_K",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"K\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_L",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"L\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_M",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"M\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_N",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"N\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_O",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"O\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_P",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"P\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Q",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Q\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_R",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"R\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_S",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"S\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_T",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"T\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_U",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"U\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_V",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"V\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_W",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"W\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_X",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"X\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Y",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Y\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Z",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Z\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_0",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"0\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_1",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"1\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_2",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"2\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_3",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"3\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_4",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"4\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_5",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"5\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_6",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"6\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_7",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"7\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_8",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"8\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_9",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"9\", centered and filling most of the image, charred black stone edged with glowing orange embers and a few drips of green slime, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "letters-ice",
+   "group": "letters",
+   "name": "lettering: ice (A-Z, 0-9)",
+   "out": "art/site/letters-ice.png",
+   "kind": "stills",
+   "frame": [
+    32,
+    32
+   ],
+   "stills": [
+    "g_A",
+    "g_B",
+    "g_C",
+    "g_D",
+    "g_E",
+    "g_F",
+    "g_G",
+    "g_H",
+    "g_I",
+    "g_J",
+    "g_K",
+    "g_L",
+    "g_M",
+    "g_N",
+    "g_O",
+    "g_P",
+    "g_Q",
+    "g_R",
+    "g_S",
+    "g_T",
+    "g_U",
+    "g_V",
+    "g_W",
+    "g_X",
+    "g_Y",
+    "g_Z",
+    "g_0",
+    "g_1",
+    "g_2",
+    "g_3",
+    "g_4",
+    "g_5",
+    "g_6",
+    "g_7",
+    "g_8",
+    "g_9"
+   ],
+   "seed": 500032,
+   "steps": [
+    {
+     "key": "g_A",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"A\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_B",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"B\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_C",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"C\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_D",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"D\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_E",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"E\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_F",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"F\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_G",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"G\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_H",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"H\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_I",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"I\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_J",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"J\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_K",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"K\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_L",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"L\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_M",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"M\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_N",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"N\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_O",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"O\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_P",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"P\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Q",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Q\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_R",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"R\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_S",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"S\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_T",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"T\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_U",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"U\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_V",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"V\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_W",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"W\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_X",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"X\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Y",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Y\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Z",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Z\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_0",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"0\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_1",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"1\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_2",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"2\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_3",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"3\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_4",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"4\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_5",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"5\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_6",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"6\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_7",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"7\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_8",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"8\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_9",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"9\", centered and filling most of the image, frosted blue ice crystal with white snow resting on top, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "letters-leaf",
+   "group": "letters",
+   "name": "lettering: leaf (A-Z, 0-9)",
+   "out": "art/site/letters-leaf.png",
+   "kind": "stills",
+   "frame": [
+    32,
+    32
+   ],
+   "stills": [
+    "g_A",
+    "g_B",
+    "g_C",
+    "g_D",
+    "g_E",
+    "g_F",
+    "g_G",
+    "g_H",
+    "g_I",
+    "g_J",
+    "g_K",
+    "g_L",
+    "g_M",
+    "g_N",
+    "g_O",
+    "g_P",
+    "g_Q",
+    "g_R",
+    "g_S",
+    "g_T",
+    "g_U",
+    "g_V",
+    "g_W",
+    "g_X",
+    "g_Y",
+    "g_Z",
+    "g_0",
+    "g_1",
+    "g_2",
+    "g_3",
+    "g_4",
+    "g_5",
+    "g_6",
+    "g_7",
+    "g_8",
+    "g_9"
+   ],
+   "seed": 579733,
+   "steps": [
+    {
+     "key": "g_A",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"A\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_B",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"B\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_C",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"C\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_D",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"D\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_E",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"E\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_F",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"F\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_G",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"G\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_H",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"H\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_I",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"I\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_J",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"J\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_K",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"K\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_L",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"L\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_M",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"M\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_N",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"N\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_O",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"O\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_P",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"P\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Q",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Q\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_R",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"R\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_S",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"S\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_T",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"T\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_U",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"U\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_V",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"V\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_W",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"W\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_X",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"X\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Y",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Y\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Z",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Z\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_0",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"0\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_1",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"1\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_2",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"2\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_3",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"3\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_4",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"4\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_5",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"5\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_6",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"6\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_7",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"7\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_8",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"8\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_9",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"9\", centered and filling most of the image, carved wood wrapped with red and orange autumn leaves, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "letters-garland",
+   "group": "letters",
+   "name": "lettering: garland (A-Z, 0-9)",
+   "out": "art/site/letters-garland.png",
+   "kind": "stills",
+   "frame": [
+    32,
+    32
+   ],
+   "stills": [
+    "g_A",
+    "g_B",
+    "g_C",
+    "g_D",
+    "g_E",
+    "g_F",
+    "g_G",
+    "g_H",
+    "g_I",
+    "g_J",
+    "g_K",
+    "g_L",
+    "g_M",
+    "g_N",
+    "g_O",
+    "g_P",
+    "g_Q",
+    "g_R",
+    "g_S",
+    "g_T",
+    "g_U",
+    "g_V",
+    "g_W",
+    "g_X",
+    "g_Y",
+    "g_Z",
+    "g_0",
+    "g_1",
+    "g_2",
+    "g_3",
+    "g_4",
+    "g_5",
+    "g_6",
+    "g_7",
+    "g_8",
+    "g_9"
+   ],
+   "seed": 673420,
+   "steps": [
+    {
+     "key": "g_A",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"A\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_B",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"B\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_C",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"C\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_D",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"D\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_E",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"E\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_F",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"F\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_G",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"G\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_H",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"H\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_I",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"I\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_J",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"J\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_K",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"K\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_L",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"L\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_M",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"M\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_N",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"N\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_O",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"O\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_P",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"P\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Q",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Q\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_R",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"R\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_S",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"S\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_T",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"T\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_U",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"U\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_V",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"V\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_W",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"W\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_X",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"X\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Y",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Y\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Z",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Z\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_0",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"0\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_1",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"1\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_2",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"2\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_3",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"3\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_4",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"4\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_5",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"5\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_6",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"6\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_7",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"7\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_8",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"8\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_9",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"9\", centered and filling most of the image, green pine garland with red berries and tiny gold lights, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "letters-bloom",
+   "group": "letters",
+   "name": "lettering: bloom (A-Z, 0-9)",
+   "out": "art/site/letters-bloom.png",
+   "kind": "stills",
+   "frame": [
+    32,
+    32
+   ],
+   "stills": [
+    "g_A",
+    "g_B",
+    "g_C",
+    "g_D",
+    "g_E",
+    "g_F",
+    "g_G",
+    "g_H",
+    "g_I",
+    "g_J",
+    "g_K",
+    "g_L",
+    "g_M",
+    "g_N",
+    "g_O",
+    "g_P",
+    "g_Q",
+    "g_R",
+    "g_S",
+    "g_T",
+    "g_U",
+    "g_V",
+    "g_W",
+    "g_X",
+    "g_Y",
+    "g_Z",
+    "g_0",
+    "g_1",
+    "g_2",
+    "g_3",
+    "g_4",
+    "g_5",
+    "g_6",
+    "g_7",
+    "g_8",
+    "g_9"
+   ],
+   "seed": 245212,
+   "steps": [
+    {
+     "key": "g_A",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"A\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_B",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"B\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_C",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"C\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_D",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"D\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_E",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"E\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_F",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"F\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_G",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"G\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_H",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"H\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_I",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"I\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_J",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"J\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_K",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"K\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_L",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"L\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_M",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"M\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_N",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"N\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_O",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"O\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_P",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"P\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Q",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Q\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_R",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"R\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_S",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"S\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_T",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"T\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_U",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"U\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_V",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"V\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_W",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"W\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_X",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"X\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Y",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Y\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_Z",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"Z\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_0",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"0\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_1",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"1\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_2",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"2\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_3",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"3\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_4",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"4\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_5",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"5\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_6",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"6\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_7",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"7\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_8",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"8\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    },
+    {
+     "key": "g_9",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. One single pixel art lettering glyph: only the capital letter \"9\", centered and filling most of the image, green vines with pink and white blossoms, a bold readable letterform, transparent background, no other characters, no words",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-panel-default",
+   "group": "frames",
+   "name": "panel frame: default",
+   "out": "art/site/frame-panel-default.png",
+   "kind": "strip",
+   "frame": [
+    48,
+    48
+   ],
+   "frames": 1,
+   "seed": 660953,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 48,
+     "height": 48,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, plain steel with a teal inner edge and a small gem in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-panel-halloween",
+   "group": "frames",
+   "name": "panel frame: halloween",
+   "out": "art/site/frame-panel-halloween.png",
+   "kind": "strip",
+   "frame": [
+    48,
+    48
+   ],
+   "frames": 1,
+   "seed": 4099,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 48,
+     "height": 48,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, twisted dark wood with orange glow, a cobweb and a tiny spider in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-panel-autumn",
+   "group": "frames",
+   "name": "panel frame: autumn",
+   "out": "art/site/frame-panel-autumn.png",
+   "kind": "strip",
+   "frame": [
+    48,
+    48
+   ],
+   "frames": 1,
+   "seed": 176238,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 48,
+     "height": 48,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, brown carved wood with orange and red leaves tucked into each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-panel-winter",
+   "group": "frames",
+   "name": "panel frame: winter",
+   "out": "art/site/frame-panel-winter.png",
+   "kind": "strip",
+   "frame": [
+    48,
+    48
+   ],
+   "frames": 1,
+   "seed": 712589,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 48,
+     "height": 48,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, pale blue ice with small icicles and a snowflake in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-panel-christmas",
+   "group": "frames",
+   "name": "panel frame: christmas",
+   "out": "art/site/frame-panel-christmas.png",
+   "kind": "strip",
+   "frame": [
+    48,
+    48
+   ],
+   "frames": 1,
+   "seed": 62824,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 48,
+     "height": 48,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, red and green with holly leaves and berries in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-panel-spring",
+   "group": "frames",
+   "name": "panel frame: spring",
+   "out": "art/site/frame-panel-spring.png",
+   "kind": "strip",
+   "frame": [
+    48,
+    48
+   ],
+   "frames": 1,
+   "seed": 989953,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 48,
+     "height": 48,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, green vines with pink blossoms in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-panel-newyear",
+   "group": "frames",
+   "name": "panel frame: newyear",
+   "out": "art/site/frame-panel-newyear.png",
+   "kind": "strip",
+   "frame": [
+    48,
+    48
+   ],
+   "frames": 1,
+   "seed": 440863,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 48,
+     "height": 48,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, polished gold with a four-point star and tiny confetti in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "realm-castle-far",
+   "group": "realm",
+   "name": "Realm castle: far",
+   "out": "art/site/realm-castle-far.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 447343,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of a high fantasy kingdom at sunset: a castle with towers on a hill, pine forest, distant mountains: the far background only: the sky and the most distant mountains or horizon, no foreground. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "realm-castle-mid",
+   "group": "realm",
+   "name": "Realm castle: mid",
+   "out": "art/site/realm-castle-mid.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 222840,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of a high fantasy kingdom at sunset: a castle with towers on a hill, pine forest, distant mountains: the middle distance only: the main silhouettes on the ground, transparent sky above them. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "realm-castle-near",
+   "group": "realm",
+   "name": "Realm castle: near",
+   "out": "art/site/realm-castle-near.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 912924,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of a high fantasy kingdom at sunset: a castle with towers on a hill, pine forest, distant mountains: the foreground only: dark close-up foliage or rocks along the bottom edge, transparent above them. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "realm-frontier-far",
+   "group": "realm",
+   "name": "Realm frontier: far",
+   "out": "art/site/realm-frontier-far.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 617146,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of a science fiction frontier at night: a ringed planet, a moon, a distant space station, mesas and crystals: the far background only: the sky and the most distant mountains or horizon, no foreground. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "realm-frontier-mid",
+   "group": "realm",
+   "name": "Realm frontier: mid",
+   "out": "art/site/realm-frontier-mid.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 407785,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of a science fiction frontier at night: a ringed planet, a moon, a distant space station, mesas and crystals: the middle distance only: the main silhouettes on the ground, transparent sky above them. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "realm-frontier-near",
+   "group": "realm",
+   "name": "Realm frontier: near",
+   "out": "art/site/realm-frontier-near.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 839963,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of a science fiction frontier at night: a ringed planet, a moon, a distant space station, mesas and crystals: the foreground only: dark close-up foliage or rocks along the bottom edge, transparent above them. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "realm-gothic-far",
+   "group": "realm",
+   "name": "Realm gothic: far",
+   "out": "art/site/realm-gothic-far.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 245997,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of a gothic moonlit night: a huge full moon, bare twisted trees, a chapel spire and gravestones: the far background only: the sky and the most distant mountains or horizon, no foreground. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "realm-gothic-mid",
+   "group": "realm",
+   "name": "Realm gothic: mid",
+   "out": "art/site/realm-gothic-mid.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 436766,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of a gothic moonlit night: a huge full moon, bare twisted trees, a chapel spire and gravestones: the middle distance only: the main silhouettes on the ground, transparent sky above them. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "realm-gothic-near",
+   "group": "realm",
+   "name": "Realm gothic: near",
+   "out": "art/site/realm-gothic-near.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 823822,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of a gothic moonlit night: a huge full moon, bare twisted trees, a chapel spire and gravestones: the foreground only: dark close-up foliage or rocks along the bottom edge, transparent above them. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "realm-grove-far",
+   "group": "realm",
+   "name": "Realm grove: far",
+   "out": "art/site/realm-grove-far.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 451386,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of an enchanted glowing grove: giant ancient trees, huge glowing mushrooms, fireflies: the far background only: the sky and the most distant mountains or horizon, no foreground. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "realm-grove-mid",
+   "group": "realm",
+   "name": "Realm grove: mid",
+   "out": "art/site/realm-grove-mid.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 851433,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of an enchanted glowing grove: giant ancient trees, huge glowing mushrooms, fireflies: the middle distance only: the main silhouettes on the ground, transparent sky above them. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "realm-grove-near",
+   "group": "realm",
+   "name": "Realm grove: near",
+   "out": "art/site/realm-grove-near.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    180
+   ],
+   "frames": 1,
+   "seed": 735835,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 180,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A wide parallax background layer of an enchanted glowing grove: giant ancient trees, huge glowing mushrooms, fireflies: the foreground only: dark close-up foliage or rocks along the bottom edge, transparent above them. Calm, soft contrast so a web page can sit on top of it, no text, no characters",
      "remove_bg": true
     }
    ]
