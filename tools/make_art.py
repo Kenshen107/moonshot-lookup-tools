@@ -13,6 +13,9 @@ Needs: requests, Pillow.
 import argparse, base64, io, json, os, sys, time, uuid
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from keep_old import keep_old  # noqa: E402
+
 try:
     import requests
     from PIL import Image, ImageSequence
@@ -331,6 +334,7 @@ def main():
             if data is None:
                 break
             spent += cost
+            keep_old(f)
             f.write_bytes(data)
             state[s['key'] + '_seed'] = seed
             state.pop(s['key'] + '_idem', None)
@@ -340,6 +344,8 @@ def main():
             if a.go and all(png.get(s['key']) for s in x['steps']):
                 out = ROOT / x['out']
                 out.parent.mkdir(parents=True, exist_ok=True)
+                if keep_old(out):
+                    print(f'  kept the old version in {out.parent.name}/_old/')
                 build_output(x, png).save(out, 'PNG')
                 print(f'  wrote {x["out"]}')
     finish(total, spent, a)

@@ -17,6 +17,9 @@ import argparse
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from keep_old import keep_old  # noqa: E402
+
 try:
     import numpy as np
     from PIL import Image
@@ -131,6 +134,7 @@ def build(path, write):
         for r, row in enumerate((idle_new, talk_new)):
             for c, f in enumerate(row):
                 sheet[r * H:(r + 1) * H, c * W:(c + 1) * W] = f
+        keep_old(path)
         Image.fromarray(np.clip(sheet.round(), 0, 255).astype(np.uint8), 'RGBA').save(path, 'PNG')
     return (f'{path.stem:<16} idle step/seam {b_idle[0]:>4}/{b_idle[1]:>4} -> {a_idle[0]:>4}/{a_idle[1]:>4}   '
             f'talk seam {b_talk[1]:>4} -> {a_talk[1]:>4}   (settle-in: first {start} frames skipped, window {a}-{a + WINDOW - 1})')

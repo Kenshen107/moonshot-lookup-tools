@@ -8,13 +8,12 @@ or the glove so the hand seems to float. For every frame this script
   3. deletes small detached specks, except yellow sparkles (the cheer row),
   4. (rows that are lined up) wipes the dotted noise above the card's top edge,
   5. draws a 2-pixel arm line from any big detached piece (a glove) to the nearest part of the rest of the drawing.
-`--replace 1:5=6` copies frame 6 of row 1 over frame 5 (for a frame whose outline came out rough). Run it once per freshly generated sheet (a second run is harmless but pointless). A copy of the original goes to tools/.art-cache/cardy-original.png.
+`--replace 1:5=6` copies frame 6 of row 1 over frame 5 (for a frame whose outline came out rough). Run it once per freshly generated sheet (a second run is harmless but pointless). The old sheet is kept in art/site/_old/.
 
   python tools/polish_cardy.py            report only
   python tools/polish_cardy.py --write
 """
 import argparse
-import shutil
 import sys
 from pathlib import Path
 
@@ -23,6 +22,9 @@ try:
     from PIL import Image
 except ImportError:
     sys.exit('Needs numpy and Pillow:  pip install numpy pillow')
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from keep_old import keep_old  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SHEET = ROOT / 'art' / 'site' / 'cardy.png'
@@ -189,10 +191,7 @@ def main():
             out[r * S:(r + 1) * S, c * S:(c + 1) * S] = f
     print(f'speckle pixels removed {totals[0]}, holes filled {totals[1]}, small pieces removed {totals[2]}, arms joined {totals[3]}')
     if a.write:
-        keep = ROOT / 'tools' / '.art-cache' / 'cardy-original.png'
-        keep.parent.mkdir(parents=True, exist_ok=True)
-        if not keep.exists():
-            shutil.copy(SHEET, keep)
+        keep_old(SHEET)
         Image.fromarray(out).save(SHEET)
         print('wrote', SHEET)
 
