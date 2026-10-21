@@ -7079,10 +7079,10 @@
         /* ---- Background glow (full) ---- */
         #fxAurora { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; display: none; }
         html[data-fx="full"] #fxAurora { display: block; }
-        #fxAurora i { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(90px); opacity: 0.16; animation: fx-aurora 28s ease-in-out infinite alternate; }
+        #fxAurora i { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(90px); opacity: 0.16; }   /* still (was a slow drift: a blurred layer redrawn every frame costs too much) */
         #fxAurora i:nth-child(1) { background: var(--brand); top: -28vmax; left: -18vmax; }
-        #fxAurora i:nth-child(2) { background: var(--brand-light); top: -24vmax; right: -24vmax; opacity: 0.12; animation-duration: 34s; animation-delay: -9s; }
-        #fxAurora i:nth-child(3) { background: color-mix(in srgb, var(--brand) 50%, var(--color-link)); bottom: -38vmax; left: 22vw; opacity: 0.1; animation-duration: 40s; animation-delay: -15s; }
+        #fxAurora i:nth-child(2) { background: var(--brand-light); top: -24vmax; right: -24vmax; opacity: 0.12; }
+        #fxAurora i:nth-child(3) { background: color-mix(in srgb, var(--brand) 50%, var(--color-link)); bottom: -38vmax; left: 22vw; opacity: 0.1; }
         @keyframes fx-aurora { to { transform: translate(8vw, 6vh) scale(1.15); } }
 
         /* ---- Scene banner behind the page title ---- */
@@ -7170,6 +7170,9 @@
 
         /* ---- Side-margin particles (full): drawn on a canvas in #seasonalFx ---- */
         #seasonalFx canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+        #seasonalFx canvas.fx-gutter { inset: 0 auto 0 0; height: 100%; }
+        #seasonalFx canvas.fx-gutter[data-side="1"] { inset: 0 0 0 auto; }
+        #seasonalFx.has-canvas { -webkit-mask-image: none; mask-image: none; }   /* the canvases only cover the side margins, so the mask isn't needed */
 
         /* ---- Card picture: tilt, foil treatments, rarity glow, 3D flip ---- */
         .holo-card {
@@ -22378,7 +22381,12 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         }
 
         // ---- The scene banner and the side-margin particles (canvas) ----
-        const fxState = { pal: null, scene: null, margin: [], running: false, sceneVisible: true, w: 0, h: 0 };
+        const fxState = { pal: null, scene: null, margin: [], running: false, sceneVisible: true, w: 0, h: 0, last: 0, step: 1 };
+        // Ambient animation budget (2026-10-21, owner: "back off ... so many effects ... runs smooth"): the sky, the side particles and the Realm run at a calm
+        // frame rate, and drop to a slow crawl once nothing has been touched for 45 seconds. Any mouse move, key, scroll or touch wakes them.
+        const AMBIENT = { idle: false, last: performance.now() };
+        ['pointermove', 'pointerdown', 'keydown', 'wheel', 'scroll', 'touchstart'].forEach(ev => window.addEventListener(ev, () => { AMBIENT.last = performance.now(); AMBIENT.idle = false; }, { passive: true, capture: true }));
+        setInterval(() => { AMBIENT.idle = performance.now() - AMBIENT.last > 45000; }, 5000);
         const fxRand = (a, b) => a + Math.random() * (b - a);
 
         function fxThemeGlyphs() {
@@ -22434,7 +22442,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             fxState.margin = [];
             if (gutter < 50) return;
             const glyphs = fxThemeGlyphs();
-            const count = glyphs.length ? 14 : 36;
+            const count = glyphs.length ? 8 : 18;   // calmer (was 14 / 36)
             for (let i = 0; i < count; i++) {
                 const left = i % 2 === 0;
                 const g = glyphs.length ? glyphs[i % glyphs.length] : null;
@@ -22621,8 +22629,8 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 ctx.lineWidth = 1;
                 s.drops.forEach(d => {
                     if (!still) {
-                        d.y += snow ? 0.4 + d.z * 0.8 : 5 + d.z * 6;
-                        d.x += snow ? Math.sin(t / 1200 + d.ph) * 0.3 : -1.2 * d.z;
+                        d.y += (snow ? 0.4 + d.z * 0.8 : 5 + d.z * 6) * fxState.step;
+                        d.x += (snow ? Math.sin(t / 1200 + d.ph) * 0.3 : -1.2 * d.z) * fxState.step;
                         if (d.y > h) { d.y = -10; d.x = fxRand(0, w + 40); }
                     }
                     ctx.globalAlpha = 0.3 + d.z * 0.6;
@@ -22640,38 +22648,44 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         function fxDrawMargin(t) {
             const layer = document.getElementById('seasonalFx');
             if (!layer) return;
-            let canvas = layer.querySelector('canvas');
-            if (!fxState.margin.length || !fxIs('full')) { if (canvas) canvas.remove(); return; }
-            if (!canvas) { canvas = document.createElement('canvas'); layer.appendChild(canvas); }
-            const { ctx, w, h } = fxSizeCanvas(canvas);
-            ctx.clearRect(0, 0, w, h);
-            const pal = fxState.pal;
-            fxState.margin.forEach(p => {
-                const offset = p.side === 0 ? 0 : w - p.gutter;
-                if (p.glyph) {
-                    const area = { glyph: p.glyph, motion: p.motion, x: p.x, y: p.y, z: p.z, ph: p.ph };
-                    fxMoveGlyph(area, p.gutter, h, t);
-                    p.x = area.x; p.y = area.y;
-                    if (p.x > p.gutter) p.x = 0;
-                    const tw = p.motion === 'twinkle' ? 0.4 + 0.6 * Math.abs(Math.sin(t / 900 + p.ph)) : 1;
-                    fxGlyph(ctx, { glyph: p.glyph, x: p.x + offset, y: p.y }, 14 + p.z * 18, (0.18 + p.z * 0.32) * tw);
-                } else {
-                    ctx.globalAlpha = (0.2 + 0.6 * p.z) * Math.abs(Math.sin(t / 1300 + p.ph));
-                    ctx.fillStyle = pal.brandLight;
-                    ctx.shadowColor = pal.brandLight;
-                    ctx.shadowBlur = 6;
-                    ctx.beginPath(); ctx.arc(p.x + offset, p.y, 0.6 + p.z * 1.4, 0, Math.PI * 2); ctx.fill();
-                    ctx.shadowBlur = 0;
-                    ctx.globalAlpha = 1;
-                }
+            // One narrow canvas per side margin (2026-10-21): a full-screen canvas under a mask had to be re-composited whole on every frame.
+            const old = layer.querySelector('canvas:not(.fx-gutter)'); if (old) old.remove();
+            if (!fxState.margin.length || !fxIs('full')) { layer.querySelectorAll('canvas').forEach(c => c.remove()); layer.classList.remove('has-canvas'); return; }
+            layer.classList.add('has-canvas');
+            const gutter = fxState.margin[0].gutter, pal = fxState.pal;
+            [0, 1].forEach(side => {
+                let canvas = layer.querySelector('canvas.fx-gutter[data-side="' + side + '"]');
+                if (!canvas) { canvas = document.createElement('canvas'); canvas.className = 'fx-gutter'; canvas.dataset.side = side; layer.appendChild(canvas); }
+                canvas.style.width = gutter + 'px';
+                const { ctx, h } = fxSizeCanvas(canvas);
+                ctx.clearRect(0, 0, gutter, h);
+                fxState.margin.forEach(p => {
+                    if (p.side !== side) return;
+                    if (p.glyph) {
+                        const area = { glyph: p.glyph, motion: p.motion, x: p.x, y: p.y, z: p.z, ph: p.ph };
+                        fxMoveGlyph(area, p.gutter, h, t);
+                        p.x = area.x; p.y = area.y;
+                        if (p.x > p.gutter) p.x = 0;
+                        const tw = p.motion === 'twinkle' ? 0.4 + 0.6 * Math.abs(Math.sin(t / 900 + p.ph)) : 1;
+                        fxGlyph(ctx, { glyph: p.glyph, x: p.x, y: p.y }, 14 + p.z * 18, (0.18 + p.z * 0.32) * tw);
+                    } else {
+                        ctx.globalAlpha = (0.2 + 0.6 * p.z) * Math.abs(Math.sin(t / 1300 + p.ph));
+                        ctx.fillStyle = pal.brandLight;
+                        ctx.beginPath(); ctx.arc(p.x, p.y, 0.6 + p.z * 1.4, 0, Math.PI * 2); ctx.fill();   // no shadow blur: it was the costliest part of this loop
+                        ctx.globalAlpha *= 0.35; ctx.beginPath(); ctx.arc(p.x, p.y, 1.8 + p.z * 2, 0, Math.PI * 2); ctx.fill();
+                        ctx.globalAlpha = 1;
+                    }
+                });
             });
         }
 
         function fxLoop(t) {
             if (!fxState.running) return;
+            requestAnimationFrame(fxLoop);
+            if (document.hidden || t - fxState.last < (AMBIENT.idle ? 250 : 50)) return;   // about 20 frames a second, 4 when idle
+            fxState.step = Math.min(4, (t - fxState.last) / 16.7) || 1; fxState.last = t;   // rain and snow move by the time passed, so they keep their speed
             if (fxState.sceneVisible) fxDrawScene(t, false);
             fxDrawMargin(t);
-            requestAnimationFrame(fxLoop);
         }
 
         // Rebuild everything for the current level and theme.
@@ -22937,7 +22951,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
 
     // ---------- The Realm: layered pixel landscapes that drift and change ----------
     const REALM = { biomes: ['castle', 'frontier', 'gothic', 'grove'], cur: 0, prev: -1, fadeT: 1, t0: 0, last: 0, switchAt: 0, built: null, W: 0, H: 180, cv: null, cx: null, running: false, forced: null, art: {}, off: { far: 0, mid: 0, near: 0, cloud: 0 }, lastT: 0, boost: 0, mx: 0, my: 0, tx: 0, ty: 0, nstars: [] };
-    const REALM_STAY = 80000, REALM_FADE = 4500, REALM_FPS = 24;
+    const REALM_STAY = 80000, REALM_FADE = 4500, REALM_FPS = 12;
     function pxrBiomeColors(biome, P) {
         const m = pxrMix, dk = m(P.canvas, [0, 0, 0], 0.55);
         const sky = {
@@ -23108,7 +23122,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function pxrFrame(t) {
         if (!REALM.running) return;
         requestAnimationFrame(pxrFrame);
-        if (document.hidden || t - REALM.last < 1000 / REALM_FPS) return;
+        if (document.hidden || t - REALM.last < 1000 / (AMBIENT.idle ? 4 : REALM_FPS)) return;
         REALM.last = t; pxrPaint(t);
     }
     function pxrPaint(t) {
@@ -23130,7 +23144,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (N.dusk > 0) { const gr = g.createLinearGradient(0, H * 0.3, 0, H); gr.addColorStop(0, pxrCss(P.warn, 0)); gr.addColorStop(1, pxrCss(P.warn, 0.22 * N.dusk)); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
         pxrWeather(g, t, N.kind, W, H);
         // a veil keeps the interface readable: the scene is a backdrop, not the subject (a little lighter in daylight)
-        g.fillStyle = pxrCss(P.canvas, 0.46 - 0.06 * N.light); g.fillRect(0, 0, W, H);
+        g.fillStyle = pxrCss(P.canvas, 0.58 - 0.06 * N.light); g.fillRect(0, 0, W, H);   // a calmer backdrop (was 0.46)
     }
     function pxrRefresh() {
         const full = fxIs('full');
@@ -23368,12 +23382,12 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (!trailOn() || e.pointerType === 'touch') return;
         trailEnsure(); const now = performance.now(), last = TRAIL.pts[TRAIL.pts.length - 1];
         if (last && Math.abs(last.x - e.clientX / 3) + Math.abs(last.y - e.clientY / 3) < 1.2) return;
-        TRAIL.pts.push({ x: e.clientX / 3, y: e.clientY / 3, t: now }); if (TRAIL.pts.length > 28) TRAIL.pts.shift();
+        TRAIL.pts.push({ x: e.clientX / 3, y: e.clientY / 3, t: now }); if (TRAIL.pts.length > 16) TRAIL.pts.shift();
         if (!TRAIL.running) { TRAIL.running = true; requestAnimationFrame(trailFrame); }
     }
     function trailFrame(now) {
         const g = TRAIL.g; trailSize(); g.clearRect(0, 0, TRAIL.w, TRAIL.h);
-        const life = 520, P = pxrPal(), col = pxrMix(P.light, P.heading, 0.25);
+        const life = 380, P = pxrPal(), col = pxrMix(P.light, P.heading, 0.25);
         TRAIL.pts = TRAIL.pts.filter(p => now - p.t < life);
         TRAIL.pts.forEach((p, i) => { const k = 1 - (now - p.t) / life; g.fillStyle = pxrCss(col, 0.5 * k * k); const s = k > 0.55 ? 2 : 1; g.fillRect(Math.round(p.x), Math.round(p.y), s, s); if (i % 5 === 0 && k > 0.4) { g.fillStyle = pxrCss(P.heading, 0.55 * k); g.fillRect(Math.round(p.x) + 2, Math.round(p.y) - 1, 1, 1); } });
         if (TRAIL.pts.length && trailOn()) requestAnimationFrame(trailFrame); else { TRAIL.running = false; TRAIL.pts = []; g.clearRect(0, 0, TRAIL.w, TRAIL.h); }
