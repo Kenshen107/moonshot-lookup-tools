@@ -23463,11 +23463,28 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         return o;
     }
     const CARDY_HATS = { halloween: 'witch', christmas: 'santa', winter: 'winter', newyear: 'party', spring: 'bunny', autumn: 'leaf' };
+    const CARDY_STIR = [0, 1, 6, 7, 13, 14, 15, 14, 13, 7, 6, 1, 0]; // the calm frames of the idle row (eyes open, a small sway), played once for a 'look'
     const CARDY_ROW = { idle: 0, look: 0, point: 1, wave: 1, talk: 2, think: 3, cheer: 4, surprised: 4, sleep: 5 };
     function cardyRender(now) {
         const t = now / 1000, g = CARDY.g; if (!g) return;
         if (CARDY.art) { // generated sheet: 16 frames per row, 96 x 96
-            const row = CARDY_ROW[CARDY.pose] || 0, f = Math.floor(t * 12) % 16; g.clearRect(0, 0, 96, 96); g.imageSmoothingEnabled = false; g.drawImage(CARDY.art, f * 96, row * 96, 96, 96, 0, 0, 96, 96); return;
+            // He stands still (frame 0 of the idle row) and only blinks, then every 12-18 s a fidget plays: a stir (the calm idle frames), a wave, a think or a cheer.
+            // Fidgets play there-and-back (no pop where the loop ends) and slowly, and each frame fades into the next so the motion stays smooth.
+            const pose = CARDY.pose, row = CARDY_ROW[pose] || 0;
+            if (CARDY.seenPose !== pose) { CARDY.seenPose = pose; CARDY.poseAt = now; }
+            const reduced = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+            const put = (f, r, a) => { g.globalAlpha = a; g.drawImage(CARDY.art, f * 96, r * 96, 96, 96, 0, 0, 96, 96); };
+            g.clearRect(0, 0, 96, 96); g.imageSmoothingEnabled = false;
+            if (pose === 'idle' || reduced) put(pose === 'idle' && performance.now() < CARDY.blinkUntil ? 3 : 0, row, 1);
+            else {
+                const seq = pose === 'look' ? CARDY_STIR : null, n = seq ? seq.length : 16;
+                const u = Math.max(0, now - (CARDY.poseAt || now)) / 1000 * (pose === 'look' ? 6 : pose === 'sleep' ? 4 : 8);
+                const pp = i => { if (seq) return seq[Math.min(i, n - 1)]; const m = i % (2 * n - 2); return m < n ? m : 2 * n - 2 - m; };
+                const i0 = Math.floor(u), fr = u - i0;
+                put(pp(i0), pose === 'look' ? 0 : row, 1);
+                if (fr > 0.04 && !(seq && i0 >= n - 1)) put(pp(i0 + 1), pose === 'look' ? 0 : row, fr);
+            }
+            g.globalAlpha = 1; return;
         }
         cardyDraw(g, cardyParams(CARDY.pose, t), CARDY_HATS[pxfName()] || null);
     }
@@ -23479,10 +23496,10 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function cardyTick(now) {
         if (!CARDY.cv || !cardyAllowed()) return;
         if (CARDY.until && now > CARDY.until) { CARDY.until = 0; CARDY.pose = CARDY.sleeping ? 'sleep' : CARDY.bubbleT && CARDY.talking ? 'talk' : 'idle'; }
-        if (now > CARDY.nextBlink) { CARDY.blinkUntil = now + 140; CARDY.nextBlink = now + 2400 + Math.random() * 3200; }
+        if (now > CARDY.nextBlink) { CARDY.blinkUntil = now + 140; CARDY.nextBlink = now + 3200 + Math.random() * 3800; }
         const bubbleOpen = !!document.getElementById('cardyBubble') && !document.getElementById('cardyBubble').hidden;
         if (!CARDY.sleeping && !bubbleOpen && CARDY.pose === 'idle' && now > CARDY.nextFidget) {
-            const pick = ['look', 'look', 'wave', 'think', 'cheer'][Math.floor(Math.random() * 5)]; cardyPose(pick, pick === 'wave' ? 1800 : pick === 'cheer' ? 1200 : 2400); CARDY.nextFidget = now + 9000 + Math.random() * 14000;
+            const pick = ['look', 'look', 'wave', 'think', 'cheer'][Math.floor(Math.random() * 5)]; cardyPose(pick, pick === 'wave' ? 2600 : pick === 'cheer' ? 2200 : pick === 'think' ? 3000 : 2200); CARDY.nextFidget = now + 12000 + Math.random() * 6000;
         }
         if (!CARDY.sleeping && !bubbleOpen && now - CARDY.lastInput > 90000) { CARDY.sleeping = true; cardyPose('sleep'); }
         if (!bubbleOpen && !CARDY.sleeping && CARDY.pose === 'idle' && now > CARDY.nextQuip && now - CARDY.lastInput < 60000 && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))) { CARDY.nextQuip = now + 240000 + Math.random() * 180000; cardyQuip(); }
@@ -23492,7 +23509,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function cardyLoop(now) {
         if (!CARDY.running) return;
         requestAnimationFrame(cardyLoop);
-        if (document.hidden || now - CARDY.lastDraw < 83) return;
+        if (document.hidden || now - CARDY.lastDraw < (CARDY.art && CARDY.pose !== 'idle' ? 40 : 83)) return;
         CARDY.lastDraw = now; cardyTick(now); cardyRender(now);
     }
 
@@ -23601,7 +23618,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             cv.addEventListener('click', () => { cardyWake(); if (CARDY.pose !== 'surprised') cardyPose('surprised', 700); setTimeout(cardyMenu, 350); });
             cv.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cv.click(); } });
             try { JSON.parse(sessionStorage.getItem('cardySeen') || '[]').forEach(k => CARDY.seen.add(k)); } catch (e) { /* none */ }
-            CARDY.seen.add('mtg'); CARDY.nextBlink = cardyNow() + 2000; CARDY.nextFidget = cardyNow() + 6000; CARDY.nextQuip = cardyNow() + 150000;
+            CARDY.seen.add('mtg'); CARDY.nextBlink = cardyNow() + 2000; CARDY.nextFidget = cardyNow() + 9000; CARDY.nextQuip = cardyNow() + 150000;
             const pm = e => { CARDY.px = e.clientX; CARDY.py = e.clientY; CARDY.lastInput = cardyNow(); if (CARDY.sleeping) cardyWake(); };
             document.addEventListener('pointermove', pm, { passive: true }); document.addEventListener('keydown', () => cardyWake(), { passive: true });
             cardyHello();

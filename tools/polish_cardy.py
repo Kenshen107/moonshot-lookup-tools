@@ -8,13 +8,12 @@ or the glove so the hand seems to float. For every frame this script
   3. deletes small detached specks, except yellow sparkles (the cheer row),
   4. (rows that are lined up) wipes the dotted noise above the card's top edge,
   5. draws a 2-pixel arm line from any big detached piece (a glove) to the nearest part of the rest of the drawing.
-`--replace 1:5=6` copies frame 6 of row 1 over frame 5 (for a frame whose outline came out rough). Run it once per freshly generated sheet (a second run is harmless but pointless). A copy of the original goes to tools/.art-cache/cardy-original.png.
+`--replace 1:5=6` copies frame 6 of row 1 over frame 5 (for a frame whose outline came out rough). Run it once per freshly generated sheet (a second run is harmless but pointless). The old sheet is kept in art/site/_old/.
 
   python tools/polish_cardy.py            report only
   python tools/polish_cardy.py --write
 """
 import argparse
-import shutil
 import sys
 from pathlib import Path
 
@@ -23,6 +22,9 @@ try:
     from PIL import Image
 except ImportError:
     sys.exit('Needs numpy and Pillow:  pip install numpy pillow')
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from keep_old import keep_old  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SHEET = ROOT / 'art' / 'site' / 'cardy.png'
@@ -108,6 +110,39 @@ def line(fr, p, q, color):
                 fr[y + oy, x + ox] = color
 
 
+def fill_enclosed(fr):
+    # clear pixels that cannot reach the frame's edge through other clear pixels are holes in the figure
+    a = fr[..., 3] > 0
+    h, w = a.shape
+    out = np.zeros((h, w), dtype=bool)
+    stack = [(y, x) for y in range(h) for x in (0, w - 1) if not a[y, x]] + [(y, x) for x in range(w) for y in (0, h - 1) if not a[y, x]]
+    for y, x in stack:
+        out[y, x] = True
+    while stack:
+        y, x = stack.pop()
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            ny, nx = y + dy, x + dx
+            if 0 <= ny < h and 0 <= nx < w and not a[ny, nx] and not out[ny, nx]:
+                out[ny, nx] = True
+                stack.append((ny, nx))
+    holes = (~a) & (~out)
+    n = int(holes.sum())
+    todo = holes.copy()
+    for _ in range(12):
+        if not todo.any():
+            break
+        got = []
+        for y, x in zip(*np.nonzero(todo)):
+            near = [fr[y + dy, x + dx] for dy, dx in NB if 0 <= y + dy < h and 0 <= x + dx < w and fr[y + dy, x + dx, 3] > 0]
+            if near:
+                got.append((y, x, np.mean(near, axis=0).astype(np.uint8)))
+        for y, x, c in got:
+            fr[y, x] = c
+            fr[y, x, 3] = 255
+            todo[y, x] = False
+    return n
+
+
 def tidy(fr, row):
     fr, lonely, holes = majority(fr)
     removed = joined = 0
@@ -139,6 +174,7 @@ def tidy(fr, row):
                     dark = np.median(np.array(darks), axis=0).astype(np.uint8)
                 line(fr, best[1], best[2], dark)
                 joined += 1
+    holes += fill_enclosed(fr)
     return fr, lonely, holes, removed, joined
 
 
@@ -189,10 +225,7 @@ def main():
             out[r * S:(r + 1) * S, c * S:(c + 1) * S] = f
     print(f'speckle pixels removed {totals[0]}, holes filled {totals[1]}, small pieces removed {totals[2]}, arms joined {totals[3]}')
     if a.write:
-        keep = ROOT / 'tools' / '.art-cache' / 'cardy-original.png'
-        keep.parent.mkdir(parents=True, exist_ok=True)
-        if not keep.exists():
-            shutil.copy(SHEET, keep)
+        keep_old(SHEET)
         Image.fromarray(out).save(SHEET)
         print('wrote', SHEET)
 

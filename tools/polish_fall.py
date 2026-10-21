@@ -13,6 +13,9 @@ import itertools
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from keep_old import keep_old  # noqa: E402
+
 try:
     import numpy as np
     from PIL import Image
@@ -50,6 +53,7 @@ def main():
         print(f'{f.stem:<18} loop jump {max(orig):5.1f} (avg step {step:4.1f}) -> {verdict} {order if verdict != "keep" else ""}')
         if a.write and verdict != 'keep':
             out = np.concatenate([fr[i] for i in order], axis=1)
+            keep_old(f)
             Image.fromarray(out.round().clip(0, 255).astype(np.uint8), 'RGBA').save(f, 'PNG')
     if not a.write:
         print('\nReport only. Add --write to rewrite the sprites.')
