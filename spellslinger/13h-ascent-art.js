@@ -30,7 +30,7 @@ function ascPortraitHTML(id, opts = {}) {
     const c = ASCENT_CHAR[id];
     if (!c) return '';
     const path = `spellslinger/art/characters/${id}.png`, talk = opts.talk ? ' talk' : '';
-    if (ASC_ART.ok[path]) return `<div class="asc-portrait sprite${talk}${ASC_ART.legacy[path] ? ' old' : ''}" style="background-image:url('${path}')${ASC_ART.cols[path] ? `;--cols:${ASC_ART.cols[path]};--idle:${(ASC_ART.cols[path] / 10).toFixed(2)}s;--tdur:${(ASC_ART.cols[path] / 13).toFixed(2)}s` : ''}" role="img" aria-label="${esc(c.name)}"></div>`;
+    if (ASC_ART.ok[path]) return `<div class="asc-portrait sprite${talk}${ASC_ART.legacy[path] ? ' old' : ''}" style="background-image:url('${path}')${ASC_ART.cols[path] ? `;--cols:${ASC_ART.cols[path]};--idle:${(ASC_ART.cols[path] / 12).toFixed(2)}s;--tdur:${(ASC_ART.cols[path] / 16).toFixed(2)}s` : ''}" role="img" aria-label="${esc(c.name)}"></div>`;
     return `<div class="asc-portrait ph${talk}${c.boss ? ' boss' : ''}" style="--accent:${c.accent}" role="img" aria-label="${esc(c.name)} (placeholder art)"><span>${c.emoji}</span></div>`;
 }
 function ascLine(id, kind, seed) {

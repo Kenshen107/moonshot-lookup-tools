@@ -8,7 +8,7 @@ const data = vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'spellslinger', 
 const { STYLE, RULES, CH, FX, IDEAS, ICONS } = data;
 const PACKS = vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'spellslinger', '12b-pack-looks.js'), 'utf8') + '\n;PACK_LOOKS');
 
-const charPrompt = c => `${STYLE}. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of ${c.look}. Palette: ${c.palette}. Expression: ${c.mood}. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.`;
+const charPrompt = c => `${STYLE}. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of ${c.look}. Palette: ${c.palette}. Expression: ${c.mood}. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.`;
 const fxPrompt = (k, f) => `${STYLE}. Animated effect, ${f.frames} frames in one horizontal strip, each frame ${f.size} x ${f.size} pixels, centered, transparent background: ${f.prompt}.`;
 const iconPrompt = (k, i) => `${STYLE}. ${i.frames > 1 ? `Animated loop of ${i.frames} frames in a horizontal strip, each frame` : 'Single sprite,'} ${i.size} x ${i.size} pixels: ${i.prompt}.`;
 
@@ -17,11 +17,11 @@ const hash = str => { let h = 2166136261; for (const ch of str) { h ^= ch.charCo
 const charSubject = c => `Close-up head-and-shoulders portrait (a dialogue portrait) of ${c.look}. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ${c.palette}. Expression: ${c.mood}. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text`;
 const MANIFEST = { generated: 'by tests/ascent_art_guide.js; do not edit by hand', assets: [] };
 for (const c of CH) MANIFEST.assets.push({
-    id: c.id, group: 'characters', name: c.name, out: `spellslinger/art/characters/${c.id}.png`, kind: 'sheet', frame: [96, 96], cols: 8, rows: 2, seed: hash(c.id),
+    id: c.id, group: 'characters', name: c.name, out: `spellslinger/art/characters/${c.id}.png`, kind: 'sheet', frame: [96, 96], cols: 16, rows: 2, seed: hash(c.id),
     steps: [
         { key: 'base', style: 'rd_pro__fantasy', width: 96, height: 96, prompt: charSubject(c), remove_bg: true },
-        { key: 'idle', style: 'rd_advanced_animation__idle', width: 96, height: 96, prompt: 'gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place', frames_duration: 8, from: 'base' },
-        { key: 'talk', style: 'rd_advanced_animation__custom_action', width: 96, height: 96, prompt: 'talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place', frames_duration: 8, from: 'base' }
+        { key: 'idle', style: 'rd_advanced_animation__idle', width: 96, height: 96, prompt: 'gentle breathing and one slow blink only, the mouth stays closed and completely still, the head barely moves, shoulders stay in place', frames_duration: 16, from: 'base' },
+        { key: 'talk', style: 'rd_advanced_animation__custom_action', width: 96, height: 96, prompt: 'talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place', frames_duration: 16, from: 'base' }
     ]
 });
 for (const [k, f] of Object.entries(FX)) MANIFEST.assets.push({
@@ -90,7 +90,7 @@ python3 tools/make_art.py --go                # then make everything the game us
 \`\`\`
 Options: \`--group characters|fx|ideas|icons\` (default: characters, fx and packs; ideas and icons are not in the game yet), \`--only id1,id2\`, \`--max-spend 20\` (stops before going over, in dollars), \`--force\` (redo finished assets), \`--seed-bump N\` (a new look for the same prompt). Finished PNGs go to \`spellslinger/art/...\`; every step is kept in \`tools/.art-cache/\`, so a rerun only does what is missing and never pays twice for a step. Commit the PNGs, not the cache.
 
-**How a character is made** (22 of them, $0.57 each, about $12.5 in all): RD Pro \`rd_pro__fantasy\` draws the head-and-shoulders portrait at 96 x 96 ($0.18), \`rd_advanced_animation__idle\` animates breathing and a blink from it ($0.14), and \`rd_advanced_animation__custom_action\` animates talking ($0.25). The script keeps 8 frames of each and builds the 768 x 192 sheet (row 1 idle, row 2 talking). Because both animations start from the same drawing, the character looks the same in every frame.
+**How a character is made** (22 of them, $0.57 each, about $12.5 in all): RD Pro \`rd_pro__fantasy\` draws the head-and-shoulders portrait at 96 x 96 ($0.18), \`rd_advanced_animation__idle\` animates breathing and a blink from it ($0.14), and \`rd_advanced_animation__custom_action\` animates talking ($0.25). The script keeps 16 frames of each and builds the 1536 x 192 sheet (row 1 idle, row 2 talking). Because both animations start from the same drawing, the character looks the same in every frame.
 **How an effect is made** (19 of them, $0.07 each, about $1.35 in all): \`rd_animation__vfx\` (24 to 96 px) makes the animation; the script picks the right number of frames, scales it up with hard pixels if the game wants it bigger (the Planeswalker portal is 128 px), and writes the strip.
 **Checked against the API's style list** (the pasted Retro Diffusion API notes, verified 2026-09): the style names, size limits and prices above. The script also asks the live \`/v2/styles/selector\` list first and stops with a clear message if a style or size has changed. Claude can't reach the API from here, so **nothing has been generated yet**: do the one-character test first. If the pixel style isn't what you want, change the style or prompt in \`tests/ascent_art_guide.js\` / the data file and rerun both scripts.
 
@@ -109,7 +109,7 @@ for (const tier of [1, 2, 3, 0]) {
     out.push(`\n### ${tier ? `League ${tier} (${['The Locals', 'Friday Grinders', 'The Pro Circuit'][tier - 1]})` : 'Helpers on the other tabs'}\n`);
     for (const c of group) {
         out.push(`#### ${c.name}${c.boss ? ' (boss)' : ''}: ${c.title}
-- **File:** \`spellslinger/art/characters/${c.id}.png\` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** \`spellslinger/art/characters/${c.id}.png\` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** ${c.emoji}
 - **Look:** ${c.look}
 - **Palette:** ${c.palette}

@@ -22,7 +22,7 @@ python3 tools/make_art.py --go                # then make everything the game us
 ```
 Options: `--group characters|fx|ideas|icons` (default: characters, fx and packs; ideas and icons are not in the game yet), `--only id1,id2`, `--max-spend 20` (stops before going over, in dollars), `--force` (redo finished assets), `--seed-bump N` (a new look for the same prompt). Finished PNGs go to `spellslinger/art/...`; every step is kept in `tools/.art-cache/`, so a rerun only does what is missing and never pays twice for a step. Commit the PNGs, not the cache.
 
-**How a character is made** (22 of them, $0.57 each, about $12.5 in all): RD Pro `rd_pro__fantasy` draws the head-and-shoulders portrait at 96 x 96 ($0.18), `rd_advanced_animation__idle` animates breathing and a blink from it ($0.14), and `rd_advanced_animation__custom_action` animates talking ($0.25). The script keeps 8 frames of each and builds the 768 x 192 sheet (row 1 idle, row 2 talking). Because both animations start from the same drawing, the character looks the same in every frame.
+**How a character is made** (22 of them, $0.57 each, about $12.5 in all): RD Pro `rd_pro__fantasy` draws the head-and-shoulders portrait at 96 x 96 ($0.18), `rd_advanced_animation__idle` animates breathing and a blink from it ($0.14), and `rd_advanced_animation__custom_action` animates talking ($0.25). The script keeps 16 frames of each and builds the 1536 x 192 sheet (row 1 idle, row 2 talking). Because both animations start from the same drawing, the character looks the same in every frame.
 **How an effect is made** (19 of them, $0.07 each, about $1.35 in all): `rd_animation__vfx` (24 to 96 px) makes the animation; the script picks the right number of frames, scales it up with hard pixels if the game wants it bigger (the Planeswalker portal is 128 px), and writes the strip.
 **Checked against the API's style list** (the pasted Retro Diffusion API notes, verified 2026-09): the style names, size limits and prices above. The script also asks the live `/v2/styles/selector` list first and stops with a clear message if a style or size has changed. Claude can't reach the API from here, so **nothing has been generated yet**: do the one-character test first. If the pixel style isn't what you want, change the style or prompt in `tests/ascent_art_guide.js` / the data file and rerun both scripts.
 
@@ -41,7 +41,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 ### League 1 (The Locals)
 
 #### Mossback Mick: Moss-covered stomper
-- **File:** `spellslinger/art/characters/t1-mick.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t1-mick.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🐗
 - **Look:** a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin
 - **Palette:** forest greens, bark browns, a spot of warm skin tone
@@ -49,7 +49,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin. Palette: forest greens, bark browns, a spot of warm skin tone. Expression: cheerful and proud, a gentle giant. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin. Palette: forest greens, bark browns, a spot of warm skin tone. Expression: cheerful and proud, a gentle giant. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -60,7 +60,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "He plays big green creatures with few tricks. Fliers go right over his head."
 
 #### Candle Annie: Lantern keeper
-- **File:** `spellslinger/art/characters/t1-annie.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t1-annie.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🕯️
 - **Look:** a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks
 - **Palette:** warm cream, soft gold, pale blue shadows
@@ -68,7 +68,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks. Palette: warm cream, soft gold, pale blue shadows. Expression: polite, earnest and fast-talking. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks. Palette: warm cream, soft gold, pale blue shadows. Expression: polite, earnest and fast-talking. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -79,7 +79,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "She fills the table with small white creatures. Wide boards beat her one-at-a-time attackers."
 
 #### Tidepool Tess: Sky fisher
-- **File:** `spellslinger/art/characters/t1-tess.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t1-tess.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🪁
 - **Look:** a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool
 - **Palette:** sea blues, foam white, sandy yellow
@@ -87,7 +87,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool. Palette: sea blues, foam white, sandy yellow. Expression: dreamy and a little smug. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool. Palette: sea blues, foam white, sandy yellow. Expression: dreamy and a little smug. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -98,7 +98,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Every creature she plays flies. Reach creatures and removal turn her game around."
 
 #### Gravedigger Gus: Cemetery caretaker
-- **File:** `spellslinger/art/characters/t1-gus.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t1-gus.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** ⚰️
 - **Look:** a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands
 - **Palette:** charcoal, violet, bone white
@@ -106,7 +106,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands. Palette: charcoal, violet, bone white. Expression: gravelly, gloomy, secretly warm. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands. Palette: charcoal, violet, bone white. Expression: gravelly, gloomy, secretly warm. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -117,7 +117,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Deathtouch and lifelink make blockers risky. Fliers and removal beat him."
 
 #### Cinder Cal: Firecracker
-- **File:** `spellslinger/art/characters/t1-cal.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t1-cal.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🧨
 - **Look:** a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk
 - **Palette:** ember reds, orange, soot black
@@ -125,7 +125,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk. Palette: ember reds, orange, soot black. Expression: hot-headed and impatient. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk. Palette: ember reds, orange, soot black. Expression: hot-headed and impatient. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -136,7 +136,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "He is all haste and burn. Stay above his burn range and keep blockers back."
 
 #### Greg the Stomper (boss): Boss of the Locals
-- **File:** `spellslinger/art/characters/t1-boss.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t1-boss.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 👑
 - **Look:** a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh
 - **Palette:** forest green, ivory, warm gold crown
@@ -144,7 +144,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh. Palette: forest green, ivory, warm gold crown. Expression: booming, generous, loves a fair fight. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh. Palette: forest green, ivory, warm gold crown. Expression: booming, generous, loves a fair fight. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -158,7 +158,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 ### League 2 (Friday Grinders)
 
 #### Skyline Sasha: Rooftop duelist
-- **File:** `spellslinger/art/characters/t2-sasha.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t2-sasha.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🌤️
 - **Look:** a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge
 - **Palette:** sky blue, white, brass
@@ -166,7 +166,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge. Palette: sky blue, white, brass. Expression: calm, polite, quietly competitive. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge. Palette: sky blue, white, brass. Expression: calm, polite, quietly competitive. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -177,7 +177,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Fliers protected by pump spells. Hold removal for the creature she is about to buff."
 
 #### Ironhide Ike: Blacksmith brawler
-- **File:** `spellslinger/art/characters/t2-ike.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t2-ike.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🛡️
 - **Look:** a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks
 - **Palette:** iron grey, rust red, forge orange
@@ -185,7 +185,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks. Palette: iron grey, rust red, forge orange. Expression: gruff, direct, respects effort. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks. Palette: iron grey, rust red, forge orange. Expression: gruff, direct, respects effort. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -196,7 +196,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "First strike wins his combats. Avoid trading small creatures; use tricks of your own."
 
 #### Marsh Marcus: Swamp herbalist
-- **File:** `spellslinger/art/characters/t2-marcus.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t2-marcus.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🪷
 - **Look:** a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile
 - **Palette:** swamp green, deep purple, mud brown
@@ -204,7 +204,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile. Palette: swamp green, deep purple, mud brown. Expression: slow and gentle, never in a hurry. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile. Palette: swamp green, deep purple, mud brown. Expression: slow and gentle, never in a hurry. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -215,7 +215,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Deathtouch, lifelink and removal. Do not trade your best creature into his blockers."
 
 #### Spellsmith Sarah: Lightning apprentice
-- **File:** `spellslinger/art/characters/t2-sarah.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t2-sarah.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** ⚡
 - **Look:** a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin
 - **Palette:** electric blue, orange, parchment
@@ -223,7 +223,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin. Palette: electric blue, orange, parchment. Expression: chatty, excitable, clever. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin. Palette: electric blue, orange, parchment. Expression: chatty, excitable, clever. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -234,7 +234,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Lots of burn and a few fliers. Keep life high and do not let her draw extra cards unchecked."
 
 #### Tangle Leo: Vine warden
-- **File:** `spellslinger/art/characters/t2-leo.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t2-leo.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🕸️
 - **Look:** a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat
 - **Palette:** teal, leaf green, silver thread
@@ -242,7 +242,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat. Palette: teal, leaf green, silver thread. Expression: thoughtful, dry humour. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat. Palette: teal, leaf green, silver thread. Expression: thoughtful, dry humour. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -253,7 +253,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Bounce spells slow you down while his big creatures catch up. Keep threats cheap."
 
 #### Marcus the Warden (boss): Boss of the Grinders
-- **File:** `spellslinger/art/characters/t2-boss.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t2-boss.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 👑
 - **Look:** a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff
 - **Palette:** midnight blue, black, silver
@@ -261,7 +261,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff. Palette: midnight blue, black, silver. Expression: measured, patient, always three turns ahead. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff. Palette: midnight blue, black, silver. Expression: measured, patient, always three turns ahead. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -275,7 +275,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 ### League 3 (The Pro Circuit)
 
 #### Dread Brenda: Blood-red racer
-- **File:** `spellslinger/art/characters/t3-brenda.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t3-brenda.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 💀
 - **Look:** a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin
 - **Palette:** black, crimson, bone
@@ -283,7 +283,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin. Palette: black, crimson, bone. Expression: aggressive, sarcastic, loves pressure. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin. Palette: black, crimson, bone. Expression: aggressive, sarcastic, loves pressure. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -294,7 +294,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Aggressive creatures with burn to finish. Block early and keep life above 8."
 
 #### Titan Trevor: Mountain mover
-- **File:** `spellslinger/art/characters/t3-trevor.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t3-trevor.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🦖
 - **Look:** a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice
 - **Palette:** moss green, granite grey, amber
@@ -302,7 +302,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice. Palette: moss green, granite grey, amber. Expression: slow, powerful, speaks in short sentences. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice. Palette: moss green, granite grey, amber. Expression: slow, powerful, speaks in short sentences. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -313,7 +313,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Gigantic tramplers. Chump-block with small ones and kill the biggest with removal."
 
 #### Wallbuilder Sam: Fortress mason
-- **File:** `spellslinger/art/characters/t3-sam.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t3-sam.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🧱
 - **Look:** a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes
 - **Palette:** white, silver, sunburst gold
@@ -321,7 +321,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes. Palette: white, silver, sunburst gold. Expression: patient, protective, immovable. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes. Palette: white, silver, sunburst gold. Expression: patient, protective, immovable. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -332,7 +332,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "High-toughness lifelink creatures. Evasion and removal win; bashing into walls does not."
 
 #### Bounce Luke: Tide trickster
-- **File:** `spellslinger/art/characters/t3-luke.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t3-luke.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🌀
 - **Look:** a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck
 - **Palette:** ocean blue, teal, silver coins
@@ -340,7 +340,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck. Palette: ocean blue, teal, silver coins. Expression: playful, mocking, always flipping a coin. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck. Palette: ocean blue, teal, silver coins. Expression: playful, mocking, always flipping a coin. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -351,7 +351,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "He bounces your best creature and wins in the air. Cheap threats and removal for his fliers."
 
 #### Arthur the Whale: Dragon-rider
-- **File:** `spellslinger/art/characters/t3-arthur.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t3-arthur.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🐉
 - **Look:** an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh
 - **Palette:** ruby red, emerald green, gold
@@ -359,7 +359,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh. Palette: ruby red, emerald green, gold. Expression: loud, generous, bragging. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh. Palette: ruby red, emerald green, gold. Expression: loud, generous, bragging. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -370,7 +370,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Huge red and green creatures that cost a lot. Counter his tempo, remove the biggest one."
 
 #### Sarah, Storm Walker (boss): Boss of the Pro Circuit
-- **File:** `spellslinger/art/characters/t3-boss.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/t3-boss.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 👑
 - **Look:** a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze
 - **Palette:** storm blue, crimson, white lightning
@@ -378,7 +378,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze. Palette: storm blue, crimson, white lightning. Expression: confident, elegant, a little bored of winning. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze. Palette: storm blue, crimson, white lightning. Expression: confident, elegant, a little bored of winning. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -392,7 +392,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 ### Helpers on the other tabs
 
 #### Pip the Guide: Ascent guide
-- **File:** `spellslinger/art/characters/npc-guide.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/npc-guide.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🧭
 - **Look:** a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil
 - **Palette:** warm browns, teal, cream
@@ -400,7 +400,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil. Palette: warm browns, teal, cream. Expression: friendly, encouraging. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil. Palette: warm browns, teal, cream. Expression: friendly, encouraging. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -410,7 +410,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Each opponent drops its own signature cards. Check them on the map before you battle."
 
 #### Mara the Packmaster: Booster merchant
-- **File:** `spellslinger/art/characters/npc-packmaster.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/npc-packmaster.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 📦
 - **Look:** a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile
 - **Palette:** gold, red, deep blue
@@ -418,7 +418,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile. Palette: gold, red, deep blue. Expression: brisk and showy. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile. Palette: gold, red, deep blue. Expression: brisk and showy. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -428,7 +428,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "The fifth copy of any card turns into Aether, so nothing is wasted."
 
 #### Brindle the Aether Smith: Upgrade smith
-- **File:** `spellslinger/art/characters/npc-smith.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/npc-smith.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** ⚒️
 - **Look:** a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh
 - **Palette:** forge orange, aether blue, iron
@@ -436,7 +436,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh. Palette: forge orange, aether blue, iron. Expression: booming, loves tinkering. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh. Palette: forge orange, aether blue, iron. Expression: booming, loves tinkering. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -446,7 +446,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 - *tip:* "Spare copies of a card can pay for an upgrade. Two slots per card, three on mythics."
 
 #### Wren the Deckwright: Deck builder
-- **File:** `spellslinger/art/characters/npc-deckwright.png` (768 x 192, 2 rows x 8 frames of 96 x 96)
+- **File:** `spellslinger/art/characters/npc-deckwright.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🃏
 - **Look:** a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes
 - **Palette:** blue-grey, cream, ink black
@@ -454,7 +454,7 @@ Use the prompt under each asset. For characters, make the standing picture first
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes. Palette: blue-grey, cream, ink black. Expression: careful and precise. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 8 frames, each frame 96 x 96 pixels, 8 frames per row (so the sheet is 768 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes. Palette: blue-grey, cream, ink black. Expression: careful and precise. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
