@@ -141,6 +141,7 @@ function botPacts(P) {
     if (!G || G.players.length < 3 || !P.isAI || P.out || P.aiLevel === 'easy' || G.over || (typeof dealsRefused === 'function' && dealsRefused(P))) return;
     G.botPact = G.botPact || {};
     if (G.turn - (G.botPact[P.i] ?? -99) < 6 || pactTarget(P)) return;
+    if (typeof dealsRelevant === 'function' && !dealsRelevant(P)) return;
     const grudge = P.grudge || {};
     const X = foes(P).filter(F => (grudge[F.i] || 0) >= 6).sort((a, b) => grudge[b.i] - grudge[a.i] || a.i - b.i)[0];
     if (!X) return;

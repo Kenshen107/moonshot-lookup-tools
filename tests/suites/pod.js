@@ -134,7 +134,7 @@ const SETUP = async function (n) {
     r = await page.evaluate(async () => {
         const out = {};
         G.players.length = 4; G.players.forEach(P => { P.out = false; P.life = 40; P.grudge = {}; P.trust = {}; P.bf.length = 0; P.aiStyle = 'midrange'; P.isAI = true; });
-        G.deals = []; G.dealStats = null; G.rep = {}; G.arch = null; G.turn = 20; G.active = 0;
+        G.dealsAlways = true; G.deals = []; G.dealStats = null; G.rep = {}; G.arch = null; G.turn = 20; G.active = 0;
         const [A, B, Cc, D] = G.players;
         // 1. a calm bot says yes to peace, an aggro bot with a grudge says no
         const ok = proposeDeal(A, B, 'peace');
@@ -215,7 +215,7 @@ const SETUP = async function (n) {
     r = await page.evaluate(() => {
         const [A, B, Cc] = G.players;
         G.players.forEach(P => { P.out = false; P.isAI = true; }); A.isAI = false;
-        G.deals = []; G.dealStats = null; G.turn = 12; G.active = B.i;
+        G.dealsAlways = true; G.deals = []; G.dealStats = null; G.turn = 12; G.active = B.i;
         B.char = { name: 'Marcus' }; Cc.char = null;
         const full = whoFull(B), plain = whoFull(Cc);
         G.log.length = 0;

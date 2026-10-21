@@ -174,6 +174,7 @@ async function offerKind(P, to, kind, x) {
 }
 async function moreOffers(P) {
     if (!G || G.players.length < 3 || P.out || dealsRefused(P) || G.hotseat) return;
+    if (typeof dealsRelevant === 'function' && !dealsRelevant(P)) return;
     G.dealAsk2 = G.dealAsk2 || {};
     if (G.turn - (G.dealAsk2[P.i] ?? -99) < 6 || (G.turn + P.i) % 3 !== 0) return;
     const human = G.players.find(X => !X.isAI && !X.out);
