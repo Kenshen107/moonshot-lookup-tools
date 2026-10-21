@@ -34,7 +34,18 @@ class Api:
         self.s.headers['X-RD-Token'] = key
 
     def call(self, method, path, **kw):
-        r = self.s.request(method, API + path, timeout=120, **kw)
+        # A dropped connection (Wi-Fi blip, DNS hiccup) shouldn't end a run: retry with a growing wait.
+        # POST is safe to repeat because it carries an Idempotency-Key.
+        for attempt in range(12):
+            try:
+                r = self.s.request(method, API + path, timeout=120, **kw)
+                break
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                if attempt == 11:
+                    raise
+                wait = min(60, 3 * (attempt + 1))
+                print(f'  (network trouble, retrying in {wait}s: {type(e).__name__})', flush=True)
+                time.sleep(wait)
         try:
             data = r.json()
         except ValueError:
@@ -55,7 +66,14 @@ class Api:
                 res = t['result']
                 out = [base64.b64decode(b) for b in res.get('base64_images') or []]
                 for u in res.get('output_urls') or []:
-                    out.append(requests.get(u, timeout=120).content)
+                    for attempt in range(6):
+                        try:
+                            out.append(requests.get(u, timeout=120).content)
+                            break
+                        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+                            if attempt == 5:
+                                raise
+                            time.sleep(3 * (attempt + 1))
                 if not out:
                     raise RuntimeError('the task succeeded but returned no images')
                 return out
