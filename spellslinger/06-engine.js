@@ -3894,6 +3894,7 @@ async function applyEffect(P, e, t, src) {
             G.lastCountered = it; G.lastPower = { P: it.P, n: 0 }; G.lastMv = it.o.card.cmc || 0;
             G.stack.splice(i, 1);
             log(`${it.name} is countered (rule 701.6a).`);
+            if (typeof ascFxHook === 'function') ascFxHook('countered', { o: it.o });
             if (it.kind === 'spell' && e.exileCast && !['instant', 'sorcery'].includes(Rx(it.o).kind)) {
                 const x = it.o; moveSpellCard(x, 'exile');
                 const X = G.players[x.owner]; pull(X.exile, x);
@@ -3975,7 +3976,7 @@ function attackTax(P) {
     return opp(P).bf.reduce((a, x) => { const t = Rx(x).attackTax || (Rx(x).attackTaxUntapped && !x.tapped ? Rx(x).attackTaxUntapped : 0); if (!t || lostAbilities(x)) return a; return a + (t === 'enchantments' ? opp(P).bf.filter(e => /Enchantment/.test(e.card.type)).length : t); }, 0);
 }
 function declareAttackers(P, list) {
-    if (G.players.length > 2 && (G.defender == null || G.players[G.defender].out)) G.defender = aiPickDefender(P).i; // the player this attack goes at
+    if (G.players.length > 2 && (G.defender == null || G.players[G.defender].out)) G.defender = (aiPickDefender(P) || foes(P)[0]).i; // the player this attack goes at
     if (G.players.length > 2) list.forEach(o => { if (o.atkTo == null || !G.players[o.atkTo] || G.players[o.atkTo].out || o.atkTo === P.i) o.atkTo = G.defender; }); // each attacker has its own target player
     if (typeof cmdAttackFilter === 'function') list = cmdAttackFilter(P, list);
     if (list.length === 1 && has(list[0], 'notalone')) { log(`${list[0].card.name} can't attack alone.`); list = []; }
@@ -4148,7 +4149,6 @@ async function beginTurn() {
     G.phase = 'beginning';
     G.focusPick = null; // the pod view follows whoever's turn it is
     politicsTick(P);
-    await dealsTick(P);
     P.landsPlayed = 0;
     P.turnsTaken = (P.turnsTaken || 0) + 1;
     if (typeof phaseInAll === 'function') phaseInAll(P);
@@ -4168,6 +4168,7 @@ async function beginTurn() {
     G.castBy = Z();
     emptyPools();
     log(`— Turn ${G.turn}: ${you(P) ? 'your' : `${P.name}'s`} turn —`);
+    await dealsTick(P); // after the header, so deals made or ended at the start of a turn read under that turn
     G.phase = 'upkeep';
     await runDelayed('upkeep', P);
     await suspendTick(P);
@@ -4701,7 +4702,7 @@ function endGame(winner, reason) {
     window.lastResult = { winner, reason, turns: G.turn };
     renderGame();
     if (AUTOPLAY) return;
-    showModal(`<h2>${winner === null ? '🤝 Draw' : won ? '🏆 You win!' : '💀 You lose'}</h2>
+    showModal(`<h2>${winner === null ? '🤝 Draw' : won ? '🏆 You win!' : '💀 You lose'}</h2>${typeof ascResultFlair === 'function' && winner !== null ? ascResultFlair(won) : ''}
         <p>${esc(reason)}</p><p class="note">${G.turn} turns${G.campaign || G.draftRound !== undefined ? '' : ` · 🪙 +${reward} coins`}</p>${talk ? talk.html : ''}${campLine ? `<p class="ok">${esc(campLine)}</p>` : ''}
         <div class="row" style="justify-content:center; margin-top:14px;">
             ${G.draftRound !== undefined ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'draft\');">🃏 Back to the draft</button>' : G.campaign ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'campaign\');">🗺️ Back to the map</button>' : '<button class="btn primary" onclick="closeModal(); leaveGame(); startMatch(true);">Play again</button>'}

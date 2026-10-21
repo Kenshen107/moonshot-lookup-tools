@@ -134,7 +134,7 @@ const SETUP = async function (n) {
     r = await page.evaluate(async () => {
         const out = {};
         G.players.length = 4; G.players.forEach(P => { P.out = false; P.life = 40; P.grudge = {}; P.trust = {}; P.bf.length = 0; P.aiStyle = 'midrange'; P.isAI = true; });
-        G.deals = []; G.dealStats = null; G.rep = {}; G.arch = null; G.turn = 20; G.active = 0;
+        G.dealsAlways = true; G.deals = []; G.dealStats = null; G.rep = {}; G.arch = null; G.turn = 20; G.active = 0;
         const [A, B, Cc, D] = G.players;
         // 1. a calm bot says yes to peace, an aggro bot with a grudge says no
         const ok = proposeDeal(A, B, 'peace');
@@ -148,6 +148,12 @@ const SETUP = async function (n) {
         // 3. an aggro bot at peace with you breaks it for lethal
         B.aiStyle = 'aggro'; out.aggroLethal = podPickDefender(B).i === 0;
         B.aiStyle = 'midrange'; A.life = 40;
+        // 3b. at peace with every opponent and no kill to take: it keeps its word and doesn't attack (no defender at all), and an aggro bot still takes a kill
+        const extra = [{ type: 'peace', a: B.i, b: Cc.i, x: null, owner: B.i, turn: G.turn, over: false, left: 1 }, { type: 'peace', a: B.i, b: D.i, x: null, owner: B.i, turn: G.turn, over: false, left: 1 }];
+        G.deals.push(...extra);
+        out.allPeaceNull = podPickDefender(B) === null && aiPickDefender(B) === null;
+        A.life = 3; B.aiStyle = 'aggro'; out.allPeaceAggroKill = aiPickDefender(B) && aiPickDefender(B).i === 0; B.aiStyle = 'midrange'; A.life = 40;
+        G.deals = G.deals.filter(d => !extra.includes(d));
         // 4. attacking a peace partner breaks it: trust and reputation drop, the partner remembers
         G.log.length = 0;
         dealsOnAttack(A, B);
@@ -169,6 +175,7 @@ const SETUP = async function (n) {
     });
     check('a calm bot agrees to peace; an aggro bot you have hurt says no, and why', r.accepted && r.declined, r);
     check('a bot at peace with you attacks someone else, even with a chance at lethal (unless it plays Aggro)', r.picksOther && r.aggroLethal, r);
+    check('a bot at peace with every opponent keeps its word and does not attack, unless it plays Aggro and has a kill', r.allPeaceNull && r.allPeaceAggroKill, r);
     check('breaking a deal costs trust with that bot and reputation with everyone', r.broken, r);
     check('a player who broke a deal is judged harder next time', r.lowerScore, r);
     check('a hands-off deal keeps a bot from targeting that player\'s permanents', r.spare, r);
@@ -203,6 +210,30 @@ const SETUP = async function (n) {
     const chips = await page.evaluate(() => ({ cmd: (podChipsHTML({ format: 'commander' }).match(/setPodSize/g) || []).length, modern: podChipsHTML({ format: 'modern' }) }));
     check('the Play tab offers 1v1, 3 players and 4 players for Commander decks only', chips.cmd === 3 && chips.modern === '', chips);
     check('no page errors', errors.length === 0, errors.slice(0, 3));
+    // Deal wording and names (2026-10-21 quality of life)
+    await page.evaluate(SETUP, 4);
+    r = await page.evaluate(() => {
+        const [A, B, Cc] = G.players;
+        G.players.forEach(P => { P.out = false; P.isAI = true; }); A.isAI = false;
+        G.dealsAlways = true; G.deals = []; G.dealStats = null; G.turn = 12; G.active = B.i;
+        B.char = { name: 'Marcus' }; Cc.char = null;
+        const full = whoFull(B), plain = whoFull(Cc);
+        G.log.length = 0;
+        makeDeal(B, Cc, 'peace');
+        const own = G.log.slice(-1)[0] || '';
+        G.active = A.i; G.log.length = 0;
+        makeDeal(B, Cc, 'spare');
+        const other = G.log.slice(-1)[0] || '';
+        makeDeal(B, A, 'peace'); makeDeal(Cc, A, 'peace'); makeDeal(Cc, A, 'peace');
+        G.deals.find(d => d.type === 'peace' && d.b === A.i && d.a === B.i).alliance = true;
+        const al = (() => { G.log.length = 0; const d = makeDeal(B, A, 'pact', Cc.i, { extra: { alliance: true } }); return G.log.slice(-1)[0] || ''; })();
+        return { full, plain, own, other, al };
+    });
+    check('deal prompts name the character and its commander', /^Marcus \(.+\)$/.test(r.full) && !/\(/.test(r.plain), r);
+    check('a deal made at the start of its maker\'s turn says it lasts a full round', /full round/.test(r.own), r.own);
+    check('a deal made on someone else\'s turn just says until their next turn', /until .+ next turn/.test(r.other) && !/full round/.test(r.other), r.other);
+    check('an alliance reads "an alliance", not "a alliance"', /make an alliance /.test(r.al) && !/a alliance/.test(r.al), r.al);
+
     const ok = printResults('pod', results, errors);
     writeOut('pod', results);
     await h.close();

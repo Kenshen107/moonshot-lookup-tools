@@ -653,12 +653,13 @@
 
         /* ---- Pack reveal: 3D peel, then flip each card ---- */
         .crack-stage { perspective: 1200px; display: grid; gap: 14px; margin-top: 12px; position: relative; }
-        .pack3d { position: relative; width: 170px; height: 262px; margin: 10px auto; transform-style: preserve-3d; transform: rotateX(8deg) rotateY(-16deg);
+        /* Pack size (2026-10-21, owner: the pack and its animations were far too small): the wrapper art is 96 x 144 (2:3), so the pack is 3 x that on desktop and 2 x on narrower screens (whole multiples keep the pixels crisp); the opening burst grows with it */
+        .pack3d { --pk-w: 288px; position: relative; width: var(--pk-w); height: calc(var(--pk-w) * 1.5); margin: 14px auto; transform-style: preserve-3d; transform: rotateX(8deg) rotateY(-16deg);
             animation: packFloat 3.2s ease-in-out infinite alternate; cursor: pointer; transition: transform 0.5s ease, opacity 0.5s ease; }
         .pack3d:focus-visible { outline: 2px solid var(--brand-light); outline-offset: 6px; }
         @keyframes packFloat { to { transform: rotateX(4deg) rotateY(14deg) translateY(-6px); } }
         .pk-flap, .pk-body { position: absolute; left: 0; right: 0; color: var(--text-heading); font-family: var(--font-display); text-align: center;
-            background: linear-gradient(160deg, var(--brand-light), var(--brand) 45%, var(--felt-1)); border: 1px solid color-mix(in srgb, var(--text-heading) 25%, transparent); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+            background: linear-gradient(160deg, var(--pk-1, var(--brand-light)), var(--pk-2, var(--brand)) 45%, var(--pk-3, var(--felt-1))); border: 1px solid color-mix(in srgb, var(--text-heading) 25%, transparent); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
         .pk-flap { top: 0; height: 22%; border-radius: 10px 10px 2px 2px; display: flex; align-items: center; justify-content: center; font-weight: 700; letter-spacing: 1px; font-size: 0.85rem;
             transform-origin: 50% 100%; transition: transform 0.65s cubic-bezier(.3, .1, .2, 1);
             clip-path: polygon(0 0, 100% 0, 100% 86%, 92% 100%, 84% 86%, 76% 100%, 68% 86%, 60% 100%, 52% 86%, 44% 100%, 36% 86%, 28% 100%, 20% 86%, 12% 100%, 4% 86%, 0 100%); }
@@ -672,6 +673,60 @@
         .pack3d.peeling { animation: none; transform: rotateX(18deg); }
         .pack3d.peeling .pk-flap { transform: rotateX(-170deg) translateZ(4px); }
         .pack3d.opened { transform: translateY(60px) rotateX(70deg) scale(0.8); opacity: 0; }
+        /* ---- Pack looks (2026-10-21): one look and opening animation per pack tier (PACK_LOOKS in 12b-pack-looks.js) ---- */
+        .pack3d[data-look="collector"] { --pk-1: color-mix(in srgb, var(--gold) 80%, var(--text-heading)); --pk-2: color-mix(in srgb, var(--gold) 55%, var(--bg-canvas)); --pk-3: var(--bg-canvas); }
+        .pack3d[data-look="masters"] { --pk-1: color-mix(in srgb, var(--mana-B) 70%, var(--text-heading)); --pk-2: color-mix(in srgb, var(--mana-B) 45%, var(--bg-canvas)); --pk-3: color-mix(in srgb, var(--mana-B) 20%, var(--bg-canvas)); }
+        .pack3d[data-look="classic"] { --pk-1: color-mix(in srgb, var(--mana-R) 75%, var(--text-heading)); --pk-2: color-mix(in srgb, var(--mana-R) 60%, var(--bg-canvas)); --pk-3: color-mix(in srgb, var(--mana-W) 18%, var(--bg-canvas)); }
+        .pack3d[data-look="vintage"] { --pk-1: color-mix(in srgb, var(--mana-W) 55%, var(--mythic)); --pk-2: color-mix(in srgb, var(--mythic) 30%, var(--bg-canvas)); --pk-3: color-mix(in srgb, var(--mythic) 15%, var(--bg-canvas)); }
+        .pack3d[data-look="early"] { --pk-1: color-mix(in srgb, var(--mana-U) 60%, var(--gold)); --pk-2: color-mix(in srgb, var(--mana-U) 35%, var(--bg-canvas)); --pk-3: var(--felt-2); }
+        .pack3d[data-look="power"] { --pk-1: var(--gold); --pk-2: color-mix(in srgb, var(--gold) 25%, var(--bg-canvas)); --pk-3: var(--bg-canvas); border-color: var(--gold); }
+        .pack3d[data-look="power"] .pk-body, .pack3d[data-look="collector"] .pk-body { box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent), inset 0 0 30px color-mix(in srgb, var(--bg-canvas) 50%, transparent); }
+        /* pixel art, when spellslinger/art/packs/<look>.png exists: the sprite is split between flap and body so the flap still peels */
+        .pack3d.has-art .pk-flap, .pack3d.has-art .pk-body { background-color: transparent; background-image: var(--pk-art); background-repeat: no-repeat; border: 0; box-shadow: none; image-rendering: pixelated; text-shadow: 0 1px 3px var(--bg-canvas); }
+        .pack3d.has-art .pk-flap { background-size: 100% 454.5%; background-position: 0 0; clip-path: none; }
+        .pack3d.has-art .pk-body { background-size: 100% 126.6%; background-position: 0 100%; }
+        .pack3d.has-art .pk-body::after { display: none; }
+        /* with the drawn wrapper the emblem is the picture: no repeated title over it, and the hint sits at the bottom */
+        .pack3d.has-art .pk-body strong, .pack3d.has-art .pk-body small { display: none; }
+        .pack3d.has-art .pk-body { justify-content: flex-end; padding-bottom: 9%; }
+        @media (max-width: 900px), (max-height: 700px) { .pack3d { --pk-w: 192px; } }
+        .pk-burst { position: absolute; left: 50%; top: 22%; width: calc(var(--pk-w) * 1.4); height: calc(var(--pk-w) * 1.4); margin: calc(var(--pk-w) * -0.7) 0 0 calc(var(--pk-w) * -0.7); pointer-events: none; opacity: 0; image-rendering: pixelated; background-repeat: no-repeat; background-size: 1200% 100%; transform: translateZ(30px); }
+        .pack3d.has-open.peeling .pk-burst { background-image: var(--pk-open); animation: pkBurstFrames 0.8s steps(11) 0.15s forwards; }
+        @keyframes pkBurstFrames { 0% { opacity: 1; background-position: 0 0; } 90% { opacity: 1; } 100% { opacity: 0; background-position: 100% 0; } }
+        .pack3d::before { content: ''; position: absolute; inset: -30%; pointer-events: none; opacity: 0; border-radius: 50%; transform: translateZ(-2px) scale(0.3); }
+        /* tear (Play Booster): the standard flap peel above */
+        /* burst (Collector): shakes, then a golden flash */
+        .pack3d.anim-burst::before { background: radial-gradient(circle, color-mix(in srgb, var(--gold) 90%, transparent), transparent 62%); }
+        .pack3d.anim-burst.peeling { animation: pkShake 0.12s linear 6; }
+        .pack3d.anim-burst.peeling::before { animation: pkFlash 0.9s ease-out 0.35s forwards; }
+        @keyframes pkShake { 0%, 100% { transform: rotateX(14deg) translateX(0); } 25% { transform: rotateX(14deg) translateX(-5px) rotateZ(-2deg); } 75% { transform: rotateX(14deg) translateX(5px) rotateZ(2deg); } }
+        @keyframes pkFlash { 0% { opacity: 0; transform: translateZ(-2px) scale(0.3); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateZ(-2px) scale(1.4); } }
+        .pack3d.anim-burst.peeling .pk-flap { transition-delay: 0.5s; }
+        /* sweep (Masters): a bright foil band wipes over the pack twice, then the flap lifts */
+        .pack3d.anim-sweep.peeling .pk-body::after { animation: packGlint 0.45s linear 2; }
+        .pack3d.anim-sweep.peeling { filter: brightness(1.15) saturate(1.2); }
+        .pack3d.anim-sweep.peeling .pk-flap { transition-delay: 0.7s; }
+        /* rip (classic): the flap tears off sideways */
+        .pack3d.anim-rip.peeling .pk-flap { transform: translate(-60%, -90%) rotateZ(-38deg) rotateX(-30deg); opacity: 0; transition: transform 0.55s ease-in, opacity 0.55s ease-in; }
+        .pack3d.anim-rip.peeling .pk-body { animation: pkJolt 0.3s ease-out; }
+        @keyframes pkJolt { 40% { transform: translateY(6px) rotateZ(1.5deg); } }
+        /* seal (vintage): a wax seal cracks, then the flap slides up */
+        .pack3d[data-look="vintage"] .pk-flap::after { content: ''; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--mythic) 70%, var(--text-heading)), var(--mythic) 45%, color-mix(in srgb, var(--mythic) 45%, var(--bg-canvas))); box-shadow: 0 2px 4px color-mix(in srgb, var(--bg-canvas) 70%, transparent); }
+        .pack3d.anim-seal.peeling .pk-flap::after { animation: pkSealCrack 0.5s ease-in forwards; }
+        .pack3d.anim-seal.peeling .pk-flap { transform: translateY(-130%) rotateX(-12deg); transition: transform 0.6s ease-in 0.5s; }
+        @keyframes pkSealCrack { 40% { transform: scale(1.25) rotate(8deg); } 100% { transform: scale(1.7) rotate(-12deg); opacity: 0; } }
+        /* unseal (Unlimited era): runes glow up the pack, the flap fades into sparks */
+        .pack3d.anim-unseal.peeling { animation: pkRunes 1s ease-in-out forwards; }
+        @keyframes pkRunes { 0% { filter: none; } 50% { filter: drop-shadow(0 0 14px var(--mana-U)) brightness(1.25); transform: rotateX(14deg) translateY(-8px); } 100% { filter: drop-shadow(0 0 22px var(--gold)) brightness(1.4); transform: rotateX(14deg) translateY(-14px); } }
+        .pack3d.anim-unseal.peeling .pk-flap { transform: none; opacity: 0; transition: opacity 0.7s ease-in 0.3s; }
+        /* unveil (Alpha / Beta): slow golden rays rise behind a pack that lifts and glows */
+        .pack3d.anim-unveil::before { background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--gold) 70%, transparent) 0 6deg, transparent 6deg 18deg); -webkit-mask-image: radial-gradient(circle, var(--text-heading) 20%, transparent 68%); mask-image: radial-gradient(circle, var(--text-heading) 20%, transparent 68%); }
+        .pack3d.anim-unveil.peeling::before { animation: pkRays 1.6s ease-out forwards; }
+        @keyframes pkRays { 0% { opacity: 0; transform: translateZ(-2px) scale(0.3) rotate(0); } 35% { opacity: 1; } 100% { opacity: 0.9; transform: translateZ(-2px) scale(1.5) rotate(40deg); } }
+        .pack3d.anim-unveil.peeling { animation: pkLift 1.4s ease-in-out forwards; }
+        @keyframes pkLift { to { filter: brightness(1.4) drop-shadow(0 0 20px var(--gold)); transform: rotateX(14deg) translateY(-18px) scale(1.06); } }
+        .pack3d.anim-unveil.peeling .pk-flap { transition: transform 1.1s cubic-bezier(.3, .1, .2, 1) 0.3s; }
+        @media (prefers-reduced-motion: reduce) { .pack3d[class*="anim-"], .pack3d[class*="anim-"]::before, .pack3d[class*="anim-"] .pk-body, .pk-burst, .pack3d .pk-flap::after { animation: none !important; } .pack3d[class*="anim-"] .pk-flap { transition: none; } }
         .crack-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
         .fcard { position: relative; display: flex; flex-direction: column; gap: 3px; background: none; border: 0; color: inherit; text-align: left; padding: 0; perspective: 900px; animation: dealIn 0.45s cubic-bezier(.2, .8, .3, 1) backwards; animation-delay: calc(var(--i) * 70ms); }
         @keyframes dealIn { from { opacity: 0; transform: translateY(-50px) rotate(-8deg) scale(0.9); } }
@@ -986,17 +1041,28 @@
         .asc-say { display: flex; gap: 12px; align-items: flex-end; margin: 8px 0; }
         .asc-bubble { background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 12px; position: relative; min-width: 0; flex: 1; }
         .asc-bubble p { margin: 4px 0 0; font-size: 1rem; }
-        .asc-portrait { flex: none; width: 64px; height: 96px; image-rendering: pixelated; }
+        .asc-portrait { flex: none; width: 96px; height: 96px; image-rendering: pixelated; }
         .asc-portrait.ph { display: grid; place-items: center; border-radius: var(--radius-md); border: 2px solid var(--accent, var(--border)); background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--accent, var(--brand)) 45%, var(--bg-inset)), var(--bg-inset)); }
         .asc-portrait.ph span { font-size: 2.2rem; }
         .asc-portrait.ph.boss { box-shadow: 0 0 12px -2px var(--gold); border-color: var(--gold); }
         .asc-portrait.ph.talk span { animation: asc-bob 0.5s ease-in-out infinite; }
-        .asc-portrait.sprite { background-size: 256px 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle 0.8s steps(4) infinite; }
-        .asc-portrait.sprite.talk { background-position-y: -96px; animation-name: asc-idle; animation-duration: 0.6s; }
-        @keyframes asc-idle { to { background-position-x: -256px; } }
+        .asc-portrait.sprite { background-size: calc(var(--cols, 4) * 96px) 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) infinite, asc-breathe var(--breath, 3.4s) steps(1, end) var(--ph, 0s) infinite, asc-sway var(--sway, 9s) steps(1, end) var(--ph, 0s) infinite; }
+        /* extra life (2026-10-21): the whole portrait rises a pixel on each breath and now and then leans a pixel to one side; whole pixels only, so the art stays crisp. Each character has its own phase (--ph) so a row of them never breathes in unison. */
+        @keyframes asc-breathe { 0% { translate: 0 0; } 45% { translate: 0 -1px; } 55% { translate: 0 -2px; } 100% { translate: 0 0; } }
+        @keyframes asc-sway { 0%, 80% { transform: translateX(0); } 84% { transform: translateX(1px); } 92% { transform: translateX(-1px); } 96%, 100% { transform: translateX(0); } }
+        /* talks for 3 loops (about 3 seconds, the second row), then settles into the idle row for good */
+        .asc-portrait.sprite.talk { background-position-y: -96px; animation: asc-idle var(--tdur, 0.6s) steps(var(--cols, 4)) 3, asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) calc(var(--tdur, 0.6s) * 3) infinite, asc-rest 0.01s linear calc(var(--tdur, 0.6s) * 3) forwards, asc-breathe var(--breath, 3.4s) steps(1, end) var(--ph, 0s) infinite; }
+        @keyframes asc-rest { to { background-position-y: 0; } }
+        @keyframes asc-idle { to { background-position-x: calc(var(--cols, 4) * -96px); } } }
+        /* sheets made before the portrait framing (256 x 192, full body, 64 x 96 frames) still display until they are remade */
+        .asc-portrait.sprite.old { width: 64px; background-size: 256px 192px; }
+          .asc-portrait.sprite.old, .asc-portrait.sprite.old.talk { animation: asc-idle-old 0.8s steps(4) infinite; }
+        @keyframes asc-idle-old { to { background-position-x: -256px; } }
         @keyframes asc-bob { 50% { transform: translateY(-4px) scale(1.06); } }
         .fx-item { position: fixed; z-index: var(--z-banner, 60); pointer-events: none; image-rendering: pixelated; }
-        .fx-item.sprite { background-repeat: no-repeat; animation: fx-strip var(--dur) steps(var(--frames)) 1 forwards; }
+        .fx-item.sprite { background-repeat: no-repeat; animation: fx-strip var(--dur) steps(var(--frames)) 1 forwards, fx-life var(--dur) ease-out 1 forwards; }
+        /* effects pop in a little small and fade out over their last third instead of vanishing on a full frame (2026-10-21) */
+        @keyframes fx-life { 0% { transform: scale(0.8); opacity: 0.6; } 15% { transform: scale(1); opacity: 1; } 65% { opacity: 1; } 100% { transform: scale(1.04); opacity: 0; } }
         @keyframes fx-strip { from { background-position-x: 0; } to { background-position-x: calc(var(--strip) * -1); } }
         .fx-item.ph { display: grid; place-items: center; border-radius: 50%; animation: fx-ph var(--dur) ease-out 1 forwards; }
         .fx-item.ph span { font-size: 2.4rem; }
@@ -1009,7 +1075,35 @@
         .fx-item.ph[data-kind$="-multi"], .fx-item.ph[data-kind="land-nonbasic"] { background: conic-gradient(var(--mana-W), var(--mana-U), var(--mana-B), var(--mana-R), var(--mana-G), var(--mana-W)); -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%); }
         .fx-item.ph[data-kind^="spell-"] { background: radial-gradient(circle, color-mix(in srgb, var(--brand-light) 60%, transparent) 0, transparent 70%); }
         @keyframes fx-ph { 0% { transform: scale(0.3); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
-        @media (prefers-reduced-motion: reduce) { .asc-portrait.ph.talk span, .asc-portrait.sprite { animation: none; } }
+
+        /* Planeswalker's Ascent extra art (2026-10-21): every rule below applies only when the matching PNG exists (13j sets the classes and variables) */
+        .asc-ico { image-rendering: pixelated; vertical-align: -0.2em; }
+        .cur .asc-ico { vertical-align: -0.3em; }
+        .phase-strip li .asc-ico { margin-right: 4px; vertical-align: -3px; }
+        .asc-barface { display: inline-block; width: 48px; height: 48px; margin-right: 6px; vertical-align: middle; border-radius: var(--radius-sm); border: 2px solid var(--border); background-size: 144px 48px; background-repeat: no-repeat; image-rendering: pixelated; }
+        .asc-barface.idle { background-size: calc(var(--cols, 4) * 48px) 96px; animation: asc-idle48 var(--idle, 1.3s) steps(var(--cols, 4)) infinite; }
+        @keyframes asc-idle48 { to { background-position-x: calc(var(--cols, 4) * -48px); } }
+        .asc-pose-wrap { display: flex; justify-content: center; margin: 6px 0; }
+        .asc-pose { width: 144px; height: 144px; border-radius: var(--radius-md); border: 2px solid var(--border); background-repeat: no-repeat; background-size: 2304px 288px; background-position-y: calc(var(--prow, 0) * -144px); image-rendering: pixelated; animation: asc-pose 1.3s steps(16) infinite; }
+        @keyframes asc-pose { to { background-position-x: -2304px; } }
+        .tier-band.has-bg { background-image: linear-gradient(color-mix(in srgb, var(--bg-panel) 80%, transparent), color-mix(in srgb, var(--bg-panel) 80%, transparent)), var(--ui-bg-tier-1); background-size: cover; background-position: center; }
+        .tier-band.tier-2.has-bg { background-image: linear-gradient(color-mix(in srgb, var(--bg-panel) 80%, transparent), color-mix(in srgb, var(--bg-panel) 80%, transparent)), var(--ui-bg-tier-2); }
+        .tier-band.tier-3.has-bg { background-image: linear-gradient(color-mix(in srgb, var(--bg-panel) 80%, transparent), color-mix(in srgb, var(--bg-panel) 80%, transparent)), var(--ui-bg-tier-3); }
+        body.asc-has-mat #game .side { background-image: linear-gradient(color-mix(in srgb, var(--bg-canvas) 70%, transparent), color-mix(in srgb, var(--bg-canvas) 70%, transparent)), var(--ui-mat-table); background-size: cover; background-position: center; image-rendering: pixelated; }
+        .asc-trophy { text-align: center; }
+        .asc-trophy > .asc-ico { display: block; margin: 0 auto 4px; }
+        .asc-back.art { background: none; border: 0; }
+        .asc-back.art .asc-ico { width: 100%; height: auto; }
+        .asc-flame { position: absolute; right: 2px; top: 2px; width: 40px; height: 40px; background: var(--ui-mythic-flame) 0 0 / 600% 100% no-repeat; image-rendering: pixelated; pointer-events: none; animation: asc-strip6 0.8s steps(5) infinite; z-index: 2; }
+        @keyframes asc-strip6 { to { background-position-x: 100%; } }
+        body.asc-has-frames .asc-tile::after { content: ''; position: absolute; inset: -2px; pointer-events: none; border: 8px solid transparent; border-image-slice: 24; image-rendering: pixelated; }
+        body.asc-has-frames .asc-tile.asc-r-common::after, body.asc-has-frames .asc-tile.asc-r-uncommon::after { border-image-source: var(--ui-card-frame-common); }
+        body.asc-has-frames .asc-tile.asc-r-rare::after { border-image-source: var(--ui-card-frame-rare); }
+        body.asc-has-frames .asc-tile.asc-r-mythic::after, body.asc-has-frames .asc-tile.asc-r-trophy::after { border-image-source: var(--ui-card-frame-mythic); }
+        .asc-flip.foil::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: var(--ui-foil-sheen) 0 0 / 800% 100% no-repeat; mix-blend-mode: screen; opacity: 0.55; image-rendering: pixelated; animation: asc-strip8 1s steps(7) infinite; }
+        @keyframes asc-strip8 { to { background-position-x: 100%; } }
+        @media (prefers-reduced-motion: reduce) { .asc-barface.idle, .asc-pose, .asc-flame, .asc-flip.foil::after { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { .asc-portrait.ph.talk span, .asc-portrait.sprite { animation: none; translate: none; } }
 
         .asc-r-trophy { border-color: var(--gold); box-shadow: 0 0 14px -2px var(--gold); }
         .asc-trophies { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }

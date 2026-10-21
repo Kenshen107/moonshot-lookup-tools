@@ -8,17 +8,31 @@ The game already has placeholders for everything below (an emoji portrait, a col
 > 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background
 
 ## File rules
-- **Characters:** One PNG per character at spellslinger/art/characters/<id>.png. A sprite sheet with 2 rows of 4 frames, each frame 64 x 96 px (so the sheet is 256 x 192). Row 1 = idle loop (breathing, blinking). Row 2 = talking loop (mouth moving, a hand gesture). Same pose and framing in every frame, feet on the bottom edge, facing the viewer.
+- **Characters:** One PNG per character at spellslinger/art/characters/<id>.png. A sprite sheet with 2 rows of 4 frames, each frame a 96 x 96 px head-and-shoulders portrait (so the sheet is 384 x 192). Row 1 = idle loop (breathing, blinking). Row 2 = talking loop (mouth moving, a hand gesture). Same pose and framing in every frame, feet on the bottom edge, facing the viewer.
 - **Effects:** One PNG per effect at spellslinger/art/fx/<id>.png: a single horizontal strip of frames, each frame the size listed. The game plays it once at 2x, pixelated, over the card.
 - **Icons and other sprites:** One PNG per icon at spellslinger/art/ui/<id>.png at the size listed (a single frame unless "frames" is listed, then a horizontal strip).
 
-## Retro Diffusion notes
-I (Claude) can't run Retro Diffusion from here and couldn't check its current style and model names, so these are general: use a small-sprite or character style for the characters and an animation or effect style for the effects if your version has them, keep every frame the exact size above, and use a transparent background. If it only makes single images, generate each frame (or a 2 x 4 grid) and assemble the strip in Aseprite or similar. The talking row only needs the mouth and one hand to move. Keep the sprite's feet, head and outline in the same place in every frame so the loop doesn't jitter. Palette tips are per character.
+## Making the art with the script (recommended)
+`tools/make_art.py` reads `docs/ascent-art-manifest.json` (written by this guide's script) and does everything below for you. It needs Python 3 with `requests` and `Pillow`.
+```
+export RD_API_KEY=rdpk-...        # your key, in your own terminal; never commit it or paste it into a file
+python3 tools/make_art.py                     # free dry run: checks the styles, lists every step and its cost
+python3 tools/make_art.py --go --only t1-mick # make one character first (about $0.57) and look at the result
+python3 tools/make_art.py --go                # then make everything the game uses now (characters + effects)
+```
+Options: `--group characters|fx|packs|site|site-fall|ideas|icons|moods|poses|all` (default: characters, fx, packs, site, site-fall; `all` adds the combat effects, icons, expressions and poses; moods and poses are made from each character's own base drawing, so make the characters first), `--only id1,id2`, `--max-spend 20` (stops before going over, in dollars), `--force` (redo finished assets), `--seed-bump N` (a new look for the same prompt). Finished PNGs go to `spellslinger/art/...`; every step is kept in `tools/.art-cache/`, so a rerun only does what is missing and never pays twice for a step. Commit the PNGs, not the cache.
+
+**How a character is made** (22 of them, $0.57 each, about $12.5 in all): RD Pro `rd_pro__fantasy` draws the head-and-shoulders portrait at 96 x 96 ($0.18), `rd_advanced_animation__idle` animates breathing and a blink from it ($0.14), and `rd_advanced_animation__custom_action` animates talking ($0.25). The script keeps 16 frames of each and builds the 1536 x 192 sheet (row 1 idle, row 2 talking). Because both animations start from the same drawing, the character looks the same in every frame.
+**How an effect is made** (19 of them, $0.07 each, about $1.35 in all): `rd_animation__vfx` (24 to 96 px) makes the animation; the script picks the right number of frames, scales it up with hard pixels if the game wants it bigger (the Planeswalker portal is 128 px), and writes the strip.
+**Checked against the API's style list** (the pasted Retro Diffusion API notes, verified 2026-09): the style names, size limits and prices above. The script also asks the live `/v2/styles/selector` list first and stops with a clear message if a style or size has changed. Claude can't reach the API from here, so **nothing has been generated yet**: do the one-character test first. If the pixel style isn't what you want, change the style or prompt in `tests/ascent_art_guide.js` / the data file and rerun both scripts.
+
+## Prompts to paste by hand (if you use the website instead)
+Use the prompt under each asset. For characters, make the standing picture first, then use the website's animation tools on it; the sheet is 2 rows x 4 frames of 96 x 96.
 
 ## Counts
 - 22 characters (18 opponents, 4 helpers)
 - 19 in-game effects (+ 9 ideas for later)
-- 71 icons, banners and backgrounds
+- 81 icons, banners and backgrounds
 
 
 ## Characters
@@ -27,7 +41,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 ### League 1 (The Locals)
 
 #### Mossback Mick: Moss-covered stomper
-- **File:** `spellslinger/art/characters/t1-mick.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t1-mick.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🐗
 - **Look:** a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin
 - **Palette:** forest greens, bark browns, a spot of warm skin tone
@@ -35,7 +49,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin. Palette: forest greens, bark browns, a spot of warm skin tone. Personality shown in the pose: cheerful and proud, a gentle giant. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin. Palette: forest greens, bark browns, a spot of warm skin tone. Expression: cheerful and proud, a gentle giant. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -46,7 +60,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "He plays big green creatures with few tricks. Fliers go right over his head."
 
 #### Candle Annie: Lantern keeper
-- **File:** `spellslinger/art/characters/t1-annie.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t1-annie.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🕯️
 - **Look:** a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks
 - **Palette:** warm cream, soft gold, pale blue shadows
@@ -54,7 +68,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks. Palette: warm cream, soft gold, pale blue shadows. Personality shown in the pose: polite, earnest and fast-talking. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks. Palette: warm cream, soft gold, pale blue shadows. Expression: polite, earnest and fast-talking. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -65,7 +79,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "She fills the table with small white creatures. Wide boards beat her one-at-a-time attackers."
 
 #### Tidepool Tess: Sky fisher
-- **File:** `spellslinger/art/characters/t1-tess.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t1-tess.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🪁
 - **Look:** a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool
 - **Palette:** sea blues, foam white, sandy yellow
@@ -73,7 +87,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool. Palette: sea blues, foam white, sandy yellow. Personality shown in the pose: dreamy and a little smug. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool. Palette: sea blues, foam white, sandy yellow. Expression: dreamy and a little smug. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -84,7 +98,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Every creature she plays flies. Reach creatures and removal turn her game around."
 
 #### Gravedigger Gus: Cemetery caretaker
-- **File:** `spellslinger/art/characters/t1-gus.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t1-gus.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** ⚰️
 - **Look:** a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands
 - **Palette:** charcoal, violet, bone white
@@ -92,7 +106,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands. Palette: charcoal, violet, bone white. Personality shown in the pose: gravelly, gloomy, secretly warm. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands. Palette: charcoal, violet, bone white. Expression: gravelly, gloomy, secretly warm. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -103,7 +117,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Deathtouch and lifelink make blockers risky. Fliers and removal beat him."
 
 #### Cinder Cal: Firecracker
-- **File:** `spellslinger/art/characters/t1-cal.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t1-cal.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🧨
 - **Look:** a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk
 - **Palette:** ember reds, orange, soot black
@@ -111,7 +125,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk. Palette: ember reds, orange, soot black. Personality shown in the pose: hot-headed and impatient. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk. Palette: ember reds, orange, soot black. Expression: hot-headed and impatient. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -122,7 +136,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "He is all haste and burn. Stay above his burn range and keep blockers back."
 
 #### Greg the Stomper (boss): Boss of the Locals
-- **File:** `spellslinger/art/characters/t1-boss.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t1-boss.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 👑
 - **Look:** a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh
 - **Palette:** forest green, ivory, warm gold crown
@@ -130,7 +144,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh. Palette: forest green, ivory, warm gold crown. Personality shown in the pose: booming, generous, loves a fair fight. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh. Palette: forest green, ivory, warm gold crown. Expression: booming, generous, loves a fair fight. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -144,7 +158,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 ### League 2 (Friday Grinders)
 
 #### Skyline Sasha: Rooftop duelist
-- **File:** `spellslinger/art/characters/t2-sasha.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t2-sasha.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🌤️
 - **Look:** a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge
 - **Palette:** sky blue, white, brass
@@ -152,7 +166,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge. Palette: sky blue, white, brass. Personality shown in the pose: calm, polite, quietly competitive. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge. Palette: sky blue, white, brass. Expression: calm, polite, quietly competitive. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -163,7 +177,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Fliers protected by pump spells. Hold removal for the creature she is about to buff."
 
 #### Ironhide Ike: Blacksmith brawler
-- **File:** `spellslinger/art/characters/t2-ike.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t2-ike.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🛡️
 - **Look:** a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks
 - **Palette:** iron grey, rust red, forge orange
@@ -171,7 +185,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks. Palette: iron grey, rust red, forge orange. Personality shown in the pose: gruff, direct, respects effort. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks. Palette: iron grey, rust red, forge orange. Expression: gruff, direct, respects effort. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -182,7 +196,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "First strike wins his combats. Avoid trading small creatures; use tricks of your own."
 
 #### Marsh Marcus: Swamp herbalist
-- **File:** `spellslinger/art/characters/t2-marcus.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t2-marcus.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🪷
 - **Look:** a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile
 - **Palette:** swamp green, deep purple, mud brown
@@ -190,7 +204,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile. Palette: swamp green, deep purple, mud brown. Personality shown in the pose: slow and gentle, never in a hurry. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile. Palette: swamp green, deep purple, mud brown. Expression: slow and gentle, never in a hurry. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -201,7 +215,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Deathtouch, lifelink and removal. Do not trade your best creature into his blockers."
 
 #### Spellsmith Sarah: Lightning apprentice
-- **File:** `spellslinger/art/characters/t2-sarah.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t2-sarah.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** ⚡
 - **Look:** a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin
 - **Palette:** electric blue, orange, parchment
@@ -209,7 +223,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin. Palette: electric blue, orange, parchment. Personality shown in the pose: chatty, excitable, clever. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin. Palette: electric blue, orange, parchment. Expression: chatty, excitable, clever. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -220,7 +234,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Lots of burn and a few fliers. Keep life high and do not let her draw extra cards unchecked."
 
 #### Tangle Leo: Vine warden
-- **File:** `spellslinger/art/characters/t2-leo.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t2-leo.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🕸️
 - **Look:** a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat
 - **Palette:** teal, leaf green, silver thread
@@ -228,7 +242,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat. Palette: teal, leaf green, silver thread. Personality shown in the pose: thoughtful, dry humour. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat. Palette: teal, leaf green, silver thread. Expression: thoughtful, dry humour. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -239,7 +253,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Bounce spells slow you down while his big creatures catch up. Keep threats cheap."
 
 #### Marcus the Warden (boss): Boss of the Grinders
-- **File:** `spellslinger/art/characters/t2-boss.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t2-boss.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 👑
 - **Look:** a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff
 - **Palette:** midnight blue, black, silver
@@ -247,7 +261,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff. Palette: midnight blue, black, silver. Personality shown in the pose: measured, patient, always three turns ahead. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff. Palette: midnight blue, black, silver. Expression: measured, patient, always three turns ahead. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -261,7 +275,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 ### League 3 (The Pro Circuit)
 
 #### Dread Brenda: Blood-red racer
-- **File:** `spellslinger/art/characters/t3-brenda.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t3-brenda.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 💀
 - **Look:** a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin
 - **Palette:** black, crimson, bone
@@ -269,7 +283,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin. Palette: black, crimson, bone. Personality shown in the pose: aggressive, sarcastic, loves pressure. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin. Palette: black, crimson, bone. Expression: aggressive, sarcastic, loves pressure. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -280,7 +294,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Aggressive creatures with burn to finish. Block early and keep life above 8."
 
 #### Titan Trevor: Mountain mover
-- **File:** `spellslinger/art/characters/t3-trevor.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t3-trevor.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🦖
 - **Look:** a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice
 - **Palette:** moss green, granite grey, amber
@@ -288,7 +302,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice. Palette: moss green, granite grey, amber. Personality shown in the pose: slow, powerful, speaks in short sentences. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice. Palette: moss green, granite grey, amber. Expression: slow, powerful, speaks in short sentences. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -299,7 +313,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Gigantic tramplers. Chump-block with small ones and kill the biggest with removal."
 
 #### Wallbuilder Sam: Fortress mason
-- **File:** `spellslinger/art/characters/t3-sam.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t3-sam.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🧱
 - **Look:** a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes
 - **Palette:** white, silver, sunburst gold
@@ -307,7 +321,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes. Palette: white, silver, sunburst gold. Personality shown in the pose: patient, protective, immovable. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes. Palette: white, silver, sunburst gold. Expression: patient, protective, immovable. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -318,7 +332,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "High-toughness lifelink creatures. Evasion and removal win; bashing into walls does not."
 
 #### Bounce Luke: Tide trickster
-- **File:** `spellslinger/art/characters/t3-luke.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t3-luke.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🌀
 - **Look:** a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck
 - **Palette:** ocean blue, teal, silver coins
@@ -326,7 +340,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck. Palette: ocean blue, teal, silver coins. Personality shown in the pose: playful, mocking, always flipping a coin. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck. Palette: ocean blue, teal, silver coins. Expression: playful, mocking, always flipping a coin. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -337,7 +351,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "He bounces your best creature and wins in the air. Cheap threats and removal for his fliers."
 
 #### Arthur the Whale: Dragon-rider
-- **File:** `spellslinger/art/characters/t3-arthur.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t3-arthur.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🐉
 - **Look:** an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh
 - **Palette:** ruby red, emerald green, gold
@@ -345,7 +359,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh. Palette: ruby red, emerald green, gold. Personality shown in the pose: loud, generous, bragging. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh. Palette: ruby red, emerald green, gold. Expression: loud, generous, bragging. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -356,7 +370,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Huge red and green creatures that cost a lot. Counter his tempo, remove the biggest one."
 
 #### Sarah, Storm Walker (boss): Boss of the Pro Circuit
-- **File:** `spellslinger/art/characters/t3-boss.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/t3-boss.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 👑
 - **Look:** a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze
 - **Palette:** storm blue, crimson, white lightning
@@ -364,7 +378,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze. Palette: storm blue, crimson, white lightning. Personality shown in the pose: confident, elegant, a little bored of winning. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze. Palette: storm blue, crimson, white lightning. Expression: confident, elegant, a little bored of winning. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -378,7 +392,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 ### Helpers on the other tabs
 
 #### Pip the Guide: Ascent guide
-- **File:** `spellslinger/art/characters/npc-guide.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/npc-guide.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🧭
 - **Look:** a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil
 - **Palette:** warm browns, teal, cream
@@ -386,7 +400,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil. Palette: warm browns, teal, cream. Personality shown in the pose: friendly, encouraging. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil. Palette: warm browns, teal, cream. Expression: friendly, encouraging. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -396,7 +410,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Each opponent drops its own signature cards. Check them on the map before you battle."
 
 #### Mara the Packmaster: Booster merchant
-- **File:** `spellslinger/art/characters/npc-packmaster.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/npc-packmaster.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 📦
 - **Look:** a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile
 - **Palette:** gold, red, deep blue
@@ -404,7 +418,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile. Palette: gold, red, deep blue. Personality shown in the pose: brisk and showy. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile. Palette: gold, red, deep blue. Expression: brisk and showy. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -414,7 +428,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "The fifth copy of any card turns into Aether, so nothing is wasted."
 
 #### Brindle the Aether Smith: Upgrade smith
-- **File:** `spellslinger/art/characters/npc-smith.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/npc-smith.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** ⚒️
 - **Look:** a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh
 - **Palette:** forge orange, aether blue, iron
@@ -422,7 +436,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh. Palette: forge orange, aether blue, iron. Personality shown in the pose: booming, loves tinkering. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh. Palette: forge orange, aether blue, iron. Expression: booming, loves tinkering. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -432,7 +446,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 - *tip:* "Spare copies of a card can pay for an upgrade. Two slots per card, three on mythics."
 
 #### Wren the Deckwright: Deck builder
-- **File:** `spellslinger/art/characters/npc-deckwright.png` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** `spellslinger/art/characters/npc-deckwright.png` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** 🃏
 - **Look:** a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes
 - **Palette:** blue-grey, cream, ink black
@@ -440,7 +454,7 @@ I (Claude) can't run Retro Diffusion from here and couldn't check its current st
 
 **Retro Diffusion prompt:**
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Full-body character sprite sheet of a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes. Palette: blue-grey, cream, ink black. Personality shown in the pose: careful and precise. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes. Palette: blue-grey, cream, ink black. Expression: careful and precise. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.
 ```
 
 **Dialogue (placeholder, shown in the game now):**
@@ -456,84 +470,84 @@ Lands play a color effect, creatures play a mono-color or multicolor effect when
 
 | File | Plays when | Size | Frames | Speed |
 |---|---|---|---|---|
-| `spellslinger/art/fx/land-W.png` | a Plains enters | 64 x 64 | 8 | 12 fps |
-| `spellslinger/art/fx/land-U.png` | an Island enters | 64 x 64 | 8 | 12 fps |
-| `spellslinger/art/fx/land-B.png` | a Swamp enters | 64 x 64 | 8 | 12 fps |
-| `spellslinger/art/fx/land-R.png` | a Mountain enters | 64 x 64 | 8 | 12 fps |
-| `spellslinger/art/fx/land-G.png` | a Forest enters | 64 x 64 | 8 | 12 fps |
-| `spellslinger/art/fx/land-nonbasic.png` | any land that is not a basic enters | 64 x 64 | 8 | 12 fps |
-| `spellslinger/art/fx/creature-W.png` | a white creature enters | 96 x 96 | 10 | 12 fps |
-| `spellslinger/art/fx/creature-U.png` | a blue creature enters | 96 x 96 | 10 | 12 fps |
-| `spellslinger/art/fx/creature-B.png` | a black creature enters | 96 x 96 | 10 | 12 fps |
-| `spellslinger/art/fx/creature-R.png` | a red creature enters | 96 x 96 | 10 | 12 fps |
-| `spellslinger/art/fx/creature-G.png` | a green creature enters | 96 x 96 | 10 | 12 fps |
-| `spellslinger/art/fx/creature-colorless.png` | a colorless creature (artifact creature) enters | 96 x 96 | 10 | 12 fps |
-| `spellslinger/art/fx/creature-multi.png` | a creature of two or more colors enters | 96 x 96 | 12 | 12 fps |
-| `spellslinger/art/fx/spell-instant.png` | an instant is cast | 96 x 96 | 8 | 14 fps |
-| `spellslinger/art/fx/spell-sorcery.png` | a sorcery is cast | 96 x 96 | 10 | 12 fps |
-| `spellslinger/art/fx/spell-artifact.png` | a non-creature artifact is cast | 96 x 96 | 10 | 12 fps |
-| `spellslinger/art/fx/spell-enchantment.png` | an enchantment is cast | 96 x 96 | 10 | 12 fps |
-| `spellslinger/art/fx/spell-planeswalker.png` | a planeswalker is cast | 128 x 128 | 12 | 12 fps |
-| `spellslinger/art/fx/spell-battle.png` | a battle is cast | 96 x 96 | 8 | 12 fps |
+| `spellslinger/art/fx/land-W.png` | a Plains enters | 64 x 64 | 12 | 14 fps |
+| `spellslinger/art/fx/land-U.png` | an Island enters | 64 x 64 | 12 | 14 fps |
+| `spellslinger/art/fx/land-B.png` | a Swamp enters | 64 x 64 | 12 | 14 fps |
+| `spellslinger/art/fx/land-R.png` | a Mountain enters | 64 x 64 | 12 | 14 fps |
+| `spellslinger/art/fx/land-G.png` | a Forest enters | 64 x 64 | 12 | 14 fps |
+| `spellslinger/art/fx/land-nonbasic.png` | any land that is not a basic enters | 64 x 64 | 12 | 14 fps |
+| `spellslinger/art/fx/creature-W.png` | a white creature enters | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/creature-U.png` | a blue creature enters | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/creature-B.png` | a black creature enters | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/creature-R.png` | a red creature enters | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/creature-G.png` | a green creature enters | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/creature-colorless.png` | a colorless creature (artifact creature) enters | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/creature-multi.png` | a creature of two or more colors enters | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/spell-instant.png` | an instant is cast | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/spell-sorcery.png` | a sorcery is cast | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/spell-artifact.png` | a non-creature artifact is cast | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/spell-enchantment.png` | an enchantment is cast | 96 x 96 | 12 | 14 fps |
+| `spellslinger/art/fx/spell-planeswalker.png` | a planeswalker is cast | 128 x 128 | 12 | 14 fps |
+| `spellslinger/art/fx/spell-battle.png` | a battle is cast | 96 x 96 | 12 | 14 fps |
 
 #### Plains: a gentle white glow (`land-W`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a soft radiant burst of white and gold light with floating feather motes and a sunbeam, expanding then fading.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a soft radiant burst of white and gold light with floating feather motes and a sunbeam, expanding then fading.
 ```
 
 #### Island: water ripple (`land-U`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a ring of blue water ripples with a splash and rising bubbles, expanding then fading.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a ring of blue water ripples with a splash and rising bubbles, expanding then fading.
 ```
 
 #### Swamp: bubbling ooze (`land-B`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: purple-black ooze bubbling up with wispy smoke and tiny skulls of vapor, rising then fading.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: purple-black ooze bubbling up with wispy smoke and tiny skulls of vapor, rising then fading.
 ```
 
 #### Mountain: ember burst (`land-R`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a burst of orange and red embers and a small flame ring, flickering then fading.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a burst of orange and red embers and a small flame ring, flickering then fading.
 ```
 
 #### Forest: sprouting leaves (`land-G`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: green leaves and a sprout growing outward with sparkling spores, unfurling then fading.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: green leaves and a sprout growing outward with sparkling spores, unfurling then fading.
 ```
 
 #### Nonbasic land: five-color shimmer (`land-nonbasic`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a swirl of white, blue, black, red and green sparkles spiralling around a bright ring, then fading.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a swirl of white, blue, black, red and green sparkles spiralling around a bright ring, then fading.
 ```
 
 #### White creature arrives (`creature-W`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a pillar of white and gold light with feathers descending, a holy flash at the base.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a pillar of white and gold light with feathers descending, a holy flash at the base.
 ```
 
 #### Blue creature arrives (`creature-U`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a vortex of blue water and swirling mist rising into a bright splash.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a vortex of blue water and swirling mist rising into a bright splash.
 ```
 
 #### Black creature arrives (`creature-B`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: purple-black shadow tendrils and skull-smoke curling up out of a crack in the ground.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: purple-black shadow tendrils and skull-smoke curling up out of a crack in the ground.
 ```
 
 #### Red creature arrives (`creature-R`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a roaring column of orange flames and sparks bursting upward with a heat shimmer.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a roaring column of orange flames and sparks bursting upward with a heat shimmer.
 ```
 
 #### Green creature arrives (`creature-G`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: roots and vines bursting out of the ground with flying leaves and a green shockwave.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: roots and vines bursting out of the ground with flying leaves and a green shockwave.
 ```
 
 #### Colorless creature arrives (`creature-colorless`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: grey metal gears and steel sparks assembling into a shining silver flash.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: grey metal gears and steel sparks assembling into a shining silver flash.
 ```
 
 #### Multicolor creature arrives (`creature-multi`)
@@ -543,22 +557,22 @@ Lands play a color effect, creatures play a mono-color or multicolor effect when
 
 #### Instant: lightning flash (`spell-instant`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a fast jagged white-blue lightning flash with an arcane rune circle snapping in and out.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a fast jagged white-blue lightning flash with an arcane rune circle snapping in and out.
 ```
 
 #### Sorcery: ritual circle (`spell-sorcery`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a large glowing arcane summoning circle with orbiting runes and rising purple-gold smoke.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a large glowing arcane summoning circle with orbiting runes and rising purple-gold smoke.
 ```
 
 #### Artifact: gear assembly (`spell-artifact`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: brass gears and cogs spinning into place with a metal clang flash and steam puffs.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: brass gears and cogs spinning into place with a metal clang flash and steam puffs.
 ```
 
 #### Enchantment: sparkling aura (`spell-enchantment`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a shimmering swirl of soft pink and gold sparkles forming a floating aura ring with tiny stars.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a shimmering swirl of soft pink and gold sparkles forming a floating aura ring with tiny stars.
 ```
 
 #### Planeswalker: arrival portal (`spell-planeswalker`)
@@ -568,21 +582,113 @@ Lands play a color effect, creatures play a mono-color or multicolor effect when
 
 #### Battle: clashing swords (`spell-battle`)
 ```
-16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: two crossed swords clashing with a shower of sparks and a shockwave ring.
+16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: two crossed swords clashing with a shower of sparks and a shockwave ring.
 ```
 
 
 ### Ideas for later (not in the game yet)
 
 - **Combat hit** (`fx-hit`, 64 x 64, 6 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 6 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a quick white impact flash with a slash mark and small sparks.
-- **Creature dies** (`fx-die`, 96 x 96, 8 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a creature outline crumbling into grey dust and fading spirit wisps rising.
-- **Life gain** (`fx-heal`, 64 x 64, 8 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: rising green plus signs and soft white sparkles around a heart.
+- **Creature dies** (`fx-die`, 96 x 96, 12 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a creature outline crumbling into grey dust and fading spirit wisps rising.
+- **Life gain** (`fx-heal`, 64 x 64, 12 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: rising green plus signs and soft white sparkles around a heart.
 - **Draw a card** (`fx-draw`, 64 x 64, 6 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 6 frames in one horizontal strip, each frame 64 x 64 pixels, centered, transparent background: a card sliding out of a deck with a small blue swoosh.
-- **Counterspell** (`fx-counter`, 96 x 96, 8 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a blue ward sigil shattering into pieces with a magic shatter ring.
-- **Upgrade applied** (`fx-upgrade`, 96 x 96, 8 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 8 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a golden anvil strike with rising blue Aether sparks and a bright flash.
-- **Pack opens** (`fx-pack-open`, 128 x 128, 10 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 128 x 128 pixels, centered, transparent background: a foil booster pack tearing open with a burst of gold light and confetti.
+- **Counterspell** (`fx-counter`, 96 x 96, 12 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a blue ward sigil shattering into pieces with a magic shatter ring.
+- **Upgrade applied** (`fx-upgrade`, 96 x 96, 12 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 96 x 96 pixels, centered, transparent background: a golden anvil strike with rising blue Aether sparks and a bright flash.
+- **Pack opens** (`fx-pack-open`, 128 x 128, 12 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 12 frames in one horizontal strip, each frame 128 x 128 pixels, centered, transparent background: a foil booster pack tearing open with a burst of gold light and confetti.
 - **Victory banner** (`fx-win`, 128 x 128, 10 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 128 x 128 pixels, centered, transparent background: a golden victory laurel and shining sunburst with confetti.
 - **Defeat banner** (`fx-lose`, 128 x 128, 10 frames): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Animated effect, 10 frames in one horizontal strip, each frame 128 x 128 pixels, centered, transparent background: a dark grey cloud with a single falling ash flake and a dimming light.
+
+## Booster pack looks (wrapper and opening burst)
+
+Each pack tier has its own look and opening animation in the game (drawn in CSS today). When these PNGs exist the wrapper art replaces the drawn pack and the burst plays over it while it opens. Wrapper: 96 x 144, one frame. Burst: 12 frames in a strip, each 96 x 96.
+
+- **Play Booster** (opens with "tear"): wrapper `spellslinger/art/packs/standard.png`: a vertical foil booster pack wrapper in teal and silver with a swirling galaxy emblem in the middle, crimped zigzag top and bottom, no text. Burst `spellslinger/art/packs/standard-open.png`: a quick burst of cyan and white sparkles and a few torn foil scraps flying outward.
+- **Collector Booster** (opens with "burst"): wrapper `spellslinger/art/packs/collector.png`: a vertical gold and black foil booster pack wrapper with a shining sunburst emblem and a thin gold border, crimped zigzag top and bottom, no text. Burst `spellslinger/art/packs/collector-open.png`: a blinding golden flash with rays and glittering gold confetti bursting outward.
+- **Masters Booster** (opens with "sweep"): wrapper `spellslinger/art/packs/masters.png`: a vertical booster pack wrapper in deep violet and silver with a polished chrome emblem and a diagonal shine, crimped zigzag top and bottom, no text. Burst `spellslinger/art/packs/masters-open.png`: a silver and violet foil shimmer sweeping across with floating prismatic sparkles.
+- **Classic Booster (2000-2008)** (opens with "rip"): wrapper `spellslinger/art/packs/classic.png`: a vertical retro booster pack wrapper in red and cream with a bold simple emblem and a painted-style border, crimped zigzag top and bottom, no text. Burst `spellslinger/art/packs/classic-open.png`: a ragged paper tear with flying scraps and a small puff of dust.
+- **Vintage Booster** (opens with "seal"): wrapper `spellslinger/art/packs/vintage.png`: a vertical old booster pack wrapper in weathered brown and parchment tones with a red wax seal at the top, worn edges and a faded emblem, no text. Burst `spellslinger/art/packs/vintage-open.png`: a red wax seal cracking apart with flying wax chips and a puff of old dust.
+- **Unlimited-era Booster** (opens with "unseal"): wrapper `spellslinger/art/packs/early.png`: a vertical dark blue and gold booster pack wrapper in an ornate old style with glowing rune marks around a central gem, no text. Burst `spellslinger/art/packs/early-open.png`: glowing blue runes spinning up out of a pack with floating golden sparks.
+- **Alpha / Beta Booster** (opens with "unveil"): wrapper `spellslinger/art/packs/power.png`: a vertical black booster pack wrapper with a heavy ornate gold border and a radiant gold five-pointed star, looking priceless and ancient, no text. Burst `spellslinger/art/packs/power-open.png`: a slow rising column of golden light with spinning rays, drifting embers and a heavenly glow.
+
+## Expressions and win / lose poses (groups `moods` and `poses`, one each per opponent)
+
+Made from each opponent's own base drawing (the character must be made first), so they stay on-model. **Expressions** (`spellslinger/art/moods/<id>.png`, 3 stills of 96 x 96: happy, angry, worried, $0.75 each, 18 = about $13.5) show on the opponent's bar in Planeswalker's Ascent games as the game turns (worried at low life or facing a big board, angry after a hard hit, happy when ahead). **Poses** (`spellslinger/art/poses/<id>.png`, 1536 x 192: row 1 victory, row 2 defeat, 16 frames each, $0.50 each, 18 = about $9) play on the result screen (you win: its defeat pose; you lose: its victory pose).
+
+- **happy**: the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little
+- **angry**: the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched
+- **worried**: the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop
+- **win pose**: the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile
+- **lose pose**: the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile
+
+## Rank badges, backdrops, card back, phase icons (group `icons`)
+
+Trophy milestone badges (`badge-3` to `badge-75`), tier backdrops, the table mat, the card back, map markers, phase icons, tab icons, currency icons, rarity gems and upgrade icons are all in the Icons section below; the game uses each one in its screen as soon as the PNG exists in `spellslinger/art/ui/`. The five mana gems and seven type icons are generic (not game symbols): they appear on the starter-color buttons and the card dialog.
+
+
+## Website art (MTG lookup tool): frames, cursor, click
+
+Drawn in code today from the theme colors; when these PNGs exist in `art/site/` the page uses them instead (the **mascot** (8 frames of 64 x 64) replaces the title moon mark, the **loading card** (8 frames of 48 x 48) shows under every loading message, and each **scene** (256 x 128) is drawn behind the page title for its season at Effects: Full, mirrored tile to tile; cursor arrow and hand 32 x 32, click burst 8 frames of 64 x 64, card frames 64 x 64 as 9-slice with 12 px corners). Make them with `py tools\make_art.py --go --group site`.
+
+- **common card frame** (`art/site/frame-common.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in plain grey steel, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **uncommon card frame** (`art/site/frame-uncommon.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in polished silver-blue, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **rare card frame** (`art/site/frame-rare.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in bright gold, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **mythic card frame** (`art/site/frame-mythic.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in fiery orange-red with tiny flame edges, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **special card frame** (`art/site/frame-special.png`, 64 x 64, style `rd_plus__ui_element`): a square ornate trading card border frame in magenta and violet with star studs, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text
+- **mouse cursor, arrow** (`art/site/cursor-arrow.png`, 32 x 32, style `rd_plus__low_res`): a pixel art mouse pointer arrow, cream white fill with a thick dark outline and one small teal highlight pixel, pointing up and to the left, the tip at the very top-left corner of the image
+- **mouse cursor, pointing hand** (`art/site/cursor-hand.png`, 32 x 32, style `rd_plus__low_res`): a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image
+- **page mascot (waves, blinks)** (`art/site/mascot.png`, 64 x 64, 8 frames, style `rd_animation__vfx`): a tiny cute pixel mascot: a smiling crescent moon wearing a little rocket-nose-cone cap, floating with a gentle bob, blinking once and giving a small wave, a seamless 8 frame loop, centered
+- **loading spinner (a card flipping)** (`art/site/loading-card.png`, 48 x 48, 8 frames, style `rd_animation__vfx`): a single pixel playing card spinning around its vertical axis like a coin flip, teal back with a small gold star, seamless 8 frame loop, centered
+- **halloween scene banner** (`art/site/scene-halloween.png`, 256 x 128, style `rd_plus__environment`): a wide pixel art banner scene, a spooky night street with a big orange moon, bats, a haunted house and glowing jack-o-lanterns, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text
+- **autumn scene banner** (`art/site/scene-autumn.png`, 256 x 128, style `rd_plus__environment`): a wide pixel art banner scene, a golden autumn hillside with red and orange trees, falling leaves and a warm low sun, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text
+- **winter scene banner** (`art/site/scene-winter.png`, 256 x 128, style `rd_plus__environment`): a wide pixel art banner scene, a snowy village at dusk with lit windows, pine trees and falling snow, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text
+- **christmas scene banner** (`art/site/scene-christmas.png`, 256 x 128, style `rd_plus__environment`): a wide pixel art banner scene, a cozy Christmas night scene with a decorated tree, wrapped gifts, a sleigh and twinkling lights, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text
+- **spring scene banner** (`art/site/scene-spring.png`, 256 x 128, style `rd_plus__environment`): a wide pixel art banner scene, a bright spring meadow with cherry blossoms, tulips, a pastel sky and small birds, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text
+- **newyear scene banner** (`art/site/scene-newyear.png`, 256 x 128, style `rd_plus__environment`): a wide pixel art banner scene, a midnight city skyline with fireworks bursting, confetti and a glowing clock, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text
+- **click burst** (`art/site/click-burst.png`, 64 x 64, 8 frames, style `rd_animation__vfx`): a tiny satisfying click burst: a bright cyan and white ring of pixels expanding with a few gold sparks flying outward and fading, centered
+
+### Seasonal falling sprites for the background (group `site-fall`, 32 x 32, 4 frames each: the page draws them in place of the pixelated emoji for each theme)
+
+- **leaf**: a tumbling brown and orange autumn leaf, 32 x 32, 4 frames, `art/site/fall-leaf.png`
+- **maple**: a red maple leaf, 32 x 32, 4 frames, `art/site/fall-maple.png`
+- **greenleaf**: a fresh green leaf, 32 x 32, 4 frames, `art/site/fall-greenleaf.png`
+- **sprout**: a small green seedling with two leaves, 32 x 32, 4 frames, `art/site/fall-sprout.png`
+- **snowflake**: a six-armed white snowflake, 32 x 32, 4 frames, `art/site/fall-snowflake.png`
+- **pumpkin**: a tiny jack-o-lantern with a glowing face, 32 x 32, 4 frames, `art/site/fall-pumpkin.png`
+- **bat**: a small black bat flapping its wings, 32 x 32, 4 frames, `art/site/fall-bat.png`
+- **ghost**: a cute white ghost, 32 x 32, 4 frames, `art/site/fall-ghost.png`
+- **witch**: a witch on a broomstick, tiny, 32 x 32, 4 frames, `art/site/fall-witch.png`
+- **broom**: a straw witch broom, 32 x 32, 4 frames, `art/site/fall-broom.png`
+- **moon**: a golden crescent moon, 32 x 32, 4 frames, `art/site/fall-moon.png`
+- **star**: a twinkling yellow star, 32 x 32, 4 frames, `art/site/fall-star.png`
+- **sparkle**: a white and gold sparkle with four points, 32 x 32, 4 frames, `art/site/fall-sparkle.png`
+- **gift**: a small wrapped gift with a red bow, 32 x 32, 4 frames, `art/site/fall-gift.png`
+- **firework**: a bursting gold and red firework spark, 32 x 32, 4 frames, `art/site/fall-firework.png`
+- **confetti**: a few pieces of colorful confetti and a streamer, 32 x 32, 4 frames, `art/site/fall-confetti.png`
+- **dove**: a small white dove with wings spread, 32 x 32, 4 frames, `art/site/fall-dove.png`
+- **tree**: a small green pine tree with a star, 32 x 32, 4 frames, `art/site/fall-tree.png`
+- **cookie**: a frosted gingerbread cookie, 32 x 32, 4 frames, `art/site/fall-cookie.png`
+- **cocoa**: a steaming mug of hot cocoa, 32 x 32, 4 frames, `art/site/fall-cocoa.png`
+- **ribbon**: a red ribbon bow, 32 x 32, 4 frames, `art/site/fall-ribbon.png`
+- **snowman**: a tiny snowman with a scarf, 32 x 32, 4 frames, `art/site/fall-snowman.png`
+- **sleigh**: a small red sleigh, 32 x 32, 4 frames, `art/site/fall-sleigh.png`
+- **reindeer**: a small reindeer with antlers, 32 x 32, 4 frames, `art/site/fall-reindeer.png`
+- **bag**: a shopping bag with a sale tag, 32 x 32, 4 frames, `art/site/fall-bag.png`
+- **tag**: a price tag on a string, 32 x 32, 4 frames, `art/site/fall-tag.png`
+- **turkey**: a small cartoon turkey with fanned tail feathers, 32 x 32, 4 frames, `art/site/fall-turkey.png`
+- **heart**: a pink heart with a white shine, 32 x 32, 4 frames, `art/site/fall-heart.png`
+- **shamrock**: a green three-leaf shamrock, 32 x 32, 4 frames, `art/site/fall-shamrock.png`
+- **egg**: a painted pastel easter egg, 32 x 32, 4 frames, `art/site/fall-egg.png`
+- **chick**: a fluffy yellow chick, 32 x 32, 4 frames, `art/site/fall-chick.png`
+- **tulip**: a pink tulip flower, 32 x 32, 4 frames, `art/site/fall-tulip.png`
+- **blossom**: a pink cherry blossom flower, 32 x 32, 4 frames, `art/site/fall-blossom.png`
+- **tie**: a blue necktie, 32 x 32, 4 frames, `art/site/fall-tie.png`
+- **earth**: a small blue and green planet earth, 32 x 32, 4 frames, `art/site/fall-earth.png`
+- **pie**: a pumpkin pie slice, 32 x 32, 4 frames, `art/site/fall-pie.png`
+- **envelope**: a red envelope with a gold coin, 32 x 32, 4 frames, `art/site/fall-envelope.png`
+- **lantern**: a red paper lantern with gold tassels, 32 x 32, 4 frames, `art/site/fall-lantern.png`
+- **diya**: a small glowing clay oil lamp, 32 x 32, 4 frames, `art/site/fall-diya.png`
+- **menorah**: a gold nine-branch menorah with flames, 32 x 32, 4 frames, `art/site/fall-menorah.png`
+- **pi**: a golden pi symbol with a small shine, 32 x 32, 4 frames, `art/site/fall-pi.png`
 
 ## Icons, banners and backgrounds
 
@@ -652,7 +758,7 @@ Lands play a color effect, creatures play a mono-color or multicolor effect when
 
 ### Cards
 
-- **card back** (`spellslinger/art/ui/card-back.png`, 96 x 96): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 96 x 96 pixels: a trading card back in deep blue with a gold galaxy swirl border pattern, no text.
+- **card back** (`spellslinger/art/ui/card-back.png`, 96 x 96): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 96 x 96 pixels: one upright portrait trading card back (5:7 shape, about 60 percent of the image width, centered, with empty transparent space around it) in deep blue with a gold galaxy swirl border pattern and rounded corners, no text.
 - **card frame, common** (`spellslinger/art/ui/card-frame-common.png`, 96 x 96): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 96 x 96 pixels: an empty trading card frame border in plain grey with a transparent middle and a transparent name bar.
 - **card frame, rare** (`spellslinger/art/ui/card-frame-rare.png`, 96 x 96): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 96 x 96 pixels: an empty trading card frame border in gold with a transparent middle.
 - **card frame, mythic** (`spellslinger/art/ui/card-frame-mythic.png`, 96 x 96): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 96 x 96 pixels: an empty trading card frame border in fiery orange with flame edges and a transparent middle.
@@ -693,3 +799,16 @@ Lands play a color effect, creatures play a mono-color or multicolor effect when
 - **+1/+1 counter** (`spellslinger/art/ui/counter-plus.png`, 24 x 24): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 24 x 24 pixels: a small green coin with a plus sign.
 - **-1/-1 counter** (`spellslinger/art/ui/counter-minus.png`, 24 x 24): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 24 x 24 pixels: a small red coin with a minus sign.
 - **life heart** (`spellslinger/art/ui/life.png`, 24 x 24): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 24 x 24 pixels: a red pixel heart with a white shine.
+
+### Trophy badges
+
+- **3 wins badge (bronze)** (`spellslinger/art/ui/badge-3.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a small bronze medal on a short red ribbon, a pixel rank badge, bold and readable, slightly glowing.
+- **6 wins badge (bronze)** (`spellslinger/art/ui/badge-6.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a bronze medal with a tiny star on a red ribbon, a pixel rank badge, bold and readable, slightly glowing.
+- **10 wins badge (silver)** (`spellslinger/art/ui/badge-10.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a silver medal on a blue ribbon, a pixel rank badge, bold and readable, slightly glowing.
+- **15 wins badge (silver)** (`spellslinger/art/ui/badge-15.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a silver medal with a laurel on a blue ribbon, a pixel rank badge, bold and readable, slightly glowing.
+- **20 wins badge (gold)** (`spellslinger/art/ui/badge-20.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a gold medal on a purple ribbon, a pixel rank badge, bold and readable, slightly glowing.
+- **25 wins badge (gold)** (`spellslinger/art/ui/badge-25.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a gold medal with a crown on a purple ribbon, a pixel rank badge, bold and readable, slightly glowing.
+- **30 wins badge (platinum)** (`spellslinger/art/ui/badge-30.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a shining platinum shield badge with wings, a pixel rank badge, bold and readable, slightly glowing.
+- **40 wins badge (platinum)** (`spellslinger/art/ui/badge-40.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a platinum shield badge with wings and a gem, a pixel rank badge, bold and readable, slightly glowing.
+- **50 wins badge (diamond)** (`spellslinger/art/ui/badge-50.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a sparkling blue-white diamond crest with wings, a pixel rank badge, bold and readable, slightly glowing.
+- **75 wins badge (legend)** (`spellslinger/art/ui/badge-75.png`, 32 x 32): 16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. Single sprite, 32 x 32 pixels: a glowing gold and violet legend crest with a flaming halo, a pixel rank badge, bold and readable, slightly glowing.

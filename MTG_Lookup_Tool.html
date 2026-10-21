@@ -785,6 +785,12 @@
             margin-bottom: 20px;
         }
 
+        /* Pixel mascot and loading card (optional art, 2026-10-21): used only when art/site/mascot.png and loading-card.png exist */
+        .ms-mark.has-art { width: 56px; height: 56px; display: inline-block; }
+        .px-mascot { display: block; width: 56px; height: 56px; background: url('art/site/mascot.png') 0 0 / calc(var(--n, 8) * 100%) 100% no-repeat; image-rendering: pixelated; animation: px-strip 1s steps(var(--n, 8)) infinite; }
+        @keyframes px-strip { to { background-position-x: 100%; } }
+        html.px-loading-art .loading:not([style*="padding:0"]):not([style*="padding: 0"])::after { content: ''; display: block; width: 48px; height: 48px; margin: 10px auto 0; background: var(--px-loading) 0 0 / calc(var(--px-loading-n, 8) * 100%) 100% no-repeat; image-rendering: pixelated; animation: px-strip 0.9s steps(var(--px-loading-n, 8)) infinite; }
+        @media (prefers-reduced-motion: reduce) { .px-mascot, html.px-loading-art .loading::after { animation: none; } }
         .loading {
             text-align: center;
             color: var(--text-secondary);
@@ -7291,6 +7297,18 @@
         html[data-fx="full"] .holo-card[data-rarity="mythic"]::before { animation: fx-aura 3.2s ease-in-out infinite alternate; }
         @keyframes fx-aura { from { opacity: 0.4; } to { opacity: 0.75; } }
 
+        /* ---- Pixel frame around the card picture (Effects: Full / Subtle); the 9-slice per rarity is drawn by pxBuildFrames ---- */
+        .holo-card { --pxf: var(--pxf-common, none); --pxf-s: var(--pxf-common-s, 6); }
+        .holo-card[data-rarity="uncommon"] { --pxf: var(--pxf-uncommon, none); --pxf-s: var(--pxf-uncommon-s, 6); }
+        .holo-card[data-rarity="rare"] { --pxf: var(--pxf-rare, none); --pxf-s: var(--pxf-rare-s, 6); }
+        .holo-card[data-rarity="mythic"] { --pxf: var(--pxf-mythic, none); --pxf-s: var(--pxf-mythic-s, 6); }
+        .holo-card[data-rarity="special"], .holo-card[data-rarity="bonus"] { --pxf: var(--pxf-special, none); --pxf-s: var(--pxf-special-s, 6); }
+        html[data-fx="full"] .holo-card::after, html[data-fx="subtle"] .holo-card::after {
+            content: ''; position: absolute; inset: -12px; border: 12px solid transparent; pointer-events: none;
+            border-image: var(--pxf) var(--pxf-s) / 12px / 0 stretch; image-rendering: pixelated;
+        }
+        html[data-fx="full"] .holo-card[data-rarity="mythic"]::after { animation: fx-aura 3.2s ease-in-out infinite alternate; }
+        @keyframes px-burst-frames { from { background-position: 0 0; } to { background-position: 100% 0; } }
         .holo-card.fading { opacity: 0.25; transition: opacity 0.15s; }
         .holo-finishes { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: -4px 0 12px; }
         .holo-finishes button {
@@ -7837,6 +7855,7 @@
             else document.documentElement.removeAttribute('data-theme');
             renderSeasonalBadge();
             renderSeasonalFx();
+            if (typeof pxFlairRefresh === 'function') pxFlairRefresh();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -22323,6 +22342,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             renderFxButton();
             renderSeasonalFx();
             fxRefresh();
+            pxFlairRefresh();
             showToast(`✨ ${FX_HINTS[next]}`);
         }
 
@@ -22542,6 +22562,26 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         }
 
         function fxGlyph(ctx, g, size, alpha) {
+            // Seasonal pixel art from the art pipeline (a 4-frame strip per theme emoji), when it exists
+            const art = typeof pxFallArt === 'function' ? pxFallArt(g.glyph) : null;
+            if (art) {
+                const nf = Math.max(1, Math.round(art.naturalWidth / 32)), d = Math.round(size * 1.5 / 4) * 4, frame = Math.floor(performance.now() / 170 + (g.x || 0) * 0.05) % nf; // 4 frames, or 6 when the sprite ping-pongs
+                ctx.imageSmoothingEnabled = false;
+                ctx.globalAlpha = Math.min(1, alpha * 1.3);
+                ctx.drawImage(art, frame * 32, 0, 32, 32, Math.round(g.x - d / 2), Math.round(g.y - d / 2), d, d);
+                ctx.globalAlpha = 1;
+                return;
+            }
+            // Pixel art: the emoji is boiled down to a small sprite (pxGlyphSprite), drawn with hard pixels on a whole-pixel grid
+            const sp = typeof pxGlyphSprite === 'function' ? pxGlyphSprite(g.glyph) : null;
+            if (sp) {
+                const k = Math.max(1, Math.round(size / 12)), d = sp.width * k;
+                ctx.imageSmoothingEnabled = false;
+                ctx.globalAlpha = alpha;
+                ctx.drawImage(sp, Math.round((g.x - d / 2) / k) * k, Math.round((g.y - d / 2) / k) * k, d, d);
+                ctx.globalAlpha = 1;
+                return;
+            }
             ctx.globalAlpha = alpha;
             ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             ctx.textAlign = 'center';
@@ -22572,6 +22612,20 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             g.addColorStop(1, sky.bottom);
             ctx.fillStyle = g;
             ctx.fillRect(0, 0, w, h);
+            // seasonal pixel scene behind the title (art/site/scene-<season>.png), mirrored tile to tile so the seams never show; veiled with the sky color so the title stays readable
+            const scn = pxSceneImg();
+            if (scn) {
+                const k = h / scn.naturalHeight, tw = scn.naturalWidth * k;
+                ctx.imageSmoothingEnabled = false;
+                for (let x = 0, i = 0; x < w; x += tw, i++) {
+                    ctx.save();
+                    if (i % 2) { ctx.translate(x + tw, 0); ctx.scale(-1, 1); } else ctx.translate(x, 0);
+                    ctx.drawImage(scn, 0, 0, tw, h);
+                    ctx.restore();
+                }
+                ctx.fillStyle = fxAlpha(sky.top, 0.35);
+                ctx.fillRect(0, 0, w, h);
+            }
             // stars
             s.stars.forEach(p => {
                 ctx.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(t / 1100 + p.ph));
@@ -22717,6 +22771,202 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             if (!animate) fxState.running = false;
             if (full && !animate) fxDrawScene(0, true);
         }
+
+        // ---------------------------------------------------------------------
+        // Pixel flair (2026-10-21, owner's request: pixel frames, a better background, a new mouse
+        // cursor and a satisfying click). Everything is drawn in code from the theme tokens, so every
+        // season restyles it, and it follows the Effects level (Full and Subtle on, Off plain). If
+        // pixel-art PNGs from the art pipeline exist in art/site/ they replace the drawn versions.
+        // ---------------------------------------------------------------------
+        const PX = { glyphs: new Map(), art: {}, fallImg: {}, probed: false, frames: {}, sceneImg: {} };
+        // Seasonal scene banners (2026-10-21): which theme shows which scene (art/site/scene-<name>.png, 256 x 128, drawn behind the page title at Effects: Full)
+        const PX_SCENES = { halloween: 1, autumn: 1, winter: 1, christmas: 1, spring: 1, newyear: 1 };
+        const PX_THEME_SCENE = { halloween: 'halloween', spooky: 'halloween', witching: 'halloween', pumpkin: 'halloween', harvest: 'autumn', harvestmoon: 'autumn', thanksgiving: 'autumn', wonderland: 'winter', snowday: 'winter', evergreen: 'winter', cocoa: 'winter', twinkle: 'winter', hanukkah: 'winter', christmas: 'christmas', christmaseve: 'christmas', festive: 'christmas', newyear: 'newyear', newyearseve: 'newyear', easter: 'spring', earthday: 'spring', stpatricks: 'spring', mothersday: 'spring', holi: 'spring' };
+        function pxSceneImg() { const k = PX_THEME_SCENE[document.documentElement.getAttribute('data-theme') || '']; return k && PX.sceneImg[k] ? PX.sceneImg[k] : null; }
+        // Mascot and loading spinner from the art pipeline, when their files exist
+        function pxApplyExtras() {
+            const mark = document.getElementById('msMark');
+            if (mark && PX.art.mascot && !mark.classList.contains('has-art')) {
+                mark.classList.add('has-art');
+                mark.innerHTML = `<span class="px-mascot" style="--n:${PX.frames.mascot || 8}"></span>`;
+            }
+            if (PX.art['loading-card']) {
+                const st = document.documentElement.style;
+                st.setProperty('--px-loading', "url('art/site/loading-card.png')");
+                st.setProperty('--px-loading-n', PX.frames['loading-card'] || 8);
+                document.documentElement.classList.add('px-loading-art');
+            }
+        }
+        const PX_ARROW = [
+            'X...........', 'XX..........', 'XWX.........', 'XWWX........', 'XWWWX.......', 'XWWWWX......', 'XWWWWWX.....', 'XWWWWWWX....',
+            'XWWWWWWWX...', 'XWWWWWXXXXX.', 'XWWXWWX.....', 'XWX.XWWX....', 'XX..XWWX....', 'X....XWWX...', '.....XWWX...', '......XX....'
+        ];
+        const PX_HAND = [
+            '....XX..........', '...XWWX.........', '...XWWX.........', '...XWWX.........', '...XWWXXX.......', '...XWWXWWXXX....', 'XX.XWWXWWXWWX...', 'XWXXWWWWWWWWWX..',
+            'XWWXWWWWWWWWWX..', '.XWWWWWWWWWWWX..', '..XWWWWWWWWWWX..', '..XWWWWWWWWWX...', '...XWWWWWWWWX...', '...XWWWWWWWX....', '....XWWWWWWX....', '....XXXXXXXX....'
+        ];
+        // Seasonal pixel art (optional): each theme emoji maps to a 4-frame sprite in art/site/fall-<id>.png (32 x 32 frames); the colored-dot lights are drawn in code
+        const PX_FALL_MAP = {
+            '🍂': 'leaf', '🍁': 'maple', '🍃': 'greenleaf', '🌱': 'sprout', '❄️': 'snowflake', '❄': 'snowflake', '🎃': 'pumpkin', '🦇': 'bat', '👻': 'ghost', '🧙‍♀️': 'witch', '🧹': 'broom',
+            '🌙': 'moon', '⭐': 'star', '✨': 'sparkle', '🎁': 'gift', '🎆': 'firework', '🎇': 'firework', '🎊': 'confetti', '🎉': 'confetti', '🕊️': 'dove', '🌲': 'tree', '🍪': 'cookie', '☕': 'cocoa',
+            '🎀': 'ribbon', '☃️': 'snowman', '🛷': 'sleigh', '🦌': 'reindeer', '🛍️': 'bag', '🏷️': 'tag', '🦃': 'turkey', '💕': 'heart', '💝': 'heart', '💜': 'heart', '💛': 'heart', '☘️': 'shamrock',
+            '🍀': 'shamrock', '🥚': 'egg', '🐣': 'chick', '🌷': 'tulip', '🌸': 'blossom', '💐': 'blossom', '👔': 'tie', '🌍': 'earth', '🥧': 'pie', '🧧': 'envelope', '🏮': 'lantern', '🪔': 'diya', '🕎': 'menorah', 'π': 'pi'
+        };
+        function pxFallArt(glyph) { const id = PX_FALL_MAP[glyph]; return id && PX.fallImg[id] ? PX.fallImg[id] : null; }
+        function pxOn() { return fxIs('full', 'subtle'); }
+        function pxFine() { return !!(window.matchMedia && window.matchMedia('(pointer: fine)').matches); }
+        // An emoji boiled down to a 12 x 12 pixel sprite with a dark outline (14 x 14 with the outline)
+        function pxGlyphSprite(glyph) {
+            const hit = PX.glyphs.get(glyph);
+            if (hit) return hit;
+            const N = 12, BIG = 48, K = BIG / N;
+            const t = document.createElement('canvas'); t.width = t.height = BIG;
+            const x = t.getContext('2d', { willReadFrequently: true });
+            x.font = `${BIG * 0.78}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            x.textAlign = 'center'; x.textBaseline = 'middle';
+            x.fillText(glyph, BIG / 2, BIG / 2 + 2);
+            let data;
+            try { data = x.getImageData(0, 0, BIG, BIG).data; } catch (e) { return null; }
+            const out = document.createElement('canvas'); out.width = out.height = N + 2;
+            const o = out.getContext('2d'), img = o.createImageData(N + 2, N + 2);
+            const solid = new Uint8Array((N + 2) * (N + 2));
+            const q = v => Math.min(255, Math.round(v / 64) * 64);
+            for (let cy = 0; cy < N; cy++) for (let cx = 0; cx < N; cx++) {
+                let r = 0, g = 0, b = 0, a = 0;
+                for (let yy = 0; yy < K; yy++) for (let xx = 0; xx < K; xx++) {
+                    const i = ((cy * K + yy) * BIG + cx * K + xx) * 4, al = data[i + 3];
+                    r += data[i] * al; g += data[i + 1] * al; b += data[i + 2] * al; a += al;
+                }
+                if (a / (K * K) < 90) continue; // mostly empty cell
+                const j = ((cy + 1) * (N + 2) + cx + 1) * 4;
+                img.data[j] = q(r / a); img.data[j + 1] = q(g / a); img.data[j + 2] = q(b / a); img.data[j + 3] = 255;
+                solid[(cy + 1) * (N + 2) + cx + 1] = 1;
+            }
+            const ol = fxRgb(fxToken('--bg-canvas')), W = N + 2;
+            for (let yy = 0; yy < W; yy++) for (let xx = 0; xx < W; xx++) {
+                if (solid[yy * W + xx]) continue;
+                const near = (xx > 0 && solid[yy * W + xx - 1]) || (xx < W - 1 && solid[yy * W + xx + 1]) || (yy > 0 && solid[(yy - 1) * W + xx]) || (yy < W - 1 && solid[(yy + 1) * W + xx]);
+                if (near) { const j = (yy * W + xx) * 4; img.data[j] = ol[0]; img.data[j + 1] = ol[1]; img.data[j + 2] = ol[2]; img.data[j + 3] = 230; }
+            }
+            o.putImageData(img, 0, 0);
+            PX.glyphs.set(glyph, out);
+            return out;
+        }
+        // A pixel map ('X' outline, 'W' fill, 'B' accent) drawn at 2x on a canvas
+        function pxMapCanvas(map, cols, scale) {
+            const w = Math.max(...map.map(r => r.length)), c = document.createElement('canvas');
+            c.width = w * scale; c.height = map.length * scale;
+            const g = c.getContext('2d');
+            map.forEach((row, y) => [...row].forEach((ch, x) => { if (cols[ch]) { g.fillStyle = cols[ch]; g.fillRect(x * scale, y * scale, scale, scale); } }));
+            return c;
+        }
+        function pxPointerSelectors() {
+            const out = [];
+            const walk = rules => { for (const r of rules) {
+                if (r.type === 1 && r.style && r.style.cursor === 'pointer' && !r.selectorText.includes('::')) out.push(r.selectorText);
+                else if (r.cssRules && r.type !== 1) walk(r.cssRules);
+            } };
+            for (const sh of document.styleSheets) { try { walk(sh.cssRules); } catch (e) { /* cross-origin sheet */ } }
+            return out;
+        }
+        function pxBuildCursor() {
+            let st = document.getElementById('pxCursorStyle');
+            if (!pxOn() || !pxFine()) { if (st) st.remove(); return; }
+            const pal = fxPalette();
+            const cols = { X: fxMix(pal.canvas, '#000000', 0.2), W: pal.heading, B: pal.brandLight };
+            let arrow = PX.art['cursor-arrow'] ? 'art/site/cursor-arrow.png' : pxMapCanvas(PX_ARROW.map(r => r.padEnd(12, '.')), cols, 2).toDataURL();
+            let hand = PX.art['cursor-hand'] ? 'art/site/cursor-hand.png' : pxMapCanvas(PX_HAND, cols, 2).toDataURL();
+            const sel = pxPointerSelectors().map(s => `html:not([data-fx="off"]) :is(${s})`).join(',\n');
+            const anyPtr = 'a[href], button:not(:disabled), summary, select, label[for], [role="button"], [role="tab"], [onclick], input[type="checkbox"], input[type="radio"], input[type="range"], input[type="button"], input[type="submit"]';
+            const css = `html:not([data-fx="off"]), html:not([data-fx="off"]) body { cursor: url("${arrow}") 2 2, auto; }
+html:not([data-fx="off"]) :is(${anyPtr}),
+${sel ? sel + ',' : ''}
+html:not([data-fx="off"]) .px-hand { cursor: url("${hand}") 9 2, pointer; }
+html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor: url("${arrow}") 2 2, not-allowed; }`;
+            if (!st) { st = document.createElement('style'); st.id = 'pxCursorStyle'; document.head.appendChild(st); }
+            st.textContent = css;
+        }
+        // The click: a ring of pixels and a handful of pixel sparks that fly out and fall
+        function pxBurst(x, y) {
+            if (!pxOn() || fxReducedMotion.matches) return;
+            const live = document.querySelectorAll('.px-burst');
+            if (live.length > 6) return;
+            if (PX.art['click-burst']) { // pixel art from the art pipeline: a strip of square 64 x 64 frames (8 or 12; the count is read from the image)
+                const d = document.createElement('div'), nf = PX.burstFrames || 12;
+                d.className = 'px-burst';
+                d.style.cssText = `position:fixed;left:${x - 48}px;top:${y - 48}px;width:96px;height:96px;pointer-events:none;z-index:200;image-rendering:pixelated;background:url('art/site/click-burst.png') 0 0 / ${nf * 100}% 100% no-repeat;animation:px-burst-frames 0.5s steps(${nf - 1}) forwards;`;
+                document.body.appendChild(d);
+                setTimeout(() => d.remove(), 560);
+                return;
+            }
+            const full = fxIs('full'), SIZE = 96;
+            const wrap = document.createElement('canvas');
+            wrap.className = 'px-burst'; wrap.width = wrap.height = SIZE / 3; // drawn at a third of the size, shown at 3x: chunky pixels
+            wrap.style.cssText = `position:fixed;left:${x - SIZE / 2}px;top:${y - SIZE / 2}px;width:${SIZE}px;height:${SIZE}px;pointer-events:none;z-index:200;image-rendering:pixelated;`;
+            document.body.appendChild(wrap);
+            const g = wrap.getContext('2d'), C = SIZE / 6, pal = fxPalette();
+            const colors = [pal.brandLight, pal.heading, pal.warn || pal.brandLight];
+            const n = full ? 10 : 6;
+            const parts = Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2 + Math.random() * 0.5, sp = 0.35 + Math.random() * 0.6; return { x: C, y: C, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.15, c: colors[i % 3], s: Math.random() < 0.35 ? 2 : 1 }; });
+            const t0 = performance.now(), DUR = full ? 520 : 380;
+            const frame = now => {
+                const k = (now - t0) / DUR;
+                g.clearRect(0, 0, wrap.width, wrap.height);
+                if (k >= 1) { wrap.remove(); return; }
+                g.globalAlpha = 1 - k * k;
+                if (full) { // a square-ish pixel ring that grows
+                    const r = Math.round(2 + k * 11);
+                    g.fillStyle = pal.brandLight;
+                    for (let a = 0; a < 20; a++) {
+                        const ang = (a / 20) * Math.PI * 2;
+                        g.fillRect(Math.round(C + Math.cos(ang) * r), Math.round(C + Math.sin(ang) * r), 1, 1);
+                    }
+                }
+                parts.forEach(p => {
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.03;
+                    g.fillStyle = p.c;
+                    g.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s);
+                });
+                requestAnimationFrame(frame);
+            };
+            requestAnimationFrame(frame);
+        }
+        // Pixel card frame around the card picture: a 9-slice drawn per rarity (a 24 x 24 source, 6 px border, shown at 2x)
+        function pxBuildFrames() {
+            const pal = fxPalette(), root = document.documentElement.style;
+            const base = { common: pal.gray, uncommon: fxToken('--rarity-uncommon'), rare: fxToken('--rarity-rare'), mythic: fxToken('--rarity-mythic'), special: fxToken('--rarity-special') };
+            Object.entries(base).forEach(([r, main]) => {
+                if (PX.art['frame-' + r]) { root.setProperty('--pxf-' + r, `url("art/site/frame-${r}.png")`); root.setProperty('--pxf-' + r + '-s', '12'); return; }
+                const c = document.createElement('canvas'); c.width = c.height = 24;
+                const g = c.getContext('2d'), N = 24;
+                const ring = [fxMix(pal.canvas, '#000000', 0.2), fxMix(main, pal.heading, 0.55), main, main, fxMix(main, pal.canvas, 0.5), fxMix(pal.canvas, '#000000', 0.2)];
+                for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+                    const d = Math.min(x, y, N - 1 - x, N - 1 - y);
+                    if (d > 5) continue;
+                    const cx = Math.min(x, N - 1 - x), cy = Math.min(y, N - 1 - y);
+                    if (cx + cy < 2 && cx < 2 && cy < 2) continue; // notched corner
+                    g.fillStyle = (cx >= 2 && cx <= 3 && cy >= 2 && cy <= 3) ? fxMix(main, pal.heading, 0.85) : ring[d]; // corner stud
+                    g.fillRect(x, y, 1, 1);
+                }
+                root.setProperty('--pxf-' + r, `url("${c.toDataURL()}")`);
+                root.setProperty('--pxf-' + r + '-s', '6');
+            });
+        }
+        function pxProbeArt() {
+            if (PX.probed) return Promise.resolve();
+            PX.probed = true;
+            const names = ['cursor-arrow', 'cursor-hand', 'click-burst', 'mascot', 'loading-card', ...Object.keys(PX_SCENES).map(k => 'scene-' + k), ...['common', 'uncommon', 'rare', 'mythic', 'special'].map(r => 'frame-' + r)];
+            const falls = [...new Set(Object.values(PX_FALL_MAP))].map(id => 'fall-' + id);
+            return Promise.all([...names, ...falls].map(n => new Promise(res => { const i = new Image(); i.onload = () => { PX.art[n] = true; if (n.startsWith('fall-')) PX.fallImg[n.slice(5)] = i; if (n === 'click-burst') PX.burstFrames = Math.max(1, Math.round(i.naturalWidth / Math.max(1, i.naturalHeight))); if (n === 'mascot' || n === 'loading-card') PX.frames[n] = Math.max(1, Math.round(i.naturalWidth / Math.max(1, i.naturalHeight))); if (n.startsWith('scene-')) PX.sceneImg[n.slice(6)] = i; res(); }; i.onerror = res; i.src = `art/site/${n}.png`; })));
+        }
+        function pxFlairRefresh() {
+            PX.glyphs.clear();
+            pxApplyExtras();
+            pxBuildCursor();
+            pxBuildFrames();
+        }
+        document.addEventListener('pointerdown', e => { if (e.button === 0 || e.pointerType === 'touch') pxBurst(e.clientX, e.clientY); }, { passive: true });
+        document.addEventListener('DOMContentLoaded', () => { pxFlairRefresh(); pxProbeArt().then(() => { if (Object.keys(PX.art).length) pxFlairRefresh(); }); });
 
         // Rolling numbers: prices roll into place digit by digit, like a
         // flip clock (Effects: Full / Subtle). Screen readers get the plain text.

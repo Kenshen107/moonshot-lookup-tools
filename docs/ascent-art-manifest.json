@@ -1,0 +1,6653 @@
+{
+ "generated": "by tests/ascent_art_guide.js; do not edit by hand",
+ "assets": [
+  {
+   "id": "t1-mick",
+   "group": "characters",
+   "name": "Mossback Mick",
+   "out": "spellslinger/art/characters/t1-mick.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 875957,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a broad, friendly young man in his early twenties with a green hooded poncho grown over with moss, bark-brown boots, a wooden club resting on one shoulder, messy brown hair, a gap-toothed grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forest greens, bark browns, a spot of warm skin tone. Expression: cheerful and proud, a gentle giant. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t1-annie",
+   "group": "characters",
+   "name": "Candle Annie",
+   "out": "spellslinger/art/characters/t1-annie.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 566766,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a small, bright-eyed girl of about twelve in a cream hooded robe, carrying a tall paper lantern on a pole, a ring of tiny candles around her hat, rosy cheeks. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: warm cream, soft gold, pale blue shadows. Expression: polite, earnest and fast-talking. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t1-tess",
+   "group": "characters",
+   "name": "Tidepool Tess",
+   "out": "spellslinger/art/characters/t1-tess.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 73964,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lanky teenage girl with windswept teal hair, a patched blue raincoat, a fishing rod with a kite on the line, goggles pushed up on her forehead, bare feet in a tide pool. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: sea blues, foam white, sandy yellow. Expression: dreamy and a little smug. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t1-gus",
+   "group": "characters",
+   "name": "Gravedigger Gus",
+   "out": "spellslinger/art/characters/t1-gus.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 558850,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stooped old man with a long grey beard and a black coat with a shovel strapped to his back, a small lantern, deep-set kind eyes, a faint purple glow around his hands. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: charcoal, violet, bone white. Expression: gravelly, gloomy, secretly warm. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t1-cal",
+   "group": "characters",
+   "name": "Cinder Cal",
+   "out": "spellslinger/art/characters/t1-cal.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 395211,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a wiry boy of about fifteen with spiky orange hair and a scorched leather jacket, sparks flying off his fingertips, a bandolier of tiny firecrackers, a cocky smirk. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ember reds, orange, soot black. Expression: hot-headed and impatient. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t1-boss",
+   "group": "characters",
+   "name": "Greg the Stomper",
+   "out": "spellslinger/art/characters/t1-boss.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 454864,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a huge, jolly man in his forties with a thick braided beard, a green-and-white fur cloak, a crown of antlers, giant leather gauntlets and a belt made of oak leaves, a deep belly laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forest green, ivory, warm gold crown. Expression: booming, generous, loves a fair fight. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t2-sasha",
+   "group": "characters",
+   "name": "Skyline Sasha",
+   "out": "spellslinger/art/characters/t2-sasha.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 696596,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a poised woman in her late twenties with short silver-blonde hair, a sky-blue trench coat and white scarf blowing sideways, a brass spyglass at her belt, standing on a rooftop edge. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: sky blue, white, brass. Expression: calm, polite, quietly competitive. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t2-ike",
+   "group": "characters",
+   "name": "Ironhide Ike",
+   "out": "spellslinger/art/characters/t2-ike.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 387081,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stocky dwarf-like man with a red braided mustache, a leather smith apron over chainmail, a hammer in one hand and a small round shield in the other, soot on his cheeks. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: iron grey, rust red, forge orange. Expression: gruff, direct, respects effort. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t2-marcus",
+   "group": "characters",
+   "name": "Marsh Marcus",
+   "out": "spellslinger/art/characters/t2-marcus.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 697307,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a slender man with muddy green skin-toned robes, lily pads stitched to his cloak, a bundle of herbs at his belt, a staff with a glowing mushroom on top, half-lidded eyes and a calm smile. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: swamp green, deep purple, mud brown. Expression: slow and gentle, never in a hurry. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t2-sarah",
+   "group": "characters",
+   "name": "Spellsmith Sarah",
+   "out": "spellslinger/art/characters/t2-sarah.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 683109,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lively young woman with a wild purple-blue ponytail, a belted blue-and-red coat covered in rune patches, a crackling wand, a spellbook tucked under one arm, mischievous grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: electric blue, orange, parchment. Expression: chatty, excitable, clever. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t2-leo",
+   "group": "characters",
+   "name": "Tangle Leo",
+   "out": "spellslinger/art/characters/t2-leo.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 5998,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a tall, quiet man with long braids woven with vines, a teal and green cloak, thin spectacles, a net of silver thread over one shoulder, a spider perched on his hat. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: teal, leaf green, silver thread. Expression: thoughtful, dry humour. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t2-boss",
+   "group": "characters",
+   "name": "Marcus the Warden",
+   "out": "spellslinger/art/characters/t2-boss.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 106547,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a dignified older man in a long midnight-blue and black coat with silver trim, a tall hat with a feather, a pocket watch chain, calm cold eyes and a short grey beard, one hand on a crystal staff. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: midnight blue, black, silver. Expression: measured, patient, always three turns ahead. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t3-brenda",
+   "group": "characters",
+   "name": "Dread Brenda",
+   "out": "spellslinger/art/characters/t3-brenda.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 725951,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a fierce woman in her thirties with a shaved-sided black hairdo, a black-and-crimson leather jacket with spikes, a skull-topped dagger, glowing red eyes and a cutting grin. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: black, crimson, bone. Expression: aggressive, sarcastic, loves pressure. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t3-trevor",
+   "group": "characters",
+   "name": "Titan Trevor",
+   "out": "spellslinger/art/characters/t3-trevor.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 288627,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a towering man with a wild green beard and a moss-covered stone helmet, a hide cloak, carrying a huge stone hammer, small birds nesting in his beard, deep calm voice. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: moss green, granite grey, amber. Expression: slow, powerful, speaks in short sentences. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t3-sam",
+   "group": "characters",
+   "name": "Wallbuilder Sam",
+   "out": "spellslinger/art/characters/t3-sam.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 210174,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a stern woman in her fifties with a white braid down her back, a silver-white tabard over plate armor, a trowel hanging from her belt, a tall tower shield with a sunburst, steady eyes. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: white, silver, sunburst gold. Expression: patient, protective, immovable. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t3-luke",
+   "group": "characters",
+   "name": "Bounce Luke",
+   "out": "spellslinger/art/characters/t3-luke.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 911456,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a lithe young man with sea-glass blue hair, a layered coat of waves and bubbles patterned fabric, a pocket full of coins he flips, one raised eyebrow, a spiral tattoo on his neck. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ocean blue, teal, silver coins. Expression: playful, mocking, always flipping a coin. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t3-arthur",
+   "group": "characters",
+   "name": "Arthur the Whale",
+   "out": "spellslinger/art/characters/t3-arthur.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 668475,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of an enormous, flamboyant man in a red-and-green fur-trimmed cape, a belt of dragon scales, rings on every finger, a golden goblet, a tiny baby dragon on his shoulder, a loud laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ruby red, emerald green, gold. Expression: loud, generous, bragging. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "t3-boss",
+   "group": "characters",
+   "name": "Sarah, Storm Walker",
+   "out": "spellslinger/art/characters/t3-boss.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 266846,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a regal, commanding woman in her late thirties with silver-white hair streaked with blue lightning, a long red-and-blue storm cloak crackling with energy, a floating crown made of lightning, one arm raised, calm confident gaze. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: storm blue, crimson, white lightning. Expression: confident, elegant, a little bored of winning. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "npc-guide",
+   "group": "characters",
+   "name": "Pip the Guide",
+   "out": "spellslinger/art/characters/npc-guide.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 579365,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a cheerful small traveller with a big backpack covered in patches, a rolled map under one arm, a feathered cap, bright round glasses, a notebook and pencil. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: warm browns, teal, cream. Expression: friendly, encouraging. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "npc-packmaster",
+   "group": "characters",
+   "name": "Mara the Packmaster",
+   "out": "spellslinger/art/characters/npc-packmaster.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 457904,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a brisk woman with a striped apron and sleeve garters, stacks of foil-wrapped booster packs, a pencil behind her ear, a brass scale on the counter, a sly smile. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: gold, red, deep blue. Expression: brisk and showy. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "npc-smith",
+   "group": "characters",
+   "name": "Brindle the Aether Smith",
+   "out": "spellslinger/art/characters/npc-smith.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 435426,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a broad smith with a leather apron and goggles, glowing blue Aether crystals in a bucket, a small anvil that hums, burn scars on the forearms, a big laugh. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: forge orange, aether blue, iron. Expression: booming, loves tinkering. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "npc-deckwright",
+   "group": "characters",
+   "name": "Wren the Deckwright",
+   "out": "spellslinger/art/characters/npc-deckwright.png",
+   "kind": "sheet",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": 2,
+   "seed": 304787,
+   "steps": [
+    {
+     "key": "base",
+     "style": "rd_pro__fantasy",
+     "width": 96,
+     "height": 96,
+     "prompt": "Close-up head-and-shoulders portrait (a dialogue portrait) of a quick-handed young person with a deck of cards fanned in one hand, a vest with many pockets, ink-stained fingers, a pencil in their hair, calm focused eyes. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: blue-grey, cream, ink black. Expression: careful and precise. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text",
+     "remove_bg": true
+    },
+    {
+     "key": "idle",
+     "style": "rd_advanced_animation__idle",
+     "width": 96,
+     "height": 96,
+     "prompt": "a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes",
+     "frames_duration": 16,
+     "from": "base"
+    },
+    {
+     "key": "talk",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place",
+     "frames_duration": 16,
+     "from": "base"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-mick",
+   "group": "moods",
+   "name": "Mossback Mick: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-mick.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 367193,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-mick"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-mick"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-mick"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-mick",
+   "group": "poses",
+   "name": "Mossback Mick: win and lose poses",
+   "out": "spellslinger/art/poses/t1-mick.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 453223,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-mick"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-mick"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-annie",
+   "group": "moods",
+   "name": "Candle Annie: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-annie.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 405994,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-annie"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-annie"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-annie"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-annie",
+   "group": "poses",
+   "name": "Candle Annie: win and lose poses",
+   "out": "spellslinger/art/poses/t1-annie.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 790740,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-annie"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-annie"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-tess",
+   "group": "moods",
+   "name": "Tidepool Tess: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-tess.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 964728,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-tess"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-tess"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-tess"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-tess",
+   "group": "poses",
+   "name": "Tidepool Tess: win and lose poses",
+   "out": "spellslinger/art/poses/t1-tess.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 619830,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-tess"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-tess"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-gus",
+   "group": "moods",
+   "name": "Gravedigger Gus: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-gus.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 440790,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-gus"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-gus"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-gus"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-gus",
+   "group": "poses",
+   "name": "Gravedigger Gus: win and lose poses",
+   "out": "spellslinger/art/poses/t1-gus.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 647104,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-gus"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-gus"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-cal",
+   "group": "moods",
+   "name": "Cinder Cal: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-cal.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 710455,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-cal"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-cal"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-cal"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-cal",
+   "group": "poses",
+   "name": "Cinder Cal: win and lose poses",
+   "out": "spellslinger/art/poses/t1-cal.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 94821,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-cal"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-cal"
+    }
+   ]
+  },
+  {
+   "id": "mood-t1-boss",
+   "group": "moods",
+   "name": "Greg the Stomper: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t1-boss.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 449396,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-boss"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-boss"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t1-boss"
+    }
+   ]
+  },
+  {
+   "id": "pose-t1-boss",
+   "group": "poses",
+   "name": "Greg the Stomper: win and lose poses",
+   "out": "spellslinger/art/poses/t1-boss.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 823178,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-boss"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t1-boss"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-sasha",
+   "group": "moods",
+   "name": "Skyline Sasha: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-sasha.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 800856,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-sasha",
+   "group": "poses",
+   "name": "Skyline Sasha: win and lose poses",
+   "out": "spellslinger/art/poses/t2-sasha.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 997070,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-sasha"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-ike",
+   "group": "moods",
+   "name": "Ironhide Ike: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-ike.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 431365,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-ike"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-ike"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-ike"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-ike",
+   "group": "poses",
+   "name": "Ironhide Ike: win and lose poses",
+   "out": "spellslinger/art/poses/t2-ike.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 342463,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-ike"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-ike"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-marcus",
+   "group": "moods",
+   "name": "Marsh Marcus: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-marcus.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 428567,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-marcus",
+   "group": "poses",
+   "name": "Marsh Marcus: win and lose poses",
+   "out": "spellslinger/art/poses/t2-marcus.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 617637,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-marcus"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-sarah",
+   "group": "moods",
+   "name": "Spellsmith Sarah: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-sarah.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 888441,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-sarah",
+   "group": "poses",
+   "name": "Spellsmith Sarah: win and lose poses",
+   "out": "spellslinger/art/poses/t2-sarah.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 983583,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-sarah"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-leo",
+   "group": "moods",
+   "name": "Tangle Leo: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-leo.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 572106,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-leo"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-leo"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-leo"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-leo",
+   "group": "poses",
+   "name": "Tangle Leo: win and lose poses",
+   "out": "spellslinger/art/poses/t2-leo.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 757876,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-leo"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-leo"
+    }
+   ]
+  },
+  {
+   "id": "mood-t2-boss",
+   "group": "moods",
+   "name": "Marcus the Warden: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t2-boss.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 349559,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-boss"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-boss"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t2-boss"
+    }
+   ]
+  },
+  {
+   "id": "pose-t2-boss",
+   "group": "poses",
+   "name": "Marcus the Warden: win and lose poses",
+   "out": "spellslinger/art/poses/t2-boss.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 798497,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-boss"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t2-boss"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-brenda",
+   "group": "moods",
+   "name": "Dread Brenda: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-brenda.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 330259,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-brenda",
+   "group": "poses",
+   "name": "Dread Brenda: win and lose poses",
+   "out": "spellslinger/art/poses/t3-brenda.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 133457,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-brenda"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-trevor",
+   "group": "moods",
+   "name": "Titan Trevor: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-trevor.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 122687,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-trevor",
+   "group": "poses",
+   "name": "Titan Trevor: win and lose poses",
+   "out": "spellslinger/art/poses/t3-trevor.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 635521,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-trevor"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-sam",
+   "group": "moods",
+   "name": "Wallbuilder Sam: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-sam.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 328714,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-sam"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-sam"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-sam"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-sam",
+   "group": "poses",
+   "name": "Wallbuilder Sam: win and lose poses",
+   "out": "spellslinger/art/poses/t3-sam.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 766028,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-sam"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-sam"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-luke",
+   "group": "moods",
+   "name": "Bounce Luke: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-luke.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 679748,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-luke"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-luke"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-luke"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-luke",
+   "group": "poses",
+   "name": "Bounce Luke: win and lose poses",
+   "out": "spellslinger/art/poses/t3-luke.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 587202,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-luke"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-luke"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-arthur",
+   "group": "moods",
+   "name": "Arthur the Whale: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-arthur.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 983639,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-arthur",
+   "group": "poses",
+   "name": "Arthur the Whale: win and lose poses",
+   "out": "spellslinger/art/poses/t3-arthur.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 633745,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-arthur"
+    }
+   ]
+  },
+  {
+   "id": "mood-t3-boss",
+   "group": "moods",
+   "name": "Sarah, Storm Walker: expressions (happy, angry, worried)",
+   "out": "spellslinger/art/moods/t3-boss.png",
+   "kind": "stills",
+   "frame": [
+    96,
+    96
+   ],
+   "stills": [
+    "m_happy",
+    "m_angry",
+    "m_worried"
+   ],
+   "seed": 377570,
+   "steps": [
+    {
+     "key": "m_happy",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-boss"
+    },
+    {
+     "key": "m_angry",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-boss"
+    },
+    {
+     "key": "m_worried",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 8,
+     "from": "base",
+     "from_asset": "t3-boss"
+    }
+   ]
+  },
+  {
+   "id": "pose-t3-boss",
+   "group": "poses",
+   "name": "Sarah, Storm Walker: win and lose poses",
+   "out": "spellslinger/art/poses/t3-boss.png",
+   "kind": "rows",
+   "frame": [
+    96,
+    96
+   ],
+   "cols": 16,
+   "rows": [
+    "p_win",
+    "p_lose"
+   ],
+   "seed": 304700,
+   "steps": [
+    {
+     "key": "p_win",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-boss"
+    },
+    {
+     "key": "p_lose",
+     "style": "rd_advanced_animation__custom_action",
+     "width": 96,
+     "height": 96,
+     "prompt": "the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile, shoulders stay in place, the framing and drawing stay identical",
+     "frames_duration": 16,
+     "from": "base",
+     "from_asset": "t3-boss"
+    }
+   ]
+  },
+  {
+   "id": "land-W",
+   "group": "fx",
+   "name": "Plains: a gentle white glow",
+   "out": "spellslinger/art/fx/land-W.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 12,
+   "seed": 834204,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a soft radiant burst of white and gold light with floating feather motes and a sunbeam, expanding then fading",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "land-U",
+   "group": "fx",
+   "name": "Island: water ripple",
+   "out": "spellslinger/art/fx/land-U.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 12,
+   "seed": 389442,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a ring of blue water ripples with a splash and rising bubbles, expanding then fading",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "land-B",
+   "group": "fx",
+   "name": "Swamp: bubbling ooze",
+   "out": "spellslinger/art/fx/land-B.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 12,
+   "seed": 59443,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "purple-black ooze bubbling up with wispy smoke and tiny skulls of vapor, rising then fading",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "land-R",
+   "group": "fx",
+   "name": "Mountain: ember burst",
+   "out": "spellslinger/art/fx/land-R.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 12,
+   "seed": 501347,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a burst of orange and red embers and a small flame ring, flickering then fading",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "land-G",
+   "group": "fx",
+   "name": "Forest: sprouting leaves",
+   "out": "spellslinger/art/fx/land-G.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 12,
+   "seed": 392300,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "green leaves and a sprout growing outward with sparkling spores, unfurling then fading",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "land-nonbasic",
+   "group": "fx",
+   "name": "Nonbasic land: five-color shimmer",
+   "out": "spellslinger/art/fx/land-nonbasic.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 12,
+   "seed": 921640,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a swirl of white, blue, black, red and green sparkles spiralling around a bright ring, then fading",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "creature-W",
+   "group": "fx",
+   "name": "White creature arrives",
+   "out": "spellslinger/art/fx/creature-W.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 188648,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a pillar of white and gold light with feathers descending, a holy flash at the base",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "creature-U",
+   "group": "fx",
+   "name": "Blue creature arrives",
+   "out": "spellslinger/art/fx/creature-U.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 743886,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a vortex of blue water and swirling mist rising into a bright splash",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "creature-B",
+   "group": "fx",
+   "name": "Black creature arrives",
+   "out": "spellslinger/art/fx/creature-B.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 634839,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "purple-black shadow tendrils and skull-smoke curling up out of a crack in the ground",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "creature-R",
+   "group": "fx",
+   "name": "Red creature arrives",
+   "out": "spellslinger/art/fx/creature-R.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 76743,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a roaring column of orange flames and sparks bursting upward with a heat shimmer",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "creature-G",
+   "group": "fx",
+   "name": "Green creature arrives",
+   "out": "spellslinger/art/fx/creature-G.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 746744,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "roots and vines bursting out of the ground with flying leaves and a green shockwave",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "creature-colorless",
+   "group": "fx",
+   "name": "Colorless creature arrives",
+   "out": "spellslinger/art/fx/creature-colorless.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 9031,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "grey metal gears and steel sparks assembling into a shining silver flash",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "creature-multi",
+   "group": "fx",
+   "name": "Multicolor creature arrives",
+   "out": "spellslinger/art/fx/creature-multi.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 1480,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a prismatic rainbow vortex of intertwined coloured light beams exploding into a star burst with gold sparkles",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "spell-instant",
+   "group": "fx",
+   "name": "Instant: lightning flash",
+   "out": "spellslinger/art/fx/spell-instant.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 693277,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a fast jagged white-blue lightning flash with an arcane rune circle snapping in and out",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "spell-sorcery",
+   "group": "fx",
+   "name": "Sorcery: ritual circle",
+   "out": "spellslinger/art/fx/spell-sorcery.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 464293,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a large glowing arcane summoning circle with orbiting runes and rising purple-gold smoke",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "spell-artifact",
+   "group": "fx",
+   "name": "Artifact: gear assembly",
+   "out": "spellslinger/art/fx/spell-artifact.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 637670,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "brass gears and cogs spinning into place with a metal clang flash and steam puffs",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "spell-enchantment",
+   "group": "fx",
+   "name": "Enchantment: sparkling aura",
+   "out": "spellslinger/art/fx/spell-enchantment.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 467501,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a shimmering swirl of soft pink and gold sparkles forming a floating aura ring with tiny stars",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "spell-planeswalker",
+   "group": "fx",
+   "name": "Planeswalker: arrival portal",
+   "out": "spellslinger/art/fx/spell-planeswalker.png",
+   "kind": "strip",
+   "frame": [
+    128,
+    128
+   ],
+   "frames": 12,
+   "seed": 206069,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a swirling dimensional portal opening with colorful light and a spark of stars, a tall flash at the center",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "spell-battle",
+   "group": "fx",
+   "name": "Battle: clashing swords",
+   "out": "spellslinger/art/fx/spell-battle.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 3238,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "two crossed swords clashing with a shower of sparks and a shockwave ring",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fx-hit",
+   "group": "ideas",
+   "name": "Combat hit",
+   "out": "spellslinger/art/fx/fx-hit.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 6,
+   "seed": 890075,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a quick white impact flash with a slash mark and small sparks",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fx-die",
+   "group": "ideas",
+   "name": "Creature dies",
+   "out": "spellslinger/art/fx/fx-die.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 758308,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a creature outline crumbling into grey dust and fading spirit wisps rising",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fx-heal",
+   "group": "ideas",
+   "name": "Life gain",
+   "out": "spellslinger/art/fx/fx-heal.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 12,
+   "seed": 272956,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "rising green plus signs and soft white sparkles around a heart",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fx-draw",
+   "group": "ideas",
+   "name": "Draw a card",
+   "out": "spellslinger/art/fx/fx-draw.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 6,
+   "seed": 471268,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a card sliding out of a deck with a small blue swoosh",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fx-counter",
+   "group": "ideas",
+   "name": "Counterspell",
+   "out": "spellslinger/art/fx/fx-counter.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 425642,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a blue ward sigil shattering into pieces with a magic shatter ring",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fx-upgrade",
+   "group": "ideas",
+   "name": "Upgrade applied",
+   "out": "spellslinger/art/fx/fx-upgrade.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 231426,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a golden anvil strike with rising blue Aether sparks and a bright flash",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fx-pack-open",
+   "group": "ideas",
+   "name": "Pack opens",
+   "out": "spellslinger/art/fx/fx-pack-open.png",
+   "kind": "strip",
+   "frame": [
+    128,
+    128
+   ],
+   "frames": 12,
+   "seed": 892898,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a foil booster pack tearing open with a burst of gold light and confetti",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fx-win",
+   "group": "ideas",
+   "name": "Victory banner",
+   "out": "spellslinger/art/fx/fx-win.png",
+   "kind": "strip",
+   "frame": [
+    128,
+    128
+   ],
+   "frames": 10,
+   "seed": 23612,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a golden victory laurel and shining sunburst with confetti",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fx-lose",
+   "group": "ideas",
+   "name": "Defeat banner",
+   "out": "spellslinger/art/fx/fx-lose.png",
+   "kind": "strip",
+   "frame": [
+    128,
+    128
+   ],
+   "frames": 10,
+   "seed": 311691,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a dark grey cloud with a single falling ash flake and a dimming light",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mana-W",
+   "group": "icons",
+   "name": "white mana symbol",
+   "out": "spellslinger/art/ui/mana-W.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 364982,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round gem-style mana symbol: a bright white-gold sun on a dark round coin, bold readable shape",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mana-U",
+   "group": "icons",
+   "name": "blue mana symbol",
+   "out": "spellslinger/art/ui/mana-U.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 809744,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round gem-style mana symbol: a blue water droplet on a dark round coin, bold readable shape",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mana-B",
+   "group": "icons",
+   "name": "black mana symbol",
+   "out": "spellslinger/art/ui/mana-B.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 811173,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round gem-style mana symbol: a purple-black skull on a dark round coin, bold readable shape",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mana-R",
+   "group": "icons",
+   "name": "red mana symbol",
+   "out": "spellslinger/art/ui/mana-R.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 253077,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round gem-style mana symbol: a red flame on a dark round coin, bold readable shape",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mana-G",
+   "group": "icons",
+   "name": "green mana symbol",
+   "out": "spellslinger/art/ui/mana-G.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 923078,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round gem-style mana symbol: a green leaf on a dark round coin, bold readable shape",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mana-C",
+   "group": "icons",
+   "name": "colorless mana symbol",
+   "out": "spellslinger/art/ui/mana-C.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 33554,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round grey gem-style mana symbol showing a small diamond",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mana-multi",
+   "group": "icons",
+   "name": "multicolor symbol",
+   "out": "spellslinger/art/ui/mana-multi.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 387346,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round gem with a split rainbow of five colors",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "rarity-common",
+   "group": "icons",
+   "name": "common rarity gem",
+   "out": "spellslinger/art/ui/rarity-common.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 809364,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a plain grey-white gem, small faceted, glowing slightly",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "rarity-uncommon",
+   "group": "icons",
+   "name": "uncommon rarity gem",
+   "out": "spellslinger/art/ui/rarity-uncommon.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 256963,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a silver-blue gem, small faceted, glowing slightly",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "rarity-rare",
+   "group": "icons",
+   "name": "rare rarity gem",
+   "out": "spellslinger/art/ui/rarity-rare.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 80253,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a golden gem, small faceted, glowing slightly",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "rarity-mythic",
+   "group": "icons",
+   "name": "mythic rarity gem",
+   "out": "spellslinger/art/ui/rarity-mythic.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 882427,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "an orange-red fiery gem, small faceted, glowing slightly",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "rarity-foil",
+   "group": "icons",
+   "name": "foil rarity gem",
+   "out": "spellslinger/art/ui/rarity-foil.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 505991,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a shimmering rainbow gem, small faceted, glowing slightly",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "type-creature",
+   "group": "icons",
+   "name": "creature card type",
+   "out": "spellslinger/art/ui/type-creature.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 521461,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a small clenched fist, bold and readable",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "type-instant",
+   "group": "icons",
+   "name": "instant card type",
+   "out": "spellslinger/art/ui/type-instant.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 563001,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a lightning bolt, bold and readable",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "type-sorcery",
+   "group": "icons",
+   "name": "sorcery card type",
+   "out": "spellslinger/art/ui/type-sorcery.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 436369,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a scroll with a flame, bold and readable",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "type-artifact",
+   "group": "icons",
+   "name": "artifact card type",
+   "out": "spellslinger/art/ui/type-artifact.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 24114,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a brass gear, bold and readable",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "type-enchantment",
+   "group": "icons",
+   "name": "enchantment card type",
+   "out": "spellslinger/art/ui/type-enchantment.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 914281,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a glowing star ring, bold and readable",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "type-planeswalker",
+   "group": "icons",
+   "name": "planeswalker card type",
+   "out": "spellslinger/art/ui/type-planeswalker.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 713849,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a spark of swirling stars, bold and readable",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "type-land",
+   "group": "icons",
+   "name": "land card type",
+   "out": "spellslinger/art/ui/type-land.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 568005,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a mountain and a tree, bold and readable",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-firststrike",
+   "group": "icons",
+   "name": "First strike upgrade icon",
+   "out": "spellslinger/art/ui/up-firststrike.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 792457,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of two crossed swords with a bright edge, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-vigilance",
+   "group": "icons",
+   "name": "Vigilance upgrade icon",
+   "out": "spellslinger/art/ui/up-vigilance.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 126353,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of an open eye over a shield, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-reach",
+   "group": "icons",
+   "name": "Reach upgrade icon",
+   "out": "spellslinger/art/ui/up-reach.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 468694,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a long spear pointing up, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-trample",
+   "group": "icons",
+   "name": "Trample upgrade icon",
+   "out": "spellslinger/art/ui/up-trample.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 695930,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a boot print breaking through a wall, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-haste",
+   "group": "icons",
+   "name": "Haste upgrade icon",
+   "out": "spellslinger/art/ui/up-haste.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 813858,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a winged boot, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-lifelink",
+   "group": "icons",
+   "name": "Lifelink upgrade icon",
+   "out": "spellslinger/art/ui/up-lifelink.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 378289,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a heart with a fang, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-flying",
+   "group": "icons",
+   "name": "Flying upgrade icon",
+   "out": "spellslinger/art/ui/up-flying.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 473516,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a pair of wings, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-deathtouch",
+   "group": "icons",
+   "name": "Deathtouch upgrade icon",
+   "out": "spellslinger/art/ui/up-deathtouch.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 400786,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a skull with a dripping drop, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-menace",
+   "group": "icons",
+   "name": "Menace upgrade icon",
+   "out": "spellslinger/art/ui/up-menace.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 142432,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of two angry eyes in the dark, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-hexproof",
+   "group": "icons",
+   "name": "Hexproof upgrade icon",
+   "out": "spellslinger/art/ui/up-hexproof.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 321086,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a crystal ball with a cross over it, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-plus11",
+   "group": "icons",
+   "name": "+1/+1 upgrade icon",
+   "out": "spellslinger/art/ui/up-plus11.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 53741,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a muscular arm with a plus sign, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-plus20",
+   "group": "icons",
+   "name": "+2/+0 upgrade icon",
+   "out": "spellslinger/art/ui/up-plus20.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 895377,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a sword with a plus sign, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-plus02",
+   "group": "icons",
+   "name": "+0/+2 upgrade icon",
+   "out": "spellslinger/art/ui/up-plus02.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 727657,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a shield with a plus sign, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-etbdraw",
+   "group": "icons",
+   "name": "Enters: draw upgrade icon",
+   "out": "spellslinger/art/ui/up-etbdraw.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 979822,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a card with a down arrow, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-dielife",
+   "group": "icons",
+   "name": "Dies: gain life upgrade icon",
+   "out": "spellslinger/art/ui/up-dielife.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 165333,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a sprout growing from a skull, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-etblife",
+   "group": "icons",
+   "name": "Enters: gain life upgrade icon",
+   "out": "spellslinger/art/ui/up-etblife.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 444854,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a heart with a leaf, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-anymana",
+   "group": "icons",
+   "name": "Aether tap (any color mana) upgrade icon",
+   "out": "spellslinger/art/ui/up-anymana.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 37608,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a rainbow gem with a small tap arrow, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-sdraw",
+   "group": "icons",
+   "name": "Cantrip upgrade icon",
+   "out": "spellslinger/art/ui/up-sdraw.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 223182,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a card with a star, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "up-slife",
+   "group": "icons",
+   "name": "Gain 3 life upgrade icon",
+   "out": "spellslinger/art/ui/up-slife.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 688214,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a heart with a three, bold dark outline, readable at 24 pixels",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "cur-aether",
+   "group": "icons",
+   "name": "Aether crystal",
+   "out": "spellslinger/art/ui/cur-aether.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 594529,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a glowing blue crystal shard with a white highlight",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "cur-coin",
+   "group": "icons",
+   "name": "coin",
+   "out": "spellslinger/art/ui/cur-coin.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 922565,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a gold coin with a star",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "cur-cash",
+   "group": "icons",
+   "name": "cash",
+   "out": "spellslinger/art/ui/cur-cash.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 222275,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a green banknote with a coin",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-play",
+   "group": "icons",
+   "name": "Play Booster wrapper",
+   "out": "spellslinger/art/ui/pack-play.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 1,
+   "seed": 637925,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 96,
+     "height": 96,
+     "prompt": "a vertical foil booster pack wrapper in teal and silver with a swirling galaxy emblem, crimped top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-collector",
+   "group": "icons",
+   "name": "Collector Booster wrapper",
+   "out": "spellslinger/art/ui/pack-collector.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 1,
+   "seed": 504962,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 96,
+     "height": 96,
+     "prompt": "a vertical gold and black foil booster pack wrapper with a shining sunburst emblem, crimped top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "card-back",
+   "group": "icons",
+   "name": "card back",
+   "out": "spellslinger/art/ui/card-back.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 1,
+   "seed": 889829,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 96,
+     "height": 96,
+     "prompt": "one upright portrait trading card back (5:7 shape, about 60 percent of the image width, centered, with empty transparent space around it) in deep blue with a gold galaxy swirl border pattern and rounded corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "card-frame-common",
+   "group": "icons",
+   "name": "card frame, common",
+   "out": "spellslinger/art/ui/card-frame-common.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 1,
+   "seed": 381407,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 96,
+     "height": 96,
+     "prompt": "an empty trading card frame border in plain grey with a transparent middle and a transparent name bar",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "card-frame-rare",
+   "group": "icons",
+   "name": "card frame, rare",
+   "out": "spellslinger/art/ui/card-frame-rare.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 1,
+   "seed": 100342,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 96,
+     "height": 96,
+     "prompt": "an empty trading card frame border in gold with a transparent middle",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "card-frame-mythic",
+   "group": "icons",
+   "name": "card frame, mythic",
+   "out": "spellslinger/art/ui/card-frame-mythic.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 1,
+   "seed": 223028,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 96,
+     "height": 96,
+     "prompt": "an empty trading card frame border in fiery orange with flame edges and a transparent middle",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "tier-1",
+   "group": "icons",
+   "name": "League 1 banner: The Locals",
+   "out": "spellslinger/art/ui/tier-1.png",
+   "kind": "strip",
+   "frame": [
+    128,
+    128
+   ],
+   "frames": 1,
+   "seed": 250535,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 128,
+     "height": 128,
+     "prompt": "a cozy village banner with a little house and a flag, warm green and brown",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "tier-2",
+   "group": "icons",
+   "name": "League 2 banner: Friday Grinders",
+   "out": "spellslinger/art/ui/tier-2.png",
+   "kind": "strip",
+   "frame": [
+    128,
+    128
+   ],
+   "frames": 1,
+   "seed": 28154,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 128,
+     "height": 128,
+     "prompt": "a game-night banner with dice and a trophy cup, blue and orange",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "tier-3",
+   "group": "icons",
+   "name": "League 3 banner: The Pro Circuit",
+   "out": "spellslinger/art/ui/tier-3.png",
+   "kind": "strip",
+   "frame": [
+    128,
+    128
+   ],
+   "frames": 1,
+   "seed": 805773,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 128,
+     "height": 128,
+     "prompt": "a grand arena banner with a golden trophy and laurels, purple and gold",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "node-opp",
+   "group": "icons",
+   "name": "opponent node",
+   "out": "spellslinger/art/ui/node-opp.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 648293,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round map node with a small crossed-swords emblem",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "node-boss",
+   "group": "icons",
+   "name": "boss node",
+   "out": "spellslinger/art/ui/node-boss.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 466529,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round map node with a golden crown",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "node-beaten",
+   "group": "icons",
+   "name": "beaten node",
+   "out": "spellslinger/art/ui/node-beaten.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 765271,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round map node with a green check mark",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "node-locked",
+   "group": "icons",
+   "name": "locked node",
+   "out": "spellslinger/art/ui/node-locked.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 798118,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a round map node with a padlock",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "bg-tier-1",
+   "group": "icons",
+   "name": "League 1 map background",
+   "out": "spellslinger/art/ui/bg-tier-1.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    320
+   ],
+   "frames": 1,
+   "seed": 63771,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 320,
+     "prompt": "a wide cozy countryside map at dawn with a winding path, farm fields and small houses, soft green and gold, no text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "bg-tier-2",
+   "group": "icons",
+   "name": "League 2 map background",
+   "out": "spellslinger/art/ui/bg-tier-2.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    320
+   ],
+   "frames": 1,
+   "seed": 841390,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 320,
+     "prompt": "a wide lively town square at dusk with lanterns, tables and a card shop, blue and orange, no text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "bg-tier-3",
+   "group": "icons",
+   "name": "League 3 map background",
+   "out": "spellslinger/art/ui/bg-tier-3.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    320
+   ],
+   "frames": 1,
+   "seed": 619009,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 320,
+     "prompt": "a wide grand arena under stormy purple skies with banners and a golden stadium, no text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "mat-table",
+   "group": "icons",
+   "name": "game table playmat",
+   "out": "spellslinger/art/ui/mat-table.png",
+   "kind": "strip",
+   "frame": [
+    320,
+    320
+   ],
+   "frames": 1,
+   "seed": 260180,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 320,
+     "height": 320,
+     "prompt": "a seamless dark wooden table top with a faint blue arcane circle in the middle, tileable, no text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "tab-map",
+   "group": "icons",
+   "name": "Map tab icon",
+   "out": "spellslinger/art/ui/tab-map.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 12451,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny folded map with a red pin",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "tab-packs",
+   "group": "icons",
+   "name": "Packs tab icon",
+   "out": "spellslinger/art/ui/tab-packs.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 180007,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny booster pack",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "tab-collection",
+   "group": "icons",
+   "name": "Collection tab icon",
+   "out": "spellslinger/art/ui/tab-collection.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 645739,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny stack of cards",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "tab-decks",
+   "group": "icons",
+   "name": "Decks tab icon",
+   "out": "spellslinger/art/ui/tab-decks.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 727439,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny hammer and a card",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "phase-upkeep",
+   "group": "icons",
+   "name": "upkeep phase icon",
+   "out": "spellslinger/art/ui/phase-upkeep.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 689695,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a sunrise",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "phase-main",
+   "group": "icons",
+   "name": "main phase icon",
+   "out": "spellslinger/art/ui/phase-main.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 831294,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a hand holding a card",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "phase-combat",
+   "group": "icons",
+   "name": "combat phase icon",
+   "out": "spellslinger/art/ui/phase-combat.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 173335,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of crossed swords",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "phase-end",
+   "group": "icons",
+   "name": "end phase icon",
+   "out": "spellslinger/art/ui/phase-end.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 890908,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a tiny icon of a moon",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "counter-plus",
+   "group": "icons",
+   "name": "+1/+1 counter",
+   "out": "spellslinger/art/ui/counter-plus.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 580686,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a small green coin with a plus sign",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "counter-minus",
+   "group": "icons",
+   "name": "-1/-1 counter",
+   "out": "spellslinger/art/ui/counter-minus.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 388614,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a small red coin with a minus sign",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "life",
+   "group": "icons",
+   "name": "life heart",
+   "out": "spellslinger/art/ui/life.png",
+   "kind": "strip",
+   "frame": [
+    24,
+    24
+   ],
+   "frames": 1,
+   "seed": 595679,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 24,
+     "height": 24,
+     "prompt": "a red pixel heart with a white shine",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mythic-flame",
+   "group": "icons",
+   "name": "mythic glow flames (loop)",
+   "out": "spellslinger/art/ui/mythic-flame.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 6,
+   "seed": 216973,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a loop of flickering orange flames around a transparent middle, to sit behind a mythic card",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "foil-sheen",
+   "group": "icons",
+   "name": "foil sheen sweep",
+   "out": "spellslinger/art/ui/foil-sheen.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 8,
+   "seed": 181291,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a diagonal rainbow shimmer sweeping across a transparent card shape",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-3",
+   "group": "icons",
+   "name": "3 wins badge (bronze)",
+   "out": "spellslinger/art/ui/badge-3.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 261492,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small bronze medal on a short red ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-6",
+   "group": "icons",
+   "name": "6 wins badge (bronze)",
+   "out": "spellslinger/art/ui/badge-6.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 928635,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a bronze medal with a tiny star on a red ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-10",
+   "group": "icons",
+   "name": "10 wins badge (silver)",
+   "out": "spellslinger/art/ui/badge-10.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 160478,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a silver medal on a blue ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-15",
+   "group": "icons",
+   "name": "15 wins badge (silver)",
+   "out": "spellslinger/art/ui/badge-15.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 48573,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a silver medal with a laurel on a blue ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-20",
+   "group": "icons",
+   "name": "20 wins badge (gold)",
+   "out": "spellslinger/art/ui/badge-20.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 347669,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a gold medal on a purple ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-25",
+   "group": "icons",
+   "name": "25 wins badge (gold)",
+   "out": "spellslinger/art/ui/badge-25.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 459574,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a gold medal with a crown on a purple ribbon, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-30",
+   "group": "icons",
+   "name": "30 wins badge (platinum)",
+   "out": "spellslinger/art/ui/badge-30.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 999628,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a shining platinum shield badge with wings, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-40",
+   "group": "icons",
+   "name": "40 wins badge (platinum)",
+   "out": "spellslinger/art/ui/badge-40.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 186819,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a platinum shield badge with wings and a gem, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-50",
+   "group": "icons",
+   "name": "50 wins badge (diamond)",
+   "out": "spellslinger/art/ui/badge-50.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 257818,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a sparkling blue-white diamond crest with wings, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "badge-75",
+   "group": "icons",
+   "name": "75 wins badge (legend)",
+   "out": "spellslinger/art/ui/badge-75.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 952359,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a glowing gold and violet legend crest with a flaming halo, a pixel rank badge, bold and readable, slightly glowing",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-standard",
+   "group": "packs",
+   "name": "Play Booster wrapper",
+   "out": "spellslinger/art/packs/standard.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 947094,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical foil booster pack wrapper in teal and silver with a swirling galaxy emblem in the middle, crimped zigzag top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-standard-open",
+   "group": "packs",
+   "name": "Play Booster opening burst",
+   "out": "spellslinger/art/packs/standard-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 904525,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a quick burst of cyan and white sparkles and a few torn foil scraps flying outward",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-collector",
+   "group": "packs",
+   "name": "Collector Booster wrapper",
+   "out": "spellslinger/art/packs/collector.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 504962,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical gold and black foil booster pack wrapper with a shining sunburst emblem and a thin gold border, crimped zigzag top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-collector-open",
+   "group": "packs",
+   "name": "Collector Booster opening burst",
+   "out": "spellslinger/art/packs/collector-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 238753,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a blinding golden flash with rays and glittering gold confetti bursting outward",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-masters",
+   "group": "packs",
+   "name": "Masters Booster wrapper",
+   "out": "spellslinger/art/packs/masters.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 222074,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical booster pack wrapper in deep violet and silver with a polished chrome emblem and a diagonal shine, crimped zigzag top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-masters-open",
+   "group": "packs",
+   "name": "Masters Booster opening burst",
+   "out": "spellslinger/art/packs/masters-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 852377,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a silver and violet foil shimmer sweeping across with floating prismatic sparkles",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-classic",
+   "group": "packs",
+   "name": "Classic Booster (2000-2008) wrapper",
+   "out": "spellslinger/art/packs/classic.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 343753,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical retro booster pack wrapper in red and cream with a bold simple emblem and a painted-style border, crimped zigzag top and bottom, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-classic-open",
+   "group": "packs",
+   "name": "Classic Booster (2000-2008) opening burst",
+   "out": "spellslinger/art/packs/classic-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 127980,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a ragged paper tear with flying scraps and a small puff of dust",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-vintage",
+   "group": "packs",
+   "name": "Vintage Booster wrapper",
+   "out": "spellslinger/art/packs/vintage.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 224639,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical old booster pack wrapper in weathered brown and parchment tones with a red wax seal at the top, worn edges and a faded emblem, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-vintage-open",
+   "group": "packs",
+   "name": "Vintage Booster opening burst",
+   "out": "spellslinger/art/packs/vintage-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 250870,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a red wax seal cracking apart with flying wax chips and a puff of old dust",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-early",
+   "group": "packs",
+   "name": "Unlimited-era Booster wrapper",
+   "out": "spellslinger/art/packs/early.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 446678,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical dark blue and gold booster pack wrapper in an ornate old style with glowing rune marks around a central gem, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-early-open",
+   "group": "packs",
+   "name": "Unlimited-era Booster opening burst",
+   "out": "spellslinger/art/packs/early-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 981005,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "glowing blue runes spinning up out of a pack with floating golden sparks",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-power",
+   "group": "packs",
+   "name": "Alpha / Beta Booster wrapper",
+   "out": "spellslinger/art/packs/power.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    144
+   ],
+   "frames": 1,
+   "seed": 641480,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_pro__default",
+     "width": 96,
+     "height": 144,
+     "prompt": "a vertical black booster pack wrapper with a heavy ornate gold border and a radiant gold five-pointed star, looking priceless and ancient, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "pack-power-open",
+   "group": "packs",
+   "name": "Alpha / Beta Booster opening burst",
+   "out": "spellslinger/art/packs/power-open.png",
+   "kind": "strip",
+   "frame": [
+    96,
+    96
+   ],
+   "frames": 12,
+   "seed": 604227,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 96,
+     "height": 96,
+     "prompt": "a slow rising column of golden light with spinning rays, drifting embers and a heavenly glow",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-common",
+   "group": "site",
+   "name": "common card frame",
+   "out": "art/site/frame-common.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 154280,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in plain grey steel, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-uncommon",
+   "group": "site",
+   "name": "uncommon card frame",
+   "out": "art/site/frame-uncommon.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 513783,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in polished silver-blue, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-rare",
+   "group": "site",
+   "name": "rare card frame",
+   "out": "art/site/frame-rare.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 169809,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in bright gold, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-mythic",
+   "group": "site",
+   "name": "mythic card frame",
+   "out": "art/site/frame-mythic.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 825095,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in fiery orange-red with tiny flame edges, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "frame-special",
+   "group": "site",
+   "name": "special card frame",
+   "out": "art/site/frame-special.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 1,
+   "seed": 778276,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__ui_element",
+     "width": 64,
+     "height": 64,
+     "prompt": "a square ornate trading card border frame in magenta and violet with star studs, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "cursor-arrow",
+   "group": "site",
+   "name": "mouse cursor, arrow",
+   "out": "art/site/cursor-arrow.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 265867,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pixel art mouse pointer arrow, cream white fill with a thick dark outline and one small teal highlight pixel, pointing up and to the left, the tip at the very top-left corner of the image",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "cursor-hand",
+   "group": "site",
+   "name": "mouse cursor, pointing hand",
+   "out": "art/site/cursor-hand.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 1,
+   "seed": 166059,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__low_res",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "mascot",
+   "group": "site",
+   "name": "page mascot (waves, blinks)",
+   "out": "art/site/mascot.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 8,
+   "seed": 708602,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a tiny cute pixel mascot: a smiling crescent moon wearing a little rocket-nose-cone cap, floating with a gentle bob, blinking once and giving a small wave, a seamless 8 frame loop, centered",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "loading-card",
+   "group": "site",
+   "name": "loading spinner (a card flipping)",
+   "out": "art/site/loading-card.png",
+   "kind": "strip",
+   "frame": [
+    48,
+    48
+   ],
+   "frames": 8,
+   "seed": 57148,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 48,
+     "height": 48,
+     "prompt": "a single pixel playing card spinning around its vertical axis like a coin flip, teal back with a small gold star, seamless 8 frame loop, centered",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "scene-halloween",
+   "group": "site",
+   "name": "halloween scene banner",
+   "out": "art/site/scene-halloween.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 569369,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a spooky night street with a big orange moon, bats, a haunted house and glowing jack-o-lanterns, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-autumn",
+   "group": "site",
+   "name": "autumn scene banner",
+   "out": "art/site/scene-autumn.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 789984,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a golden autumn hillside with red and orange trees, falling leaves and a warm low sun, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-winter",
+   "group": "site",
+   "name": "winter scene banner",
+   "out": "art/site/scene-winter.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 889615,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a snowy village at dusk with lit windows, pine trees and falling snow, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-christmas",
+   "group": "site",
+   "name": "christmas scene banner",
+   "out": "art/site/scene-christmas.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 319186,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a cozy Christmas night scene with a decorated tree, wrapped gifts, a sleigh and twinkling lights, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-spring",
+   "group": "site",
+   "name": "spring scene banner",
+   "out": "art/site/scene-spring.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 218423,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a bright spring meadow with cherry blossoms, tulips, a pastel sky and small birds, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "scene-newyear",
+   "group": "site",
+   "name": "newyear scene banner",
+   "out": "art/site/scene-newyear.png",
+   "kind": "strip",
+   "frame": [
+    256,
+    128
+   ],
+   "frames": 1,
+   "seed": 679189,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_plus__environment",
+     "width": 256,
+     "height": 128,
+     "prompt": "a wide pixel art banner scene, a midnight city skyline with fireworks bursting, confetti and a glowing clock, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text",
+     "remove_bg": false
+    }
+   ]
+  },
+  {
+   "id": "click-burst",
+   "group": "site",
+   "name": "click burst",
+   "out": "art/site/click-burst.png",
+   "kind": "strip",
+   "frame": [
+    64,
+    64
+   ],
+   "frames": 8,
+   "seed": 576244,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 64,
+     "height": 64,
+     "prompt": "a tiny satisfying click burst: a bright cyan and white ring of pixels expanding with a few gold sparks flying outward and fading, centered",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-leaf",
+   "group": "site-fall",
+   "name": "falling leaf",
+   "out": "art/site/fall-leaf.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 786883,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a tumbling brown and orange autumn leaf, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-maple",
+   "group": "site-fall",
+   "name": "falling maple",
+   "out": "art/site/fall-maple.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 228556,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a red maple leaf, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-greenleaf",
+   "group": "site-fall",
+   "name": "falling greenleaf",
+   "out": "art/site/fall-greenleaf.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 382026,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a fresh green leaf, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-sprout",
+   "group": "site-fall",
+   "name": "falling sprout",
+   "out": "art/site/fall-sprout.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 476230,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small green seedling with two leaves, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-snowflake",
+   "group": "site-fall",
+   "name": "falling snowflake",
+   "out": "art/site/fall-snowflake.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 545605,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a six-armed white snowflake, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-pumpkin",
+   "group": "site-fall",
+   "name": "falling pumpkin",
+   "out": "art/site/fall-pumpkin.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 249253,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a tiny jack-o-lantern with a glowing face, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-bat",
+   "group": "site-fall",
+   "name": "falling bat",
+   "out": "art/site/fall-bat.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 339706,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small black bat flapping its wings, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-ghost",
+   "group": "site-fall",
+   "name": "falling ghost",
+   "out": "art/site/fall-ghost.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 617314,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a cute white ghost, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-witch",
+   "group": "site-fall",
+   "name": "falling witch",
+   "out": "art/site/fall-witch.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 897542,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a witch on a broomstick, tiny, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-broom",
+   "group": "site-fall",
+   "name": "falling broom",
+   "out": "art/site/fall-broom.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 897288,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a straw witch broom, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-moon",
+   "group": "site-fall",
+   "name": "falling moon",
+   "out": "art/site/fall-moon.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 276334,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a golden crescent moon, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-star",
+   "group": "site-fall",
+   "name": "falling star",
+   "out": "art/site/fall-star.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 630235,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a twinkling yellow star, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-sparkle",
+   "group": "site-fall",
+   "name": "falling sparkle",
+   "out": "art/site/fall-sparkle.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 630375,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a white and gold sparkle with four points, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-gift",
+   "group": "site-fall",
+   "name": "falling gift",
+   "out": "art/site/fall-gift.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 153545,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small wrapped gift with a red bow, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-firework",
+   "group": "site-fall",
+   "name": "falling firework",
+   "out": "art/site/fall-firework.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 317614,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a bursting gold and red firework spark, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-confetti",
+   "group": "site-fall",
+   "name": "falling confetti",
+   "out": "art/site/fall-confetti.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 785839,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a few pieces of colorful confetti and a streamer, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-dove",
+   "group": "site-fall",
+   "name": "falling dove",
+   "out": "art/site/fall-dove.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 897483,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small white dove with wings spread, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-tree",
+   "group": "site-fall",
+   "name": "falling tree",
+   "out": "art/site/fall-tree.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 271355,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small green pine tree with a star, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-cookie",
+   "group": "site-fall",
+   "name": "falling cookie",
+   "out": "art/site/fall-cookie.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 115753,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a frosted gingerbread cookie, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-cocoa",
+   "group": "site-fall",
+   "name": "falling cocoa",
+   "out": "art/site/fall-cocoa.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 411974,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a steaming mug of hot cocoa, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-ribbon",
+   "group": "site-fall",
+   "name": "falling ribbon",
+   "out": "art/site/fall-ribbon.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 201567,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a red ribbon bow, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-snowman",
+   "group": "site-fall",
+   "name": "falling snowman",
+   "out": "art/site/fall-snowman.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 398624,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a tiny snowman with a scarf, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-sleigh",
+   "group": "site-fall",
+   "name": "falling sleigh",
+   "out": "art/site/fall-sleigh.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 790005,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small red sleigh, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-reindeer",
+   "group": "site-fall",
+   "name": "falling reindeer",
+   "out": "art/site/fall-reindeer.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 650441,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small reindeer with antlers, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-bag",
+   "group": "site-fall",
+   "name": "falling bag",
+   "out": "art/site/fall-bag.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 120183,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a shopping bag with a sale tag, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-tag",
+   "group": "site-fall",
+   "name": "falling tag",
+   "out": "art/site/fall-tag.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 438653,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a price tag on a string, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-turkey",
+   "group": "site-fall",
+   "name": "falling turkey",
+   "out": "art/site/fall-turkey.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 475017,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small cartoon turkey with fanned tail feathers, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-heart",
+   "group": "site-fall",
+   "name": "falling heart",
+   "out": "art/site/fall-heart.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 994605,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pink heart with a white shine, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-shamrock",
+   "group": "site-fall",
+   "name": "falling shamrock",
+   "out": "art/site/fall-shamrock.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 732791,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a green three-leaf shamrock, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-egg",
+   "group": "site-fall",
+   "name": "falling egg",
+   "out": "art/site/fall-egg.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 581708,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a painted pastel easter egg, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-chick",
+   "group": "site-fall",
+   "name": "falling chick",
+   "out": "art/site/fall-chick.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 244541,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a fluffy yellow chick, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-tulip",
+   "group": "site-fall",
+   "name": "falling tulip",
+   "out": "art/site/fall-tulip.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 514345,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pink tulip flower, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-blossom",
+   "group": "site-fall",
+   "name": "falling blossom",
+   "out": "art/site/fall-blossom.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 413984,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pink cherry blossom flower, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-tie",
+   "group": "site-fall",
+   "name": "falling tie",
+   "out": "art/site/fall-tie.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 45391,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a blue necktie, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-earth",
+   "group": "site-fall",
+   "name": "falling earth",
+   "out": "art/site/fall-earth.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 798449,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small blue and green planet earth, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-pie",
+   "group": "site-fall",
+   "name": "falling pie",
+   "out": "art/site/fall-pie.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 437619,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a pumpkin pie slice, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-envelope",
+   "group": "site-fall",
+   "name": "falling envelope",
+   "out": "art/site/fall-envelope.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 304939,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a red envelope with a gold coin, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-lantern",
+   "group": "site-fall",
+   "name": "falling lantern",
+   "out": "art/site/fall-lantern.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 11161,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a red paper lantern with gold tassels, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-diya",
+   "group": "site-fall",
+   "name": "falling diya",
+   "out": "art/site/fall-diya.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 266734,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a small glowing clay oil lamp, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-menorah",
+   "group": "site-fall",
+   "name": "falling menorah",
+   "out": "art/site/fall-menorah.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 179485,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a gold nine-branch menorah with flames, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  },
+  {
+   "id": "fall-pi",
+   "group": "site-fall",
+   "name": "falling pi",
+   "out": "art/site/fall-pi.png",
+   "kind": "strip",
+   "frame": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "seed": 746244,
+   "steps": [
+    {
+     "key": "gen",
+     "style": "rd_animation__vfx",
+     "width": 32,
+     "height": 32,
+     "prompt": "a golden pi symbol with a small shine, slowly spinning, a 4 frame loop, transparent background",
+     "remove_bg": true
+    }
+   ]
+  }
+ ]
+}

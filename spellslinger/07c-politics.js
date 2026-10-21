@@ -150,6 +150,8 @@ function pactTarget(P) {
     return d ? G.players[d.x] : null;
 }
 const nm = P => (you(P) ? 'you' : P.name.split(',')[0]);
+// "Marcus (Guan Yu)": the character and the commander it plays, so a prompt or a texted record says which seat it means
+const whoFull = P => (you(P) ? 'you' : P.char ? `${P.char.name} (${P.name.split(',')[0]})` : P.name.split(',')[0]);
 
 function dealScore(bot, from, type, x) {
     const st = styleOf(bot);
@@ -190,8 +192,8 @@ function makeDeal(a, b, type, x, opts = {}) {
     (G.deals = G.deals || []).push(d);
     dealStats().made++;
     { const b = dealStats().by = dealStats().by || {}; b[type] = (b[type] || 0) + 1; }
-    const until = d.left > 1 ? `for ${d.left} of ${nm(a)}${you(a) ? 'r' : "'s"} turns` : `until ${nm(a)}${you(a) ? 'r' : "'s"} next turn`;
-    log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make a ${d.alliance ? 'alliance ' : ''}${DEAL_TYPES[type].name.toLowerCase()} deal${type === 'pact' ? ` against ${G.players[x].name.split(',')[0]}` : ''} (${until}).`);
+    const until = d.left > 1 ? `for ${d.left} of ${nm(a)}${you(a) ? 'r' : "'s"} turns` : (G.active === a.i ? `for a full round, until ${nm(a)}${you(a) ? 'r' : "'s"} next turn` : `until ${nm(a)}${you(a) ? 'r' : "'s"} next turn`);
+    log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make ${d.alliance ? 'an alliance ' : 'a '}${DEAL_TYPES[type].name.toLowerCase()} deal${type === 'pact' ? ` against ${G.players[x].name.split(',')[0]}` : ''} (${until}).`);
     return d;
 }
 // `from` proposes to `to`. A bot answers at once; the result is { ok, reason }.
@@ -258,6 +260,7 @@ async function dealsTick(P) {
     if (!G || G.players.length < 3 || P.out) return;
     expireDeals(P);
     if (!P.isAI || P.aiLevel === 'easy') return;
+    if (typeof dealsRelevant === 'function' && !dealsRelevant(P)) return; // nothing at the table gives it a reason to deal (07h-deal-tension.js)
     if (typeof moreOffers === 'function') await moreOffers(P);
     const m = botMood(P).mood;
     const live = foes(P).filter(F => !hasPeace(P.i, F.i));
@@ -270,7 +273,7 @@ async function dealsTick(P) {
     if (G.dealAsk && G.turn - (G.dealAsk[P.i] ?? -99) < 8) return;
     (G.dealAsk = G.dealAsk || {})[P.i] = G.turn;
     if (!ask.isAI && talkOn()) {
-        const yes = await askYes(ask, `${P.name.split(',')[0]} (${(MOODS[m] || MOODS.calm).emoji} ${(MOODS[m] || MOODS.calm).name}) offers peace: neither of you attacks the other until their next turn. Accept? You can still change your mind, but a broken deal is remembered.`, { card: P.command[0] && P.command[0].card, yes: 'Accept the deal', no: 'No deal' });
+        const yes = await askYes(ask, `${whoFull(P)} (${(MOODS[m] || MOODS.calm).emoji} ${(MOODS[m] || MOODS.calm).name}) offers peace: neither of you attacks the other until their next turn. Accept? You can still change your mind, but a broken deal is remembered.`, { card: P.command[0] && P.command[0].card, yes: 'Accept the deal', no: 'No deal' });
         if (yes) { makeDeal(P, ask, 'peace'); say(P, 'peaceYes', 'calm', { foe: 'you' }, null); }
         else { dealStats().declined++; say(P, 'peaceNo', 'annoyed', { foe: 'you' }, null); }
     } else {
@@ -291,7 +294,7 @@ function dealDialog(step, to, type) {
         return;
     }
     showModal(`<h2>🤝 Make a deal</h2>
-        <p class="note">A deal lasts until your next turn. Break one and that player (and, a little, everyone) remembers. Bots decide from how much they trust you, what you did to them, how threatened they feel, and how they play.</p>
+        <p class="note">A deal lasts until your next turn. Break one and that player (and, a little, everyone) remembers. Bots only deal when something is going on: someone is salty, a player is far ahead of the table, or someone is about to win. Then they decide from how much they trust you, what you did to them, how threatened they feel, and how they play.</p>
         ${active ? `<p><b>Active deals</b></p><ul>${active}</ul>` : ''}
         ${bots.map(B => `<div class="panel" style="margin:8px 0;"><div class="row"><b>${(MOODS[botMood(B).mood] || MOODS.calm).emoji} ${esc(nm(B))}</b> <span class="note">${esc(styleOf(B) ? styleOf(B).name : '')} · feeling ${esc((MOODS[botMood(B).mood] || MOODS.calm).name)}</span></div>
             <div class="row" style="flex-wrap:wrap; gap:6px; margin-top:6px;">${['peace', 'spare'].map(t => `<button class="btn small" title="${esc(DEAL_TYPES[t].desc)}" onclick="dealAsk(${B.i}, '${t}')">${DEAL_TYPES[t].emoji} ${DEAL_TYPES[t].name}</button>`).join('')}

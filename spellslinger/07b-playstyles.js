@@ -157,6 +157,8 @@ function podPickDefender(P) {
     // Lethal first - but a deal is a deal, unless this bot plays Aggro
     const lethal = fs.filter(F => F.life <= dmgTo(F) && open(F) && (!hasPeace(P.i, F.i) || P.aiStyle === 'aggro' || (typeof charBreaksPeace === 'function' && charBreaksPeace(P, F, power, open(F))))).sort((a, b) => a.life - b.life)[0];
     if (lethal) return lethal;
+    // At peace with every opponent and no kill to take: keep the word and don't attack (null; callers skip combat). Without this the bot attacked someone anyway and broke the deal it had just made.
+    if (fs.length && fs.every(F => hasPeace(P.i, F.i))) return null;
     const grudge = F => (P.grudge && P.grudge[F.i]) || 0;
     // Politics: when one player is far ahead the whole table goes after them (a revenge-minded bot still hits whoever hurt it most; an aggro bot finishes a nearly dead player first)
     // Deals: a pact names who to hit; a peace keeps us off someone (an Aggro bot breaks it for lethal, handled above by the lethal pick only when it has no deal)

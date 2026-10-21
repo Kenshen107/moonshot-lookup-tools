@@ -6,10 +6,102 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.resolve(__dirname, '..');
 const data = vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'spellslinger', '13g-ascent-art-data.js'), 'utf8') + '\n;({ STYLE: ASCENT_ART_STYLE, RULES: ASCENT_ART_RULES, CH: ASCENT_CHARACTERS, FX: ASCENT_FX, IDEAS: ASCENT_FX_IDEAS, ICONS: ASCENT_ICONS })');
 const { STYLE, RULES, CH, FX, IDEAS, ICONS } = data;
+const PACKS = vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'spellslinger', '12b-pack-looks.js'), 'utf8') + '\n;PACK_LOOKS');
 
-const charPrompt = c => `${STYLE}. Full-body character sprite sheet of ${c.look}. Palette: ${c.palette}. Personality shown in the pose: ${c.mood}. Front-facing, standing, feet on the bottom edge. Sheet layout: 2 rows of 4 frames, each frame 64 x 96 pixels. Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, one hand gesture). Identical framing in every frame.`;
+const charPrompt = c => `${STYLE}. Close-up head-and-shoulders portrait sprite sheet (a dialogue portrait) of ${c.look}. Palette: ${c.palette}. Expression: ${c.mood}. The face is large and centered, facing the viewer, filling most of the frame, shoulders cropped by the bottom edge. Sheet layout: 2 rows of 16 frames, each frame 96 x 96 pixels, 16 frames per row (so the sheet is 1536 x 192). Row 1: idle loop (gentle breathing, a blink). Row 2: talking loop (mouth opening and closing, eyebrows moving a little). Identical framing in every frame.`;
 const fxPrompt = (k, f) => `${STYLE}. Animated effect, ${f.frames} frames in one horizontal strip, each frame ${f.size} x ${f.size} pixels, centered, transparent background: ${f.prompt}.`;
 const iconPrompt = (k, i) => `${STYLE}. ${i.frames > 1 ? `Animated loop of ${i.frames} frames in a horizontal strip, each frame` : 'Single sprite,'} ${i.size} x ${i.size} pixels: ${i.prompt}.`;
+
+// ---- Machine-readable manifest for tools/make_art.py (styles checked against the Retro Diffusion API catalog, 2026-09) ----
+const hash = str => { let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1000000; };
+const charSubject = c => `Close-up head-and-shoulders portrait (a dialogue portrait) of ${c.look}. Show only what is visible from the chest up. The face is large and centered, filling most of the frame, facing the viewer with an expressive face, shoulders cropped by the bottom edge. Palette: ${c.palette}. Expression: ${c.mood}. Mouth closed in a relaxed, small friendly smile. Plain flat background, no text`;
+const MANIFEST = { generated: 'by tests/ascent_art_guide.js; do not edit by hand', assets: [] };
+for (const c of CH) MANIFEST.assets.push({
+    id: c.id, group: 'characters', name: c.name, out: `spellslinger/art/characters/${c.id}.png`, kind: 'sheet', frame: [96, 96], cols: 16, rows: 2, seed: hash(c.id),
+    steps: [
+        { key: 'base', style: 'rd_pro__fantasy', width: 96, height: 96, prompt: charSubject(c), remove_bg: true },
+        { key: 'idle', style: 'rd_advanced_animation__idle', width: 96, height: 96, prompt: 'a seamless idle loop: the very first and very last frame are the same pose. Gentle breathing and one slow blink only. The expression never changes from the starting drawing, the mouth stays closed and completely still, the head barely moves, shoulders stay in place, no lighting or color changes', frames_duration: 16, from: 'base' },
+        { key: 'talk', style: 'rd_advanced_animation__custom_action', width: 96, height: 96, prompt: 'talking: the mouth opens and closes, the eyebrows move a little and the head tilts slightly, shoulders stay in place', frames_duration: 16, from: 'base' }
+    ]
+});
+// Expression stills and win / lose poses for the 18 opponents (not the helpers). Both are made from the character's own base drawing
+// (tools/make_art.py reads it from that character's cache, so make the characters first), so they stay on-model.
+const MOODS = [['happy', 'the character breaks into a warm delighted smile, eyes bright, eyebrows raised, head tilts a little'], ['angry', 'the character scowls angrily, eyebrows lowered and pulled together, eyes narrowed, jaw clenched'], ['worried', 'the character looks worried and anxious, eyebrows raised and drawn together, eyes wide, mouth tight, one small sweat drop']];
+const POSES = [['win', 'the character celebrates a victory: a big triumphant grin, a quick fist pump and bouncing shoulders, then settles back with a proud smile'], ['lose', 'the character is defeated: shoulders slump, the head drops, a heavy sigh with eyes closed, then slowly looks up with a rueful half-smile']];
+for (const c of CH.filter(x => !/^npc-/.test(x.id))) {
+    MANIFEST.assets.push({ id: 'mood-' + c.id, group: 'moods', name: c.name + ': expressions (happy, angry, worried)', out: `spellslinger/art/moods/${c.id}.png`, kind: 'stills', frame: [96, 96], stills: MOODS.map(m => 'm_' + m[0]), seed: hash('mood-' + c.id),
+        steps: MOODS.map(m => ({ key: 'm_' + m[0], style: 'rd_advanced_animation__custom_action', width: 96, height: 96, prompt: m[1] + ', shoulders stay in place, the framing and drawing stay identical', frames_duration: 8, from: 'base', from_asset: c.id })) });
+    MANIFEST.assets.push({ id: 'pose-' + c.id, group: 'poses', name: c.name + ': win and lose poses', out: `spellslinger/art/poses/${c.id}.png`, kind: 'rows', frame: [96, 96], cols: 16, rows: POSES.map(p => 'p_' + p[0]), seed: hash('pose-' + c.id),
+        steps: POSES.map(p => ({ key: 'p_' + p[0], style: 'rd_advanced_animation__custom_action', width: 96, height: 96, prompt: p[1] + ', shoulders stay in place, the framing and drawing stay identical', frames_duration: 16, from: 'base', from_asset: c.id })) });
+}
+for (const [k, f] of Object.entries(FX)) MANIFEST.assets.push({
+    id: k, group: 'fx', name: f.label, out: `spellslinger/art/fx/${k}.png`, kind: 'strip', frame: [f.size, f.size], frames: f.frames, seed: hash(k),
+    steps: [{ key: 'gen', style: 'rd_animation__vfx', width: Math.min(f.size, 96), height: Math.min(f.size, 96), prompt: f.prompt, remove_bg: true }]
+});
+for (const [k, f] of Object.entries(IDEAS)) MANIFEST.assets.push({
+    id: k, group: 'ideas', name: f.label, out: `spellslinger/art/fx/${k}.png`, kind: 'strip', frame: [f.size, f.size], frames: f.frames, seed: hash(k),
+    steps: [{ key: 'gen', style: 'rd_animation__vfx', width: Math.min(f.size, 96), height: Math.min(f.size, 96), prompt: f.prompt, remove_bg: true }]
+});
+for (const [k, i] of Object.entries(ICONS)) {
+    const big = i.size >= 128, bg = /^bg-|^mat-/.test(k);
+    MANIFEST.assets.push({
+        id: k, group: 'icons', name: i.label, out: `spellslinger/art/ui/${k}.png`, kind: 'strip', frame: [i.size, i.size], frames: i.frames, seed: hash(k),
+        steps: [{ key: 'gen', style: i.frames > 1 ? 'rd_animation__vfx' : big ? 'rd_plus__environment' : 'rd_plus__low_res', width: i.frames > 1 ? Math.min(i.size, 96) : Math.max(i.size, 16), height: i.frames > 1 ? Math.min(i.size, 96) : Math.max(i.size, 16), prompt: i.prompt, remove_bg: !bg }]
+    });
+}
+for (const [k, L] of Object.entries(PACKS)) {
+    MANIFEST.assets.push({ id: 'pack-' + k, group: 'packs', name: L.label + ' wrapper', out: `spellslinger/art/packs/${k}.png`, kind: 'strip', frame: [96, 144], frames: 1, seed: hash('pack-' + k),
+        steps: [{ key: 'gen', style: 'rd_pro__default', width: 96, height: 144, prompt: L.wrap, remove_bg: true }] });
+    MANIFEST.assets.push({ id: 'pack-' + k + '-open', group: 'packs', name: L.label + ' opening burst', out: `spellslinger/art/packs/${k}-open.png`, kind: 'strip', frame: [96, 96], frames: 12, seed: hash('pack-' + k + '-open'),
+        steps: [{ key: 'gen', style: 'rd_animation__vfx', width: 96, height: 96, prompt: L.open, remove_bg: true }] });
+}
+// ---- Website art (MTG lookup tool): pixel card frames, cursor and click burst; PNGs go in art/site/ and are used automatically ----
+const SITE = [
+    ...[['common', 'plain grey steel'], ['uncommon', 'polished silver-blue'], ['rare', 'bright gold'], ['mythic', 'fiery orange-red with tiny flame edges'], ['special', 'magenta and violet with star studs']].map(([r, d]) => ({
+        id: 'frame-' + r, label: `${r} card frame`, size: [64, 64], frames: 1, style: 'rd_plus__ui_element', remove_bg: true,
+        prompt: `a square ornate trading card border frame in ${d}, symmetrical, a thin bevelled band around the edge with small corner studs, the entire middle is empty and fully transparent, designed to be stretched as a 9-slice with 12 pixel corners, no text` })),
+    { id: 'cursor-arrow', label: 'mouse cursor, arrow', size: [32, 32], frames: 1, style: 'rd_plus__low_res', remove_bg: true,
+      prompt: 'a pixel art mouse pointer arrow, cream white fill with a thick dark outline and one small teal highlight pixel, pointing up and to the left, the tip at the very top-left corner of the image' },
+    { id: 'cursor-hand', label: 'mouse cursor, pointing hand', size: [32, 32], frames: 1, style: 'rd_plus__low_res', remove_bg: true,
+      prompt: 'a pixel art pointing hand cursor, cream white glove with a thick dark outline, the index finger pointing straight up at the top of the image' },
+    { id: 'mascot', label: 'page mascot (waves, blinks)', size: [64, 64], frames: 8, style: 'rd_animation__vfx', remove_bg: true,
+      prompt: 'a tiny cute pixel mascot: a smiling crescent moon wearing a little rocket-nose-cone cap, floating with a gentle bob, blinking once and giving a small wave, a seamless 8 frame loop, centered' },
+    { id: 'loading-card', label: 'loading spinner (a card flipping)', size: [48, 48], frames: 8, style: 'rd_animation__vfx', remove_bg: true,
+      prompt: 'a single pixel playing card spinning around its vertical axis like a coin flip, teal back with a small gold star, seamless 8 frame loop, centered' },
+    ...[['halloween', 'a spooky night street with a big orange moon, bats, a haunted house and glowing jack-o-lanterns'], ['autumn', 'a golden autumn hillside with red and orange trees, falling leaves and a warm low sun'], ['winter', 'a snowy village at dusk with lit windows, pine trees and falling snow'], ['christmas', 'a cozy Christmas night scene with a decorated tree, wrapped gifts, a sleigh and twinkling lights'], ['spring', 'a bright spring meadow with cherry blossoms, tulips, a pastel sky and small birds'], ['newyear', 'a midnight city skyline with fireworks bursting, confetti and a glowing clock']].map(([k, d]) => ({
+        id: 'scene-' + k, label: `${k} scene banner`, size: [256, 128], frames: 1, style: 'rd_plus__environment', remove_bg: false,
+        prompt: `a wide pixel art banner scene, ${d}, horizon along the lower third, plenty of open sky in the upper half where a page title will sit, soft colors that stay readable behind white text` })),
+    { id: 'click-burst', label: 'click burst', size: [64, 64], frames: 8, style: 'rd_animation__vfx', remove_bg: true,
+      prompt: 'a tiny satisfying click burst: a bright cyan and white ring of pixels expanding with a few gold sparks flying outward and fading, centered' }
+];
+for (const x of SITE) MANIFEST.assets.push({ id: x.id, group: 'site', name: x.label, out: `art/site/${x.id}.png`, kind: 'strip', frame: x.size, frames: x.frames, seed: hash(x.id),
+    steps: [{ key: 'gen', style: x.style, width: x.size[0], height: x.size[1], prompt: x.prompt, remove_bg: x.remove_bg }] });
+// Falling and drifting sprites for the seasonal themes (the page maps each theme emoji to one of these ids: PX_FALL_MAP in MTG_Lookup_Tool.html)
+const FALL = [['leaf', 'a tumbling brown and orange autumn leaf'], ['maple', 'a red maple leaf'], ['greenleaf', 'a fresh green leaf'], ['sprout', 'a small green seedling with two leaves'], ['snowflake', 'a six-armed white snowflake'],
+    ['pumpkin', 'a tiny jack-o-lantern with a glowing face'], ['bat', 'a small black bat flapping its wings'], ['ghost', 'a cute white ghost'], ['witch', 'a witch on a broomstick, tiny'], ['broom', 'a straw witch broom'],
+    ['moon', 'a golden crescent moon'], ['star', 'a twinkling yellow star'], ['sparkle', 'a white and gold sparkle with four points'], ['gift', 'a small wrapped gift with a red bow'], ['firework', 'a bursting gold and red firework spark'],
+    ['confetti', 'a few pieces of colorful confetti and a streamer'], ['dove', 'a small white dove with wings spread'], ['tree', 'a small green pine tree with a star'], ['cookie', 'a frosted gingerbread cookie'], ['cocoa', 'a steaming mug of hot cocoa'],
+    ['ribbon', 'a red ribbon bow'], ['snowman', 'a tiny snowman with a scarf'], ['sleigh', 'a small red sleigh'], ['reindeer', 'a small reindeer with antlers'], ['bag', 'a shopping bag with a sale tag'],
+    ['tag', 'a price tag on a string'], ['turkey', 'a small cartoon turkey with fanned tail feathers'], ['heart', 'a pink heart with a white shine'], ['shamrock', 'a green three-leaf shamrock'], ['egg', 'a painted pastel easter egg'],
+    ['chick', 'a fluffy yellow chick'], ['tulip', 'a pink tulip flower'], ['blossom', 'a pink cherry blossom flower'], ['tie', 'a blue necktie'], ['earth', 'a small blue and green planet earth'],
+    ['pie', 'a pumpkin pie slice'], ['envelope', 'a red envelope with a gold coin'], ['lantern', 'a red paper lantern with gold tassels'], ['diya', 'a small glowing clay oil lamp'], ['menorah', 'a gold nine-branch menorah with flames'], ['pi', 'a golden pi symbol with a small shine']];
+
+// The page's glyph map must cover every emoji its themes use (the colored dots are drawn as pixel lights in code) and only name sprites in the list above
+{
+    const html = fs.readFileSync(path.join(ROOT, 'MTG_Lookup_Tool.html'), 'utf8');
+    const m = html.match(/const PX_FALL_MAP = (\{[\s\S]*?\n        \});/);
+    if (m) {
+        const map = vm.runInNewContext('(' + m[1] + ')');
+        const ids = new Set(FALL.map(f => f[0])), used = new Set(Object.values(map));
+        const glyphs = new Set([...html.matchAll(/\[\s*'([^'\w\s][^']*)',\s*'(?:fall|rise|drift|twinkle)'\s*\]/g)].map(x => x[1]));
+        const dots = new Set(['🔴', '🟢', '🔵', '🟡', '🟣', '⚪', '⚫']);
+        const missing = [...glyphs].filter(g => !map[g] && !dots.has(g)), unknown = [...used].filter(i => !ids.has(i)), unused = [...ids].filter(i => !used.has(i));
+        if (missing.length || unknown.length || unused.length) { console.error('FALL sprite map out of step with the page:', { missing, unknown, unused }); process.exit(1); }
+    }
+}
+for (const [k, d] of FALL) MANIFEST.assets.push({ id: 'fall-' + k, group: 'site-fall', name: 'falling ' + k, out: `art/site/fall-${k}.png`, kind: 'strip', frame: [32, 32], frames: 4, seed: hash('fall-' + k),
+    steps: [{ key: 'gen', style: 'rd_animation__vfx', width: 32, height: 32, prompt: `${d}, slowly spinning, a 4 frame loop, transparent background`, remove_bg: true }] });
+fs.writeFileSync(path.join(ROOT, 'docs', 'ascent-art-manifest.json'), JSON.stringify(MANIFEST, null, 1) + '\n');
 
 const out = [];
 out.push(`# Planeswalker's Ascent: art prompts for Retro Diffusion
@@ -26,8 +118,22 @@ The game already has placeholders for everything below (an emoji portrait, a col
 - **Effects:** ${RULES.fx}
 - **Icons and other sprites:** ${RULES.ui}
 
-## Retro Diffusion notes
-I (Claude) can't run Retro Diffusion from here and couldn't check its current style and model names, so these are general: use a small-sprite or character style for the characters and an animation or effect style for the effects if your version has them, keep every frame the exact size above, and use a transparent background. If it only makes single images, generate each frame (or a 2 x 4 grid) and assemble the strip in Aseprite or similar. The talking row only needs the mouth and one hand to move. Keep the sprite's feet, head and outline in the same place in every frame so the loop doesn't jitter. Palette tips are per character.
+## Making the art with the script (recommended)
+\`tools/make_art.py\` reads \`docs/ascent-art-manifest.json\` (written by this guide's script) and does everything below for you. It needs Python 3 with \`requests\` and \`Pillow\`.
+\`\`\`
+export RD_API_KEY=rdpk-...        # your key, in your own terminal; never commit it or paste it into a file
+python3 tools/make_art.py                     # free dry run: checks the styles, lists every step and its cost
+python3 tools/make_art.py --go --only t1-mick # make one character first (about $0.57) and look at the result
+python3 tools/make_art.py --go                # then make everything the game uses now (characters + effects)
+\`\`\`
+Options: \`--group characters|fx|packs|site|site-fall|ideas|icons|moods|poses|all\` (default: characters, fx, packs, site, site-fall; \`all\` adds the combat effects, icons, expressions and poses; moods and poses are made from each character's own base drawing, so make the characters first), \`--only id1,id2\`, \`--max-spend 20\` (stops before going over, in dollars), \`--force\` (redo finished assets), \`--seed-bump N\` (a new look for the same prompt). Finished PNGs go to \`spellslinger/art/...\`; every step is kept in \`tools/.art-cache/\`, so a rerun only does what is missing and never pays twice for a step. Commit the PNGs, not the cache.
+
+**How a character is made** (22 of them, $0.57 each, about $12.5 in all): RD Pro \`rd_pro__fantasy\` draws the head-and-shoulders portrait at 96 x 96 ($0.18), \`rd_advanced_animation__idle\` animates breathing and a blink from it ($0.14), and \`rd_advanced_animation__custom_action\` animates talking ($0.25). The script keeps 16 frames of each and builds the 1536 x 192 sheet (row 1 idle, row 2 talking). Because both animations start from the same drawing, the character looks the same in every frame.
+**How an effect is made** (19 of them, $0.07 each, about $1.35 in all): \`rd_animation__vfx\` (24 to 96 px) makes the animation; the script picks the right number of frames, scales it up with hard pixels if the game wants it bigger (the Planeswalker portal is 128 px), and writes the strip.
+**Checked against the API's style list** (the pasted Retro Diffusion API notes, verified 2026-09): the style names, size limits and prices above. The script also asks the live \`/v2/styles/selector\` list first and stops with a clear message if a style or size has changed. Claude can't reach the API from here, so **nothing has been generated yet**: do the one-character test first. If the pixel style isn't what you want, change the style or prompt in \`tests/ascent_art_guide.js\` / the data file and rerun both scripts.
+
+## Prompts to paste by hand (if you use the website instead)
+Use the prompt under each asset. For characters, make the standing picture first, then use the website's animation tools on it; the sheet is 2 rows x 4 frames of 96 x 96.
 
 ## Counts
 - ${CH.length} characters (${CH.filter(c => c.role === 'opponent').length} opponents, ${CH.filter(c => c.role === 'npc').length} helpers)
@@ -41,7 +147,7 @@ for (const tier of [1, 2, 3, 0]) {
     out.push(`\n### ${tier ? `League ${tier} (${['The Locals', 'Friday Grinders', 'The Pro Circuit'][tier - 1]})` : 'Helpers on the other tabs'}\n`);
     for (const c of group) {
         out.push(`#### ${c.name}${c.boss ? ' (boss)' : ''}: ${c.title}
-- **File:** \`spellslinger/art/characters/${c.id}.png\` (256 x 192, 2 rows x 4 frames of 64 x 96)
+- **File:** \`spellslinger/art/characters/${c.id}.png\` (1536 x 192, 2 rows x 16 frames of 96 x 96)
 - **Placeholder in the game:** ${c.emoji}
 - **Look:** ${c.look}
 - **Palette:** ${c.palette}
@@ -65,6 +171,20 @@ out.push('');
 for (const [k, f] of Object.entries(FX)) out.push(`#### ${f.label} (\`${k}\`)\n\`\`\`\n${fxPrompt(k, f)}\n\`\`\`\n`);
 out.push('\n### Ideas for later (not in the game yet)\n');
 for (const [k, f] of Object.entries(IDEAS)) out.push(`- **${f.label}** (\`${k}\`, ${f.size} x ${f.size}, ${f.frames} frames): ${fxPrompt(k, f)}`);
+out.push('\n## Booster pack looks (wrapper and opening burst)\n');
+out.push('Each pack tier has its own look and opening animation in the game (drawn in CSS today). When these PNGs exist the wrapper art replaces the drawn pack and the burst plays over it while it opens. Wrapper: 96 x 144, one frame. Burst: 12 frames in a strip, each 96 x 96.\n');
+for (const [k, L] of Object.entries(PACKS)) out.push(`- **${L.label}** (opens with "${L.anim}"): wrapper \`spellslinger/art/packs/${k}.png\`: ${L.wrap}. Burst \`spellslinger/art/packs/${k}-open.png\`: ${L.open}.`);
+out.push('\n## Expressions and win / lose poses (groups `moods` and `poses`, one each per opponent)\n');
+out.push('Made from each opponent\'s own base drawing (the character must be made first), so they stay on-model. **Expressions** (`spellslinger/art/moods/<id>.png`, 3 stills of 96 x 96: happy, angry, worried, $0.75 each, 18 = about $13.5) show on the opponent\'s bar in Planeswalker\'s Ascent games as the game turns (worried at low life or facing a big board, angry after a hard hit, happy when ahead). **Poses** (`spellslinger/art/poses/<id>.png`, 1536 x 192: row 1 victory, row 2 defeat, 16 frames each, $0.50 each, 18 = about $9) play on the result screen (you win: its defeat pose; you lose: its victory pose).\n');
+for (const m of MOODS) out.push(`- **${m[0]}**: ${m[1]}`);
+for (const q of POSES) out.push(`- **${q[0]} pose**: ${q[1]}`);
+out.push('\n## Rank badges, backdrops, card back, phase icons (group `icons`)\n');
+out.push('Trophy milestone badges (`badge-3` to `badge-75`), tier backdrops, the table mat, the card back, map markers, phase icons, tab icons, currency icons, rarity gems and upgrade icons are all in the Icons section below; the game uses each one in its screen as soon as the PNG exists in `spellslinger/art/ui/`. The five mana gems and seven type icons are generic (not game symbols): they appear on the starter-color buttons and the card dialog.\n');
+out.push('\n## Website art (MTG lookup tool): frames, cursor, click\n');
+out.push('Drawn in code today from the theme colors; when these PNGs exist in `art/site/` the page uses them instead (the **mascot** (8 frames of 64 x 64) replaces the title moon mark, the **loading card** (8 frames of 48 x 48) shows under every loading message, and each **scene** (256 x 128) is drawn behind the page title for its season at Effects: Full, mirrored tile to tile; cursor arrow and hand 32 x 32, click burst 8 frames of 64 x 64, card frames 64 x 64 as 9-slice with 12 px corners). Make them with `py tools\\make_art.py --go --group site`.\n');
+for (const x of SITE) out.push(`- **${x.label}** (\`art/site/${x.id}.png\`, ${x.size[0]} x ${x.size[1]}${x.frames > 1 ? `, ${x.frames} frames` : ''}, style \`${x.style}\`): ${x.prompt}`);
+out.push('\n### Seasonal falling sprites for the background (group `site-fall`, 32 x 32, 4 frames each: the page draws them in place of the pixelated emoji for each theme)\n');
+for (const [k, d] of FALL) out.push(`- **${k}**: ${d}, 32 x 32, 4 frames, \`art/site/fall-${k}.png\``);
 out.push('\n## Icons, banners and backgrounds\n');
 const groups = {};
 for (const [k, i] of Object.entries(ICONS)) (groups[i.group] = groups[i.group] || []).push([k, i]);

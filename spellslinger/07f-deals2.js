@@ -154,10 +154,10 @@ function acceptCounter(i, type, x) {
 async function offerKind(P, to, kind, x) {
     if (!to || to.out || dealBetween(P.i, to.i, kind === 'peace3' || kind === 'tipPeace' ? 'peace' : kind) || (kind === 'alliance' && hasPeace(P.i, to.i))) return false;
     const text = {
-        peace3: `${who(P)} offers peace for three turns: neither of you attacks the other. Accept?`,
-        restraint: `${who(P)} offers restraint for two turns: no counterspells between you and no removal at each other's commander. Accept?`,
-        tipPeace: `${who(P)} offers a tip for peace: neither of you attacks the other this turn, and ${who(P)} tells you something it knows (it might bluff). Accept?`,
-        alliance: `${who(P)} proposes an alliance against ${x != null ? nm(G.players[x]) : 'someone'}: peace between you and a gang-up on them for three turns. Breaking it costs a lot of trust. Accept?`
+        peace3: `${whoFull(P)} offers peace for three turns: neither of you attacks the other. Accept?`,
+        restraint: `${whoFull(P)} offers restraint for two turns: no counterspells between you and no removal at each other's commander. Accept?`,
+        tipPeace: `${whoFull(P)} offers a tip for peace: neither of you attacks the other this turn, and ${whoFull(P)} tells you something it knows (it might bluff). Accept?`,
+        alliance: `${whoFull(P)} proposes an alliance against ${x != null ? whoFull(G.players[x]) : 'someone'}: peace between you and a gang-up on them for three turns. Breaking it costs a lot of trust. Accept?`
     }[kind];
     if (!to.isAI) {
         if (!talkOn()) return false;
@@ -174,6 +174,7 @@ async function offerKind(P, to, kind, x) {
 }
 async function moreOffers(P) {
     if (!G || G.players.length < 3 || P.out || dealsRefused(P) || G.hotseat) return;
+    if (typeof dealsRelevant === 'function' && !dealsRelevant(P)) return;
     G.dealAsk2 = G.dealAsk2 || {};
     if (G.turn - (G.dealAsk2[P.i] ?? -99) < 6 || (G.turn + P.i) % 3 !== 0) return;
     const human = G.players.find(X => !X.isAI && !X.out);

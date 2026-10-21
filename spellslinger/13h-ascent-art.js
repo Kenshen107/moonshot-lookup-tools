@@ -1,7 +1,7 @@
 // Planeswalker's Ascent, art and animation runtime (data in 13g-ascent-art-data.js, guide in docs/ascent-art-prompts.md).
 // Portraits and effects use the pixel art in spellslinger/art/ when the files exist, and a placeholder until then.
 const ASCENT_CHAR = Object.fromEntries(ASCENT_CHARACTERS.map(c => [c.id, c]));
-const ASC_ART = { ok: {}, probed: false, size: { w: 64, h: 96 } };
+const ASC_ART = { ok: {}, probed: false, size: { w: 96, h: 96 }, legacy: {}, cols: {} };
 const ASC_FX = { active: 0, max: 4 };
 const ASC_FX_KINDS_ART = {}; // kind -> true when its PNG strip exists
 function ascFxPref() { try { return store.get('ascentFx', true) !== false; } catch (e) { return true; } }
@@ -11,18 +11,20 @@ function renderAscentIfOpen() { if ($('ascentApp') && !$('view-campaign').classL
 function ascFxEnabled() { return window.__FX_FORCE === true || (!AUTOPLAY && !window.__LAB && !reducedMotion() && ascFxPref()); }
 
 // ---- Probing for art files (once per page load) ----
-function ascProbe(path) {
-    return new Promise(res => { const img = new Image(); img.onload = () => res(true); img.onerror = () => res(false); img.src = path; });
+function ascProbe(path, note) {
+    return new Promise(res => { const img = new Image(); img.onload = () => { if (note) note(img.naturalWidth); res(true); }; img.onerror = () => res(false); img.src = path; });
 }
 async function ascProbeArt() {
     if (ASC_ART.probed) return;
     ASC_ART.probed = true;
     const tasks = [
-        ...ASCENT_CHARACTERS.map(async c => { const p = `spellslinger/art/characters/${c.id}.png`; ASC_ART.ok[p] = await ascProbe(p); }),
-        ...Object.keys(ASCENT_FX).map(async k => { ASC_FX_KINDS_ART[k] = await ascProbe(`spellslinger/art/fx/${k}.png`); })
+        ...ASCENT_CHARACTERS.map(async c => { const p = `spellslinger/art/characters/${c.id}.png`; ASC_ART.ok[p] = await ascProbe(p, w => { if (w === 256) ASC_ART.legacy[p] = true; else if (w >= 96) ASC_ART.cols[p] = Math.round(w / 96); }); }),
+        ...Object.keys(ASCENT_FX).map(async k => { ASC_FX_KINDS_ART[k] = await ascProbe(`spellslinger/art/fx/${k}.png`); }),
+        ...(typeof ascExtraProbeTasks === 'function' ? ascExtraProbeTasks() : []) // icons, backdrops, combat effects (13j)
     ];
     await Promise.all(tasks);
-    if (Object.values(ASC_ART.ok).some(Boolean)) renderAscentIfOpen();
+    if (typeof ascUiApply === 'function') ascUiApply();
+    if (Object.values(ASC_ART.ok).some(Boolean) || (typeof ASC_UI !== 'undefined' && Object.values(ASC_UI.ok).some(Boolean))) renderAscentIfOpen();
 }
 
 // ---- Portraits and dialogue ----
@@ -30,7 +32,7 @@ function ascPortraitHTML(id, opts = {}) {
     const c = ASCENT_CHAR[id];
     if (!c) return '';
     const path = `spellslinger/art/characters/${id}.png`, talk = opts.talk ? ' talk' : '';
-    if (ASC_ART.ok[path]) return `<div class="asc-portrait sprite${talk}" style="background-image:url('${path}')" role="img" aria-label="${esc(c.name)}"></div>`;
+    if (ASC_ART.ok[path]) return `<div class="asc-portrait sprite${talk}${ASC_ART.legacy[path] ? ' old' : ''}" style="background-image:url('${path}');--ph:-${(Array.from(String(c.id)).reduce((a, ch) => a + ch.charCodeAt(0), 0) % 29) / 10}s${ASC_ART.cols[path] ? `;--cols:${ASC_ART.cols[path]};--idle:${(ASC_ART.cols[path] / 12).toFixed(2)}s;--tdur:${(ASC_ART.cols[path] / 16).toFixed(2)}s` : ''}" role="img" aria-label="${esc(c.name)}"></div>`;
     return `<div class="asc-portrait ph${talk}${c.boss ? ' boss' : ''}" style="--accent:${c.accent}" role="img" aria-label="${esc(c.name)} (placeholder art)"><span>${c.emoji}</span></div>`;
 }
 function ascLine(id, kind, seed) {
@@ -39,10 +41,11 @@ function ascLine(id, kind, seed) {
     const arr = Array.isArray(list) ? list : [list];
     return arr[(seed === undefined ? Math.floor(Math.random() * arr.length) : seed % arr.length)];
 }
-function ascSpeechHTML(id, kind, seed) {
+// The portrait idles while a character is only being looked at (choosing who to face, tips); it talks (opts.talk) only in the Let's play prompt
+function ascSpeechHTML(id, kind, seed, opts = {}) {
     const c = ASCENT_CHAR[id];
     if (!c) return '';
-    return `<div class="asc-say">${ascPortraitHTML(id, { talk: true })}<div class="asc-bubble"><strong>${esc(c.name)}</strong> <span class="note">${esc(c.title)}</span><p>${esc(ascLine(id, kind, seed))}</p></div></div>`;
+    return `<div class="asc-say">${ascPortraitHTML(id, { talk: !!opts.talk })}<div class="asc-bubble"><strong>${esc(c.name)}</strong> <span class="note">${esc(c.title)}</span><p>${esc(ascLine(id, kind, seed))}</p></div></div>`;
 }
 
 // ---- Effects ----
@@ -69,21 +72,22 @@ function ascFxKindFor(ev, ctx) {
     return null;
 }
 function ascFxHook(ev, ctx) {
-    if (ev !== 'enters' && ev !== 'cast') return;
+    if (typeof ascMoodNote === 'function') ascMoodNote(ev, ctx); // keeps track of the opponent's mood, even with no art
+    if (ev !== 'enters' && ev !== 'cast') { if (typeof ascIdeaFxHook === 'function') ascIdeaFxHook(ev, ctx); return; }
     if (!ascFxEnabled() || !G || G.over) return;
     const kind = ascFxKindFor(ev, ctx);
     if (kind) ascFxPlay(kind, ev === 'enters' ? ctx.o.uid : null);
 }
-function ascFxPlay(kind, uid) {
-    const spec = ASCENT_FX[kind];
-    if (!spec || ASC_FX.active >= ASC_FX.max) return null;
+function ascFxPlay(kind, uid, rect) {
+    const spec = ASCENT_FX[kind] || ASCENT_FX_IDEAS[kind]; // the combat effects (fx-hit...) have no placeholder: they play only with art
+    if (!spec || ASC_FX.active >= ASC_FX.max || (!ASCENT_FX[kind] && !ASC_FX_KINDS_ART[kind])) return null;
     ASC_FX.active++;
     setTimeout(() => {
         try {
             const el = uid != null ? document.querySelector(`#game [data-uid="${uid}"]`) : null;
             const host = el || $('midBar') || $('game');
-            if (!host || $('game').classList.contains('hidden')) return;
-            const r = host.getBoundingClientRect(), px = spec.size * 2;
+            if (!rect && (!host || $('game').classList.contains('hidden'))) return;
+            const r = rect || host.getBoundingClientRect(), px = spec.size * 2;
             const node = document.createElement('div');
             const dur = spec.frames / spec.fps;
             node.className = `fx-item fx-${kind}`;

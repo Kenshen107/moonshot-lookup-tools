@@ -504,7 +504,7 @@ async function aiMain(P) {
 // In a pod: which opponent to attack this combat. Lethal on someone first, else the biggest threat on the table.
 function aiPickDefender(P) {
     const fs = foes(P);
-    if (fs.length === 1) return fs[0];
+    if (fs.length === 1) return G.players.length > 2 && !P.aiRand && (P.aiStyle || P.aiLevel !== 'easy') ? podPickDefender(P) : fs[0]; // may be null: at peace with the last opponent
     if (P.aiRand && P.aiRand.def) return fs[rand(fs.length)];
     if (P.aiStyle || P.aiLevel !== 'easy') return podPickDefender(P);
     const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
@@ -653,8 +653,13 @@ async function aiTurn(P) {
     await settle();
     if (G.over) return;
     aiCrew(P);
-    if (G.players.length > 2) G.defender = aiPickDefender(P).i;
-    let attackers = P.skip && P.skip.turn === G.turn && P.skip.what === 'combat' ? [] : aiChooseAttackers(P);
+    let peaceStay = false;
+    if (G.players.length > 2) {
+        const pd = aiPickDefender(P);
+        if (pd) G.defender = pd.i;
+        else { G.defender = foes(P)[0].i; peaceStay = true; if (P.bf.some(canAttackWith) && !G.over) log(`🤝 ${nm(P)} has a peace deal with every opponent left, so it keeps its word and doesn't attack.`); }
+    }
+    let attackers = (P.skip && P.skip.turn === G.turn && P.skip.what === 'combat') || peaceStay ? [] : aiChooseAttackers(P);
     if (P.mustAttackTurn === G.turn && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...P.bf.filter(canAttackWith)])];
     if (typeof cmdForcedAttackers === 'function' && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...cmdForcedAttackers(P)])]; // Graaz: Juggernauts must attack
     for (let round = 0; round < 4 && attackers.length && !G.over; round++) {

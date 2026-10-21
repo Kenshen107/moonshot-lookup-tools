@@ -293,6 +293,7 @@ async function startAscentMatch(oppId, deckIndex = 0) {
     if (!deck || !opp) throw new Error('Pick a deck and an opponent.');
     const problems = ascentDeckProblems(deck);
     if (problems.length) throw new Error(problems[0]);
+    if (typeof ascProbeOpp === 'function') { await ascProbeArt(); await ascProbeOpp(oppId); } // the opponent's expressions and poses, when the art exists
     if (!ascentOpponentOpen(opp)) throw new Error('That opponent is still locked.');
     await cardsByIds(Object.keys(deck.cards));
     const missing = Object.keys(deck.cards).filter(id => !CARDS.has(id));

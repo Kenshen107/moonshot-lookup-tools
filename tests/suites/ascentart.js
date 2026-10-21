@@ -67,8 +67,9 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
             // ---- portraits and dialogue on screen ----
             showView('campaign'); await renderAscent();
             await ascChooseStarter('R'); ASC.tab = 'map'; await renderAscent();
-            ok('the map shows the guide talking, as a placeholder portrait', document.querySelectorAll('#ascBody .asc-npc .asc-portrait.ph.talk').length === 1);
+            ok('the map shows the guide idling (not talking), as a placeholder portrait', document.querySelectorAll('#ascBody .asc-npc .asc-portrait.ph').length === 1 && document.querySelectorAll('#ascBody .asc-npc .asc-portrait.talk').length === 0);
             ascSelectOpp('t1-cal'); await ascOppPanel();
+            ok('the opponent panel idles while choosing who to face', !!document.querySelector('#ascOpp .asc-portrait') && !document.querySelector('#ascOpp .asc-portrait.talk'));
             ok('an opponent panel shows their portrait, an intro line and a tip', document.querySelectorAll('#ascOpp .asc-portrait').length === 1 && ASCENT_CHAR['t1-cal'].lines.intro.some(l => $('ascOpp').textContent.includes(l)) && $('ascOpp').textContent.includes(ASCENT_CHAR['t1-cal'].lines.tip));
             ASC_ART.ok['spellslinger/art/characters/t1-cal.png'] = true; ascSelectOpp('t1-cal'); await ascOppPanel();
             ok('with a sprite file the portrait is the animated sheet', !!document.querySelector('#ascOpp .asc-portrait.sprite'));

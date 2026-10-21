@@ -3,7 +3,7 @@
 // Art files go in spellslinger/art/ at the paths below; until a file exists the game shows a placeholder.
 const ASCENT_ART_STYLE = '16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background';
 const ASCENT_ART_RULES = {
-    characters: 'One PNG per character at spellslinger/art/characters/<id>.png. A sprite sheet with 2 rows of 4 frames, each frame 64 x 96 px (so the sheet is 256 x 192). Row 1 = idle loop (breathing, blinking). Row 2 = talking loop (mouth moving, a hand gesture). Same pose and framing in every frame, feet on the bottom edge, facing the viewer.',
+    characters: 'One PNG per character at spellslinger/art/characters/<id>.png. A sprite sheet with 2 rows of 4 frames, each frame a 96 x 96 px head-and-shoulders portrait (so the sheet is 384 x 192). Row 1 = idle loop (breathing, blinking). Row 2 = talking loop (mouth moving, a hand gesture). Same pose and framing in every frame, feet on the bottom edge, facing the viewer.',
     fx: 'One PNG per effect at spellslinger/art/fx/<id>.png: a single horizontal strip of frames, each frame the size listed. The game plays it once at 2x, pixelated, over the card.',
     ui: 'One PNG per icon at spellslinger/art/ui/<id>.png at the size listed (a single frame unless "frames" is listed, then a horizontal strip).'
 };
@@ -105,35 +105,35 @@ const ASCENT_CHARACTERS = [
 // ---- Effects played while a game is running ----
 // kind -> { label, size (px per frame), frames, fps, prompt, hook }. Played over the card (lands, creatures) or the middle of the table (spells).
 const ASCENT_FX = {
-    'land-W': { label: 'Plains: a gentle white glow', size: 64, frames: 8, fps: 12, hook: 'a Plains enters', prompt: 'a soft radiant burst of white and gold light with floating feather motes and a sunbeam, expanding then fading' },
-    'land-U': { label: 'Island: water ripple', size: 64, frames: 8, fps: 12, hook: 'an Island enters', prompt: 'a ring of blue water ripples with a splash and rising bubbles, expanding then fading' },
-    'land-B': { label: 'Swamp: bubbling ooze', size: 64, frames: 8, fps: 12, hook: 'a Swamp enters', prompt: 'purple-black ooze bubbling up with wispy smoke and tiny skulls of vapor, rising then fading' },
-    'land-R': { label: 'Mountain: ember burst', size: 64, frames: 8, fps: 12, hook: 'a Mountain enters', prompt: 'a burst of orange and red embers and a small flame ring, flickering then fading' },
-    'land-G': { label: 'Forest: sprouting leaves', size: 64, frames: 8, fps: 12, hook: 'a Forest enters', prompt: 'green leaves and a sprout growing outward with sparkling spores, unfurling then fading' },
-    'land-nonbasic': { label: 'Nonbasic land: five-color shimmer', size: 64, frames: 8, fps: 12, hook: 'any land that is not a basic enters', prompt: 'a swirl of white, blue, black, red and green sparkles spiralling around a bright ring, then fading' },
-    'creature-W': { label: 'White creature arrives', size: 96, frames: 10, fps: 12, hook: 'a white creature enters', prompt: 'a pillar of white and gold light with feathers descending, a holy flash at the base' },
-    'creature-U': { label: 'Blue creature arrives', size: 96, frames: 10, fps: 12, hook: 'a blue creature enters', prompt: 'a vortex of blue water and swirling mist rising into a bright splash' },
-    'creature-B': { label: 'Black creature arrives', size: 96, frames: 10, fps: 12, hook: 'a black creature enters', prompt: 'purple-black shadow tendrils and skull-smoke curling up out of a crack in the ground' },
-    'creature-R': { label: 'Red creature arrives', size: 96, frames: 10, fps: 12, hook: 'a red creature enters', prompt: 'a roaring column of orange flames and sparks bursting upward with a heat shimmer' },
-    'creature-G': { label: 'Green creature arrives', size: 96, frames: 10, fps: 12, hook: 'a green creature enters', prompt: 'roots and vines bursting out of the ground with flying leaves and a green shockwave' },
-    'creature-colorless': { label: 'Colorless creature arrives', size: 96, frames: 10, fps: 12, hook: 'a colorless creature (artifact creature) enters', prompt: 'grey metal gears and steel sparks assembling into a shining silver flash' },
-    'creature-multi': { label: 'Multicolor creature arrives', size: 96, frames: 12, fps: 12, hook: 'a creature of two or more colors enters', prompt: 'a prismatic rainbow vortex of intertwined coloured light beams exploding into a star burst with gold sparkles' },
-    'spell-instant': { label: 'Instant: lightning flash', size: 96, frames: 8, fps: 14, hook: 'an instant is cast', prompt: 'a fast jagged white-blue lightning flash with an arcane rune circle snapping in and out' },
-    'spell-sorcery': { label: 'Sorcery: ritual circle', size: 96, frames: 10, fps: 12, hook: 'a sorcery is cast', prompt: 'a large glowing arcane summoning circle with orbiting runes and rising purple-gold smoke' },
-    'spell-artifact': { label: 'Artifact: gear assembly', size: 96, frames: 10, fps: 12, hook: 'a non-creature artifact is cast', prompt: 'brass gears and cogs spinning into place with a metal clang flash and steam puffs' },
-    'spell-enchantment': { label: 'Enchantment: sparkling aura', size: 96, frames: 10, fps: 12, hook: 'an enchantment is cast', prompt: 'a shimmering swirl of soft pink and gold sparkles forming a floating aura ring with tiny stars' },
-    'spell-planeswalker': { label: 'Planeswalker: arrival portal', size: 128, frames: 12, fps: 12, hook: 'a planeswalker is cast', prompt: 'a swirling dimensional portal opening with colorful light and a spark of stars, a tall flash at the center' },
-    'spell-battle': { label: 'Battle: clashing swords', size: 96, frames: 8, fps: 12, hook: 'a battle is cast', prompt: 'two crossed swords clashing with a shower of sparks and a shockwave ring' }
+    'land-W': { label: 'Plains: a gentle white glow', size: 64, frames: 12, fps: 14, hook: 'a Plains enters', prompt: 'a soft radiant burst of white and gold light with floating feather motes and a sunbeam, expanding then fading' },
+    'land-U': { label: 'Island: water ripple', size: 64, frames: 12, fps: 14, hook: 'an Island enters', prompt: 'a ring of blue water ripples with a splash and rising bubbles, expanding then fading' },
+    'land-B': { label: 'Swamp: bubbling ooze', size: 64, frames: 12, fps: 14, hook: 'a Swamp enters', prompt: 'purple-black ooze bubbling up with wispy smoke and tiny skulls of vapor, rising then fading' },
+    'land-R': { label: 'Mountain: ember burst', size: 64, frames: 12, fps: 14, hook: 'a Mountain enters', prompt: 'a burst of orange and red embers and a small flame ring, flickering then fading' },
+    'land-G': { label: 'Forest: sprouting leaves', size: 64, frames: 12, fps: 14, hook: 'a Forest enters', prompt: 'green leaves and a sprout growing outward with sparkling spores, unfurling then fading' },
+    'land-nonbasic': { label: 'Nonbasic land: five-color shimmer', size: 64, frames: 12, fps: 14, hook: 'any land that is not a basic enters', prompt: 'a swirl of white, blue, black, red and green sparkles spiralling around a bright ring, then fading' },
+    'creature-W': { label: 'White creature arrives', size: 96, frames: 12, fps: 14, hook: 'a white creature enters', prompt: 'a pillar of white and gold light with feathers descending, a holy flash at the base' },
+    'creature-U': { label: 'Blue creature arrives', size: 96, frames: 12, fps: 14, hook: 'a blue creature enters', prompt: 'a vortex of blue water and swirling mist rising into a bright splash' },
+    'creature-B': { label: 'Black creature arrives', size: 96, frames: 12, fps: 14, hook: 'a black creature enters', prompt: 'purple-black shadow tendrils and skull-smoke curling up out of a crack in the ground' },
+    'creature-R': { label: 'Red creature arrives', size: 96, frames: 12, fps: 14, hook: 'a red creature enters', prompt: 'a roaring column of orange flames and sparks bursting upward with a heat shimmer' },
+    'creature-G': { label: 'Green creature arrives', size: 96, frames: 12, fps: 14, hook: 'a green creature enters', prompt: 'roots and vines bursting out of the ground with flying leaves and a green shockwave' },
+    'creature-colorless': { label: 'Colorless creature arrives', size: 96, frames: 12, fps: 14, hook: 'a colorless creature (artifact creature) enters', prompt: 'grey metal gears and steel sparks assembling into a shining silver flash' },
+    'creature-multi': { label: 'Multicolor creature arrives', size: 96, frames: 12, fps: 14, hook: 'a creature of two or more colors enters', prompt: 'a prismatic rainbow vortex of intertwined coloured light beams exploding into a star burst with gold sparkles' },
+    'spell-instant': { label: 'Instant: lightning flash', size: 96, frames: 12, fps: 14, hook: 'an instant is cast', prompt: 'a fast jagged white-blue lightning flash with an arcane rune circle snapping in and out' },
+    'spell-sorcery': { label: 'Sorcery: ritual circle', size: 96, frames: 12, fps: 14, hook: 'a sorcery is cast', prompt: 'a large glowing arcane summoning circle with orbiting runes and rising purple-gold smoke' },
+    'spell-artifact': { label: 'Artifact: gear assembly', size: 96, frames: 12, fps: 14, hook: 'a non-creature artifact is cast', prompt: 'brass gears and cogs spinning into place with a metal clang flash and steam puffs' },
+    'spell-enchantment': { label: 'Enchantment: sparkling aura', size: 96, frames: 12, fps: 14, hook: 'an enchantment is cast', prompt: 'a shimmering swirl of soft pink and gold sparkles forming a floating aura ring with tiny stars' },
+    'spell-planeswalker': { label: 'Planeswalker: arrival portal', size: 128, frames: 12, fps: 14, hook: 'a planeswalker is cast', prompt: 'a swirling dimensional portal opening with colorful light and a spark of stars, a tall flash at the center' },
+    'spell-battle': { label: 'Battle: clashing swords', size: 96, frames: 12, fps: 14, hook: 'a battle is cast', prompt: 'two crossed swords clashing with a shower of sparks and a shockwave ring' }
 };
 // Ideas for later (not wired up): combat hit, a creature dies, life gain, draw a card, an upgrade applied, a counterspell, a pack opening, a win and a lose banner.
 const ASCENT_FX_IDEAS = {
     'fx-hit': { label: 'Combat hit', size: 64, frames: 6, fps: 14, prompt: 'a quick white impact flash with a slash mark and small sparks' },
-    'fx-die': { label: 'Creature dies', size: 96, frames: 8, fps: 12, prompt: 'a creature outline crumbling into grey dust and fading spirit wisps rising' },
-    'fx-heal': { label: 'Life gain', size: 64, frames: 8, fps: 12, prompt: 'rising green plus signs and soft white sparkles around a heart' },
+    'fx-die': { label: 'Creature dies', size: 96, frames: 12, fps: 14, prompt: 'a creature outline crumbling into grey dust and fading spirit wisps rising' },
+    'fx-heal': { label: 'Life gain', size: 64, frames: 12, fps: 14, prompt: 'rising green plus signs and soft white sparkles around a heart' },
     'fx-draw': { label: 'Draw a card', size: 64, frames: 6, fps: 14, prompt: 'a card sliding out of a deck with a small blue swoosh' },
-    'fx-counter': { label: 'Counterspell', size: 96, frames: 8, fps: 14, prompt: 'a blue ward sigil shattering into pieces with a magic shatter ring' },
-    'fx-upgrade': { label: 'Upgrade applied', size: 96, frames: 8, fps: 12, prompt: 'a golden anvil strike with rising blue Aether sparks and a bright flash' },
-    'fx-pack-open': { label: 'Pack opens', size: 128, frames: 10, fps: 12, prompt: 'a foil booster pack tearing open with a burst of gold light and confetti' },
+    'fx-counter': { label: 'Counterspell', size: 96, frames: 12, fps: 14, prompt: 'a blue ward sigil shattering into pieces with a magic shatter ring' },
+    'fx-upgrade': { label: 'Upgrade applied', size: 96, frames: 12, fps: 14, prompt: 'a golden anvil strike with rising blue Aether sparks and a bright flash' },
+    'fx-pack-open': { label: 'Pack opens', size: 128, frames: 12, fps: 14, prompt: 'a foil booster pack tearing open with a burst of gold light and confetti' },
     'fx-win': { label: 'Victory banner', size: 128, frames: 10, fps: 10, prompt: 'a golden victory laurel and shining sunburst with confetti' },
     'fx-lose': { label: 'Defeat banner', size: 128, frames: 10, fps: 10, prompt: 'a dark grey cloud with a single falling ash flake and a dimming light' }
 };
@@ -152,7 +152,7 @@ const ASCENT_ICONS = (() => {
     add('cur-cash', 'Currency', 'cash', 24, 'a green banknote with a coin');
     add('pack-play', 'Packs', 'Play Booster wrapper', 96, 'a vertical foil booster pack wrapper in teal and silver with a swirling galaxy emblem, crimped top and bottom, no text', 1);
     add('pack-collector', 'Packs', 'Collector Booster wrapper', 96, 'a vertical gold and black foil booster pack wrapper with a shining sunburst emblem, crimped top and bottom, no text', 1);
-    add('card-back', 'Cards', 'card back', 96, 'a trading card back in deep blue with a gold galaxy swirl border pattern, no text');
+    add('card-back', 'Cards', 'card back', 96, 'one upright portrait trading card back (5:7 shape, about 60 percent of the image width, centered, with empty transparent space around it) in deep blue with a gold galaxy swirl border pattern and rounded corners, no text');
     add('card-frame-common', 'Cards', 'card frame, common', 96, 'an empty trading card frame border in plain grey with a transparent middle and a transparent name bar');
     add('card-frame-rare', 'Cards', 'card frame, rare', 96, 'an empty trading card frame border in gold with a transparent middle');
     add('card-frame-mythic', 'Cards', 'card frame, mythic', 96, 'an empty trading card frame border in fiery orange with flame edges and a transparent middle');
@@ -177,5 +177,7 @@ const ASCENT_ICONS = (() => {
     add('life', 'Counters', 'life heart', 24, 'a red pixel heart with a white shine');
     add('mythic-flame', 'Rarity', 'mythic glow flames (loop)', 96, 'a loop of flickering orange flames around a transparent middle, to sit behind a mythic card', 6);
     add('foil-sheen', 'Rarity', 'foil sheen sweep', 96, 'a diagonal rainbow shimmer sweeping across a transparent card shape', 8);
+        // Trophy milestone badges (2026-10-21): one per ASCENT_TROPHY_WINS step, shown in an opponent's trophy list when the art exists
+    [[3, 'bronze', 'a small bronze medal on a short red ribbon'], [6, 'bronze', 'a bronze medal with a tiny star on a red ribbon'], [10, 'silver', 'a silver medal on a blue ribbon'], [15, 'silver', 'a silver medal with a laurel on a blue ribbon'], [20, 'gold', 'a gold medal on a purple ribbon'], [25, 'gold', 'a gold medal with a crown on a purple ribbon'], [30, 'platinum', 'a shining platinum shield badge with wings'], [40, 'platinum', 'a platinum shield badge with wings and a gem'], [50, 'diamond', 'a sparkling blue-white diamond crest with wings'], [75, 'legend', 'a glowing gold and violet legend crest with a flaming halo']].forEach(([n, tier, d]) => add('badge-' + n, 'Trophy badges', `${n} wins badge (${tier})`, 32, `${d}, a pixel rank badge, bold and readable, slightly glowing`));
     return out;
 })();
