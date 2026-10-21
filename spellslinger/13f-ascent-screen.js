@@ -100,7 +100,7 @@ function ascMatchupHTML(o) {
 async function ascPlay(oppId) {
     ASC.deck = Number($('ascDeckPick').value) || 0;
     const o = ASCENT_OPP[oppId];
-    showModal(`<h2>${esc(o.name)}</h2>${ascSpeechHTML(oppId, 'intro', Math.floor(Math.random() * 8))}
+    showModal(`<h2>${esc(o.name)}</h2>${ascSpeechHTML(oppId, 'intro', Math.floor(Math.random() * 8), { talk: true })}
         <div class="actions"><button class="btn primary" onclick="ascGo('${oppId}')">⚔️ Let's play</button><button class="btn" onclick="closeModal()">Not yet</button></div>`);
 }
 async function ascGo(oppId) {

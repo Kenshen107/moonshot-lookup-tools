@@ -39,10 +39,11 @@ function ascLine(id, kind, seed) {
     const arr = Array.isArray(list) ? list : [list];
     return arr[(seed === undefined ? Math.floor(Math.random() * arr.length) : seed % arr.length)];
 }
-function ascSpeechHTML(id, kind, seed) {
+// The portrait idles while a character is only being looked at (choosing who to face, tips); it talks (opts.talk) only in the Let's play prompt
+function ascSpeechHTML(id, kind, seed, opts = {}) {
     const c = ASCENT_CHAR[id];
     if (!c) return '';
-    return `<div class="asc-say">${ascPortraitHTML(id, { talk: true })}<div class="asc-bubble"><strong>${esc(c.name)}</strong> <span class="note">${esc(c.title)}</span><p>${esc(ascLine(id, kind, seed))}</p></div></div>`;
+    return `<div class="asc-say">${ascPortraitHTML(id, { talk: !!opts.talk })}<div class="asc-bubble"><strong>${esc(c.name)}</strong> <span class="note">${esc(c.title)}</span><p>${esc(ascLine(id, kind, seed))}</p></div></div>`;
 }
 
 // ---- Effects ----

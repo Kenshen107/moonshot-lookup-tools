@@ -1042,8 +1042,8 @@
         .asc-portrait.ph.boss { box-shadow: 0 0 12px -2px var(--gold); border-color: var(--gold); }
         .asc-portrait.ph.talk span { animation: asc-bob 0.5s ease-in-out infinite; }
         .asc-portrait.sprite { background-size: calc(var(--cols, 4) * 96px) 192px; background-repeat: no-repeat; background-position: 0 0; animation: asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) infinite; }
-        /* talks for 5 loops (about 3 seconds, the second row), then settles into the idle row for good */
-        .asc-portrait.sprite.talk { background-position-y: -96px; animation: asc-idle var(--tdur, 0.6s) steps(var(--cols, 4)) 5, asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) calc(var(--tdur, 0.6s) * 5) infinite, asc-rest 0.01s linear calc(var(--tdur, 0.6s) * 5) forwards; }
+        /* talks for 3 loops (about 3 seconds, the second row), then settles into the idle row for good */
+        .asc-portrait.sprite.talk { background-position-y: -96px; animation: asc-idle var(--tdur, 0.6s) steps(var(--cols, 4)) 3, asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) calc(var(--tdur, 0.6s) * 3) infinite, asc-rest 0.01s linear calc(var(--tdur, 0.6s) * 3) forwards; }
         @keyframes asc-rest { to { background-position-y: 0; } }
         @keyframes asc-idle { to { background-position-x: calc(var(--cols, 4) * -96px); } } }
         /* sheets made before the portrait framing (256 x 192, full body, 64 x 96 frames) still display until they are remade */
