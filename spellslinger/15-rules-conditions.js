@@ -304,13 +304,13 @@ async function optionalCost(P, e, src) {
         return yes;
     }
     const what = e.t === 'optPay' ? `pay ${['W', 'U', 'B', 'R', 'G', 'C'].map(c => `{${c}}`.repeat(e.cost[c])).join('')}${e.cost.generic ? `{${e.cost.generic}}` : ''}` : e.t === 'optLife' ? `pay ${e.n} life` : e.t === 'optSac' ? `sacrifice a${e.what === 'artifact' ? 'n' : ''} ${e.what}` : 'discard a card';
-    const can = e.t === 'optPay' ? !!planPayment(P, e.cost) : e.t === 'optLife' ? P.life > e.n : e.t === 'optSac' ? !!sacFodder(P, src, e.what) : P.hand.length > 0;
+    const can = e.t === 'optPay' ? !!planPayment(P, e.cost) : e.t === 'optLife' ? P.life > e.n : e.t === 'optSac' ? !!sacFodder(P, src, (e.another ? 'another ' : '') + e.what) : P.hand.length > 0;
     if (!can) return false;
     const yes = P.isAI ? true : await askYes(P, `${src.card.name}: ${what}?`, { card: src.card });
     if (!yes) return false;
     if (e.t === 'optPay') planPayment(P, e.cost).forEach(x => tapSource(P, x));
     if (e.t === 'optLife') P.life -= e.n;
-    if (e.t === 'optSac') { const f = await chooseSac(P, src, e.what, src.card.name); G.lastSacPow = Math.max(0, pow(f)); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); dieOrLeave(f, 'gy'); }
+    if (e.t === 'optSac') { const f = await chooseSac(P, src, (e.another ? 'another ' : '') + e.what, src.card.name); G.lastSacPow = Math.max(0, pow(f)); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); dieOrLeave(f, 'gy'); }
     if (e.t === 'discardSelf') { await applyEffect(P, e, null, src); return true; }
     log(`${P.name} ${you(P) ? 'choose' : 'chooses'} to ${what}.`);
     return true;
@@ -338,6 +338,7 @@ function pickScry(P, cards, surveil, src) {
 }
 // ---- Static abilities: lords and anthems ----
 function hasType(o, type) {
+    if (o.addedTypes && o.addedTypes.includes(type)) return true; // "becomes a Mutant in addition to its other types" (Jenova)
     if (Rx(o).kw.has('changeling') || typeRx(type).test(o.card.type)) return true;
     if (o.tempSub && o.tempSub.turn === G.turn && o.tempSub.sub === type) return true; // Nogi, Sarkhan: becomes a Dragon until end of turn
     if (G && /\bCreature\b/.test(o.card.type) && permsBy('lordSub', a => !!Rx(a).lordAddSub).some(a => a !== o && a.owner === o.owner && Rx(a).lordAddSub === type && !lostAbilities(a))) return true; // Graaz: other creatures are Juggernauts
@@ -545,6 +546,7 @@ function fire(ev, ctx = {}) {
     if (ev === 'landfall' && ctx.o && ctx.o.tapped && landsUntappedFor(G.players[ctx.o.owner])) ctx.o.tapped = false;
     if (ev === 'dies' && ctx.o && G.players[ctx.o.owner].hsRedirect && G.players[ctx.o.owner].hsRedirect.uid === ctx.o.uid && G.players[ctx.o.owner].hsRedirect.turn === G.turn) { const hsP = G.players[ctx.o.owner]; (G.trigQ = G.trigQ || []).push({ P: hsP, o: ctx.o, effects: [{ t: 'cmd', id: 'heroicSacrificeDies', target: 'creature', mine: true, optional: true, good: true }], raw: { counters: ctx.o.counters, ctr: { ...ctx.o.ctr } } }); hsP.hsRedirect = null; }
     if (ev === 'creatureDies' && ctx.o && (ctx.o.counters > 0 || Object.values(ctx.o.ctr || {}).some(v => v > 0) || allPerms().some(a => a.attachedTo === ctx.o.uid))) G.players[ctx.o.owner].modDied = G.turn; // a modified creature died
+    if (ev === 'creatureDies' && typeof superNovaWatch === 'function') superNovaWatch(ctx);
     if (ev === 'creatureDies') { G.diedTurn = G.turn; G.diedN = G.diedN && G.diedN.turn === G.turn ? { turn: G.turn, n: G.diedN.n + 1 } : { turn: G.turn, n: 1 }; }
     if (ev === 'cast' && ctx.o) {
         G.lastCast = ctx.o;
@@ -720,6 +722,7 @@ function sacCandidates(P, src, kind) {
     if (kind === 'creature with power 4 or greater') return P.bf.filter(x => isCreature(x) && pow(x) >= 4);
     if (kind === 'legendary creature') return P.bf.filter(x => isCreature(x) && /Legendary/.test(x.card.type));
     if (/^another /.test(kind)) return sacCandidates(P, src, kind.slice(8)).filter(x => x !== src);
+    if (/^nontoken creature:[WUBRG]$/.test(kind)) return P.bf.filter(x => isCreature(x) && !x.token && x !== src && (x.card.colors || []).includes(kind.slice(-1)));
     if (kind === 'nontoken creature') return P.bf.filter(x => isCreature(x) && !x.token && x !== src);
     if (/ or /.test(kind)) return [...new Set(kind.split(' or ').flatMap(k => sacCandidates(P, src, k)))];
     if (kind === 'token') return P.bf.filter(x => x.token && x !== src);
@@ -879,7 +882,7 @@ async function cycle(P, o) {
     if (Rx(o).cycling.x) { let mx = 0; while (mx < 30 && planPayment(P, Rx(o).cycling, mx + 1)) mx++; cx = P.isAI || AUTOPLAY ? mx : await askNumber(P, `Cycling ${o.card.name}: choose X`, 0, mx, mx, { card: o.card, ok: 'Cycle' }); if (cx === null) return false; planPayment(P, Rx(o).cycling, cx).forEach(s => tapSource(P, s)); }
     else planPayment(P, Rx(o).cycling).forEach(s => tapSource(P, s));
     pull(P.hand, o);
-    P.gy.push(o);
+    P.gy.push(o); o.discardTurn = G.turn; // cycling discards the card (Archfiend of Ifnir, Megrim)
     log(`${P.name} ${you(P) ? 'cycle' : 'cycles'} ${o.card.name}.`);
     if (Rx(o).cycleTrig) (G.trigQ = G.trigQ || []).push({ P, o, effects: cx !== undefined ? Rx(o).cycleTrig.map(e => ({ ...e, x: cx })) : Rx(o).cycleTrig });
     drawCards(P, 1);
@@ -1220,8 +1223,10 @@ function dieOrLeave(o, zone) {
     if (o.disturbed) { o.disturbed = false; if (zone === 'gy') { log(`${o.card.name} is exiled instead (disturb).`); zone = 'exile'; } }
     if (zone === 'gy' && o.exileOnDeath === G.turn) { log(`${o.card.name} is exiled instead.`); zone = 'exile'; }
     if (zone === 'gy' && onBf(o.uid) && (o.ctr.finality || o.paragonExile)) { if (o.paragonExile) { o.paragonExile = false; gainLifeFor(G.players[o.owner], 2); } log(`${o.card.name} is exiled instead.`); zone = 'exile'; } // finality counter (Excava), Serra Paragon
+    if (zone === 'gy' && onBf(o.uid) && isCreature(o)) { const g = allPerms().find(a => Rx(a).exileFoeDies && a.owner !== o.owner && !lostAbilities(a)); if (g) { log(`${o.card.name} is exiled instead of dying (${g.card.name}).`); zone = 'exile'; } }
     if (zone === 'gy' && !o.token && onBf(o.uid) && isCreature(o)) { const k = allPerms().find(a => Rx(a).kalitas && a.owner !== o.owner && !lostAbilities(a)); if (k) { log(`${o.card.name} is exiled instead of dying (${k.card.name}).`); zone = 'exile'; (G.trigQ = G.trigQ || []).push({ P: G.players[k.owner], o: k, effects: [{ t: 'token', n: 1, p: 2, q: 2, name: 'black Zombie', kw: [] }] }); } } // Kalitas, Traitor of Ghet
     const dying = zone === 'gy' && onBf(o.uid) && isCreature(o);
+    if (dying && o.galufTurn === G.turn) (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: [{ t: 'cmd', id: 'galufCounters', target: 'creature', optional: true, good: true, amount: Math.max(0, pow(o)) }] }); // Galuf's Final Act
     if (dying) { fire('dies', { o }); fire('creatureDies', { o }); }
     if (dying && !o.token) { const X = G.players[o.owner], k = X.thrinaxTurn === G.turn ? X.thrinaxN || 0 : 0, p = Math.max(0, pow(o)); if (k && p) (G.trigQ = G.trigQ || []).push({ P: X, o, effects: [{ t: 'token', n: p * k, p: 1, q: 1, name: 'green saproling', kw: [] }] }); }
     if (dying && o.blitzed) (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: [{ t: 'draw', n: 1 }] }); // blitz (702.152)

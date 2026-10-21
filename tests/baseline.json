@@ -6,15 +6,15 @@
     ]
   },
   "coverage": {
-    "measured": "2026-10-20",
+    "measured": "2026-10-21",
     "total": 34142,
-    "full": 14606,
-    "partial": 15375,
-    "none": 4161,
+    "full": 14685,
+    "partial": 15310,
+    "none": 4147,
     "top1000": {
-      "full": 863,
+      "full": 864,
       "partial": 100,
-      "none": 37
+      "none": 36
     }
   }
 }
