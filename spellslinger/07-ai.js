@@ -559,7 +559,7 @@ function aiChooseAttackersFree(P) {
     // Lethal on board? Assume they block our biggest blockable attackers.
     const unblockable = cands.filter(a => !canBeBlocked(a));
     const blockable = cands.filter(a => canBeBlocked(a)).sort((a, b) => pow(b) - pow(a));
-    const through = unblockable.reduce((s, a) => s + pow(a), 0) + blockable.slice(blockers.length).reduce((s, a) => s + pow(a), 0);
+    const through = unblockable.reduce((s, a) => s + dmgVs(a, D), 0) + blockable.slice(blockers.length).reduce((s, a) => s + dmgVs(a, D), 0);
     if (through >= D.life && !(P.aiLevel === 'easy' && Math.random() < 0.3)) return cands;
     if (P.aiLevel === 'easy') return cands.filter(a => !canBeBlocked(a) || Math.random() < 0.5);
     return cands.filter(a => {
@@ -594,7 +594,7 @@ function combatKills(a, b) {
 }
 function aiChooseBlocks(D, A) {
     // Life each attacker would take if it isn't blocked: double strike hits twice, infect gives poison instead of damage
-    const dmgOf = a => has(a, 'infect') ? 0 : Math.max(0, pow(a)) * (has(a, 'double strike') ? 2 : 1);
+    const dmgOf = a => dmgVs(a, D); // life damage, plus poison counted as the share of life it takes away (07b-playstyles.js)
     const atks = G.attackers.map(onBf).filter(Boolean).sort((a, b) => dmgOf(b) - dmgOf(a));
     const free = D.bf.filter(o => isCreature(o) && !o.tapped);
     const blocks = {};

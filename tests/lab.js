@@ -138,6 +138,12 @@ function report(all, pageErrors, secs) {
     if (PLAYERS > 2) console.log(`Finished ${done.length} pods: wins by seat ${bySeat.slice(0, PLAYERS).map((n, i) => `${'ABCD'[i]} ${n} (${(100 * n / Math.max(1, done.length)).toFixed(1)}%)`).join(', ')}, draws ${draws}`);
     else console.log(`Finished ${done.length}: seat A won ${w0} (${(100 * w0 / Math.max(1, done.length)).toFixed(1)}%), seat B won ${w1}, draws ${draws}`);
     console.log(`Turns: median ${turns[turns.length >> 1]}, p90 ${turns[Math.floor(turns.length * 0.9)]}, max ${turns[turns.length - 1]}`);
+    if (done.some(r => r.themes && r.themes.length)) {
+        // Wins per theme (deck themes or the text-based political decks): fair share is 1 / players
+        const tally = {};
+        done.forEach(r => (r.themes || []).forEach((k, i) => { const t = tally[k] = tally[k] || { games: 0, wins: 0 }; t.games++; if (r.winner === i) t.wins++; }));
+        console.log('Wins by theme (fair share ' + (100 / PLAYERS).toFixed(0) + '%): ' + Object.entries(tally).sort((a, b) => b[1].wins / b[1].games - a[1].wins / a[1].games).map(([s, t]) => `${s} ${(100 * t.wins / t.games).toFixed(0)}% (${t.wins}/${t.games})`).join(', '));
+    }
     if (done.some(r => r.styles && r.styles[0])) {
         // Wins per playstyle: a style appears in a game when a seat plays it; the fair share is 1 / players
         const tally = {};

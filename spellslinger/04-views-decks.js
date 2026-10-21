@@ -36,7 +36,7 @@ function ensureProfile() {
 
 // How much of Magic the game can run: every paper card (one per name, from Scryfall) through rulesFor.
 // Measured after each rules round with the coverage test; update these numbers when it's rerun.
-const CARD_COVERAGE = { measured: '2026-10-19', total: 34142, full: 14558, partial: 15407, none: 4177, top1000: { full: 861, partial: 100, none: 39 } };
+const CARD_COVERAGE = { measured: '2026-10-20', total: 34142, full: 14606, partial: 15375, none: 4161, top1000: { full: 863, partial: 100, none: 37 } };
 function coverageHTML() {
     const c = CARD_COVERAGE, pct = n => Math.round(100 * n / c.total), play = c.full + c.partial;
     const seg = (n, cls, label) => `<span class="cov-seg ${cls}" style="width:${(100 * n / c.total).toFixed(2)}%" title="${label}: ${n.toLocaleString()} cards (${pct(n)}%)"></span>`;
@@ -1576,7 +1576,7 @@ async function renderOpponents() {
 }
 function randomOppHTML(fmt) {
     const on = chosenOpponent && chosenOpponent.type === 'random' && chosenOpponent.fmt === fmt;
-    return `<h3 class="opp-h">🎲 Surprise me</h3><div class="opp-grid" style="margin-bottom:12px;"><button type="button" class="opp" aria-pressed="${!!on}" onclick="chooseOpponent({ type: 'random', fmt: '${fmt}', name: 'Random playable deck' })"><strong>🎲 A random playable ${fmt === 'commander' ? 'Commander' : 'Modern'} deck</strong><small>${fmt === 'commander' ? 'A random commander and a shuffle of the popular cards in its colors' : 'Two random colors and popular cards in them'}. Every card is fully automated; a new deck each game.</small></button></div>`;
+    return `<h3 class="opp-h">🎲 Surprise me</h3><div class="opp-grid" style="margin-bottom:12px;"><button type="button" class="opp" aria-pressed="${!!on}" onclick="chooseOpponent({ type: 'random', fmt: '${fmt}', name: 'Random playable deck' })"><strong>🎲 A random playable ${fmt === 'commander' ? 'Commander' : 'Modern'} deck</strong><small>${fmt === 'commander' ? 'A random commander and a shuffle of the popular cards in its colors' : 'Two random colors and popular cards in them'}. Every card is fully automated; a new deck each game.</small></button></div>${fmt === 'commander' ? randomThemeSelectHTML() : ''}`;
 }
 function verifiedOppHTML() {
     return `<h3 class="opp-h">✅ Fully working decks</h3><p class="note" style="margin-bottom:8px;">Every card in these decks is automated and was checked one by one.</p>${verifiedDecksHTML('chooseVerifiedOpp', chosenOpponent && chosenOpponent.type === 'verified' ? chosenOpponent.key : null)}`;

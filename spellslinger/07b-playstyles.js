@@ -122,10 +122,17 @@ function styleAttackers(P, base, cands, D) {
     return base.filter(a => killers(a).length === 0 || !blockers.some(b => canBlock(b, a)));
 }
 // Threat on the table: what a player could do to the rest of us next turn, and how close they are to winning
+// Poison (2026-10-20): infect and toxic creatures threaten a player's poison total, not their life. `dmgVs` counts a poison counter as the share of the
+// target's life it takes away (1 poison = life / poison left), so every "is it lethal" check in the AI sees poison attackers as the threat they are.
+const poisonOf = a => (has(a, 'infect') ? Math.max(0, pow(a)) * (has(a, 'double strike') ? 2 : 1) : 0) + (Rx(a).toxic || 0);
+function dmgVs(a, D) {
+    const life = has(a, 'infect') ? 0 : Math.max(0, pow(a)) * (has(a, 'double strike') ? 2 : 1), ps = poisonOf(a);
+    return life + (ps ? ps * (D.life / Math.max(1, 10 - (D.poison || 0))) : 0);
+}
 function podThreat(F) {
     const creatures = F.bf.filter(isCreature);
     return creatures.reduce((a, o) => a + Math.max(0, pow(o)), 0) + creatures.length * 0.5 + F.bf.filter(o => !isCreature(o)).length * 0.25
-        + (F.bf.some(o => o.isCommander) ? 2 : 0) + F.hand.length * 0.3 + Math.max(0, F.life - 40) * 0.1 + drainThreat(F);
+        + (F.bf.some(o => o.isCommander) ? 2 : 0) + F.hand.length * 0.3 + Math.max(0, F.life - 40) * 0.1 + drainThreat(F) + creatures.reduce((a, o) => a + poisonOf(o), 0) * 0.5;
 }
 // Permanents that drain every opponent bypass the board and any peace deals, so the table should see them as a threat sooner
 const DRAIN_RE = /each opponent loses|deals? \d+ damage to each opponent|each opponent (sacrifices|discards)|whenever an opponent (loses|draws|casts)/i;
@@ -138,16 +145,17 @@ function noteGrudge(target, src, n) {
     if (!src || src.owner === undefined || !target || target.life === undefined || src.owner === target.i || !(n > 0)) return;
     target.grudge = target.grudge || {};
     target.grudge[src.owner] = (target.grudge[src.owner] || 0) + n;
-    if (typeof bountyProgress === 'function') bountyProgress(target, src, n);
 }
 // Which opponent to attack in a pod. Lethal on someone first; then by the style's habit.
 function podPickDefender(P) {
     let fs = foes(P);
     const st = styleOf(P);
-    const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
+    const attackers = P.bf.filter(canAttackWith);
+    const power = attackers.reduce((a, o) => a + Math.max(0, pow(o)), 0);
     const open = F => !F.bf.some(o => isCreature(o) && !o.tapped);
+    const dmgTo = F => attackers.reduce((a, o) => a + dmgVs(o, F), 0); // poison counts as the life it takes away
     // Lethal first - but a deal is a deal, unless this bot plays Aggro
-    const lethal = fs.filter(F => F.life <= power && open(F) && (!hasPeace(P.i, F.i) || P.aiStyle === 'aggro')).sort((a, b) => a.life - b.life)[0];
+    const lethal = fs.filter(F => F.life <= dmgTo(F) && open(F) && (!hasPeace(P.i, F.i) || P.aiStyle === 'aggro' || (typeof charBreaksPeace === 'function' && charBreaksPeace(P, F, power, open(F))))).sort((a, b) => a.life - b.life)[0];
     if (lethal) return lethal;
     const grudge = F => (P.grudge && P.grudge[F.i]) || 0;
     // Politics: when one player is far ahead the whole table goes after them (a revenge-minded bot still hits whoever hurt it most; an aggro bot finishes a nearly dead player first)
@@ -156,6 +164,10 @@ function podPickDefender(P) {
     if (pt && !hasPeace(P.i, pt.i)) return pt;
     const free = fs.filter(F => !hasPeace(P.i, F.i));
     if (free.length && free.length < fs.length) fs = free;
+    // Kingmaking (2026-10-20): a bot that can't win any more decides who to hit by how it feels about them, not by who is the biggest threat
+    if (typeof isDoomed === 'function' && isDoomed(P) && fs.length) return doomedTarget(P, fs);
+    // Poison: finish whoever already carries the most counters
+    if (attackers.some(o => isCreature(o) && poisonOf(o) > 0)) { const t = fs.slice().sort((a, b) => (b.poison || 0) - (a.poison || 0) || a.life - b.life || a.i - b.i)[0]; if (t && (t.poison || 0) >= 2) return t; }
     const arch = G.arch != null ? G.players[G.arch] : null;
     if (arch && !arch.out && arch !== P && fs.includes(arch) && !tn(P, 'ignoreArch')) {
         const wounded = fs.filter(F => F !== arch && F.life <= 10).sort((a, b) => a.life - b.life)[0];
@@ -179,6 +191,7 @@ const AI_TUNE = { holdShare: 1, stallTurn: 14, stallRatio: 1.4, targetMode: 0, i
 const tn = (P, k) => (P && P.tune && P.tune[k] !== undefined ? P.tune[k] : AI_TUNE[k]);
 function aiHoldBack(P, chosen, D) {
     if (G.players.length <= 2 || !chosen.length || P.aiLevel === 'easy') return chosen;
+    if (typeof isDoomed === 'function' && isDoomed(P)) return chosen; // nothing left to protect: all in
     if (chosen.reduce((s, a) => s + Math.max(0, pow(a)), 0) >= D.life && !D.bf.some(o => isCreature(o) && !o.tapped)) return chosen; // lethal
     const st = styleOf(P), factor = (st ? st.hold : 0.75) * (G.arch === P.i ? 0.8 : 1); // the archenemy keeps more at home
     const theirs = foes(P).flatMap(F => F.bf.filter(isCreature)).map(o => Math.max(0, pow(o))).sort((a, b) => b - a);

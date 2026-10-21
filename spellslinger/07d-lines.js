@@ -213,11 +213,6 @@ const TALK = {
     askThreat: { _: ["I'd say {card}.", "{card} worries me the most.", "Honestly? {card}."], marcus: ["{card}. Obviously."], sam: ["{card}! Get {card}!"] },
     gossip: { _: ["Did you see that? {foe} broke their word to {card}.", "{foe} just broke a deal with {card}. Remember that.", "I wouldn't trust {foe} after that."], marcus: ["{foe} breaks deals. Noted for later."], greg: ["That wasn't nice, {foe}."] },
     // ---- Complex deals ----
-    bountyOffer: {
-        _: ["{foe}, anyone who knocks out {card} gets a card from me.", "Bounty on {card}. A card for whoever takes them down.", "Kill {card}, {foe}, and I'll make it worth your while."],
-        arthur: ["I'll pay for {card}'s head. Handsomely."], brenda: ["A card for the one who finishes {card}. Cheap at the price."], luke: ["Bounty on {card}! Collect from me, I swear."]
-    },
-    bountyPaid: { _: ["A deal's a deal, {foe}. Here's your card.", "Bounty paid, {foe}. Nice work."], arthur: ["Paid in full, {foe}."], greg: ["There you go, {foe}. Thanks."] },
     allianceOffer: {
         _: ["{foe}, let's take {card} down together. Three turns.", "Alliance against {card}, {foe}? Three turns, no attacks between us.", "You and me versus {card}, {foe}. Deal?"],
         marcus: ["{foe}. {card} is the problem. We both benefit if it goes away."], sam: ["{foe}! You and me! Get {card}!"]

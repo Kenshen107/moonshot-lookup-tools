@@ -193,7 +193,7 @@ const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, startLife: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
         landsPlayed: 0, tax: 0, cmdDmg: 0, cmdBy: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
-        aiLevel: /^random/.test(deck.aiLevel || '') ? 'easy' : /^r:/.test(deck.aiLevel || '') ? 'normal' : deck.aiLevel || 'normal', aiRand: /^random/.test(deck.aiLevel || '') ? { cast: 1, atk: 1, blk: 1, def: 1 } : /^r:/.test(deck.aiLevel || '') ? Object.fromEntries(deck.aiLevel.slice(2).split('+').map(k => [k, 1])) : null, aiStyle: deck.aiStyle || null, poison: 0, energy: 0, exp: 0 };
+        aiLevel: /^random/.test(deck.aiLevel || '') ? 'easy' : /^r:/.test(deck.aiLevel || '') ? 'normal' : deck.aiLevel || 'normal', aiRand: /^random/.test(deck.aiLevel || '') ? { cast: 1, atk: 1, blk: 1, def: 1 } : /^r:/.test(deck.aiLevel || '') ? Object.fromEntries(deck.aiLevel.slice(2).split('+').map(k => [k, 1])) : null, aiStyle: deck.aiStyle || null, theme: deck.theme ? deck.theme.key : null, poison: 0, energy: 0, exp: 0 };
     { let bfArr = watchBf(P.bf); Object.defineProperty(P, 'bf', { enumerable: true, configurable: true, get() { return bfArr; }, set(v) { bfArr = watchBf(v); } }); } // see allPerms
     { let lifeNow = P.life; Object.defineProperty(P, 'life', { enumerable: true, configurable: true, get() { return lifeNow; }, set(v) { if (v > lifeNow && typeof noLifeGainActive === 'function' && noLifeGainActive()) return; lifeNow = v; } }); } // "Players can't gain life" (Rampaging Ferocidon)
     trackGraveyard(P);
@@ -234,7 +234,7 @@ async function startMatch(again) {
             oppDeck = await buildThemeDeck(theme);
             oppDeck.source = 'Scryfall theme deck';
         } else if (chosenOpponent.type === 'random') {
-            oppDeck = chosenOpponent.fmt === 'commander' ? await buildRandomCommanderDeck() : await buildRandomModernDeck();
+            oppDeck = chosenOpponent.fmt === 'commander' ? await buildRandomCommanderDeck(null, undefined, randomThemeChoice || undefined) : await buildRandomModernDeck();
         } else if (chosenOpponent.type === 'precon') {
             const pc = (await loadPreconList()).find(x => x.file === chosenOpponent.key);
             oppDeck = await preconForAI(await loadPreconDeck(pc));
@@ -658,7 +658,6 @@ function sba() {
 // 800.4: a player who has lost leaves: their cards go away, what they were using of other players' goes back, their spells leave the stack
 function eliminate(P, reason) {
     P.out = true;
-    if (typeof bountyOnOut === 'function') bountyOnOut(P);
     if (typeof banterOut === 'function') banterOut(P, reason);
     if (typeof pol === 'function') pol().outAt.push(G.turn);
     log(`${P.name} ${you(P) ? 'lose' : 'loses'} the game and leaves the pod: ${reason}`);
@@ -688,6 +687,7 @@ function manaOf(o) {
         const X1 = G.players[o.owner];
         if (/\bBasic\b/.test(o.card.type) && X1.bf.some(a => Rx(a).tripleBasic && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 3 };
         if (G.monarch === o.owner && X1.bf.some(a => Rx(a).monarchMana && !lostAbilities(a))) m = { ...m, n: (m.n || 1) + 1, colors: [...new Set([...(m.colors || []), ...COLORS])] };
+        if (allPerms().some(a => Rx(a).landDoubleAll && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 2 }; // Mana Flare, Heartbeat of Spring: every land adds one more of the same type
     }
     if (m && m.identity) { const X0 = G.players[o.owner]; if ([...X0.command, ...X0.bf].some(x => x.isCommander && x.owner === o.owner)) { const id = cmdrIdentity(X0).filter(c => COLORS.includes(c)); return id.length ? { ...m, colors: id } : null; } } // Command Tower, Path of Ancestry: the commander's color identity
     if (o.ctr && o.ctr.flood > 0 && /\bLand\b/.test(o.card.type)) return { colors: ['U'], n: 1 }; // an Island while it has a flood counter
@@ -1091,6 +1091,20 @@ function tapForMana(uid, color) {
     if (pay && poolCovers(P, pay.cost, pay.extra, pay.opts)) { pay.done(true); return; }
     renderGame();
 }
+// Tap every untapped land that makes one color and float the mana (owner's request, 2026-10-20). Lands with a choice of colors are left for you.
+function tapAllLands() {
+    if (!G || G.over) return;
+    const P = me();
+    if (!P || P.isAI) return;
+    if (G.mode && G.mode.type === 'pay') { toast('Finish paying first.'); return; }
+    const lands = manaSources(P).filter(o => /\bLand\b/.test(o.card.type) && !isCreature(o));
+    const single = lands.filter(o => { const m = manaOf(o), c = landColorsOf(o); return m.fixed || c.length === 1; });
+    const skipped = lands.length - single.length;
+    if (!single.length) { toast(lands.length ? 'Those lands make a choice of colors: tap them yourself.' : 'No untapped lands.'); return; }
+    single.forEach(o => tapForMana(o.uid, landColorsOf(o)[0]));
+    if (skipped) toast(`${skipped} land${skipped === 1 ? '' : 's'} with a choice of colors left untapped.`);
+    renderGame();
+}
 function pickManaColor(o, cols) {
     const NAMES = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', C: 'Colorless' };
     const pay = G.mode && G.mode.type === 'pay' ? G.mode : null;
@@ -1156,7 +1170,7 @@ function canCastNow(P, o) {
     }
     return G.active === P.i && MAIN.includes(G.phase);
 }
-function landLimit(P) { if (P.skip && P.skip.turn === G.turn && P.skip.what === 'main') return 0; return 1 + P.bf.reduce((a, x) => a + (Rx(x).extraLand || 0), 0) + (P.extraLandTurn === G.turn ? P.extraLandN || 1 : 0); }
+function landLimit(P) { if (P.skip && P.skip.turn === G.turn && P.skip.what === 'main') return 0; return 1 + P.bf.reduce((a, x) => a + (Rx(x).extraLand || 0), 0) + allPerms().reduce((a, x) => a + (Rx(x).extraLandAll || 0), 0) + (P.extraLandTurn === G.turn ? P.extraLandN || 1 : 0); }
 function canPlayLand(P, o) { return Rx(o).kind === 'land' && G.active === P.i && MAIN.includes(G.phase) && P.landsPlayed < landLimit(P) && (P.hand.includes(o) || (P.exile.includes(o) && o.playUntil >= G.turn) || extraLandZones(P).includes(o)) && !G.over; }
 // Crucible of Worlds (lands from your graveyard), Courser-style (lands from the top of your library)
 function extraLandZones(P) {
@@ -4674,10 +4688,10 @@ function endGame(winner, reason) {
     const talk = !AUTOPLAY ? banterEnd(winner) : null; // style points, salt and cool report (07d-banter.js)
     if (!AUTOPLAY) {
         if (talk && talk.bonus) profile.coins += talk.bonus;
-        if (G.campaign || G.draftRound !== undefined) { if (won) profile.wins++; else profile.losses++; }
+        if (G.campaign || G.draftRound !== undefined) { if (won) profile.wins++; else if (winner !== null) profile.losses++; } // a draw is neither
         else {
             if (won) { reward = G.format === 'commander' ? REWARDS.winCommander : REWARDS.win; profile.wins++; }
-            else { reward = REWARDS.loss; profile.losses++; }
+            else { reward = REWARDS.loss; if (winner !== null) profile.losses++; }
             profile.coins += reward;
         }
         saveProfile();

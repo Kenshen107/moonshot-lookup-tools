@@ -80,6 +80,10 @@ async function banterStart() {
         if (!r) return;
         if (r.grudge >= 1) say(P, 'rival', 'angry', { foe: 'you' }, null);
         else if (r.respect >= 1) say(P, 'friendlyRival', 'cheerful', { foe: 'you' }, null);
+        // Good memories carry over too (2026-10-20): a bot you dealt fairly with starts the game trusting you a little
+        const keep = Math.max(0, Math.min(2, (r.trust || 0) * 0.5 + (r.respect || 0) * 0.25));
+        if (keep > 0) { P.trust = P.trust || {}; P.trust[human.i] = (P.trust[human.i] || 0) + keep; log(`📓 ${who(P)} remembers you from before: ${r.grudge >= 1 ? 'a rival' : 'a fair player'}.`); }
+        else if (r.grudge >= 1) log(`📓 ${who(P)} remembers you from before: a rival.`);
         if (r.grudge >= 1) { P.salt = Math.min(3, r.grudge); P.grudge = P.grudge || {}; P.grudge[human.i] = (P.grudge[human.i] || 0) + Math.min(4, r.grudge * 2); }
     });
 }
@@ -218,6 +222,7 @@ function banterEnd(winner) {
             if (!P.char) return;
             const r = profile.rivals[P.char.key] = profile.rivals[P.char.key] || { grudge: 0, respect: 0, games: 0 };
             r.games++;
+            r.trust = Math.max(-3, Math.min(3, Math.round((r.trust || 0) * 0.5 + ((P.trust && P.trust[human.i]) || 0)))); // how this bot felt about you at the end, kept between games
             const hurt = (P.salt || 0) >= SALT_TIERS[2] || ((P.grudge && P.grudge[human.i]) || 0) >= 8;
             if (hurt) r.grudge = Math.min(5, r.grudge + 1); else r.grudge = Math.max(0, r.grudge - 1);
             if (coolN >= 2 && !hurt) r.respect = Math.min(5, r.respect + 1);

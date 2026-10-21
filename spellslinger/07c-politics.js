@@ -146,7 +146,7 @@ const hasPeace = (i, j) => !!dealBetween(i, j, 'peace');
 const hasSpare = (i, j) => !!dealBetween(i, j, 'spare');
 // The third player a bot has promised to attack with a pact
 function pactTarget(P) {
-    const d = (G.deals || []).find(x => !x.over && (x.type === 'pact' ? (x.a === P.i || x.b === P.i) : x.type === 'bounty' && x.b === P.i) && x.x !== P.i && G.players[x.x] && !G.players[x.x].out);
+    const d = (G.deals || []).find(x => !x.over && (x.type === 'pact' && (x.a === P.i || x.b === P.i)) && x.x !== P.i && G.players[x.x] && !G.players[x.x].out);
     return d ? G.players[d.x] : null;
 }
 const nm = P => (you(P) ? 'you' : P.name.split(',')[0]);
@@ -184,14 +184,14 @@ function dealScore(bot, from, type, x) {
     return { score: s, parts, reason };
 }
 
-// opts: { len: how many of the maker's turns it lasts (default 1), extra: more fields on the deal (bounty progress, alliance flag) }
+// opts: { len: how many of the maker's turns it lasts (default 1), extra: more fields on the deal (the alliance flag) }
 function makeDeal(a, b, type, x, opts = {}) {
     const d = { type, a: a.i, b: b.i, x: x === undefined ? null : x, owner: a.i, turn: G.turn, over: false, left: opts.len || 1, ...(opts.extra || {}) };
     (G.deals = G.deals || []).push(d);
     dealStats().made++;
     { const b = dealStats().by = dealStats().by || {}; b[type] = (b[type] || 0) + 1; }
     const until = d.left > 1 ? `for ${d.left} of ${nm(a)}${you(a) ? 'r' : "'s"} turns` : `until ${nm(a)}${you(a) ? 'r' : "'s"} next turn`;
-    log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make a ${d.alliance ? 'alliance ' : ''}${DEAL_TYPES[type].name.toLowerCase()} deal${['pact', 'bounty'].includes(type) ? ` against ${G.players[x].name.split(',')[0]}` : ''} (${until}).`);
+    log(`🤝 ${a.name.split(',')[0]} and ${b.name.split(',')[0]} make a ${d.alliance ? 'alliance ' : ''}${DEAL_TYPES[type].name.toLowerCase()} deal${type === 'pact' ? ` against ${G.players[x].name.split(',')[0]}` : ''} (${until}).`);
     return d;
 }
 // `from` proposes to `to`. A bot answers at once; the result is { ok, reason }.
@@ -295,8 +295,10 @@ function dealDialog(step, to, type) {
         ${active ? `<p><b>Active deals</b></p><ul>${active}</ul>` : ''}
         ${bots.map(B => `<div class="panel" style="margin:8px 0;"><div class="row"><b>${(MOODS[botMood(B).mood] || MOODS.calm).emoji} ${esc(nm(B))}</b> <span class="note">${esc(styleOf(B) ? styleOf(B).name : '')} · feeling ${esc((MOODS[botMood(B).mood] || MOODS.calm).name)}</span></div>
             <div class="row" style="flex-wrap:wrap; gap:6px; margin-top:6px;">${['peace', 'spare'].map(t => `<button class="btn small" title="${esc(DEAL_TYPES[t].desc)}" onclick="dealAsk(${B.i}, '${t}')">${DEAL_TYPES[t].emoji} ${DEAL_TYPES[t].name}</button>`).join('')}
-            <button class="btn small" title="${esc(DEAL_TYPES.pact.desc)}" onclick="dealDialog('target', ${B.i})">${DEAL_TYPES.pact.emoji} ${DEAL_TYPES.pact.name}…</button>${typeof moreDealsHTML === 'function' ? moreDealsHTML(B) : ''}</div></div>`).join('')}
-        <div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
+            <button class="btn small" title="${esc(DEAL_TYPES.pact.desc)}" onclick="dealDialog('target', ${B.i})">${DEAL_TYPES.pact.emoji} ${DEAL_TYPES.pact.name}…</button>${typeof moreDealsHTML === 'function' ? moreDealsHTML(B) : ''}</div>
+            ${typeof emoteButtonsHTML === 'function' ? `<div class="row" style="flex-wrap:wrap; gap:6px; margin-top:6px;">${emoteButtonsHTML(B)}</div>` : ''}</div>`).join('')}
+        ${typeof tableDealsHTML === 'function' ? tableDealsHTML() : ''}
+        <div class="row" style="justify-content:center; gap:8px; margin-top:10px;">${typeof drawButtonHTML === 'function' ? drawButtonHTML() : ''}<button class="btn" onclick="closeModal()">Close</button></div>`);
 }
 function dealAsk(i, type, x) {
     const r = proposeDeal(me(), G.players[i], type, x);

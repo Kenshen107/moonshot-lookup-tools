@@ -16681,9 +16681,18 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const neutral = s < 0.18 || l < 0.1 || l > 0.85;
             return neutral ? [1, 1 - l, 0] : [0, h >= 338 ? h - 360 : h, l];
         }
+        // Owner's wall order (2026-10-21): Power goes directly in front of Might, and Wraith directly in front of Justice. The swatch colors stay as they are;
+        // a pinned sleeve takes the sort position of the sleeve it sits in front of, a hair earlier.
+        const SLEEVE_PIN = { 'dual:Power': 'dual:Might', 'dual:Wraith': 'dual:Justice' };
+        function sleeveKey(sl) {
+            const target = SLEEVE_PIN[sl.id] && DS_SLEEVES.find(x => x.id === SLEEVE_PIN[sl.id]);
+            if (target) { const k = sleeveSortKey(target.hex); return [k[0], k[1], k[2] - 1e-6, 0]; }
+            const k = sleeveSortKey(sl.hex);
+            return [k[0], k[1], k[2], 1];
+        }
         function sleeveCompare(a, b) {
-            const x = sleeveSortKey(a.hex), y = sleeveSortKey(b.hex);
-            return x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || a.name.localeCompare(b.name);
+            const x = sleeveKey(a), y = sleeveKey(b);
+            return x[0] - y[0] || x[1] - y[1] || x[2] - y[2] || x[3] - y[3] || a.name.localeCompare(b.name);
         }
         function sleeveSwatchStyle(sl) {
             return sl.hex2 ? `background:linear-gradient(135deg, ${sl.hex} 0 58%, ${sl.hex2} 58% 100%)` : `background:${sl.hex}`;
