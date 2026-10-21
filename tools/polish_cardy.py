@@ -110,6 +110,39 @@ def line(fr, p, q, color):
                 fr[y + oy, x + ox] = color
 
 
+def fill_enclosed(fr):
+    # clear pixels that cannot reach the frame's edge through other clear pixels are holes in the figure
+    a = fr[..., 3] > 0
+    h, w = a.shape
+    out = np.zeros((h, w), dtype=bool)
+    stack = [(y, x) for y in range(h) for x in (0, w - 1) if not a[y, x]] + [(y, x) for x in range(w) for y in (0, h - 1) if not a[y, x]]
+    for y, x in stack:
+        out[y, x] = True
+    while stack:
+        y, x = stack.pop()
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            ny, nx = y + dy, x + dx
+            if 0 <= ny < h and 0 <= nx < w and not a[ny, nx] and not out[ny, nx]:
+                out[ny, nx] = True
+                stack.append((ny, nx))
+    holes = (~a) & (~out)
+    n = int(holes.sum())
+    todo = holes.copy()
+    for _ in range(12):
+        if not todo.any():
+            break
+        got = []
+        for y, x in zip(*np.nonzero(todo)):
+            near = [fr[y + dy, x + dx] for dy, dx in NB if 0 <= y + dy < h and 0 <= x + dx < w and fr[y + dy, x + dx, 3] > 0]
+            if near:
+                got.append((y, x, np.mean(near, axis=0).astype(np.uint8)))
+        for y, x, c in got:
+            fr[y, x] = c
+            fr[y, x, 3] = 255
+            todo[y, x] = False
+    return n
+
+
 def tidy(fr, row):
     fr, lonely, holes = majority(fr)
     removed = joined = 0
@@ -141,6 +174,7 @@ def tidy(fr, row):
                     dark = np.median(np.array(darks), axis=0).astype(np.uint8)
                 line(fr, best[1], best[2], dark)
                 joined += 1
+    holes += fill_enclosed(fr)
     return fr, lonely, holes, removed, joined
 
 
