@@ -8712,8 +8712,8 @@
    "out": "art/site/frame-panel-default.png",
    "kind": "strip",
    "frame": [
-    48,
-    48
+    64,
+    64
    ],
    "frames": 1,
    "seed": 660953,
@@ -8721,9 +8721,9 @@
     {
      "key": "gen",
      "style": "rd_plus__ui_element",
-     "width": 48,
-     "height": 48,
-     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, plain steel with a teal inner edge and a small gem in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "width": 64,
+     "height": 64,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, plain steel with a teal inner edge and a small gem in each corner. Symmetrical, a thin 16 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 16 pixel corners, no text",
      "remove_bg": true
     }
    ]
@@ -8735,8 +8735,8 @@
    "out": "art/site/frame-panel-halloween.png",
    "kind": "strip",
    "frame": [
-    48,
-    48
+    64,
+    64
    ],
    "frames": 1,
    "seed": 4099,
@@ -8744,9 +8744,9 @@
     {
      "key": "gen",
      "style": "rd_plus__ui_element",
-     "width": 48,
-     "height": 48,
-     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, twisted dark wood with orange glow, a cobweb and a tiny spider in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "width": 64,
+     "height": 64,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, twisted dark wood with orange glow, a cobweb and a tiny spider in each corner. Symmetrical, a thin 16 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 16 pixel corners, no text",
      "remove_bg": true
     }
    ]
@@ -8758,8 +8758,8 @@
    "out": "art/site/frame-panel-autumn.png",
    "kind": "strip",
    "frame": [
-    48,
-    48
+    64,
+    64
    ],
    "frames": 1,
    "seed": 176238,
@@ -8767,9 +8767,9 @@
     {
      "key": "gen",
      "style": "rd_plus__ui_element",
-     "width": 48,
-     "height": 48,
-     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, brown carved wood with orange and red leaves tucked into each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "width": 64,
+     "height": 64,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, brown carved wood with orange and red leaves tucked into each corner. Symmetrical, a thin 16 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 16 pixel corners, no text",
      "remove_bg": true
     }
    ]
@@ -8781,8 +8781,8 @@
    "out": "art/site/frame-panel-winter.png",
    "kind": "strip",
    "frame": [
-    48,
-    48
+    64,
+    64
    ],
    "frames": 1,
    "seed": 712589,
@@ -8790,9 +8790,9 @@
     {
      "key": "gen",
      "style": "rd_plus__ui_element",
-     "width": 48,
-     "height": 48,
-     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, pale blue ice with small icicles and a snowflake in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "width": 64,
+     "height": 64,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, pale blue ice with small icicles and a snowflake in each corner. Symmetrical, a thin 16 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 16 pixel corners, no text",
      "remove_bg": true
     }
    ]
@@ -8804,8 +8804,8 @@
    "out": "art/site/frame-panel-christmas.png",
    "kind": "strip",
    "frame": [
-    48,
-    48
+    64,
+    64
    ],
    "frames": 1,
    "seed": 62824,
@@ -8813,9 +8813,9 @@
     {
      "key": "gen",
      "style": "rd_plus__ui_element",
-     "width": 48,
-     "height": 48,
-     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, red and green with holly leaves and berries in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "width": 64,
+     "height": 64,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, red and green with holly leaves and berries in each corner. Symmetrical, a thin 16 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 16 pixel corners, no text",
      "remove_bg": true
     }
    ]
@@ -8827,8 +8827,8 @@
    "out": "art/site/frame-panel-spring.png",
    "kind": "strip",
    "frame": [
-    48,
-    48
+    64,
+    64
    ],
    "frames": 1,
    "seed": 989953,
@@ -8836,9 +8836,9 @@
     {
      "key": "gen",
      "style": "rd_plus__ui_element",
-     "width": 48,
-     "height": 48,
-     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, green vines with pink blossoms in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "width": 64,
+     "height": 64,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, green vines with pink blossoms in each corner. Symmetrical, a thin 16 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 16 pixel corners, no text",
      "remove_bg": true
     }
    ]
@@ -8850,8 +8850,8 @@
    "out": "art/site/frame-panel-newyear.png",
    "kind": "strip",
    "frame": [
-    48,
-    48
+    64,
+    64
    ],
    "frames": 1,
    "seed": 440863,
@@ -8859,9 +8859,9 @@
     {
      "key": "gen",
      "style": "rd_plus__ui_element",
-     "width": 48,
-     "height": 48,
-     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, polished gold with a four-point star and tiny confetti in each corner. Symmetrical, a thin 12 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 12 pixel corners, no text",
+     "width": 64,
+     "height": 64,
+     "prompt": "16-bit fantasy trading-card-game pixel art, crisp 1px dark outline, limited 16-color palette, soft top-left light, no text, no watermark, transparent background. A square panel border frame, polished gold with a four-point star and tiny confetti in each corner. Symmetrical, a thin 16 pixel border all the way around with ornaments only in the four corners, the entire middle is empty and fully transparent so it can be stretched as a 9-slice with 16 pixel corners, no text",
      "remove_bg": true
     }
    ]

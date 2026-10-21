@@ -22968,7 +22968,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     // the Effects level (the Realm only at Full; lettering and frames at Full and Subtle). Optional pixel art from the art
     // pipeline replaces the drawn versions when the files exist in art/site/:
     //   letters-<style>.png    36 glyphs (A-Z, 0-9) of 32 x 32 in one row; styles gold, ember, ice, leaf, garland, bloom
-    //   frame-panel-<name>.png 48 x 48 9-slice (12 px corners) for panels; names default, halloween, autumn, winter, christmas, spring, newyear
+    //   frame-panel-<name>.png 64 x 64 9-slice (16 px corners) for panels; names default, halloween, autumn, winter, christmas, spring, newyear
     //   realm-<biome>-<layer>.png  320 x 180 layers (far, mid, near) for castle, frontier, gothic, grove
     // =====================================================================
 
@@ -23331,7 +23331,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const clear = () => ['--px-panel-frame', '--px-banner-frame', '--px-panel-slice', '--px-panel-bw'].forEach(k => root.style.removeProperty(k));
         if (!on) { clear(); return; }
         const name = pxfName(), art = PX.art['frame-panel-' + name] ? name : PX.art['frame-panel-default'] ? 'default' : null;
-        if (art) { root.style.setProperty('--px-panel-frame', `url('art/site/frame-panel-${art}.png')`); root.style.setProperty('--px-panel-slice', '12'); root.style.setProperty('--px-panel-bw', '12px'); }
+        if (art) { root.style.setProperty('--px-panel-frame', `url('art/site/frame-panel-${art}.png')`); root.style.setProperty('--px-panel-slice', '16'); root.style.setProperty('--px-panel-bw', '12px'); }
         else { root.style.setProperty('--px-panel-frame', `url("${pxfBuild(name, 'panel').toDataURL()}")`); root.style.setProperty('--px-panel-slice', '5'); root.style.setProperty('--px-panel-bw', '10px'); }
         root.style.setProperty('--px-banner-frame', `url("${pxfBuild(name, 'banner').toDataURL()}")`);
     }
