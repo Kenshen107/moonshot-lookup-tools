@@ -12,8 +12,22 @@ The game already has placeholders for everything below (an emoji portrait, a col
 - **Effects:** One PNG per effect at spellslinger/art/fx/<id>.png: a single horizontal strip of frames, each frame the size listed. The game plays it once at 2x, pixelated, over the card.
 - **Icons and other sprites:** One PNG per icon at spellslinger/art/ui/<id>.png at the size listed (a single frame unless "frames" is listed, then a horizontal strip).
 
-## Retro Diffusion notes
-I (Claude) can't run Retro Diffusion from here and couldn't check its current style and model names, so these are general: use a small-sprite or character style for the characters and an animation or effect style for the effects if your version has them, keep every frame the exact size above, and use a transparent background. If it only makes single images, generate each frame (or a 2 x 4 grid) and assemble the strip in Aseprite or similar. The talking row only needs the mouth and one hand to move. Keep the sprite's feet, head and outline in the same place in every frame so the loop doesn't jitter. Palette tips are per character.
+## Making the art with the script (recommended)
+`tools/make_art.py` reads `docs/ascent-art-manifest.json` (written by this guide's script) and does everything below for you. It needs Python 3 with `requests` and `Pillow`.
+```
+export RD_API_KEY=rdpk-...        # your key, in your own terminal; never commit it or paste it into a file
+python3 tools/make_art.py                     # free dry run: checks the styles, lists every step and its cost
+python3 tools/make_art.py --go --only t1-mick # make one character first (about $0.57) and look at the result
+python3 tools/make_art.py --go                # then make everything the game uses now (characters + effects)
+```
+Options: `--group characters|fx|ideas|icons` (default: characters and fx; ideas and icons are not in the game yet), `--only id1,id2`, `--max-spend 20` (stops before going over, in dollars), `--force` (redo finished assets), `--seed-bump N` (a new look for the same prompt). Finished PNGs go to `spellslinger/art/...`; every step is kept in `tools/.art-cache/`, so a rerun only does what is missing and never pays twice for a step. Commit the PNGs, not the cache.
+
+**How a character is made** (22 of them, $0.57 each, about $12.5 in all): RD Pro `rd_pro__fantasy` draws the standing character at 64 x 96 ($0.18), `rd_advanced_animation__idle` animates breathing and a blink from it ($0.14), and `rd_advanced_animation__custom_action` animates talking ($0.25). The script keeps 4 frames of each and builds the 256 x 192 sheet (row 1 idle, row 2 talking). Because both animations start from the same drawing, the character looks the same in every frame.
+**How an effect is made** (19 of them, $0.07 each, about $1.35 in all): `rd_animation__vfx` (24 to 96 px) makes the animation; the script picks the right number of frames, scales it up with hard pixels if the game wants it bigger (the Planeswalker portal is 128 px), and writes the strip.
+**Checked against the API's style list** (the pasted Retro Diffusion API notes, verified 2026-09): the style names, size limits and prices above. The script also asks the live `/v2/styles/selector` list first and stops with a clear message if a style or size has changed. Claude can't reach the API from here, so **nothing has been generated yet**: do the one-character test first. If the pixel style isn't what you want, change the style or prompt in `tests/ascent_art_guide.js` / the data file and rerun both scripts.
+
+## Prompts to paste by hand (if you use the website instead)
+Use the prompt under each asset. For characters, make the standing picture first, then use the website's animation tools on it; the sheet is 2 rows x 4 frames of 64 x 96.
 
 ## Counts
 - 22 characters (18 opponents, 4 helpers)

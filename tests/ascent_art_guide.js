@@ -11,6 +11,35 @@ const charPrompt = c => `${STYLE}. Full-body character sprite sheet of ${c.look}
 const fxPrompt = (k, f) => `${STYLE}. Animated effect, ${f.frames} frames in one horizontal strip, each frame ${f.size} x ${f.size} pixels, centered, transparent background: ${f.prompt}.`;
 const iconPrompt = (k, i) => `${STYLE}. ${i.frames > 1 ? `Animated loop of ${i.frames} frames in a horizontal strip, each frame` : 'Single sprite,'} ${i.size} x ${i.size} pixels: ${i.prompt}.`;
 
+// ---- Machine-readable manifest for tools/make_art.py (styles checked against the Retro Diffusion API catalog, 2026-09) ----
+const hash = str => { let h = 2166136261; for (const ch of str) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1000000; };
+const charSubject = c => `${c.look}. Palette: ${c.palette}. ${c.mood}. A single character, full body, front-facing, standing with feet at the bottom edge of the image, plain flat background, no text`;
+const MANIFEST = { generated: 'by tests/ascent_art_guide.js; do not edit by hand', assets: [] };
+for (const c of CH) MANIFEST.assets.push({
+    id: c.id, group: 'characters', name: c.name, out: `spellslinger/art/characters/${c.id}.png`, kind: 'sheet', frame: [64, 96], cols: 4, rows: 2, seed: hash(c.id),
+    steps: [
+        { key: 'base', style: 'rd_pro__fantasy', width: 64, height: 96, prompt: charSubject(c), remove_bg: true },
+        { key: 'idle', style: 'rd_advanced_animation__idle', width: 64, height: 96, prompt: 'gentle breathing and one slow blink, feet and body stay in place', frames_duration: 4, from: 'base' },
+        { key: 'talk', style: 'rd_advanced_animation__custom_action', width: 64, height: 96, prompt: 'talking: the mouth opens and closes and one hand makes a small gesture, feet stay in place', frames_duration: 4, from: 'base' }
+    ]
+});
+for (const [k, f] of Object.entries(FX)) MANIFEST.assets.push({
+    id: k, group: 'fx', name: f.label, out: `spellslinger/art/fx/${k}.png`, kind: 'strip', frame: [f.size, f.size], frames: f.frames, seed: hash(k),
+    steps: [{ key: 'gen', style: 'rd_animation__vfx', width: Math.min(f.size, 96), height: Math.min(f.size, 96), prompt: f.prompt, remove_bg: true }]
+});
+for (const [k, f] of Object.entries(IDEAS)) MANIFEST.assets.push({
+    id: k, group: 'ideas', name: f.label, out: `spellslinger/art/fx/${k}.png`, kind: 'strip', frame: [f.size, f.size], frames: f.frames, seed: hash(k),
+    steps: [{ key: 'gen', style: 'rd_animation__vfx', width: Math.min(f.size, 96), height: Math.min(f.size, 96), prompt: f.prompt, remove_bg: true }]
+});
+for (const [k, i] of Object.entries(ICONS)) {
+    const big = i.size >= 128, bg = /^bg-|^mat-/.test(k);
+    MANIFEST.assets.push({
+        id: k, group: 'icons', name: i.label, out: `spellslinger/art/ui/${k}.png`, kind: 'strip', frame: [i.size, i.size], frames: i.frames, seed: hash(k),
+        steps: [{ key: 'gen', style: i.frames > 1 ? 'rd_animation__vfx' : big ? 'rd_plus__environment' : 'rd_plus__low_res', width: i.frames > 1 ? Math.min(i.size, 96) : Math.max(i.size, 16), height: i.frames > 1 ? Math.min(i.size, 96) : Math.max(i.size, 16), prompt: i.prompt, remove_bg: !bg }]
+    });
+}
+fs.writeFileSync(path.join(ROOT, 'docs', 'ascent-art-manifest.json'), JSON.stringify(MANIFEST, null, 1) + '\n');
+
 const out = [];
 out.push(`# Planeswalker's Ascent: art prompts for Retro Diffusion
 
@@ -26,8 +55,22 @@ The game already has placeholders for everything below (an emoji portrait, a col
 - **Effects:** ${RULES.fx}
 - **Icons and other sprites:** ${RULES.ui}
 
-## Retro Diffusion notes
-I (Claude) can't run Retro Diffusion from here and couldn't check its current style and model names, so these are general: use a small-sprite or character style for the characters and an animation or effect style for the effects if your version has them, keep every frame the exact size above, and use a transparent background. If it only makes single images, generate each frame (or a 2 x 4 grid) and assemble the strip in Aseprite or similar. The talking row only needs the mouth and one hand to move. Keep the sprite's feet, head and outline in the same place in every frame so the loop doesn't jitter. Palette tips are per character.
+## Making the art with the script (recommended)
+\`tools/make_art.py\` reads \`docs/ascent-art-manifest.json\` (written by this guide's script) and does everything below for you. It needs Python 3 with \`requests\` and \`Pillow\`.
+\`\`\`
+export RD_API_KEY=rdpk-...        # your key, in your own terminal; never commit it or paste it into a file
+python3 tools/make_art.py                     # free dry run: checks the styles, lists every step and its cost
+python3 tools/make_art.py --go --only t1-mick # make one character first (about $0.57) and look at the result
+python3 tools/make_art.py --go                # then make everything the game uses now (characters + effects)
+\`\`\`
+Options: \`--group characters|fx|ideas|icons\` (default: characters and fx; ideas and icons are not in the game yet), \`--only id1,id2\`, \`--max-spend 20\` (stops before going over, in dollars), \`--force\` (redo finished assets), \`--seed-bump N\` (a new look for the same prompt). Finished PNGs go to \`spellslinger/art/...\`; every step is kept in \`tools/.art-cache/\`, so a rerun only does what is missing and never pays twice for a step. Commit the PNGs, not the cache.
+
+**How a character is made** (22 of them, $0.57 each, about $12.5 in all): RD Pro \`rd_pro__fantasy\` draws the standing character at 64 x 96 ($0.18), \`rd_advanced_animation__idle\` animates breathing and a blink from it ($0.14), and \`rd_advanced_animation__custom_action\` animates talking ($0.25). The script keeps 4 frames of each and builds the 256 x 192 sheet (row 1 idle, row 2 talking). Because both animations start from the same drawing, the character looks the same in every frame.
+**How an effect is made** (19 of them, $0.07 each, about $1.35 in all): \`rd_animation__vfx\` (24 to 96 px) makes the animation; the script picks the right number of frames, scales it up with hard pixels if the game wants it bigger (the Planeswalker portal is 128 px), and writes the strip.
+**Checked against the API's style list** (the pasted Retro Diffusion API notes, verified 2026-09): the style names, size limits and prices above. The script also asks the live \`/v2/styles/selector\` list first and stops with a clear message if a style or size has changed. Claude can't reach the API from here, so **nothing has been generated yet**: do the one-character test first. If the pixel style isn't what you want, change the style or prompt in \`tests/ascent_art_guide.js\` / the data file and rerun both scripts.
+
+## Prompts to paste by hand (if you use the website instead)
+Use the prompt under each asset. For characters, make the standing picture first, then use the website's animation tools on it; the sheet is 2 rows x 4 frames of 64 x 96.
 
 ## Counts
 - ${CH.length} characters (${CH.filter(c => c.role === 'opponent').length} opponents, ${CH.filter(c => c.role === 'npc').length} helpers)
