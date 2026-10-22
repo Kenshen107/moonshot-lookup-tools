@@ -7005,6 +7005,97 @@
         .values-stores > div { background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px 12px; }
         .values-stores a { color: var(--color-link); }
         .values-subtitle { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); margin-bottom: 8px; }
+        /* ============== PODCAST PREP ============== */
+        #podcastApp { --pod-W: var(--text-heading); --pod-U: var(--brand-light); --pod-B: var(--text-muted); --pod-R: var(--color-error); --pod-G: var(--color-success); --pod-M: var(--color-warning); --pod-C: var(--text-secondary); }
+        .pod-top { display: grid; gap: 12px; margin-bottom: 16px; }
+        .pod-ep { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); }
+        .pod-ep strong { color: var(--text-heading); font-size: 1.2em; }
+        .pod-ep span { color: var(--text-soft); font-size: 0.9em; }
+        .pod-prog { display: grid; gap: 6px; font-size: 0.9em; }
+        .pod-bar { height: 8px; background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+        .pod-bar i { display: block; height: 100%; background: var(--color-success); transition: width 0.3s; }
+        .pod-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pod-btn { background: var(--bg-panel-raised); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 12px; font-size: 0.9em; cursor: pointer; }
+        .pod-btn:hover { border-color: var(--brand-light); color: var(--text-heading); }
+        .pod-link { background: none; border: 0; color: var(--color-link); text-decoration: underline; cursor: pointer; padding: 0; font: inherit; }
+        .pod-pitch { display: grid; gap: 6px; }
+        .pod-pitch textarea, .pod-notes, #podcastApp input[type="text"], #podcastApp input[type="number"], #podcastApp select, #podcastApp textarea { width: 100%; box-sizing: border-box; background: var(--bg-inset); color: var(--text-primary); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; font: inherit; }
+        #podcastApp input[type="number"] { width: 70px; }
+        .pod-note { padding: 10px 12px; background: var(--bg-panel); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: var(--radius-sm); font-size: 0.9em; color: var(--text-soft); line-height: 1.5; }
+        .pod-warn { border-left-color: var(--color-warning); }
+        .pod-seg, .pod-sec { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 14px; padding: 0 14px 12px; }
+        .pod-seg > summary, .pod-sec > summary { cursor: pointer; padding: 12px 0; display: flex; gap: 10px; align-items: center; color: var(--text-heading); font-weight: 600; }
+        .pod-seg-title { flex: 1; font-size: 1.1em; }
+        .pod-seg-count { font-size: 0.85em; color: var(--text-soft); font-weight: 400; }
+        .pod-seg-goal { margin: 0 0 8px; color: var(--text-soft); font-size: 0.9em; }
+        .pod-mins { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9em; color: var(--text-soft); margin-bottom: 10px; }
+        .pod-q { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 10px; margin-bottom: 10px; background: var(--bg-panel-raised); }
+        .pod-q.ready { border-color: var(--color-success); }
+        .pod-q-head { display: flex; gap: 10px; align-items: flex-start; }
+        .pod-q-n { flex: none; min-width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: var(--text-heading); display: grid; place-items: center; font-size: 0.85em; font-weight: 700; }
+        .pod-q-text { flex: 1; margin: 2px 0 0; color: var(--text-heading); line-height: 1.45; }
+        .pod-ready { font-size: 0.85em; color: var(--text-soft); white-space: nowrap; }
+        .pod-tips { margin: 8px 0; font-size: 0.9em; }
+        .pod-tips summary { cursor: pointer; color: var(--color-link); }
+        .pod-tips ul { margin: 6px 0 6px 18px; padding: 0; line-height: 1.5; color: var(--text-primary); }
+        .pod-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .pod-chip { background: var(--bg-inset); color: var(--color-link); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 0.85em; cursor: pointer; }
+        .pod-chip:hover { border-color: var(--brand-light); }
+        .pod-notes { margin-top: 6px; }
+        .pod-practice, .pod-practice-q { padding: 12px; background: var(--bg-panel); border: 1px solid var(--brand); border-radius: var(--radius-md); }
+        .pod-practice-q { font-size: 1.1em; color: var(--text-heading); margin: 6px 0; }
+        .pod-clock { font-size: 1.2em; font-variant-numeric: tabular-nums; color: var(--color-warning); }
+        .pod-h3 { margin: 14px 0 8px; font-size: 1em; color: var(--text-heading); }
+        .pod-table-wrap { overflow-x: auto; margin: 8px 0; }
+        .pod-table { border-collapse: collapse; width: 100%; font-size: 0.9em; }
+        .pod-table th, .pod-table td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+        .pod-table th { background: var(--bg-panel-raised); color: var(--text-heading); }
+        .pod-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .pod-stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+        .pod-stat { background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 12px; font-size: 0.9em; }
+        .pod-stat b { display: block; font-size: 1.2em; color: var(--text-heading); }
+        .pod-mech { padding: 10px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); margin-bottom: 8px; background: var(--bg-panel-raised); }
+        .pod-mech p { margin: 4px 0; font-size: 0.9em; line-height: 1.5; }
+        .pod-badge { font-size: 0.72em; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-soft); }
+        .pod-badge.new { border-color: var(--color-success); color: var(--color-success); }
+        .pod-colorlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+        .pod-color { text-align: left; background: var(--bg-panel-raised); color: var(--text-primary); border: 1px solid var(--border); border-left: 4px solid var(--pod-C); border-radius: var(--radius-sm); padding: 6px 8px; cursor: pointer; display: grid; gap: 2px; font-size: 0.9em; }
+        .pod-color span { font-size: 0.85em; color: var(--text-soft); }
+        .pod-color.c-W { border-left-color: var(--pod-W); } .pod-color.c-U { border-left-color: var(--pod-U); } .pod-color.c-B { border-left-color: var(--pod-B); }
+        .pod-color.c-R { border-left-color: var(--pod-R); } .pod-color.c-G { border-left-color: var(--pod-G); } .pod-color.c-M { border-left-color: var(--pod-M); }
+        .pod-colorbars { display: grid; gap: 6px; }
+        .pod-cb { display: grid; grid-template-columns: 110px 1fr 30px; gap: 8px; align-items: center; font-size: 0.85em; }
+        .pod-cb i { display: block; height: 10px; border-radius: var(--radius-sm); background: var(--pod-C); }
+        .pod-cb i.c-W { background: var(--pod-W); } .pod-cb i.c-U { background: var(--pod-U); } .pod-cb i.c-B { background: var(--pod-B); }
+        .pod-cb i.c-R { background: var(--pod-R); } .pod-cb i.c-G { background: var(--pod-G); } .pod-cb i.c-M { background: var(--pod-M); }
+        .pod-design { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px); gap: 16px; }
+        @media (max-width: 760px) { .pod-design { grid-template-columns: minmax(0, 1fr); } }
+        .pod-form { display: grid; gap: 10px; }
+        .pod-row { display: grid; gap: 4px; font-size: 0.9em; }
+        .pod-colorpick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .pod-cp { border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 0.85em; cursor: pointer; }
+        .pod-cp.c-W { border-color: var(--pod-W); } .pod-cp.c-U { border-color: var(--pod-U); } .pod-cp.c-B { border-color: var(--pod-B); } .pod-cp.c-R { border-color: var(--pod-R); } .pod-cp.c-G { border-color: var(--pod-G); }
+        .pod-checks { display: grid; gap: 4px; font-size: 0.9em; }
+        .pod-preview { position: sticky; top: 70px; align-self: start; }
+        .pod-card { background: var(--bg-panel-raised); border: 3px solid var(--text-muted); border-radius: var(--radius-lg); padding: 10px; display: grid; gap: 6px; }
+        .pod-card-top { display: flex; justify-content: space-between; gap: 6px; color: var(--text-heading); font-weight: 700; }
+        .pod-card-type { font-size: 0.85em; color: var(--text-soft); border-top: 1px solid var(--border); padding-top: 4px; }
+        .pod-card-text { font-size: 0.9em; line-height: 1.45; min-height: 90px; white-space: pre-wrap; }
+        .pod-card-pt { text-align: right; font-weight: 700; color: var(--text-heading); }
+        .pod-pips { display: inline-flex; gap: 2px; }
+        .pod-pip { min-width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 0.72em; color: var(--bg-canvas); background: var(--pod-C); }
+        .pod-pip.c-W { background: var(--pod-W); } .pod-pip.c-U { background: var(--pod-U); } .pod-pip.c-B { background: var(--pod-B); } .pod-pip.c-R { background: var(--pod-R); } .pod-pip.c-G { background: var(--pod-G); }
+        .pod-saved, .pod-saved-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+        #podPrintArea { display: none; }
+        @media print {
+            body.pod-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
+            body.pod-printing > *:not(#podPrintArea) { display: none !important; }
+            body.pod-printing #podPrintArea { display: block; color: #1b1f23; font: 10pt/1.4 "Segoe UI", system-ui, Helvetica, Arial, sans-serif; }
+            #podPrintArea h1 { font-size: 16pt; margin: 0 0 4px; } #podPrintArea h2 { font-size: 12pt; margin: 14px 0 6px; border-bottom: 1px solid #999; }
+            #podPrintArea .pp-q { break-inside: avoid; margin-bottom: 8px; } #podPrintArea .pp-qt { font-weight: 700; }
+            #podPrintArea ul { margin: 2px 0 2px 18px; padding: 0; } #podPrintArea .pp-notes { min-height: 36px; border-bottom: 1px dotted #888; white-space: pre-wrap; }
+            #podPrintArea .pp-foot { font-size: 8pt; color: #555; margin-top: 14px; }
+        }
         .site-note { max-width: 1300px; margin: 24px auto 0; padding: 0 4px 90px; font-size: 0.85em; color: var(--text-secondary); text-align: center; line-height: 1.5; }
 
         /* ================================================================
@@ -8329,6 +8420,21 @@
             </div>
         </div>
 
+        <!-- ============== PODCAST PREP ============== -->
+        <div id="podcastApp" style="display:none;">
+            <div class="formats-intro">
+                A prep kit for the Star Trek episode: a run sheet with talking points and your own notes, a universe cheat sheet, the live Star Trek set, and a Legend designer.
+            </div>
+            <div class="guide-tabs" id="podTabs">
+                <button type="button" class="guide-tab active" data-pod-tab="run" onclick="switchPodcastTab('run')">🎙️ Run Sheet</button>
+                <button type="button" class="guide-tab" data-pod-tab="cheat" onclick="switchPodcastTab('cheat')">🖖 Universe Cheat Sheet</button>
+                <button type="button" class="guide-tab" data-pod-tab="set" onclick="switchPodcastTab('set')">🃏 The Set</button>
+                <button type="button" class="guide-tab" data-pod-tab="design" onclick="switchPodcastTab('design')">🛠️ Design a Legend</button>
+            </div>
+            <div id="podBody"></div>
+            <div class="site-note">Fan-made prep notes. Not affiliated with or endorsed by Paramount, CBS, or Wizards of the Coast. Card data from Scryfall.</div>
+        </div>
+
         <!-- ============== CARD QUIZ ============== -->
         <div id="quizApp" style="display:none;">
             <div class="guide-tabs" id="quizModeTabs">
@@ -9157,6 +9263,7 @@
             prerelease:   { appId: 'prereleaseApp',   icon: '🎟️', navLabel: 'Prerelease',      title: '🎟️ Prerelease Toolkit', desc: 'New mechanics and rulings, hot cards, a sealed helper and printable handouts', keywords: 'prerelease sealed mechanics rulings judge new set handout print qr deck building event', onShow: showPrereleaseTab },
             valuevintage: { appId: 'valueVintageApp', icon: '🏆', navLabel: 'Value Vintage',   title: '🏆 Value Vintage (V30)', desc: 'Rules and the restricted list for $30 Vintage nights', keywords: 'v30 vintage budget restricted wednesday', onShow: renderValueVintagePanel },
             judge:        { appId: 'judgeApp',        icon: '⚖️', navLabel: 'Judge Ref',       title: '⚖️ Judge Quick-Reference', desc: 'Quick rules answers, common myths and the layer system', keywords: 'rules ruling judge layers stack myths', onShow: showJudgeTab },
+            podcast:      { appId: 'podcastApp',      icon: '🎙️', navLabel: 'Podcast Prep',    title: '🎙️ Podcast Prep', desc: 'Run sheet, Star Trek cheat sheet and the live set for the episode', keywords: 'podcast star trek trk episode prep interview', onShow: () => { if (typeof showPodcastTab === 'function') showPodcastTab(); } },
             setprimer:    { appId: 'setPrimerApp',    icon: '🎁', navLabel: 'Set Primer',      title: '🎁 Set Primer', desc: 'A set at a glance: its cards by rarity, top picks and bonus sheets', keywords: 'set new release cards primer' },
             grading:      { appId: 'gradingApp',      icon: '🔍', navLabel: 'Grading & Fakes', title: '🔍 Grading & Spotting Fakes', desc: 'Card grading basics and how to spot counterfeits', keywords: 'grade psa bgs fake counterfeit condition' },
             shelves:      { appId: 'shelfPlannerApp', icon: '🗄️', navLabel: 'Shelf Planner',  title: '🗄️ Shelf Planner', desc: 'Plan a wall of shelves on 70-hole uprights and lay products out in rainbow order', keywords: 'shelf shelves planner wall sleeves layout uprights pegboard stocking', onShow: () => window.showShelfPlanner && window.showShelfPlanner() },
@@ -9330,7 +9437,7 @@
         const NAV_GROUPS = [
             { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap', 'shelves', 'sleeves'] },
             { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'prerelease', 'valuevintage', 'judge'] },
-            { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'grading', 'quiz'] }
+            { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'podcast', 'grading', 'quiz'] }
         ];
 
         function navGroupForView(view) {
@@ -22925,6 +23032,1090 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         initVisualEffects();
         if (location.hash) applyRouteFromHash();
     </script>
+    <script id="podcastScript">
+    function podEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    // ============== PODCAST PREP (added 2026-10-22, owner's request) ==============
+    // A prep kit for one episode: "Star Trek intro - Welcome to the Final Frontier" (host QH (Rachel), guests Ovid and Hayden). Four tabs: the Run Sheet
+    // (the questions, with talking points and your own notes), a Universe cheat sheet, The Set (live Star Trek cards from Scryfall) and Design a Legend.
+    // Notes are saved in this browser only (localStorage). The facts were written from general Star Trek knowledge, so the tab tells you to check dates
+    // and episode titles before airing. Fan-made: it isn't made by or affiliated with Paramount, CBS, Wizards of the Coast or any store.
+    const PODCAST = {
+ "SEGMENTS": [
+  {
+   "key": "intro",
+   "icon": "👋",
+   "title": "Meet the guests",
+   "mins": 8,
+   "goal": "Introduce the guests, establish their Star Trek credentials, and hook listeners who know nothing about the franchise.",
+   "questions": [
+    {
+     "q": "For someone who doesn't know you yet, who are you, what do you do in the Magic community, and how did Star Trek become part of your life?",
+     "tips": [
+      "Lead with a one-line intro, then one concrete thing you do in the community (events you run, formats you play, what people come to you for).",
+      "Give one Star Trek credential in a sentence: which series you've watched most, or how many times you've rewatched a favorite.",
+      "End with a hook for non-fans: \"By the end of this episode you'll know why people have loved this for almost 60 years.\""
+     ]
+    },
+    {
+     "q": "What's your personal history with Star Trek? Did you grow up watching it, discover it later, or get pulled into it by someone else?",
+     "tips": [
+      "Say who or what introduced you (a parent, a friend, reruns, a movie night) and roughly when.",
+      "Name the first series that stuck, and the one you came back to as an adult.",
+      "A short story beats a list: one scene, one person, one reason you kept watching."
+     ]
+    },
+    {
+     "q": "If you had to explain Star Trek to someone who has never watched a single episode, how would you describe it?",
+     "tips": [
+      "10-second version: \"A hopeful future where people from many worlds work together to explore space, and every episode is a puzzle about how to do the right thing.\"",
+      "30-second version: add the setup (a starship crew, a mission to seek out new life, an ethics problem each week) and the tone (curiosity and teamwork before fighting).",
+      "Mention you can start almost anywhere, because most episodes stand alone."
+     ]
+    },
+    {
+     "q": "What do you think makes Star Trek different from other major science-fiction franchises like Star Wars?",
+     "tips": [
+      "Star Wars is a myth: a long time ago, a chosen hero, the Force, good against evil. Star Trek is set in our own future and is about ideas.",
+      "Trek's heroes work for an institution (Starfleet) and solve problems with talking, science and teamwork; the crew is an ensemble, not one chosen person.",
+      "Trek often uses a strange planet or alien as a mirror for real-world issues (the \"allegory of the week\").",
+      "Be fair: both are loved, and they scratch different itches (adventure and myth versus ideas and optimism)."
+     ]
+    },
+    {
+     "q": "Do you remember the first Star Trek episode, movie, character, or moment that made you realize you loved this universe?",
+     "tips": [
+      "Fans often name: Spock's sacrifice in The Wrath of Khan, Picard becoming Locutus in \"The Best of Both Worlds\", Data's trial in \"The Measure of a Man\", or Sisko's \"In the Pale Moonlight\". Use your own, not these.",
+      "Say what the moment made you feel, not just what happened.",
+      "Tie it to Magic if you can: a moment you wish was a card."
+     ]
+    }
+   ]
+  },
+  {
+   "key": "universe",
+   "icon": "🖖",
+   "title": "Crash course in the universe",
+   "mins": 16,
+   "goal": "Give the audience a crash course: the Federation, species, technology and history, in plain English.",
+   "questions": [
+    {
+     "q": "Let's start with the basics: what is the United Federation of Planets, and what is Starfleet's role in it?",
+     "tips": [
+      "The Federation is a union of many worlds (humans, Vulcans, Andorians and more) that share defense, science and a set of values: equality, cooperation, and rights for every kind of life.",
+      "It was founded in the early 2160s in the show's timeline (check the exact year before airing). Earth is a member; the Federation is based in Paris and Starfleet's headquarters is in San Francisco.",
+      "Starfleet is the Federation's fleet and academy: its explorers, scientists, diplomats and defenders, all in one organization."
+     ],
+     "cards": [
+      "Starfleet Academy"
+     ]
+    },
+    {
+     "q": "What is Starfleet actually trying to accomplish? Is it a military organization, an exploration service, a peacekeeping force, or a combination of all three?",
+     "tips": [
+      "Its stated mission: \"to explore strange new worlds, to seek out new life and new civilizations, to boldly go where no one has gone before.\"",
+      "It has ranks, a chain of command and warships, so it looks like a navy, but exploration and diplomacy come first. It fights when it has to (the Dominion War is the big example).",
+      "Good line: \"a navy's structure with a scientist's mission.\""
+     ]
+    },
+    {
+     "q": "What are the different alien species a newcomer should know, and what makes them distinct? I'm thinking Vulcans, Klingons, Romulans, Borg, and maybe the Ferengi.",
+     "tips": [
+      "Use the species table in the Universe cheat sheet: one line each, plus the card in the set.",
+      "Vulcans: logic and discipline. Klingons: honor and battle. Romulans: secretive and suspicious. Borg: a hive mind that assimilates. Ferengi: profit above all.",
+      "A fun contrast for a card audience: each species is almost a color identity."
+     ],
+     "cards": [
+      "Mr. Spock, Science Officer",
+      "Worf, Honor-Bound Warrior",
+      "Locutus, the One Who Speaks",
+      "Quark, Humble Proprietor"
+     ]
+    },
+    {
+     "q": "What is the Prime Directive, and why does it cause so many conflicts throughout the franchise?",
+     "tips": [
+      "Starfleet's rule against interfering with the natural development of less advanced societies: no revealing advanced technology, no steering their future.",
+      "It causes conflict because crews often could save a world, and the rule says don't. Captains bend it or break it, and each episode argues whether they were right.",
+      "Examples fans cite: TNG's \"Pen Pals\" and \"Who Watches the Watchers\" (check titles before airing)."
+     ]
+    },
+    {
+     "q": "What are the biggest historical events in Star Trek that a newcomer should know about?",
+     "tips": [
+      "First contact: humanity's first warp flight draws the Vulcans' attention (Zefram Cochrane, 2063 in the show's timeline; the film Star Trek: First Contact).",
+      "The Federation's founding, then wars and peace with the Klingons and Romulans, the Borg attack at Wolf 359, and the Dominion War.",
+      "Don't memorize dates: the order is first contact, Federation, Klingon and Romulan conflicts, Borg, Dominion War. Check years before airing."
+     ]
+    },
+    {
+     "q": "What was the conflict between the Federation and the Klingons, and how did that relationship evolve?",
+     "tips": [
+      "Early on, hostile: a cold war of suspicion and border skirmishes, with the Klingons as the Federation's main rival in the original series.",
+      "Turning point: a disaster at the Klingon moon Praxis pushes the Empire to seek peace (Star Trek VI, the Khitomer Accords).",
+      "By The Next Generation, Worf serves in Starfleet and the Klingons are uneasy allies; the relationship cools again in the Dominion era."
+     ],
+     "cards": [
+      "Gowron, Eager for Battle",
+      "General Chang, Cold Warrior",
+      "L'Rell, Fierce Visionary",
+      "The Duras Sisters",
+      "Worf, Intelligence Contractor"
+     ]
+    },
+    {
+     "q": "How does time travel work in Star Trek, and how much does it complicate the overall timeline?",
+     "tips": [
+      "It happens through accidents, alien technology and slingshot maneuvers around a sun. Whales, in Star Trek IV, are the famous example.",
+      "Trek treats it as a story engine, not a rulebook: most time-travel episodes are self-contained and the timeline \"fixes itself\".",
+      "The big exception is the 2009 film's alternate (Kelvin) timeline, which branches off and leaves the original series intact.",
+      "A Starfleet \"Temporal Prime Directive\" and agents like Daniels exist to police it."
+     ],
+     "cards": [
+      "Daniels, Temporal Agent"
+     ]
+    },
+    {
+     "q": "Can you explain warp speed, transporters, phasers, and replicators in a way that makes sense to someone who isn't a science-fiction fan?",
+     "tips": [
+      "Warp drive: bends space around the ship so it can go faster than light (\"warp factors\" are the speed settings).",
+      "Transporter: scans a person, turns them into energy, and rebuilds them somewhere else (\"Beam me up\").",
+      "Phaser: a handheld energy weapon with a stun setting, the Starfleet \"blaster\".",
+      "Replicator: a machine that makes food and objects on demand (\"Tea, Earl Grey, hot\"). It is why money barely matters on Earth.",
+      "Bonus: the holodeck (a room that creates simulated worlds) and the universal translator."
+     ],
+     "cards": [
+      "The Holodeck",
+      "Miles O'Brien, Transporter Ops"
+     ]
+    },
+    {
+     "q": "What are the major factions in Star Trek, and which ones are allies versus enemies?",
+     "tips": [
+      "Use the factions table in the cheat sheet. Short version: Federation, Klingon Empire, Romulan Star Empire, Cardassians, Ferengi, Borg, Dominion.",
+      "Allegiances shift: the Klingons go from enemies to allies, the Cardassians from rivals to a treaty, and Romulans stay wary.",
+      "The Borg and the Dominion are the existential threats."
+     ]
+    },
+    {
+     "q": "Star Trek has a lot of different timelines, series, and movies. How connected is everything, and do you need to watch it in a particular order?",
+     "tips": [
+      "No: nearly every series is a fresh start, and most episodes stand alone. Good entry points are The Next Generation, Strange New Worlds, or the movie The Wrath of Khan.",
+      "Release order gives you the \"how it grew\" story; in-universe order (Enterprise, Discovery, Strange New Worlds, The Original Series, and on) gives you the timeline.",
+      "A few arcs reward order: Deep Space Nine's Dominion War and Discovery."
+     ]
+    }
+   ]
+  },
+  {
+   "key": "people",
+   "icon": "🧑‍🚀",
+   "title": "Characters, rivals and big ideas",
+   "mins": 14,
+   "goal": "Get into the personalities, rivalries and iconic characters that fans will recognize in the cards.",
+   "questions": [
+    {
+     "q": "Let's talk captains. What makes Kirk, Picard, Sisko, Janeway, and the other major captains different from one another?",
+     "tips": [
+      "Kirk: bold, instinctive, charismatic, a risk-taker who fights with his head and his heart.",
+      "Picard: scholar and diplomat, principled, calm; patience over action.",
+      "Sisko: a commander at a space station in the middle of a war; the most human and the most willing to get his hands dirty.",
+      "Janeway: a scientist-captain stranded far from home who has to hold a crew together.",
+      "Others: Archer (the first explorer), Pike (Kirk's predecessor), Burnham (Discovery)."
+     ],
+     "cards": [
+      "Captain James T. Kirk",
+      "Captain Jean-Luc Picard",
+      "Captain Benjamin Sisko",
+      "Captain Kathryn Janeway",
+      "Captain Jonathan Archer",
+      "Captain Pike, Fullness of Time",
+      "Captain Michael Burnham"
+     ]
+    },
+    {
+     "q": "Who are the most iconic characters in the entire franchise, and which ones do you think are essential to understanding Star Trek?",
+     "tips": [
+      "The short list: Kirk, Spock, McCoy, Picard, Data, Worf, Sisko, Janeway, Seven of Nine.",
+      "Essential for the ideas: Spock (outsider and logic) and Data (what it means to be a person).",
+      "Name a few more that show up in the set and why."
+     ],
+     "cards": [
+      "Mr. Spock, Science Officer",
+      "Lieutenant Commander Data",
+      "Seven of Nine, Unassimilated",
+      "Dr. Beverly Crusher"
+     ]
+    },
+    {
+     "q": "Can you explain the relationship between Kirk, Spock, and McCoy? Why has that trio remained so iconic?",
+     "tips": [
+      "Three ways of thinking: Spock is logic, McCoy is emotion, Kirk is the judgment that balances them.",
+      "They bicker, but they would die for each other. That friendship is the heart of the original series.",
+      "It works as a template: many later crews echo it."
+     ],
+     "cards": [
+      "Captain James T. Kirk",
+      "Mr. Spock, Science Officer",
+      "Dr. Joseph M'Benga"
+     ]
+    },
+    {
+     "q": "What makes Spock such an important character, both within the story and in pop culture?",
+     "tips": [
+      "Half-Vulcan, half-human: he lives between two worlds and keeps trying to prove which one he is. It is a story anyone who has felt like an outsider can relate to.",
+      "Pop culture: the Vulcan salute and \"Live long and prosper\", the nerve pinch, \"Fascinating\", and Leonard Nimoy's performance.",
+      "His death in The Wrath of Khan (\"the needs of the many outweigh the needs of the few\") is one of the most famous moments in science fiction."
+     ],
+     "cards": [
+      "Mr. Spock, Science Officer",
+      "Spock, Always Your Friend",
+      "Saavik, Stoic Student"
+     ]
+    },
+    {
+     "q": "Which characters best represent the core values of Star Trek, and which characters challenge those values?",
+     "tips": [
+      "Core values: Picard (principle and diplomacy), Data (curiosity and empathy), Kirk (compassion), Spock (logic in service of others).",
+      "Challenging: Sisko in \"In the Pale Moonlight\" (a compromise he has to live with), Section 31 (a secret agency that says the ends justify the means), and Starfleet admirals who put fear first.",
+      "A good point to make: Trek is at its best when its heroes are tested, not when they are perfect."
+     ]
+    },
+    {
+     "q": "What are the most important rivalries in Star Trek?",
+     "tips": [
+      "Kirk and Khan (The Wrath of Khan): hero against a genius with a grudge.",
+      "Sisko and Dukat (Deep Space Nine): a rivalry that is also personal and ideological.",
+      "Picard and the Borg, and Picard and Q: a captain tested by overwhelming power.",
+      "The Federation and the Klingons, and Spock and McCoy as a friendly rivalry."
+     ],
+     "cards": [
+      "Khan, Vengeful Heart",
+      "Q, Stacking the Deck",
+      "Locutus, the One Who Speaks"
+     ]
+    },
+    {
+     "q": "Which villains or antagonists are the most compelling, and are any of them more complicated than simply being evil?",
+     "tips": [
+      "Khan: a brilliant, wronged leader whose grief becomes obsession.",
+      "Gul Dukat: charming and self-deceiving, a villain who believes he is the hero.",
+      "Q: a trickster who judges humanity and slowly becomes something like a friend.",
+      "The Borg: not evil, just a collective that wants to perfect everything it assimilates.",
+      "General Chang: a Klingon who quotes Shakespeare and fears peace."
+     ],
+     "cards": [
+      "Khan, Vengeful Heart",
+      "General Chang, Cold Warrior",
+      "Q, Stacking the Deck",
+      "Locutus, the One Who Speaks"
+     ]
+    },
+    {
+     "q": "Who is the most underrated character in Star Trek, and who do you think gets more credit than they deserve?",
+     "tips": [
+      "This is your opinion; pick one each and a reason.",
+      "Candidates fans often name as underrated: Miles O'Brien (the everyman engineer), Odo, Garak, Tuvok, Pike. Check what the set includes.",
+      "Say it with kindness: \"overrated\" is more fun as \"I wish they had been written better\"."
+     ],
+     "cards": [
+      "Miles O'Brien, Transporter Ops",
+      "Constable Odo",
+      "Captain Pike, Fullness of Time"
+     ]
+    },
+    {
+     "q": "Are there any particularly important episodes or movies that you believe everyone should watch at least once?",
+     "tips": [
+      "Movies: The Wrath of Khan, The Voyage Home, First Contact.",
+      "TOS: \"The City on the Edge of Forever\", \"The Trouble with Tribbles\". TNG: \"The Measure of a Man\", \"The Best of Both Worlds\", \"The Inner Light\", \"Darmok\". DS9: \"In the Pale Moonlight\". Voyager: \"Year of Hell\". Check titles before airing.",
+      "Give one \"gateway\" pick for each guest and a reason in one sentence."
+     ]
+    },
+    {
+     "q": "Star Trek often imagines a future where humanity has overcome many of its current problems. What themes or philosophies do you think are at the heart of the franchise?",
+     "tips": [
+      "Hope: people can solve big problems by cooperating.",
+      "IDIC: infinite diversity in infinite combinations. Different kinds of people make the crew stronger.",
+      "Curiosity over conquest; the rights of every kind of life (Data, the Doctor, the Borg).",
+      "A world without money or want, so the story is about what people do with purpose."
+     ]
+    },
+    {
+     "q": "How does Star Trek balance its optimistic vision of the future with darker stories about war, prejudice, political corruption, and morality?",
+     "tips": [
+      "The optimism is the setting; the drama is people living up to it, or failing.",
+      "Deep Space Nine is the clearest case: a war, spies, prejudice and compromise, and the Federation still tries to be better.",
+      "Starfleet admirals and Section 31 show the Federation is not perfect. The point is that the ideals are worth defending."
+     ]
+    }
+   ]
+  },
+  {
+   "key": "magic",
+   "icon": "🃏",
+   "title": "Star Trek meets Magic",
+   "mins": 12,
+   "goal": "Connect the franchise to Magic: The Gathering and the new Star Trek set.",
+   "questions": [
+    {
+     "q": "When you first heard that Magic was doing a Star Trek Universes Beyond set, what was your reaction?",
+     "tips": [
+      "Honest first reaction, then what changed your mind (or confirmed it).",
+      "Mention the first card or character you wanted to see.",
+      "Set facts: Star Trek releases November 13, 2026, with prerelease events starting a week earlier (check dates before airing)."
+     ]
+    },
+    {
+     "q": "Why do you think Star Trek is a good fit for Magic? What elements of the franchise translate especially well into a trading card game?",
+     "tips": [
+      "A huge cast of distinct characters: each is a natural legendary card.",
+      "Species and roles are natural creature types (Human, Vulcan, Klingon, Borg; Officer, Scientist, Doctor).",
+      "Ships and stations are Spacecraft, a type Magic has already built rules for (Station).",
+      "The mechanics can mirror the show: Federation rewards a crew of different creature types, Assimilate is the Borg, Face a dilemma is the \"no-win scenario\"."
+     ],
+     "cards": [
+      "U.S.S. Enterprise-D, Galaxy-Class",
+      "Deep Space 9"
+     ]
+    },
+    {
+     "q": "Star Trek has decades of shows, films, and lore to pull from. What are the biggest characters, locations, ships, or storylines you hope the set represents?",
+     "tips": [
+      "Check the \"The set\" tab: the legends, ships and places are listed live.",
+      "Name two you were glad to see and one you hope is in the deck lists or a later set.",
+      "Think across eras: classic, Next Generation, Deep Space Nine, Voyager, Enterprise, the new shows."
+     ],
+     "cards": [
+      "U.S.S. Enterprise-A, Free Spirit",
+      "U.S.S. Discovery, at Black Alert",
+      "U.S.S. Reliant, From Hell's Heart",
+      "Starfleet Academy"
+     ]
+    },
+    {
+     "q": "Are there any characters whose abilities, colors, or mechanics you think could be particularly interesting in Magic?",
+     "tips": [
+      "Look at how the set colors the captains: Kirk and Burnham red, Picard and Sisko white, Janeway, Archer and Pike green, Spock blue.",
+      "Spock in blue (logic) and the Borg and Data as artifact creatures are natural fits.",
+      "Q is a chaos card (red), Khan a black mythic (a vengeful genius), the Ferengi pull toward treasure and rogue themes."
+     ],
+     "cards": [
+      "Mr. Spock, Science Officer",
+      "Lieutenant Commander Data",
+      "Q, Stacking the Deck",
+      "Khan, Vengeful Heart",
+      "Quark, Humble Proprietor"
+     ]
+    },
+    {
+     "q": "If you could design one Star Trek legendary creature yourself, who would it be, what colors would it be, and what would its signature ability do?",
+     "tips": [
+      "Use the \"Design a Legend\" tab to sketch it: name, colors, cost, type line and ability.",
+      "Start from the character's defining trait, then pick the color that matches it, then an ability that makes the trait happen on the table.",
+      "Example thinking: Odo as a shapeshifter (copy something), Garak as a blue-black trickster, Riker as a leader who rewards a crew of many types."
+     ]
+    },
+    {
+     "q": "What would make this set feel authentically Star Trek rather than just a collection of recognizable characters with Magic card frames?",
+     "tips": [
+      "Mechanics that act like the show: a diverse crew rewarded (Federation), moral choices (Face a dilemma), ships you crew and power up (Station), the Borg that take what you have (Assimilate).",
+      "Flavor in details: quotes, ranks as creature types, ship classes, locations like the Holodeck.",
+      "Tone: curiosity and teamwork, not only combat."
+     ]
+    },
+    {
+     "q": "What do you think makes a good adaptation of a beloved franchise into Magic cards?",
+     "tips": [
+      "Respect both audiences: the Star Trek fan should recognize the moments, and the Magic player should find the cards fun and fair.",
+      "Make each character's card do the thing they are known for.",
+      "Mention the Commander decks as a home for fans: legendary captains that lead a crew."
+     ]
+    },
+    {
+     "q": "What makes crossover sets successful at introducing people to a new community?",
+     "tips": [
+      "They give fans a reason to walk into a store: a card with a character they love.",
+      "Starter-friendly products (decks, Commander decks) let a newcomer play right away.",
+      "Prerelease events are the front door: bring a friend who has never played.",
+      "Close with an invitation: where to find the guests and how to get into Magic or Star Trek."
+     ]
+    }
+   ]
+  }
+ ],
+ "CHEAT": {
+  "pitches": [
+   [
+    "10 seconds",
+    "A hopeful future where people from many worlds work together to explore space, and every episode is a puzzle about how to do the right thing."
+   ],
+   [
+    "30 seconds",
+    "Star Trek follows the crew of a starship in a future where humanity has solved poverty and war on Earth. They explore the galaxy, meet strange civilizations, and face a problem each week that tests their ethics as much as their courage. It is science fiction about ideas, curiosity and teamwork."
+   ],
+   [
+    "For Star Wars fans",
+    "Star Wars is a myth about a chosen hero in a galaxy far, far away. Star Trek is about regular, brilliant people in our own future, solving problems with talk, science and each other."
+   ]
+  ],
+  "species": [
+   [
+    "Humans",
+    "Explorers and the Federation's founders. Curious, adaptable, imperfect.",
+    "Captain James T. Kirk"
+   ],
+   [
+    "Vulcans",
+    "Logic and discipline: they suppress emotion. Pointed ears, the nerve pinch, \"Live long and prosper\".",
+    "Mr. Spock, Science Officer"
+   ],
+   [
+    "Klingons",
+    "A warrior culture built on honor and battle. Forehead ridges, bat'leth blades, \"Qapla'!\"",
+    "Worf, Honor-Bound Warrior"
+   ],
+   [
+    "Romulans",
+    "Secretive cousins of the Vulcans who split off long ago. Suspicious, cloaked ships, a long cold war with the Federation.",
+    ""
+   ],
+   [
+    "Borg",
+    "A cybernetic hive mind that assimilates other species: \"Resistance is futile.\" Not evil, just relentless.",
+    "Locutus, the One Who Speaks"
+   ],
+   [
+    "Ferengi",
+    "Traders who live by the Rules of Acquisition. Profit comes first.",
+    "Quark, Humble Proprietor"
+   ],
+   [
+    "Cardassians and Bajorans",
+    "Deep Space Nine's neighbors: the Cardassians occupied Bajor, and the Federation helps the Bajorans rebuild.",
+    ""
+   ],
+   [
+    "Q",
+    "An omnipotent trickster who tests humanity.",
+    "Q, Stacking the Deck"
+   ],
+   [
+    "Androids and holograms",
+    "Data, Lore and the Doctor ask what it means to be a person.",
+    "Lieutenant Commander Data"
+   ]
+  ],
+  "timeline": [
+   [
+    "Mid 22nd century",
+    "Enterprise (NX-01) era: humanity's first deep-space explorers; the Romulan War follows and the Federation is founded in the early 2160s. (Check exact years.)"
+   ],
+   [
+    "2200s",
+    "Discovery's early years, Pike's Enterprise (Strange New Worlds), then Kirk's five-year mission (The Original Series, the 2260s)."
+   ],
+   [
+    "2290s",
+    "The Klingon moon Praxis explodes and peace is made at Khitomer (Star Trek VI)."
+   ],
+   [
+    "2360s",
+    "The Next Generation: Picard's Enterprise-D; the Borg attack at Wolf 359 (2367)."
+   ],
+   [
+    "2370s",
+    "Deep Space Nine, Voyager, and the Dominion War (about 2373 to 2375)."
+   ],
+   [
+    "2380s and later",
+    "A supernova threatens Romulus, then Picard's story and the Discovery-era future. (Check exact years.)"
+   ],
+   [
+    "Earlier, as backstory",
+    "First contact: humanity's first warp flight and the arrival of the Vulcans (about 2063 in the show's timeline)."
+   ]
+  ],
+  "tech": [
+   [
+    "Warp drive",
+    "Bends space so a ship can travel faster than light. Warp factors are the speed settings."
+   ],
+   [
+    "Transporter",
+    "Scans a person, turns them into energy and rebuilds them somewhere else."
+   ],
+   [
+    "Phaser",
+    "A handheld energy weapon with stun and kill settings; ships have phaser banks too."
+   ],
+   [
+    "Replicator",
+    "Makes food and objects on demand from energy. A key reason money barely matters in the Federation."
+   ],
+   [
+    "Holodeck",
+    "A room that creates simulated worlds and characters. Great for stories and a Magic card."
+   ],
+   [
+    "Universal translator",
+    "Lets everyone understand every language."
+   ],
+   [
+    "Dilithium",
+    "The crystal that powers warp drive in much of the franchise."
+   ]
+  ],
+  "factions": [
+   [
+    "United Federation of Planets",
+    "The home team: a union of many worlds with shared values.",
+    "Hero"
+   ],
+   [
+    "Klingon Empire",
+    "Honor-bound warriors. Enemies at first, allies by The Next Generation, with tension in between.",
+    "Shifting"
+   ],
+   [
+    "Romulan Star Empire",
+    "Secretive, suspicious rivals; a cold war with occasional cooperation.",
+    "Wary"
+   ],
+   [
+    "Cardassian Union",
+    "Military empire that occupied Bajor; at war with the Federation, then uneasy peace.",
+    "Enemy, then partner"
+   ],
+   [
+    "Ferengi Alliance",
+    "Traders; more rivals than enemies.",
+    "Neutral"
+   ],
+   [
+    "The Borg",
+    "An all-consuming collective. The biggest threat to everyone.",
+    "Enemy"
+   ],
+   [
+    "The Dominion",
+    "An empire from the Gamma Quadrant ruled by shapeshifting Founders; the Dominion War is the franchise's biggest conflict.",
+    "Enemy"
+   ],
+   [
+    "Bajor",
+    "A world recovering from occupation; close ties to the Federation.",
+    "Ally"
+   ]
+  ],
+  "order": [
+   [
+    "The Original Series (1966)",
+    "Kirk, Spock, McCoy. Classic, campy and bold. Fun, but a lot of newcomers start elsewhere."
+   ],
+   [
+    "The Next Generation (1987)",
+    "Picard's Enterprise. The most popular entry point."
+   ],
+   [
+    "Deep Space Nine (1993)",
+    "A space station and a war. Serialized, darker, beloved."
+   ],
+   [
+    "Voyager (1995)",
+    "A crew stranded far from home."
+   ],
+   [
+    "Enterprise (2001)",
+    "The first starship, before the Federation."
+   ],
+   [
+    "Discovery, Picard, Lower Decks, Prodigy, Strange New Worlds (2017 and later)",
+    "The modern shows. Strange New Worlds is a good fresh start; Lower Decks is a comedy."
+   ],
+   [
+    "Films",
+    "The Wrath of Khan, The Voyage Home and First Contact are the usual first three."
+   ]
+  ],
+  "captains": [
+   [
+    "James T. Kirk",
+    "The Original Series; Enterprise",
+    "Bold and charismatic; trusts his gut",
+    "Captain James T. Kirk"
+   ],
+   [
+    "Jean-Luc Picard",
+    "The Next Generation; Picard",
+    "Diplomat and scholar; principled",
+    "Captain Jean-Luc Picard"
+   ],
+   [
+    "Benjamin Sisko",
+    "Deep Space Nine",
+    "Pragmatic; a leader in wartime",
+    "Captain Benjamin Sisko"
+   ],
+   [
+    "Kathryn Janeway",
+    "Voyager",
+    "Scientist; determined; far from home",
+    "Captain Kathryn Janeway"
+   ],
+   [
+    "Jonathan Archer",
+    "Enterprise (NX-01)",
+    "The first explorer; learning as he goes",
+    "Captain Jonathan Archer"
+   ],
+   [
+    "Christopher Pike",
+    "Strange New Worlds",
+    "Warm, brave, haunted by his future",
+    "Captain Pike, Fullness of Time"
+   ],
+   [
+    "Michael Burnham",
+    "Discovery",
+    "Science officer turned captain",
+    "Captain Michael Burnham"
+   ]
+  ],
+  "episodes": [
+   [
+    "The Original Series",
+    "\"The City on the Edge of Forever\"; \"The Trouble with Tribbles\"; \"Balance of Terror\""
+   ],
+   [
+    "The Next Generation",
+    "\"The Measure of a Man\"; \"The Best of Both Worlds\"; \"The Inner Light\"; \"Darmok\"; \"Yesterday's Enterprise\""
+   ],
+   [
+    "Deep Space Nine",
+    "\"In the Pale Moonlight\"; \"The Visitor\"; \"Duet\""
+   ],
+   [
+    "Voyager",
+    "\"Year of Hell\"; \"Scorpion\""
+   ],
+   [
+    "Films",
+    "The Wrath of Khan; The Voyage Home; First Contact"
+   ]
+  ]
+ },
+ "SERIES": [
+  [
+   "The Original Series and films",
+   "🖖",
+   [
+    "Captain James T. Kirk",
+    "Kirk, Commanding Officer",
+    "Mr. Spock, Science Officer",
+    "Spock, Always Your Friend",
+    "Nyota Uhura, Communications",
+    "Khan, Vengeful Heart",
+    "Saavik, Stoic Student",
+    "General Chang, Cold Warrior",
+    "V'Ger, the Intruder",
+    "U.S.S. Enterprise-A, Free Spirit",
+    "U.S.S. Reliant, From Hell's Heart",
+    "Dr. Joseph M'Benga"
+   ]
+  ],
+  [
+   "The Next Generation",
+   "🖥️",
+   [
+    "Captain Jean-Luc Picard",
+    "Picard, Leading by Example",
+    "Lieutenant Commander Data",
+    "Lt. Cmdr. Geordi La Forge",
+    "Dr. Beverly Crusher",
+    "Worf, Honor-Bound Warrior",
+    "Lore, Positronic Provocateur",
+    "Locutus, the One Who Speaks",
+    "Q, Stacking the Deck",
+    "Vash, Freelance Archaeologist",
+    "The Traveler",
+    "The Duras Sisters",
+    "U.S.S. Enterprise-D, Galaxy-Class",
+    "The Holodeck",
+    "Gowron, Eager for Battle"
+   ]
+  ],
+  [
+   "Deep Space Nine",
+   "🛰️",
+   [
+    "Captain Benjamin Sisko",
+    "Constable Odo",
+    "Quark, Humble Proprietor",
+    "Miles O'Brien, Transporter Ops",
+    "Deep Space 9",
+    "Worf, Intelligence Contractor"
+   ]
+  ],
+  [
+   "Voyager",
+   "🚀",
+   [
+    "Captain Kathryn Janeway",
+    "Seven of Nine",
+    "Seven of Nine, Unassimilated",
+    "The Doctor, EMH"
+   ]
+  ],
+  [
+   "Enterprise",
+   "⚓",
+   [
+    "Captain Jonathan Archer",
+    "Phlox, Unorthodox Doctor",
+    "Hoshi Sato, Exolinguist",
+    "Daniels, Temporal Agent"
+   ]
+  ],
+  [
+   "Discovery",
+   "🌌",
+   [
+    "Captain Michael Burnham",
+    "U.S.S. Discovery, at Black Alert",
+    "L'Rell, Fierce Visionary",
+    "Cleveland Booker, Empath",
+    "Gray and Adira, Forever Joined"
+   ]
+  ],
+  [
+   "Strange New Worlds",
+   "🔭",
+   [
+    "Captain Pike, Fullness of Time",
+    "La'An Noonien-Singh, Security",
+    "Hemmer, Fixing What Is Broken"
+   ]
+  ],
+  [
+   "Lower Decks and Prodigy",
+   "🎬",
+   [
+    "Beckett Mariner, Impetuous Ensign",
+    "Brad Boimler, Eager Ensign",
+    "D'Vana Tendi, Optimistic Ensign",
+    "Dal R'El, Augment Orphan",
+    "Zero, Incorporeal Sensate"
+   ]
+  ],
+  [
+   "Places",
+   "🏫",
+   [
+    "Starfleet Academy"
+   ]
+  ]
+ ],
+ "DESIGN": {
+  "traits": [
+   "Defining personality trait (what do they always do?)",
+   "A signature moment you can recreate in the card's ability",
+   "A relationship that could show up in a crew (who do they need?)",
+   "A color that fits their worldview"
+  ],
+  "checks": [
+   "The ability does what the character is known for.",
+   "The colors match their personality (red = bold and impulsive, white = order and ideals, blue = logic and curiosity, black = ambition, green = growth and nature).",
+   "It rewards a Star Trek idea: a crew of different types (Federation), a hard choice (Face a dilemma), a ship (Station) or the Borg (Assimilate).",
+   "The cost and power feel fair for a legend (a 3-drop with a 3/3 body and a strong ability is a lot)."
+  ]
+ }
+};
+    const PODCAST_EPISODE = { title: 'Welcome to the Final Frontier', host: 'QH (Rachel)', guests: ['Ovid', 'Hayden'], set: 'trk', release: '2026-11-13' };
+    const PODCAST_KEY = 'podcastPrepV1';
+    let podState = null;
+    let podTab = 'run';
+    let podSetCards = null, podSetInfo = null, podSetLoading = false, podSetError = '';
+    let podPractice = null;
+
+    function podLoad() {
+        if (podState) return podState;
+        let s = null;
+        try { s = JSON.parse(localStorage.getItem(PODCAST_KEY) || 'null'); } catch (e) { s = null; }
+        podState = Object.assign({ notes: {}, ready: {}, mins: {}, hideTips: false, pitch: '', designs: [] }, s || {});
+        return podState;
+    }
+    function podSave() { try { localStorage.setItem(PODCAST_KEY, JSON.stringify(podState)); } catch (e) { /* this session only */ } }
+    function podQuestions() {
+        let n = 0;
+        return PODCAST.SEGMENTS.map(seg => seg.questions.map(q => { n++; q.id = seg.key + n; q.n = n; q.seg = seg; return q; })).flat();
+    }
+    function podCardChips(names) {
+        if (!names || !names.length) return '';
+        return `<div class="pod-chips">${names.map(n => `<button type="button" class="pod-chip" onclick="openCardModalByName('${podEsc(n).replace(/&#39;/g, "\\'")}')" title="Open this card">🃏 ${podEsc(n)}</button>`).join('')}</div>`;
+    }
+    function showPodcastTab() { podLoad(); renderPodcast(); if (podTab === 'set') loadPodcastSet(); }
+    function switchPodcastTab(tab) {
+        podTab = tab;
+        document.querySelectorAll('#podTabs .guide-tab').forEach(b => setTabActive(b, b.dataset.podTab === tab));
+        renderPodcast();
+        if (tab === 'set') loadPodcastSet();
+    }
+    function renderPodcast() {
+        podLoad();
+        const host = document.getElementById('podBody'); if (!host) return;
+        document.querySelectorAll('#podTabs .guide-tab').forEach(b => setTabActive(b, b.dataset.podTab === podTab));
+        host.innerHTML = podTab === 'run' ? podRunHTML() : podTab === 'cheat' ? podCheatHTML() : podTab === 'set' ? podSetHTML() : podDesignHTML();
+        if (podTab === 'design') podDesignRefresh();
+    }
+
+    // ---------- Run sheet ----------
+    function podProgress() {
+        const qs = podQuestions(), done = qs.filter(q => podState.ready[q.id]).length;
+        return { done, total: qs.length };
+    }
+    function podSegMins(seg) { const v = parseInt(podState.mins[seg.key], 10); return isFinite(v) && v >= 0 ? v : seg.mins; }
+    function podRunHTML() {
+        const p = podProgress(), totalMins = PODCAST.SEGMENTS.reduce((a, s) => a + podSegMins(s), 0);
+        const segs = PODCAST.SEGMENTS.map(seg => {
+            const qs = seg.questions, done = qs.filter(q => podState.ready[q.id]).length;
+            return `<details class="pod-seg" open>
+                <summary><span class="pod-seg-ico">${seg.icon}</span><span class="pod-seg-title">${podEsc(seg.title)}</span><span class="pod-seg-count" id="podSegCount-${seg.key}">${done}/${qs.length} ready</span></summary>
+                <p class="pod-seg-goal">${podEsc(seg.goal)}</p>
+                <label class="pod-mins">Target time <input type="number" min="0" max="120" value="${podSegMins(seg)}" oninput="podSetMins('${seg.key}', this.value)" aria-label="Minutes for ${podEsc(seg.title)}"> min</label>
+                ${qs.map(q => podQuestionHTML(q)).join('')}
+            </details>`;
+        }).join('');
+        return `<div class="pod-top">
+                <div class="pod-ep"><strong>${podEsc(PODCAST_EPISODE.title)}</strong><span>Host: ${podEsc(PODCAST_EPISODE.host)} · Guests: ${PODCAST_EPISODE.guests.map(podEsc).join(' and ')}</span></div>
+                <div class="pod-prog" role="status"><span id="podProgText">${p.done} of ${p.total} questions ready</span><div class="pod-bar"><i id="podProgBar" style="width:${Math.round(p.done / p.total * 100)}%"></i></div><span id="podTotalMins" class="text-secondary">About ${totalMins} minutes planned</span></div>
+                <div class="pod-actions">
+                    <button type="button" class="pod-btn" onclick="podPracticeStart()">🎲 Practice a question</button>
+                    <button type="button" class="pod-btn" onclick="podToggleTips()">${podState.hideTips ? '👁️ Show talking points' : '🙈 Hide talking points'}</button>
+                    <button type="button" class="pod-btn" onclick="podCopyNotes()">📋 Copy my notes</button>
+                    <button type="button" class="pod-btn" onclick="podPrint()">🖨️ Print run sheet</button>
+                </div>
+                <div id="podPractice"></div>
+                <div class="pod-pitch"><label for="podPitch"><strong>Your 10-second pitch</strong> <span class="text-secondary">(the hook you'll lead with; saved on this device)</span></label>
+                    <textarea id="podPitch" rows="2" placeholder="Star Trek is..." oninput="podSetPitch(this.value)">${podEsc(podState.pitch)}</textarea></div>
+                <div class="pod-note pod-warn">Talking points are suggestions written from general Star Trek knowledge. Double-check dates, episode titles and character facts before you say them on air.</div>
+            </div>${segs}`;
+    }
+    function podQuestionHTML(q) {
+        const note = podState.notes[q.id] || '', ready = !!podState.ready[q.id];
+        return `<div class="pod-q${ready ? ' ready' : ''}" id="podQ-${q.id}">
+            <div class="pod-q-head"><span class="pod-q-n">${q.n}</span><p class="pod-q-text">${podEsc(q.q)}</p>
+                <label class="pod-ready"><input type="checkbox" ${ready ? 'checked' : ''} onchange="podSetReady('${q.id}', this.checked)"> Ready</label></div>
+            ${podState.hideTips ? '' : `<details class="pod-tips"><summary>Talking points</summary><ul>${q.tips.map(t => `<li>${podEsc(t)}</li>`).join('')}</ul>${podCardChips(q.cards)}</details>`}
+            <textarea class="pod-notes" rows="3" placeholder="Your answer, in your own words..." oninput="podSetNote('${q.id}', this.value)" aria-label="Your notes for question ${q.n}">${podEsc(note)}</textarea>
+        </div>`;
+    }
+    function podSetNote(id, v) { podState.notes[id] = v; podSave(); }
+    function podSetPitch(v) { podState.pitch = v; podSave(); }
+    function podSetMins(key, v) {
+        podState.mins[key] = v; podSave();
+        const total = PODCAST.SEGMENTS.reduce((a, s) => a + podSegMins(s), 0), el = document.getElementById('podTotalMins');
+        if (el) el.textContent = `About ${total} minutes planned`;
+    }
+    function podSetReady(id, on) {
+        if (on) podState.ready[id] = true; else delete podState.ready[id];
+        podSave();
+        const el = document.getElementById('podQ-' + id); if (el) el.classList.toggle('ready', !!on);
+        const p = podProgress(), t = document.getElementById('podProgText'), b = document.getElementById('podProgBar');
+        if (t) t.textContent = `${p.done} of ${p.total} questions ready`;
+        if (b) b.style.width = Math.round(p.done / p.total * 100) + '%';
+        PODCAST.SEGMENTS.forEach(seg => { const c = document.getElementById('podSegCount-' + seg.key); if (c) c.textContent = `${seg.questions.filter(q => podState.ready[q.id]).length}/${seg.questions.length} ready`; });
+    }
+    function podToggleTips() { podState.hideTips = !podState.hideTips; podSave(); renderPodcast(); }
+    function podNotesText() {
+        const lines = [`${PODCAST_EPISODE.title}`, `Host: ${PODCAST_EPISODE.host} | Guests: ${PODCAST_EPISODE.guests.join(', ')}`, ''];
+        if (podState.pitch.trim()) lines.push('My 10-second pitch: ' + podState.pitch.trim(), '');
+        PODCAST.SEGMENTS.forEach(seg => {
+            lines.push(`== ${seg.title} (${podSegMins(seg)} min) ==`);
+            seg.questions.forEach(q => { lines.push(`${q.n}. ${q.q}`, `   ${podState.ready[q.id] ? '[ready]' : '[ ]'} ${(podState.notes[q.id] || '').trim() || '(no notes yet)'}`); });
+            lines.push('');
+        });
+        return lines.join('\n');
+    }
+    function podCopyNotes() {
+        const text = podNotesText();
+        const done = () => { const b = document.querySelector('.pod-actions .pod-btn:nth-child(3)'); if (b) { const old = b.textContent; b.textContent = '✅ Copied'; setTimeout(() => { b.textContent = old; }, 1600); } };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => podCopyFallback(text, done)); else podCopyFallback(text, done);
+    }
+    function podCopyFallback(text, done) {
+        const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:0;'; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) { /* nothing to do */ }
+        ta.remove();
+    }
+    function podPrint() {
+        let area = document.getElementById('podPrintArea'); if (area) area.remove();
+        area = document.createElement('div'); area.id = 'podPrintArea';
+        const segs = PODCAST.SEGMENTS.map(seg => `<h2>${podEsc(seg.title)} <small>(${podSegMins(seg)} min)</small></h2>${seg.questions.map(q => `<div class="pp-q"><div class="pp-qt"><span>${q.n}</span> ${podEsc(q.q)}</div>${podState.hideTips ? '' : `<ul>${q.tips.map(t => `<li>${podEsc(t)}</li>`).join('')}</ul>`}<div class="pp-notes">${podEsc(podState.notes[q.id] || '')}</div></div>`).join('')}`).join('');
+        area.innerHTML = `<h1>${podEsc(PODCAST_EPISODE.title)}</h1><p>Host: ${podEsc(PODCAST_EPISODE.host)} · Guests: ${PODCAST_EPISODE.guests.map(podEsc).join(' and ')} · Printed ${new Date().toLocaleDateString()}</p>${podState.pitch.trim() ? `<p><strong>My pitch:</strong> ${podEsc(podState.pitch)}</p>` : ''}${segs}<p class="pp-foot">Fan-made prep sheet. Not affiliated with Paramount, CBS or Wizards of the Coast. Check facts before airing.</p>`;
+        document.body.appendChild(area);
+        document.body.classList.add('pod-printing');
+        const done = () => { document.body.classList.remove('pod-printing'); area.remove(); window.removeEventListener('afterprint', done); };
+        window.addEventListener('afterprint', done);
+        window.print();
+    }
+    // Practice: a random question that isn't marked ready yet, with a 60 second clock
+    function podPracticeStart() {
+        const pool = podQuestions().filter(q => !podState.ready[q.id]);
+        const list = pool.length ? pool : podQuestions();
+        podPractice = { q: list[Math.floor(Math.random() * list.length)], t: 60, run: false, timer: 0 };
+        podPracticeDraw();
+    }
+    function podPracticeDraw() {
+        const host = document.getElementById('podPractice'); if (!host || !podPractice) return;
+        const p = podPractice;
+        host.innerHTML = `<div class="pod-practice"><div class="pod-practice-q"><strong>Question ${p.q.n}</strong> <span class="text-secondary">${podEsc(p.q.seg.title)}</span><p>${podEsc(p.q.q)}</p></div>
+            <div class="pod-clock" id="podClock" role="timer">${podClockText()}</div>
+            <div class="pod-actions"><button type="button" class="pod-btn" onclick="podPracticeToggle()">${p.run ? '⏸️ Pause' : '▶️ Start the clock'}</button><button type="button" class="pod-btn" onclick="podPracticeStart()">⏭️ Another one</button><button type="button" class="pod-btn" onclick="podPracticeReady()">✅ I've got this one</button><button type="button" class="pod-btn" onclick="podPracticeStop()">Close</button></div></div>`;
+    }
+    function podClockText() { const t = podPractice ? podPractice.t : 0; return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; }
+    function podPracticeToggle() {
+        if (!podPractice) return;
+        podPractice.run = !podPractice.run;
+        clearInterval(podPractice.timer);
+        if (podPractice.run) podPractice.timer = setInterval(() => {
+            if (!podPractice) return;
+            podPractice.t = Math.max(0, podPractice.t - 1);
+            const c = document.getElementById('podClock'); if (c) c.textContent = podClockText();
+            if (podPractice.t === 0) { clearInterval(podPractice.timer); podPractice.run = false; podPracticeDraw(); }
+        }, 1000);
+        podPracticeDraw();
+    }
+    function podPracticeReady() { if (podPractice) { podSetReady(podPractice.q.id, true); const cb = document.querySelector(`#podQ-${podPractice.q.id} .pod-ready input`); if (cb) cb.checked = true; } podPracticeStart(); }
+    function podPracticeStop() { if (podPractice) clearInterval(podPractice.timer); podPractice = null; const h = document.getElementById('podPractice'); if (h) h.innerHTML = ''; }
+
+    // ---------- Universe cheat sheet ----------
+    function podCheatHTML() {
+        const C = PODCAST.CHEAT;
+        const table = (head, rows, cls) => `<div class="pod-table-wrap"><table class="pod-table ${cls || ''}"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+        const chip = n => n ? podCardChips([n]) : '';
+        return `<div class="pod-note pod-warn">Plain-English reference for the crash course. Written from general Star Trek knowledge: double-check years and titles before airing.</div>
+        <details class="pod-sec" open><summary>🎤 Ready-made pitches</summary>${C.pitches.map(p => `<div class="pod-pitchrow"><strong>${podEsc(p[0])}</strong><p>${podEsc(p[1])}</p></div>`).join('')}</details>
+        <details class="pod-sec" open><summary>👽 Species at a glance</summary>${table(['Species', 'In one line', 'In the set'], C.species.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td><td>${chip(r[2])}</td></tr>`))}</details>
+        <details class="pod-sec"><summary>🚀 Captains compared</summary>${table(['Captain', 'Series', 'Style', 'In the set'], C.captains.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td><td>${podEsc(r[2])}</td><td>${chip(r[3])}</td></tr>`))}</details>
+        <details class="pod-sec"><summary>🛠️ Technology in plain English</summary>${table(['Technology', 'What it does'], C.tech.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td></tr>`))}</details>
+        <details class="pod-sec"><summary>⚔️ Factions: allies and enemies</summary>${table(['Faction', 'Who they are', 'Toward the Federation'], C.factions.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td><td>${podEsc(r[2])}</td></tr>`))}</details>
+        <details class="pod-sec"><summary>📅 Timeline (rough)</summary>${table(['When', 'What happens'], C.timeline.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td></tr>`))}<p class="text-secondary">Years are approximate and follow the franchise's own timeline.</p></details>
+        <details class="pod-sec"><summary>📺 Where to start (and does order matter?)</summary>${table(['Series', 'Good to know'], C.order.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td></tr>`))}<p>Short answer: no. Most episodes stand alone, so start with whatever sounds fun.</p></details>
+        <details class="pod-sec"><summary>🎬 Must-watch episodes and films</summary>${table(['Where', 'Titles fans recommend'], C.episodes.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td></tr>`))}<p class="text-secondary">Check titles before airing.</p></details>`;
+    }
+
+    // ---------- The set (live) ----------
+    async function loadPodcastSet() {
+        if (podSetCards || podSetLoading) return;
+        podSetLoading = true; podSetError = '';
+        try {
+            const [cards, info] = await Promise.all([
+                fetchAllSetCards(PODCAST_EPISODE.set),
+                fetch(`${API_BASE}/sets/${PODCAST_EPISODE.set}`).then(r => r.ok ? r.json() : null).catch(() => null)
+            ]);
+            podSetCards = cards; podSetInfo = info;
+            cards.forEach(c => { cardTileDataById[c.id] = c; });
+        } catch (e) { podSetError = "Couldn't load the Star Trek cards right now."; }
+        podSetLoading = false;
+        if (podTab === 'set') renderPodcast();
+    }
+    function podLegends() { return (podSetCards || []).filter(c => /Legendary/.test(c.type_line || '')); }
+    function podColorWord(c) {
+        const cols = c.colors && c.colors.length ? c.colors : (c.color_identity || []);
+        return cols.length === 0 ? 'C' : cols.length > 1 ? 'M' : cols[0];
+    }
+    function podSetHTML() {
+        if (podSetLoading || (!podSetCards && !podSetError)) return `<div class="loading">Loading the Star Trek cards...</div>`;
+        if (podSetError) return `<div class="error">${podEsc(podSetError)}</div><p><button type="button" class="pod-btn" onclick="podSetError=''; podSetCards=null; loadPodcastSet(); renderPodcast()">Try again</button></p>`;
+        const cards = podSetCards, legends = podLegends(), N = podSetInfo && podSetInfo.card_count;
+        const byRar = {}; cards.forEach(c => { byRar[c.rarity] = (byRar[c.rarity] || 0) + 1; });
+        const notes = (typeof PRERELEASE_SET_NOTES !== 'undefined' && PRERELEASE_SET_NOTES[PODCAST_EPISODE.set]) || null;
+        const mech = notes ? notes.mechanics.map(m => {
+            const ex = cards.find(c => m.match.test((c.oracle_text || '') + ' ' + (c.type_line || '')));
+            return `<div class="pod-mech"><strong>${podEsc(m.name)}</strong> <span class="pod-badge ${m.isNew ? 'new' : ''}">${m.isNew ? 'New' : 'Returning'}</span><p>${podEsc(m.text)}</p>${ex ? podCardChips([ex.name]) : ''}</div>`;
+        }).join('') : '';
+        const named = new Set(); const groups = PODCAST.SERIES.map(([label, icon, names]) => {
+            const found = names.map(n => legends.find(c => c.name === n)).filter(Boolean); found.forEach(c => named.add(c.id));
+            return found.length ? `<div class="pod-group"><h3>${icon} ${podEsc(label)} <span class="text-secondary">(${found.length})</span></h3><div class="pod-tiles">${found.map(c => buildCardTileHTML(c)).join('')}</div></div>` : '';
+        }).join('');
+        const other = legends.filter(c => !named.has(c.id));
+        const otherHTML = other.length ? `<div class="pod-group"><h3>✨ New reveals and others <span class="text-secondary">(${other.length})</span></h3><div class="pod-tiles">${other.map(c => buildCardTileHTML(c)).join('')}</div></div>` : '';
+        const ships = cards.filter(c => /Spacecraft|Vehicle/.test(c.type_line || '') && !/Legendary/.test(c.type_line || ''));
+        const colorNames = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', M: 'Multicolor', C: 'Colorless' };
+        const lc = {}; legends.filter(c => /Creature/.test(c.type_line || '')).forEach(c => { const k = podColorWord(c); lc[k] = (lc[k] || 0) + 1; });
+        const maxLc = Math.max(1, ...Object.values(lc));
+        const captains = ['Captain James T. Kirk', 'Captain Jean-Luc Picard', 'Captain Benjamin Sisko', 'Captain Kathryn Janeway', 'Captain Jonathan Archer', 'Captain Pike, Fullness of Time', 'Captain Michael Burnham', 'Mr. Spock, Science Officer', 'Khan, Vengeful Heart', 'Q, Stacking the Deck']
+            .map(n => legends.find(c => c.name === n)).filter(Boolean);
+        return `<div class="pod-note">Live from Scryfall: <strong>${cards.length}</strong> Star Trek (TRK) cards are listed${N ? ` of ${N} planned` : ''}. The set releases ${PODCAST_EPISODE.release}; more cards appear as they are previewed. Open <button type="button" class="pod-link" onclick="navigateTo('setprimer')">Set Primer</button> to browse every card.</div>
+            <div class="pod-stats">${['mythic', 'rare', 'uncommon', 'common'].map(r => `<div class="pod-stat"><strong>${byRar[r] || 0}</strong><span>${r}</span></div>`).join('')}<div class="pod-stat"><strong>${legends.length}</strong><span>legendary</span></div></div>
+            <details class="pod-sec" open><summary>⚙️ Mechanics to explain</summary>${mech || '<p class="text-secondary">No mechanic notes yet.</p>'}</details>
+            <details class="pod-sec" open><summary>🎨 Captains and icons: which color?</summary><div class="pod-colorlist">${captains.map(c => `<button type="button" class="pod-color c-${podColorWord(c)}" onclick="openCardModal(cardTileDataById['${c.id}'])"><b>${podEsc(c.name.replace(/, .*/, ''))}</b><span>${podEsc(colorNames[podColorWord(c)])} · ${podEsc(c.mana_cost || '')}</span></button>`).join('')}</div>
+                <h3 class="pod-h3">Legendary creatures by color</h3><div class="pod-colorbars">${Object.keys(colorNames).filter(k => lc[k]).map(k => `<div class="pod-cb"><span>${colorNames[k]}</span><i class="c-${k}" style="width:${Math.round(lc[k] / maxLc * 100)}%"></i><b>${lc[k]}</b></div>`).join('')}</div></details>
+            <details class="pod-sec" open><summary>🖖 Who's in the set (${legends.length} legendary cards)</summary><p class="text-secondary">Grouped by the show each character comes from. The grouping is hand-made, so check anything you plan to say.</p>${groups}${otherHTML}</details>
+            ${ships.length ? `<details class="pod-sec"><summary>🛸 Ships and other Spacecraft (${ships.length})</summary><div class="pod-tiles">${ships.map(c => buildCardTileHTML(c)).join('')}</div></details>` : ''}`;
+    }
+
+    // ---------- Design a legend ----------
+    const POD_COLORS = [['W', 'White', 'order, ideals, community'], ['U', 'Blue', 'logic, knowledge, curiosity'], ['B', 'Black', 'ambition, sacrifice, power'], ['R', 'Red', 'passion, speed, chaos'], ['G', 'Green', 'growth, instinct, nature']];
+    function podDesignHTML() {
+        const d = podDesign();
+        const examples = ['Mr. Spock, Science Officer', 'Lieutenant Commander Data', 'Khan, Vengeful Heart'].map(n => podSetCards && podSetCards.find(c => c.name === n)).filter(Boolean);
+        return `<div class="pod-design">
+            <div class="pod-form">
+                <p class="text-secondary">Sketch one Star Trek legendary creature. Text only: no art or Wizards frames, just the design.</p>
+                <label>Character name<input type="text" id="pdName" value="${podEsc(d.name)}" placeholder="e.g. Elim Garak, Plain Simple Tailor" oninput="podDesignSet()"></label>
+                <div class="pod-colorpick"><span>Colors</span>${POD_COLORS.map(c => `<label class="pod-cp c-${c[0]}" title="${c[1]}: ${c[2]}"><input type="checkbox" value="${c[0]}" ${d.colors.includes(c[0]) ? 'checked' : ''} onchange="podDesignSet()"> ${c[1]}</label>`).join('')}</div>
+                <div class="pod-row"><label>Generic mana<input type="number" id="pdGen" min="0" max="9" value="${d.generic}" oninput="podDesignSet()"></label><label>Power<input type="number" id="pdPow" min="0" max="12" value="${d.pow}" oninput="podDesignSet()"></label><label>Toughness<input type="number" id="pdTou" min="0" max="12" value="${d.tou}" oninput="podDesignSet()"></label></div>
+                <label>Creature types<input type="text" id="pdTypes" value="${podEsc(d.types)}" placeholder="Human Officer" oninput="podDesignSet()"></label>
+                <label>Signature ability<textarea id="pdText" rows="4" placeholder="What happens on the table when this character does what they are famous for?" oninput="podDesignSet()">${podEsc(d.text)}</textarea></label>
+                <label>Why it feels like Star Trek<textarea id="pdWhy" rows="2" placeholder="One sentence you could say on the podcast" oninput="podDesignSet()">${podEsc(d.why)}</textarea></label>
+                <div class="pod-checks"><strong>Check it:</strong>${PODCAST.DESIGN.checks.map((t, i) => `<label><input type="checkbox" ${d.checks[i] ? 'checked' : ''} onchange="podDesignCheck(${i}, this.checked)"> ${podEsc(t)}</label>`).join('')}</div>
+                <div class="pod-actions"><button type="button" class="pod-btn" onclick="podDesignCopy()">📋 Copy as text</button><button type="button" class="pod-btn" onclick="podDesignSaveNew()">💾 Save this and start another</button></div>
+            </div>
+            <div class="pod-preview"><div class="pod-card" id="pdCard"></div>${podState.designs.length ? `<div class="pod-saved"><strong>Saved designs</strong>${podState.designs.map((x, i) => `<div class="pod-saved-row"><span>${podEsc(x.name || 'Unnamed')}</span><button type="button" class="pod-link" onclick="podDesignLoad(${i})">Open</button><button type="button" class="pod-link" onclick="podDesignDelete(${i})">Delete</button></div>`).join('')}</div>` : ''}
+                ${examples.length ? `<div class="pod-saved"><strong>For inspiration, cards in the set</strong>${examples.map(c => `<div class="pod-saved-row"><span>${podEsc(c.name)}</span><button type="button" class="pod-link" onclick="openCardModal(cardTileDataById['${c.id}'])">View</button></div>`).join('')}</div>` : (podSetCards ? '' : `<p class="text-secondary">Open the "The set" tab once to see examples here.</p>`)}</div></div>`;
+    }
+    function podDesign() {
+        if (!podState.design) podState.design = { name: '', colors: [], generic: 2, pow: 3, tou: 3, types: 'Human Officer', text: '', why: '', checks: {} };
+        return podState.design;
+    }
+    function podDesignSet() {
+        const d = podDesign(), g = id => document.getElementById(id);
+        d.name = g('pdName').value; d.generic = Math.max(0, parseInt(g('pdGen').value, 10) || 0); d.pow = parseInt(g('pdPow').value, 10) || 0; d.tou = parseInt(g('pdTou').value, 10) || 0;
+        d.types = g('pdTypes').value; d.text = g('pdText').value; d.why = g('pdWhy').value;
+        d.colors = [...document.querySelectorAll('.pod-colorpick input:checked')].map(i => i.value);
+        podSave(); podDesignRefresh();
+    }
+    function podDesignCheck(i, on) { const d = podDesign(); if (on) d.checks[i] = true; else delete d.checks[i]; podSave(); }
+    function podDesignCost(d) {
+        const order = 'WUBRG'; let s = d.generic > 0 ? `{${d.generic}}` : '';
+        order.split('').forEach(c => { if (d.colors.includes(c)) s += `{${c}}`; });
+        return s || '{0}';
+    }
+    function podDesignText(d) {
+        return `${d.name || 'Unnamed legend'}   ${podDesignCost(d)}\nLegendary Creature — ${d.types || '...'}\n${d.text || '(ability text)'}\n${d.pow}/${d.tou}${d.why ? `\nWhy it feels like Star Trek: ${d.why}` : ''}`;
+    }
+    function podDesignRefresh() {
+        const el = document.getElementById('pdCard'); if (!el) return;
+        const d = podDesign(), cols = d.colors.length ? d.colors : ['C'];
+        const pips = podDesignCost(d).match(/\{[^}]+\}/g).map(p => `<span class="pod-pip c-${p.length === 3 && 'WUBRG'.includes(p[1]) ? p[1] : 'C'}">${p.slice(1, -1)}</span>`).join('');
+        el.className = 'pod-card pc-' + (cols.length > 1 ? 'M' : cols[0]);
+        el.innerHTML = `<div class="pod-card-top"><b>${podEsc(d.name || 'Unnamed legend')}</b><span class="pod-pips">${pips}</span></div><div class="pod-card-type">Legendary Creature — ${podEsc(d.types || '...')}</div><div class="pod-card-text">${podEsc(d.text || 'Ability text appears here.').replace(/\n/g, '<br>')}</div><div class="pod-card-pt">${d.pow}/${d.tou}</div>`;
+    }
+    function podDesignCopy() {
+        const text = podDesignText(podDesign());
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(() => podCopyFallback(text, () => {})); else podCopyFallback(text, () => {});
+    }
+    function podDesignSaveNew() {
+        const d = podDesign(); if (!d.name.trim() && !d.text.trim()) return;
+        podState.designs.push(JSON.parse(JSON.stringify(d))); podState.designs = podState.designs.slice(-12);
+        podState.design = null; podSave(); renderPodcast();
+    }
+    function podDesignLoad(i) { podState.design = JSON.parse(JSON.stringify(podState.designs[i])); podSave(); renderPodcast(); }
+    function podDesignDelete(i) { podState.designs.splice(i, 1); podSave(); renderPodcast(); }
+        // opened by a #podcast link before this script ran
+    if (document.getElementById('podcastApp') && document.getElementById('podcastApp').style.display !== 'none') showPodcastTab();
+    </script>
+
     <script id="pxRealmScript">
     // =====================================================================
     // Realm background, pixel lettering and seasonal frames (2026-10-21, owner: "pixel alphabet sheets so we can use custom
