@@ -291,7 +291,7 @@ function fireMain2() { if (!G || G.main2Turn === G.turn) return; G.main2Turn = G
 const jvCounters = o => Math.max(0, o.counters || 0) + Object.values(o.ctr || {}).reduce((a, v) => a + Math.max(0, v), 0);
 function weakestFoe(P) { return foes(P).slice().sort((a, b) => a.life - b.life)[0] || null; }
 // "Target opponent": a person chooses when there is more than one (the computer takes the weakest)
-async function chooseOpponent(P, title) {
+async function chooseFoeTarget(P, title) {
     const fs = foes(P).filter(x => !x.out);
     if (fs.length <= 1 || P.isAI || AUTOPLAY) return weakestFoe(P);
     const w = await pickWord(P, title, fs.map(f => f.name));
@@ -338,7 +338,7 @@ Object.assign(CMD, {
     },
     // Sephiroth, Fabled SOLDIER: drain 1; the fourth time this turn he transforms (Super Nova: an emblem with the same drain)
     async sephirothDies(P, e, t, src) {
-        const O = await chooseOpponent(P, `${src.card.name}: choose a target opponent (they lose 1 life, you gain 1)`);
+        const O = await chooseFoeTarget(P, `${src.card.name}: choose a target opponent (they lose 1 life, you gain 1)`);
         if (O && !O.out) { O.life -= 1; log(`${O.name} ${you(O) ? 'lose' : 'loses'} 1 life.`); gainLifeFor(P, 1); }
         G.sephN = G.sephN && G.sephN.turn === G.turn && G.sephN.uid === src.uid ? { turn: G.turn, uid: src.uid, n: G.sephN.n + 1 } : { turn: G.turn, uid: src.uid, n: 1 };
         if (G.sephN.n === 4 && onBf(src.uid) && src.front && src.front.back && src.card === src.front) {
@@ -346,7 +346,7 @@ Object.assign(CMD, {
             await applyEffect(P, { t: 'transform' }, null, src);
         }
     },
-    async superNovaDrain(P) { const O = await chooseOpponent(P, 'Super Nova: choose a target opponent (they lose 1 life, you gain 1)'); if (O && !O.out) { O.life -= 1; log(`${O.name} ${you(O) ? 'lose' : 'loses'} 1 life (Super Nova).`); gainLifeFor(P, 1); } }
+    async superNovaDrain(P) { const O = await chooseFoeTarget(P, 'Super Nova: choose a target opponent (they lose 1 life, you gain 1)'); if (O && !O.out) { O.life -= 1; log(`${O.name} ${you(O) ? 'lose' : 'loses'} 1 life (Super Nova).`); gainLifeFor(P, 1); } }
 });
 // Super Nova emblems: each one drains whenever any creature dies
 function superNovaWatch(ctx) {

@@ -43,6 +43,9 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             ok('every non-basic card is fully automated', deck.entries.every(e => isBasic(e.card) || rulesFor(e.card).support === 'full'));
         }
         ok('the one-tap random commander and the Random build button exist', typeof playRandomCommander === 'function' && /faceCommander\(true\)/.test(renderOpponents.toString()) || true);
+        // the Jenova deck once redefined chooseOpponent(P, title) and broke the Play tab's opponent tiles
+        chosenOpponent = null; chooseOpponent({ type: 'random', fmt: 'commander', name: 'x' });
+        ok('picking an opponent on the Play tab sets chosenOpponent', chosenOpponent && chosenOpponent.type === 'random', String(chosenOpponent));
         return out;
     });
     const results = formatChecks(r);
