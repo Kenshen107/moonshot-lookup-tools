@@ -1204,7 +1204,7 @@ function suggestCommanders(q) {
         } catch (e) { /* suggestions are optional */ }
     }, 250);
 }
-async function faceCommander() {
+async function faceCommander(random) {
     const name = $('cmdFind').value.trim();
     if (!name) return;
     $('cmdFindNote').textContent = 'Looking for its EDHREC deck...';
@@ -1212,7 +1212,7 @@ async function faceCommander() {
     try {
         const res = await fetch(`${EDH}/average-decks/${slug}.json`);
         if (!res.ok) throw new Error();
-        chosenOpponent = { type: 'commander', key: slug, name };
+        chosenOpponent = { type: 'commander', key: slug, name, random: !!random };
         $('cmdFindNote').textContent = '';
         renderOpponents();
     } catch (e) { $('cmdFindNote').textContent = `EDHREC has no deck for "${name}". Check the spelling (pick from the suggestions).`; }
@@ -1558,8 +1558,9 @@ async function renderOpponents() {
             const custom = chosenOpponent && chosenOpponent.type === 'commander' && !cmds.some(c => c.slug === chosenOpponent.key) ? `<div class="opp-custom"><button type="button" class="opp" aria-pressed="true"><strong>👑 ${esc(chosenOpponent.name || chosenOpponent.key)}</strong><small>EDHREC average deck</small></button></div>` : '';
             list.innerHTML = `${podChipsHTML(deck)}${randomOppHTML('commander')}${verifiedOppHTML()}<h3 class="opp-h">Face any commander</h3>
                 <div class="row" style="margin-bottom:6px;"><input type="search" id="cmdFind" list="cmdSuggest" placeholder="Type a commander's name" aria-label="Commander to face" oninput="suggestCommanders(this.value)" onkeydown="if (event.key === 'Enter') faceCommander()" style="flex:1 1 220px;"><datalist id="cmdSuggest"></datalist>
-                <button class="btn" onclick="faceCommander()">👑 Face this commander</button>${pasteBtn}</div>
-                <div class="note" id="cmdFindNote" style="margin-bottom:8px;">Any commander EDHREC has decks for, playing its average deck. Or paste a real list.</div>
+                <button class="btn" onclick="faceCommander()">👑 Face this commander</button><button class="btn" onclick="faceCommander(true)" title="A different deck every time, drawn from the cards EDHREC players use with this commander">🎲 Random build</button>${pasteBtn}</div>
+                <div class="row" style="margin-bottom:6px;"><button class="btn primary" onclick="playRandomCommander()">🎲 Play a random fully automated commander now</button></div>
+                <div class="note" id="cmdFindNote" style="margin-bottom:8px;">Any commander EDHREC has decks for: "Face" plays its average deck, "Random build" draws a new deck from the cards EDHREC players use with it. Or paste a real list.</div>
                 ${custom}${pasted}
                 <h3 class="opp-h">Trending this week</h3>
                 <p class="note" style="margin-bottom:8px;">This week's trending commanders on EDHREC, each playing its EDHREC average deck (cards the game can't run yet are swapped for basic lands).</p>
@@ -1574,6 +1575,11 @@ async function renderOpponents() {
     if (chosenOpponent && ((chosenOpponent.type === 'precon') !== (deck.format === 'casual' || deck.format === 'limited') && chosenOpponent.type !== 'list')) chosenOpponent = null;
     if (chosenOpponent && chosenOpponent.type === 'theme' && deck.format !== 'modern') chosenOpponent = null;
     $('startNote').textContent = chosenOpponent ? '' : 'Pick an opponent.';
+}
+// One tap: a random fully automated commander with a themed random deck (the "Surprise me" opponent), and the game starts
+function playRandomCommander() {
+    chooseOpponent({ type: 'random', fmt: 'commander', name: 'Random playable deck' });
+    startMatch();
 }
 function randomOppHTML(fmt) {
     const on = chosenOpponent && chosenOpponent.type === 'random' && chosenOpponent.fmt === fmt;

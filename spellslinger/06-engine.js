@@ -246,6 +246,8 @@ async function startMatch(again) {
             oppDeck = await listToOppDeck(v.text, 'commander');
             oppDeck.source = `fully working deck (checked ${v.checked})`;
             if (v.style && PLAYSTYLES[v.style]) oppDeck.aiStyle = v.style; // a deck can name the playstyle it was tuned with
+        } else if (chosenOpponent.type === 'commander' && chosenOpponent.random) {
+            oppDeck = await buildEdhrecRandomDeck(chosenOpponent.key);
         } else {
             oppDeck = await buildCommanderDeck(chosenOpponent.key);
             oppDeck.source = `EDHREC average deck${oppDeck.swapped ? `, ${oppDeck.swapped} cards swapped for lands` : ''}`;
@@ -2796,7 +2798,9 @@ async function applyEffect(P, e, t, src) {
         case 'bounceOwnLand': {
             // Karoo lands: return a land (a tapped one, the cheapest kind, first)
             const ls = P.bf.filter(x => /\bLand\b/.test(x.card.type)).sort((a, b) => (b.tapped - a.tapped) || (isBasic(b.card) - isBasic(a.card)) || ((a === src) - (b === src)));
-            const l = ls[0];
+            let l = ls[0];
+            // a person chooses which land goes back (owner, 2026-10-23); the computer keeps its rule
+            if (l && !P.isAI && ls.length > 1) l = (await pickCard(P, ls, `${name}: choose a land to return to your hand`, { required: true })) || l;
             if (l) { leaveBattlefield(l, 'hand'); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${l.card.name} to hand.`); }
             break;
         }
