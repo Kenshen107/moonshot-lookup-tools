@@ -294,7 +294,7 @@ function mtgjsonSet(code) {
 const RULE_PACKS = {};
 // Extension points for the precon rounds (filled in by 15b-precon-effects.js): extra conditions, static-ability and block filters
 const COND_EXTRA = [], STATIC_FN = {}, BLOCK_FN = {}, BLOCKER_FN = {}, COUNT_EXTRA = [];
-const RULE_PACK_ORDER = ['jenova', 'politics', 'votes', 'gishath', 'msc', 'soc', 'cmdr', 'uldaros', 'precons5', 'precons4', 'precons3', 'precons2', 'precons1', 'm10', 'mirrodin', 'gitrog', 'brudiclad', 'sandman', 'tyrox', 'top1000-r2', 'landfall', 'xspells', 'top1000', 'starter-kits', 'welcome'];
+const RULE_PACK_ORDER = ['c-act', 'c-atk1', 'c-atk2', 'c-castmana1', 'c-castmana2', 'c-ctr', 'c-etb1', 'c-etb2', 'c-kw', 'c-phase1', 'c-phase2', 'c-pop1', 'c-pop2', 'c-tokgy1', 'c-tokgy2', 'c-tokgy3', 'jenova', 'politics', 'votes', 'gishath', 'msc', 'soc', 'cmdr', 'uldaros', 'precons5', 'precons4', 'precons3', 'precons2', 'precons1', 'm10', 'mirrodin', 'gitrog', 'brudiclad', 'sandman', 'tyrox', 'top1000-r2', 'landfall', 'xspells', 'top1000', 'starter-kits', 'welcome'];
 function registerRules(pack) { RULE_PACKS[pack.name] = pack; }
 function rulePackEntries(kind) { return RULE_PACK_ORDER.flatMap(n => (RULE_PACKS[n] && RULE_PACKS[n][kind]) || []); }
 // The lines of card text a pack reads (rulesFor's line loop): functions that take { R, card, lines, t, line, li } and return true
