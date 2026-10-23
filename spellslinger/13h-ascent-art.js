@@ -8,7 +8,8 @@ function ascFxPref() { try { return store.get('ascentFx', true) !== false; } cat
 function ascFxSet(on) { store.set('ascentFx', !!on); renderAscentIfOpen(); }
 function renderAscentIfOpen() { if ($('ascentApp') && !$('view-campaign').classList.contains('hidden')) renderAscent(); }
 // Effects never play in tests (autoplay and the lab), for people who ask for less motion, or when switched off
-function ascFxEnabled() { return window.__FX_FORCE === true || (!AUTOPLAY && !window.__LAB && !reducedMotion() && ascFxPref()); }
+// Campaign mode only (owner, 2026-10-23: no effects in Sandbox)
+function ascFxEnabled() { return window.__FX_FORCE === true || (!AUTOPLAY && !window.__LAB && !reducedMotion() && ascFxPref() && typeof modeKey === 'function' && modeKey() === 'campaign'); }
 
 // ---- Probing for art files (once per page load) ----
 function ascProbe(path, note) {
