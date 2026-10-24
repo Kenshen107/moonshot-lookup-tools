@@ -23544,7 +23544,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
   "timeline": [
    [
     "Mid 22nd century",
-    "Enterprise (NX-01) era: humanity's first deep-space explorers; the Romulan War follows and the Federation is founded in the early 2160s. (Check exact years.)"
+    "Enterprise (NX-01) era: humanity's first deep-space explorers. The Earth-Romulan War runs 2156 to 2160, and the United Federation of Planets is founded in 2161 (with United Earth, Vulcan, Andoria and Tellar)."
    ],
    [
     "2200s",
@@ -23552,23 +23552,23 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
    ],
    [
     "2290s",
-    "The Klingon moon Praxis explodes and peace is made at Khitomer (Star Trek VI)."
+    "The Klingon moon Praxis explodes and the Khitomer Accords make peace between the Klingons and the Federation (2293, Star Trek VI)."
    ],
    [
     "2360s",
-    "The Next Generation: Picard's Enterprise-D; the Borg attack at Wolf 359 (2367)."
+    "The Next Generation: Picard's Enterprise-D; the Borg destroy a Starfleet fleet at Wolf 359 (early 2367)."
    ],
    [
     "2370s",
-    "Deep Space Nine, Voyager, and the Dominion War (about 2373 to 2375)."
+    "Deep Space Nine, Voyager, and the Dominion War (2373 to 2375)."
    ],
    [
     "2380s and later",
-    "A supernova threatens Romulus, then Picard's story and the Discovery-era future. (Check exact years.)"
+    "Romulus is destroyed when its sun goes supernova (2387), which leads into Picard's story. Discovery later jumps to the 32nd century."
    ],
    [
     "Earlier, as backstory",
-    "First contact: humanity's first warp flight and the arrival of the Vulcans (about 2063 in the show's timeline)."
+    "First contact: Zefram Cochrane's first warp flight in 2063 brings the Vulcans to Earth."
    ]
   ],
   "tech": [
@@ -23739,7 +23739,10 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     "The Wrath of Khan; The Voyage Home; First Contact"
    ]
   ],
-  "checked": "2026-10-24 against Scryfall; Memory Alpha could not be reached from the build environment, so character/episode facts were not re-verified against it"
+  "checked": "2026-10-24: timeline years, the Prime Directive, the Khitomer Accords, Wolf 359, the Dominion War, show premiere dates and the episode titles were checked against Memory Alpha; species and character descriptions are summaries and were not",
+  "sources": [
+   "Memory Alpha (memory-alpha.fandom.com), checked 2026-10-24"
+  ]
  },
  "SERIES": [
   [
@@ -24068,7 +24071,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const C = PODCAST.CHEAT;
         const table = (head, rows, cls) => `<div class="pod-table-wrap"><table class="pod-table ${cls || ''}"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
         const chip = n => n ? podCardChips([n]) : '';
-        return `<div class="pod-note pod-warn">Plain-English reference for the crash course. Written from general Star Trek knowledge: double-check years and titles before airing. ${C.checked ? podEsc('Last reviewed: ' + C.checked + '.') : ''} <a href="https://memory-alpha.fandom.com/wiki/Portal:Main" target="_blank" rel="noopener">Memory Alpha</a> is the fan wiki to check facts against.</div>
+        return `<div class="pod-note pod-warn">Plain-English reference for the crash course. Timeline years and episode titles were checked against Memory Alpha; species and character summaries are written from general knowledge, so double-check details before airing. ${C.checked ? podEsc('Last reviewed: ' + C.checked + '.') : ''} <a href="https://memory-alpha.fandom.com/wiki/Portal:Main" target="_blank" rel="noopener">Memory Alpha</a> is the fan wiki to check facts against.</div>
         <details class="pod-sec" open><summary>🎤 Ready-made pitches</summary>${C.pitches.map(p => `<div class="pod-pitchrow"><strong>${podEsc(p[0])}</strong><p>${podEsc(p[1])}</p></div>`).join('')}</details>
         <details class="pod-sec" open><summary>👽 Species at a glance</summary>${table(['Species', 'In one line', 'In the set'], C.species.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td><td>${chip(r[2])}</td></tr>`))}</details>
         <details class="pod-sec"><summary>🚀 Captains compared</summary>${table(['Captain', 'Series', 'Style', 'In the set'], C.captains.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td><td>${podEsc(r[2])}</td><td>${chip(r[3])}</td></tr>`))}</details>
