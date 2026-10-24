@@ -15152,7 +15152,7 @@
             // "Collecting Star Trek" first look and the cards previewed on
             // Scryfall; no release notes or archetype guides were out yet.
             trk: {
-                checked: '2026-09-27',
+                checked: '2026-10-24',
                 mechanics: [
                     {
                         name: 'Assimilate', match: /\bassimilat/i, isNew: true,
@@ -15168,6 +15168,16 @@
                         name: 'Federation', match: /\bFederation\s*[\u2014-]/, isNew: true,
                         text: 'An ability word. These abilities count the number of different creature types among the non-Borg creatures you control - the more varied your crew, the bigger the effect.',
                         rulings: ['Borg creatures don\'t count, and each creature type counts only once.']
+                    },
+                    {
+                        name: 'Strange new worlds', match: /\bstrange new worlds\b/i, isNew: true,
+                        text: 'An ability word on Captain Pike, Ensign Chekov and others. It rewards a varied mana base: the effect counts how many differently named lands you control, and Pike lets you look at the top of your library and play lands from it.',
+                        rulings: []
+                    },
+                    {
+                        name: 'Beam me up', match: /\bbeam me up\b/i, isNew: true,
+                        text: 'You may cast a spell from your graveyard for its beam me up cost if you also return a creature you control to its owner\'s hand. Then exile that spell. Only instants and sorceries can be cast this way.',
+                        rulings: []
                     },
                     {
                         name: 'Station', match: /\bstation\b/i, isNew: false,
@@ -23102,7 +23112,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
      "q": "Let's start with the basics: what is the United Federation of Planets, and what is Starfleet's role in it?",
      "tips": [
       "The Federation is a union of many worlds (humans, Vulcans, Andorians and more) that share defense, science and a set of values: equality, cooperation, and rights for every kind of life.",
-      "It was founded in the early 2160s in the show's timeline (check the exact year before airing). Earth is a member; the Federation is based in Paris and Starfleet's headquarters is in San Francisco.",
+      "It was founded in 2161. Earth is a founding member; in the 24th century the Federation's government is based in Paris, and Starfleet's headquarters is in San Francisco.",
       "Starfleet is the Federation's fleet and academy: its explorers, scientists, diplomats and defenders, all in one organization."
      ],
      "cards": [
@@ -23122,13 +23132,16 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
      "tips": [
       "Use the species table in the Universe cheat sheet: one line each, plus the card in the set.",
       "Vulcans: logic and discipline. Klingons: honor and battle. Romulans: secretive and suspicious. Borg: a hive mind that assimilates. Ferengi: profit above all.",
-      "A fun contrast for a card audience: each species is almost a color identity."
+      "A fun contrast for a card audience: each species is almost a color identity.",
+      "New spoilers: Garak (a Cardassian) and Kira Nerys (a Bajoran) are in the set, so you can point at Cardassians and Bajorans too."
      ],
      "cards": [
       "Mr. Spock, Science Officer",
       "Worf, Honor-Bound Warrior",
       "Locutus, the One Who Speaks",
-      "Quark, Humble Proprietor"
+      "Quark, Humble Proprietor",
+      "Elim Garak, Simple Tailor",
+      "Kira Nerys, Firebrand"
      ]
     },
     {
@@ -23136,15 +23149,15 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
      "tips": [
       "Starfleet's rule against interfering with the natural development of less advanced societies: no revealing advanced technology, no steering their future.",
       "It causes conflict because crews often could save a world, and the rule says don't. Captains bend it or break it, and each episode argues whether they were right.",
-      "Examples fans cite: TNG's \"Pen Pals\" and \"Who Watches the Watchers\" (check titles before airing)."
+      "Examples fans cite: TNG's \"Pen Pals\" and \"Who Watches the Watchers\"."
      ]
     },
     {
      "q": "What are the biggest historical events in Star Trek that a newcomer should know about?",
      "tips": [
-      "First contact: humanity's first warp flight draws the Vulcans' attention (Zefram Cochrane, 2063 in the show's timeline; the film Star Trek: First Contact).",
+      "First contact: humanity's first warp flight draws the Vulcans' attention (Zefram Cochrane, 2063; the film Star Trek: First Contact).",
       "The Federation's founding, then wars and peace with the Klingons and Romulans, the Borg attack at Wolf 359, and the Dominion War.",
-      "Don't memorize dates: the order is first contact, Federation, Klingon and Romulan conflicts, Borg, Dominion War. Check years before airing."
+      "Don't memorize dates: the order is first contact, Federation, Klingon and Romulan conflicts, Borg, Dominion War."
      ]
     },
     {
@@ -23220,7 +23233,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
       "Picard: scholar and diplomat, principled, calm; patience over action.",
       "Sisko: a commander at a space station in the middle of a war; the most human and the most willing to get his hands dirty.",
       "Janeway: a scientist-captain stranded far from home who has to hold a crew together.",
-      "Others: Archer (the first explorer), Pike (Kirk's predecessor), Burnham (Discovery)."
+      "Others: Archer (the first explorer), Pike (Kirk's predecessor), Burnham (Discovery).",
+      "Spoilers since: Pike's Strange new worlds ability lets you play lands from the top of your library, a nice \"exploration\" flavor."
      ],
      "cards": [
       "Captain James T. Kirk",
@@ -23237,13 +23251,15 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
      "tips": [
       "The short list: Kirk, Spock, McCoy, Picard, Data, Worf, Sisko, Janeway, Seven of Nine.",
       "Essential for the ideas: Spock (outsider and logic) and Data (what it means to be a person).",
-      "Name a few more that show up in the set and why."
+      "Name a few more that show up in the set and why.",
+      "Data now has a second card, Data, New Life, which grows whenever you draw: a card version of an android who keeps learning."
      ],
      "cards": [
       "Mr. Spock, Science Officer",
       "Lieutenant Commander Data",
       "Seven of Nine, Unassimilated",
-      "Dr. Beverly Crusher"
+      "Dr. Beverly Crusher",
+      "Data, New Life"
      ]
     },
     {
@@ -23251,12 +23267,16 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
      "tips": [
       "Three ways of thinking: Spock is logic, McCoy is emotion, Kirk is the judgment that balances them.",
       "They bicker, but they would die for each other. That friendship is the heart of the original series.",
-      "It works as a template: many later crews echo it."
+      "It works as a template: many later crews echo it.",
+      "Dr. McCoy is now in the set: a healer who protects creatures with +1/+1 counters, and the trio can all be cards (Kirk, Spock and McCoy; Scotty and Chekov round out the crew)."
      ],
      "cards": [
       "Captain James T. Kirk",
       "Mr. Spock, Science Officer",
-      "Dr. Joseph M'Benga"
+      "Dr. Joseph M'Benga",
+      "Dr. McCoy, Surly Surgeon",
+      "Scotty, Miracle Worker",
+      "Ensign Pavel Chekov"
      ]
     },
     {
@@ -23315,19 +23335,21 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
      "tips": [
       "This is your opinion; pick one each and a reason.",
       "Candidates fans often name as underrated: Miles O'Brien (the everyman engineer), Odo, Garak, Tuvok, Pike. Check what the set includes.",
-      "Say it with kindness: \"overrated\" is more fun as \"I wish they had been written better\"."
+      "Say it with kindness: \"overrated\" is more fun as \"I wish they had been written better\".",
+      "Garak is in the set as a rare that drains whenever you face a dilemma, which fits a man who famously never confirms what he is (\"I never said I was either\")."
      ],
      "cards": [
       "Miles O'Brien, Transporter Ops",
       "Constable Odo",
-      "Captain Pike, Fullness of Time"
+      "Captain Pike, Fullness of Time",
+      "Elim Garak, Simple Tailor"
      ]
     },
     {
      "q": "Are there any particularly important episodes or movies that you believe everyone should watch at least once?",
      "tips": [
       "Movies: The Wrath of Khan, The Voyage Home, First Contact.",
-      "TOS: \"The City on the Edge of Forever\", \"The Trouble with Tribbles\". TNG: \"The Measure of a Man\", \"The Best of Both Worlds\", \"The Inner Light\", \"Darmok\". DS9: \"In the Pale Moonlight\". Voyager: \"Year of Hell\". Check titles before airing.",
+      "TOS: \"The City on the Edge of Forever\", \"The Trouble with Tribbles\". TNG: \"The Measure of a Man\", \"The Best of Both Worlds\", \"The Inner Light\", \"Darmok\". DS9: \"In the Pale Moonlight\". Voyager: \"Year of Hell\".",
       "Give one \"gateway\" pick for each guest and a reason in one sentence."
      ]
     },
@@ -23371,11 +23393,15 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
       "A huge cast of distinct characters: each is a natural legendary card.",
       "Species and roles are natural creature types (Human, Vulcan, Klingon, Borg; Officer, Scientist, Doctor).",
       "Ships and stations are Spacecraft, a type Magic has already built rules for (Station).",
-      "The mechanics can mirror the show: Federation rewards a crew of different creature types, Assimilate is the Borg, Face a dilemma is the \"no-win scenario\"."
+      "The mechanics can mirror the show: Federation rewards a crew of different creature types, Assimilate is the Borg, Face a dilemma is the \"no-win scenario\".",
+      "Newer spoilers add two more show-flavored mechanics: Strange new worlds (play the best land from the top of your library, with Captain Pike and Chekov) and Beam me up (cast spells from the graveyard by returning a creature, like a transporter rescue).",
+      "Landfall returns for the Discovery and Deep Space Nine crews, and Heal protects creatures with +1/+1 counters."
      ],
      "cards": [
       "U.S.S. Enterprise-D, Galaxy-Class",
-      "Deep Space 9"
+      "Deep Space 9",
+      "Scotty, Miracle Worker",
+      "Ensign Pavel Chekov"
      ]
     },
     {
@@ -23383,13 +23409,17 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
      "tips": [
       "Check the \"The set\" tab: the legends, ships and places are listed live.",
       "Name two you were glad to see and one you hope is in the deck lists or a later set.",
-      "Think across eras: classic, Next Generation, Deep Space Nine, Voyager, Enterprise, the new shows."
+      "Think across eras: classic, Next Generation, Deep Space Nine, Voyager, Enterprise, the new shows.",
+      "Newer spoilers: Georgiou, Terran Emperor (Discovery's mirror-universe emperor), Kira Nerys, Garak, Jake Sisko, Una Chin-Riley (Number One), Rutherford, Chekov, Scotty and McCoy."
      ],
      "cards": [
       "U.S.S. Enterprise-A, Free Spirit",
       "U.S.S. Discovery, at Black Alert",
       "U.S.S. Reliant, From Hell's Heart",
-      "Starfleet Academy"
+      "Starfleet Academy",
+      "Georgiou, Terran Emperor",
+      "Una Chin-Riley, Number One",
+      "Rutherford, Upgraded Ensign"
      ]
     },
     {
@@ -23397,14 +23427,19 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
      "tips": [
       "Look at how the set colors the captains: Kirk and Burnham red, Picard and Sisko white, Janeway, Archer and Pike green, Spock blue.",
       "Spock in blue (logic) and the Borg and Data as artifact creatures are natural fits.",
-      "Q is a chaos card (red), Khan a black mythic (a vengeful genius), the Ferengi pull toward treasure and rogue themes."
+      "Q is a chaos card (red), Khan a black mythic (a vengeful genius), the Ferengi pull toward treasure and rogue themes.",
+      "Georgiou is a black mythic that does not lose at 0 life and can turn that into ten Officer tokens: a fun \"mirror universe\" card.",
+      "Scotty is a blue mythic who gives your graveyard spells Beam me up: a miracle worker, as the character is known."
      ],
      "cards": [
       "Mr. Spock, Science Officer",
       "Lieutenant Commander Data",
       "Q, Stacking the Deck",
       "Khan, Vengeful Heart",
-      "Quark, Humble Proprietor"
+      "Quark, Humble Proprietor",
+      "Georgiou, Terran Emperor",
+      "Scotty, Miracle Worker",
+      "Data, New Life"
      ]
     },
     {
@@ -23420,7 +23455,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
      "tips": [
       "Mechanics that act like the show: a diverse crew rewarded (Federation), moral choices (Face a dilemma), ships you crew and power up (Station), the Borg that take what you have (Assimilate).",
       "Flavor in details: quotes, ranks as creature types, ship classes, locations like the Holodeck.",
-      "Tone: curiosity and teamwork, not only combat."
+      "Tone: curiosity and teamwork, not only combat.",
+      "Beam me up is a good example: the transporter becomes returning a creature to your hand to cast a spell from the graveyard. Strange new worlds does the same for exploring: lands from the top of your library."
      ]
     },
     {
@@ -23461,7 +23497,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
   "species": [
    [
     "Humans",
-    "Explorers and the Federation's founders. Curious, adaptable, imperfect.",
+    "Explorers and a founding member of the Federation. Curious, adaptable, imperfect.",
     "Captain James T. Kirk"
    ],
    [
@@ -23496,7 +23532,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
    ],
    [
     "Q",
-    "An omnipotent trickster who tests humanity.",
+    "A godlike trickster who tests humanity.",
     "Q, Stacking the Deck"
    ],
    [
@@ -23508,7 +23544,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
   "timeline": [
    [
     "Mid 22nd century",
-    "Enterprise (NX-01) era: humanity's first deep-space explorers; the Romulan War follows and the Federation is founded in the early 2160s. (Check exact years.)"
+    "Enterprise (NX-01) era: humanity's first deep-space explorers. The Earth-Romulan War runs 2156 to 2160, and the United Federation of Planets is founded in 2161 (with United Earth, Vulcan, Andoria and Tellar)."
    ],
    [
     "2200s",
@@ -23516,23 +23552,23 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
    ],
    [
     "2290s",
-    "The Klingon moon Praxis explodes and peace is made at Khitomer (Star Trek VI)."
+    "The Klingon moon Praxis explodes and the Khitomer Accords make peace between the Klingons and the Federation (2293, Star Trek VI)."
    ],
    [
     "2360s",
-    "The Next Generation: Picard's Enterprise-D; the Borg attack at Wolf 359 (2367)."
+    "The Next Generation: Picard's Enterprise-D; the Borg destroy a Starfleet fleet at Wolf 359 (early 2367)."
    ],
    [
     "2370s",
-    "Deep Space Nine, Voyager, and the Dominion War (about 2373 to 2375)."
+    "Deep Space Nine, Voyager, and the Dominion War (2373 to 2375)."
    ],
    [
     "2380s and later",
-    "A supernova threatens Romulus, then Picard's story and the Discovery-era future. (Check exact years.)"
+    "Romulus is destroyed when its sun goes supernova (2387), which leads into Picard's story. Discovery later jumps to the 32nd century."
    ],
    [
     "Earlier, as backstory",
-    "First contact: humanity's first warp flight and the arrival of the Vulcans (about 2063 in the show's timeline)."
+    "First contact: Zefram Cochrane's first warp flight in 2063 brings the Vulcans to Earth."
    ]
   ],
   "tech": [
@@ -23702,6 +23738,10 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     "Films",
     "The Wrath of Khan; The Voyage Home; First Contact"
    ]
+  ],
+  "checked": "2026-10-24 against Memory Alpha: timeline years, Federation and Starfleet headquarters, the Prime Directive, Khitomer, Wolf 359, the Dominion War, show premieres, episode titles, the Q Continuum, Klingon phrases, IDIC, General Chang, captains and species summaries. Descriptions of opinions (best entry point, underrated characters) are suggestions, not facts.",
+  "sources": [
+   "Memory Alpha (memory-alpha.fandom.com), checked 2026-10-24"
   ]
  },
  "SERIES": [
@@ -23720,7 +23760,10 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     "V'Ger, the Intruder",
     "U.S.S. Enterprise-A, Free Spirit",
     "U.S.S. Reliant, From Hell's Heart",
-    "Dr. Joseph M'Benga"
+    "Dr. Joseph M'Benga",
+    "Dr. McCoy, Surly Surgeon",
+    "Ensign Pavel Chekov",
+    "Scotty, Miracle Worker"
    ]
   ],
   [
@@ -23741,7 +23784,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     "The Duras Sisters",
     "U.S.S. Enterprise-D, Galaxy-Class",
     "The Holodeck",
-    "Gowron, Eager for Battle"
+    "Gowron, Eager for Battle",
+    "Data, New Life"
    ]
   ],
   [
@@ -23753,7 +23797,10 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     "Quark, Humble Proprietor",
     "Miles O'Brien, Transporter Ops",
     "Deep Space 9",
-    "Worf, Intelligence Contractor"
+    "Worf, Intelligence Contractor",
+    "Elim Garak, Simple Tailor",
+    "Kira Nerys, Firebrand",
+    "Jake Sisko, War Correspondent"
    ]
   ],
   [
@@ -23784,7 +23831,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     "U.S.S. Discovery, at Black Alert",
     "L'Rell, Fierce Visionary",
     "Cleveland Booker, Empath",
-    "Gray and Adira, Forever Joined"
+    "Gray and Adira, Forever Joined",
+    "Georgiou, Terran Emperor"
    ]
   ],
   [
@@ -23793,7 +23841,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
    [
     "Captain Pike, Fullness of Time",
     "La'An Noonien-Singh, Security",
-    "Hemmer, Fixing What Is Broken"
+    "Hemmer, Fixing What Is Broken",
+    "Una Chin-Riley, Number One"
    ]
   ],
   [
@@ -23804,7 +23853,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     "Brad Boimler, Eager Ensign",
     "D'Vana Tendi, Optimistic Ensign",
     "Dal R'El, Augment Orphan",
-    "Zero, Incorporeal Sensate"
+    "Zero, Incorporeal Sensate",
+    "Rutherford, Upgraded Ensign"
    ]
   ],
   [
@@ -23827,6 +23877,35 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
    "The colors match their personality (red = bold and impulsive, white = order and ideals, blue = logic and curiosity, black = ambition, green = growth and nature).",
    "It rewards a Star Trek idea: a crew of different types (Federation), a hard choice (Face a dilemma), a ship (Station) or the Borg (Assimilate).",
    "The cost and power feel fair for a legend (a 3-drop with a 3/3 body and a strong ability is a lot)."
+  ]
+ },
+ "SETFACTS": {
+  "asOf": "2026-10-24",
+  "listed": 205,
+  "planned": 399,
+  "releases": "2026-11-13",
+  "legendary": 66,
+  "rarities": {
+   "common": 73,
+   "uncommon": 65,
+   "rare": 46,
+   "mythic": 21
+  },
+  "newMechanics": [
+   "Strange new worlds (ability word, 5 cards)",
+   "Beam me up (cast from graveyard by returning a creature)"
+  ],
+  "newLegends": [
+   "Data, New Life",
+   "Dr. McCoy, Surly Surgeon",
+   "Elim Garak, Simple Tailor",
+   "Ensign Pavel Chekov",
+   "Georgiou, Terran Emperor",
+   "Jake Sisko, War Correspondent",
+   "Kira Nerys, Firebrand",
+   "Rutherford, Upgraded Ensign",
+   "Scotty, Miracle Worker",
+   "Una Chin-Riley, Number One"
   ]
  }
 };
@@ -23992,7 +24071,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const C = PODCAST.CHEAT;
         const table = (head, rows, cls) => `<div class="pod-table-wrap"><table class="pod-table ${cls || ''}"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
         const chip = n => n ? podCardChips([n]) : '';
-        return `<div class="pod-note pod-warn">Plain-English reference for the crash course. Written from general Star Trek knowledge: double-check years and titles before airing.</div>
+        return `<div class="pod-note pod-warn">Plain-English reference for the crash course. Facts were checked against Memory Alpha on 2026-10-24 (opinions and picks are suggestions, not facts). ${C.checked ? podEsc('Last reviewed: ' + C.checked + '.') : ''} <a href="https://memory-alpha.fandom.com/wiki/Portal:Main" target="_blank" rel="noopener">Memory Alpha</a> is the fan wiki to check facts against.</div>
         <details class="pod-sec" open><summary>🎤 Ready-made pitches</summary>${C.pitches.map(p => `<div class="pod-pitchrow"><strong>${podEsc(p[0])}</strong><p>${podEsc(p[1])}</p></div>`).join('')}</details>
         <details class="pod-sec" open><summary>👽 Species at a glance</summary>${table(['Species', 'In one line', 'In the set'], C.species.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td><td>${chip(r[2])}</td></tr>`))}</details>
         <details class="pod-sec"><summary>🚀 Captains compared</summary>${table(['Captain', 'Series', 'Style', 'In the set'], C.captains.map(r => `<tr><td><strong>${podEsc(r[0])}</strong></td><td>${podEsc(r[1])}</td><td>${podEsc(r[2])}</td><td>${chip(r[3])}</td></tr>`))}</details>
@@ -24045,7 +24124,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const maxLc = Math.max(1, ...Object.values(lc));
         const captains = ['Captain James T. Kirk', 'Captain Jean-Luc Picard', 'Captain Benjamin Sisko', 'Captain Kathryn Janeway', 'Captain Jonathan Archer', 'Captain Pike, Fullness of Time', 'Captain Michael Burnham', 'Mr. Spock, Science Officer', 'Khan, Vengeful Heart', 'Q, Stacking the Deck']
             .map(n => legends.find(c => c.name === n)).filter(Boolean);
-        return `<div class="pod-note">Live from Scryfall: <strong>${cards.length}</strong> Star Trek (TRK) cards are listed${N ? ` of ${N} planned` : ''}. The set releases ${PODCAST_EPISODE.release}; more cards appear as they are previewed. Open <button type="button" class="pod-link" onclick="navigateTo('setprimer')">Set Primer</button> to browse every card.</div>
+        const sf = PODCAST.SETFACTS; return `${sf ? `<div class="pod-note">Spoiler update (${podEsc(sf.asOf)}): new since the first previews are ${sf.newLegends.map(podEsc).join('; ')}. New mechanics: ${sf.newMechanics.map(podEsc).join('; ')}.</div>` : ''}<div class="pod-note">Live from Scryfall: <strong>${cards.length}</strong> Star Trek (TRK) cards are listed${N ? ` of ${N} planned` : ''}. The set releases ${PODCAST_EPISODE.release}; more cards appear as they are previewed. Open <button type="button" class="pod-link" onclick="navigateTo('setprimer')">Set Primer</button> to browse every card.</div>
             <div class="pod-stats">${['mythic', 'rare', 'uncommon', 'common'].map(r => `<div class="pod-stat"><strong>${byRar[r] || 0}</strong><span>${r}</span></div>`).join('')}<div class="pod-stat"><strong>${legends.length}</strong><span>legendary</span></div></div>
             <details class="pod-sec" open><summary>⚙️ Mechanics to explain</summary>${mech || '<p class="text-secondary">No mechanic notes yet.</p>'}</details>
             <details class="pod-sec" open><summary>🎨 Captains and icons: which color?</summary><div class="pod-colorlist">${captains.map(c => `<button type="button" class="pod-color c-${podColorWord(c)}" onclick="openCardModal(cardTileDataById['${c.id}'])"><b>${podEsc(c.name.replace(/, .*/, ''))}</b><span>${podEsc(colorNames[podColorWord(c)])} · ${podEsc(c.mana_cost || '')}</span></button>`).join('')}</div>
