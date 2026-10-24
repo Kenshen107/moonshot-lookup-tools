@@ -702,7 +702,7 @@ function rulesFor(card) {
                     p.limit = { test: /legendary/.test(lm[1]) ? 'legendary' : lm[2] ? 'chosenOrAbil' : 'chosen', free: prevMana ? prevMana.colors.slice() : [], uncounter: !!lm[3] };
                     if (prevMana) p.colors = [...new Set([...prevMana.colors, ...p.colors])];
                 }
-                else if (m[5] && (lm = m[5].match(/^ Spend this mana only to cast an? ([A-Z][a-z]+) spells?(?: or activate abilities of [A-Z][a-z]+s)?\.$/))) p.onlyType = lm[1]; // Giada, Orb of Dragonkind (2026-10-15)
+                else if (m[5] && (lm = m[5].match(/^ Spend this mana only to cast an? ([A-Za-z]+) spells?(?: or activate abilities of [A-Z][a-z]+s)?\.$/))) p.onlyType = lm[1][0].toUpperCase() + lm[1].slice(1); // Giada, Orb of Dragonkind (2026-10-15)
                 else if (m[5]) R.approx = 'The "spend this mana only" limit isn\'t checked.';
                 continue;
             }
@@ -734,6 +734,7 @@ function rulesFor(card) {
         if (R.kind === 'land' && (m = line.match(/^As ~ enters(?: the battlefield)?, you may reveal an? (\w+) or (\w+) card from your hand\. If you don't, ~ enters tapped\.$/))) { R.revealTypes = [m[1], m[2]]; continue; }
         if (/^You may play an additional land on each of your turns\.$/.test(line)) { R.extraLand = 1; continue; }
         if (/^You have no maximum hand size\.$/.test(line)) { R.noMaxHand = true; continue; }
+        if (R.kind === 'land' && (m = line.match(/^~ enters tapped unless you control (two|three|four|\d+) or more other lands\.$/))) { R.entersTappedUnlessLands = num(m[1]); continue; } // Star Trek (2026-10-24): checked when the land is played
         if (R.kind === 'land' && /^~ enters tapped unless/.test(line)) { R.entersTapped = true; continue; } // approximation
         if ((m = line.match(/^When ~ enters(?: the battlefield)?, (.+)$/))) { const fx = parseEffects(m[1]); if (fx) { R.etb.push(...fx); continue; } }
         if ((m = line.match(/^When(?:ever)? ~ enters(?: the battlefield)? or attacks, (.+)$/))) { const fx = parseEffects(m[1]); if (fx) { R.etb.push(...fx); R.trig.push({ ev: 'attacks', effects: fx }); continue; } }

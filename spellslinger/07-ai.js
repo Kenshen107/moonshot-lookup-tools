@@ -382,13 +382,13 @@ function aiBestPlay(P) {
     const reserve = P.aiStyle === 'control' && P.aiLevel !== 'easy' && G.active === P.i && O.hand.length ? heldInstantCost(P) : 0;
     const faces = [];
     const libTop = P.library[P.library.length - 1];
-    for (const o of [...P.hand, ...P.command, ...P.gy.filter(x => Rx(x).flashback || mayhemOk(P, x) || gyCastOk(P, x) || x.gyCastTurn === G.turn || (Rx(x).gyCast && Rx(x).gyCast.exile) || castAsOk(P, x, 'blitz') || castAsOk(P, x, 'disturb') || castAsOk(P, x, 'retrace') || lockerOk(P, x)), ...P.exile.filter(x => x.playUntil >= G.turn || x.advReady || (x.foretoldTurn && x.foretoldTurn < G.turn) || (x.warpedTurn && x.warpedTurn < G.turn)), ...(libTop && ((P.bf.some(x => Rx(x).castTopCreatures) && Rx(libTop).kind === 'creature') || pitTop(P) === libTop) ? [libTop] : [])]) {
+    for (const o of [...P.hand, ...P.command, ...P.gy.filter(x => Rx(x).flashback || mayhemOk(P, x) || gyCastOk(P, x) || x.gyCastTurn === G.turn || (Rx(x).gyCast && Rx(x).gyCast.exile) || castAsOk(P, x, 'blitz') || castAsOk(P, x, 'disturb') || castAsOk(P, x, 'retrace') || castAsOk(P, x, 'beam') || lockerOk(P, x)), ...P.exile.filter(x => x.playUntil >= G.turn || x.advReady || (x.foretoldTurn && x.foretoldTurn < G.turn) || (x.warpedTurn && x.warpedTurn < G.turn)), ...(libTop && ((P.bf.some(x => Rx(x).castTopCreatures) && Rx(libTop).kind === 'creature') || pitTop(P) === libTop) ? [libTop] : [])]) {
         faces.push([o, o.front || o.card]);
         if (P.hand.includes(o) && o.front && o.front.back && ['modal_dfc', 'adventure', 'split'].includes(o.front.layout) && rulesFor(o.front.back).kind !== 'land') faces.push([o, o.front.back]);
         if (P.hand.includes(o) && Rx(o).overload) faces.push([o, o.card, true]);
         if (P.hand.includes(o) && Rx(o).evoke && Rx(o).etb.length && !canPay(P, o)) faces.push([o, o.card, false, true]);
         if (Rx(o).alt && !canPay(P, o) && altOk(P, o)) faces.push([o, o.card, false, false, true]);
-        for (const md of ['warp', 'bestow', 'blitz', 'dash', 'impending', 'morph', 'disturb', 'retrace', 'energy', 'escape']) if (castAsOk(P, o, md)) faces.push([o, o.card, false, false, false, md]);
+        for (const md of ['warp', 'bestow', 'blitz', 'dash', 'impending', 'morph', 'disturb', 'retrace', 'beam', 'energy', 'escape']) if (castAsOk(P, o, md)) faces.push([o, o.card, false, false, false, md]);
     }
     for (const [o, face, ov, ev, alt, md] of faces) {
         o.card = face;

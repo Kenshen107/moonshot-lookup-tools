@@ -1,6 +1,6 @@
 // Engine pieces for the other four FDC Commander decks (Keen Engineering, Reign of Dragons, Tramplesaurus Rex, Wretched Ranks). Wordings: rules/cmdr.js.
 // ---- Hooks the core calls ----
-function cmdNoUntap(o) { return !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).noUntapUnlessMonarch && G.monarch !== o.owner); }
+function cmdNoUntap(o) { return !!G && allPerms().some(a => a.attachedTo === o.uid && ((Rx(a).noUntapUnlessMonarch && G.monarch !== o.owner) || Rx(a).noUntapHost)); }
 function cmdFlashOk(src, spell, P) {
     const f = Rx(src).flashSpec; if (!f || src.owner !== P.i) return false;
     if (f.cond && !condOk(f.cond, P, src)) return false;
