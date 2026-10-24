@@ -46,6 +46,14 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         // the Jenova deck once redefined chooseOpponent(P, title) and broke the Play tab's opponent tiles
         chosenOpponent = null; chooseOpponent({ type: 'random', fmt: 'commander', name: 'x' });
         ok('picking an opponent on the Play tab sets chosenOpponent', chosenOpponent && chosenOpponent.type === 'random', String(chosenOpponent));
+        // 2026-10-24: "Build me a random Commander deck" on the Play tab adds a playable deck to the player's decks
+        ensureProfile(); renderPlayView();
+        ok('the Play tab has the random-deck button', !!document.getElementById('randomDeckBtn'));
+        const n0 = profile.decks.length;
+        await buildRandomPlayerDeck();
+        const nd = profile.decks[profile.decks.length - 1];
+        ok('a Commander deck was added and selected', profile.decks.length === n0 + 1 && nd.format === 'commander' && document.getElementById('playDeck').value === String(n0), [n0, nd && nd.name]);
+        ok('the new deck has 99 cards plus a commander and no problems', deckCount(nd) === 100 && deckProblems(nd).length === 0, [deckCount(nd), deckProblems(nd).slice(0, 2)]);
         return out;
     });
     const results = formatChecks(r);

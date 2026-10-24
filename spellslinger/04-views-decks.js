@@ -1506,14 +1506,15 @@ function renderPlayView() {
     if (!PLAYSEL.type || !counts[PLAYSEL.type]) PLAYSEL.type = cur ? cur.format : types[0] || null;
     if (cur && cur.format !== PLAYSEL.type) { const i = profile.decks.findIndex(d => d.format === PLAYSEL.type); if (i >= 0) sel.value = String(i); }
     const box = $('deckPick');
-    if (!profile.decks.length) box.innerHTML = '<p class="note">No decks yet.</p>';
+    const randomBuild = `<div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;"><button type="button" class="btn" id="randomDeckBtn" onclick="buildRandomPlayerDeck()" title="Builds a new themed Commander deck from a random fully automated commander and adds it to your decks">🎲 Build me a random Commander deck</button><span class="note" id="randomDeckNote" style="margin:0;">A random commander and deck, saved to your decks. Uses the theme picked under Surprise me.</span></div>`;
+    if (!profile.decks.length) box.innerHTML = `<p class="note">No decks yet.</p>${randomBuild}`;
     else {
         const q = PLAYSEL.q.trim().toLowerCase();
         const mine = profile.decks.map((d, i) => [d, i]).filter(([d]) => d.format === PLAYSEL.type && (!q || d.name.toLowerCase().includes(q)));
         const chosen = Number(sel.value);
         box.innerHTML = `<div class="chips" style="margin:0 0 8px;" role="group" aria-label="Deck type">${types.map(k => `<button type="button" class="chip${PLAYSEL.type === k ? ' on' : ''}" aria-pressed="${PLAYSEL.type === k}" onclick="playPickType('${k}')">${DECK_TYPE_ICONS[k] || ''} ${esc(FORMATS[k].name)} (${counts[k]})</button>`).join('')}</div>
             ${counts[PLAYSEL.type] > 6 ? `<input type="search" id="playDeckQ" value="${esc(PLAYSEL.q)}" placeholder="Find one of your ${esc(FORMATS[PLAYSEL.type].name)} decks" aria-label="Find a deck" oninput="playDeckSearch(this.value)" style="width:100%; margin-bottom:8px;">` : ''}
-            <div class="opp-grid deck-pick">${mine.map(([d, i]) => { const pr = deckProblems(d); return `<button type="button" class="opp" aria-pressed="${i === chosen}" onclick="playPickDeck(${i})"><strong>${esc(d.name)}</strong><small>${deckCount(d)} cards${pr.length ? ` · ⚠ ${pr.length} to fix` : ' · ✓ ready'}</small></button>`; }).join('') || '<p class="note">No deck matches.</p>'}</div>`;
+            <div class="opp-grid deck-pick">${mine.map(([d, i]) => { const pr = deckProblems(d); return `<button type="button" class="opp" aria-pressed="${i === chosen}" onclick="playPickDeck(${i})"><strong>${esc(d.name)}</strong><small>${deckCount(d)} cards${pr.length ? ` · ⚠ ${pr.length} to fix` : ' · ✓ ready'}</small></button>`; }).join('') || '<p class="note">No deck matches.</p>'}</div>${randomBuild}`;
     }
     $('oppHead').textContent = cur ? `2. Your opponent - ${FORMATS[PLAYSEL.type].name} decks, so it's a fair match` : '2. Your opponent';
     renderOpponents();
@@ -1594,3 +1595,25 @@ function chooseOpponent(o) {
     renderOpponents();
 }
 
+
+// Sandbox Play tab (owner, 2026-10-24): build a new random themed Commander deck for yourself, saved to your decks, to try a new commander.
+async function buildRandomPlayerDeck() {
+    const btn = $('randomDeckBtn'), note = $('randomDeckNote');
+    if (btn) btn.disabled = true;
+    if (note) note.textContent = 'Building a random Commander deck from live card data...';
+    try {
+        const gen = await buildRandomCommanderDeck(null, null, randomThemeChoice || undefined);
+        const deck = generatedToDeck(gen, `${gen.name} (random)`);
+        profile.decks.push(deck);
+        saveProfile();
+        PLAYSEL.type = 'commander'; PLAYSEL.q = '';
+        toast(`Added "${deck.name}" to your decks.`);
+        renderDeckPicker();
+        renderPlayView();
+        const sel = $('playDeck'); if (sel) { sel.value = String(profile.decks.length - 1); renderPlayView(); }
+    } catch (e) {
+        console.error(e);
+        if (note) note.textContent = `Couldn't build a deck: ${e.message}`;
+        if (btn) btn.disabled = false;
+    }
+}
