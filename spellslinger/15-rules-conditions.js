@@ -524,6 +524,7 @@ function castFilter(f, o) {
         || (f === 'xpermanent' && !!Rx(o).cost.x && k !== 'instant' && k !== 'sorcery')
         || (f === 'artifact' && /Artifact/.test(t)) || (f === 'enchantment' && /Enchantment/.test(t)) || (f === 'colorless' && !(o.card.colors || []).length) || (f === 'multicolored' && (o.card.colors || []).length > 1)
         || (f === 'historic' && (/Artifact|Legendary|Saga/.test(t)))
+        || (f === 'chosenMv' && !!castFilterSrc && castFilterSrc.chosenNumber !== undefined && (o.card.cmc || 0) === castFilterSrc.chosenNumber)
         || (/^types:/.test(f) && f.slice(6).split('|').some(w => new RegExp(`\\b${w}\\b`).test(t)))
         || (COLOR_WORDS[f] && (o.card.colors || []).includes(COLOR_WORDS[f]))
         || (/^colors:/.test(f) && f.slice(7).split('|').some(c => (o.card.colors || []).includes(c)))
@@ -637,6 +638,7 @@ function actPlan(P, o, a, xExtra = 0) {
     if (a.hand ? !P.hand.includes(o) : a.gy ? !P.gy.includes(o) : !P.bf.includes(o)) return null;
     if (o.detainedUntil > G.turn) return null;
     if (a.needPrepared && !o.prepared) return null;
+    if (a.cost && a.cost.sacSelf && o.token && /\bTreasure\b/.test(o.card.type) && allPerms().some(x => Rx(x).noSacTreasure && !lostAbilities(x))) return null; // Quark: you can't sacrifice Treasure tokens
     if (a.lvl && (o.level || 1) < a.lvl) return null;
     if (a.levelUp && (o.level || 1) !== a.levelUp - 1) return null;
     if (a.onlyIf && !condOk(a.onlyIf, P, o)) return null;
@@ -868,7 +870,7 @@ async function activate(P, o, a, presetTarget, presetX) {
     if (a.cost && a.cost.mana && a.cost.mana.x && typeof flourishCopyAbility === 'function') flourishCopyAbility(P, abItem);
     if (target && target.o) fire('targeted', { o: target.o, by: P.i });
     log(`${P.name} ${you(P) ? 'activate' : 'activates'} ${o.card.name}: ${a.text.replace(/~/g, o.card.name.split(',')[0])}${target ? ` (targeting ${targetName(target)})` : ''}`);
-    if (a.cost && a.cost.sacSelf) { log(`${o.card.name} is sacrificed.`); fire('sacrificed', { o }); dieOrLeave(o, 'gy'); }
+    if (a.cost && a.cost.sacSelf) { o.lkiCtr = { ...o.ctr }; log(`${o.card.name} is sacrificed.`); fire('sacrificed', { o }); dieOrLeave(o, 'gy'); }
     if (a.cost && a.cost.exileSelf && onBf(o.uid)) { log(`${o.card.name} is exiled.`); leaveBattlefield(o, 'exile'); }
     renderGame();
     await settle();
@@ -1121,6 +1123,7 @@ function permMatches(o, f, P) {
     if (LAND_COLOR[f]) return hasType(o, f);
     if (/^types:/.test(f)) return f.slice(6).split('|').some(ty => hasType(o, ty)); // Undead Slayer
     switch (f) {
+        case 'artifact or creature': return isCreature(o) || /Artifact/.test(t);
         case 'monocolored permanent': return (o.card.colors || []).length === 1;
         case 'legendary permanent': return /Legendary/.test(t);
         // Mirrodin (2026-10-08)

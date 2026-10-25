@@ -113,13 +113,14 @@ function phaseOut(o) {
     log(`${o.card.name} phases out.`);
 }
 function phaseInAll(P) {
+    if (G.players.some(X => X.bf.some(a => a.noPhaseIn))) return; // The City on the Edge of Forever: permanents can't phase in
     const back = (P.phased || []).splice(0);
     back.forEach(x => { delete x.phasedOut; P.bf.push(x); });
     if (back.length) log(`${back.map(x => x.card.name).join(', ')} phase${back.length === 1 ? 's' : ''} in.`);
 }
 // ---- Goad (701.38): attacks each combat if able, and attacks a player other than the goader if able ----
 function goad(o, by, until) { o.goaded = { by, until: until === undefined ? Infinity : until }; log(`${o.card.name} is goaded.`); }
-const isGoaded = o => !!(G && o && ((o.goaded && G.turn < o.goaded.until && G.players[o.goaded.by] && !G.players[o.goaded.by].out) || allPerms().some(a => a.attachedTo === o.uid && Rx(a).goadsHost && !lostAbilities(a))));
+const isGoaded = o => !!(G && o && ((o.goaded && G.turn < o.goaded.until && G.players[o.goaded.by] && !G.players[o.goaded.by].out) || (hasType(o, 'Tribble') && allPerms().some(a => Rx(a).tribbleGoad && !lostAbilities(a))) || allPerms().some(a => a.attachedTo === o.uid && Rx(a).goadsHost && !lostAbilities(a))));
 const cmdNoMinus = o => !!G && isCreature(o) && G.players[o.owner].bf.some(a => Rx(a).noMinusCounters && !lostAbilities(a));
 // Jace, Multiverse Architect: creatures that didn't pay can't attack his controller's Jaces this turn
 const jaceNoAttack = (w, A) => !!G && !!G.jaceNoAttack && G.jaceNoAttack.turn === G.turn && G.jaceNoAttack.player === A.i && hasType(w, 'Jace') && w.owner === G.jaceNoAttack.by;
@@ -137,6 +138,7 @@ function cmdExtraTriggers(ev, o, tr, ctx) {
         if (Rx(a).veyran && ev === 'cast' && ctx.o && ['instant', 'sorcery'].includes(Rx(ctx.o).kind)) k++; // Veyran: casting an instant or sorcery
     });
     k += throneBoost(o, true); // Roaming Throne
+    if (typeof tkCrusherExtra === 'function') k += tkCrusherExtra(ev, o); // Dr. Crusher
     return k;
 }
 // Cast a card from a zone without paying its mana cost; returns true when it was cast

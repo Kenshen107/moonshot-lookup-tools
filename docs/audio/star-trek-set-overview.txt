@@ -1,0 +1,27 @@
+Star Trek set overview for the podcast. Prepared on October twenty-fourth, twenty twenty-six. This is a fan-made prep note, not store policy, and the card details come from Scryfall and from MythicSpoiler's pictures, so check any rule before you say it on air.
+
+Let's start with where things stand. The Star Trek set releases on November thirteenth. Scryfall now lists two hundred and nine cards in the main set, fifty-three cards from the Star Trek Commander decks, and five Special Guests cards. MythicSpoiler has about three hundred and nineteen card pages, but most of those are the same cards, just in other sets and frames. Only about fifteen set cards, plus two promos, the Special Guests names and the autograph cards, are on MythicSpoiler and not on Scryfall yet.
+
+Now the stuff that is actually new. Scryfall does not have these yet, so they are good material for a first-look segment.
+
+First, the villains and the big moments. Armus, Skin of Evil is a seven-mana six-six Ooze Horror. It has menace, and at the end of your turn an opponent discards two cards. Kai Winn, Faithless Leader is a two-mana three-one that names a card, and every time an opponent casts that card or uses its abilities, they lose three life. That is a very Bajoran, very scheming card. And The Caretaker is a six-mana five-six with ward two. If you faced a dilemma this turn, it lets you cast a free card off the top of an opponent's library at your end step.
+
+Then there are the sagas. The City on the Edge of Forever phases out all artifacts and creatures, makes everyone draw two and lose two, and then lets you sacrifice a creature to gain five life. That is the time-travel episode in card form. Also new is Zefram Cochrane, a two-mana blue pilot who lets you cast an artifact from the top of your library, and who makes your Spacecraft enter with extra charge counters.
+
+Next, the dilemma cards. Test of Courage and Test of Loyalty are modal spells, where you pick between two choices. Test of Loyalty lets you pick between Plain, Simple Garak, which exiles a card and draws you one, and Of the Obsidian Order, which returns a creature from your graveyard. And there is a Ferengi one, Rules of Acquisition, which we have only seen in Japanese so far.
+
+Now the Special Guests. These are Star Trek skins of cards we already know. General Picard, Earth Warlord is Kenrith, the Returned King, with five abilities. Khan, Engineered Evil is Sheoldred, the Apocalypse. Leonard McCoy, Country Doctor is Bristly Bill, Spine Sower. Spock, Mirror Malefactor is Prosper, Tome-Bound, which is a great fit for the mirror universe. And Academy on the Bay is Minamo, School at Water's Edge. Hosts can play with that: which famous card would you reskin as which character?
+
+There are also seven autograph cards, numbered seventeen oh one to seventeen oh six, for Kirk, Spock, Picard, Data, Janeway, Seven of Nine, and Geordi La Forge. Plus two promos: Burst Lightning with Betazoid flavor text, and Solemn Simulacrum with a Lal and Data quote.
+
+The Commander decks add new ideas too. Uhura has Hailing Frequencies, where you choose a number from zero to ten, and then you draw when an opponent casts a spell with that mana value. Worf, Defiant Commander has Battlefront, which lets you exile cards from the top as you attack and play them. Jean-Luc Picard, Luminary has Seek out, which rewards you for drawing your second card each turn. And Koloth, Tribble Hunter hands every player Tribbles at the end of the turn, and goads them. That one will make a good story.
+
+Borg and Klingon themes show up a lot. Join the Collective is a seven-mana wrath that leaves Borg tokens behind. The Borg Queen, Locutus, and the Bio-Asset Allocator all push artifact creatures. On the Klingon side, you have a whole row of warriors: Gowron, General Chang, L'Rell, Kruge, and Worf in several versions. Storied Veteran even has a printing written in Klingon script.
+
+The ships are the other big topic. The Enterprise-A, Enterprise-D, Discovery, Reliant, the Borg Cube, Deep Space Nine, the D-7 Battle Cruiser, and the Starship Enterprise are all Spacecraft, and some have a blueprint frame. They work by tapping creatures to add charge counters, until they station and become big fliers.
+
+Lands are fun as well. There is a Watery Grave with sunken-ship art, Quark's Bar, The Unicomplex, Vulcan, and Spatial Anomaly, which can even make a planet.
+
+A few things to be careful about. Scryfall is still the best source for exact card text. I read the MythicSpoiler cards from their images, and some were in German or Japanese, so a few lines may be a little off. Opinions about which cards are best are suggestions, not facts.
+
+That is the overview. Good luck with the episode.

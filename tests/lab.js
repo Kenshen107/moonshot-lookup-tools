@@ -59,6 +59,8 @@ async function main() {
     const t0 = Date.now();
     if (REPLAY) {
         const { page, info, errors } = await openLab(h);
+        if (PATCH) await page.evaluate(PATCH); // replay with a patch too (e.g. a watch on log)
+        page.on('console', m => { if (/NANLIFE/.test(m.text())) console.log(m.text().slice(0, 1500)); });
         if (process.env.LAB_PAUSE) { // a game that never returns (a synchronous loop): pause the page after N ms and print where it is
             const cdp = await h.ctx.newCDPSession(page);
             await cdp.send('Debugger.enable');

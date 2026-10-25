@@ -353,10 +353,10 @@ function handHTML() {
     const top = P.library[P.library.length - 1];
     const topCard = top && (topCastOk(P, top) || pitTop(P) === top) ? [top] : [];
     const extraLands = MAIN.includes(G.phase) && G.active === G.view ? extraLandZones(P).filter(o => !topCard.includes(o)) : [];
-    const gyModes = P.gy.filter(o => castAsOk(P, o, 'blitz') || castAsOk(P, o, 'disturb') || castAsOk(P, o, 'retrace') || lockerOk(P, o));
+    const gyModes = P.gy.filter(o => castAsOk(P, o, 'blitz') || castAsOk(P, o, 'disturb') || castAsOk(P, o, 'retrace') || castAsOk(P, o, 'beam') || lockerOk(P, o));
     return [...P.hand, ...P.exile.filter(o => o.playUntil >= G.turn || o.advReady || (o.foretoldTurn && o.foretoldTurn < G.turn) || (o.warpedTurn && o.warpedTurn < G.turn)), ...topCard, ...extraLands, ...gyModes].map(o => {
         const r = Rx(o);
-        const playable = r.kind === 'land' ? canPlayLand(P, o) : (canCastNow(P, o) && canPay(P, o)) || ['blitz', 'escape', 'disturb', 'retrace'].some(md => { o.castAs = md; const ok = castAsOk(P, o, md) && canCastNow(P, o) && canPay(P, o); o.castAs = null; return ok; });
+        const playable = r.kind === 'land' ? canPlayLand(P, o) : (canCastNow(P, o) && canPay(P, o)) || ['blitz', 'escape', 'disturb', 'retrace', 'beam'].some(md => { o.castAs = md; const ok = castAsOk(P, o, md) && canCastNow(P, o) && canPay(P, o); o.castAs = null; return ok; });
         return `<button type="button" class="hc${playable ? ' playable' : ''}${!P.hand.includes(o) ? ' from-exile' : ''}" data-uid="${o.uid}" onclick="showGameCard(${o.uid})" title="${esc(o.card.name)}">${cardImg(o.card, true)}${r.support !== 'full' ? `<span class="sup badge sup-${r.support}">${r.support === 'none' ? '!' : '~'}</span>` : ''}</button>`;
     }).join('') || '<span class="note">No cards in hand.</span>';
 }
