@@ -60,6 +60,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
               ok('Captain Sisko: an Officer for each dilemma faced this turn', A.bf.filter(x => hasType(x, 'Officer') && x.token).length >= 1, A.bf.map(x => x.card.name)); }
             { const [A] = await fresh(); const k = put(A, 'Kobayashi Maru Scenario'); const a0 = A.hand.length; fire('upkeep'); await settle2(); G.active = 0; await CMD.tkKobayashi(A, {}, null, k); await CMD.tkKobayashi(A, {}, null, k); await settle2();
               ok('Kobayashi Maru Scenario: each option once, in order (the computer avoids Abandon Ship)', k.kobayashi.length === 3 && !k.kobayashi.includes(3) && A.hand.length >= a0 + 2, [k.kobayashi, A.hand.length - a0]); }
+            { const [A] = await fresh(); const k = put(A, 'Kobayashi Maru Scenario'); k.kobayashi = [0, 1, 2]; A.life = 20; await CMD.tkKobayashi(A, {}, null, k); await settle2(); ok('Kobayashi Maru Scenario: Abandon Ship (the last option) ends the game for that player, with no NaN life', k.kobayashi.includes(3) && A.life === 0 && !isNaN(A.life), [A.life, k.kobayashi]); }
             // ---- Beam me up ----
             { const [A, B] = await fresh(); lands(A, 5, 'Island'); const mine = put(A, 'Grizzly Bears'); const foe = put(B, 'Hill Giant'); const en = inGy(A, 'Energize');
               ok('Energize: castable from the graveyard when you control a creature', beamOk(A, en), 0);

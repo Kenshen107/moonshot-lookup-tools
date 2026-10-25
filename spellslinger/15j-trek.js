@@ -474,7 +474,7 @@ Object.assign(CMD, {
             if (x) { log(`${x.card.name} returns to its owner's hand.`); leaveBattlefield(x, 'hand'); }
         } else if (pick === 1) drawCards(P, 2);
         else if (pick === 2) await tkOfficers(P, 2, src);
-        else await applyEffect(P, { t: 'loseSelf' }, null, src);
+        else { log(`${P.name} ${you(P) ? 'lose' : 'loses'} the game (Abandon Ship).`); P.life = Math.min(P.life, 0); } // state-based actions end it (704.5a)
     },
     // ---- Kirk ----
     async tkKirkModes(P, e, t, src) {
