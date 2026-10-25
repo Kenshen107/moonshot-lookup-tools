@@ -11,6 +11,7 @@ const ABOUT_FEATURES = [
     ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log.']
 ];
 const ABOUT_LOG = [
+    ['Oct 25 (Star Trek cards, random decks)', ['Every Star Trek card (the main set, the Commander decks and the Special Guests, 262 cards) now plays: Stations and Spacecraft, dilemmas, Beam me up, Borg assimilation, Officers, Klingons and Tribbles. On the Play tab, 🎲 Build me a random Commander deck makes a new themed deck from a random commander and saves it to your decks so you can try it.']],
     ['Oct 23 (opponent picker fix)', ['Fixed: tapping an opponent on the Play tab did nothing, so you could not start a game. A newer card rule had accidentally taken over the picker\'s name.']],
     ['Oct 23 (random commanders, bounce lands)', ['Type a commander on the Play tab and tap 🎲 Random build to face a new deck every time, drawn from the cards EDHREC players use with that commander (popular cards show up most). 🎲 Play a random fully automated commander now starts a game at once. Bounce lands (Karoo lands) now ask which land to return. Pixel effects now play only in Campaign mode, not in Sandbox.']],
     ['Oct 21 (looks and frames)', ['A new 🎨 Look button in the header (and in the phone Player menu) lets you pick a look: Classic, Dungeon, Ember, Frost, Yule, Grove or Royal. It changes the colors of the whole game and is saved on your device. Pixel frames now draw a border around panels and dialogs, and you can turn them off in the same window.']],
