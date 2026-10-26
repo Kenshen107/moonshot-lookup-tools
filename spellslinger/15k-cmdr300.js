@@ -791,3 +791,47 @@ Object.assign(CMD, {
         drawCards(P, 1);
     },
 });
+
+// ===== Batch 7 =====
+Object.assign(TRIG_FN, {
+    creatureLeftGy: (o, ctx) => ctx.P.i === o.owner && (ctx.P.gyLeftLast || []).some(c => /\bCreature\b/.test(c.card.type)),
+    outlawEnters: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && ctx.o !== o && OUTLAWS.some(w => hasType(ctx.o, w)),
+    anyCreatureTargeted: (o, ctx) => !!ctx.o && isCreature(ctx.o),
+    putCounterThisTurn: (o, ctx) => G.players[o.owner].counterTurn === G.turn,
+});
+Object.assign(CMD_SCORE, { szarekh: () => 4, lavinia10: () => 6, zimoneDina: () => 5, ardoz: () => 3, halana: () => 5, tariel: () => 7, vialGG: () => 2, horobi: () => 3, selvalaEager: () => 3, kudro: () => 2, sakiko: () => 3, ori: () => 6, jhoira: () => 5 });
+Object.assign(CMD_AITARGET, { vialGG: (P, e, src, valid, c) => ({ p: c.O }) });
+Object.assign(CMD, {
+    async szarekh(P, e, t, src) { const milled = doMill(P, 3); const pool = milled.filter(c => /\bArtifact\b/.test(c.card.type) && /\bCreature\b/.test(c.card.type) || /\bVehicle\b/.test(c.card.type)); if (!pool.length) return; const c = await pickOwn(P, pool, `${src.card.name}: put an artifact creature or Vehicle card into your hand?`, { optional: true }); if (c && P.gy.includes(c)) { pull(P.gy, c); P.hand.push(c); log(`${c.card.name} goes to ${you(P) ? 'your' : P.name + "'s"} hand.`); } },
+    lavinia10(P, e, t, src) { foes(P).flatMap(F => F.bf).filter(x => !/\bLand\b/.test(x.card.type) && (x.card.cmc || 0) <= 4).forEach(x => applyEffect(P, { t: 'detain' }, { o: x }, src)); },
+    async zimoneDina(P, e, t, src) {
+        for (let k = 0; k < (P.bf.filter(x => /\bLand\b/.test(x.card.type)).length >= 8 ? 2 : 1); k++) {
+            drawCards(P, 1); const lands = P.hand.filter(c => /\bLand\b/.test(c.card.type)); if (!lands.length) continue;
+            const c = await pickOwn(P, lands, `${src.card.name}: put a land card from your hand onto the battlefield tapped?`, { optional: true }); if (c) { pull(P.hand, c); putOntoBattlefield(P, c, true); fire('landfall', { o: c }); }
+        }
+    },
+    ardoz(P, e, t, src) { const x = G.ctxObj; if (x && onBf(x.uid)) { x.tp += 2; log(`${x.card.name} gets +2/+0 until end of turn.`); } },
+    ardozSelf(P, e, t, src) { if (onBf(src.uid)) { src.tp += 2; log(`${src.card.name} gets +2/+0 until end of turn.`); } },
+    async halana(P, e, t, src) {
+        const x = G.ctxObj; if (!x || !onBf(x.uid) || !(pow(x) > 0)) return;
+        const pool = allPerms().filter(y => isCreature(y) && y !== x && !has(y, 'hexproof') || (isCreature(y) && y.owner === P.i && y !== x)); const foesPool = pool.filter(y => y.owner !== P.i); if (!foesPool.length && (P.isAI || AUTOPLAY)) return;
+        if (!(await mayPay(P, '{2}', `${src.card.name}: pay {2} so ${x.card.name} deals ${pow(x)} damage to target creature?`, src, true))) return;
+        const tgt = (P.isAI || AUTOPLAY) ? foesPool.sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: target creature`, { required: true }); if (tgt) { damage(tgt, pow(x), x); log(`${x.card.name} deals ${pow(x)} damage to ${tgt.card.name}.`); }
+    },
+    tariel(P, e, t, src) { const F = foes(P).filter(q => q.gy.some(c => /\bCreature\b/.test(c.card.type))); if (!F.length) return; const Q = F[0]; const pool = Q.gy.filter(c => /\bCreature\b/.test(c.card.type)); const c = pool[rand(pool.length)]; pull(Q.gy, c); c.realOwner = Q.i; c.owner = P.i; putOntoBattlefield(P, c); log(`${c.card.name} enters the battlefield under ${you(P) ? 'your' : P.name + "'s"} control.`); },
+    vialGG(P, e, t, src) { if (t && t.p) damage(t.p, 1, src); },
+    horobi(P, e, t, src) { const x = G.ctxRaw && G.ctxRaw.o; if (x && onBf(x.uid)) { log(`${x.card.name} is destroyed (${src.card.name}).`); destroy(x); } },
+    async selvalaEager(P, e, t, src) {
+        const n = new Set(P.bf.filter(isCreature).map(x => pow(x))).size; if (n <= 0) return;
+        const col = (P.isAI || AUTOPLAY) ? (P.hand.some(h => (h.card.colors || []).includes('G')) ? 'G' : (['W', 'U', 'B', 'R', 'G'].find(c => P.hand.some(h => (h.card.colors || []).includes(c))) || 'G')) : ['W', 'U', 'B', 'R', 'G'][await askMode(P, `${src.card.name}: choose a color`, ['White', 'Blue', 'Black', 'Red', 'Green'])];
+        P.pool = (P.pool || []).concat(Array(n).fill(col)); log(`${P.name} add${you(P) ? '' : 's'} ${('{' + col + '}').repeat(n)}.`);
+    },
+    async kudro(P, e, t, src) { const pool = foes(P).flatMap(F => F.gy.map(c => ({ c, F }))); if (!pool.length) return; let pick; if (P.isAI || AUTOPLAY) pick = pool.sort((a, b) => (b.c.card.cmc || 0) - (a.c.card.cmc || 0))[0]; else { const ch = await pickCard(P, pool.map(p2 => p2.c), `${src.card.name}: exile target card from an opponent's graveyard`, { required: true }); pick = pool.find(p => p.c === ch) || pool[0]; } pull(pick.F.gy, pick.c); pick.F.exile.push(pick.c); log(`${pick.c.card.name} is exiled from ${pick.F.name === 'You' ? 'your' : pick.F.name + "'s"} graveyard.`); },
+    sakiko(P, e, t, src) { const n = (G.ctxRaw && G.ctxRaw.n) || 0; if (n > 0) { P.pool = (P.pool || []).concat(Array(n).fill('G')); P.keepPoolTurn = G.turn; log(`${P.name} add${you(P) ? '' : 's'} ${'{G}'.repeat(Math.min(n, 12))}${n > 12 ? '…' : ''} (it stays until end of turn).`); } },
+    ori(P, e, t, src) { const hit = foes(P).flatMap(F => F.bf).filter(x => /\b(Artifact|Enchantment)\b/.test(x.card.type) && !has(x, 'indestructible')); hit.forEach(x => { if (onBf(x.uid)) destroy(x); }); if (hit.length) gainLifeFor(P, hit.length); },
+    async jhoira(P, e, t, src) {
+        src.ctr.ingenuity = (src.ctr.ingenuity || 0) + 2; const X = src.ctr.ingenuity;
+        const pool = P.hand.filter(c => /\bArtifact\b/.test(c.card.type) && (c.card.cmc || 0) <= X); if (!pool.length) return;
+        const c = await pickOwn(P, pool, `${src.card.name}: put an artifact card with mana value ${X} or less onto the battlefield?`, { optional: true }); if (c) { pull(P.hand, c); putOntoBattlefield(P, c); log(`${c.card.name} enters the battlefield.`); }
+    },
+});
