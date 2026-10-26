@@ -30,6 +30,11 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
 
             // ---- TESTS ----
             // (batches are added below this line)
+            // ---- Owner report: "nonlegendary" tutors (Unmarked Grave) offered no choice because cardFits did not know the word ----
+            { const X2 = await T.cards(['Unmarked Grave', 'Urza, Lord Protector']); const UG = X2['Unmarked Grave']; C['Unmarked Grave'] = UG; C['Urza, Lord Protector'] = X2['Urza, Lord Protector'];
+              const [A] = await fresh(); A.library.length = 0; inLib(A, 'Grizzly Bears'); inLib(A, 'Serra Angel'); inLib(A, 'Urza, Lord Protector'); let seen = null; const old = window.pickCard; window.pickCard = async (P, list) => { seen = list.map(x => x.card.name); return list[0]; };
+              const sp = makeObj(UG, A.i); await resolveEffects(A, spellEffects(sp), null, sp); await settle2(); window.pickCard = old;
+              ok('Unmarked Grave: you are offered every nonlegendary card of your library and the pick goes to the graveyard', !!seen && seen.length === 2 && !seen.includes('Urza, Lord Protector') && A.gy.some(x => x.card.name === seen[0]), [seen, A.gy.map(x => x.card.name)]); }
             // ---- Pod-record fix: Massacre Wurm only drains the dead creature's controller ----
             { const W = (await T.cards(['Massacre Wurm']))['Massacre Wurm']; C['Massacre Wurm'] = W;
               const [A, B] = await fresh(); put(A, 'Massacre Wurm'); const bear = put(B, 'Grizzly Bears'); const a0 = A.life, b0 = B.life; dieOrLeave(bear, 'gy'); await settle2();

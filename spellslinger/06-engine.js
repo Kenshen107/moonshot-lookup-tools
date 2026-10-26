@@ -1933,6 +1933,8 @@ function cardFits(o, what) {
     if ((m = what.match(/^(white|blue|black|red|green) (.+)$/))) return (o.card.colors || []).includes(COLOR_WORDS[m[1]]) && cardFits(o, m[2]);
     if ((m = what.match(/^(.+) pow(\d+)$/))) return cardFits(o, m[1]) && (Number(o.card.power) || 0) <= +m[2];
     if (/ or /.test(what) && !/, /.test(what) && !['instant or sorcery', 'artifact or enchantment', 'creature or planeswalker'].includes(what)) return what.split(' or ').some(w => cardFits(o, w));
+    // "nonlegendary card", "nonlegendary creature" (Unmarked Grave): not Legendary, then whatever follows (2026-10-26, owner's report: no choice was offered)
+    if ((m = what.match(/^nonlegendary(?: (.+))?$/))) return !/\bLegendary\b/.test(t) && (!m[1] || cardFits(o, m[1]));
     switch (what) {
         case 'card': return true;
         case 'nonland': return k !== 'land';
