@@ -1570,11 +1570,20 @@ async function endStepWindow(P) {
         }
     }
 }
+// A person who just cast an instant or sorcery is still asked when one of their permanents has an ability that targets a spell (Rootha: "{2}, return it to
+// its owner's hand: copy target instant or sorcery spell you control"), since that ability only works while the spell is on the stack (2026-10-26, owner's report).
+function ownSpellAbilityOptions(P, top) {
+    if (P.isAI || top.kind !== 'spell' || !top.o) return false;
+    const k = Rx(top.o).kind; if (k !== 'instant' && k !== 'sorcery') return false;
+    const was = G.priority; G.priority = P.i;
+    try { return P.bf.some(o => actsOf(o).some(a => (a.effects || []).some(e => e.target === 'spell') && canActivate(P, o, a))); }
+    finally { G.priority = was; }
+}
 async function offerPriority(P, top) {
-    if (top.P === P) return false; // auto-pass on your own spell or ability
+    if (top.P === P && !ownSpellAbilityOptions(P, top)) return false; // auto-pass on your own spell or ability
     if (G.stack.some(it => it.kind === 'spell' && Rx(it.o).splitSecond)) return false; // split second (702.61)
     // A person is asked when they have any spell or ability to use; the computer only answers with spells (what aiRespond knows how to do)
-    const anything = P.isAI ? [...P.hand, ...P.command].some(o => { G.priority = P.i; return canCastNow(P, o) && canPay(P, o); }) : instantOptions(P);
+    const anything = P.isAI ? [...P.hand, ...P.command].some(o => { G.priority = P.i; return canCastNow(P, o) && canPay(P, o); }) : (top.P === P ? true : instantOptions(P));
     if (!anything) { G.priority = null; return false; } // nothing they could do: pass automatically
     G.priority = P.i;
     if (P.isAI) {

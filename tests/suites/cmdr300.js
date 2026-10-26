@@ -35,6 +35,17 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
               const [A] = await fresh(); A.library.length = 0; inLib(A, 'Grizzly Bears'); inLib(A, 'Serra Angel'); inLib(A, 'Urza, Lord Protector'); let seen = null; const old = window.pickCard; window.pickCard = async (P, list) => { seen = list.map(x => x.card.name); return list[0]; };
               const sp = makeObj(UG, A.i); await resolveEffects(A, spellEffects(sp), null, sp); await settle2(); window.pickCard = old;
               ok('Unmarked Grave: you are offered every nonlegendary card of your library and the pick goes to the graveyard', !!seen && seen.length === 2 && !seen.includes('Urza, Lord Protector') && A.gy.some(x => x.card.name === seen[0]), [seen, A.gy.map(x => x.card.name)]); }
+            // ---- Owner report: a person casting an instant gets a window to use Rootha's copy ability on their own spell ----
+            { const X3 = await T.cards(['Rootha, Mercurial Artist', 'Lightning Bolt']); C['Rootha, Mercurial Artist'] = X3['Rootha, Mercurial Artist']; C['Lightning Bolt'] = X3['Lightning Bolt'];
+              const run = async withRootha => { const [A, B] = await fresh(); A.isAI = false; B.isAI = true; if (withRootha) { put(A, 'Rootha, Mercurial Artist'); lands(A, 2, 'Island'); }
+                const sp = makeObj(have('Lightning Bolt'), A.i); A.hand.push(sp); const top = { kind: 'spell', o: sp, P: A, name: 'Lightning Bolt', target: { p: B } }; G.stack.push(top);
+                const pr = offerPriority(A, top); for (let i = 0; i < 8; i++) await Promise.resolve(); const asked = !!(G.mode && G.mode.type === 'respond' && G.mode.who === A.i); if (asked) G.mode.resolve(false); await pr; G.stack.length = 0; G.mode = null; return asked; };
+              ok('Rootha: casting your own instant stops for priority so its copy ability can be used', (await run(true)) === true);
+              ok('No such ability: your own spell still auto-passes', (await run(false)) === false); }
+            { const [A, B] = await fresh(); A.isAI = true; B.isAI = true; const ro = put(A, 'Rootha, Mercurial Artist'); lands(A, 2, 'Island');
+              const sp = makeObj(have('Lightning Bolt'), A.i); A.hand.push(sp); const top = { kind: 'spell', o: sp, P: A, name: 'Lightning Bolt', target: { p: B }, x: 0 }; G.stack.push(top); const b0 = B.life;
+              G.priority = A.i; const a = actsOf(ro)[0]; const done = await activate(A, ro, a, { item: top }); G.priority = null; await settle2();
+              ok('Rootha: the ability returns it to hand and the spell is copied (two Lightning Bolts: 6 damage)', done && A.hand.some(x => x.card.name === 'Rootha, Mercurial Artist') && B.life === b0 - 6, [done, A.hand.map(x => x.card.name), b0 - B.life]); G.stack.length = 0; }
             // ---- Pod-record fix: Massacre Wurm only drains the dead creature's controller ----
             { const W = (await T.cards(['Massacre Wurm']))['Massacre Wurm']; C['Massacre Wurm'] = W;
               const [A, B] = await fresh(); put(A, 'Massacre Wurm'); const bear = put(B, 'Grizzly Bears'); const a0 = A.life, b0 = B.life; dieOrLeave(bear, 'gy'); await settle2();
