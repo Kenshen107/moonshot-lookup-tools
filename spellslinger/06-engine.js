@@ -356,8 +356,9 @@ function putCounters(o, n, by) {
     let bonus = X.bf.filter(a => (Rx(a).counterBonus || []).some(ty => hasType(o, ty))).length;
     // Hardened Scales (+1), Doubling Season / Branching Evolution (x2)
     X.bf.forEach(a => { const cm = Rx(a).counterMod; if (!cm || lostAbilities(a)) return; if (cm.other && a === o) return; if (cm.what === 'creature' && !isCreature(o)) return; if (cm.what === 'artifact or creature' && !isCreature(o) && !/Artifact/.test(o.card.type)) return; const t = (n + bonus) * cm.times + cm.plus; bonus = t - n; });
+    if (Rx(o).counterPlusOne && !lostAbilities(o)) bonus += 1; // Mowu, Loyal Companion
     if (typeof tkCounterMult === 'function') { const m = tkCounterMult(o, '+1/+1', n + bonus); bonus = m - n; }
-    o.counters += n + bonus;
+    o.counters += n + bonus; o.counterTurn = G.turn;
     X.counterTurn = G.turn;
     fire('counters', { P: by || X, o, n: n + bonus });
     return n + bonus;
@@ -535,6 +536,7 @@ function damage(target, n, src) {
         if (n <= 0) return;
     }
     if (target.life !== undefined && oppSrc && G.noPrevent !== G.turn) { const k = target.bf.filter(x => Rx(x).seraph && !lostAbilities(x)).length; if (k) { n -= k; log(`Guardian Seraph prevents ${Math.min(k, n + k)} damage.`); if (n <= 0) return; } }
+    if (target.card && isCreature(target) && !G.inCombatDamage && G.noPrevent !== G.turn && allPerms().some(a2 => Rx(a2).tajic && a2 !== target && a2.owner === target.owner && !lostAbilities(a2))) { log(`Noncombat damage to ${target.card.name} is prevented (Tajic).`); return; }
     if (target.card && !G.inCombatDamage && has(target, 'nononcombat') && G.noPrevent !== G.turn) { log(`Noncombat damage to ${target.card.name} is prevented.`); return; }
     if (target.card && Rx(target).protean && !lostAbilities(target) && G.noPrevent !== G.turn) {
         const k = Math.min(n, Math.max(0, target.counters));

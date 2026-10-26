@@ -607,3 +607,107 @@ Object.assign(CMD, {
     wakka(P, e, t, src) { P.bf.filter(x => x !== src && isCreature(x)).forEach(x => putCounters(x, 1, P)); },
 });
 COUNT_EXTRA.push([/^(?:the number of )?permanent cards in your graveyard$/, () => o => G.players[o.owner].gy.filter(x => !/Instant|Sorcery/.test(x.card.type)).length]);
+
+// ===== Batch 5 =====
+Object.assign(TRIG_FN, {
+    selfAndOtherAttack: (o, ctx) => (ctx.list || []).includes(o) && ctx.list.length >= 2,
+    smallCreatureDies: (o, ctx) => { const x = ctx.o; if (!x || x.owner !== o.owner) return false; return true; },
+    sameNameInGy: (o, ctx) => { const sp = ctx.o, Q = ctx.P; if (!sp || !Q || Q.i === o.owner) return false; if (!/\b(Creature|Planeswalker)\b/.test(sp.card.type)) return false; return Q.gy.some(c => c.card.name === sp.card.name); },
+    markGyLeft: (o, ctx) => { if (ctx.P.i === o.owner) G.players[o.owner].gyLeftTurn = G.turn; return false; },
+    gyLeftThisTurn: (o, ctx) => G.players[o.owner].gyLeftTurn === G.turn,
+    firstEnchantment: (o, ctx) => { if (ctx.P.i !== o.owner || !/\bEnchantment\b/.test(ctx.o.card.type)) return false; if (ctx.P.enchCastTurn === G.turn) return false; ctx.P.enchCastTurn = G.turn; return true; },
+    bairdCond: (o, ctx) => G.players[o.owner].bf.some(x => isCreature(x) && pow(x) > (Number(x.card.power) || 0)),
+});
+COND_EXTRA.push([/^an artifact entered the battlefield under your control this turn$/, () => P => (G.entered || []).some(e => e.turn === G.turn && e.owner === P.i && /\bArtifact\b/.test(e.o.card.type))]);
+Object.assign(CMD_SCORE, { aveline: () => 4, baxter: () => 2, belakor: () => 5, oji: () => 4, slobad: () => 1, endure: () => 4, urdnan: () => 3, alenaMana: () => 2, arnyn: () => 3, hraes: () => 3, spiderIndia: () => 4, firja: () => 4, kolaghan: () => 1, orfeo: () => 4, jenson: () => 3, miara: () => 3, amzu: () => 4, erkenbrand: () => 3, gau: () => 3, leonardoBalance: () => 5, krydle: () => 3, smellerbee: () => 3, yisan: () => 6, generalLeo: () => 6, cosmicSpider: () => 4, aureliaEJ: () => 4, karrthus: () => 12, misterNegative: () => 3, bentonDraw: () => 2, gandalfGB: () => 3, nemataGG: () => 1, brion: () => 3, minwu: () => 3, grub: () => 4, harald: () => 5, kolvori: () => 5, hidetsugu: () => 4, narsetEM: () => 7, raphLeo: () => 6 });
+Object.assign(CMD_AITARGET, { brion: (P, e, src, valid, c) => ({ p: c.O }), hidetsugu: (P, e, src, valid, c) => ({ p: c.O }) });
+async function lookTopPick(P, n, test, why, src) {
+    const top = []; for (let i = 0; i < n && P.library.length; i++) top.push(P.library.pop());
+    const pool = top.filter(test); let got = null;
+    if (pool.length) got = await pickOwn(P, pool, `${src.card.name}: ${why}`, { optional: true, rank: (a, b) => (b.card.cmc || 0) - (a.card.cmc || 0) });
+    if (got) { P.hand.push(got); log(`${P.name} reveal${you(P) ? '' : 's'} ${got.card.name} and put it into ${you(P) ? 'your' : 'their'} hand.`); }
+    P.library.unshift(...shuffle(top.filter(c => c !== got)));
+    return got;
+}
+Object.assign(CMD, {
+    aveline(P, e, t, src) { const s = rawSrc(), n = (G.ctxRaw && G.ctxRaw.n) || 0; if (s && onBf(s.uid) && n > 0) { const got = putCounters(s, n, P); log(`${s.card.name} gets ${got} +1/+1 counter${got === 1 ? '' : 's'}.`); } },
+    baxter(P, e, t, src) { P.bf.filter(x => isCreature(x) && (x.counters > 0 || Object.values(x.ctr || {}).some(v => v > 0))).forEach(x => x.tkw.push('flying')); log('Each creature you control with a counter on it gains flying until end of turn.'); },
+    belakor(P, e, t, src) { const x = P.bf.filter(y => isCreature(y) && hasType(y, 'Demon')).length; if (x > 0) { drawCards(P, x); P.life -= x; log(`${P.name} lose${you(P) ? '' : 's'} ${x} life.`); fire('loseLife', { P, n: x }); } },
+    async oji(P, e, t, src) { const x = await pickOwn(P, P.bf.filter(isCreature), `${src.card.name}: exile up to one creature you control, then return it`, { optional: true, rank: (a, b) => ((b.etbCount || 0) - (a.etbCount || 0)) || (Rx(b).etb.length - Rx(a).etb.length) }); if (x && ((!(P.isAI || AUTOPLAY)) || Rx(x).etb.length)) await applyEffect(P, { t: 'flicker' }, { o: x }, src); },
+    async slobad(P, e, t, src) { const x = await pickOwn(P, P.bf.filter(y => /\bArtifact\b/.test(y.card.type)), `${src.card.name}: target artifact gains indestructible`, { rank: (a, b) => permValue(b) - permValue(a) }); if (x) { x.tkw.push('indestructible'); log(`${x.card.name} gains indestructible until end of turn.`); } },
+    async endure(P, e, t, src) {
+        const n = e.n || 1; const useCounters = onBf(src.uid) && ((P.isAI || AUTOPLAY) ? true : (await askMode(P, `${src.card.name} endures ${n}`, [`Put ${n} +1/+1 counters on ${src.card.name}`, `Create a ${n}/${n} white Spirit token`])) === 0);
+        if (useCounters) { const got = putCounters(src, n, P); log(`${src.card.name} gets ${got} +1/+1 counters.`); } else await applyEffect(P, { t: 'token', n: 1, p: n, q: n, name: 'white Spirit', kw: [] }, null, src);
+    },
+    async urdnan(P, e, t, src) {
+        const at = (G.attackers || []).map(onBf).filter(x => x && x.owner === P.i && x.counters > 0); if (!at.length) return;
+        const x = await pickOwn(P, at, `${src.card.name}: target attacking creature with a +1/+1 counter`, { rank: (a, b) => b.counters - a.counters });
+        if (x) { x.tkw.push(x.counters >= 2 ? 'double strike' : 'first strike'); log(`${x.card.name} gains ${x.counters >= 2 ? 'double' : 'first'} strike until end of turn.`); }
+    },
+    alenaMana(P, e, t, src) { const n = Math.max(0, ...(G.entered || []).filter(en => en.turn === G.turn && en.owner === P.i && en.creature && onBf(en.o.uid)).map(en => pow(en.o)), 0); if (n > 0) { P.pool = (P.pool || []).concat(Array(n).fill('R')); log(`${P.name} add${you(P) ? '' : 's'} ${'{R}'.repeat(n)}.`); } },
+    arnyn(P, e, t, src) {
+        const l = G.ctxRaw && G.ctxRaw.lki; if (!l || !(l.pow <= 1 || l.tou <= 1)) return;
+        foes(P).slice(0, 1).forEach(F => { F.life -= 2; log(`${F.name} lose${you(F) ? '' : 's'} 2 life.`); fire('loseLife', { P: F, n: 2 }); }); gainLifeFor(P, 2);
+    },
+    async hraes(P, e, t, src) { const x = await pickOwn(P, P.bf.filter(isCreature), `${src.card.name}: target creature gets +1/+0 and can't be blocked`, { rank: (a, b) => pow(b) - pow(a) }); if (x) { x.tp += 1; x.tkw.push('unblockable'); log(`${x.card.name} gets +1/+0 and can't be blocked this turn.`); } },
+    async spiderIndia(P, e, t, src) { const x = await pickOwn(P, P.bf.filter(isCreature), `${src.card.name}: +1/+1 counter on a creature, it gains flying`, { rank: (a, b) => creatureValue(b) - creatureValue(a) }); if (x) { putCounters(x, 1, P); x.tkw.push('flying'); log(`${x.card.name} gets a +1/+1 counter and gains flying until end of turn.`); } },
+    async firja(P, e, t, src) {
+        const top = []; for (let i = 0; i < 3 && P.library.length; i++) top.push(P.library.pop()); if (!top.length) return;
+        const c = await pickOwn(P, top, `${src.card.name}: put one into your hand (the rest go to the graveyard)`, { rank: (a, b) => (b.card.cmc || 0) - (a.card.cmc || 0) }) || top[0];
+        P.hand.push(c); top.filter(x => x !== c).forEach(x => P.gy.push(x)); log(`${P.name} put${you(P) ? '' : 's'} ${c.card.name} into ${you(P) ? 'your' : 'their'} hand and the rest into the graveyard.`);
+    },
+    kolaghan(P, e, t, src) { const Q = G.ctxRaw && G.ctxRaw.P; if (!Q || Q.out) return; Q.life -= 10; log(`${Q.name} lose${you(Q) ? '' : 's'} 10 life.`); fire('loseLife', { P: Q, n: 10 }); },
+    async orfeo(P, e, t, src) { const x = await pickOwn(P, allPerms().filter(y => isCreature(y) && y.owner === P.i), `${src.card.name}: double target creature's power`, { rank: (a, b) => pow(b) - pow(a) }); if (x) { const n = pow(x); if (n > 0) { x.tp += n; log(`${x.card.name}'s power is doubled until end of turn.`); } } },
+    jenson(P, e, t, src) { log(`${P.name} scry${you(P) ? '' : 's'} 1.`); const sp = G.ctxRaw && G.ctxRaw.o; if (sp && (sp.card.colors || []).length >= 5) applyEffect(P, { t: 'token', n: 1, p: 4, q: 4, name: 'white Angel', kw: ['flying', 'vigilance'] }, null, src); },
+    async miara(P, e, t, src) { if (P.life < 2) return; if (await mayPay(P, '{1}', `${src.card.name}: pay {1} and 1 life to draw a card?`, src, true)) { P.life -= 1; fire('loseLife', { P, n: 1 }); drawCards(P, 1); } },
+    amzu(P, e, t, src) { const cards = P.gyLeftLast || []; const mv = Math.max(0, ...cards.map(c => c.card.cmc || 0)); applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'black green Insect', kw: [] }, null, src).then(() => { const tk = G.lastMade; if (tk && mv > 0) putCounters(tk, mv, P); }); },
+    erkenbrand(P, e, t, src) { P.bf.filter(isCreature).forEach(x => { x.tp += 1; }); log('Creatures you control get +1/+0 until end of turn.'); },
+    gau(P, e, t, src) { const n = Math.max(0, pow(src)); if (n > 0) foes(P).forEach(F => damage(F, n, src)); },
+    leonardoBalance(P, e, t, src) { P.bf.filter(isCreature).forEach(x => putCounters(x, 1, P)); log('A +1/+1 counter on each creature you control.'); },
+    krydle(P, e, t, src) { hitList().forEach(H => { H.life -= 1; fire('loseLife', { P: H, n: 1 }); doMill(H, 1); }); gainLifeFor(P, 1); log(`${P.name} scry${you(P) ? '' : 's'} 1.`); },
+    async smellerbee(P, e, t, src) {
+        const n = (G.attackers || []).length; if (!P.hand.length) return;
+        const ok = (P.isAI || AUTOPLAY) ? n > P.hand.length : await askYes(P, `${src.card.name}: discard your hand and draw ${n} cards?`, { card: src.card });
+        if (ok) { const k = P.hand.length; P.hand.splice(0).forEach(c => P.gy.push(c)); noteDiscard(P, k); drawCards(P, n); }
+    },
+    async yisan(P, e, t, src) {
+        src.ctr.verse = (src.ctr.verse || 0) + 1; const mv = src.ctr.verse;
+        const pool = P.library.filter(c => /\bCreature\b/.test(c.card.type) && (c.card.cmc || 0) === mv);
+        if (pool.length) { const c = await pickOwn(P, pool, `${src.card.name}: search for a creature card with mana value ${mv}`, {}); if (c) { pull(P.library, c); putOntoBattlefield(P, c); log(`${c.card.name} enters the battlefield.`); } }
+        shuffle(P.library);
+    },
+    async generalLeo(P, e, t, src) {
+        const pool = P.gy.filter(c => /\bCreature\b/.test(c.card.type) && (c.card.cmc || 0) <= 3);
+        if (pool.length) { const c = await pickOwn(P, pool, `${src.card.name}: return a creature card with mana value 3 or less`, { optional: true }); if (c) { pull(P.gy, c); putOntoBattlefield(P, c); } }
+        const n = P.bf.filter(isCreature).length; if (onBf(src.uid) && n > 0) putCounters(src, n, P);
+    },
+    cosmicSpider(P, e, t, src) { P.bf.filter(x => x !== src && isCreature(x) && hasType(x, 'Spider')).forEach(x => x.tkw.push('flying', 'first strike', 'trample', 'lifelink', 'haste')); },
+    async aureliaEJ(P, e, t, src) { const x = await pickOwn(P, P.bf.filter(isCreature), `${src.card.name}: choose up to one creature you control`, { optional: true, rank: (a, b) => pow(b) - pow(a) }); if (!x) return; x.tp += 2; if ((x.card.colors || []).includes('R')) x.tkw.push('trample'); if ((x.card.colors || []).includes('W')) x.tkw.push('vigilance'); },
+    async karrthus(P, e, t, src) { for (const x of allPerms().filter(y => isCreature(y) && hasType(y, 'Dragon') && y.owner !== P.i)) await applyEffect(P, { t: 'stealPerm' }, { o: x }, src); allPerms().filter(y => isCreature(y) && hasType(y, 'Dragon')).forEach(y => { y.tapped = false; }); log('All Dragons untap.'); },
+    async misterNegative(P, e, t, src) {
+        const F = foes(P).sort((a, b) => b.life - a.life)[0]; if (!F) return;
+        const ok = (P.isAI || AUTOPLAY) ? F.life > P.life + 4 : await askYes(P, `${src.card.name}: exchange life totals with ${F.name}?`, { card: src.card });
+        if (!ok) return; const a = P.life, b = F.life; P.life = b; F.life = a; log(`${P.name} and ${F.name} exchange life totals.`); if (b < a) drawCards(P, a - b);
+    },
+    bentonDraw(P, e, t, src) { const n = (G.ctxRaw && G.ctxRaw.n) || 0; if (n > 0) { drawCards(P, n); hitList().forEach(H => drawCards(H, n)); } },
+    gandalfGB(P, e, t, src) { if (onBf(src.uid)) { src.tp += 1; src.tq += 1; } foes(P).forEach(F => damage(F, 1, src)); },
+    nemataGG(P, e, t, src) { P.bf.filter(x => isCreature(x) && hasType(x, 'Saproling')).forEach(x => { x.tp += 1; x.tq += 1; }); },
+    brion(P, e, t, src) { const n = G.lastSacPow || 0; if (n > 0 && t && t.p) damage(t.p, n, src); },
+    minwu(P, e, t, src) { P.bf.filter(x => isCreature(x) && hasType(x, 'Cleric')).forEach(x => putCounters(x, 1, P)); },
+    async grub(P, e, t, src) { const pool = P.gy.filter(c => /\bCreature\b/.test(c.card.type) && hasType(c, 'Goblin')); if (!pool.length) return; const c = await pickOwn(P, pool, `${src.card.name}: return a Goblin card to your hand`, { optional: true }); if (c) { pull(P.gy, c); P.hand.push(c); log(`${c.card.name} returns to ${you(P) ? 'your' : P.name + "'s"} hand.`); } },
+    async harald(P, e, t, src) { await lookTopPick(P, 5, c => hasType(c, 'Elf') || hasType(c, 'Warrior') || hasType(c, 'Tyvar') || /Tyvar/.test(c.card.name), 'reveal an Elf, Warrior, or Tyvar card', src); },
+    async kolvori(P, e, t, src) { await lookTopPick(P, 6, c => /\bLegendary\b/.test(c.card.type) && /\bCreature\b/.test(c.card.type), 'reveal a legendary creature card', src); },
+    async hidetsugu(P, e, t, src) {
+        const c = P.library.pop(); if (!c) return; P.exile.push(c); log(`${c.card.name} is exiled from ${you(P) ? 'your' : P.name + "'s"} library.`);
+        const mv = c.card.cmc || 0; if (t && t.p && mv > 0) { t.p.life -= mv; log(`${t.p.name} lose${you(t.p) ? '' : 's'} ${mv} life.`); fire('loseLife', { P: t.p, n: mv }); }
+        if (/Instant|Sorcery/.test(c.card.type)) { const ok = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: cast ${c.card.name} without paying its mana cost?`, { card: c.card }); if (ok) await castFreeFrom(P, c, null); }
+    },
+    async narsetEM(P, e, t, src) {
+        const top = []; for (let i = 0; i < 4 && P.library.length; i++) top.push(P.library.pop()); top.forEach(c => P.exile.push(c)); if (top.length) log(`${P.name} exile${you(P) ? '' : 's'} ${top.map(c => c.card.name).join(', ')}.`);
+        for (const c of top) { if (/\bCreature\b/.test(c.card.type) || /\bLand\b/.test(c.card.type) || !P.exile.includes(c)) continue; const ok = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: cast ${c.card.name} without paying its mana cost?`, { card: c.card }); if (ok) await castFreeFrom(P, c, null); }
+    },
+    async raphLeo(P, e, t, src) {
+        const at = (G.attackers || []).map(onBf).filter(x => x && x.owner === P.i && x.tapped); at.slice(0, 2).forEach(x => { x.tapped = false; }); G.extraCombat = (G.extraCombat || 0) + 1;
+        log(`${P.name} untap${you(P) ? '' : 's'} up to two attacking creatures; there will be an additional combat phase after this one.`);
+    },
+});
