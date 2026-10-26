@@ -180,6 +180,18 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             // Heiko Yamazaki
             { const [A] = await fresh(); put(A, 'Heiko Yamazaki, the General'); lands(A, 1, 'Plains'); const sam = syn(A, 'Grizzly Bears', 'Creature — Samurai'); inGy(A, 'Sol Ring'); fire('attacks', { list: [sam] }); await settle2();
               ok('Heiko Yamazaki, the General: a Samurai or Warrior attacking alone lets you cast an artifact card from your graveyard', A.bf.some(x => x.card.name === 'Sol Ring'), A.bf.map(x => x.card.name)); }
+            // Eleventh Doctor
+            { const [A, B] = await fresh(); const d = put(A, 'The Eleventh Doctor'); A.hand.length = 0; const c = inHand(A, 'Hill Giant'); hit(d, [B]); await settle2();
+              ok('The Eleventh Doctor: exiles a card from hand with time counters equal to its mana value (suspended)', A.exile.includes(c) && c.ctr.time === 4 && c.suspended, [A.exile.length, c.ctr.time]); }
+            // Sivriss
+            { const [A, B] = await fresh(); const s = put(A, 'Sivriss, Nightmare Speaker'); put(A, 'Grizzly Bears'); const top = inLib(A, 'Serra Angel'); const h0 = A.hand.length; await activate(A, s, acts(s)[0]); await settle2();
+              ok('Sivriss, Nightmare Speaker: mills a card per opponent and returns it to hand unless that player pays 3 life', (A.hand.includes(top) && B.life === 20) || (A.gy.includes(top) && B.life === 17), [A.hand.length - h0, B.life]); }
+            // Mirri the Cursed
+            { const [A, B] = await fresh(); const m = put(A, 'Mirri the Cursed'); const t = put(B, 'Hill Giant'); G.inCombatDamage = true; damage(t, 1, m); G.inCombatDamage = false; await settle2(); const a = m.counters; damage(t, 1, m); await settle2();
+              ok('Mirri the Cursed: a +1/+1 counter when it deals combat damage to a creature (not noncombat)', a === 1 && m.counters === 1, [a, m.counters]); }
+            // The Sentry
+            { const [A, B] = await fresh(); const s = inHand(A, 'The Sentry, Golden Guardian'); putOntoBattlefield(A, s); await settle2(); const v = B.bf.find(x => x.card.name === 'The Void');
+              ok('The Sentry, Golden Guardian: target opponent creates The Void, a 5/5 flying indestructible token that must attack', !!v && pow(v) === 5 && has(v, 'flying') && has(v, 'indestructible') && Rx(v).support === 'full', [!!v, v && pow(v), v && Rx(v).support]); }
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;
     }, NAMES);

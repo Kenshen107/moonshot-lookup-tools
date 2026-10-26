@@ -13,8 +13,9 @@ const gIsLand = o => /\bLand\b/.test(o.card.type);
 const gHasCtr = o => o.counters > 0 || Object.values(o.ctr || {}).some(v => v > 0);
 function gRemoveCtr(o) { if (o.counters > 0) { o.counters--; return true; } const k = Object.keys(o.ctr || {}).find(k2 => o.ctr[k2] > 0); if (k) { o.ctr[k]--; return true; } return false; }
 // Make a token with its own rules text (Cragflame)
-function gMakeToken(P, name, type, text, colors) {
+function gMakeToken(P, name, type, text, colors, pt) {
     const card = { id: `token-${name}-${uidSeq}`, name, fullName: `${name} token`, cost: '', cmc: 0, type, text, colors: colors || [], ci: colors || [], img: null, imgS: null, legal: {} };
+    if (pt) { card.power = String(pt[0]); card.toughness = String(pt[1]); }
     const o = makeObj(card, P.i, { token: true, sick: false });
     P.bf.push(o); log(`${P.name} ${you(P) ? 'create' : 'creates'} ${name}.`); fire('enters', { o }); tokenMade(P);
     return o;
@@ -56,11 +57,32 @@ Object.assign(TRIG_FN, {
     },
     g_rogueHit: (o, ctx) => !!ctx.src && ctx.src.owner === o.owner && hasType(ctx.src, 'Rogue') && (ctx.hit || []).some(X => X.i !== o.owner),
     g_aloneAttack: (o, ctx) => (ctx.list || []).length === 1 && ctx.list[0].owner === o.owner && (hasType(ctx.list[0], 'Samurai') || hasType(ctx.list[0], 'Warrior')),
-    g_sphinx: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner
+    g_sphinx: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner,
+    g_mirriHit: (o, ctx) => ctx.src === o && !!G.inCombatDamage && !!ctx.o && isCreature(ctx.o)
 });
 Object.assign(CMD_SCORE, { g_vito: () => 4, g_omega: () => 6, g_nashi: () => 3, g_sin: () => 5, g_baba: () => 8, g_atemsis: () => 8, g_legolas: () => 6, g_galina: () => 9, g_kethek: () => 4, g_spider: () => 5, g_strago: () => 7, g_quistis: () => 5, g_unesh: () => 5, g_niv: () => 8, g_vaevictis: () => 7 });
 
 Object.assign(CMD, {
+    // Eleventh Doctor: exile a card from hand with time counters equal to its mana value (suspend)
+    async g_doctor11(P, e, t, src) {
+        const pool = P.hand.filter(c => !gIsLand(c) && (c.card.cmc || 0) >= 1 && Rx(c).support !== 'none'); if (!pool.length) return;
+        const c = await pickOwn(P, pool, `${src.card.name}: exile a card from your hand with time counters equal to its mana value`, { optional: true, rank: (a, b) => (a.card.cmc || 0) - (b.card.cmc || 0) });
+        if (!c) return;
+        pull(P.hand, c); c.ctr = c.ctr || {}; c.ctr.time = c.card.cmc || 1; c.suspended = true; P.exile.push(c);
+        log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${c.card.name} with ${c.ctr.time} time counter${c.ctr.time === 1 ? '' : 's'} on it (suspend).`);
+    },
+    async g_sivriss(P, e, t, src) {
+        for (const F of foes(P)) {
+            const before = P.gy.length; doMill(P, 1); const c = P.gy[P.gy.length - 1]; if (P.gy.length === before || !c) continue;
+            const pay = gAI(F) ? F.life > 12 : await askYes(F, `${src.card.name}: pay 3 life to keep ${c.card.name} in ${P.name === 'You' ? 'their' : P.name + "'s"} graveyard?`, { card: c.card });
+            if (pay) { gLose(F, 3); } else { pull(P.gy, c); P.hand.push(c); log(`${c.card.name} returns to ${you(P) ? 'your' : 'their'} hand.`); }
+        }
+    },
+    g_selfCounter(P, e, t, src) { if (onBf(src.uid)) putCounters(src, 1, P); },
+    async g_sentry(P, e, t, src) {
+        const F = await gOpp(P, `${src.card.name}: which opponent creates The Void?`); if (!F) return;
+        gMakeToken(F, 'The Void', 'Token Legendary Creature — Horror Villain', 'Flying, indestructible\nThe Void attacks each combat if able.', ['B'], [5, 5]);
+    },
     // Junk token ability
     g_junk(P, e, t, src) {
         const c = P.library.pop(); if (!c) return;

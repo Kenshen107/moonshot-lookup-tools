@@ -74,17 +74,25 @@ clx("{U}{U}, {T}: Gain control of target legendary permanent.", (R, m, ctx) => {
 clx("When ~ enters, return to your hand all creature cards in your graveyard that were put there from anywhere this turn.", R => { R.etb.push(cmd('g_garna')); });
 // Anowon, the Ruin Thief
 clx("Whenever one or more Rogues you control deal combat damage to a player, that player mills a card for each 1 damage dealt to them. If the player mills at least one creature card this way, you draw a card.", R => { R.trig.push({ ev: 'hitPlayer', fn: 'g_rogueHit', effects: [cmd('g_anowon')] }); });
+// The Eleventh Doctor
+clx("I. AM. TALKING! — Whenever ~ deals combat damage to a player, you may exile a card from your hand with a number of time counters on it equal to its mana value. If it doesn't have suspend, it gains suspend.", R => { R.trig.push({ ev: 'hitPlayer', effects: [cmd('g_doctor11')] }); });
 // The Destined White Mage
 clx("Whenever you gain life, put a +1/+1 counter on target creature you control. If you have a full party, put three +1/+1 counters on that creature instead.", R => { R.trig.push({ ev: 'gainLife', fn: 'g_myGain', effects: [cmd('g_whiteMage')] }); });
+// Sivriss, Nightmare Speaker
+clx("{T}, Sacrifice another creature or an artifact: For each opponent, you mill a card, then return that card from your graveyard to your hand unless that player pays 3 life.", (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('g_sivriss')], a => { a.cost.sacPerm = 'another creature or artifact'; }); });
 // Sensational Spider-Man
 clx("Whenever ~ attacks, tap target creature defending player controls and put a stun counter on it. Then you may remove up to three stun counters from among all permanents. Draw cards equal to the number of stun counters removed this way.", R => { R.trig.push({ ev: 'attacks', fn: 'selfAttacks', effects: [cmd('g_spider')] }); });
 // Heiko Yamazaki, the General
 clx("Whenever a Samurai or Warrior you control attacks alone, you may cast target artifact card from your graveyard this turn.", R => { R.trig.push({ ev: 'attacks', fn: 'g_aloneAttack', effects: [cmd('g_heiko')] }); });
 // Dwalin, Weaponmaster
 clx("Whenever ~ enters or attacks, put a hone counter on each Equipment you control.", R => { R.etb.push(cmd('g_dwalin')); R.trig.push({ ev: 'attacks', fn: 'selfAttacks', effects: [cmd('g_dwalin')] }); });
+// Mirri the Cursed
+clx("Whenever ~ deals combat damage to a creature, put a +1/+1 counter on ~.", R => { R.trig.push({ ev: 'dealsDamage', fn: 'g_mirriHit', effects: [cmd('g_selfCounter')] }); });
 // Bilbo, Fellow Conspirator
 clx("If you would create a Food token, instead create a Food token and a Treasure token.", R => { R.g_bilbo = true; });
 // Norin, Swift Survivalist
 clx("Whenever a creature you control becomes blocked, you may exile it. You may play that card from exile this turn.", R => { R.trig.push({ ev: 'blocked', fn: 'b_myBlocked', effects: [cmd('g_norin')] }); });
+// The Sentry, Golden Guardian
+clx("When ~ enters, target opponent creates The Void, a legendary 5/5 black Horror Villain creature token with flying, indestructible, and \"The Void attacks each combat if able.\"", R => { R.etb.push(cmd('g_sentry')); });
 // Junk token (Veronica, Dogmeat)
 clx("{T}, Sacrifice this artifact: Exile the top card of your library. You may play that card this turn. Activate only as a sorcery.", (R, m, ctx) => { act(R, ctx.line, '{T}, Sacrifice this artifact', [cmd('g_junk')], a => { a.sorcery = true; }); });
