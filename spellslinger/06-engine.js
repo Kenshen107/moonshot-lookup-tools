@@ -4137,7 +4137,7 @@ function combatDamage(A) {
                 if (G.monarch === H.i && src.owner !== H.i) { G.monarch = src.owner; log(`${G.players[src.owner].name} ${you(G.players[src.owner]) ? 'become' : 'becomes'} the monarch.`); }
                 if (Rx(src).toxic) { H.poison += Rx(src).toxic; log(`${src.card.name}: toxic ${Rx(src).toxic} (${H.name} ${you(H) ? 'have' : 'has'} ${H.poison} poison).`); }
             });
-            fire('hitPlayer', { src, n: events.filter(([s2, t]) => s2 === src && t.life !== undefined).reduce((a, [, , n]) => a + n, 0) });
+            fire('hitPlayer', { src, n: events.filter(([s2, t]) => s2 === src && t.life !== undefined).reduce((a, [, , n]) => a + n, 0), hit: [...new Set(events.filter(([s2, t]) => s2 === src && t.life !== undefined).map(([, t]) => t))] });
         });
         [...new Set(events.filter(([, t]) => t.life !== undefined).map(([, t]) => t))].forEach(H => {
             const n = events.filter(([, t]) => t === H).reduce((a, [, , k]) => a + k, 0);

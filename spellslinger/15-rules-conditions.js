@@ -600,8 +600,9 @@ function fire(ev, ctx = {}) {
             const ctxObj = (ev === 'cast' ? null : ctx.o) || (ctx.list && (tr.alone ? ctx.list[0] : ctx.list.find(x => x.owner === o.owner && (!tr.color || (x.card.colors || []).includes(tr.color))))) || null;
             const ctxCount = tr.attackWith ? ctx.list.filter(x => x.owner === o.owner && (tr.attackWith === 'creatures' || (tr.attackWith === 'legendary creatures' ? /Legendary/.test(x.card.type) : hasType(x, PLURAL_TYPES[tr.attackWith] || tr.attackWith.replace(/s$/, ''))))).length : ctx.n || 0;
             if (tr.anyMine && tr.ctxTarget && !tr.alone) { ctx.list.filter(x => x.owner === o.owner && (!tr.color || (x.card.colors || []).includes(tr.color)) && (!tr.withCounter || x.counters > 0)).forEach(x => (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: x })); continue; }
+            const lkiOf = (ev === 'dies' || ev === 'creatureDies' || ev === 'leaves') && ctx.o ? { pow: pow(ctx.o), tou: tou(ctx.o), counters: ctx.o.counters, ctr: { ...ctx.o.ctr }, card: ctx.o.card } : null; // last known information
             const timesTotal = times * (1 + (typeof cmdExtraTriggers === 'function' ? cmdExtraTriggers(ev, o, tr, ctx) : 0)); // Windcrag Siege (Mardu), Annie Joins Up
-            for (let k = 0; k < timesTotal; k++) (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: ctxObj, ctxCount, raw: { P: ctx.P, o: ctx.o, by: ctx.by, n: ctx.n !== undefined ? ctx.n : ctx.n, src: ctx.src, list: ctx.list } });
+            for (let k = 0; k < timesTotal; k++) (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: ctxObj, ctxCount, raw: { P: ctx.P, o: ctx.o, by: ctx.by, n: ctx.n !== undefined ? ctx.n : ctx.n, src: ctx.src, list: ctx.list, hit: ctx.hit, lki: lkiOf } });
         }
     }
 }
@@ -659,7 +660,7 @@ function actPlan(P, o, a, xExtra = 0) {
     if (a.cost.tapOther && !tapFodder(P, o, a.cost.tapOther)) return null; // nothing to tap for the cost
     if (dampingOn() && (isCreature(o) || /Artifact/.test(o.card.type)) && !a.effects.every(e => e.t === 'addMana')) return null; // Damping Matrix
     if (a.cost.exileTop && P.library.length < a.cost.exileTop) return null;
-    if (a.cost.sacOthers && P.bf.filter(x => isCreature(x) && x !== o).length < a.cost.sacOthers) return null;
+    if (a.cost.sacOthers && P.bf.filter(x => (isCreature(x) || (a.cost.sacAny && /Artifact/.test(x.card.type))) && x !== o).length < a.cost.sacOthers) return null;
     if (a.cost.mill && P.library.length < a.cost.mill) return null;
     if (a.cost.removeNamed && !((o.ctr[a.cost.removeNamed] || 0) > 0)) return null;
     if (a.cost.removeAny && !P.bf.some(x => x.counters > 0 || Object.values(x.ctr || {}).some(v => v > 0))) return null;
@@ -836,7 +837,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (a.cost.lifeIdentity) { const k = cmdrIdentity(P).length; P.life -= k; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${k} life.`); }
         if (a.cost.discard) { const d = (!P.isAI && P.hand.length > 1 ? await pickCard(P, P.hand, `${o.card.name}: discard a card`, { required: true }) : null) || P.hand.slice().sort((x, y) => (x.card.cmc || 0) - (y.card.cmc || 0))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
         if (a.cost.mill) doMill(P, a.cost.mill);
-        if (a.cost.sacOthers) { const pool = P.bf.filter(x => isCreature(x) && x !== o); const fs = await chooseSacN(P, pool, a.cost.sacOthers, o.card.name); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(' and ')}.`); }
+        if (a.cost.sacOthers) { const pool = P.bf.filter(x => (isCreature(x) || (a.cost.sacAny && /Artifact/.test(x.card.type))) && x !== o); const fs = await chooseSacN(P, pool, a.cost.sacOthers, o.card.name); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(' and ')}.`); }
         if (a.cost.bounceSelf) { log(`${o.card.name} returns to ${you(P) ? 'your' : 'their'} hand.`); leaveBattlefield(o, 'hand'); }
         if (a.needPrepared) { o.prepared = false; log(`${o.card.name} is no longer prepared.`); }
         if (a.once) { o.actTurn = o.actTurn || {}; o.actTurn[a.text] = G.turn; }

@@ -93,6 +93,7 @@ function aiPickTarget(P, e, source, valid) {
         case 'steal': return byValue(theirs)[0] || null;
         case 'aura':
             return e.good ? (byValue(mine)[0] || null) : (byValue(theirs)[0] || null);
+        case 'cmd': if (typeof CMD_AITARGET === 'object' && CMD_AITARGET[e.id]) return CMD_AITARGET[e.id](P, e, source, valid, { theirs, mine, O, byValue }); return valid[0] || null;
         default:
             return valid[0] || null;
     }

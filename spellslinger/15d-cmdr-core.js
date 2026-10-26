@@ -4,6 +4,7 @@
 // Wordings are in rules/cmdr-*.js; the per-card engine code is in 15d-cmdr-*.js. preconEffect -> uldEffect -> cmdEffect.
 // =====================================================================
 const CMD = {};
+const CMD_AITARGET = {}; // id -> (P, e, source, valid, { theirs, mine, O, byValue }) => the target the computer picks for a targeted cmd effect
 const CMD_SCORE = {}; // id -> (P, e, target, src) => AI score of a cmd effect (0 when missing)
 async function cmdEffect(P, e, t, src, O, name) {
     if (e.t !== 'cmd') return;
@@ -26,6 +27,8 @@ function specMatch(spec, o, x, ctx) {
     if (spec.nontoken && x.token) return false;
     if (spec.legendary && !/\bLegendary\b/.test(ty)) return false;
     if (spec.nonland && /\bLand\b/.test(ty)) return false;
+    if (spec.noncreature && /\bCreature\b/.test(ty)) return false;
+    if (spec.mvMax !== undefined && !((x.card.cmc || 0) <= spec.mvMax)) return false;
     if (spec.color && !(x.card.colors || []).includes(spec.color)) return false;
     if (spec.minPow !== undefined && !(pow(x) >= spec.minPow)) return false;
     if (spec.mvMin !== undefined && !((x.card.cmc || 0) >= spec.mvMin)) return false;
