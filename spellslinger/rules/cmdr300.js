@@ -318,3 +318,6 @@ cl(/^At the beginning of each end step, if you put a counter on a creature this 
 cl(/^Whenever a creature you control deals combat damage to a player, add that much \{G\}\. Until end of turn, you don't lose this mana as steps and phases end\.$/, R => { R.trig.push({ ev: 'hitPlayer', fn: 'myCreatureHit', effects: [cmd('sakiko')] }); });
 cl(/^When ~ enters, destroy all artifacts and enchantments your opponents control\. You gain 1 life for each permanent destroyed this way\.$/, R => { R.etb.push(cmd('ori')); });
 cl(/^\{T\}: Put two ingenuity counters on ~, then you may put an artifact card with mana value X or less from your hand onto the battlefield, where X is the number of ingenuity counters on ~\.$/, (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('jhoira')]); });
+
+// Pod-record fix (2026-10-26): "Whenever a creature an opponent controls dies, that player loses N life." (Massacre Wurm) only hits the dead creature's controller.
+cl(/^Whenever a creature an opponent controls dies, that player loses (\d+) life\.$/, (R, m) => { R.trig.push({ ev: 'creatureDies', theirs: true, effects: [cmd('deadOwnerLoses', { n: Number(m[1]) })] }); });

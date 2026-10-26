@@ -835,3 +835,11 @@ Object.assign(CMD, {
         const c = await pickOwn(P, pool, `${src.card.name}: put an artifact card with mana value ${X} or less onto the battlefield?`, { optional: true }); if (c) { pull(P.hand, c); putOntoBattlefield(P, c); log(`${c.card.name} enters the battlefield.`); }
     },
 });
+
+// Pod-record fix (2026-10-26): the controller of the creature that died loses life (Massacre Wurm), not every opponent.
+CMD.deadOwnerLoses = function (P, e, t, src) {
+    const x = G.ctxRaw && G.ctxRaw.o; if (!x) return;
+    const X = G.players[x.realOwner ?? x.owner]; if (!X || X.out) return;
+    X.life -= e.n; G.lastLost = e.n;
+    log(`${X.name} ${you(X) ? 'lose' : 'loses'} ${e.n} life.`);
+};

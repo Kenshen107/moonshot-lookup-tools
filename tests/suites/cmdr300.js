@@ -30,6 +30,10 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
 
             // ---- TESTS ----
             // (batches are added below this line)
+            // ---- Pod-record fix: Massacre Wurm only drains the dead creature's controller ----
+            { const W = (await T.cards(['Massacre Wurm']))['Massacre Wurm']; C['Massacre Wurm'] = W;
+              const [A, B] = await fresh(); put(A, 'Massacre Wurm'); const bear = put(B, 'Grizzly Bears'); const a0 = A.life, b0 = B.life; dieOrLeave(bear, 'gy'); await settle2();
+              ok('Massacre Wurm: the controller of the creature that died loses 2 life, nobody else', B.life === b0 - 2 && A.life === a0, [A.life - a0, B.life - b0]); }
             // ---- Batch 1 ----
             const hit = (src, victims, n = 1) => { fire('hitPlayer', { src, n, hit: victims || [], step: (G.combatDmgStep = (G.combatDmgStep || 0) + 1) }); };
             const sacrificeLog = [];
