@@ -90,7 +90,7 @@ function aiPickTarget(P, e, source, valid) {
         case 'bounceSpell': return valid.filter(v => v.item && v.item.P !== P).pop() || null;
         case 'peer': return P.life >= 10 && P.library.length > 12 ? { p: P } : { p: O };
         case 'topdeck': return theirs.sort((a, b) => permValue(b.o) - permValue(a.o))[0] || null;
-        case 'steal': return byValue(theirs)[0] || null;
+        case 'steal': case 'stealPerm': return byValue(theirs)[0] || null;
         case 'aura':
             return e.good ? (byValue(mine)[0] || null) : (byValue(theirs)[0] || null);
         case 'cmd': if (typeof CMD_AITARGET === 'object' && CMD_AITARGET[e.id]) return CMD_AITARGET[e.id](P, e, source, valid, { theirs, mine, O, byValue }); return valid[0] || null;

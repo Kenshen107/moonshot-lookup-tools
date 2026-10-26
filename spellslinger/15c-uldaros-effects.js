@@ -12,6 +12,7 @@ function millBonusFor(X) {
 function doMill(X, n) {
     n = Math.floor(Number(n) || 0);
     if (n <= 0) return [];
+    if (allPerms().some(o => o.owner !== X.i && Rx(o).millDouble && !lostAbilities(o))) n *= 2; // Bruvac the Grandiloquent
     n += millBonusFor(X);
     const milled = X.library.splice(-Math.min(n, X.library.length)).reverse();
     X.gy.push(...milled);

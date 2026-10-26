@@ -446,7 +446,7 @@ function leaveBattlefield(o, zone) {
     }
     if (wasOn) { o.lastPow = isCreature(o) ? pow(o) : 0; }
     if (wasOn) allPerms().filter(x => x.permAnimated && x.permAnimated.whileSrc === o.uid).forEach(x => { delete x.permAnimated; log(`${x.card.name} is no longer a creature.`); }); // Awakener Druid
-    if (wasOn) { o.lastCounters = Math.max(0, o.counters); if ((Rx(o).trig || []).some(t => t.ev === 'leaves') || (o.token && allPerms().some(a => (Rx(a).trig || []).some(t => t.ev === 'leaves' && t.tokenMine))) || allPerms().some(a => a !== o && (Rx(a).trig || []).some(t => t.ev === 'leaves' && t.spec))) fire('leaves', { o }); }
+    if (wasOn) { o.lastCounters = Math.max(0, o.counters); if ((Rx(o).trig || []).some(t => t.ev === 'leaves') || (o.token && allPerms().some(a => (Rx(a).trig || []).some(t => t.ev === 'leaves' && (t.tokenMine || t.anyLeave)))) || allPerms().some(a => a !== o && (Rx(a).trig || []).some(t => t.ev === 'leaves' && t.spec))) fire('leaves', { o }); }
     if (wasOn && zone === 'gy' && /Artifact/.test(o.card.type)) fire('artifactToGy', { o }); // Disciple of the Vault
     // Cards it exiled "until it leaves the battlefield" come back (610.3)
     if (wasOn) G.players.forEach(X => X.exile.filter(x => x.exiledBy === o.uid).forEach(x => {
@@ -852,6 +852,7 @@ function costOf(P, o) {
     const base = P.gy.includes(o) && R.flashback ? R.flashback : P.gy.includes(o) && R.mayhem ? R.mayhem : o.webSlinging && R.webSling ? R.webSling.cost : freerun ? R.freerun : R.cost;
     let cut = 0;
     if (R.affinityOf) cut += P.bf.filter(x => hasType(x, R.affinityOf)).length; // Affinity for Islands (702.41)
+    if (!R.affinity && P.bf.some(x => Rx(x).affinityAll && !lostAbilities(x))) cut += P.bf.filter(x => /Artifact/.test(x.card.type)).length; // Sami, Wildcat Captain
     if (R.affinity || P.nextAffinityTurn === G.turn) cut += P.bf.filter(x => /Artifact/.test(x.card.type)).length; // affinity for artifacts (702.41); Saheeli's +1
     if (R.costLess) cut += R.costLess.n * countFn(R.costLess.what)(o);
     if (R.costLessX === 'historic') cut += P.bf.filter(x => /\b(?:Artifact|Legendary|Saga)\b/.test(x.card.type)).reduce((a, x) => a + (x.card.cmc || 0), 0);
@@ -862,6 +863,7 @@ function costOf(P, o) {
     P.bf.forEach(x => { const rd = Rx(x).reducer; if (rd && (!rd.lvl || (x.level || 1) >= rd.lvl) && spellFits(o, rd, x)) cut += rd.perCounter ? rd.n * Math.max(0, x.counters) : rd.affinity ? P.bf.filter(y => hasType(y, rd.affinity) || (rd.affinity === 'Aura' && y.bestowed)).length : rd.n; });
     P.command.forEach(x => { const rd = Rx(x).reducer; if (rd && rd.eminence && spellFits(o, rd, x)) cut += rd.n; }); // Eminence: The Ur-Sphinx works from the command zone
     let generic = Math.max(0, base.generic - cut);
+    if (typeof spellTaxFor === 'function') generic += spellTaxFor(P, o); // Thalia, Grand Arbiter Augustin IV, Esior
     if (/Artifact/.test(o.card.type)) { const hum = allPerms().filter(x => Rx(x).hum && !lostAbilities(x)).length; if (hum) generic += hum * P.bf.filter(x => /Artifact/.test(x.card.type)).length; } // Hum of the Radix
     if ((R.kind === 'creature' && P.bf.some(x => Rx(x).anyManaCreatures)) || (o.anyMana && P.exile.includes(o))) { const colored = ['W', 'U', 'B', 'R', 'G'].reduce((a, c) => a + (base[c] || 0), 0); return { ...base, W: 0, U: 0, B: 0, R: 0, G: 0, generic: generic + colored }; }
     o._delve = 0;
@@ -889,6 +891,7 @@ function spellFits(o, rd, from) {
     if ((m = rd.what.match(/^color:([WUBRG]+)(:creature)?$/))) return (!m[2] || k === 'creature') && (o.card.colors || []).some(c => m[1].includes(c));
     if (rd.what === 'chosenType') return k === 'creature' && !!from && !!from.chosenType && hasType(o, from.chosenType);
     if (rd.what === 'chosenCardType') return !!from && !!from.chosenCardType && new RegExp(`\\b${from.chosenCardType}\\b`, 'i').test(o.card.type);
+    if ((m = rd.what.match(/^mv(\d+)$/))) return (o.card.cmc || 0) >= +m[1];
     if (rd.what === 'xFirst') { const Q = G.players[o.owner]; return !!Rx(o).cost.x && !(Q.xCastsTurn === G.turn && Q.xCasts > 0); }
     if (rd.what === 'notHand') return !G.players[o.owner].hand.includes(o);
     if (rd.what === 'Instant and sorcery') return k === 'instant' || k === 'sorcery';
@@ -2740,6 +2743,7 @@ async function applyEffect(P, e, t, src) {
             if (e.sacEnd) madeNow.forEach(tk => { tk.sacAtEnd = G.turn; });
             tokenMade(P);
             fire('creatureTokenMade', { P });
+            if (!e.plusSoldier && e.n > 0) { const qa = P.bf.filter(x => Rx(x).tokenPlusSoldier && !lostAbilities(x)).length; for (let i = 0; i < qa; i++) await applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'white Soldier', kw: [], plusSoldier: true }, null, src); } // Queen Allenal
             break;
         case 'counters': {
             const target = e.target === 'self' ? src : t.o;
@@ -3906,7 +3910,7 @@ async function applyEffect(P, e, t, src) {
                 const plan = planPayment(it.P, { generic: unless, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 });
                 if (plan) { plan.forEach(x => tapSource(it.P, x)); log(`${it.P.name} ${you(it.P) ? 'pay' : 'pays'} {${unless}}, so ${it.name} isn't countered.`); break; }
             }
-            if (it.kind === 'spell' && (Rx(it.o).uncounterable || it.o.noCounter || it.P.bf.some(x => { const u = Rx(x).spellsUncounterable; return u && !lostAbilities(x) && (u === 'all' || (u === 'creature' && Rx(it.o).kind === 'creature')); }))) { log(`${it.name} can't be countered.`); break; }
+            if (it.kind === 'spell' && (Rx(it.o).uncounterable || it.o.noCounter || it.P.bf.some(x => { const u = Rx(x).spellsUncounterable; return u && !lostAbilities(x) && (u === 'all' || (u === 'creature' && Rx(it.o).kind === 'creature') || (u === 'mv5' && (it.o.card.cmc || 0) >= 5)); }))) { log(`${it.name} can't be countered.`); break; }
             if (it.kind === 'spell' && ['instant', 'sorcery'].includes(Rx(it.o).kind) && it.P.bf.some(x => Rx(x).protectSpells)) { log(`${it.name} can't be countered.`); break; }
             G.lastCountered = it; G.lastPower = { P: it.P, n: 0 }; G.lastMv = it.o.card.cmc || 0;
             G.stack.splice(i, 1);

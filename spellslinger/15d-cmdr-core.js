@@ -69,7 +69,7 @@ TRIG_FN.dragonAttacks = (o, ctx) => (ctx.list || []).some(x => specMatch({ sub: 
 // ---- Casting creature spells from the top of the library (Thundermane Dragon: power 4 or greater; older cards: any creature) ----
 function topCastOk(P, o) {
     if (!o || Rx(o).kind !== 'creature' || P.library[P.library.length - 1] !== o) return false;
-    return P.bf.some(x => { const c = Rx(x).castTopCreatures; return c && !lostAbilities(x) && (c === true || !c.minPow || Number(o.card.power) >= c.minPow); });
+    return P.bf.some(x => { const c = Rx(x).castTopCreatures; return c && !lostAbilities(x) && (c === true || (c.when ? c.when(o) : (!c.minPow || Number(o.card.power) >= c.minPow))); });
 }
 // ---- Read ahead (Sagas): choose a chapter to start on; only that chapter triggers ----
 async function readAheadPick(P, o) {
@@ -139,6 +139,15 @@ function cmdExtraTriggers(ev, o, tr, ctx) {
         if (Rx(a).doubleLegendTrig && /\bLegendary\b/.test(o.card.type) && isCreature(o)) k++;
         if (Rx(a).harmonic && (hasType(o, 'Shaman') || (hasType(o, 'Wizard') && o !== a))) k++; // Harmonic Prodigy
         if (Rx(a).veyran && ev === 'cast' && ctx.o && ['instant', 'sorcery'].includes(Rx(ctx.o).kind)) k++; // Veyran: casting an instant or sorcery
+    });
+    allPerms().forEach(a => { // trigger doublers (2026-10-26): Teysa Karlov, Drivnod, Isshin, Wulfgar, Felix Five-Boots, Katara
+        if (a.owner !== o.owner || lostAbilities(a)) return;
+        const R = Rx(a);
+        if (R.doubleDeath && (ev === 'dies' || ev === 'creatureDies') && ctx.o && isCreature(ctx.o)) k++;
+        if (R.doubleAttackAny && ev === 'attacks' && (ctx.list || []).length) k++;
+        if (R.doubleHit && (ev === 'hitPlayer' || ev === 'combatHitAny')) k++;
+        if (R.doubleAlly && hasType(o, 'Ally')) k++;
+        if (R.doubleEnter && (ev === 'enters' || ev === 'landfall')) k++;
     });
     k += throneBoost(o, true); // Roaming Throne
     if (typeof tkCrusherExtra === 'function') k += tkCrusherExtra(ev, o); // Dr. Crusher
