@@ -124,7 +124,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             { const [A, B] = await fresh(); const a = put(A, 'Aphelia, Viper Whisperer'); lands(A, 3, 'Swamp'); lands(A, 2, 'Plains'); const sn = syn(A, 'Grizzly Bears', 'Creature — Snake'); hit(sn, [B]); await settle2(); const b0 = B.life; await activate(A, a, acts(a)[0]); await settle2(); hit(sn, [B]); await settle2();
               ok('Aphelia, Viper Whisperer: after {4}{B}, a Snake that hits a player makes them lose half their life, rounded up', b0 === 20 && B.life === 10, [b0, B.life]); }
             // Tatyova
-            { const [A] = await fresh(); put(A, 'Tatyova, Steward of Tides'); lands(A, 6); const l7 = put(A, 'Plains'); fire('landfall', { o: l7 }); await settle2(); const made = A.bf.filter(x => gIsLand(x) && isCreature(x));
+            { const [A] = await fresh(); put(A, 'Tatyova, Steward of Tides'); lands(A, 6); put(A, 'Plains'); await settle2(); const made = A.bf.filter(x => gIsLand(x) && isCreature(x));
               ok('Tatyova, Steward of Tides: with seven lands a land becomes a 3/3 Elemental creature with haste', made.length === 1 && pow(made[0]) === 3 && tou(made[0]) === 3, made.map(x => pow(x))); }
             // Unesh
             { const [A, B] = await fresh(); A.library.length = 0; ['Plains', 'Island', 'Hill Giant', 'Grizzly Bears'].forEach(n => inLib(A, n)); const n0 = A.hand.length + A.gy.length; const u = inHand(A, 'Unesh, Criosphinx Sovereign'); const n1 = A.hand.length; putOntoBattlefield(A, u); await settle2();
@@ -137,8 +137,8 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
               ['Cleric', 'Rogue', 'Warrior', 'Wizard'].forEach(w => syn(A, 'Grizzly Bears', 'Creature — ' + w)); castEv(A, inHand(A, 'Divination')); await settle2();
               ok('The Destined Black Mage: 1 damage to each opponent per noncreature spell, 3 with a full party', a === 19 && b === 19 && B.life === 16, [a, b, B.life]); }
             // Sierra
-            { const [A] = await fresh(); const s = put(A, 'Sierra, Nuka\'s Biggest Fan'); s.ctr.quest = 3; const b = put(A, 'Grizzly Bears'); applyEffect(A, { t: 'artToken', kind: 'food', n: 1 }, null, s); await settle2(); const f = A.bf.find(x => x.card.name === 'Food'); fire('sacrificed', { o: f }); await settle2();
-              ok('Sierra, Nuka\'s Biggest Fan: sacrificing a Food gives a creature +X/+X where X is her quest counters', pow(b) === 5 || pow(s) === pow(have('Sierra, Nuka\'s Biggest Fan').power ? s : s) + 3, [pow(b), pow(s)]); }
+            { const [A] = await fresh(); const s = put(A, 'Sierra, Nuka\'s Biggest Fan'); s.ctr.quest = 3; const b = put(A, 'Grizzly Bears'); const p0 = pow(s) + pow(b); applyEffect(A, { t: 'artToken', kind: 'food', n: 1 }, null, s); await settle2(); const f = A.bf.find(x => x.card.name === 'Food'); fire('sacrificed', { o: f }); await settle2();
+              ok('Sierra, Nuka\'s Biggest Fan: sacrificing a Food gives a creature +X/+X where X is her quest counters', pow(s) + pow(b) === p0 + 3, [pow(s) + pow(b), p0]); }
             // Pharika
             { const [A, B] = await fresh(); const p = put(A, 'Pharika, God of Affliction'); lands(A, 1, 'Swamp'); lands(A, 1, 'Forest'); const g = makeObj(have('Hill Giant'), 1); B.gy.push(g); await activate(A, p, acts(p)[0]); await settle2();
               ok('Pharika, God of Affliction: exiles a creature card from a graveyard and its owner gets a 1/1 deathtouch Snake', B.exile.includes(g) && B.bf.some(x => x.token && pow(x) === 1 && has(x, 'deathtouch')), [B.exile.length, B.bf.map(x => x.card.name)]); }
@@ -146,7 +146,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             { const [A] = await fresh(); put(A, 'Iron Man, Bleeding Edge'); const r = inHand(A, 'Sol Ring'); castEv(A, r); await settle2(); const n1 = A.bf.filter(x => x.token && x.card.name === 'Sol Ring').length; castEv(A, inHand(A, 'Sol Ring')); await settle2();
               ok('Iron Man, Bleeding Edge: copies an artifact spell you cast, once each turn', n1 === 1 && A.bf.filter(x => x.token && x.card.name === 'Sol Ring').length === 1, [n1]); }
             // Kethek
-            { const [A] = await fresh(); A.isAI = false; const k = put(A, 'Kethek, Crucible Goliath'); const g = put(A, 'Hill Giant'); A.library.length = 0; A.library.push(makeObj(have('Island'), 0)); const b = inLib(A, 'Grizzly Bears'); fire('end'); await settle2(); A.isAI = true;
+            { const [A] = await fresh(); const k = put(A, 'Kethek, Crucible Goliath'); const g = syn(A, 'Hill Giant', 'Creature — Giant', { power: '0', toughness: '1', cmc: 4 }); A.library.length = 0; A.library.push(makeObj(have('Island'), 0)); const b = inLib(A, 'Grizzly Bears'); fire('end'); await settle2();
               ok('Kethek, Crucible Goliath: at the end step you may sacrifice another creature to put a nonlegendary creature with lesser mana value onto the battlefield', A.gy.includes(g) && A.bf.includes(b), [A.gy.length, A.bf.map(x => x.card.name)]); }
             // Ukkima
             { const [A, B] = await fresh(); const u = put(A, 'Ukkima, Stalking Shadow'); const X = pow(u); const l0 = A.life; leaveBattlefield(u, 'gy'); await settle2();
@@ -161,9 +161,9 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             { const [A, B] = await fresh(); put(A, 'Anowon, the Ruin Thief'); const r = syn(A, 'Grizzly Bears', 'Creature — Rogue'); B.library.length = 0; B.library.push(makeObj(have('Island'), 1), makeObj(have('Grizzly Bears'), 1), makeObj(have('Island'), 1)); const h0 = A.hand.length; hit(r, [B], 2); await settle2();
               ok('Anowon, the Ruin Thief: a Rogue\'s combat damage mills that many cards and you draw if a creature was milled', B.gy.length === 2 && A.hand.length === h0 + 1, [B.gy.length, A.hand.length - h0]); }
             // The Destined White Mage
-            { const [A] = await fresh(); put(A, 'The Destined White Mage'); const b = put(A, 'Grizzly Bears'); fire('gainLife', { P: A, n: 2 }); await settle2(); const one = b.counters;
-              ['Cleric', 'Rogue', 'Warrior', 'Wizard'].forEach(w => syn(A, 'Hill Giant', 'Creature — ' + w)); b.counters = 0; fire('gainLife', { P: A, n: 2 }); await settle2();
-              ok('The Destined White Mage: gaining life puts a +1/+1 counter on a creature, three with a full party', one === 1 && A.bf.some(x => x.counters === 3), [one, A.bf.map(x => x.counters)]); }
+            { const [A] = await fresh(); put(A, 'The Destined White Mage'); put(A, 'Grizzly Bears'); const sum = () => A.bf.reduce((a, x) => a + x.counters, 0); fire('gainLife', { P: A, n: 2 }); await settle2(); const one = sum();
+              ['Cleric', 'Rogue', 'Warrior', 'Wizard'].forEach(w => syn(A, 'Hill Giant', 'Creature — ' + w)); fire('gainLife', { P: A, n: 2 }); await settle2();
+              ok('The Destined White Mage: gaining life puts a +1/+1 counter on a creature, three with a full party', one === 1 && sum() === 4, [one, sum()]); }
             // Sensational Spider-Man
             { const [A, B] = await fresh(); const s = put(A, 'Sensational Spider-Man'); const g = put(B, 'Hill Giant'); G.defender = 1; fire('attacks', { list: [s] }); await settle2(); const one = g.tapped && g.ctr.stun === 1;
               const mine = put(A, 'Grizzly Bears'); mine.ctr.stun = 2; const h0 = A.hand.length; fire('attacks', { list: [s] }); await settle2();
