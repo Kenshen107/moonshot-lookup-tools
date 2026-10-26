@@ -1449,7 +1449,7 @@ function podChipsHTML(deck) {
     if (deck.format !== 'commander') return '';
     return `<div class="chips" style="margin:0 0 10px;" role="group" aria-label="Players at the table"><span class="note" style="align-self:center;">Table:</span>${[[2, '⚔️ 1 vs 1'], [3, '👥 3 players'], [4, '👥 4 players']].map(([n, t]) => `<button type="button" class="chip${podSize === n ? ' on' : ''}" onclick="setPodSize(${n})">${t}</button>`).join('')}</div>${podSize > 2 ? `<p class="note" style="margin-bottom:10px;">Free-for-all: the opponent you pick sits next to you, and ${podSize === 3 ? 'one more seat is' : 'two more seats are'} filled with random playable Commander decks. Last player standing wins; 21 damage from one commander knocks a player out.</p>` : ''}`;
 }
-const OPPSEL = { kind: 'all', q: '' };
+const OPPSEL = { kind: 'all', q: '', tab: '' };
 function oppSel(k, v) { OPPSEL[k] = v; renderOpponents(); }
 // Pass and play: your deck and another account's deck on this device
 function renderFriendPanel() {
@@ -1489,7 +1489,7 @@ async function startFriendMatch() {
 }
 // Step 1 of the Play tab: pick a TYPE of deck (Commander, Modern, Casual, Limited), then one of your decks of that type.
 // The hidden #playDeck select still holds the choice (value = index in profile.decks), so the rest of the game reads it as before.
-const PLAYSEL = { type: null, q: '' };
+const PLAYSEL = { type: null, q: '', getOpen: false };
 const DECK_TYPE_ICONS = { commander: '👑', modern: '⚔️', casual: '🎴', limited: '🃏' };
 function playPickType(t) { PLAYSEL.type = t; PLAYSEL.q = ''; const first = profile.decks.findIndex(d => d.format === t); if (first >= 0 && profile.decks[$('playDeck').value] && profile.decks[$('playDeck').value].format !== t) $('playDeck').value = String(first); renderPlayView(); }
 function playPickDeck(i) { $('playDeck').value = String(i); renderPlayView(); }
@@ -1506,8 +1506,8 @@ function renderPlayView() {
     if (!PLAYSEL.type || !counts[PLAYSEL.type]) PLAYSEL.type = cur ? cur.format : types[0] || null;
     if (cur && cur.format !== PLAYSEL.type) { const i = profile.decks.findIndex(d => d.format === PLAYSEL.type); if (i >= 0) sel.value = String(i); }
     const box = $('deckPick');
-    const randomBuild = `<div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;"><button type="button" class="btn" id="randomDeckBtn" onclick="buildRandomPlayerDeck()" title="Builds a new themed Commander deck from a random fully automated commander and adds it to your decks">🎲 Build me a random Commander deck</button><span class="note" id="randomDeckNote" style="margin:0;">A random commander and deck, saved to your decks. Uses the theme picked under Surprise me.</span></div>
-        <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;"><input type="search" id="topCmdFind" list="topCmdSuggest" placeholder="Type a fully automated commander" aria-label="Commander for a top-played deck" oninput="suggestTopCommanders(this.value)" onkeydown="if (event.key === 'Enter') buildTopPlayerDeck()" style="flex:1 1 220px;"><datalist id="topCmdSuggest"></datalist><button type="button" class="btn" id="topDeckBtn" onclick="buildTopPlayerDeck()" title="Builds EDHREC's most-played version of this commander's deck, using only fully automated cards, and adds it to your decks">🏆 Build its top-played deck</button></div><div class="note" id="topDeckNote" style="margin-top:4px;">Type a commander (only fully automated ones are suggested): you get the deck EDHREC players play most, saved to your decks.</div>`;
+    const randomBuild = `<details class="get-deck" style="margin-top:10px;"${PLAYSEL.getOpen ? ' open' : ''} ontoggle="PLAYSEL.getOpen = this.open"><summary>➕ Get a new deck</summary><div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;"><button type="button" class="btn" id="randomDeckBtn" onclick="buildRandomPlayerDeck()" title="Builds a new themed Commander deck from a random fully automated commander and adds it to your decks">🎲 Build me a random Commander deck</button><span class="note" id="randomDeckNote" style="margin:0;">A random commander and deck, saved to your decks. Uses the theme picked under Surprise me.</span></div>
+        <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;"><input type="search" id="topCmdFind" list="topCmdSuggest" placeholder="Type a fully automated commander" aria-label="Commander for a top-played deck" oninput="suggestTopCommanders(this.value)" onkeydown="if (event.key === 'Enter') buildTopPlayerDeck()" style="flex:1 1 220px;"><datalist id="topCmdSuggest"></datalist><button type="button" class="btn" id="topDeckBtn" onclick="buildTopPlayerDeck()" title="Builds EDHREC's most-played version of this commander's deck, using only fully automated cards, and adds it to your decks">🏆 Build its top-played deck</button></div><div class="note" id="topDeckNote" style="margin-top:4px;">Type a commander (only fully automated ones are suggested): you get the deck EDHREC players play most, saved to your decks.</div></details>`;
     if (!profile.decks.length) box.innerHTML = `<p class="note">No decks yet.</p>${randomBuild}`;
     else {
         const q = PLAYSEL.q.trim().toLowerCase();
@@ -1521,6 +1521,65 @@ function renderPlayView() {
     renderOpponents();
 }
 
+// ---- The opponent picker (cleaned up 2026-10-26, owner's request): one tab at a time instead of one long stack ----
+const OPP_TABS = {
+    commander: [['surprise', '🎲 Surprise me'], ['cmd', '👑 Pick a commander'], ['ready', '✅ Ready decks'], ['saved', '📚 Saved decks'], ['paste', '📋 Paste a list']],
+    modern: [['surprise', '🎲 Surprise me'], ['themes', '🎨 Themed decks'], ['saved', '📚 Saved decks'], ['paste', '📋 Paste a list']],
+    casual: [['precon', '📦 Precons'], ['saved', '📚 Saved decks'], ['paste', '📋 Paste a list']]
+};
+function oppTabKey(deck) { const tabs = OPP_TABS[deck.format === 'limited' ? 'casual' : deck.format]; return tabs.some(t => t[0] === OPPSEL.tab) ? OPPSEL.tab : tabs[0][0]; }
+function setOppTab(k) { OPPSEL.tab = k; renderOpponents(); }
+// Every saved deck of the same format that could be the opponent: yours first, then the other players' on this device
+function savedOpponentGroups(deck) {
+    const groups = [{ who: accounts.current, label: 'Your decks', decks: profile.decks.map((d, i) => ({ d, i })).filter(x => x.d.format === deck.format) }];
+    accounts.list.filter(n => n !== accounts.current).forEach(n => {
+        const prof = store.get(`profile:${n}`, null);
+        groups.push({ who: n, label: `${n}'s decks`, decks: ((prof && prof.decks) || []).map((d, i) => ({ d, i })).filter(x => x.d.format === deck.format) });
+    });
+    return groups.filter(g => g.decks.length);
+}
+function savedOppHTML(deck) {
+    const groups = savedOpponentGroups(deck);
+    if (!groups.length) return `<p class="note">You have no other saved ${esc(FORMATS[deck.format].name)} decks yet. Build one in Collection &amp; Decks, or add it with "Get a new deck" above.</p>`;
+    return `<p class="note" style="margin-bottom:8px;">Any saved ${esc(FORMATS[deck.format].name)} deck, yours or another player's on this device. The computer plays it; cards the game can't run yet become basic lands of its colors.</p>` + groups.map(g => `<h3 class="opp-h">${esc(g.label)}</h3><div class="opp-grid">${g.decks.map(({ d, i }) => {
+        const on = chosenOpponent && chosenOpponent.type === 'saved' && chosenOpponent.who === g.who && chosenOpponent.idx === i;
+        const cmdr = d.commander && CARDS.get(d.commander);
+        return `<button type="button" class="opp" aria-pressed="${!!on}" onclick="chooseSavedOpponent(${JSON.stringify(g.who).replace(/"/g, '&quot;')}, ${i})"><strong>${esc(d.name)}</strong><small>${cmdr ? `${esc(cmdr.name)} · ` : ''}${deckCount(d)} cards</small></button>`;
+    }).join('')}</div>`).join('');
+}
+function chooseSavedOpponent(who, idx) {
+    const prof = who === accounts.current ? profile : store.get(`profile:${who}`, null), d = prof && prof.decks[idx];
+    if (!d) return;
+    chooseOpponent({ type: 'saved', who, idx, fmt: d.format, name: d.name });
+}
+// A saved deck as an opponent: the same shape as a pasted list; cards the game can't cast become basics of its colors
+async function savedToOppDeck(who, idx) {
+    const prof = who === accounts.current ? profile : store.get(`profile:${who}`, null), d = prof && prof.decks[idx];
+    if (!d) throw new Error('That deck is gone.');
+    await loadBasics();
+    await cardsByIds([...Object.keys(d.cards), d.commander].filter(Boolean));
+    const commander = d.commander ? CARDS.get(d.commander) : null;
+    const ci = (commander ? commander.ci : [...new Set(Object.keys(d.cards).map(id => CARDS.get(id)).filter(Boolean).flatMap(c => c.ci))]).filter(c => BASIC_IDS[c]);
+    const entries = []; let swapped = 0;
+    Object.entries(d.cards).forEach(([id, n]) => {
+        const card = CARDS.get(id);
+        if (!card) { swapped += n; return; }
+        if (rulesFor(card).support === 'none' && !isBasic(card)) { swapped += n; return; }
+        entries.push({ card, n });
+    });
+    for (let i = 0; i < swapped; i++) {
+        const id = BASIC_IDS[ci.length ? ci[i % ci.length] : 'W'];
+        const e = entries.find(x => x.card.id === id);
+        if (e) e.n++; else entries.push({ card: CARDS.get(id), n: 1 });
+    }
+    return { name: d.name, format: d.format, commander, entries, swapped, source: `${who}'s saved deck${swapped ? `, ${swapped} cards swapped for lands` : ''}` };
+}
+function oppChosenLine() {
+    if (!chosenOpponent) return '<div class="note" style="margin-bottom:8px;">No opponent picked yet.</div>';
+    const o = chosenOpponent;
+    const nm = o.name || (o.type === 'random' ? 'Random playable deck' : o.type === 'theme' ? (MODERN_THEMES.find(t => t.key === o.key) || {}).name : o.type === 'verified' ? (VERIFIED_DECKS.find(v => v.key === o.key) || {}).name : o.key) || o.type;
+    return `<div class="note" style="margin-bottom:8px;">Opponent: <strong>${esc(nm)}</strong></div>`;
+}
 async function renderOpponents() {
     const deck = profile.decks[$('playDeck').value];
     const list = $('oppList');
@@ -1534,47 +1593,55 @@ async function renderOpponents() {
     $('playDeckNote').innerHTML = probs.length ? `<span class="warn">⚠ ${esc(probs[0])}${probs.length > 1 ? ` (+${probs.length - 1} more)` : ''}</span>` : '<span class="ok">✓ Ready</span>';
     const pasted = chosenOpponent && chosenOpponent.type === 'list' ? `<div class="opp-custom"><button type="button" class="opp" aria-pressed="true" onclick="pasteOpponentDialog()"><strong>📋 ${esc(chosenOpponent.name)}</strong><small>Your pasted list${chosenOpponent.gen.swapped ? ` · ${chosenOpponent.gen.swapped} cards swapped for lands` : ''} · tap to change</small></button></div>` : '';
     const pasteBtn = `<button type="button" class="btn small" onclick="pasteOpponentDialog()">📋 Face a pasted decklist (Moxfield)</button>`;
-    if (deck.format === 'casual' || deck.format === 'limited') {
-        list.innerHTML = '<div class="loading">Loading precons...</div>';
+    const fmtKey = deck.format === 'limited' ? 'casual' : deck.format;
+    const tab = oppTabKey(deck);
+    const head = `${deck.format === 'commander' ? podChipsHTML(deck) : ''}<div class="chips" style="margin:0 0 8px;" role="tablist" aria-label="Where the opponent's deck comes from">${OPP_TABS[fmtKey].map(t => `<button type="button" class="chip${tab === t[0] ? ' on' : ''}" role="tab" aria-selected="${tab === t[0]}" onclick="setOppTab('${t[0]}')">${t[1]}</button>`).join('')}</div>${oppChosenLine()}`;
+    const set = html => { list.innerHTML = head + html; };
+    const stillHere = () => $('playDeck').value === String(profile.decks.indexOf(deck)) && oppTabKey(deck) === tab;
+    if (tab === 'saved') set(savedOppHTML(deck));
+    else if (tab === 'paste') set(`<p class="note" style="margin-bottom:8px;">Paste any list (Moxfield, MTGA or plain text) and the computer plays it.</p>${pasted}<div class="row">${pasteBtn}</div>`);
+    else if (tab === 'surprise') set(`${randomOppHTML(deck.format === 'commander' ? 'commander' : 'modern')}`);
+    else if (tab === 'themes') {
+        set(`<p class="note" style="margin-bottom:8px;">Themed decks built live from Scryfall: the most-played Modern-legal cards for each theme that the game can run (not tournament lists).</p>
+            <div class="opp-grid">${MODERN_THEMES.map(t => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === t.key}" onclick="chooseOpponent({ type: 'theme', key: '${t.key}' })">
+                <strong>${t.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(t.name)}</strong><small>${esc(t.desc)}</small></button>`).join('')}</div>`);
+    } else if (tab === 'ready') set(verifiedOppHTML());
+    else if (tab === 'precon') {
+        set('<div class="loading">Loading precons...</div>');
         try {
             const pl = await loadPreconList(); await loadPreconReady(); const nm = await setNames();
-            if ($('playDeck').value !== String(profile.decks.indexOf(deck))) return;
+            if (!stillHere()) return;
             const q = OPPSEL.q.trim().toLowerCase();
             const kinds = PRECON_GROUPS.filter(g => pl.some(p => p.type === g[0] && preconIsReady(p)));
             const shown = pl.filter(p => preconIsReady(p) && (OPPSEL.kind === 'all' || p.type === OPPSEL.kind) && (!q || `${p.name} ${nm[(p.code || '').toUpperCase()] || ''}`.toLowerCase().includes(q)));
-            list.innerHTML = `${pasted}<div class="row" style="margin-bottom:10px;">${pasteBtn}</div>
-                <p class="note" style="margin-bottom:8px;">Precons the game plays in full, the same kind of ${esc(FORMATS[deck.format].name)} game as yours. Pick a type, then a deck.</p>
+            set(`<p class="note" style="margin-bottom:8px;">Precons the game plays in full, the same kind of ${esc(FORMATS[deck.format].name)} game as yours. Pick a type, then a deck.</p>
                 <div class="chips" style="margin:0 0 8px;"><button type="button" class="chip${OPPSEL.kind === 'all' ? ' on' : ''}" onclick="oppSel('kind','all')">All</button>${kinds.map(g => `<button type="button" class="chip${OPPSEL.kind === g[0] ? ' on' : ''}" onclick="oppSel('kind','${g[0]}')">${esc(g[1])}</button>`).join('')}</div>
                 <input type="search" id="oppQ" value="${esc(OPPSEL.q)}" placeholder="Find a precon" aria-label="Find a precon" oninput="oppSel('q', this.value)" style="width:100%; margin-bottom:8px;">
-                <div class="opp-grid">${shown.map(p => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.type === 'precon' && chosenOpponent.key === p.file}" onclick="chooseOpponent({ type: 'precon', key: '${esc(p.file)}', name: '${esc(p.name).replace(/'/g, "\\'")}' })"><strong>${esc(p.name)}</strong><small>${esc(nm[(p.code || '').toUpperCase()] || p.code || '')} · ${esc((p.date || '').slice(0, 4))} · ${esc(p.type)}</small></button>`).join('') || '<p class="note">No precon matches.</p>'}</div>`;
+                <div class="opp-grid" style="max-height:420px; overflow-y:auto;">${shown.map(p => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.type === 'precon' && chosenOpponent.key === p.file}" onclick="chooseOpponent({ type: 'precon', key: '${esc(p.file)}', name: '${esc(p.name).replace(/'/g, "\\'")}' })"><strong>${esc(p.name)}</strong><small>${esc(nm[(p.code || '').toUpperCase()] || p.code || '')} · ${esc((p.date || '').slice(0, 4))} · ${esc(p.type)}</small></button>`).join('') || '<p class="note">No precon matches.</p>'}</div>`);
             if (OPPSEL.q) { const el = $('oppQ'); if (el) { el.focus(); el.setSelectionRange(OPPSEL.q.length, OPPSEL.q.length); } }
-        } catch (e) { list.innerHTML = `${pasted}<p class="warn">${esc(e.message)}</p>`; }
-    } else if (deck.format !== 'commander') {
-        list.innerHTML = `${pasted}<div class="row" style="margin-bottom:10px;">${pasteBtn}</div>${randomOppHTML('modern')}<p class="note" style="margin-bottom:8px;">Themed decks built live from Scryfall: the most-played Modern-legal cards for each theme that the game can run (not tournament lists).</p>
-            <div class="opp-grid">${MODERN_THEMES.map(t => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === t.key}" onclick="chooseOpponent({ type: 'theme', key: '${t.key}' })">
-                <strong>${t.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(t.name)}</strong><small>${esc(t.desc)}</small></button>`).join('')}</div>`;
-    } else {
-        list.innerHTML = '<div class="loading">Loading this week\'s trending commanders from EDHREC...</div>';
+        } catch (e) { set(`<p class="warn">${esc(e.message)}</p>`); }
+    } else if (tab === 'cmd') {
+        set('<div class="loading">Loading this week\'s trending commanders from EDHREC...</div>');
+        const finder = `<div class="row" style="margin-bottom:6px;"><input type="search" id="cmdFind" list="cmdSuggest" placeholder="Type a commander's name" aria-label="Commander to face" oninput="suggestCommanders(this.value)" onkeydown="if (event.key === 'Enter') faceCommander()" style="flex:1 1 220px;"><datalist id="cmdSuggest"></datalist>
+                <button class="btn" onclick="faceCommander()">👑 Face this commander</button><button class="btn" onclick="faceCommander(true)" title="A different deck every time, drawn from the cards EDHREC players use with this commander">🎲 Random build</button></div>
+                <div class="note" id="cmdFindNote" style="margin-bottom:8px;">Any commander EDHREC has decks for: "Face" plays its average deck, "Random build" draws a new deck from the cards EDHREC players use with it.</div>`;
         try {
             const cmds = await loadTrendingCommanders();
+            if (!stillHere()) return;
             const custom = chosenOpponent && chosenOpponent.type === 'commander' && !cmds.some(c => c.slug === chosenOpponent.key) ? `<div class="opp-custom"><button type="button" class="opp" aria-pressed="true"><strong>👑 ${esc(chosenOpponent.name || chosenOpponent.key)}</strong><small>EDHREC average deck</small></button></div>` : '';
-            list.innerHTML = `${podChipsHTML(deck)}${randomOppHTML('commander')}${verifiedOppHTML()}<h3 class="opp-h">Face any commander</h3>
-                <div class="row" style="margin-bottom:6px;"><input type="search" id="cmdFind" list="cmdSuggest" placeholder="Type a commander's name" aria-label="Commander to face" oninput="suggestCommanders(this.value)" onkeydown="if (event.key === 'Enter') faceCommander()" style="flex:1 1 220px;"><datalist id="cmdSuggest"></datalist>
-                <button class="btn" onclick="faceCommander()">👑 Face this commander</button><button class="btn" onclick="faceCommander(true)" title="A different deck every time, drawn from the cards EDHREC players use with this commander">🎲 Random build</button>${pasteBtn}</div>
-                <div class="row" style="margin-bottom:6px;"><button class="btn primary" onclick="playRandomCommander()">🎲 Play a random fully automated commander now</button></div>
-                <div class="note" id="cmdFindNote" style="margin-bottom:8px;">Any commander EDHREC has decks for: "Face" plays its average deck, "Random build" draws a new deck from the cards EDHREC players use with it. Or paste a real list.</div>
-                ${custom}${pasted}
+            set(`${finder}${custom}
                 <h3 class="opp-h">Trending this week</h3>
                 <p class="note" style="margin-bottom:8px;">This week's trending commanders on EDHREC, each playing its EDHREC average deck (cards the game can't run yet are swapped for basic lands).</p>
                 <div class="opp-grid">${cmds.map(c => `<button type="button" class="opp" aria-pressed="${chosenOpponent && chosenOpponent.key === c.slug}" onclick="chooseOpponent({ type: 'commander', key: '${esc(c.slug)}' })">
-                    <strong>👑 ${esc(c.name)}</strong><small>${c.decks ? `${c.decks.toLocaleString()} decks on EDHREC` : ''}</small></button>`).join('')}</div>`;
+                    <strong>👑 ${esc(c.name)}</strong><small>${c.decks ? `${c.decks.toLocaleString()} decks on EDHREC` : ''}</small></button>`).join('')}</div>`);
         } catch (e) {
-            list.innerHTML = `${podChipsHTML(deck)}${randomOppHTML('commander')}${verifiedOppHTML()}<p class="warn">EDHREC is unavailable right now, so its commanders aren't listed. Try again later.</p>`;
+            if (stillHere()) set(`${finder}<p class="warn">EDHREC is unavailable right now, so its trending commanders aren't listed. Try again later.</p>`);
         }
     }
-    const oppIsCmd = chosenOpponent && (chosenOpponent.type === 'commander' || chosenOpponent.type === 'verified' || (chosenOpponent.type === 'random' && chosenOpponent.fmt === 'commander') || (chosenOpponent.type === 'list' && chosenOpponent.gen.format === 'commander'));
+    const oppIsCmd = chosenOpponent && (chosenOpponent.type === 'commander' || chosenOpponent.type === 'verified' || (chosenOpponent.type === 'random' && chosenOpponent.fmt === 'commander') || (chosenOpponent.type === 'list' && chosenOpponent.gen.format === 'commander') || (chosenOpponent.type === 'saved' && chosenOpponent.fmt === 'commander'));
     if (chosenOpponent && (deck.format === 'commander') !== !!oppIsCmd) chosenOpponent = null;
-    if (chosenOpponent && ((chosenOpponent.type === 'precon') !== (deck.format === 'casual' || deck.format === 'limited') && chosenOpponent.type !== 'list')) chosenOpponent = null;
+    if (chosenOpponent && ((chosenOpponent.type === 'precon') !== (deck.format === 'casual' || deck.format === 'limited') && chosenOpponent.type !== 'list' && chosenOpponent.type !== 'saved')) chosenOpponent = null;
+    if (chosenOpponent && chosenOpponent.type === 'saved' && chosenOpponent.fmt !== deck.format) chosenOpponent = null;
     if (chosenOpponent && chosenOpponent.type === 'theme' && deck.format !== 'modern') chosenOpponent = null;
     $('startNote').textContent = chosenOpponent ? '' : 'Pick an opponent.';
 }

@@ -242,6 +242,8 @@ async function startMatch(again) {
             oppDeck.source = pc.type;
         } else if (chosenOpponent.type === 'list') {
             oppDeck = chosenOpponent.gen;
+        } else if (chosenOpponent.type === 'saved') {
+            oppDeck = await savedToOppDeck(chosenOpponent.who, chosenOpponent.idx);
         } else if (chosenOpponent.type === 'verified') {
             const v = VERIFIED_DECKS.find(x => x.key === chosenOpponent.key);
             oppDeck = await listToOppDeck(v.text, 'commander');

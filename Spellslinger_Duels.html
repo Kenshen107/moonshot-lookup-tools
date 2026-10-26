@@ -275,15 +275,6 @@
 
         <section id="view-play" class="hidden">
             <div class="panel">
-                <h2>👥 Play a friend on this device</h2>
-                <p class="note">Two players, one device: pass it back and forth. A cover screen hides the table whenever it's the other player's turn or decision. Each player uses a deck from their own account, and each account gets its own win or loss and coins.</p>
-                <div class="grid-2" style="margin-top:6px;">
-                    <div><div class="note" id="frMeName"></div><select id="frMyDeck" aria-label="Your deck" style="width:100%;"></select></div>
-                    <div><select id="frWho" aria-label="Your friend's account" onchange="renderFriendDecks()" style="width:100%;"></select><select id="frTheirDeck" aria-label="Your friend's deck" style="width:100%; margin-top:6px;"></select></div>
-                </div>
-                <div class="row" style="margin-top:10px;"><button class="btn primary" id="frStart" onclick="startFriendMatch()">👥 Start the game</button><span class="note" id="frNote"></span></div>
-            </div>
-            <div class="panel">
                 <h2>1. Your deck</h2>
                 <div class="row">
                     <select id="playDeck" aria-label="Your deck" onchange="renderPlayView()" hidden></select>
@@ -301,6 +292,15 @@
                     <span class="note" id="startNote"></span>
                 </div>
             </div>
+            <details class="panel" id="friendBox">
+                <summary>👥 Play a friend on this device</summary>
+                <p class="note">Two players, one device: pass it back and forth. A cover screen hides the table whenever it's the other player's turn or decision. Each player uses a deck from their own account, and each account gets its own win or loss and coins.</p>
+                <div class="grid-2" style="margin-top:6px;">
+                    <div><div class="note" id="frMeName"></div><select id="frMyDeck" aria-label="Your deck" style="width:100%;"></select></div>
+                    <div><select id="frWho" aria-label="Your friend's account" onchange="renderFriendDecks()" style="width:100%;"></select><select id="frTheirDeck" aria-label="Your friend's deck" style="width:100%; margin-top:6px;"></select></div>
+                </div>
+                <div class="row" style="margin-top:10px;"><button class="btn primary" id="frStart" onclick="startFriendMatch()">👥 Start the game</button><span class="note" id="frNote"></span></div>
+            </details>
         </section>
     </main>
 

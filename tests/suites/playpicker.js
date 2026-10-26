@@ -29,7 +29,18 @@ const BODY = async function () {
     ok('picking a precon marks it', chosenOpponent && chosenOpponent.type === 'precon', chosenOpponent);
     playPickType('modern'); await new Promise(r => setTimeout(r, 1500));
     ok('switching type clears an opponent of the wrong kind', chosenOpponent === null, chosenOpponent);
-    ok('Modern decks face the themed decks', opps().length === MODERN_THEMES.length + 1, opps().length);
+    ok('Modern decks open on Surprise me', opps().length === 1 && /Surprise|Random/i.test(document.getElementById('oppList').textContent), opps().length);
+    setOppTab('themes'); await new Promise(r => setTimeout(r, 300));
+    ok('Modern decks face the themed decks (Themed decks tab)', opps().length === MODERN_THEMES.length, opps().length);
+    // 2026-10-26: the opponent's deck can be any saved deck of the same format (yours or another player's)
+    profile.decks.push(mk('Cas C', 'casual')); renderPlayView(); playPickType('casual'); await new Promise(r => setTimeout(r, 400));
+    setOppTab('saved'); await new Promise(r => setTimeout(r, 300));
+    ok('Saved decks tab lists your other decks of the same format', /Your decks/.test(document.getElementById('oppList').textContent) && opps().length >= 2, opps().map(o => o.textContent));
+    opps().find(o => /Cas C/.test(o.textContent)).click(); await new Promise(r => setTimeout(r, 300));
+    ok('picking a saved deck makes it the opponent', chosenOpponent && chosenOpponent.type === 'saved' && chosenOpponent.name === 'Cas C' && chosenOpponent.fmt === 'casual', chosenOpponent);
+    playPickType('commander'); await new Promise(r => setTimeout(r, 600));
+    ok('a saved deck of another format is cleared when the type changes', chosenOpponent === null, chosenOpponent);
+    ok('the friend panel is folded and the new-deck box is collapsed', document.getElementById('friendBox') && !document.getElementById('friendBox').open && !document.querySelector('details.get-deck').open);
     playPickType('casual'); await new Promise(r => setTimeout(r, 1500));
     return out;
 };

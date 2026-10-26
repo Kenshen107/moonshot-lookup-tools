@@ -58,6 +58,13 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         const nd = profile.decks[profile.decks.length - 1];
         ok('a Commander deck was added and selected', profile.decks.length === n0 + 1 && nd.format === 'commander' && document.getElementById('playDeck').value === String(n0), [n0, nd && nd.name]);
         ok('the new deck has 99 cards plus a commander and no problems', deckCount(nd) === 100 && deckProblems(nd).length === 0, [deckCount(nd), deckProblems(nd).slice(0, 2)]);
+        // 2026-10-26: a saved deck as the opponent's deck
+        { const SC = await T.cards(['Grizzly Bears', 'Lightning Bolt', 'Forest', 'Mountain']); ensureProfile();
+          const sd = { id: 'dsv', name: 'Saved test', format: 'casual', cards: { [SC['Grizzly Bears'].id]: 4, [SC['Lightning Bolt'].id]: 4, [SC['Forest'].id]: 10, [SC['Mountain'].id]: 10 }, commander: null };
+          profile.decks.push(sd); const idx = profile.decks.length - 1;
+          const gen = await savedToOppDeck(accounts.current, idx);
+          ok('a saved deck becomes an opponent deck with all its cards', gen.entries.reduce((a, e) => a + e.n, 0) === 28 && gen.format === 'casual' && /saved deck/.test(gen.source), [gen.entries.length, gen.source]);
+          profile.decks.pop(); }
         return out;
     });
     const results = formatChecks(r);

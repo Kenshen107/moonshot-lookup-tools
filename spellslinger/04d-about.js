@@ -11,6 +11,7 @@ const ABOUT_FEATURES = [
     ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log.']
 ];
 const ABOUT_LOG = [
+    ['Oct 26 (a tidier Play page)', ['The Play page is shorter: the opponent picker now has tabs (Surprise me, Pick a commander, Ready decks, Saved decks, Paste a list), "Get a new deck" is one folded box, and "Play a friend" folds away at the bottom. New: pick any saved deck as your opponent, yours or another player\'s on this device.']],
     ['Oct 26 (top-played decks, fixes)', ['New on the Play tab: type any fully automated commander and tap 🏆 Build its top-played deck to get the version of its deck that EDHREC players play most, saved to your decks. Fixed: Massacre Wurm no longer drains every opponent for one death, tutors for a "nonlegendary" card (Unmarked Grave) now let you choose, and casting your own instant or sorcery now stops for you to use Rootha to copy it.']],
     ['Oct 26 (167 more commanders)', ['Another 167 cards that can lead a Commander deck now play fully, so 1,661 of 3,866 commanders are Automated (it was 1,494). The game now fully plays 15,652 paper cards.']],
     ['Oct 26 (300 more commanders, again)', ['Another 333 cards that can lead a Commander deck now play fully, so 1,494 of 3,866 commanders are Automated (it was 1,161). The game now fully plays 15,481 paper cards.']],

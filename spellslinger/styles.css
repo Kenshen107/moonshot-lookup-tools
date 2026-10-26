@@ -1133,3 +1133,8 @@
         .look-card[data-look="grove"] .look-sw { background: linear-gradient(90deg, #2f7d40, #7fd58f, #1c2c20); }
         .look-card[data-look="royal"] .look-sw { background: linear-gradient(90deg, #8f6d12, #f0cf62, #29241a); }
         .look-frames { display: flex; align-items: center; gap: 8px; color: var(--text-soft); justify-content: center; }
+
+/* Play page cleanup (2026-10-26): collapsible boxes */
+details.panel > summary, details.get-deck > summary { cursor: pointer; font-weight: 700; padding: 2px 0; }
+details.panel > summary { font-size: 1.1em; color: var(--text-heading); }
+details.get-deck > summary { color: var(--brand-light); }
