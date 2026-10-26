@@ -4,6 +4,7 @@
 // Wordings are in rules/cmdr-*.js; the per-card engine code is in 15d-cmdr-*.js. preconEffect -> uldEffect -> cmdEffect.
 // =====================================================================
 const CMD = {};
+const CMD_AITARGET = {}; // id -> (P, e, source, valid, { theirs, mine, O, byValue }) => the target the computer picks for a targeted cmd effect
 const CMD_SCORE = {}; // id -> (P, e, target, src) => AI score of a cmd effect (0 when missing)
 async function cmdEffect(P, e, t, src, O, name) {
     if (e.t !== 'cmd') return;
@@ -26,6 +27,8 @@ function specMatch(spec, o, x, ctx) {
     if (spec.nontoken && x.token) return false;
     if (spec.legendary && !/\bLegendary\b/.test(ty)) return false;
     if (spec.nonland && /\bLand\b/.test(ty)) return false;
+    if (spec.noncreature && /\bCreature\b/.test(ty)) return false;
+    if (spec.mvMax !== undefined && !((x.card.cmc || 0) <= spec.mvMax)) return false;
     if (spec.color && !(x.card.colors || []).includes(spec.color)) return false;
     if (spec.minPow !== undefined && !(pow(x) >= spec.minPow)) return false;
     if (spec.mvMin !== undefined && !((x.card.cmc || 0) >= spec.mvMin)) return false;
@@ -66,7 +69,7 @@ TRIG_FN.dragonAttacks = (o, ctx) => (ctx.list || []).some(x => specMatch({ sub: 
 // ---- Casting creature spells from the top of the library (Thundermane Dragon: power 4 or greater; older cards: any creature) ----
 function topCastOk(P, o) {
     if (!o || Rx(o).kind !== 'creature' || P.library[P.library.length - 1] !== o) return false;
-    return P.bf.some(x => { const c = Rx(x).castTopCreatures; return c && !lostAbilities(x) && (c === true || !c.minPow || Number(o.card.power) >= c.minPow); });
+    return P.bf.some(x => { const c = Rx(x).castTopCreatures; return c && !lostAbilities(x) && (c === true || (c.when ? c.when(o) : (!c.minPow || Number(o.card.power) >= c.minPow))); });
 }
 // ---- Read ahead (Sagas): choose a chapter to start on; only that chapter triggers ----
 async function readAheadPick(P, o) {
@@ -136,6 +139,15 @@ function cmdExtraTriggers(ev, o, tr, ctx) {
         if (Rx(a).doubleLegendTrig && /\bLegendary\b/.test(o.card.type) && isCreature(o)) k++;
         if (Rx(a).harmonic && (hasType(o, 'Shaman') || (hasType(o, 'Wizard') && o !== a))) k++; // Harmonic Prodigy
         if (Rx(a).veyran && ev === 'cast' && ctx.o && ['instant', 'sorcery'].includes(Rx(ctx.o).kind)) k++; // Veyran: casting an instant or sorcery
+    });
+    allPerms().forEach(a => { // trigger doublers (2026-10-26): Teysa Karlov, Drivnod, Isshin, Wulfgar, Felix Five-Boots, Katara
+        if (a.owner !== o.owner || lostAbilities(a)) return;
+        const R = Rx(a);
+        if (R.doubleDeath && (ev === 'dies' || ev === 'creatureDies') && ctx.o && isCreature(ctx.o)) k++;
+        if (R.doubleAttackAny && ev === 'attacks' && (ctx.list || []).length) k++;
+        if (R.doubleHit && (ev === 'hitPlayer' || ev === 'combatHitAny')) k++;
+        if (R.doubleAlly && hasType(o, 'Ally')) k++;
+        if (R.doubleEnter && (ev === 'enters' || ev === 'landfall')) k++;
     });
     k += throneBoost(o, true); // Roaming Throne
     if (typeof tkCrusherExtra === 'function') k += tkCrusherExtra(ev, o); // Dr. Crusher

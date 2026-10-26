@@ -566,6 +566,10 @@ function fire(ev, ctx = {}) {
     if ((ev === 'enters' || ev === 'landfall') && ctx.o) (G.entered = (G.entered || []).filter(e => e.turn === G.turn)).push({ turn: G.turn, o: ctx.o, owner: ctx.o.owner, creature: isCreature(ctx.o), land: /\bLand\b/.test(ctx.o.card.type) });
     // Cards with abilities that work from the graveyard (Shambling Cie'th)
     G.players.forEach(X => X.gy.filter(o => Rx(o).gyTrig).forEach(o => Rx(o).gyTrig.forEach(tr => { if (trigMatches(tr, ev, o, ctx) && (!tr.cond || condOk(tr.cond, X, o))) (G.trigQ = G.trigQ || []).push({ P: X, o, effects: tr.effects }); })));
+    if ((ev === 'loseLife' || ev === 'playerDamaged') && ctx.P && ctx.n > 0) { ctx.P.lostN = (ctx.P.lostTurn === G.turn ? ctx.P.lostN : 0) + ctx.n; ctx.P.lostTurn = G.turn; } // life lost this turn (Sygg, Neheb, Papalymo, Tymna)
+    if (ev === 'discarded' && ctx.P) G.discardedTurn = G.turn;
+    if (ev === 'cast' && ctx.o && ctx.P && Rx(ctx.o).kind === 'creature' && /Legendary/.test(ctx.o.card.type)) ctx.P.legendCastTurn = G.turn; // Serah Farron: the first legendary creature spell each turn
+    if (ev === 'enters' && ctx.o && isCreature(ctx.o)) { const Xe = G.players[ctx.o.owner]; Xe.crEnt = [...(Xe.crEnt || []).slice(-6), { turn: G.turn, uid: ctx.o.uid }]; } // Ephara: creatures that entered last turn
     if (ev === 'gainLife' && ctx.P) { ctx.P.gainedAmt = (ctx.P.gainedTurn === G.turn ? ctx.P.gainedAmt || 0 : 0) + (ctx.n || 0); ctx.P.gainedTurn = G.turn; }
     if (ev === 'cast' && ctx.P) { ctx.P.castN = ctx.P.castTurn === G.turn ? (ctx.P.castN || 0) + 1 : 1; ctx.P.castTurn = G.turn; } // Angelic Arbiter; Monologue Tax counts spells per turn
     if (ev === 'attacks' && ctx.list && ctx.list.length) G.players[ctx.list[0].owner].attackedTurn = G.turn;
@@ -578,6 +582,8 @@ function fire(ev, ctx = {}) {
     if (ev === 'creatureDies' && ctx.o) { const X = G.players[ctx.o.owner]; X.diedTurnN = { turn: G.turn, n: (X.diedTurnN && X.diedTurnN.turn === G.turn ? X.diedTurnN.n : 0) + 1 }; }
     // Metallic Mimic: another creature of the chosen type enters with an extra +1/+1 counter (a replacement, not a trigger)
     if (ev === 'enters' && ctx.o && isCreature(ctx.o)) G.players[ctx.o.owner].bf.filter(a => a !== ctx.o && Rx(a).mimic && !lostAbilities(a) && a.chosenType && hasType(ctx.o, a.chosenType)).forEach(a => { ctx.o.counters += 1; log(`${ctx.o.card.name} enters with an additional +1/+1 counter (${a.card.name}).`); });
+    if (ev === 'enters' && ctx.o && isCreature(ctx.o)) G.players[ctx.o.owner].bf.filter(a => a !== ctx.o && Rx(a).entersCounterOthers && !lostAbilities(a) && !hasType(ctx.o, Rx(a).entersCounterOthers.not)).forEach(a => { ctx.o.counters += 1; log(`${ctx.o.card.name} enters with an additional +1/+1 counter (${a.card.name}).`); });
+    if ((ev === 'enters' || ev === 'landfall') && ctx.o && typeof oppEnterTappedHook === 'function') oppEnterTappedHook(ctx.o);
     if (ev === 'enters' && ctx.o && typeof cmdEntersHooks === 'function') cmdEntersHooks(ctx.o);
     if (ev === 'enters' && ctx.o) fire('selfEnters', { o: ctx.o });
     // A land's own "when ~ enters" abilities (lands don't use the stack to enter, 305.1)
@@ -600,8 +606,9 @@ function fire(ev, ctx = {}) {
             const ctxObj = (ev === 'cast' ? null : ctx.o) || (ctx.list && (tr.alone ? ctx.list[0] : ctx.list.find(x => x.owner === o.owner && (!tr.color || (x.card.colors || []).includes(tr.color))))) || null;
             const ctxCount = tr.attackWith ? ctx.list.filter(x => x.owner === o.owner && (tr.attackWith === 'creatures' || (tr.attackWith === 'legendary creatures' ? /Legendary/.test(x.card.type) : hasType(x, PLURAL_TYPES[tr.attackWith] || tr.attackWith.replace(/s$/, ''))))).length : ctx.n || 0;
             if (tr.anyMine && tr.ctxTarget && !tr.alone) { ctx.list.filter(x => x.owner === o.owner && (!tr.color || (x.card.colors || []).includes(tr.color)) && (!tr.withCounter || x.counters > 0)).forEach(x => (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: x })); continue; }
+            const lkiOf = (ev === 'dies' || ev === 'creatureDies' || ev === 'leaves') && ctx.o ? { pow: pow(ctx.o), tou: tou(ctx.o), counters: ctx.o.counters, ctr: { ...ctx.o.ctr }, card: ctx.o.card } : null; // last known information
             const timesTotal = times * (1 + (typeof cmdExtraTriggers === 'function' ? cmdExtraTriggers(ev, o, tr, ctx) : 0)); // Windcrag Siege (Mardu), Annie Joins Up
-            for (let k = 0; k < timesTotal; k++) (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: ctxObj, ctxCount, raw: { P: ctx.P, o: ctx.o, by: ctx.by, n: ctx.n !== undefined ? ctx.n : ctx.n, src: ctx.src, list: ctx.list } });
+            for (let k = 0; k < timesTotal; k++) (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: ctxObj, ctxCount, raw: { P: ctx.P, o: ctx.o, by: ctx.by, n: ctx.n !== undefined ? ctx.n : ctx.n, src: ctx.src, list: ctx.list, hit: ctx.hit, lki: lkiOf } });
         }
     }
 }
@@ -611,7 +618,7 @@ async function flushTriggers() {
         if (G && G.gyLeaveP && G.gyLeaveP.size) { const ps = [...G.gyLeaveP]; G.gyLeaveP.clear(); ps.forEach(i => { const X = G.players[i]; X.gyLeftLast = (X.gyLeftNow || []).splice(0); fire('gyLeave', { P: X }); }); }
         if (!(G && G.trigQ && G.trigQ.length && !G.over)) break;
         const t = G.trigQ.shift();
-        if (t.o && t.o.card && t.effects === Rx(t.o).etb && !t.doubled) { const k = throneBoost(t.o); for (let i = 0; i < k; i++) G.trigQ.push({ ...t, doubled: true }); } // Roaming Throne
+        if (t.o && t.o.card && t.effects === Rx(t.o).etb && !t.doubled) { const k = throneBoost(t.o) + (typeof yarokBoost === 'function' ? yarokBoost(t.o) : 0); for (let i = 0; i < k; i++) G.trigQ.push({ ...t, doubled: true }); } // Roaming Throne
         await putTriggers(t.P, t.o, t.effects, t.ctx, t.ctxCount, t.raw);
     }
 }
@@ -659,7 +666,7 @@ function actPlan(P, o, a, xExtra = 0) {
     if (a.cost.tapOther && !tapFodder(P, o, a.cost.tapOther)) return null; // nothing to tap for the cost
     if (dampingOn() && (isCreature(o) || /Artifact/.test(o.card.type)) && !a.effects.every(e => e.t === 'addMana')) return null; // Damping Matrix
     if (a.cost.exileTop && P.library.length < a.cost.exileTop) return null;
-    if (a.cost.sacOthers && P.bf.filter(x => isCreature(x) && x !== o).length < a.cost.sacOthers) return null;
+    if (a.cost.sacOthers && P.bf.filter(x => (isCreature(x) || (a.cost.sacAny && /Artifact/.test(x.card.type))) && x !== o).length < a.cost.sacOthers) return null;
     if (a.cost.mill && P.library.length < a.cost.mill) return null;
     if (a.cost.removeNamed && !((o.ctr[a.cost.removeNamed] || 0) > 0)) return null;
     if (a.cost.removeAny && !P.bf.some(x => x.counters > 0 || Object.values(x.ctr || {}).some(v => v > 0))) return null;
@@ -836,7 +843,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (a.cost.lifeIdentity) { const k = cmdrIdentity(P).length; P.life -= k; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${k} life.`); }
         if (a.cost.discard) { const d = (!P.isAI && P.hand.length > 1 ? await pickCard(P, P.hand, `${o.card.name}: discard a card`, { required: true }) : null) || P.hand.slice().sort((x, y) => (x.card.cmc || 0) - (y.card.cmc || 0))[0]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
         if (a.cost.mill) doMill(P, a.cost.mill);
-        if (a.cost.sacOthers) { const pool = P.bf.filter(x => isCreature(x) && x !== o); const fs = await chooseSacN(P, pool, a.cost.sacOthers, o.card.name); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(' and ')}.`); }
+        if (a.cost.sacOthers) { const pool = P.bf.filter(x => (isCreature(x) || (a.cost.sacAny && /Artifact/.test(x.card.type))) && x !== o); const fs = await chooseSacN(P, pool, a.cost.sacOthers, o.card.name); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(' and ')}.`); }
         if (a.cost.bounceSelf) { log(`${o.card.name} returns to ${you(P) ? 'your' : 'their'} hand.`); leaveBattlefield(o, 'hand'); }
         if (a.needPrepared) { o.prepared = false; log(`${o.card.name} is no longer prepared.`); }
         if (a.once) { o.actTurn = o.actTurn || {}; o.actTurn[a.text] = G.turn; }
@@ -860,7 +867,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (a.cost.tapArt) { P.bf.filter(x => !x.tapped && /\bArtifact\b/.test(x.card.type)).sort((x, y) => (x === o) - (y === o) || permValue(x) - permValue(y)).slice(0, a.cost.tapArt).forEach(x => { x.tapped = true; fire('tapped', { o: x }); log(`${P.name} ${you(P) ? 'tap' : 'taps'} ${x.card.name}.`); }); }
         if (a.cost.tapOtherN) { P.bf.filter(x => x !== o && !x.tapped && isCreature(x)).sort((x, y) => creatureValue(x) - creatureValue(y)).slice(0, a.cost.tapOtherN).forEach(x => { x.tapped = true; fire('tapped', { o: x }); log(`${P.name} ${you(P) ? 'tap' : 'taps'} ${x.card.name}.`); }); }
         if (a.cost.tapOther && tapFor) { const f = tapFor; fire('tapped', { o: f }); log(`${P.name} ${you(P) ? 'tap' : 'taps'} ${f.card.name} for ${o.card.name}.`); }
-        for (const kind of [a.cost.sacCreature && 'creature', a.cost.sacPerm].filter(Boolean)) { const f = await chooseSac(P, o, kind, o.card.name); if (!f) return false; /* nothing left to sacrifice (it was tapped for mana) */ if (isCreature(f)) G.lastSacPow = Math.max(0, pow(f)); G.lastSacMv = f.card.cmc || 0; log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }
+        for (const kind of [a.cost.sacCreature && 'creature', a.cost.sacPerm].filter(Boolean)) { const f = await chooseSac(P, o, kind, o.card.name); if (!f) return false; /* nothing left to sacrifice (it was tapped for mana) */ if (isCreature(f)) { G.lastSacPow = Math.max(0, pow(f)); G.lastSacTou = Math.max(0, tou(f)); } G.lastSacMv = f.card.cmc || 0; log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${f.card.name}.`); fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }
         if (a.cost.sacN) { const fs = await chooseSacN(P, P.bf.filter(x => new RegExp(`\\b${a.cost.sacN.kind}\\b`).test(x.card.type)), a.cost.sacN.n, o.card.name); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(', ')}.`); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); }
     }
     // Mana abilities don't use the stack (605.3)
@@ -1226,7 +1233,7 @@ function dieOrLeave(o, zone) {
     if (o.disturbed) { o.disturbed = false; if (zone === 'gy') { log(`${o.card.name} is exiled instead (disturb).`); zone = 'exile'; } }
     if (zone === 'gy' && o.exileOnDeath === G.turn) { log(`${o.card.name} is exiled instead.`); zone = 'exile'; }
     if (zone === 'gy' && onBf(o.uid) && (o.ctr.finality || o.paragonExile)) { if (o.paragonExile) { o.paragonExile = false; gainLifeFor(G.players[o.owner], 2); } log(`${o.card.name} is exiled instead.`); zone = 'exile'; } // finality counter (Excava), Serra Paragon
-    if (zone === 'gy' && onBf(o.uid) && isCreature(o)) { const g = allPerms().find(a => Rx(a).exileFoeDies && a.owner !== o.owner && !lostAbilities(a)); if (g) { log(`${o.card.name} is exiled instead of dying (${g.card.name}).`); zone = 'exile'; } }
+    if (zone === 'gy' && onBf(o.uid) && isCreature(o)) { const g = allPerms().find(a => Rx(a).exileFoeDies && a.owner !== o.owner && !lostAbilities(a)); if (g) { log(`${o.card.name} is exiled instead of dying (${g.card.name}).`); zone = 'exile'; if (Rx(g).exileFoeDies === 'saproling') (G.trigQ = G.trigQ || []).push({ P: G.players[g.owner], o: g, effects: [{ t: 'token', n: 1, p: 1, q: 1, name: 'green Saproling', kw: [] }] }); } }
     if (zone === 'gy' && !o.token && onBf(o.uid) && isCreature(o)) { const k = allPerms().find(a => Rx(a).kalitas && a.owner !== o.owner && !lostAbilities(a)); if (k) { log(`${o.card.name} is exiled instead of dying (${k.card.name}).`); zone = 'exile'; (G.trigQ = G.trigQ || []).push({ P: G.players[k.owner], o: k, effects: [{ t: 'token', n: 1, p: 2, q: 2, name: 'black Zombie', kw: [] }] }); } } // Kalitas, Traitor of Ghet
     const dying = zone === 'gy' && onBf(o.uid) && isCreature(o);
     if (dying && o.galufTurn === G.turn) (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: [{ t: 'cmd', id: 'galufCounters', target: 'creature', optional: true, good: true, amount: Math.max(0, pow(o)) }] }); // Galuf's Final Act
