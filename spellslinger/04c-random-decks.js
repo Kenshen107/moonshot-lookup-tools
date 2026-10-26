@@ -84,7 +84,8 @@ async function buildRandomCommanderDeck(commander, style, themeArg) {
 // A typed commander's own random build (owner, 2026-10-23: "type in a deck and it builds a random deck from EDHREC"): every card
 // EDHREC lists for the commander is drawn at random, weighted by how many of its decks play it, so popular cards show up often
 // and no two builds match. Only fully automated cards are used; basics fill the rest by color symbols.
-async function buildEdhrecRandomDeck(slug) {
+// top = true: the most-played cards instead of a weighted draw (the "top-played" deck of a commander; the commander itself must be fully automated)
+async function buildEdhrecRandomDeck(slug, top) {
     await loadBasics();
     const res = await fetch(`${EDH}/commanders/${slug}.json`);
     if (!res.ok) throw new Error('EDHREC has no page for that commander');
@@ -103,9 +104,10 @@ async function buildEdhrecRandomDeck(slug) {
     const byName = await cardsByNames([cmdName, ...pool.map(x => x.name)]);
     const commander = byName.get(String(cmdName).toLowerCase());
     if (!commander) throw new Error(`Couldn't find ${cmdName}`);
+    if (top && !isFullAuto(commander)) throw new Error(`${commander.name} isn't fully automated yet, so its deck can't be built.`);
     const ci = commander.ci.filter(c => BASIC_IDS[c]);
     // weighted draw without repeats: the key -ln(u) / weight is smallest for heavy cards
-    const draw = list => list.map(x => ({ x, k: -Math.log(1 - Math.random()) / Math.max(0.002, x.rate) })).sort((a, b) => a.k - b.k).map(o => o.x);
+    const draw = top ? list => list.slice().sort((a, b) => b.rate - a.rate) : list => list.map(x => ({ x, k: -Math.log(1 - Math.random()) / Math.max(0.002, x.rate) })).sort((a, b) => a.k - b.k).map(o => o.x);
     const usable = pool.map(x => ({ ...x, card: byName.get(x.name.toLowerCase()) })).filter(x => x.card && x.card.id !== commander.id && isFullAuto(x.card) && !isBasic(x.card));
     const spells = draw(usable.filter(x => !x.land && rulesFor(x.card).kind !== 'land')).slice(0, 63);
     const lands = draw(usable.filter(x => x.land || rulesFor(x.card).kind === 'land').filter(x => rulesFor(x.card).mana)).slice(0, ci.length > 1 ? 10 : 4);
@@ -119,7 +121,7 @@ async function buildEdhrecRandomDeck(slug) {
     for (let i = 0; left > 0 && ci.length; i++, left--) split[ci[i % ci.length]]++;
     Object.entries(split).forEach(([col, n]) => { if (n > 0 && BASIC_IDS[col]) entries.push({ card: CARDS.get(BASIC_IDS[col]), n }); });
     if (!ci.length) entries.push({ card: CARDS.get(BASIC_IDS.W), n: 99 - entries.reduce((a, e) => a + e.n, 0) });
-    return { name: commander.name, format: 'commander', commander, entries, swapped: 0, source: `random build from EDHREC's ${commander.name} cards (${spells.length} spells and ${lands.length} nonbasic lands drawn by how often decks play them; every card is fully automated)` };
+    return { name: commander.name, format: 'commander', commander, entries, swapped: 0, source: `${top ? 'top-played build' : 'random build'} from EDHREC's ${commander.name} cards (${spells.length} spells and ${lands.length} nonbasic lands drawn by how often decks play them; every card is fully automated)` };
 }
 
 // Modern: two random colors, 24 lands, four-ofs of the most-played Automated cards

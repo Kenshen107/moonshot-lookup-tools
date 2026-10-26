@@ -1506,7 +1506,8 @@ function renderPlayView() {
     if (!PLAYSEL.type || !counts[PLAYSEL.type]) PLAYSEL.type = cur ? cur.format : types[0] || null;
     if (cur && cur.format !== PLAYSEL.type) { const i = profile.decks.findIndex(d => d.format === PLAYSEL.type); if (i >= 0) sel.value = String(i); }
     const box = $('deckPick');
-    const randomBuild = `<div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;"><button type="button" class="btn" id="randomDeckBtn" onclick="buildRandomPlayerDeck()" title="Builds a new themed Commander deck from a random fully automated commander and adds it to your decks">🎲 Build me a random Commander deck</button><span class="note" id="randomDeckNote" style="margin:0;">A random commander and deck, saved to your decks. Uses the theme picked under Surprise me.</span></div>`;
+    const randomBuild = `<div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;"><button type="button" class="btn" id="randomDeckBtn" onclick="buildRandomPlayerDeck()" title="Builds a new themed Commander deck from a random fully automated commander and adds it to your decks">🎲 Build me a random Commander deck</button><span class="note" id="randomDeckNote" style="margin:0;">A random commander and deck, saved to your decks. Uses the theme picked under Surprise me.</span></div>
+        <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;"><input type="search" id="topCmdFind" list="topCmdSuggest" placeholder="Type a fully automated commander" aria-label="Commander for a top-played deck" oninput="suggestTopCommanders(this.value)" onkeydown="if (event.key === 'Enter') buildTopPlayerDeck()" style="flex:1 1 220px;"><datalist id="topCmdSuggest"></datalist><button type="button" class="btn" id="topDeckBtn" onclick="buildTopPlayerDeck()" title="Builds EDHREC's most-played version of this commander's deck, using only fully automated cards, and adds it to your decks">🏆 Build its top-played deck</button></div><div class="note" id="topDeckNote" style="margin-top:4px;">Type a commander (only fully automated ones are suggested): you get the deck EDHREC players play most, saved to your decks.</div>`;
     if (!profile.decks.length) box.innerHTML = `<p class="note">No decks yet.</p>${randomBuild}`;
     else {
         const q = PLAYSEL.q.trim().toLowerCase();
@@ -1597,6 +1598,42 @@ function chooseOpponent(o) {
 
 
 // Sandbox Play tab (owner, 2026-10-24): build a new random themed Commander deck for yourself, saved to your decks, to try a new commander.
+// Suggestions for the top-played deck box: commanders the game fully automates
+let topSuggestTimer = null;
+function suggestTopCommanders(q) {
+    clearTimeout(topSuggestTimer);
+    if (q.trim().length < 2) return;
+    topSuggestTimer = setTimeout(async () => {
+        try {
+            const cards = await searchCards(`is:commander game:paper ${q}`, 2, 'edhrec');
+            const names = cards.filter(c => isFullAuto(c) && canBeCommander(c)).slice(0, 12).map(c => c.name);
+            if ($('topCmdSuggest')) $('topCmdSuggest').innerHTML = names.map(n => `<option value="${esc(n)}">`).join('');
+            if ($('topDeckNote') && !names.length) $('topDeckNote').textContent = 'No fully automated commander matches that yet.';
+        } catch (e) { /* suggestions are optional */ }
+    }, 250);
+}
+// Type a commander: add EDHREC's most-played version of its deck (fully automated cards only) to your decks
+async function buildTopPlayerDeck() {
+    const btn = $('topDeckBtn'), note = $('topDeckNote'), name = ($('topCmdFind') || {}).value ? $('topCmdFind').value.trim() : '';
+    if (!name) { if (note) note.textContent = 'Type a commander first.'; return; }
+    if (btn) btn.disabled = true;
+    if (note) note.textContent = 'Reading EDHREC and building the deck...';
+    try {
+        const gen = await buildEdhrecRandomDeck(edhrecSlug(name), true);
+        const deck = generatedToDeck(gen, `${gen.name} (top-played)`);
+        profile.decks.push(deck);
+        saveProfile();
+        PLAYSEL.type = 'commander'; PLAYSEL.q = '';
+        toast(`Added "${deck.name}" to your decks.`);
+        renderDeckPicker();
+        renderPlayView();
+        const sel = $('playDeck'); if (sel) { sel.value = String(profile.decks.length - 1); renderPlayView(); }
+    } catch (e) {
+        console.error(e);
+        if (note) note.textContent = `Couldn't build that deck: ${e.message}`;
+        if (btn) btn.disabled = false;
+    }
+}
 async function buildRandomPlayerDeck() {
     const btn = $('randomDeckBtn'), note = $('randomDeckNote');
     if (btn) btn.disabled = true;

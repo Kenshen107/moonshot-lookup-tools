@@ -36,7 +36,10 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         window.fetch = async (url, init) => String(url).includes('/commanders/') ? { ok: true, json: async () => ({ header: "Atraxa, Praetors' Voice (Commander)", container: { json_dict: { card: { name: "Atraxa, Praetors' Voice" }, cardlists: [{ tag: 'creatures', header: 'Creatures', cardviews: names.map((n, i) => ({ name: n, num_decks: 1000 - i * 100, potential_decks: 1200 })) }] } } }) } : realFetch(url, init);
         let deck = null, err = null;
         try { deck = await buildEdhrecRandomDeck('atraxa-praetors-voice'); } catch (e) { err = String(e); }
+        let top1 = null, top2 = null; try { top1 = await buildEdhrecRandomDeck('atraxa-praetors-voice', true); top2 = await buildEdhrecRandomDeck('atraxa-praetors-voice', true); } catch (e) { err = String(e); }
         window.fetch = realFetch;
+        ok('2026-10-26: the top-played build is the same every time, 99 cards plus a fully automated commander', top1 && top2 && JSON.stringify(top1.entries.map(e => e.card.name + e.n)) === JSON.stringify(top2.entries.map(e => e.card.name + e.n)) && top1.entries.reduce((a, e) => a + e.n, 0) === 99 && /top-played/.test(top1.source), err);
+        ok('the Play tab has the top-played box and button', typeof buildTopPlayerDeck === 'function' && typeof suggestTopCommanders === 'function');
         ok('the random build works', deck && deck.format === 'commander', err);
         if (deck) {
             ok('99 cards plus the commander', deck.entries.reduce((a, e) => a + e.n, 0) === 99 && deck.commander.name.startsWith('Atraxa'), JSON.stringify([deck.entries.reduce((a, e) => a + e.n, 0), deck.entries.map(e => e.card.name + e.n), deck.commander.name]));
@@ -49,6 +52,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         // 2026-10-24: "Build me a random Commander deck" on the Play tab adds a playable deck to the player's decks
         ensureProfile(); renderPlayView();
         ok('the Play tab has the random-deck button', !!document.getElementById('randomDeckBtn'));
+        ok('the Play tab has the top-played commander box', !!document.getElementById('topCmdFind') && !!document.getElementById('topDeckBtn'));
         const n0 = profile.decks.length;
         await buildRandomPlayerDeck();
         const nd = profile.decks[profile.decks.length - 1];
