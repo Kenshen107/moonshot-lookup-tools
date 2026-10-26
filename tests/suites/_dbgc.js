@@ -32,7 +32,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             // (batches are added below this line)
             const hit = (src, victims, n = 1) => { fire('hitPlayer', { src, n, hit: victims || [], step: (G.combatDmgStep = (G.combatDmgStep || 0) + 1) }); };
 
-{ const [A] = await fresh(); const e = put(A, 'Elanor Gardner'); inLib(A, 'Forest'); const f = makeArtifactToken(A, 'food'); out.push(['trig', true, Rx(e).trig.map(t=>t.ev+':'+(t.fn||''))]); fire('sacrificed', { o: f }); await settle2(); out.push(['flag', true, A.c_foodTurn, G.turn]); fire('end'); await settle2(); out.push(['bf', true, A.bf.map(x=>x.card.name)]);} { const [A] = await fresh(); put(A, 'Hakbal of the Surging Soul'); const m = put(A, 'Bear Cub'); m.card = { ...m.card, type: 'Creature — Merfolk' }; out.push(['tr', true, Rx(m).support]); fire('combat'); await settle2(); out.push(['ex', true, [A.hand.map(x=>x.card.name), m.counters, A.library.length]]); }
+{ const [A] = await fresh(); const y = put(A, 'Cayth, Famed Mechanist'); await settle2(); const c = put(A, 'Hill Giant'); await settle2(); out.push(['c', true, [c.counters, y.counters]]); }
             out.push(['LOG', true, (G.log || G.logLines || []).slice(-25)]);
         } catch (e) { out.push([`threw: ${e.message}`, false, String(e.stack).split('\n').slice(0, 6)]); }
         return out;

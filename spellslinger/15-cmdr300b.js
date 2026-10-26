@@ -301,9 +301,9 @@ Object.assign(CMD, {
     },
     // Mendicant Core, Guidelight
     async b_mendicant(P, e, t, src) {
-        const sp = G.ctxRaw && G.ctxRaw.o; const item = sp && G.stack.find(it => it.kind === 'spell' && it.o === sp); if (!item) return;
+        const sp = G.ctxRaw && G.ctxRaw.o; if (!sp) return;
         if (!(await mayPay(P, '{1}', `${src.card.name}: pay {1} to copy ${sp.card.name}?`, src, true))) return;
-        await copySpellItem(P, item);
+        tokenCopyOf(P, sp.card); // a copy of an artifact spell becomes a token copy of the permanent
     },
     // Lathiel, the Bounteous Dawn
     async b_lathiel(P, e, t, src) {

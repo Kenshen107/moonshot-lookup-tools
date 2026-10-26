@@ -242,3 +242,132 @@ Object.assign(TRIG_FN, {
     c_mineAttack: (o, ctx) => (ctx.list || []).some(x => x.owner === o.owner),
     c_ownEnters: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && ctx.o.c_extraCtr > 0 && isCreature(ctx.o)
 });
+
+// ===== Chunk 2 =====
+Object.assign(TRIG_FN, {
+    c_main2Mine: (o, ctx) => G.active === o.owner && G.players[o.owner].gainedTurn === G.turn && (G.players[o.owner].gainedAmt || 0) >= 3,
+    c_bigHit: (o, ctx) => ctx.P.i === o.owner && (ctx.list || []).some(x => x.owner === o.owner && pow(x) >= 7),
+    c_calixHit: (o, ctx) => !!ctx.src && ctx.src.owner === o.owner && (ctx.src === o || allPerms().some(a => a.attachedTo === ctx.src.uid && a.owner === o.owner && /\bAura\b/.test(a.card.type) && a === o)) && (ctx.hit || []).some(H => H.i !== o.owner),
+    c_calixHost: (o, ctx) => !!ctx.src && ctx.src.owner === o.owner && (ctx.src === o || allPerms().some(a => a.attachedTo === ctx.src.uid && a.owner === o.owner && /\bEnchantment\b/.test(a.card.type) && /\bAura\b/.test(a.card.type))) && (ctx.hit || []).some(H => H.i !== o.owner),
+    c_myNontokenEntersOther: (o, ctx) => !!ctx.o && ctx.o !== o && ctx.o.owner === o.owner && !ctx.o.token && isCreature(ctx.o),
+    c_myInstSorc: (o, ctx) => !!ctx.o && ctx.P.i === o.owner && ['instant', 'sorcery'].includes(Rx(ctx.o).kind),
+    c_myNoncreatureBig: (o, ctx) => !!ctx.o && ctx.P.i === o.owner && Rx(ctx.o).kind !== 'creature' && Rx(ctx.o).kind !== 'land' && (ctx.o.card.cmc || 0) >= 4,
+    c_garnetAttack: (o, ctx) => (ctx.list || []).includes(o)
+});
+STATIC_FN.c_isCommander = o => !!o.isCommander;
+Object.assign(CMD_SCORE, { c_gisa: () => 6, c_zur: () => 5, c_prismari: () => 8, c_rashmi: () => 5, c_krark: () => 4, c_danithaBH: () => 6, c_cayth: () => 4, c_transformMay: () => 5, c_lili: () => 6, c_edgar: () => 6, c_sorin: () => 6, c_ral: () => 3, c_terra: () => 3, c_emperor: () => 3, c_calix: () => 4, c_tifa: () => 8, c_roku: () => 7, c_garnet: () => 1, c_xuifit: () => 6, c_danithaNBL: () => 6 });
+// Garnet: the computer keeps its Sagas as they are; a person is asked for each
+async function c_garnetWants(P, src, s) { return (P.isAI || AUTOPLAY) ? false : await askYes(P, `${src.card.name}: remove a lore counter from ${s.card.name}?`, { card: s.card }); }
+// Cast a creature card of a kind from the graveyard paying its mana cost (Gisa and Geralf, Danitha)
+async function c_castFromGy(P, src, test, what) {
+    const pool = P.gy.filter(x => test(x) && Rx(x).support !== 'none' && canPay(P, x));
+    const pick = await pickOwn(P, pool, `${src.card.name}: cast ${what} from your graveyard`, { optional: true });
+    if (!pick) { src.usedOnce = {}; (src.onceTurn = src.onceTurn || {}); log(`No ${what} to cast.`); return false; }
+    return await castPaying(P, pick);
+}
+Object.assign(CMD, {
+    async c_gisa(P, e, t, src) { await c_castFromGy(P, src, x => Rx(x).kind === 'creature' && hasType(x, 'Zombie'), 'a Zombie creature spell'); },
+    async c_danithaNBL(P, e, t, src) { await c_castFromGy(P, src, x => /\b(Aura|Equipment)\b/.test(x.card.type), 'an Aura or Equipment spell'); },
+    // Zur, Eternal Schemer: a non-Aura enchantment becomes a creature with base power and toughness equal to its mana value
+    async c_zur(P, e, t, src) {
+        const pool = P.bf.filter(x => /\bEnchantment\b/.test(x.card.type) && !/\bAura\b/.test(x.card.type) && !isCreature(x)); if (!pool.length) return;
+        const x = await pickOwn(P, pool, `${src.card.name}: target non-Aura enchantment becomes a creature`, { rank: (a, b) => (b.card.cmc || 0) - (a.card.cmc || 0) }); if (!x) return;
+        const mv = x.card.cmc || 0; x.permAnimated = { p: mv, q: mv }; log(`${x.card.name} becomes a ${mv}/${mv} creature in addition to its other types.`);
+    },
+    // Prismari, the Inspiration: instants and sorceries you cast have storm
+    async c_prismari(P, e, t, src) {
+        const o = G.ctxRaw && G.ctxRaw.o; if (!o) return;
+        const item = G.stack.find(i => i.o === o && i.kind === 'spell'); const n = (G.castThisTurn || 1) - 1;
+        if (!item || n <= 0 || Rx(o).kw.has('storm')) return;
+        log(`Storm: ${n} cop${n === 1 ? 'y' : 'ies'} of ${o.card.name}.`);
+        for (let k = 0; k < n; k++) await copySpellItem(P, item, { retarget: true });
+    },
+    // Rashmi, Eternities Crafter
+    async c_rashmi(P, e, t, src) {
+        const c = P.library[P.library.length - 1]; if (!c) return;
+        const cast = G.ctxRaw && G.ctxRaw.o; log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${c.card.name}.`);
+        if (Rx(c).kind !== 'land' && (c.card.cmc || 0) < ((cast && cast.card.cmc) || 0)) {
+            const yes = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: cast ${c.card.name} without paying its mana cost?`, { card: c.card });
+            if (yes && await castFreeFrom(P, c)) return;
+        }
+        if (P.library.includes(c)) { pull(P.library, c); P.hand.push(c); log(`${c.card.name} is put into ${you(P) ? 'your' : 'their'} hand.`); }
+    },
+    // Krark, the Thumbless
+    async c_krark(P, e, t, src) {
+        const o = G.ctxRaw && G.ctxRaw.o; const item = o && G.stack.find(i => i.o === o && i.kind === 'spell'); if (!item) return;
+        const won = flipCoin(P); log(`${P.name} ${you(P) ? 'flip' : 'flips'} a coin for ${src.card.name} and ${won ? 'win' : 'lose'}${you(P) ? '' : 's'} the flip.`);
+        if (won) await copySpellItem(P, item, { retarget: true });
+        else { const i = G.stack.indexOf(item); if (i >= 0) { G.stack.splice(i, 1); if (o.front) o.card = o.front; resetObj(o); if (!o.token) { G.players[o.owner].hand.push(o); log(`${item.name} returns to its owner's hand.`); } } }
+    },
+    // Danitha Capashen, Benalia's Hope: an Aura or Equipment from hand or graveyard enters attached to it
+    async c_danithaBH(P, e, t, src) {
+        if (!onBf(src.uid)) return;
+        const pool = [...P.hand, ...P.gy].filter(c => /\b(Aura|Equipment)\b/.test(c.card.type) && (/\bEquipment\b/.test(c.card.type) || (Rx(c).kind !== 'instant')));
+        const c = await pickOwn(P, pool, `${src.card.name}: put an Aura or Equipment onto the battlefield attached to ${src.card.name}?`, { optional: true }); if (!c) return;
+        putOntoBattlefield(P, c, false); c.attachedTo = src.uid; log(`${c.card.name} is attached to ${src.card.name}.`);
+    },
+    // Cayth, Famed Mechanist: other nontoken creatures have fabricate 1
+    async c_cayth(P, e, t, src) { const x = G.ctxObj; if (x && onBf(x.uid)) await applyEffect(P, { t: 'fabricate', n: 1 }, null, x); },
+    // "You may exile ~, then return it transformed" (Ajani)
+    async c_transformMay(P, e, t, src) {
+        if (!onBf(src.uid) || !src.front || !src.front.back) return;
+        if (!(P.isAI || AUTOPLAY) && !(await askYes(P, `${src.card.name}: exile it and return it transformed?`, { card: src.card }))) return;
+        await applyEffect(P, { t: 'exileReturnTransformed' }, null, src);
+    },
+    // Liliana, Heretical Healer: transform, and a 2/2 black Zombie
+    async c_lili(P, e, t, src) { if (!onBf(src.uid) || !src.front || !src.front.back) return; await applyEffect(P, { t: 'exileReturnTransformed' }, null, src); await applyEffect(P, { t: 'token', n: 1, p: 2, q: 2, name: 'black Zombie', kw: [] }, null, src); },
+    async c_sorin(P, e, t, src) { if (!onBf(src.uid) || !src.front || !src.front.back) return; await applyEffect(P, { t: 'exileReturnTransformed' }, null, src); },
+    // Edgar, Charmed Groom: returns from the graveyard transformed
+    c_edgar(P, e, t, src) {
+        const X = G.players[src.owner]; if (!X.gy.includes(src) || !src.front || !src.front.back) return;
+        pull(X.gy, src); resetObj(src); src.card = src.front.back; src.enteredTurn = G.turn; X.bf.push(src);
+        log(`${src.front.name} returns to the battlefield transformed as ${src.card.name}.`); fire('enters', { o: src });
+        if (Rx(src).etb.length) (G.trigQ = G.trigQ || []).push({ P: X, o: src, effects: Rx(src).etb });
+    },
+    // Ral, Monsoon Mage: flip a coin when you cast an instant or sorcery in your turn
+    async c_ral(P, e, t, src) {
+        if (G.active !== P.i || !onBf(src.uid)) return;
+        const won = flipCoin(P); log(`${P.name} ${you(P) ? 'flip' : 'flips'} a coin for ${src.card.name} and ${won ? 'win' : 'lose'}${you(P) ? '' : 's'} the flip.`);
+        if (!won) { damage(P, 1, src); return; }
+        if (!src.front || !src.front.back) return;
+        if (!(P.isAI || AUTOPLAY) && !(await askYes(P, `${src.card.name}: exile him and return him transformed?`, { card: src.card }))) return;
+        await applyEffect(P, { t: 'exileReturnTransformed' }, null, src);
+    },
+    // Terra, Magical Adept: mill five, an enchantment card to hand
+    async c_terra(P, e, t, src) {
+        const before = P.gy.length; doMill(P, 5); const milled = P.gy.slice(before).filter(c => /\bEnchantment\b/.test(c.card.type)); if (!milled.length) return;
+        const c = await pickOwn(P, milled, `${src.card.name}: put an enchantment card milled this way into your hand?`, { optional: true }); if (c) { pull(P.gy, c); P.hand.push(c); log(`${c.card.name} is put into ${you(P) ? 'your' : 'their'} hand.`); }
+    },
+    // The Emperor of Palamecia: a counter for each noncreature spell with four or more mana; three counters transform it
+    c_emperor(P, e, t, src) {
+        if (!onBf(src.uid)) return; putCounters(src, 1, P); log(`${src.card.name} gets a +1/+1 counter.`);
+        if (src.counters >= 3 && src.front && src.front.back && src.card === src.front) { src.card = src.front.back; log(`${src.front.name} transforms into ${src.card.name}.`); }
+    },
+    // Calix, Guided by Fate: a token copy of a nonlegendary enchantment you control (once each turn)
+    async c_calix(P, e, t, src) {
+        const pool = P.bf.filter(x => /\bEnchantment\b/.test(x.card.type) && !/Legendary/.test(x.card.type) && !x.token); if (!pool.length) { return; }
+        const x = await pickOwn(P, pool, `${src.card.name}: create a token that's a copy of a nonlegendary enchantment?`, { optional: true, rank: (a, b) => (b.card.cmc || 0) - (a.card.cmc || 0) }); if (x) tokenCopyOf(P, x.card);
+    },
+    // Tifa, Martial Artist
+    c_tifa(P, e, t, src) {
+        const ut = P.bf.filter(x => isCreature(x) && x.tapped); ut.forEach(x => { x.tapped = false; });
+        if (!G.extraCombatOn) { G.extraCombat = (G.extraCombat || 0) + 1; log(`${P.name} untap${you(P) ? '' : 's'} all creatures; there will be an additional combat phase after this one.`); } else log(`${P.name} untap${you(P) ? '' : 's'} all creatures.`);
+    },
+    // Avatar Roku, Firebender
+    c_roku(P, e, t, src) { P.pool = (P.pool || []).concat(Array(6).fill('R')); P.keepPoolTurn = G.turn; log(`${P.name} add${you(P) ? '' : 's'} {R}{R}{R}{R}{R}{R} (it stays until end of combat).`); },
+    // Garnet, Princess of Alexandria
+    async c_garnet(P, e, t, src) {
+        if (!onBf(src.uid)) return; let n = 0;
+        for (const s of P.bf.filter(x => /\bSaga\b/.test(x.card.type) && (x.ctr.lore || 0) > 0)) {
+            if (await c_garnetWants(P, src, s)) { s.ctr.lore--; n++; }
+        }
+        if (n > 0) { const got = putCounters(src, n, P); log(`${src.card.name} gets ${got} +1/+1 counters.`); }
+    },
+    // Xu-Ifit, Osteoharmonist: a creature card returns as a Skeleton with no abilities
+    async c_xuifit(P, e, t, src) {
+        const pool = P.gy.filter(x => /\bCreature\b/.test(x.card.type)); if (!pool.length) return;
+        const c = await pickOwn(P, pool, `${src.card.name}: return a creature card from your graveyard to the battlefield`, { optional: true }); if (!c) return;
+        c.front = c.card; c.card = { ...c.card, text: '', type: c.card.type.replace(/\s—.*$/, '') + ' — Skeleton ' + (c.card.type.split('—')[1] || '').trim() };
+        reanimateFrom(P, P, c); log(`${c.card.name} is a Skeleton with no abilities.`);
+    }
+});
