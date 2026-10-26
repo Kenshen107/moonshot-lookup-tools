@@ -39,7 +39,9 @@ const BODY = async function (group, mustBe100) {
         const got = await T.cards(names);
         names.forEach(n => { if (got[n]) cards.push(got[n]); });
     } else if (group === 'cmdr300') {
-        const names = await (await fetch('/tests/data/cmdr300_names.json')).json();
+        let names = [];
+        for (const f of ['cmdr300', 'cmdr300b', 'cmdr300c', 'cmdr300d']) names = names.concat(await (await fetch('/tests/data/' + f + '_names.json')).json());
+        names = [...new Set(names)];
         const got = await T.cards(names);
         names.forEach(n => { if (got[n]) cards.push(got[n]); });
     } else if (group === 'trek') {

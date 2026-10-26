@@ -100,7 +100,7 @@ Object.assign(CMD, {
         if (P.isAI || AUTOPLAY) n = Math.min(P.hand.filter(c => /\bLand\b/.test(c.card.type)).length, P.bf.filter(x => /\bLand\b/.test(x.card.type)).length >= 5 ? 3 : 0);
         else n = await askNumber(P, `${src.card.name}: discard how many cards (draw that many, add that much {R})?`, 0, P.hand.length, 0, { card: src.card });
         if (!n) return;
-        for (let i = 0; i < n; i++) { const d = (P.isAI || AUTOPLAY) ? P.hand.filter(c => /\bLand\b/.test(c.card.type))[0] : null; if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; fire('discarded', { P, o: d }); } else await discardChosen(P, `${src.card.name}: discard a card`); }
+        for (let i = 0; i < n; i++) { const d = (P.isAI || AUTOPLAY) ? P.hand.filter(c => /\bLand\b/.test(c.card.type))[0] : null; if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; } else await discardChosen(P, `${src.card.name}: discard a card`); }
         drawCards(P, n);
         P.pool = (P.pool || []).concat(Array(n).fill('R')); P.keepPoolTurn = G.turn; log(`${P.name} add${you(P) ? '' : 's'} ${'{R}'.repeat(Math.min(n, 12))} (it stays until end of turn).`);
     },
@@ -196,7 +196,7 @@ Object.assign(CMD, {
     // Old Rutstein
     c_rutstein(P, e, t, src) {
         const c = P.library.pop(); if (!c) return;
-        P.gy.push(c); log(`${P.name} mill${you(P) ? '' : 's'} ${c.card.name}.`); fire('milled', { P, n: 1, list: [c] });
+        P.gy.push(c); log(`${P.name} mill${you(P) ? '' : 's'} ${c.card.name}.`); fire('milled', { P, cards: [c] });
         if (/\bLand\b/.test(c.card.type)) makeArtifactToken(P, 'treasure');
         else if (/\bCreature\b/.test(c.card.type)) applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'green Insect', kw: [] }, null, src);
         else makeArtifactToken(P, 'blood');
@@ -288,7 +288,7 @@ Object.assign(CMD, {
         const cast = G.ctxRaw && G.ctxRaw.o; log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${c.card.name}.`);
         if (Rx(c).kind !== 'land' && (c.card.cmc || 0) < ((cast && cast.card.cmc) || 0)) {
             const yes = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: cast ${c.card.name} without paying its mana cost?`, { card: c.card });
-            if (yes && await castFreeFrom(P, c)) return;
+            if (yes && await castFreeAuto(P, c)) return;
         }
         if (P.library.includes(c)) { pull(P.library, c); P.hand.push(c); log(`${c.card.name} is put into ${you(P) ? 'your' : 'their'} hand.`); }
     },
@@ -369,5 +369,281 @@ Object.assign(CMD, {
         const c = await pickOwn(P, pool, `${src.card.name}: return a creature card from your graveyard to the battlefield`, { optional: true }); if (!c) return;
         c.front = c.card; c.card = { ...c.card, text: '', type: c.card.type.replace(/\s—.*$/, '') + ' — Skeleton ' + (c.card.type.split('—')[1] || '').trim() };
         reanimateFrom(P, P, c); log(`${c.card.name} is a Skeleton with no abilities.`);
+    }
+});
+
+// ===== Chunk 3 =====
+Object.assign(TRIG_FN, {
+    c_discardCreature: (o, ctx) => !!ctx.P && ctx.P.i === o.owner && !!ctx.o && /\bCreature\b/.test(ctx.o.card.type),
+    c_main2Own: (o, ctx) => G.active === o.owner,
+    c_myCreatureTargeted: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && isCreature(ctx.o) && ctx.by !== undefined,
+    c_artifactEnters: (o, ctx) => !!ctx.o && ctx.o !== o && ctx.o.owner === o.owner && !ctx.o.token && /\bArtifact\b/.test(ctx.o.card.type),
+    c_equipmentEnters: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && !ctx.o.token && /\bEquipment\b/.test(ctx.o.card.type),
+    c_allyEnters: (o, ctx) => !!ctx.o && ctx.o !== o && ctx.o.owner === o.owner && isCreature(ctx.o) && hasType(ctx.o, 'Ally'),
+    c_earthDies: (o, ctx) => !!ctx.o && !!ctx.o.c_earthbent,
+    c_recordMill: (o, ctx) => { if (ctx.P && ctx.P.i !== o.owner) (ctx.cards || []).forEach(c => { c.c_milledTurn = G.turn; }); return false; },
+    c_selfAttacksFirebend: (o, ctx) => (ctx.list || []).includes(o)
+});
+Object.assign(CMD_SCORE, { c_hashaton: () => 5, c_florian: () => 6, c_gargos: () => 6, c_ultron: () => 5, c_firion: () => 4, c_firionSweep: () => 0, c_gilraen: () => 3, c_earthbend1: () => 5, c_kyoshi: () => 6, c_boulder: () => 6, c_firebend: () => 3, c_tivit: () => 5, c_nghathrod: () => 8, c_earthReturn: () => 4 });
+// Earthbend N: a land you control becomes a 0/0 haste creature with N +1/+1 counters; when it dies it returns to the battlefield tapped
+async function c_earthbend(P, n, src) {
+    const pool = P.bf.filter(x => /\bLand\b/.test(x.card.type) && !isCreature(x)); if (!pool.length || n <= 0) return null;
+    const x = await pickOwn(P, pool, `${src.card.name}: earthbend ${n} - target land you control`, { rank: (a, b) => (/\bBasic\b/.test(b.card.type) ? 1 : 0) - (/\bBasic\b/.test(a.card.type) ? 1 : 0) || (b.tapped ? 1 : 0) - (a.tapped ? 1 : 0) });
+    if (!x) return null;
+    x.permAnimated = { p: 0, q: 0 }; x.sick = false; x.c_earthbent = true; x.tkw.push('haste');
+    const got = putCounters(x, n, P); log(`${x.card.name} becomes a 0/0 creature with haste that's still a land, with ${got} +1/+1 counters (earthbend ${n}).`);
+    return x;
+}
+Object.assign(CMD, {
+    c_noop() {},
+    // Hashaton, Scarab's Fist
+    async c_hashaton(P, e, t, src) {
+        const c = G.ctxRaw && G.ctxRaw.o; if (!c || !P.gy.includes(c)) return;
+        if (!await mayPay(P, '{2}{U}', `${src.card.name}: pay {2}{U} to create a tapped 4/4 black Zombie copy of ${c.card.name}?`, src)) return;
+        const tok = tokenCopyOf(P, { ...c.card, colors: ['B'], type: c.card.type.replace(/\s—.*$/, '') + ' — Zombie' }, { p: 4, q: 4 }); tok.tapped = true;
+    },
+    // Florian, Voldaren Scion
+    async c_florian(P, e, t, src) {
+        const X = foes(P).reduce((a, F) => a + (F.lostTurn === G.turn ? (F.lostN || 0) : 0), 0); if (X <= 0) return;
+        const top = []; for (let i = 0; i < X && P.library.length; i++) top.push(P.library.pop()); if (!top.length) return;
+        log(`${P.name} ${you(P) ? 'look' : 'looks'} at the top ${top.length} cards of ${you(P) ? 'your' : 'their'} library.`);
+        const pick = await pickOwn(P, top, `${src.card.name}: exile one of these cards; you may play it this turn`, { rank: (a, b) => (b.card.cmc || 0) - (a.card.cmc || 0) });
+        c_bottomRandom(P, top.filter(c => c !== pick));
+        if (pick) exilePlayFrom(P, P, pick, G.turn);
+    },
+    // Gargos, Vicious Watcher: fights a creature you don't control
+    async c_gargos(P, e, t, src) {
+        if (!onBf(src.uid)) return;
+        const pool = foes(P).flatMap(F => F.bf.filter(x => isCreature(x) && !has(x, 'hexproof') && !has(x, 'shroud')));
+        const good = pool.filter(x => pow(src) >= tou(x) - x.dmg && pow(x) < tou(src) - src.dmg);
+        const x = await pickOwn(P, (P.isAI || AUTOPLAY) ? good : pool, `${src.card.name}: fight up to one target creature you don't control?`, { optional: true, rank: (a, b) => creatureValue(b) - creatureValue(a) }); if (!x) return;
+        log(`${src.card.name} fights ${x.card.name}.`); damage(x, Math.max(0, pow(src)), src); damage(src, Math.max(0, pow(x)), x);
+    },
+    // Ultron, Artificial Malevolence
+    async c_ultron(P, e, t, src) {
+        const x = G.ctxObj; if (!x || !onBf(x.uid)) return;
+        if (!await mayPay(P, '{2}', `${src.card.name}: pay {2} to create a token copy of ${x.card.name}?`, src)) return;
+        let card = x.card;
+        if (!/\bCreature\b/.test(card.type)) card = { ...card, type: card.type.replace(/\bArtifact\b/, 'Artifact Creature').replace(/(\s—.*)?$/, m => (m ? m + ' Robot Villain' : ' — Robot Villain')), power: '2', toughness: '2' };
+        tokenCopyOf(P, card);
+    },
+    // Firion, Wild Rose Warrior: a token copy of the Equipment with cheaper equip; sacrificed at the beginning of the next upkeep
+    c_firion(P, e, t, src) {
+        const x = G.ctxObj; if (!x || !onBf(x.uid)) return;
+        const tok = tokenCopyOf(P, { ...x.card, text: String(x.card.text || '').replace(/Equip (\{\d+\})(\{[^}]+\})*/g, (m, g) => m.replace(/Equip \{(\d+)\}/, (mm, k) => `Equip {${Math.max(0, +k - 2)}}`)) });
+        tok.c_sacUpkeep = G.turn; log(`${tok.card.name}'s equip abilities cost {2} less; it is sacrificed at the beginning of the next upkeep.`);
+    },
+    c_firionSweep(P, e, t, src) { allPerms().filter(x => x.c_sacUpkeep !== undefined).forEach(x => { log(`${x.card.name} is sacrificed.`); sacPerm(G.players[x.owner], x); }); },
+    // Gilraen, Dunedain Protector
+    async c_gilraen(P, e, t, src) {
+        const pool = P.bf.filter(x => isCreature(x) && x !== src); if (!pool.length) return;
+        const x = await pickOwn(P, pool, `${src.card.name}: exile another target creature you control`, { rank: (a, b) => creatureValue(a) - creatureValue(b) }); if (!x) return;
+        const tok = x.token, card = x;
+        leaveBattlefield(x, 'exile'); log(`${x.card.name} is exiled.`);
+        if (tok) return;
+        const now = (P.isAI || AUTOPLAY) ? false : await askYes(P, `${src.card.name}: return ${x.card.name} to the battlefield now? (Otherwise it returns at the end step with a vigilance counter and a lifelink counter.)`, { card: x.card, yes: 'Return it now', no: 'At the end step, with counters' });
+        const back = withCounters => { const O = G.players[card.owner]; if (!O.exile.includes(card)) return; pull(O.exile, card); putOntoBattlefield(O, card, false); if (withCounters) { card.ctr.vigilance = 1; card.ctr.lifelink = 1; log(`${card.card.name} gets a vigilance counter and a lifelink counter.`); } };
+        if (now) back(false); else atEndStep(() => back(true), `${x.card.name} returns to the battlefield.`);
+    },
+    // Earthbend cards
+    async c_earthbend1(P, e, t, src) { await c_earthbend(P, 1, src); },
+    async c_kyoshi(P, e, t, src) { const x = await c_earthbend(P, 8, src); if (x) { x.tapped = false; log(`${x.card.name} untaps.`); } },
+    async c_boulder(P, e, t, src) { await c_earthbend(P, P.bf.filter(x => isCreature(x) && pow(x) >= 4).length, src); },
+    c_earthReturn(P, e, t, src) {
+        const x = G.ctxRaw && G.ctxRaw.o; if (!x || !x.c_earthbent) return; x.c_earthbent = false; delete x.permAnimated;
+        const O = G.players[x.owner]; if (!O.gy.includes(x)) return;
+        pull(O.gy, x); putOntoBattlefield(O, x, true); log(`${x.card.name} returns to the battlefield tapped (earthbend).`);
+    },
+    // Firebending N: whenever this creature attacks, add N {R} until end of combat
+    c_firebend(P, e, t, src) { const n = e.n || 0; P.pool = (P.pool || []).concat(Array(n).fill('R')); P.keepPoolTurn = G.turn; log(`${P.name} add${you(P) ? '' : 's'} ${'{R}'.repeat(n)} (firebending ${n}).`); },
+    // Tivit, Seller of Secrets: each player votes for evidence (investigate) or bribery (Treasure)
+    async c_tivit(P, e, t, src) {
+        if (!VOTE_DEFS.tivit) VOTE_DEFS.tivit = { name: 'Tivit, Seller of Secrets', options: [{ key: 'evidence', label: 'Evidence', desc: 'the caster investigates per evidence vote' }, { key: 'bribery', label: 'Bribery', desc: 'the caster creates a Treasure per bribery vote' }], value: (k, X, caster) => forCaster(k === 'evidence' ? 3 : 2, X, caster) };
+        const r = await holdVote(P, src, 'tivit');
+        for (let k = 0; k < r.counts[0]; k++) applyEffect(P, { t: 'artToken', n: 1, kind: 'clue' }, null, src);
+        for (let k = 0; k < r.counts[1]; k++) makeArtifactToken(P, 'treasure');
+    },
+    // Captain N'ghathrod: an artifact or creature card put into an opponent's graveyard from their library this turn
+    async c_nghathrod(P, e, t, src) {
+        const pool = []; foes(P).forEach(F => F.gy.filter(c => c.c_milledTurn === G.turn && /\b(Artifact|Creature)\b/.test(c.card.type)).forEach(c => pool.push([F, c])));
+        if (!pool.length) return;
+        const c = await pickOwn(P, pool.map(a => a[1]), `${src.card.name}: put an artifact or creature card milled this turn onto the battlefield under your control`, { optional: true }); if (!c) return;
+        const F = pool.find(a => a[1] === c)[0]; reanimateFrom(P, F, c);
+    }
+});
+
+// ===== Chunk 4 =====
+Object.assign(TRIG_FN, {
+    c_zadaCast: (o, ctx) => !!ctx.o && ctx.P.i === o.owner && ['instant', 'sorcery'].includes(Rx(ctx.o).kind),
+    c_dealsOne: (o, ctx) => !!ctx.src && ctx.src !== o && ctx.src.owner === o.owner && ctx.n === 1,
+    c_anyCast: () => true,
+    c_oliviaWatch: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner,
+    c_clavDies: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && !!ctx.o.c_clav
+});
+Object.assign(CMD_SCORE, { c_zada: () => 6, c_irma: () => 4, c_ghyrson: () => 5, c_clav: () => 4, c_clavDies: () => 4, c_norin: () => 0, c_olivia: () => 8, c_oliviaSweep: () => 0 });
+const C_IRMA_LINE = 'At the beginning of combat on your turn, ~ becomes a copy of up to one other target creature you control, except her name is Irma, Part-Time Mutant and she has this ability. Then put a +1/+1 counter on it.';
+Object.assign(CMD, {
+    // Zada, Hedron Grinder: a spell that targets only Zada is copied for each other creature you control it could target
+    async c_zada(P, e, t, src) {
+        const o = G.ctxRaw && G.ctxRaw.o; const item = o && G.stack.find(i => i.o === o && i.kind === 'spell'); if (!item || !item.target || !item.target.o || item.target.o.uid !== src.uid) return;
+        const te = firstTargetEffect(o); if (!te) return;
+        const valid = validTargets(P, te, o).filter(v => v.o && v.o !== src && v.o.owner === P.i && isCreature(v.o)); if (!valid.length) return;
+        for (const v of valid) { log(`${src.card.name}: ${item.name} is copied for ${v.o.card.name}.`); await copySpellItem(P, item, { target: { o: v.o } }); }
+    },
+    // Irma, Part-Time Mutant: becomes a copy of another creature you control (keeping her name and this ability), then a +1/+1 counter
+    async c_irma(P, e, t, src) {
+        if (!onBf(src.uid)) return;
+        const pool = P.bf.filter(x => isCreature(x) && x !== src && !x.c_isCopy);
+        const x = await pickOwn(P, pool, `${src.card.name}: become a copy of up to one other creature you control?`, { optional: true, rank: (a, b) => creatureValue(b) - creatureValue(a) });
+        if (x && (P.isAI || AUTOPLAY ? creatureValue(x) > creatureValue(src) : true)) {
+            const name = src.card.name; src.copyOf = src.copyOf || src.card;
+            src.card = { ...x.card, id: `${x.card.id}-irma${uidSeq++}`, name, fullName: name, text: `${String(x.card.text || '').replace(/~|\bthis creature\b/g, '~')}\n${C_IRMA_LINE}`, type: x.card.type.replace(/Legendary /, '') };
+            log(`${name} becomes a copy of ${x.card.name}.`);
+        }
+        const got = putCounters(src, 1, P); log(`${src.card.name} gets ${got} +1/+1 counter.`);
+    },
+    // Ghyrson Starn, Kelermorph: another source you control deals exactly 1 damage; Ghyrson deals 2 to the same permanent or player
+    c_ghyrson(P, e, t, src) {
+        const raw = G.ctxRaw || {}; const tgt = raw.o || raw.P; if (!tgt || !onBf(src.uid)) return;
+        if (tgt.card && !onBf(tgt.uid)) return;
+        log(`${src.card.name} deals 2 damage to ${tgt.card ? tgt.card.name : tgt.name}.`); damage(tgt, 2, src);
+    },
+    // Clavileno, First of the Blessed: an attacking Vampire becomes a Demon and gains a death trigger
+    async c_clav(P, e, t, src) {
+        const pool = c_ctxList().filter(x => onBf(x.uid) && x.owner === P.i && hasType(x, 'Vampire') && !hasType(x, 'Demon')); if (!pool.length) return;
+        const x = await pickOwn(P, pool, `${src.card.name}: target attacking Vampire becomes a Demon`, { rank: (a, b) => creatureValue(b) - creatureValue(a) }); if (!x) return;
+        x.card = { ...x.card, id: `${x.card.id}-demon${uidSeq++}`, type: x.card.type.replace(/(—.*)$/, m => m + ' Demon') }; x.c_clav = true;
+        log(`${x.card.name} becomes a Demon in addition to its other types, and gains "When this creature dies, draw a card and create a tapped 4/3 white and black Vampire Demon creature token with flying."`);
+    },
+    async c_clavDies(P, e, t, src) {
+        const x = G.ctxRaw && G.ctxRaw.o; if (!x || !x.c_clav) return; x.c_clav = false;
+        drawCards(P, 1); await applyEffect(P, { t: 'token', n: 1, p: 4, q: 3, name: 'white black Vampire Demon', kw: ['flying'], tapped: true }, null, src);
+    },
+    // Norin the Wary: exile it when a player casts a spell or a creature attacks; back at the next end step
+    c_norin(P, e, t, src) {
+        if (!onBf(src.uid)) return; const O = G.players[src.owner];
+        leaveBattlefield(src, 'exile'); log(`${src.card.name} is exiled.`);
+        atEndStep(() => { if (O.exile.includes(src)) { pull(O.exile, src); putOntoBattlefield(O, src, false); } }, `${src.card.name} returns to the battlefield.`);
+    },
+    // Olivia, Crimson Bride: a creature card returns tapped and attacking; it is exiled once you control no legendary Vampire
+    async c_olivia(P, e, t, src) {
+        const pool = P.gy.filter(x => /\bCreature\b/.test(x.card.type)); if (!pool.length || !onBf(src.uid)) return;
+        const c = await pickOwn(P, pool, `${src.card.name}: return a creature card from your graveyard to the battlefield tapped and attacking`, { optional: true }); if (!c) return;
+        pull(P.gy, c); putOntoBattlefield(P, c, true); G.attackers.push(c.uid); c.c_exileNoVamp = true; if (src.atkTo !== undefined) c.atkTo = src.atkTo;
+        log(`${c.card.name} enters tapped and attacking.`);
+    },
+    c_oliviaSweep(P, e, t, src) {
+        if (P.bf.some(x => isCreature(x) && /Legendary/.test(x.card.type) && hasType(x, 'Vampire'))) return;
+        P.bf.filter(x => x.c_exileNoVamp).forEach(x => { x.c_exileNoVamp = false; log(`${x.card.name} is exiled (no legendary Vampire).`); leaveBattlefield(x, 'exile'); });
+    }
+});
+
+// ===== Chunk 5: abilities with X =====
+async function c_pickOpp(P, why) {
+    const f = foes(P).slice().sort((a, b) => a.life - b.life); if (f.length <= 1) return f[0] || null;
+    if (P.isAI || AUTOPLAY) return f[0];
+    const i = await askMode(P, why, f.map(F => `${F.name} (${F.life} life)`)); return f[i] || f[0];
+}
+// An activated ability with X in its cost: effect carries "{X}" strings that withX fills in at activation
+function c_actX(R, line, costText, effect, patch) { const a = parseActivated(`${costText}: Draw X cards.`, R); a.effects = [effect]; a.text = line; if (patch) patch(a); R.acts.push(a); return a; }
+COND_EXTRA.push([/^you control a Clue$/, () => P => P.bf.some(x => /\bClue\b/.test(x.card.type))]);
+{
+    const c_dol = dieOrLeave;
+    dieOrLeave = function (o, zone) { if (o && o.ctr && o.ctr.finality > 0 && zone === 'gy' && !o.token) { log(`${o.card.name} is exiled instead (finality counter).`); zone = 'exile'; } return c_dol(o, zone); };
+}
+Object.assign(CMD_SCORE, { c_rydia: () => 6, c_oona: () => 4, c_gogo: () => 3, c_lonis: () => 4, c_katara: () => 6 });
+Object.assign(CMD, {
+    // Rydia, Summoner of Mist: a Saga card with mana value X returns with a finality counter and haste
+    async c_rydia(P, e, t, src) {
+        const X = Number(e.x); const pool = P.gy.filter(c => /\bSaga\b/.test(c.card.type) && (c.card.cmc || 0) === X); if (!pool.length) return;
+        const c = await pickOwn(P, pool, `${src.card.name}: return a Saga card with mana value ${X} from your graveyard`, { optional: true }); if (!c) return;
+        pull(P.gy, c); putOntoBattlefield(P, c, false); c.ctr.finality = 1; c.tkw.push('haste'); c.ctr.lore = 1; sagaChapter(P, c);
+        log(`${c.card.name} gets a finality counter.`);
+    },
+    // Oona, Queen of the Fae
+    async c_oona(P, e, t, src) {
+        const X = Number(e.x); const F = await c_pickOpp(P, `${src.card.name}: target opponent`); if (!F || X <= 0) return;
+        const COL = { W: 'white', U: 'blue', B: 'black', R: 'red', G: 'green' };
+        const tally = {}; F.library.forEach(c => (c.card.colors || []).forEach(k => { tally[k] = (tally[k] || 0) + 1; }));
+        let col = Object.keys(COL).sort((a, b) => (tally[b] || 0) - (tally[a] || 0))[0];
+        if (!(P.isAI || AUTOPLAY)) { const i = await askMode(P, `${src.card.name}: choose a color`, Object.values(COL)); col = Object.keys(COL)[i] || col; }
+        let n = 0; for (let i = 0; i < X && F.library.length; i++) { const c = F.library.pop(); F.exile.push(c); if ((c.card.colors || []).includes(col)) n++; log(`${F.name} exile${you(F) ? '' : 's'} ${c.card.name}.`); }
+        if (n > 0) await applyEffect(P, { t: 'token', n, p: 1, q: 1, name: 'blue black Faerie Rogue', kw: ['flying'] }, null, src);
+    },
+    // Gogo, Master of Mimicry: copy an activated or triggered ability you control X times
+    async c_gogo(P, e, t, src) {
+        const X = Number(e.x); if (!(X > 0)) return;
+        const items = G.stack.filter(it => it.kind === 'trigger' && it.P === P && it.o !== src && !it.copy); if (!items.length) return;
+        let item = items[items.length - 1];
+        if (!(P.isAI || AUTOPLAY) && items.length > 1) { const i = await askMode(P, `${src.card.name}: copy which ability?`, items.map(it => it.name || (it.o && it.o.card.name) || 'ability')); item = items[i] || item; }
+        for (let k = 0; k < X; k++) G.stack.push({ ...item, id: stackSeq++, copy: true });
+        log(`${src.card.name}: ${item.name || 'an ability'} is copied ${X} time${X === 1 ? '' : 's'}.`);
+    },
+    // Lonis, Cryptozoologist: sacrifice X Clues, reveal the top X cards of an opponent's library
+    async c_lonis(P, e, t, src) {
+        const clues = P.bf.filter(x => /\bClue\b/.test(x.card.type)); if (!clues.length) return;
+        const F = await c_pickOpp(P, `${src.card.name}: target opponent`); if (!F) return;
+        const X = (P.isAI || AUTOPLAY) ? Math.min(clues.length, 4) : await askNumber(P, `${src.card.name}: sacrifice how many Clues?`, 0, clues.length, Math.min(clues.length, 3), { card: src.card });
+        if (!X) return; clues.slice(0, X).forEach(c => sacPerm(P, c));
+        const top = []; for (let i = 0; i < X && F.library.length; i++) top.push(F.library.pop());
+        log(`${F.name} reveal${you(F) ? '' : 's'} ${top.map(c => c.card.name).join(', ')}.`);
+        const pool = top.filter(c => !/\bLand\b/.test(c.card.type) && (c.card.cmc || 0) <= X);
+        const pick = await pickOwn(P, pool, `${src.card.name}: put a nonland permanent card with mana value ${X} or less onto the battlefield under your control`, { optional: true });
+        const rest = top.filter(c => c !== pick); shuffle(rest); F.library.unshift(...rest);
+        if (pick) reanimateFromLib(P, F, pick);
+    },
+    // Katara, Water Tribe's Hope: your creatures have base power and toughness X/X until end of turn
+    c_katara(P, e, t, src) {
+        const X = Number(e.x); if (!(X > 0) || G.active !== P.i) return;
+        P.bf.filter(isCreature).forEach(x => { x.baseSet = { turn: G.turn, p: X, q: X }; }); log(`Creatures ${you(P) ? 'you control' : `${P.name} controls`} have base power and toughness ${X}/${X} until end of turn.`);
+    }
+});
+// A card put onto the battlefield from another player's library
+function reanimateFromLib(P, F, c) { pull(F.library, c); resetObj(c); if (F !== P) { c.realOwner = c.owner; c.owner = P.i; } c.enteredTurn = G.turn; P.bf.push(c); log(`${c.card.name} enters the battlefield under ${you(P) ? 'your' : `${P.name}'s`} control.`); fire('enters', { o: c }); if (Rx(c).etb.length) (G.trigQ = G.trigQ || []).push({ P, o: c, effects: Rx(c).etb }); }
+
+// ===== Chunk 6 =====
+const c_belloOk = x => ((/\bArtifact\b/.test(x.card.type) && !/\bEquipment\b/.test(x.card.type)) || (/\bEnchantment\b/.test(x.card.type) && !/\bAura\b/.test(x.card.type))) && (x.card.cmc || 0) >= 4 && !isCreature(x);
+Object.assign(TRIG_FN, {
+    c_belloEnters: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && G.active === o.owner && c_belloOk(ctx.o),
+    c_belloHit: (o, ctx) => !!ctx.src && ctx.src.owner === o.owner && !!ctx.src.c_bello && (ctx.hit || []).some(H => H.i !== o.owner),
+    c_faramirWatch: (o, ctx) => { (ctx.list || []).forEach(x => { if (x.owner !== o.owner && c_attacksPlayer(x, o.owner)) { const X = G.players[x.owner]; X.c_attackedFaramir = G.turn; } }); return false; },
+    c_faramirEnd: (o, ctx) => { const P = G.players[o.owner]; return P.c_faramir !== undefined && P.c_faramir === G.active && G.active !== o.owner; }
+});
+Object.assign(CMD_SCORE, { c_belloOn: () => 0, c_belloOff: () => 0, c_belloOne: () => 0, c_belloDraw: () => 3, c_faramirChoose: () => 0, c_faramirEnd: () => 6, c_kefka: () => 8, c_locke: () => 5 });
+function c_belloAnimate(x) {
+    x.permAnimated = { p: 4, q: 4 }; x.c_bello = true; x.sick = false; x.tkw.push('indestructible', 'haste');
+    log(`${x.card.name} becomes a 4/4 Elemental creature with indestructible and haste.`);
+}
+Object.assign(CMD, {
+    // Bello, Bard of the Brambles: during your turn your big artifacts and enchantments are 4/4 Elemental creatures
+    c_belloOn(P, e, t, src) { P.bf.filter(c_belloOk).forEach(c_belloAnimate); },
+    c_belloOne(P, e, t, src) { const x = G.ctxObj; if (x && onBf(x.uid) && c_belloOk(x)) c_belloAnimate(x); },
+    c_belloOff(P, e, t, src) { P.bf.filter(x => x.c_bello).forEach(x => { x.c_bello = false; delete x.permAnimated; log(`${x.card.name} stops being a creature.`); }); },
+    c_belloDraw(P, e, t, src) { drawCards(P, 1); },
+    // Faramir, Prince of Ithilien: choose an opponent; at their next end step, draw if they didn't attack you, else three Human Soldiers
+    async c_faramirChoose(P, e, t, src) { const F = await c_pickOpp(P, `${src.card.name}: choose an opponent`); if (F) { P.c_faramir = F.i; F.c_attackedFaramir = -1; log(`${P.name} ${you(P) ? 'choose' : 'chooses'} ${F.name} (${src.card.name}).`); } },
+    async c_faramirEnd(P, e, t, src) {
+        const F = G.players[P.c_faramir]; P.c_faramir = undefined; if (!F) return;
+        if (F.c_attackedFaramir === G.turn) await applyEffect(P, { t: 'token', n: 3, p: 1, q: 1, name: 'white Human Soldier', kw: [] }, null, src);
+        else drawCards(P, 1);
+    },
+    // Kefka, Dancing Mad: exile a card at random from each opponent's graveyard and cast the spells for free; owners lose life equal to mana value
+    async c_kefka(P, e, t, src) {
+        const got = []; foes(P).forEach(F => { if (F.gy.length) { const c = F.gy.splice(rand(F.gy.length), 1)[0]; c.realOwner = F.i; F.exile.push(c); got.push([F, c]); log(`${c.card.name} is exiled from ${F.name === 'You' ? 'your' : F.name + "'s"} graveyard.`); } });
+        for (const [F, c] of got) {
+            if (Rx(c).kind === 'land' || Rx(c).support === 'none') continue;
+            const yes = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: cast ${c.card.name} without paying its mana cost?`, { card: c.card });
+            if (!yes) continue;
+            const mv = c.card.cmc || 0;
+            if (await castFreeAuto(P, c) && mv > 0) { F.life -= mv; log(`${F.name} ${you(F) ? 'lose' : 'loses'} ${mv} life.`); fire('loseLife', { P: F, n: mv }); }
+        }
+    },
+    // Locke, Treasure Hunter: each player mills a card; a Treasure if a land was milled; you may cast a spell from among them
+    async c_locke(P, e, t, src) {
+        const milled = []; G.players.filter(X => !X.out).forEach(X => doMill(X, 1).forEach(c => milled.push([X, c])));
+        if (milled.some(([X, c]) => /\bLand\b/.test(c.card.type))) { makeArtifactToken(P, 'treasure'); log(`${P.name} ${you(P) ? 'create' : 'creates'} a Treasure token.`); }
+        const spells = milled.filter(([X, c]) => Rx(c).kind !== 'land' && Rx(c).support !== 'none'); if (!spells.length) return;
+        for (const [X, c] of spells) { if (X !== P) { pull(X.gy, c); c.realOwner = X.i; c.owner = P.i; c.playUntil = G.turn; c.playAny = true; P.exile.push(c); } else c.gyCastTurn = G.turn; }
+        log(`${P.name} may cast a spell from among the milled cards this turn.`);
     }
 });
