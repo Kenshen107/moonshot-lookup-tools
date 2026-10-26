@@ -46,8 +46,6 @@ clx("When ~ dies, exile it and return to the battlefield all artifact and creatu
 clx("Tapped creatures you control can block as though they were untapped.", R => { R.i_masako = true; });
 // Eloise, Nephalia Sleuth
 clx("Whenever you sacrifice a token, surveil 1.", R => { R.trig.push({ ev: 'sacrificed', fn: 'i_mySacToken', effects: [{ t: 'surveil', n: 1 }] }); });
-// Jasmine Boreal of the Seven
-clx("Creatures you control with no abilities can't be blocked by creatures with abilities.", R => { R.i_jasmine = true; });
 // Nadier, Agent of the Duskenel
 clx("When ~ leaves the battlefield, create a number of 1/1 green Elf Warrior creature tokens equal to its power.", R => { R.trig.push({ ev: 'leaves', fn: 'i_selfLeaves', effects: [cmd('i_nadier')] }); });
 // Nin, the Pain Artist

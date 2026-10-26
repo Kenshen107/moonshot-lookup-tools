@@ -36,7 +36,7 @@ Object.assign(TRIG_FN, {
     j_myEnd: (o, ctx) => G.active === o.owner,
     j_rhinoCast: (o, ctx) => { if (ctx.P.i === o.owner && (ctx.o.card.cmc || 0) >= 4) ctx.P.j_bigCast = G.turn; return false; },
     j_raffCast: (o, ctx) => ctx.P.i === o.owner && /\b(Instant|Sorcery)\b/.test(ctx.o.card.type),
-    j_nikara: (o, ctx) => !!ctx.o && ctx.o !== o && ctx.o.owner === o.owner && !!ctx.lki && /\bCreature\b/.test(ctx.lki.card ? ctx.lki.card.type : ctx.o.card.type) && ((ctx.lki.counters || 0) > 0 || Object.values(ctx.lki.ctr || {}).some(v => v > 0)),
+    j_nikara: (o, ctx) => !!ctx.o && ctx.o !== o && ctx.o.owner === o.owner && /\bCreature\b/.test(ctx.o.card.type) && ((ctx.o.lastCounters || 0) > 0 || ctx.o.counters > 0 || Object.values(ctx.o.ctr || {}).some(v => v > 0)),
     j_dwarfHit: (o, ctx) => !!ctx.src && ctx.src.owner === o.owner && hasType(ctx.src, 'Dwarf') && (ctx.hit || []).some(X => X.i !== o.owner),
     j_heroHit: (o, ctx) => !!ctx.src && ctx.src.owner === o.owner && hasType(ctx.src, 'Hero') && (ctx.hit || []).some(X => X.i !== o.owner),
     j_selfHit: (o, ctx) => ctx.src === o && (ctx.hit || []).some(X => X.i !== o.owner),
@@ -47,7 +47,7 @@ Object.assign(TRIG_FN, {
     j_insects: (o, ctx) => (ctx.list || []).some(x => x.owner === o.owner && hasType(x, 'Insect')),
     j_enchAttack: (o, ctx) => (ctx.list || []).some(x => x.owner === o.owner && (/\bEnchantment\b/.test(x.card.type) || allPerms().some(a => a.attachedTo === x.uid && /\bAura\b/.test(a.card.type)))),
     j_vogar: (o, ctx) => G.active === o.owner && !!ctx.o && ctx.o !== o,
-    j_edea: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && ctx.o.realOwner !== undefined && ctx.o.realOwner !== o.owner && !ctx.o.token
+    j_edea: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && ctx.o.realOwner !== undefined && ctx.o.realOwner !== o.owner && !ctx.o.token && ((ctx.o.j_edeaOwner = ctx.o.realOwner) !== undefined)
 });
 Object.assign(CMD_SCORE, { j_bolas: () => 6, j_capar: () => 5, j_geist: () => 7, j_kydele: () => 3, j_shadowfax: () => 8, j_sally: () => 6, j_jirina: () => 3, j_gregor: () => 6, j_jet: () => 7, j_ryan: () => 6, j_rufus: () => 4, j_toshiro: () => 5, j_nath: () => 3, j_vargus: () => 4, j_jorn: () => 3, j_sami: () => 4, j_mai: () => 5, j_rhino: () => 3, j_karvanista: () => 4, j_raff: () => 3, j_bosco: () => 3, j_wilfred: () => 5, j_nikara: () => 3, j_rulik: () => 5, j_torsten: () => 6, j_mishra: () => 2, j_muzzio: () => 6, j_eutropia: () => 4, j_arjun: () => 4, j_brigid: () => 5, j_pol: () => 5, j_ashling: () => 7, j_orah: () => 6, j_vrestin: () => 5, j_kestia: () => 3, j_pia: () => 3, j_shizuko: () => 4, j_vogar: () => 3, j_cait: () => 4, j_doctor1: () => 3, j_atris: () => 5, j_urza: () => 3, j_edea: () => 5 });
 
@@ -311,8 +311,8 @@ Object.assign(CMD, {
     },
     // Edea, Possessed Sorceress: a creature you control but don't own dies; it returns under its owner's control and you draw
     j_edea(P, e, t, src) {
-        const d = G.ctxRaw && G.ctxRaw.o; if (!d || d.realOwner === undefined) return;
-        const H = G.players[d.realOwner]; if (!H || !H.gy.includes(d)) return;
+        const d = G.ctxRaw && G.ctxRaw.o; if (!d || d.j_edeaOwner === undefined) return;
+        const H = G.players[d.j_edeaOwner]; delete d.j_edeaOwner; if (!H || !H.gy.includes(d)) return;
         pull(H.gy, d); d.owner = H.i; delete d.realOwner; putOntoBattlefield(H, d); log(`${d.card.name} returns to the battlefield under ${H.name === 'You' ? 'your' : H.name + "'s"} control.`); drawCards(P, 1);
     }
 });

@@ -55,7 +55,7 @@ Object.assign(TRIG_FN, {
     // Estinien: remember who ~ or a Dragon of mine dealt combat damage to this turn (no effect of its own)
     h_estNote: (o, ctx) => { if (ctx.src && ctx.src.owner === o.owner && (ctx.src === o || hasType(ctx.src, 'Dragon'))) { const P = G.players[o.owner]; const s = h_note(P, 'est') || []; h_victims(o, ctx).forEach(F => { if (!s.includes(F.i)) s.push(F.i); }); h_note(P, 'est', s); } return false; },
     h_myMain2: (o, ctx) => G.active === o.owner,
-    h_mathasDies: (o, ctx) => !!ctx.lki && !!(ctx.lki.ctr || {}).bounty,
+    h_mathasDies: (o, ctx) => !!((ctx.o && ctx.o.ctr && ctx.o.ctr.bounty) || (ctx.lki && ctx.lki.ctr && ctx.lki.ctr.bounty)),
     h_newcomerHits: (o, ctx) => !!ctx.src && ctx.src.owner === o.owner && ctx.src.enteredTurn === G.turn && (ctx.hit || []).some(H => H.i !== o.owner),
     h_mineLeaves: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner,
     h_markLeft: (o, ctx) => { if (ctx.o && ctx.o.owner === o.owner) h_note(G.players[o.owner], 'left', true); return false; },
@@ -139,7 +139,7 @@ Object.assign(CMD, {
         const pool = P.bf.filter(x => isCreature(x) && x !== src || (x === src && false));
         const others = P.bf.filter(x => isCreature(x));
         const max = others.length; if (max <= 0) return;
-        let X = h_human(P) ? await askNumber(P, `${src.card.name}: sacrifice how many creatures?`, 0, max, Math.min(2, max), { card: src.card }) : Math.min(max, others.filter(x => x !== src && creatureValue(x) < 3).length);
+        let X = h_human(P) ? await askNumber(P, `${src.card.name}: sacrifice how many creatures?`, 0, max, Math.min(2, max), { card: src.card }) : Math.min(3, others.filter(x => x !== src && (x.token || creatureValue(x) <= 3)).length);
         if (!X) return;
         const chosen = await chooseSacN(P, others, X, src.card.name); X = chosen.length; if (!X) return;
         chosen.forEach(x => { fire('sacrificed', { o: x }); dieOrLeave(x, 'gy'); });
@@ -382,7 +382,7 @@ Object.assign(CMD, {
     async h_lonis(P, e, t, src) { const n = (G.ctxRaw || {}).n || 1; for (let k = 0; k < n; k++) makeArtifactToken(P, 'clue'); },
     // Rhys, the Evermore: remove any number of counters from target creature you control
     async h_rhys(P, e, t, src) {
-        const x = await pickOwn(P, P.bf.filter(c => isCreature(c) && h_nctr(c) > 0), `${src.card.name}: remove counters from target creature you control`, { rank: (a, b) => (a.counters < 0 ? -1 : 1) - (b.counters < 0 ? -1 : 1) || h_nctr(b) - h_nctr(a) }); if (!x) return;
+        const x = await pickOwn(P, P.bf.filter(c => isCreature(c) && (h_nctr(c) > 0 || c.counters < 0)), `${src.card.name}: remove counters from target creature you control`, { rank: (a, b) => (a.counters < 0 ? -1 : 1) - (b.counters < 0 ? -1 : 1) || h_nctr(b) - h_nctr(a) }); if (!x) return;
         if (x.counters < 0) { log(`${x.card.name} loses its -1/-1 counters.`); x.counters = 0; }
         const neg = Object.entries(x.ctr || {}).filter(([k, v]) => v > 0 && ['stun', 'shield', 'bounty', 'time', 'fade'].includes(k) === false); // other counters stay unless the player asks
         if (h_human(P) && x.counters > 0) { const n = await askNumber(P, `${src.card.name}: remove how many +1/+1 counters from ${x.card.name}?`, 0, x.counters, 0, { card: x.card }); if (n) { x.counters -= n; log(`${n} counter${n === 1 ? '' : 's'} removed from ${x.card.name}.`); } }
