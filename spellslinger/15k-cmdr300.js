@@ -304,7 +304,7 @@ Object.assign(CMD, {
     },
     kioraScion(P, e, t, src) {
         if (P.bf.some(x => x.token && x.card.name === 'Scion of the Deep')) return;
-        applyEffect(P, { t: 'token', n: 1, p: 8, q: 8, name: 'blue Octopus', kw: [], named: 'Scion of the Deep' }, null, src);
+        applyEffect(P, { t: 'token', n: 1, p: 8, q: 8, name: 'blue Octopus', kw: [], named: 'Scion of the Deep', legendary: true }, null, src);
     },
     severina(P, e, t, src) { const x = (G.attackers || []).map(onBf).filter(y => y && y !== src && y.owner === P.i).length; if (x <= 0) return; foes(P).forEach(F => { F.life -= x; log(`${F.name} lose${you(F) ? '' : 's'} ${x} life.`); fire('loseLife', { P: F, n: x }); }); },
     garna(P, e, t, src) { const x = G.ctxRaw && G.ctxRaw.o; if (!x) return; if (x._wasAtk) drawCards(P, 1); else foes(P).forEach(F => { damage(F, 1, src); }); },
@@ -709,5 +709,85 @@ Object.assign(CMD, {
     async raphLeo(P, e, t, src) {
         const at = (G.attackers || []).map(onBf).filter(x => x && x.owner === P.i && x.tapped); at.slice(0, 2).forEach(x => { x.tapped = false; }); G.extraCombat = (G.extraCombat || 0) + 1;
         log(`${P.name} untap${you(P) ? '' : 's'} up to two attacking creatures; there will be an additional combat phase after this one.`);
+    },
+});
+
+// ===== Batch 6 =====
+function maxHandSize(P) {
+    let m = 7;
+    for (const x of allPerms()) {
+        if (x.owner === P.i || lostAbilities(x)) continue;
+        const R = Rx(x);
+        if (R.oppHandReduce) m -= R.oppHandReduce;
+        if (R.oppHandWinter) { const X = G.players[x.owner]; const ty = new Set(); X.gy.forEach(c => ['Artifact', 'Creature', 'Enchantment', 'Instant', 'Land', 'Planeswalker', 'Sorcery', 'Battle', 'Kindred'].forEach(w => { if (new RegExp(`\\b${w}\\b`).test(c.card.type)) ty.add(w); })); if (ty.size >= 4) m = Math.min(m, 7 - ty.size); }
+    }
+    return Math.max(0, m);
+}
+Object.assign(TRIG_FN, {
+    myCreatureAlone: (o, ctx) => (ctx.list || []).length === 1 && ctx.list[0].owner === o.owner,
+    twoCreaturesEntered: (o, ctx) => (G.entered || []).filter(e => e.turn === G.turn && e.owner === o.owner && e.creature).length >= 2,
+    anyCreatureSacrificed: (o, ctx) => !!ctx.o && isCreature(ctx.o) || !!ctx.o && /\bCreature\b/.test(ctx.o.card.type),
+    counterCreatureHit: (o, ctx) => !!ctx.src && ctx.src.owner === o.owner && ctx.src.counters > 0 && (ctx.step === undefined || (o.lastStepC !== ctx.step && ((o.lastStepC = ctx.step), true))),
+    myNontokenLeaves: (o, ctx) => !!ctx.o && !ctx.o.token && ctx.o.owner === o.owner && /\bCreature\b/.test(ctx.o.card.type),
+    selfTappedScry: (o, ctx) => ctx.P.i === o.owner && o.tapped,
+    hasteAttacker: (o, ctx) => (ctx.list || []).some(x => x.owner === o.owner && has(x, 'haste')),
+    selfNoncombatDamage: (o, ctx) => ctx.o === o && !G.inCombatDamage,
+    bigAttack: (o, ctx) => (ctx.list || []).some(x => x.owner === o.owner && pow(x) >= 4),
+    diedWithCounter: (o, ctx) => !!ctx.o && (ctx.o === o || ctx.o.owner === o.owner) && (ctx.o.counters > 0 || (ctx.o.lastCounters || 0) > 0),
+    threeArtifactsEntered: (o, ctx) => (G.entered || []).filter(e => e.turn === G.turn && e.owner === o.owner && /\bArtifact\b/.test(e.o.card.type)).length >= 3,
+    fourCreaturesInGy: (o, ctx) => G.players[o.owner].gy.filter(c => /\bCreature\b/.test(c.card.type)).length >= 4,
+    artifactOrLesson: (o, ctx) => ctx.P.i === o.owner && /\b(Artifact|Lesson)\b/.test(ctx.o.card.type),
+});
+COND_EXTRA.push(
+    [/^you control three or more artifacts$/, () => P => P.bf.filter(x => /\bArtifact\b/.test(x.card.type)).length >= 3],
+    [/^you control a creature with a \+1\/\+1 counter on it$/, () => P => P.bf.some(x => isCreature(x) && x.counters > 0)]
+);
+Object.assign(CMD_SCORE, { spiderNoir: () => 4, piandao: () => 4, verix: () => 7, felothar: () => 5, grunn: () => 4, kemba: () => 4, aangKatara: () => 6, tolsimir: () => 4, livaan: () => 3, smaug: () => 4, ojutaiSoW: () => 4, bolster2: () => 4, jorKadeenFG: () => 4, slurrk: () => 4, brightPalm: () => 4, viconia: () => 4, ghave: () => 3, prossh: () => 5, eivor: () => 5, shantotto: () => 4, madameNull: () => 3, piru: () => 5, totentanz: () => 2, valduk: () => 5, yennett: () => 4 });
+const putSpec = (P, name, p, q, kw, extra) => applyEffect(P, { t: 'token', n: 1, p, q, name, kw: kw || [], ...(extra || {}) }, null, G.players[P.i].bf[0] || { card: { name: 'effect' } });
+Object.assign(CMD, {
+    pumpSelf(P, e, t, src) { if (onBf(src.uid)) { src.tp += e.p || 0; src.tq += e.q || 0; log(`${src.card.name} gets +${e.p || 0}/+${e.q || 0} until end of turn.`); } },
+    async spiderNoir(P, e, t, src) { const x = (G.ctxRaw && G.ctxRaw.list && G.ctxRaw.list[0]) || null; if (x && onBf(x.uid)) { putCounters(x, 1, P); log(`${P.name} surveil${you(P) ? '' : 's'} ${x.counters}.`); } },
+    async piandao(P, e, t, src) { await lookTopPick(P, 4, c => hasType(c, 'Ally') || /\bEquipment\b/.test(c.card.type) || /\bLesson\b/.test(c.card.type), 'reveal an Ally, Equipment, or Lesson card', src); },
+    verix(P, e, t, src) { if (src.kicked || src.wasKicked) applyEffect(P, { t: 'token', n: 1, p: 4, q: 4, name: 'red Dragon', kw: ['flying'], named: 'Karox Bladewing', legendary: true }, null, src); },
+    async felothar(P, e, t, src) {
+        const pool = P.bf.filter(x => !/\bLand\b/.test(x.card.type)); if (!pool.length) return;
+        const f = (P.isAI || AUTOPLAY) ? pool.filter(x => x.token || permValue(x) <= 2)[0] : await pickOwn(P, pool, `${src.card.name}: sacrifice a nonland permanent?`, { optional: true });
+        if (!f) return; sacPerm(P, f); P.bf.filter(isCreature).forEach(x => putCounters(x, 1, P));
+    },
+    grunn(P, e, t, src) { if (!onBf(src.uid)) return; src.tp += pow(src); src.tq += tou(src); log(`${src.card.name}'s power and toughness are doubled until end of turn.`); },
+    kemba(P, e, t, src) { const n = allPerms().filter(a => a.attachedTo === src.uid && /\bEquipment\b/.test(a.card.type)).length; if (n > 0) applyEffect(P, { t: 'token', n, p: 2, q: 2, name: 'white Cat', kw: [] }, null, src); },
+    aangKatara(P, e, t, src) { const n = P.bf.filter(x => x.tapped && (isCreature(x) || /\bArtifact\b/.test(x.card.type))).length; if (n > 0) applyEffect(P, { t: 'token', n, p: 1, q: 1, name: 'white Ally', kw: [] }, null, src); },
+    tolsimir(P, e, t, src) { if (P.bf.some(x => x.token && x.card.name === 'Voja')) return; applyEffect(P, { t: 'token', n: 1, p: 2, q: 2, name: 'green white Wolf', kw: [], named: 'Voja', legendary: true }, null, src); },
+    async livaan(P, e, t, src) { const sp = G.ctxRaw && G.ctxRaw.o; const x = await pickOwn(P, P.bf.filter(isCreature), `${src.card.name}: target creature gets +X/+0`, { rank: (a, b) => pow(b) - pow(a) }); if (x && sp) { x.tp += sp.card.cmc || 0; log(`${x.card.name} gets +${sp.card.cmc || 0}/+0 until end of turn.`); } },
+    smaug(P, e, t, src) { const n = (G.ctxRaw && G.ctxRaw.n) || G.ctxCount || 0; if (n > 0) applyEffect(P, { t: 'artToken', kind: 'treasure', n }, null, src); },
+    async ojutaiSoW(P, e, t, src) { const pool = foes(P).flatMap(F => F.bf).filter(x => !/\bLand\b/.test(x.card.type)); const x = (P.isAI || AUTOPLAY) ? pool.sort((a, b) => permValue(b) - permValue(a))[0] : await pickCard(P, pool, `${src.card.name}: tap target nonland permanent`, { optional: true }); if (x) { x.tapped = true; x.skipUntap = true; log(`${x.card.name} is tapped and won't untap during its controller's next untap step.`); } },
+    bolster2(P, e, t, src) { const cs = P.bf.filter(isCreature); if (!cs.length) return; const w = cs.sort((a, b) => tou(a) - tou(b))[0]; putCounters(w, 2, P); log(`${w.card.name} gets two +1/+1 counters (bolster 2).`); },
+    jorKadeenFG(P, e, t, src) { const n = P.bf.filter(x => isCreature(x) && allPerms().some(a => a.attachedTo === x.uid && /\bEquipment\b/.test(a.card.type))).length; if (!onBf(src.uid)) return; src.tp += n; src.tq += n; if (pow(src) >= 4) drawCards(P, 1); },
+    slurrk(P, e, t, src) { P.bf.filter(x => isCreature(x) && x.counters > 0).forEach(x => putCounters(x, 1, P)); },
+    async brightPalm(P, e, t, src) {
+        const pool = P.bf.filter(x => isCreature(x) && x.counters > 0); const x = await pickOwn(P, pool, `${src.card.name}: double the +1/+1 counters on a creature`, { rank: (a, b) => b.counters - a.counters });
+        if (x) { putCounters(x, x.counters, P); x.smallCantBlock = G.turn; log(`${x.card.name}'s counters are doubled.`); }
+    },
+    viconia(P, e, t, src) { const pool = P.gy.filter(c => /\bCreature\b/.test(c.card.type)); if (!pool.length) return; const c = pool[rand(pool.length)]; pull(P.gy, c); P.hand.push(c); log(`${c.card.name} returns to ${you(P) ? 'your' : P.name + "'s"} hand at random.`); },
+    ghave(P, e, t, src) { const x = P.bf.find(y => isCreature(y) && y.counters > 0); if (!x) return; x.counters -= 1; log(`A +1/+1 counter is removed from ${x.card.name}.`); applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'green Saproling', kw: [] }, null, src); },
+    prossh(P, e, t, src) { const x = src.card.cmc || 0; if (x > 0) applyEffect(P, { t: 'token', n: x, p: 0, q: 1, name: 'red Kobold', kw: [], named: 'Kobolds of Kher Keep' }, null, src); },
+    async eivor(P, e, t, src) {
+        const n = (G.ctxRaw && G.ctxRaw.n) || 0; if (n <= 0) return; const milled = doMill(P, n);
+        const saga = milled.find(c => /\bSaga\b/.test(c.card.type)), land = milled.find(c => /\bLand\b/.test(c.card.type));
+        for (const c of [saga, land]) if (c && P.gy.includes(c)) { pull(P.gy, c); putOntoBattlefield(P, c); if (/\bLand\b/.test(c.card.type)) fire('landfall', { o: c }); log(`${c.card.name} enters the battlefield.`); }
+    },
+    shantotto(P, e, t, src) { const sp = G.ctxRaw && G.ctxRaw.o; const x = sp ? (sp.card.cmc || 0) : 0; if (onBf(src.uid)) src.tp += x; if (x >= 4) drawCards(P, 1); },
+    async madameNull(P, e, t, src) {
+        const x = G.ctxObj; if (!x || !onBf(x.uid)) return; const n = Math.max(0, pow(x)); if (n <= 0 || P.life <= n) return;
+        const ok = (P.isAI || AUTOPLAY) ? P.life > n * 3 : await askYes(P, `${src.card.name}: pay ${n} life to put ${n} +1/+1 counters on ${x.card.name}?`, { card: src.card });
+        if (ok) { P.life -= n; fire('loseLife', { P, n }); putCounters(x, n, P); }
+    },
+    piru(P, e, t, src) { allPerms().filter(x => isCreature(x) && !/\bLegendary\b/.test(x.card.type)).forEach(x => damage(x, 7, src)); },
+    async totentanz(P, e, t, src) { const pool = (G.attackers || []).map(onBf).filter(x => x && x.owner === P.i && hasType(x, 'Rat')); const x = await pickOwn(P, pool, `${src.card.name}: target attacking Rat gains deathtouch`, {}); if (x) x.tkw.push('deathtouch'); },
+    valduk(P, e, t, src) { const n = allPerms().filter(a => a.attachedTo === src.uid && /\b(Aura|Equipment)\b/.test(a.card.type)).length; if (n <= 0) return; applyEffect(P, { t: 'token', n, p: 3, q: 1, name: 'red Elemental', kw: ['trample', 'haste'], sacEnd: true }, null, src); },
+    async yennett(P, e, t, src) {
+        const top = P.library[P.library.length - 1]; if (!top) return; log(`${P.name} reveal${you(P) ? '' : 's'} ${top.card.name}.`);
+        if ((top.card.cmc || 0) % 2 === 1 && !/\bLand\b/.test(top.card.type)) { const ok = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: cast ${top.card.name} without paying its mana cost?`, { card: top.card }); if (ok && await castFreeFrom(P, top, null)) return; }
+        drawCards(P, 1);
     },
 });

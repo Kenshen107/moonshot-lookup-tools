@@ -447,7 +447,7 @@ function leaveBattlefield(o, zone) {
     }
     if (wasOn) { o.lastPow = isCreature(o) ? pow(o) : 0; }
     if (wasOn) allPerms().filter(x => x.permAnimated && x.permAnimated.whileSrc === o.uid).forEach(x => { delete x.permAnimated; log(`${x.card.name} is no longer a creature.`); }); // Awakener Druid
-    if (wasOn) { o.lastCounters = Math.max(0, o.counters); if ((Rx(o).trig || []).some(t => t.ev === 'leaves') || (o.token && allPerms().some(a => (Rx(a).trig || []).some(t => t.ev === 'leaves' && (t.tokenMine || t.anyLeave)))) || allPerms().some(a => a !== o && (Rx(a).trig || []).some(t => t.ev === 'leaves' && t.spec))) fire('leaves', { o }); }
+    if (wasOn) { o.lastCounters = Math.max(0, o.counters); if ((Rx(o).trig || []).some(t => t.ev === 'leaves') || (o.token && allPerms().some(a => (Rx(a).trig || []).some(t => t.ev === 'leaves' && (t.tokenMine || t.anyLeave)))) || allPerms().some(a => a !== o && (Rx(a).trig || []).some(t => t.ev === 'leaves' && (t.spec || t.anyLeave)))) fire('leaves', { o }); }
     if (wasOn && zone === 'gy' && /Artifact/.test(o.card.type)) fire('artifactToGy', { o }); // Disciple of the Vault
     // Cards it exiled "until it leaves the battlefield" come back (610.3)
     if (wasOn) G.players.forEach(X => X.exile.filter(x => x.exiledBy === o.uid).forEach(x => {
@@ -2732,7 +2732,7 @@ async function applyEffect(P, e, t, src) {
                 const words = e.name.split(' ');
                 const colors = words.filter(w => Object.values(COLOR_NAMES).includes(w)).map(w => Object.keys(COLOR_NAMES).find(k2 => COLOR_NAMES[k2] === w));
                 const sub = words.filter(w => !Object.values(COLOR_NAMES).includes(w) && w !== 'and' && w !== 'colorless').map(w => w[0].toUpperCase() + w.slice(1)).join(' ') || 'Creature';
-                const card = { id: `token-${uidSeq}`, name: e.named || `${sub} token`, fullName: e.named || `${sub} token`, cost: '', cmc: 0, type: `Token ${e.artifact ? 'Artifact ' : ''}Creature — ${sub}`, text: [e.kw.map(k2 => k2[0].toUpperCase() + k2.slice(1)).join(', '), e.text || ''].filter(Boolean).join('\n'), power: String(e.p), toughness: String(e.q), colors, ci: colors, img: null, imgS: null, legal: {} };
+                const card = { id: `token-${uidSeq}`, name: e.named || `${sub} token`, fullName: e.named || `${sub} token`, cost: '', cmc: 0, type: `Token ${e.legendary ? 'Legendary ' : ''}${e.artifact ? 'Artifact ' : ''}Creature — ${sub}`, text: [e.kw.map(k2 => k2[0].toUpperCase() + k2.slice(1)).join(', '), e.text || ''].filter(Boolean).join('\n'), power: String(e.p), toughness: String(e.q), colors, ci: colors, img: null, imgS: null, legal: {} };
                 const tok = makeObj(card, P.i, { token: true });
                 if (e.tkw) tok.tkw.push(...e.tkw);
                 if (e.tapped) tok.tapped = true;
@@ -2747,6 +2747,7 @@ async function applyEffect(P, e, t, src) {
             if (e.sacEnd) madeNow.forEach(tk => { tk.sacAtEnd = G.turn; });
             tokenMade(P);
             fire('creatureTokenMade', { P });
+            if (!e.plusFood && !e.plusSoldier && e.n > 0) { const fa = P.bf.filter(x => Rx(x).tokenPlusFood && !lostAbilities(x)).length; for (let i = 0; i < fa; i++) makeArtifactToken(P, 'food'); } // Tippy-Toe, Terrific Partner
             if (!e.plusSoldier && e.n > 0) { const qa = P.bf.filter(x => Rx(x).tokenPlusSoldier && !lostAbilities(x)).length; for (let i = 0; i < qa; i++) await applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'white Soldier', kw: [], plusSoldier: true }, null, src); } // Queen Allenal
             break;
         case 'counters': {
@@ -4309,7 +4310,7 @@ async function endTurn(P) {
     allPerms().filter(o => o.exileAtEnd === G.turn).forEach(o => { leaveBattlefield(o, 'exile'); });
     allPerms().filter(o => o.warpExile === G.turn).forEach(o => { log(`${o.card.name} is exiled (warp); it can be cast from exile on a later turn.`); leaveBattlefield(o, 'exile'); if (G.players[o.owner].exile.includes(o)) o.warpedTurn = G.turn; });
     allPerms().filter(o => o.copyOf && o.copyTurn === G.turn).forEach(o => { o.card = o.copyOf; delete o.copyOf; delete o.copyTurn; log(`${o.card.name} is itself again.`); });
-    while (P.hand.length > 7 && !P.noMaxHand && !P.bf.some(x => Rx(x).noMaxHand)) {
+    while (P.hand.length > (typeof maxHandSize === 'function' ? maxHandSize(P) : 7) && !P.noMaxHand && !P.bf.some(x => Rx(x).noMaxHand)) {
         // 514.1: the player chooses what to discard down to seven (the computer throws away its most expensive card)
         const over = P.hand.length - 7;
         const d = (!P.isAI ? await pickCard(P, P.hand, `Hand size: discard ${over} more card${over === 1 ? '' : 's'} (down to 7)`, { required: true }) : null) || P.hand.slice().sort((a, b) => b.card.cmc - a.card.cmc)[0];
