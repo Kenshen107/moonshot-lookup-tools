@@ -32,7 +32,7 @@ function updateArchenemy() {
         pol().arch++;
         const A = G.players[G.arch];
         const caller = live.find(P => P !== A && P.isAI);
-        log(`${A.name} is pulling ahead - the table starts to focus on them.`);
+        log(you(A) ? 'You are pulling ahead - the table starts to focus on you.' : `${A.name} is pulling ahead - the table starts to focus on them.`);
         if (caller) say(caller, 'archenemy', 'worried', { foe: you(A) ? 'You' : who(A) });
     }
 }

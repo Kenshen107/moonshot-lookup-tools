@@ -4070,7 +4070,7 @@ function declareAttackers(P, list) {
         let cur = list.slice().sort((a, b) => pow(b) - pow(a));
         while (cur.length && !planPayment(P, parseCost(''), taxOf(cur))) cur.pop();
         const n = cur.length;
-        if (n < list.length) { log(`${P.name} can only pay the attack tax for ${n} creature${n === 1 ? '' : 's'}.`); list = cur; }
+        if (n < list.length) { log(n ? `${P.name} can only pay the attack tax for ${n} creature${n === 1 ? '' : 's'}.` : `${P.name} can't pay the attack tax.`); list = cur; }
         if (n) { const tax = taxOf(cur); planPayment(P, parseCost(''), tax).forEach(x => tapSource(P, x)); log(`${P.name} ${you(P) ? 'pay' : 'pays'} {${tax}} to attack.`); }
     }
     // Nils, Discipline Enforcer: a creature with counters pays {X} (its counters) to attack its controller's opponent who controls Nils
@@ -4597,6 +4597,7 @@ async function confirmAttack() {
 function logBlocks() {
     const lines = Object.entries(G.blocks).filter(([a, bs]) => onBf(Number(a)) && bs.every(onBf))
         .map(([a, bs]) => `${bs.map(u => onBf(u).card.name).join(' and ')} ${bs.length > 1 ? 'block' : 'blocks'} ${onBf(Number(a)).card.name}`);
+    if (!G.attackers.length && !lines.length) return; // nothing attacked, so there is nothing to block
     log(lines.length ? `Blocks: ${lines.join('; ')}.` : 'No blocks.');
 }
 async function dealDamage() {
