@@ -391,7 +391,7 @@ function staticBuffs(o) {
             if (s.colorChosen && !(a.chosenColor && (o.card.colors || []).includes(a.chosenColor))) continue;
             if (s.lvl && (a.level || 1) < s.lvl) continue;
             if (s.cond && !condOk(s.cond, G.players[a.owner], a)) continue;
-            { const mult = s.perCmdCast ? commanderCasts(G.players[a.owner]) : s.perCtr ? ((a.ctr && a.ctr[s.perCtr]) || 0) : 1; b.p += s.p * mult; b.q += s.q * mult; } b.kw.push(...s.kw);
+            { const mult = s.perSpeed ? (G.players[a.owner].speed || 0) : s.perCmdCast ? commanderCasts(G.players[a.owner]) : s.perCtr ? ((a.ctr && a.ctr[s.perCtr]) || 0) : 1; b.p += s.p * mult; b.q += s.q * mult; } b.kw.push(...s.kw);
         }
     }
     } finally { staticDepth--; }

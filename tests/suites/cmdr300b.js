@@ -98,7 +98,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
               ok('Fandaniel: an opponent with no creature to sacrifice loses 2 life for each instant and sorcery in your graveyard', B.life === 16, B.life); }
             { const [A] = await fresh(); put(A, 'Rakdos, Patron of Chaos'); const h0 = A.hand.length; fire('end'); await settle2();
               ok('Rakdos, Patron of Chaos: you draw two if the opponent doesn\'t sacrifice two permanents', A.hand.length === h0 + 2, A.hand.length - h0); }
-            { const [A] = await fresh(); put(A, 'Mendicant Core, Guidelight'); lands(A, 3); const sr = inHand(A, 'Sol Ring'); await castSpell(A, sr); await settle2(); await settle2(); await settle2();
+            { const [A] = await fresh(); A.speed = 4; put(A, 'Mendicant Core, Guidelight'); lands(A, 3); const sr = inHand(A, 'Sol Ring'); await castSpell(A, sr); await settle2(); await settle2(); await settle2();
               ok('Mendicant Core: pay {1} when you cast an artifact spell to copy it', A.bf.filter(x => x.card.name === 'Sol Ring').length === 2, A.bf.map(x => x.card.name)); }
             { const [A] = await fresh(); put(A, 'Lathiel, the Bounteous Dawn'); const b = put(A, 'Grizzly Bears'); fire('gainLife', { P: A, n: 4 }); fire('end'); await settle2();
               ok('Lathiel: distributes +1/+1 counters equal to the life you gained at the end step', b.counters === 4, b.counters); }

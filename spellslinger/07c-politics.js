@@ -163,6 +163,8 @@ function dealScore(bot, from, type, x) {
     // Burned twice (two broken deals): no more deals, from anyone who was betrayed
     if (dealsRefused(bot)) return { score: -99, parts: {}, reason: "I'm too angry to make deals right now." };
     if (bot.trust && bot.trust[from.i] <= -6) return { score: -99, parts: {}, reason: "You've broken your word twice. No more deals." };
+    // No gang-up against someone this bot (or the one it is asking) has promised peace to
+    if (type === 'pact' && x != null && (hasPeace(bot.i, x) || hasPeace(from.i, x))) return { score: -99, parts: {}, reason: "We have a deal with that player." };
     let s = 1 + 2 * trust - grudge * 0.4;
     const parts = { trust: 2 * trust, grudge: -grudge * 0.4 };
     if (type === 'peace' || type === 'spare') {
