@@ -193,7 +193,7 @@ const pause = ms => sleep(AUTOPLAY ? 0 : ms);
 // ---- Setup ----
 function makePlayer(i, name, deck, isAI) {
     const P = { i, name, isAI, life: FORMATS[deck.format].life, startLife: FORMATS[deck.format].life, library: [], hand: [], bf: [], gy: [], exile: [], command: [],
-        landsPlayed: 0, tax: 0, cmdDmg: 0, cmdBy: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
+        landsPlayed: 0, tax: 0, cmdCastN: {}, cmdDmg: 0, cmdBy: {}, cmdByC: {}, out: false, deckName: deck.name, source: deck.source || '', drewEmpty: false, mulligans: 0,
         aiLevel: /^random/.test(deck.aiLevel || '') ? 'easy' : /^r:/.test(deck.aiLevel || '') ? 'normal' : deck.aiLevel || 'normal', aiRand: /^random/.test(deck.aiLevel || '') ? { cast: 1, atk: 1, blk: 1, def: 1 } : /^r:/.test(deck.aiLevel || '') ? Object.fromEntries(deck.aiLevel.slice(2).split('+').map(k => [k, 1])) : null, aiStyle: deck.aiStyle || null, theme: deck.theme ? deck.theme.key : null, poison: 0, energy: 0, exp: 0 };
     { let bfArr = watchBf(P.bf); Object.defineProperty(P, 'bf', { enumerable: true, configurable: true, get() { return bfArr; }, set(v) { bfArr = watchBf(v); } }); } // see allPerms
     { let lifeNow = P.life; Object.defineProperty(P, 'life', { enumerable: true, configurable: true, get() { return lifeNow; }, set(v) { if (v > lifeNow && typeof noLifeGainActive === 'function' && noLifeGainActive()) return; lifeNow = v; } }); } // "Players can't gain life" (Rampaging Ferocidon)
@@ -201,16 +201,18 @@ function makePlayer(i, name, deck, isAI) {
     deck.entries.forEach(e => { for (let k = 0; k < e.n; k++) P.library.push(makeObj(e.card, i)); });
     shuffle(P.library);
     if (deck.commander) {
-        const c = makeObj(deck.commander, i, { isCommander: true });
+        const c = makeObj(deck.commander, i, { isCommander: true, cmdSlot: 0 });
         P.command.push(c);
         P.commanderUid = c.uid;
+        // a second commander (Partner, Friends forever, Background, Doctor's companion...) starts in the command zone too, with its own tax and its own commander damage
+        if (deck.commander2) { const c2 = makeObj(deck.commander2, i, { isCommander: true, cmdSlot: 1 }); P.command.push(c2); P.commanderUid2 = c2.uid; }
     }
     return P;
 }
 
 function deckToEntries(deck) {
     return {
-        name: deck.name, format: deck.format, commander: deck.commander ? CARDS.get(deck.commander) : null,
+        name: deck.name, format: deck.format, commander: deck.commander ? CARDS.get(deck.commander) : null, commander2: deck.commander2 ? CARDS.get(deck.commander2) : null,
         entries: Object.entries(deck.cards).map(([id, n]) => ({ card: CARDS.get(id), n })).filter(e => e.card)
     };
 }
@@ -228,7 +230,7 @@ async function startMatch(again) {
     startMatch.forced = false;
     showModal('<h2>Shuffling up...</h2><p class="loading">Building your opponent\'s deck from live card data...</p>');
     try {
-        await cardsByIds([...Object.keys(deck.cards), deck.commander].filter(Boolean));
+        await cardsByIds([...Object.keys(deck.cards), deck.commander, deck.commander2].filter(Boolean));
         let oppDeck;
         if (chosenOpponent.type === 'theme') {
             const theme = MODERN_THEMES.find(t => t.key === chosenOpponent.key);
@@ -577,7 +579,7 @@ function damage(target, n, src) {
         // Infect: damage to a player is given as poison counters (702.90b)
         if (infect) target.poison += n; else target.life -= n;
         noteGrudge(target, src, n);
-        if (src && src.isCommander && G.format === 'commander' && isCreature(src)) { target.cmdBy[src.owner] = (target.cmdBy[src.owner] || 0) + n; target.cmdDmg = Math.max(target.cmdDmg, target.cmdBy[src.owner]); }
+        if (src && src.isCommander && G.format === 'commander' && isCreature(src)) { target.cmdBy[src.owner] = (target.cmdBy[src.owner] || 0) + n; const ck = `${src.owner}:${src.cmdSlot || 0}`; target.cmdByC[ck] = (target.cmdByC[ck] || 0) + n; target.cmdDmg = Math.max(target.cmdDmg, target.cmdByC[ck]); } // 21 from one commander (each partner counts on its own)
     } else if (isPlaneswalker(target)) {
         target.ctr.loyalty = (target.ctr.loyalty || 0) - n; // damage to a planeswalker removes loyalty (120.3c)
         log(`${target.card.name} loses ${n} loyalty.`);
@@ -801,7 +803,7 @@ function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
     chosen.forEach(s => { if (!s.o.pool) s.o._payColor = s.payColor; });
     return chosen.map(s => s.o);
 }
-function extraCost(P, o) { return (o.isCommander && P.command.includes(o) ? P.tax * 2 : 0) - (Rx(o).harmonize && P.gy.includes(o) ? harmonizeCut(P) : 0); } // Harmonize: tapping a creature pays generic mana equal to its power
+function extraCost(P, o) { return (o.isCommander && P.command.includes(o) ? (P.commanderUid2 ? (P.cmdCastN[o.cmdSlot || 0] || 0) : P.tax) * 2 : 0) - (Rx(o).harmonize && P.gy.includes(o) ? harmonizeCut(P) : 0); } // Harmonize: tapping a creature pays generic mana equal to its power
 // X spells need X of at least 1; xVal is the X chosen for this cast
 // Flashback (702.34): from the graveyard, for the flashback cost
 // Gitrog deck: other ways to cast (o.castAs)
@@ -1215,7 +1217,7 @@ function firstTargetEffect(o) {
     return spellEffects(o).find(needsTarget) || null;
 }
 // Protection (702.16): can't be targeted, blocked, damaged or enchanted by what it's protected from
-function cmdrIdentity(P) { const c = [...P.command, ...allPerms()].find(x => x.isCommander && x.owner === P.i); return c ? (c.card.ci || c.card.colors || []) : []; }
+function cmdrIdentity(P) { const cs = [...P.command, ...allPerms()].filter(x => x.isCommander && x.owner === P.i); return [...new Set(cs.flatMap(c => c.card.ci || c.card.colors || []))]; }
 function protFrom(o, src) {
     if (!o || !src || !src.card || !o.card) return false;
     if (Rx(o).mirrorPro && o.imprinted && !lostAbilities(o) && ['Artifact', 'Creature', 'Enchantment', 'Instant', 'Land', 'Planeswalker', 'Sorcery', 'Battle'].some(k => new RegExp(`\\b${k}\\b`).test(o.imprinted.card.type) && new RegExp(`\\b${k}\\b`).test(src.card.type))) return true;
@@ -1438,7 +1440,7 @@ async function castSpell(P, o, presetTarget) {
     o.castPow = Math.max(0, ...P.bf.filter(isCreature).map(pow)); // "greatest power among creatures you controlled as you cast ~"
     if (Rx(o).kind === 'creature' && P.nextCreatureCounter === G.turn) { o.extraEnterCounter = 1; P.nextCreatureCounter = 0; } // Summon: Fenrir II
     removeFromZones(o);
-    if (fromCommand) P.tax++;
+    if (fromCommand) { P.tax++; P.cmdCastN[o.cmdSlot || 0] = (P.cmdCastN[o.cmdSlot || 0] || 0) + 1; }
     const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x || (Rx(o).addCost && Rx(o).addCost.lifeX) || (castAs === 'warp' && Rx(o).warp.x) || (castAs === 'bestow' && Rx(o).bestow.x) ? (o.xVal || 0) : undefined, kicked: !!o.kicked, kickN: o.kickN || 0, buyback: !!o.buyback, castAs, paragon };
     if (castAs) log(`(${o.card.name} is cast with ${castAs === 'energy' ? 'energy' : castAs}.)`);
     o.buyback = false;
