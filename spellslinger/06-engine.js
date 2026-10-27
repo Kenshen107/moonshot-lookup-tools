@@ -693,6 +693,11 @@ function manaOf(o) {
     if (o.tempMana && G && o.tempMana.turn === G.turn) return { colors: ['G'], n: 3, fixed: true };
     const R = Rx(o);
     let m = R.mana;
+    // Yavimaya, Cradle of Growth: every land is a Forest as well, so it can tap for {G} besides its own mana
+    if (typeof LANDS_FOREST !== 'undefined' && LANDS_FOREST.on && G && o.uid && /\bLand\b/.test(o.card.type) && allPerms().some(a => Rx(a).landsForest && !lostAbilities(a))) {
+        if (!m) m = { colors: ['G'], n: 1 };
+        else if (!m.fixed && m.colors && !m.colors.includes('G')) m = { ...m, colors: [...m.colors, 'G'] };
+    }
     if (!G || !o.uid) return m;
     if (m && m.devotionBest) { const X0 = G.players[o.owner]; let bc = 'W', bn = -1; for (const c of COLORS) { const d = devotion(X0, [c]); if (d > bn) { bn = d; bc = c; } } return bn > 0 ? { colors: [bc], n: bn, fixed: true } : { colors: ['W'], n: 0 }; } // Nyx Lotus
     if (m && G && m.colors && m.colors.length === 1 && m.colors[0] === 'C' && o.uid) { const k = G.players[o.owner].bf.filter(a => Rx(a).monumentC && !lostAbilities(a)).length; if (k) m = { ...m, n: (m.n || 1) + k }; } // Forsaken Monument: an additional {C}
@@ -750,7 +755,7 @@ const LAND_COLOR = { Plains: 'W', Island: 'U', Swamp: 'B', Mountain: 'R', Forest
 function manaSources(P) {
     return P.bf.filter(o => !o.tapped && manaOf(o) && manaOf(o).n > 0 && !(isCreature(o) && o.sick && !has(o, 'haste')));
 }
-function availableMana(P) { return manaSources(P).reduce((a, o) => a + manaOf(o).n, 0) + (P.pool || []).length; }
+function availableMana(P) { return manaSources(P).reduce((a, o) => a + manaOf(o).n - (manaOf(o).fee || 0), 0) + (P.pool || []).length; } // a Signet's {1} comes out of what it makes
 function emptyPools() { if (G) G.players.forEach(P => { if (P.keepPoolTurn === G.turn) return; if (P.pool && P.pool.length) P.pool = P.bf.some(a => Rx(a).keepColorless && !lostAbilities(a)) ? P.pool.map(() => 'C') : P.bf.some(a => Rx(a).keepRedMana && !lostAbilities(a)) ? P.pool.filter(c => c[0] === 'R') : []; }); } // Leyline Tyrant: red mana stays
 // Which sources to tap for a cost: colored symbols first (scarcest color
 // first, least flexible source first), then generic from what's left.
@@ -772,12 +777,13 @@ function landColorsOf(o) {
     return aura ? [Rx(aura).landBecomes] : manaOf(o).colors;
 }
 function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
-    const real = opts.poolOnly ? [] : manaSources(P).filter(o => o !== exclude);
+    const real = opts.poolOnly ? [] : manaSources(P).filter(o => o !== exclude && !manaOf(o).fee); // Signets are added by the wrapper below
     const channelN = !opts.poolOnly && P.channelTurn === G.turn ? Math.max(0, Math.min(cost.generic + extra + (cost.C || 0), P.life - 1)) : 0; // Channel (Yavimaya Bloomsage): pay 1 life for {C}
     const srcs = [
         ...Array.from({ length: channelN }, () => ({ o: { pool: true, color: 'C', channel: true }, colors: ['C'], n: 1, rank: 3 })),
         ...(P.pool || []).filter(c => !c.includes(':') || (opts.forType && new RegExp(`\\b${c.split(':')[1]}\\b`).test(opts.forType))).map(c => ({ o: { pool: true, color: c }, colors: [c[0]], n: 1, rank: -2 })),
         ...real.filter(o => (!manaOf(o).only || (opts.spellKind && manaOf(o).only.split(' or ').includes(opts.spellKind))) && (!manaOf(o).onlyType || (opts.forType && new RegExp(`\\b${manaOf(o).onlyType}\\b`).test(opts.forType)))).map(o => ({ o, colors: srcColors(o, opts), n: manaOf(o).n, pain: manaOf(o).pain, rank: 0 })).filter(s => s.colors.length),
+        ...(opts.virt || []).map(c => ({ o: { pool: true, virtual: true, color: c }, colors: [c], n: 1, rank: 3 })), // the mana a Signet will make (see the planPayment wrapper)
         ...(opts.improvise && !opts.poolOnly ? P.bf.filter(a => /Artifact/.test(a.card.type) && !a.tapped && !real.includes(a)).map(a => ({ o: a, colors: [], n: 1, rank: 2 })) : []),
         ...(opts.convoke && !opts.poolOnly ? P.bf.filter(c => isCreature(c) && !c.tapped && !real.includes(c)).map(c => ({ o: c, colors: (c.card.colors || []).filter(x => COLORS.includes(x)), n: 1, rank: 2 })) : [])
     ];
@@ -1098,6 +1104,13 @@ function tapForMana(uid, color) {
     const m = manaOf(o), cols = landColorsOf(o);
     if (!color && !m.fixed && cols.length > 1) { pickManaColor(o, cols); return; }
     const pick = color || cols[0];
+    // A Signet pays its {1} from mana you already have: tap a land first, then the Signet
+    let feePaid = [];
+    if (m.fee) {
+        const have = P.pool || [];
+        if (have.length < m.fee) { toast(`${o.card.name} needs {${m.fee}} first: tap a land, then tap it.`); return; }
+        for (let k = 0; k < m.fee; k++) { const i = Math.max(0, have.findIndex(c => c[0] === 'C')); feePaid.push(have.splice(i, 1)[0]); }
+    }
     const added = m.extra ? [...Array(m.n - m.extra.length).fill(pick), ...m.extra] : m.fixed ? (cols.length === m.n ? cols.slice() : Array(m.n).fill(cols[0])) : Array(m.n).fill(pick);
     const lfree = m.limit ? srcColors(o, {}) : [];
     const tag = m.only ? `:${m.only.split(' or ').map(w => w[0].toUpperCase() + w.slice(1)).join('|')}` : m.onlyType ? `:${m.onlyType}` : m.limit && !lfree.includes(pick) ? `:${limitTag(o)}` : '';
@@ -1108,7 +1121,7 @@ function tapForMana(uid, color) {
     const pool = added.map(c => c + (m.rider ? `!${m.rider}` : '') + tag);
     P.pool = (P.pool || []).concat(pool);
     const pay = G.mode && G.mode.type === 'pay' ? G.mode : null;
-    if (pay) pay.taps.push({ o, pool, life: lifeBefore - P.life, sac: !onBf(o.uid) });
+    if (pay) pay.taps.push({ o, pool, life: lifeBefore - P.life, sac: !onBf(o.uid), fee: feePaid });
     else log(`You tap ${o.card.name} for ${added.map(c => `{${c}}`).join('')} (it stays in your mana pool until the step ends).`);
     if (pay && poolCovers(P, pay.cost, pay.extra, pay.opts)) { pay.done(true); return; }
     renderGame();
@@ -1152,6 +1165,7 @@ function cancelPay() {
     m.taps.forEach(t => {
         if (t.sac) return; // a sacrificed source can't come back; its mana stays in your pool
         t.pool.forEach(c => { const i = P.pool.indexOf(c); if (i >= 0) P.pool.splice(i, 1); });
+        (t.fee || []).forEach(c => P.pool.push(c));
         if (onBf(t.o.uid)) t.o.tapped = false;
         P.life += t.life;
     });
