@@ -1227,7 +1227,7 @@ function protFrom(o, src) {
 function validTargets(P, e, src) {
     const out = [];
     const creatures = allPerms().filter(isCreature).filter(c => !has(c, 'shroud') && !(has(c, 'hexproof') && c.owner !== P.i) && !protFrom(c, src));
-    if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.powLtSrc || pow(o) < pow(src)) && (!e.withCounters || o.counters > 0)).map(o => ({ o })));
+    if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.powLtSrc || pow(o) < pow(src)) && (!e.withCounters || o.counters > 0) && (!e.unenchanted || !allPerms().some(a => a.attachedTo === o.uid && /\bAura\b/.test(a.card.type)))).map(o => ({ o })));
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'spellOrCreature') { out.push(...creatures.map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); }
@@ -2007,6 +2007,7 @@ function wipeMatches(o, what, P) {
         case 'artifacts': return /Artifact/.test(o.card.type);
         case 'enchantments': return /Enchantment/.test(o.card.type);
         case 'artifacts and enchantments': return /Artifact|Enchantment/.test(o.card.type);
+        case 'artifacts and creatures': return isCreature(o) || /Artifact/.test(o.card.type);
         case 'artifacts, creatures, and enchantments': return isCreature(o) || /Artifact|Enchantment/.test(o.card.type);
         case 'nonland permanents': return !/\bLand\b/.test(o.card.type);
         case "creatures you don't control": case 'creatures your opponents control': return isCreature(o) && o.owner !== P.i;
@@ -2808,6 +2809,7 @@ async function applyEffect(P, e, t, src) {
             const was = src.card.name;
             src.card = src.card === src.front ? src.front.back : src.front;
             log(`${was} transforms into ${src.card.name}.`);
+            fire('transformed', { o: src });
             break;
         }
         case 'revealTransform': {

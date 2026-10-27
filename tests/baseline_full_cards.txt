@@ -1150,6 +1150,7 @@ Beastmaster Ascension
 Beastrider Vanguard
 Beasts
 Beatrix, Loyal General
+Bebop & Rocksteady
 Bebop, Skull & Crossbones
 Bebop, Warthog Warrior
 Beckett Mariner, Impetuous Ensign
@@ -1684,6 +1685,7 @@ Brain Freeze
 Brain Weevil
 Brainbite
 Braingeyser
+Brainspoil
 Brainstone
 Brainstorm
 Brainsurge
@@ -1870,6 +1872,7 @@ Burning Shield Askari
 Burning Sun's Avatar
 Burning Sun's Fury
 Burning-Fist Minotaur
+Burning-Rune Demon
 Burning-Tree Emissary
 Burning-Tree Vandal
 Burnished Hart
@@ -3284,6 +3287,7 @@ Demonic Embrace
 Demonic Gifts
 Demonic Pact
 Demonic Ruckus
+Demonic Taskmaster
 Demonic Tutor
 Demonlord Belzenlok
 Demons
@@ -3399,6 +3403,7 @@ Dimir House Guard
 Dimir Infiltrator
 Dimir Informant
 Dimir Locket
+Dimir Machinations
 Dimir Signet
 Dina's Guidance
 Dina, Essence Brewer
@@ -4253,6 +4258,7 @@ Eusocial Engineering
 Eutropia the Twice-Favored
 Evacuation
 Evanescent Intellect
+Evangel of Synthesis
 Evasive Maneuvers
 Everdawn Champion
 Everett K. Ross, Hapless Attaché
@@ -4357,6 +4363,7 @@ Eye of Ramos
 Eye of Vecna
 Eyeblight Assassin
 Eyeblight Cullers
+Eyekite
 Eyes in the Skies
 Eyes of the Beholder
 Eyes of the Watcher
@@ -4869,6 +4876,7 @@ Fog of Gnats
 Fog on the Barrow-Downs
 Foggy Bottom Swamp
 Foggy Nelson, On Retainer
+Foggy Swamp Hunters
 Foggy Swamp Spirit Keeper
 Fogwell's Gym
 Folk Hero
@@ -5134,6 +5142,7 @@ Galvanic Giant // Storm Reading
 Galvanic Iteration
 Galvanic Juggernaut
 Galvanic Key
+Galvanize
 Galvanizing Sawship
 Gamble
 Game Trail
@@ -5464,6 +5473,7 @@ Glóin, Dwarf Emissary
 Gnarlback Rhino
 Gnarled Effigy
 Gnarled Mass
+Gnarled Sage
 Gnarled Scarhide
 Gnarlid Colony
 Gnarlid Pack
@@ -6069,6 +6079,7 @@ Haunted Ridge
 Haunter of Nightveil
 Haunting Echoes
 Haven of the Spirit Dragon
+Havengul Laboratory // Havengul Mystery
 Havengul Vampire
 Havenwood Battleground
 Havenwood Wurm
@@ -6709,6 +6720,7 @@ Insatiable Harpy
 Insatiable Souleater
 Insects
 Insidious Bookworms
+Insidious Fungus
 Insight
 Insight Engine
 Insolent Neonate
@@ -7030,6 +7042,7 @@ Jump
 Jund Battlemage
 Jund Charm
 Jund Panorama
+June, Bounty Hunter
 Jungle Barrier
 Jungle Creeper
 Jungle Delver
@@ -7478,6 +7491,7 @@ Lagonna-Band Elder
 Lagonna-Band Trailblazer
 Lake-town
 Lake-town Mariners // Gone Fishing
+Lake-town Toymaker
 Lakeshore Apothecary
 Lakeside Shack
 Lambholt Elder // Silverpelt Werewolf
@@ -7996,6 +8010,7 @@ Magnify
 Magnifying Glass
 Magnigoth Sentry
 Magnivore
+Magus of the Balance
 Magus of the Bazaar
 Magus of the Coffers
 Magus of the Disk
@@ -8340,6 +8355,7 @@ Mesmerizing Benthid
 Mesmerizing Dose
 Messenger Drake
 Messenger Falcons
+Messenger Hawk
 Messenger's Speed
 Metallic Mimic
 Metallic Rebuke
@@ -8970,6 +8986,7 @@ Nesting Grounds
 Netcaster Spider
 Nether Horror
 Nether Traitor
+Netherborn Phalanx
 Nettle Drone
 Nettle Sentinel
 Nettle Swine
@@ -9097,6 +9114,7 @@ No One Left Behind
 No Way Out
 No-Dachi
 Nobilis of War
+Noble Heritage
 Noble Hierarch
 Noble Panther
 Noble Steeds
@@ -9157,6 +9175,7 @@ Nurturing Bristleback
 Nurturing Peatland
 Nurturing Presence
 Nutrient Block
+Nyla, Shirshu Sleuth
 Nylea's Emissary
 Nylea's Forerunner
 Nylea's Intervention
@@ -9208,6 +9227,7 @@ Oboro, Palace in the Clouds
 Obscura Initiate
 Obscura Storefront
 Observant Alseid
+Obsessive Pursuit
 Obsessive Search
 Obsessive Skinner
 Obsessive Stitcher
@@ -9424,6 +9444,7 @@ Ostrich-Horse
 Oswald Fiddlebender
 Otawara, Soaring City
 Otharri, Suns' Glory
+Othelm, Sigardian Outcast
 Otherworldly Gaze
 Otter-Penguin
 Out of Air
@@ -9629,6 +9650,7 @@ Persistent Specimen
 Personal Tutor
 Personify
 Persuasion
+Persuasive Interrogators
 Pest Infestation
 Pest Mascot
 Pest Rescuer
@@ -9780,6 +9802,7 @@ Pit Trap
 Pitchburn Devils
 Pith Driller
 Pithing Needle
+Pitiless Carnage
 Pitiless Gorgon
 Pitiless Horde
 Pitiless Plunderer
@@ -9985,6 +10008,7 @@ Prismari Pianist
 Prismari, the Inspiration
 Prismatic Lens
 Prismatic Omen
+Prismatic Undercurrents
 Prismatic Vista
 Prismite
 Prison Sentence
@@ -10386,6 +10410,7 @@ Ravages of War
 Ravaging Blaze
 Ravaging Horde
 Raven Clan War-Axe
+Raven Eagle
 Raven Familiar
 Raven Wings
 Raven's Crime
@@ -10678,6 +10703,7 @@ Return to the Earth
 Returned
 Returned Centaur
 Rev, Tithe Extractor
+Reveillark
 Revel Ruiner
 Revel in Riches
 Revel of the Fallen God
@@ -11799,6 +11825,7 @@ Shower of Arrows
 Shower of Sparks
 Shrapnel Blast
 Shrapnel Slinger
+Shred Memory
 Shredded Sails
 Shredder's Revenge
 Shredder, Shadow Master
@@ -12514,6 +12541,7 @@ Spined Megalodon
 Spined Thopter
 Spined Tyrranax
 Spined Wurm
+Spinehorn Minotaur
 Spineless Thug
 Spinerock Knoll
 Spineseeker Centipede
@@ -13604,6 +13632,7 @@ The Shattered States Era // Nameless Conqueror
 The Shire
 The Sibsig Ceremony
 The Skullspore Nexus
+The Soul Stone
 The Spear of Bashenga
 The Spirit Oasis
 The Squadron Sinister
@@ -13900,6 +13929,7 @@ Tomb Hex
 Tomb Robber
 Tombstalker
 Tombstone, Career Criminal
+Tome Anima
 Tome Blast
 Tome Raider
 Tome Scour
@@ -14079,6 +14109,7 @@ Trelane, Squire of Gothos
 Trelasarra, Moon Dancer
 Tremble
 Tremor
+Trench Stalker
 Trench Wurm
 Trenching Steed
 Treno, Dark City
@@ -15144,11 +15175,13 @@ Welkin Tern
 Well-Read
 Well-Worn Spatula
 Werebear
+Wernog, Rider's Chaplain
 West Coast Expansion
 Western Paladin
 Westfold Rider
 Wetland Sambar
 Whack
+What Must Be Done
 Wheel of Fate
 Wheel of Fortune
 Where Ancients Tread
