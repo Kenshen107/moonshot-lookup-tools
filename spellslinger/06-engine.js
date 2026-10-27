@@ -1808,6 +1808,20 @@ function dynN(P, e, source) {
     if (/^devotion:/.test(e.nFrom || '')) return devotion(P, [e.nFrom.slice(9)]);
     return e.n;
 }
+// Effect types that happen on their own once chosen (no pick of their own), so "you may" has to be asked up front
+const MAY_ASK = ['draw', 'gain', 'token', 'millSelf', 'untapSelf', 'teamCounters', 'counters', 'dmg', 'pump', 'tap', 'untap', 'destroy', 'exile', 'bounce', 'fight'];
+function mayText(e) {
+    const n = Number(e.n) || 0, pl = n === 1 ? '' : 's';
+    switch (e.t) {
+        case 'draw': return `draw ${n || 'a'} card${n === 1 || !n ? '' : 's'}`;
+        case 'gain': return `gain ${n} life`;
+        case 'token': return `create ${n || 'a'} token${n === 1 || !n ? '' : 's'}`;
+        case 'millSelf': return `mill ${n} card${pl}`;
+        case 'untapSelf': return 'untap it';
+        case 'counters': case 'teamCounters': return `put ${n || 'the'} +1/+1 counter${pl}`;
+        default: return 'do this';
+    }
+}
 async function resolveEffects(P, effects, presetTarget, source) {
     G.lastDo = true;
     let usedPreset = false;
@@ -1834,6 +1848,12 @@ async function resolveEffects(P, effects, presetTarget, source) {
         if (e.kickedP && source && source.kicked) e = { ...e, p: e.kickedP.p, q: e.kickedP.q };
         if (e.t === 'optOppDraw') { G.lastDo = await optionalCost(P, e, source); continue; }
         if (e.nCount || e.nFrom) e = { ...e, n: dynN(P, e, source) * (e.nFrom && e.per && e.t !== 'pump' && typeof e.per === 'number' ? e.per : 1) };
+        // "You may ..." (owner's report, 2026-10-27: Consecrated Sphinx drew a person's library empty without asking): a person is always asked,
+        // the computer skips an optional draw that would nearly empty its library
+        if (e.may === true && MAY_ASK.includes(e.t) && !needsTarget(e)) {
+            if (P.isAI) { if (e.t === 'draw' && P.library.length <= (Number(e.n) || 1) + 2) { G.lastDo = false; continue; } }
+            else if (!await askYes(P, `${source && source.card ? source.card.name : 'Ability'}: ${mayText(e)}?`, { card: source && source.card })) { G.lastDo = false; continue; }
+        }
         if (e.kickedN !== undefined && e.t === 'tokenCopy' && source && source.kicked) e = { ...e, times: e.kickedN };
         if (e.perCtx && e.t === 'pump') e = { ...e, p: e.p * (G.ctxCount || 0), q: e.q * (G.ctxCount || 0) };
         if (e.per && e.t === 'pump') { const k = countFn(e.per)({ owner: P.i }); e = { ...e, p: e.p * k, q: e.q * k }; }
@@ -1851,7 +1871,7 @@ async function resolveEffects(P, effects, presetTarget, source) {
         if (needsTarget(e)) {
             // The target chosen on casting goes with the first targeted effect; later ones choose now ("another target")
             if (!usedPreset && presetTarget && validTargets(P, e, source).some(v => sameTarget(v, presetTarget))) { target = presetTarget; usedPreset = true; }
-            if (!target) target = await chooseTarget(P, e, source, !!e.optional, e.notPrev ? resTargets : []);
+            if (!target) target = await chooseTarget(P, e, source, !!(e.optional || (e.may === true && !P.isAI && MAY_ASK.includes(e.t))), e.notPrev ? resTargets : []);
             if (!target) { if (!e.optional) log(`${source.card.name}: no legal target.`); continue; }
             if (!targetStillOk(target)) { log(`${source.card.name}'s target is gone.`); continue; }
             resTargets.push(target);
@@ -4043,7 +4063,7 @@ function declareAttackers(P, list) {
     list.forEach(o => { o.attackedTurn = G.turn; if (has(o, 'decayed')) o.sacEndCombat = true; }); // decayed: sacrificed at end of combat
     list.forEach(o => { if (!has(o, 'vigilance')) { o.tapped = true; fire('tapped', { o }); } });
     G.blocks = {};
-    log(`${P.name} ${you(P) ? 'attack' : 'attacks'} with ${list.map(o => `${o.card.name}${o.attackPW && onBf(o.attackPW) ? ` (at ${onBf(o.attackPW).card.name})` : hitPlayers.length > 1 && G.players[o.atkTo] ? ` (at ${G.players[o.atkTo].name})` : ''}`).join(', ')}.`);
+    if (!list.length) log(`${P.name} ${you(P) ? "don't attack" : "doesn't attack"} (nothing could attack).`); else log(`${P.name} ${you(P) ? 'attack' : 'attacks'} with ${list.map(o => `${o.card.name}${o.attackPW && onBf(o.attackPW) ? ` (at ${onBf(o.attackPW).card.name})` : hitPlayers.length > 1 && G.players[o.atkTo] ? ` (at ${G.players[o.atkTo].name})` : ''}`).join(', ')}.`);
     // Exalted: a creature attacking alone gets +1/+1 for each exalted instance (702.83)
     if (list.length === 1) { const n = P.bf.filter(o => has(o, 'exalted')).length; if (n) { list[0].tp += n; list[0].tq += n; log(`Exalted: ${list[0].card.name} gets +${n}/+${n} until end of turn.`); } }
     fire('attacks', { list });
