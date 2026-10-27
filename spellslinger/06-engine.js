@@ -16,7 +16,7 @@ function makeObj(card, owner, extra) {
     { let at = o.attachedTo; Object.defineProperty(o, 'attachedTo', { enumerable: true, configurable: true, get() { return at; }, set(v) { if (v !== at) { at = v; attVer++; } } }); } // attachments are looked up by host (attachmentsOf), so changes are counted
     return o;
 }
-const Rx = o => o.card._r || rulesFor(o.card);
+const Rx = o => { const r = o.card._r || rulesFor(o.card); return r.msProps ? msView(o, r) : r; }; // msProps: flags that only work at max speed (15n-samutdf.js)
 // The player holding the device (G.view; always 0 except in a pass-and-play game) and the other one
 const me = () => G.players[G.view || 0];
 // The opponent whose board and bar are shown: the only one in a 1v1; in a pod, the one you tapped, else whose turn it is, else the one being attacked
@@ -864,7 +864,7 @@ function costOf(P, o) {
     else if (R.costLessX) { const ps = P.bf.filter(isCreature).map(x => Math.max(0, pow(x))); cut += R.costLessX === 'total power' ? ps.reduce((a, b) => a + b, 0) : Math.max(0, ...ps); }
     if (R.costLessIf && condOk(R.costLessIf.cond, P, o)) cut += R.costLessIf.n;
     if (R.costLessTgt && (o._tgt ? tgtFits(o._tgt, R.costLessTgt.what, P) : !o._noTgtYet && firstTargetEffect(o) && validTargets(P, firstTargetEffect(o), o).some(v => tgtFits(v, R.costLessTgt.what, P)))) cut += R.costLessTgt.n;
-    P.bf.forEach(x => { const rd = Rx(x).reducer; if (rd && (!rd.lvl || (x.level || 1) >= rd.lvl) && spellFits(o, rd, x)) cut += rd.perCounter ? rd.n * Math.max(0, x.counters) : rd.affinity ? P.bf.filter(y => hasType(y, rd.affinity) || (rd.affinity === 'Aura' && y.bestowed)).length : rd.n; });
+    P.bf.forEach(x => { const rd = Rx(x).reducer; if (rd && (!rd.lvl || (x.level || 1) >= rd.lvl) && (!rd.maxSpeed || (P.speed || 0) >= 4) && spellFits(o, rd, x)) cut += rd.perSpeed ? rd.n * (P.speed || 0) : rd.perCounter ? rd.n * Math.max(0, x.counters) : rd.affinity ? P.bf.filter(y => hasType(y, rd.affinity) || (rd.affinity === 'Aura' && y.bestowed)).length : rd.n; });
     P.command.forEach(x => { const rd = Rx(x).reducer; if (rd && rd.eminence && spellFits(o, rd, x)) cut += rd.n; }); // Eminence: The Ur-Sphinx works from the command zone
     let generic = Math.max(0, base.generic - cut);
     if (typeof spellTaxFor === 'function') generic += spellTaxFor(P, o); // Thalia, Grand Arbiter Augustin IV, Esior
@@ -900,11 +900,13 @@ function spellFits(o, rd, from) {
     if (rd.what === 'xFirst') { const Q = G.players[o.owner]; return !!Rx(o).cost.x && !(Q.xCastsTurn === G.turn && Q.xCasts > 0); }
     if (rd.what === 'notHand') return !G.players[o.owner].hand.includes(o);
     if (rd.what === 'Instant and sorcery') return k === 'instant' || k === 'sorcery';
+    if (rd.what === 'noncreature') return k !== 'creature' && !/\bLand\b/.test(t);
+    if (rd.what === 'any') return !/\bLand\b/.test(t);
     if (rd.what === 'Creature') return k === 'creature' && (Number(o.card.power) || 0) >= rd.minPow;
     if (rd.what === 'Artifact' || rd.what === 'Enchantment') return new RegExp(rd.what).test(t);
     return new RegExp(`\\b${rd.what}\\b`).test(t);
 }
-const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.test(o.card.type) && !!G && G.players[o.owner].bf.some(a => Rx(a).improviseAll)), convoke: Rx(o).kw.has('convoke'), spellKind: Rx(o).kind, forType: o.card.type + (Rx(o).cost.x ? ' XCOST' : '') + ((o.card.cmc || 0) >= 5 ? ' MV5PLUS' : '') });
+const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.test(o.card.type) && !!G && G.players[o.owner].bf.some(a => Rx(a).improviseAll)), convoke: hasConvoke(o), spellKind: Rx(o).kind, forType: o.card.type + (Rx(o).cost.x ? ' XCOST' : '') + ((o.card.cmc || 0) >= 5 ? ' MV5PLUS' : '') });
 function altExileCard(P, o) { const a = Rx(o).alt; return a && a.exile ? P.hand.filter(x => x !== o && (x.card.colors || []).includes(a.exile)).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0] || null : null; }
 function altOk(P, o) {
     const a = Rx(o).alt;
@@ -912,9 +914,9 @@ function altOk(P, o) {
 }
 function altTapFliers(P, o, n) { return P.bf.filter(x => isCreature(x) && !x.tapped && has(x, 'flying') && x !== o).slice(0, n); }
 function canPay(P, o) { return (!o.altCast || altOk(P, o)) && addCostOk(P, o) && !!planPayment(P, costOf(P, o), extraCost(P, o) + (costOf(P, o).x ? xMult(o) : 0), null, payOpts(o)); }
-function maxKick(P, o) { const m = Rx(o).multikicker; if (!m) return 0; const was = o.kickN; let n = 0; while (n < 20) { o.kickN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: Rx(o).kw.has('convoke') })) break; n++; } o.kickN = was; return n; }
-function canBuyback(P, o) { const b = Rx(o).buyback; if (!b || Rx(o).kind === 'creature') return false; const was = o.buyback; o.buyback = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: Rx(o).kw.has('convoke') }); o.buyback = was; return ok; }
-function canKick(P, o) { const k = Rx(o).kicker; if (!k) return false; if (Rx(o).kickSac && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < Rx(o).kickSac.n + (P.isAI ? 2 : 0)) return false; const was = o.kicked; o.kicked = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: Rx(o).kw.has('convoke') }); o.kicked = was; return ok; }
+function maxKick(P, o) { const m = Rx(o).multikicker; if (!m) return 0; const was = o.kickN; let n = 0; while (n < 20) { o.kickN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) })) break; n++; } o.kickN = was; return n; }
+function canBuyback(P, o) { const b = Rx(o).buyback; if (!b || Rx(o).kind === 'creature') return false; const was = o.buyback; o.buyback = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) }); o.buyback = was; return ok; }
+function canKick(P, o) { const k = Rx(o).kicker; if (!k) return false; if (Rx(o).kickSac && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < Rx(o).kickSac.n + (P.isAI ? 2 : 0)) return false; const was = o.kicked; o.kicked = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) }); o.kicked = was; return ok; }
 // "As an additional cost to cast ~, sacrifice a creature / discard a card / pay N life"
 function addCostOk(P, o) {
     const a = Rx(o).addCost;
@@ -1022,7 +1024,7 @@ async function payAddCost(P, o) {
 }
 const xMult = o => Rx(o).cost.xn || 1;
 function maxX(P, o) {
-    let x = 0; while (x < 30 && planPayment(P, costOf(P, o), extraCost(P, o) + (x + 1) * xMult(o), null, { convoke: Rx(o).kw.has('convoke') })) x++;
+    let x = 0; while (x < 30 && planPayment(P, costOf(P, o), extraCost(P, o) + (x + 1) * xMult(o), null, { convoke: hasConvoke(o) })) x++;
     if (Rx(o).xBlackOnly) { const b = manaSources(P).filter(s => !s.tapped && manaOf(s) && manaOf(s).colors.includes('B')).reduce((a, s) => a + (manaOf(s).n || 1), 0) + (P.pool || []).filter(c => c[0] === 'B').length; x = Math.min(x, Math.max(0, b - (Rx(o).cost.B || 0))); } // Consume Spirit
     if (Rx(o).xFromTarget && o._tgt && o._tgt.o) x = Math.min(x, o._tgt.o.card.cmc || 0);
     if (Rx(o).xMaxPlayers) x = Math.min(x, G.players.filter(y => !y.out).length); // Open the Way
@@ -1229,7 +1231,7 @@ function validTargets(P, e, src) {
     const creatures = allPerms().filter(isCreature).filter(c => !has(c, 'shroud') && !(has(c, 'hexproof') && c.owner !== P.i) && !protFrom(c, src));
     if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.powLtSrc || pow(o) < pow(src)) && (!e.withCounters || o.counters > 0) && (!e.unenchanted || !allPerms().some(a => a.attachedTo === o.uid && /\bAura\b/.test(a.card.type)))).map(o => ({ o })));
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
-    if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
+    if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && (!e.mine || o.owner === P.i) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'spellOrCreature') { out.push(...creatures.map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); }
     if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(p.protAll && G.turn < p.protAll) && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a))) && !(p !== P && p.hexTurn === G.turn)).map(p => ({ p })));
     if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P) && !(e.filter === 'oppInstSorc' && it.P === P) && !(e.filter === 'myInstSorc' && it.P !== P) && !(e.filter === 'targetsMine' && !(it.target && it.target.o && it.target.o.owner === P.i))).map(item => ({ item })));
@@ -1641,6 +1643,9 @@ async function resolveTop() {
             if (o.front && o.front.layout === 'adventure' && o.card !== o.front && !o.flashedBack) {
                 o.card = o.front; resetObj(o); o.advReady = true; G.players[o.owner].exile.push(o);
                 log(`${o.card.name} goes on an adventure (exiled; you can cast the creature later).`);
+            } else if (r.paradigm && !o.ceases && !o.flashedBack) {
+                // Paradigm (Secrets of Strixhaven): exile it; each of your first main phases you may cast a copy for free (see 15n-samutdf.js)
+                resetObj(o); o.paradigmP = item.P.i; item.P.exile.push(o); log(`${o.card.name} is exiled (paradigm).`);
             } else if (r.cipher && item.P.bf.some(isCreature) && !o.flashedBack) {
                 // Cipher (702.99): exile it encoded on a creature you control
                 const host = item.P.isAI ? item.P.bf.filter(isCreature).sort((a, b) => (has(b, 'flying') || has(b, 'unblockable') ? 5 : 0) + pow(b) - ((has(a, 'flying') || has(a, 'unblockable') ? 5 : 0) + pow(a)))[0]

@@ -177,7 +177,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             { const [A, B] = await fresh(); put(A, 'Djeru, With Eyes Open'); const pw = syn(A, 'Grizzly Bears', 'Planeswalker — Test'); pw.ctr.loyalty = 5; const s = put(B, 'Shivan Dragon'); damage(pw, 3, s);
               ok('Djeru, With Eyes Open: prevents 1 damage dealt to your planeswalkers', pw.dmg === 2 || pw.ctr.loyalty === 3, [pw.dmg, pw.ctr.loyalty]); }
             // Far Fortune, End Boss
-            { const [A, B] = await fresh(); put(A, 'Far Fortune, End Boss'); const s = put(A, 'Shivan Dragon'); damage(B, 2, s); const v = put(B, 'Hill Giant'); damage(v, 1, s);
+            { const [A, B] = await fresh(); A.speed = 4; put(A, 'Far Fortune, End Boss'); const s = put(A, 'Shivan Dragon'); damage(B, 2, s); const v = put(B, 'Hill Giant'); damage(v, 1, s);
               ok('Far Fortune, End Boss: sources you control deal 1 extra damage to opponents and their permanents', B.life === 17 && v.dmg === 2, [B.life, v.dmg]); }
             // Owen Grady, Raptor Trainer
             { const [A] = await fresh(); const o = put(A, 'Owen Grady, Raptor Trainer'); o.sick = false; const d = syn(A, 'Grizzly Bears', 'Creature — Dinosaur'); await activate(A, o, acts(o)[0]); await settle2();

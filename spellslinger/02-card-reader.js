@@ -560,7 +560,28 @@ function rulesFor(card) {
     // effect the game knows works with X; the parsed effects are marked (xMark) and the X paid
     // is filled in when the spell resolves (withX).
     if (R.cost.x) for (let k = 0; k < lines.length; k++) lines[k] = xSub(lines[k]);
+    // "Max speed —" lines (2026-10-27): what they add only works at speed 4; the entries a line adds are marked
+    let msPend = null;
+    const msFlush = () => {
+        if (!msPend) return;
+        R.acts.slice(msPend.a).forEach(x => { x.maxSpeed = true; });
+        R.trig.slice(msPend.t).forEach(x => { x.maxSpeed = true; });
+        R.statics.slice(msPend.s).forEach(x => { if (!x.cond) x.cond = 'you have max speed'; });
+        (R.selfCond || []).slice(msPend.c).forEach(x => { if (!x.cond) x.cond = 'you have max speed'; });
+        if (R.reducer && R.reducer !== msPend.rd) R.reducer.maxSpeed = true;
+        // a mana ability on a max-speed line replaces the card's own only at max speed (Muraganda Raceway, Endrider Catalyzer)
+        if (R.mana !== msPend.mana) { R.msMana = R.mana; R.mana = msPend.mana; }
+        // other flags the line switched on (Vnwxt's double draw, Far Fortune's extra damage) are kept aside and switched on only at max speed (msView, 15n-samutdf.js)
+        else if (R.acts.length === msPend.a && R.trig.length === msPend.t && R.statics.length === msPend.s && (R.selfCond || []).length === msPend.c && R.reducer === msPend.rd) {
+            const fresh = Object.keys(R).filter(k => !(k in msPend.keys) || (!msPend.keys[k] && R[k]));
+            if (fresh.length) { R.msProps = R.msProps || {}; fresh.forEach(k => { R.msProps[k] = R[k]; if (k in msPend.keys) R[k] = msPend.keys[k]; else delete R[k]; }); }
+            else if (!(msPend.line in { '': 1 })) R.unhandled.push(msPend.line + ' (max speed: not gated)');
+        }
+        msPend = null;
+    };
     for (let li = 0; li < lines.length; li++) {
+        msFlush();
+        if (/^Max speed — /.test(lines[li])) { lines[li] = lines[li].replace(/^Max speed — /, ''); msPend = { a: R.acts.length, t: R.trig.length, s: R.statics.length, c: (R.selfCond || []).length, rd: R.reducer, mana: R.mana, line: lines[li], keys: { ...R } }; }
         // Ability words ("Landfall —", "Metalcraft —") are just labels (207.2c)
         const line = lines[li].replace(/^(?!Choose\b)(?!(?:I|II|III|IV|V|VI)(?:,| —))[A-Z][A-Za-z'!-]*(?: [A-Za-z'!-]+){0,4} — (?=When|Whenever|At |\{|[A-Z~])/, '');
         let m;
@@ -755,6 +776,7 @@ function rulesFor(card) {
         if ((m = line.match(/^Equip ((?:\{[^}]+\})+)$/))) { const c = parseCost(m[1]); if (!c.x && !c.odd) { R.equip = c; R.equipText = m[1]; continue; } }
         R.unhandled.push(line);
     }
+    msFlush();
     if ((R.kind === 'instant' || R.kind === 'sorcery') && !R.spell && !R.modes && !R.unhandled.length && R.kw.size && lines.length && lines.every(l => /^(?:cascade|retrace|flashback|storm|cipher|rebound|jump-start|buyback|convoke|delve|miracle|casualty|replicate|entwine|kicker|overload|suspend|cycling|foretell|ravenous|improvise|conspire|gift|escape|spree|splice)\b/i.test(l))) R.spell = []; // Throes of Chaos: nothing but keywords
     if (R.cost.x) xMarkRules(R);
     if ((R.spell || []).some(e => e.t === 'detonate')) R.xFromTarget = true; // Detonate: X is the artifact's mana value

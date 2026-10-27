@@ -440,6 +440,7 @@ Angelic Gift
 Angelic Guardian
 Angelic Overseer
 Angelic Page
+Angelic Sell-Sword
 Angelic Shield
 Angelic Sleuth
 Angelic Wall
@@ -1156,6 +1157,7 @@ Bebop, Warthog Warrior
 Beckett Mariner, Impetuous Ensign
 Beckon Apparition
 Become Immense
+Become the Avalanche
 Bedeck // Bedazzle
 Bedevil
 Bedhead Beastie
@@ -1644,6 +1646,7 @@ Boros Recruit
 Boros Signet
 Boros Swiftblade
 Borough Backup
+Borrowed Knowledge
 Borrowed Time
 Borrowing 100,000 Arrows
 Bosco, Just a Bear
@@ -1876,6 +1879,7 @@ Burning-Rune Demon
 Burning-Tree Emissary
 Burning-Tree Vandal
 Burnished Hart
+Burnout Bashtronaut
 Burr Grafter
 Burrenton Shield-Bearers
 Burrog Banemaker
@@ -2600,6 +2604,7 @@ Confiscate
 Confound
 Confusion in the Ranks
 Confusticate and Bebother
+Congregate
 Congregation Gryff
 Conifer Strider
 Conjurer's Closet
@@ -3203,7 +3208,9 @@ Declare Dominance
 Decoction Module
 Deconstruct
 Deconstruction Hammer
+Decorum Dissertation
 Decoy Ploy
+Decree of Savagery
 Dedicated Commons
 Dedicated Martyr
 Deduce
@@ -3350,6 +3357,7 @@ Detective
 Determined Iteration
 Detonate
 Devastate
+Devastating Onslaught
 Devastation Tide
 Deviant Glee
 Devil Dinosaur
@@ -3980,6 +3988,7 @@ Elite Scaleguard
 Elite Skirmisher
 Elite Spellbinder
 Elite Vanguard
+Elixir
 Elixir of Immortality
 Elixir of Vitality
 Eloise, Nephalia Sleuth
@@ -4938,6 +4947,7 @@ Foriysian Brigade
 Foriysian Interceptor
 Forked Bolt
 Forlorn Flats
+Form a Posse
 Formation Breaker
 Formidable Commons
 Formidable Speaker
@@ -4945,6 +4955,7 @@ Forsake the Worldly
 Forsaken Drifters
 Forsaken Monument
 Forsaken Sanctuary
+Forth Eorlingas!
 Fortified Rampart
 Fortified Village
 Fortify
@@ -5242,6 +5253,7 @@ Geralf's Messenger
 Geralf's Mindcrusher
 Geralf, Visionary Stitcher
 Germinating Wurm
+Germination Practicum
 Gerrard's Battle Cry
 Gerrard's Command
 Gerrard's Irregulars
@@ -5610,6 +5622,7 @@ Gods' Hall Guardian
 Godtracker of Jund
 Goggles of Night
 Gogo, Master of Mimicry
+Gogo, Mysterious Mime
 Gohn, Town of Ruin
 Golbez, Crystal Collector
 Gold Myr
@@ -6099,6 +6112,7 @@ Hazel's Nocturne
 Hazerider Drake
 Hazoret the Fervent
 Hazoret's Monument
+Hazoret, Godseeker
 He Who Hungers
 He's Dead, Jim
 Head of Security
@@ -6431,6 +6445,7 @@ Howling Gale
 Howling Giant
 Howling Golem
 Howling Mine
+Howlsquad Heavy
 Hraesvelgr of the First Brood
 Hua Tuo, Honored Physician
 Huang Zhong, Shu General
@@ -6449,6 +6464,7 @@ Hulking Devil
 Hulking Goblin
 Hulking Ogre
 Hulking Raptor
+Hulkling, Young Avenger
 Hull Breach
 Hullbreaker Horror
 Hullcarver
@@ -6615,6 +6631,7 @@ Impossible Inferno
 Impostor of the Sixth Pride
 Impractical Joke
 Improbable Alliance
+Improvisation Capstone
 Improvised Armor
 Improvised Arsenal
 Improvised Club
@@ -6927,6 +6944,7 @@ Jadzi, Oracle of Arcavios // Journey to the Oracle
 Jagged Barrens
 Jagged Lightning
 Jagwasp Swarm
+Jaheira's Respite
 Jaheira, Friend of the Forest
 Jalum Tome
 Jamuraan Lion
@@ -9486,6 +9504,7 @@ Overwhelmed Archivist // Archive Haunt
 Overwhelming Remorse
 Overwhelming Stampede
 Overwhelming Surge
+Oviya, Automech Artisan
 Owen Grady, Raptor Trainer
 Owl Familiar
 Owlbear
@@ -9559,6 +9578,7 @@ Parcel Myr
 Parch
 Pardic Collaborator
 Pardic Wanderer
+Parhelion II
 Parhelion Patrol
 Pariah
 Parish-Blade Trainee
@@ -9864,6 +9884,7 @@ Plundering Predator
 Plunge into Winter
 Plus One
 Poetic Ingenuity
+Point the Way
 Poison Arrow
 Poison Counter
 Poison Dart Frog
@@ -10234,6 +10255,7 @@ Rabid Wombat
 Raccoon Rallier
 Racecourse Fury
 Racers' Ring
+Racers' Scoreboard
 Radagast, Wizard of Wilds
 Radha, Heir to Keld
 Radiant Fountain
@@ -10680,6 +10702,7 @@ Restless Reef
 Restless Ridgeline
 Restless Spire
 Restless Vents
+Restoration Seminar
 Restore with Empathy
 Resupply
 Resurgent Belief
@@ -11152,6 +11175,7 @@ Samut, Hazoret's Champion
 Samut, Tyrant Smasher
 Samut, Vizier of Naktamun
 Samut, Voice of Dissent
+Samut, the Driving Force
 Samwise Gamgee
 Sanar, Unfinished Genius // Wild Idea
 Sanctified Charge
@@ -12824,6 +12848,7 @@ Stolen by the Fae
 Stomp and Howl
 Stomper Cub
 Stomping Ground
+Stone Calendar
 Stone Catapult
 Stone Docent
 Stone Giant
@@ -13768,6 +13793,7 @@ Three Tragedies
 Three Tree Mascot
 Three Tree Rootweaver
 Three Visits
+Threefold Thunderhulk
 Thresher Lizard
 Thrill of Possibility
 Thrill of the Hunt
@@ -14076,6 +14102,7 @@ Traverse the Outlands
 Traxos, Academy Guardian
 Traxos, Scourge of Kroog
 Treacherous Blessing
+Treacherous Terrain
 Treachery
 Tread Upon
 Treason of Isengard
@@ -15131,6 +15158,7 @@ Wayward Giant
 Wayward Guide-Beast
 Wayward Servant
 Wayward Swordtooth
+We Ride at Dawn
 Weakness
 Weapon Surge
 Weaponcraft Enthusiast
