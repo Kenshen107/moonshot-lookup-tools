@@ -302,6 +302,7 @@ async function newGame(myDeck, oppDeck, friend, more = []) {
 const mullBottom = P => G.players.length > 2 ? Math.max(0, P.mulligans - 1) : P.mulligans;
 async function mulligan(P) {
     if (P.isAI) {
+        if (typeof seqOn === 'function' && seqOn(P)) { await aiMulligan(P); return; } // sequencing (07k): judges the hand, not just the land count
         let lands = P.hand.filter(o => Rx(o).kind === 'land').length;
         if ((lands < 2 || lands > 5) && P.mulligans === 0) {
             P.mulligans = 1;
