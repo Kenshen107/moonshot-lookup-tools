@@ -63,7 +63,7 @@ function saveProfile() {
 }
 function trimCardCache() {
     const keep = new Set(Object.keys(profile.collection));
-    profile.decks.forEach(d => { Object.keys(d.cards).forEach(id => keep.add(id)); if (d.commander) keep.add(d.commander); });
+    profile.decks.forEach(d => { Object.keys(d.cards).forEach(id => keep.add(id)); if (d.commander) keep.add(d.commander); if (d.commander2) keep.add(d.commander2); });
     try { Object.values(BASIC_IDS).forEach(id => keep.add(id)); } catch (e) { /* not loaded yet */ }
     store.remove('cards');
     store.set('cards', Object.fromEntries([...CARDS].filter(([id]) => keep.has(id) && !id.includes('~'))));

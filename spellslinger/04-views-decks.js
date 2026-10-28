@@ -313,7 +313,18 @@ const FORMATS = {
     limited: { name: 'Limited', size: 40, copies: 99, life: 20 }
 };
 
-function deckCount(deck) { return Object.values(deck.cards).reduce((a, b) => a + b, 0) + (deck.commander ? 1 : 0); }
+// A deck saved before second commanders existed keeps its partner in the 99: the one card there that pairs with the commander (null if none or several)
+function legacyPartnerId(deck) {
+    if (deck.format !== 'commander' || deck.commander2 || !deck.commander) return null;
+    const cmd = CARDS.get(deck.commander); if (!cmd) return null;
+    const ids = Object.keys(deck.cards || {}).filter(id => CARDS.get(id) && deck.cards[id] > 0 && pairKind(cmd, CARDS.get(id)));
+    return ids.length === 1 ? ids[0] : null;
+}
+function moveToCommandZone(id) {
+    if (!editing || editing.commander2) return;
+    takeFromMain(id); editing.commander2 = id; builderChanged();
+}
+function deckCount(deck) { return Object.values(deck.cards).reduce((a, b) => a + b, 0) + (deck.commander ? 1 : 0) + (deck.commander2 ? 1 : 0); }
 
 // Who can lead a Commander deck: a legendary creature, or a card that says "can be your commander" (a few planeswalkers, 903.3)
 function canBeCommander(card) {
@@ -323,8 +334,32 @@ function canBeCommander(card) {
 }
 // Partners (2026-10-27): the game has one commander, so a partner plays from the 99. The deck's color identity is both commanders' together
 function partnerKind(c) { const m = c && (c.text || '').match(/^Partner(?:—([^\n(]+?))?\s*(?:\(|$)/m); return m ? (m[1] || '').trim() : null; }
+// Second commanders (2026-10-27): Partner, Partner with, Friends forever and the other "Partner—" kinds, Choose a Background, Doctor's companion.
+// A deck may have a second commander (deck.commander2); both start in the command zone, with their own tax and their own 21 commander damage.
+const partnerWithName = c => { const m = c && (c.text || '').match(/^Partner with ([^\n(]+?)\s*(?:\(|$)/m); return m ? m[1].trim() : null; };
+const isBackground = c => !!c && /\bLegendary\b/.test(c.type || '') && /\bBackground\b/.test(String(c.type).split('—')[1] || '');
+const wantsBackground = c => !!c && /^Choose a Background/m.test(c.text || '');
+const isDoctor = c => !!c && /\bTime Lord Doctor\b/.test(c.type || '');
+const doctorsCompanion = c => !!c && /^Doctor's companion/m.test(c.text || '');
+// What links two commanders, or null when they can't lead a deck together
+function pairKind(a, b) {
+    if (!a || !b || a.id === b.id) return null;
+    const pa = partnerWithName(a), pb = partnerWithName(b);
+    if (pa || pb) return pa === b.name && pb === a.name ? 'Partner with' : null;
+    const ka = partnerKind(a), kb = partnerKind(b);
+    if (ka !== null && kb !== null && ka === kb) return ka ? `Partner—${ka}` : 'Partner';
+    if ((wantsBackground(a) && isBackground(b)) || (wantsBackground(b) && isBackground(a))) return 'Choose a Background';
+    if ((isDoctor(a) && doctorsCompanion(b)) || (isDoctor(b) && doctorsCompanion(a))) return "Doctor's companion";
+    return null;
+}
+function pairProblem(a, b) { return !a || !b || pairKind(a, b) ? null : `${a.name} and ${b.name} can't lead a deck together (they need Partner, Partner with each other, Friends forever, Choose a Background or Doctor's companion).`; }
+// Of the two commanders, the one that goes first (a Background is always second)
+function orderCommanders(a, b) { return isBackground(a) && !isBackground(b) ? [b, a] : [a, b]; }
 function deckCi(deck) {
     const cmd = deck.commander && CARDS.get(deck.commander); if (!cmd) return [];
+    const c2 = deck.commander2 && CARDS.get(deck.commander2);
+    if (c2) return [...new Set([...cmd.ci, ...c2.ci])];
+    // older decks keep a partner in the 99
     const kind = partnerKind(cmd); if (kind === null) return cmd.ci;
     const mate = Object.keys(deck.cards || {}).map(id => CARDS.get(id)).find(c => c && c !== cmd && /\bLegendary\b/.test(c.type || '') && partnerKind(c) === kind);
     return mate ? [...new Set([...cmd.ci, ...mate.ci])] : cmd.ci;
@@ -341,6 +376,8 @@ function deckProblems(deck) {
         const cmd = deck.commander && CARDS.get(deck.commander);
         if (!cmd) out.push('Pick a commander: a legendary creature, or a planeswalker that says it can be your commander.');
         else if (!canBeCommander(cmd)) out.push(`${cmd.name} can't be a commander (it needs to be a legendary creature, or say it can be your commander).`);
+        const c2 = deck.commander2 && CARDS.get(deck.commander2);
+        if (c2) { const pp = pairProblem(cmd, c2); if (pp) out.push(pp); }
     }
     const cmd = deck.commander && CARDS.get(deck.commander);
     for (const [id, n] of Object.entries(deck.cards)) {
@@ -349,7 +386,7 @@ function deckProblems(deck) {
         if (!isBasic(c) && n > F.copies) out.push(`${c.name}: ${n} copies (${F.copies} max).`);
         if (c.legal[deck.format] && c.legal[deck.format] !== 'legal') out.push(`${c.name} isn't legal in ${F.name} (${c.legal[deck.format].replace('_', ' ')}).`);
         if (cmd && c.ci.some(col => !deckCi(deck).includes(col))) out.push(`${c.name} is outside ${cmd.name}'s colors.`);
-        if (!deck.starter && !isBasic(c) && n + (deck.commander === id ? 1 : 0) > (profile.collection[id] || 0)) out.push(`You own ${profile.collection[id] || 0} ${c.name} but the deck uses ${n}.`);
+        if (!deck.starter && !isBasic(c) && n + (deck.commander === id ? 1 : 0) + (deck.commander2 === id ? 1 : 0) > (profile.collection[id] || 0)) out.push(`You own ${profile.collection[id] || 0} ${c.name} but the deck uses ${n}.`);
     }
     return out;
 }
@@ -367,7 +404,7 @@ async function renderDeckPicker() {
     const el = $('deckPicker');
     el.classList.remove('hidden');
     const need = new Set();
-    profile.decks.forEach(d => { Object.keys(d.cards).forEach(id => need.add(id)); if (d.commander) need.add(d.commander); });
+    profile.decks.forEach(d => { Object.keys(d.cards).forEach(id => need.add(id)); if (d.commander) need.add(d.commander); if (d.commander2) need.add(d.commander2); });
     Object.keys(profile.collection).forEach(id => need.add(id));
     if ([...need].some(id => !CARDS.has(id))) {
         el.innerHTML = '<div class="loading">Loading your cards...</div>';
@@ -440,7 +477,7 @@ async function openBuilder() {
     BXS = { hover: null, curveSel: null, hand: [], lib: [] };
     renderBuilderHead();
     await loadBasics().catch(() => {});
-    await cardsByIds([...Object.keys(profile.collection), ...Object.keys(editing.cards), editing.commander].filter(Boolean));
+    await cardsByIds([...Object.keys(profile.collection), ...Object.keys(editing.cards), editing.commander, editing.commander2].filter(Boolean));
     renderCollection();
     renderDeckPanel();
     if (bxPool().length >= 7) bxDeal();
@@ -468,7 +505,7 @@ function autoNoteHTML() {
         ? 'Showing only cards the game fully automates. <button type="button" class="linkish" onclick="setAutoFilter(\'\')">Show all cards</button>'
         : `Showing ${$('fSupport').value === '' ? 'all cards' : $('fSupport').selectedOptions[0].textContent.toLowerCase() + ' cards'}. <button type="button" class="linkish" onclick="setAutoFilter('full')">Automated only</button>`;
 }
-function inDeckCount(id) { return (editing.cards[id] || 0) + (editing.commander === id ? 1 : 0); }
+function inDeckCount(id) { return (editing.cards[id] || 0) + (editing.commander === id ? 1 : 0) + (editing.commander2 === id ? 1 : 0); }
 
 function renderCollection() {
     if (!editing) return;
@@ -502,7 +539,14 @@ function collectionClick(id) {
     showCardSheet(id, `
         <button class="btn primary" onclick="addToDeck('${id}'); closeSheet();">➕ Add to deck</button>
         ${editing.cards[id] ? `<button class="btn" onclick="removeFromDeck('${id}'); closeSheet();">➖ Remove one</button>` : ''}
-        ${canCmd ? `<button class="btn gold" onclick="setCommander('${id}'); closeSheet();">👑 Make commander</button>` : ''}`);
+        ${canCmd ? `<button class="btn gold" onclick="setCommander('${id}'); closeSheet();">👑 Make commander</button>` : ''}
+        ${secondCommanderButton(c)}`);
+}
+// "Make second commander" when this card can lead the deck together with the current commander
+function secondCommanderButton(c) {
+    if (editing.format !== 'commander' || !editing.commander || editing.commander === c.id || editing.commander2 === c.id) return '';
+    const kind = pairKind(CARDS.get(editing.commander), c);
+    return kind ? `<button class="btn gold" onclick="setSecondCommander('${c.id}'); closeSheet();">👑 Make second commander (${esc(kind)})</button>` : '';
 }
 
 // Adds one copy; false (with a toast) when the format or your collection says no
@@ -513,8 +557,8 @@ function addToDeck(id, quiet) {
     if (!isBasic(c)) {
         if (n >= F.copies) { if (!quiet) toast(`${F.name} allows ${F.copies === 1 ? 'one copy' : `${F.copies} copies`} of ${c.name}.`); return false; }
         const owned = profile.collection[id] || 0;
-        if (!editing.starter && n + (editing.commander === id ? 1 : 0) >= owned) { if (!quiet) toast(`You only own ${owned} ${c.name}.`); return false; }
-        if (editing.format === 'commander' && editing.commander === id) { if (!quiet) toast(`${c.name} is already your commander.`); return false; }
+        if (!editing.starter && n + (editing.commander === id ? 1 : 0) + (editing.commander2 === id ? 1 : 0) >= owned) { if (!quiet) toast(`You only own ${owned} ${c.name}.`); return false; }
+        if (editing.format === 'commander' && (editing.commander === id || editing.commander2 === id)) { if (!quiet) toast(`${c.name} is already your commander.`); return false; }
     }
     if (editing.commander && c.ci.some(col => !deckCi(editing).includes(col))) { if (!quiet) toast(`${c.name} is outside your commander's colors.`); return false; }
     editing.cards[id] = n + 1;
@@ -527,16 +571,35 @@ function removeFromDeck(id, all) {
     if (!editing.cards[id]) delete editing.cards[id];
     builderChanged();
 }
+function takeFromMain(id) { if (editing.cards[id]) { editing.cards[id]--; if (!editing.cards[id]) delete editing.cards[id]; } }
 function setCommander(id) {
-    if (editing.cards[id]) { editing.cards[id]--; if (!editing.cards[id]) delete editing.cards[id]; }
+    const c = CARDS.get(id);
+    if (isBackground(c)) { setSecondCommander(id); return; }
+    takeFromMain(id);
     if (editing.commander && editing.commander !== id) editing.cards[editing.commander] = (editing.cards[editing.commander] || 0) + 1;
     editing.commander = id;
+    if (editing.commander2 === id) editing.commander2 = null;
+    // a second commander that doesn't go with the new one goes back to the main deck
+    const c2 = editing.commander2 && CARDS.get(editing.commander2);
+    if (c2 && pairProblem(c, c2)) { editing.cards[c2.id] = (editing.cards[c2.id] || 0) + 1; editing.commander2 = null; toast(`${c2.name} went back to the main deck: it doesn't pair with ${c.name}.`); }
     builderChanged();
 }
-function unsetCommander() {
-    const id = editing.commander;
+function setSecondCommander(id) {
+    const c = CARDS.get(id), first = editing.commander && CARDS.get(editing.commander);
+    if (!first) { toast('Pick your first commander before the second one.'); return; }
+    const pp = pairProblem(first, c);
+    if (pp) { toast(pp); return; }
+    takeFromMain(id);
+    if (editing.commander2 && editing.commander2 !== id) editing.cards[editing.commander2] = (editing.cards[editing.commander2] || 0) + 1;
+    editing.commander2 = id;
+    builderChanged();
+}
+function unsetCommander(which) {
+    const id = which || editing.commander;
     if (!id) return;
-    editing.commander = null;
+    if (id === editing.commander2) { editing.commander2 = null; }
+    else if (id === editing.commander) { const c2 = editing.commander2 && CARDS.get(editing.commander2); editing.commander = c2 && canBeCommander(c2) ? c2.id : null; if (c2 && editing.commander === c2.id) editing.commander2 = null; else if (c2) { editing.cards[c2.id] = (editing.cards[c2.id] || 0) + 1; editing.commander2 = null; } }
+    else return;
     editing.cards[id] = (editing.cards[id] || 0) + 1;
     builderChanged();
 }
@@ -657,14 +720,15 @@ function mxRowMenu(id) {
     const c = CARDS.get(id);
     if (!c) return;
     const R = rulesFor(c);
-    const isCmd = editing.commander === id;
+    const isCmd = editing.commander === id || editing.commander2 === id;
     const canCmd = editing.format === 'commander' && canBeCommander(c) && !isCmd;
     showCardSheet(id, isCmd
-        ? `<button class="btn" onclick="unsetCommander(); closeSheet();">↩ Move to the main deck</button>`
+        ? `<button class="btn" onclick="unsetCommander('${id}'); closeSheet();">↩ Move to the main deck</button>`
         : `<button class="btn primary" onclick="addToDeck('${id}'); closeSheet();">＋ Add one</button>
            ${editing.cards[id] ? `<button class="btn" onclick="removeFromDeck('${id}'); closeSheet();">− Remove one</button>` : ''}
            ${editing.cards[id] > 1 ? `<button class="btn danger" onclick="removeFromDeck('${id}', true); closeSheet();">✖ Remove all ${editing.cards[id]}</button>` : ''}
-           ${canCmd ? `<button class="btn gold" onclick="setCommander('${id}'); closeSheet();">👑 Make commander</button>` : ''}`);
+           ${canCmd ? `<button class="btn gold" onclick="setCommander('${id}'); closeSheet();">👑 Make commander</button>` : ''}
+           ${secondCommanderButton(c)}`);
 }
 // Tokens the deck's cards make, read from their text
 function deckTokens(entries) {
@@ -684,7 +748,7 @@ function renderDeckPanel() {
     if (!d) return;
     const entries = Object.entries(d.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c);
     const probs = deckProblems(d);
-    const cmd = d.commander && CARDS.get(d.commander);
+    const cmd = d.commander && CARDS.get(d.commander), cmd2 = d.commander2 && CARDS.get(d.commander2);
     const groups = bxGroups().map(([k, label]) => {
         const rows = entries.filter(e => bxGroupOf(e.c) === k).sort(bxSort);
         if (!rows.length) return '';
@@ -692,7 +756,7 @@ function renderDeckPanel() {
         const value = rows.reduce((a, r) => a + (+r.c.usd || 0) * r.n, 0);
         return `<section class="mx-group"><h3>${label} <span class="mx-gn">(${n})</span><span class="mx-gv">${value ? usd(value) : ''}</span></h3><div class="${BX.view === 'visual' ? 'mx-stack' : 'mx-rows'}">${rows.map(({ c, n }) => bxRowHTML(c, n)).join('')}</div></section>`;
     }).join('');
-    const tokens = deckTokens([...entries, ...(cmd ? [{ c: cmd, n: 1 }] : [])]);
+    const tokens = deckTokens([...entries, ...(cmd ? [{ c: cmd, n: 1 }] : []), ...(cmd2 ? [{ c: cmd2, n: 1 }] : [])]);
     $('deckPanel').innerHTML = `
         <div class="mx-tools">
             <div class="seg" role="group" aria-label="View">
@@ -704,18 +768,18 @@ function renderDeckPanel() {
         </div>
         ${probs.length ? `<details class="mx-probs"><summary class="warn">⚠ ${probs.length} thing${probs.length === 1 ? '' : 's'} to fix before this deck can play</summary><ul>${probs.map(p => `<li>${esc(p)}</li>`).join('')}</ul></details>` : ''}
         <div class="mx-cols${BX.view === 'visual' ? ' visual' : ''}">
-            ${d.format === 'commander' ? `<section class="mx-group mx-cmd"><h3>Commander <span class="mx-gn">(${cmd ? 1 : 0})</span></h3>${cmd ? `<div class="${BX.view === 'visual' ? 'mx-stack' : 'mx-rows'}">${bxRowHTML(cmd, 1, true)}</div>` : '<p class="note">None yet. Open a legendary creature and choose 👑 Make commander.</p>'}</section>` : ''}
+            ${d.format === 'commander' ? `<section class="mx-group mx-cmd"><h3>Commander${cmd2 ? 's' : ''} <span class="mx-gn">(${(cmd ? 1 : 0) + (cmd2 ? 1 : 0)})</span></h3>${cmd ? `<div class="${BX.view === 'visual' ? 'mx-stack' : 'mx-rows'}">${bxRowHTML(cmd, 1, true)}${cmd2 ? bxRowHTML(cmd2, 1, true) : ''}</div>${cmd2 ? `<p class="note">Together: ${esc(pairKind(cmd, cmd2) || 'not a legal pair')}.</p>` : `<p class="note">A partner, Friends forever, Background or Doctor\'s companion goes in the second slot: open it and choose 👑 Make second commander.</p>${legacyPartnerId(d) ? `<p class="note"><strong>${esc(CARDS.get(legacyPartnerId(d)).name)}</strong> is in the main deck but pairs with your commander. <button type="button" class="btn small gold" onclick="moveToCommandZone('${legacyPartnerId(d)}')">👑 Move it to the command zone</button></p>` : ''}`}` : '<p class="note">None yet. Open a legendary creature and choose 👑 Make commander.</p>'}</section>` : ''}
             ${groups || (d.format === 'commander' ? '' : '<p class="note">No cards yet. Use "Find and add cards" above, or browse your collection below.</p>')}
             ${tokens.length ? `<section class="mx-group"><h3>Tokens <span class="mx-gn">(${tokens.length})</span></h3><div class="mx-rows">${tokens.map(([t, from]) => `<div class="mx-row mx-token" title="Made by ${esc(from.join(', '))}"><span class="n"></span><span class="nm">${esc(t)}</span><span class="note">${esc(from.length === 1 ? from[0] : `${from.length} cards`)}</span></div>`).join('')}</div></section>` : ''}
         </div>`;
     renderPreview();
-    renderBuilderStats(entries, cmd);
+    renderBuilderStats(entries, cmd, cmd2);
     renderBuilderBar(entries, cmd, probs);
 }
 
 // ---- Stats: mana curve, colors, sample hand ----
-function renderBuilderStats(entries, cmd) {
-    const all = [...entries, ...(cmd ? [{ c: cmd, n: 1 }] : [])];
+function renderBuilderStats(entries, cmd, cmd2) {
+    const all = [...entries, ...(cmd ? [{ c: cmd, n: 1 }] : []), ...(cmd2 ? [{ c: cmd2, n: 1 }] : [])];
     $('mxStats').innerHTML = `
         <div class="panel mx-stat"><h3>Mana curve</h3>${mxCurveHTML(all)}</div>
         <div class="panel mx-stat"><h3>Colors</h3>${mxColorsHTML(all)}</div>
@@ -777,14 +841,14 @@ function deckColorStats(all) {
 }
 function mxColorsHTML(all) {
     const { sym, prod } = deckColorStats(all);
-    const cmd = editing.commander && CARDS.get(editing.commander);
-    // The deck's colors: the commander's, else the colors in its costs (else what its lands make)
-    const cols = cmd ? COLORS.filter(c => cmd.ci.includes(c)) : COLORS.some(c => sym[c]) ? COLORS.filter(c => sym[c]) : COLORS.filter(c => prod[c]);
+    const cmd = editing.commander && CARDS.get(editing.commander), cmdCi = cmd ? deckCi(editing) : [];
+    // The deck's colors: the commanders', else the colors in its costs (else what its lands make)
+    const cols = cmd ? COLORS.filter(c => cmdCi.includes(c)) : COLORS.some(c => sym[c]) ? COLORS.filter(c => sym[c]) : COLORS.filter(c => prod[c]);
     const ts = cols.reduce((a, c) => a + sym[c], 0), tp = cols.reduce((a, c) => a + prod[c], 0);
     const pct = (v, t) => t ? Math.round(100 * v / t) : 0;
     const target = editing.format === 'casual' ? 40 : FORMATS[editing.format].size;
     const fill = Math.max(0, target - deckCount(editing));
-    const allowed = cmd ? COLORS.filter(c => cmd.ci.includes(c)) : COLORS;
+    const allowed = cmd ? COLORS.filter(c => cmdCi.includes(c)) : COLORS;
     return `${cols.length ? cols.map(c => {
         const ps = pct(sym[c], ts), pp = pct(prod[c], tp), short = ts && pp + 10 < ps;
         return `<div class="mx-color">
@@ -804,9 +868,10 @@ async function fillBasics() {
     await loadBasics();
     const all = Object.entries(editing.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c);
     if (editing.commander) all.push({ c: CARDS.get(editing.commander), n: 1 });
+    if (editing.commander2) all.push({ c: CARDS.get(editing.commander2), n: 1 });
     const { sym } = deckColorStats(all);
-    const cmd = editing.commander && CARDS.get(editing.commander);
-    const cols = COLORS.filter(c => sym[c] && (!cmd || cmd.ci.includes(c)));
+    const cmd = editing.commander && CARDS.get(editing.commander), cmdCi = cmd ? deckCi(editing) : [];
+    const cols = COLORS.filter(c => sym[c] && (!cmd || cmdCi.includes(c)));
     if (!cols.length) { toast('Add colored cards first, so the split has something to follow.'); return; }
     const split = landSplit(cols.map(c => ({ card: { cost: `{${c}}`.repeat(sym[c]) }, n: 1 })), cols, need);
     Object.entries(split).forEach(([c, k]) => { if (k > 0 && BASIC_IDS[c]) editing.cards[BASIC_IDS[c]] = (editing.cards[BASIC_IDS[c]] || 0) + k; });
@@ -870,8 +935,9 @@ function bulkEdit() {
     const d = editing;
     const lines = [];
     if (d.commander && CARDS.get(d.commander)) lines.push(`1 ${CARDS.get(d.commander).fullName} *CMDR*`);
+    if (d.commander2 && CARDS.get(d.commander2)) lines.push(`1 ${CARDS.get(d.commander2).fullName} *CMDR*`);
     Object.entries(d.cards).map(([id, n]) => ({ c: CARDS.get(id), n })).filter(e => e.c).sort((a, b) => a.c.name.localeCompare(b.c.name)).forEach(({ c, n }) => lines.push(`${n} ${c.fullName}`));
-    menuSheet('Bulk edit', `<p class="note">One card per line, like "4 Lightning Bolt".${d.format === 'commander' ? ' Put *CMDR* after your commander.' : ''} ${d.starter ? '' : 'Only cards you own (and basic lands) can go in.'}</p>
+    menuSheet('Bulk edit', `<p class="note">One card per line, like "4 Lightning Bolt".${d.format === 'commander' ? ' Put *CMDR* after your commander (and after a second commander, such as a partner or a Background).' : ''} ${d.starter ? '' : 'Only cards you own (and basic lands) can go in.'}</p>
         <textarea id="bulkText" rows="16" spellcheck="false" aria-label="Deck list">${esc(lines.join('\n'))}</textarea>
         <div class="row" style="margin-top:8px;"><button class="btn primary" onclick="applyBulkEdit()">Apply</button></div>
         <div id="bulkNote" class="note" style="margin-top:6px;"></div>`);
@@ -891,17 +957,18 @@ async function applyBulkEdit() {
     builderPool().forEach(index);
     Object.keys(d.cards).forEach(id => CARDS.get(id) && index(CARDS.get(id)));
     if (d.commander && CARDS.get(d.commander)) index(CARDS.get(d.commander));
+    if (d.commander2 && CARDS.get(d.commander2)) index(CARDS.get(d.commander2));
     if (d.starter) {
         const missing = parsed.filter(p => !byName.has(p.name.toLowerCase())).map(p => p.name);
         if (missing.length) { $('bulkNote').textContent = 'Looking up cards...'; (await cardsByNames(missing)).forEach(index); }
     }
     const F = FORMATS[d.format];
     const cards = {}, notes = [];
-    let commander = null;
+    let commander = null, commander2 = null;
     for (const p of parsed) {
         const c = byName.get(p.name.toLowerCase());
         if (!c) { notes.push(`"${p.name}": ${d.starter ? 'not found' : 'not in your collection'}.`); continue; }
-        if (p.cmdr && d.format === 'commander') { commander = c.id; continue; }
+        if (p.cmdr && d.format === 'commander') { if (commander && !commander2) commander2 = c.id; else commander = c.id; continue; }
         let n = p.n;
         if (!isBasic(c)) {
             const owned = d.starter ? Infinity : profile.collection[c.id] || 0;
@@ -910,9 +977,10 @@ async function applyBulkEdit() {
         }
         if (n) cards[c.id] = (cards[c.id] || 0) + n;
     }
-    if (commander && cards[commander]) { cards[commander]--; if (!cards[commander]) delete cards[commander]; }
+    if (commander2) { const [x, y] = orderCommanders(CARDS.get(commander), CARDS.get(commander2)); commander = x.id; commander2 = y.id; if (pairProblem(x, y)) { notes.push(pairProblem(x, y)); commander2 = null; } }
+    [commander, commander2].forEach(id => { if (id && cards[id]) { cards[id]--; if (!cards[id]) delete cards[id]; } });
     d.cards = cards;
-    if (d.format === 'commander') d.commander = commander || (d.commander && parsed.some(p => p.cmdr) ? null : d.commander);
+    if (d.format === 'commander') { d.commander = commander || (d.commander && parsed.some(p => p.cmdr) ? null : d.commander); d.commander2 = commander ? commander2 : (parsed.some(p => p.cmdr) ? null : d.commander2) || null; }
     builderChanged();
     if (notes.length) $('bulkNote').innerHTML = `Applied, with changes:<br>${notes.map(esc).join('<br>')}`;
     else { closeSheet(); toast('Deck list updated.'); }
@@ -1010,6 +1078,14 @@ function importDialog() {
         <div id="impOut" style="margin-top:10px;"></div>`);
     $('sheetHost').querySelector('.sheet').classList.add('wide');
 }
+// The second commander of an imported list: a marked one that pairs with the first, else the only card in the list that does
+function impSecondFor(rows, cmd, marked) {
+    if (!cmd) return null;
+    const pairs = r => r.card && r !== cmd && pairKind(cmd.card, r.card);
+    return (marked || []).find(pairs) || (rows.filter(pairs).length === 1 ? rows.find(pairs) : null) || null;
+}
+function impPickCmd(i) { IMP.cmdRow = IMP.rows[i]; IMP.cmd2Row = impSecondFor(IMP.rows, IMP.cmdRow, []); renderImport(); }
+function impPickCmd2(i) { IMP.cmd2Row = i === '' ? null : IMP.rows[i]; renderImport(); }
 async function checkImport() {
     const text = $('impText').value;
     const parsed = parseDeckText(text);
@@ -1023,16 +1099,17 @@ async function checkImport() {
     let fmt = $('impFormat').value;
     if (fmt === 'auto') fmt = parsed.commander.length || (total >= 98 && total <= 101) ? 'commander' : total >= 60 ? 'modern' : 'casual';
     // The commander: the list's, else a legendary creature the player picks
-    let cmd = null;
+    let cmd = null, cmd2 = null;
     if (fmt === 'commander') {
         const marked = rows.filter(r => parsed.commander.includes(all[rows.indexOf(r)]) && r.card);
-        cmd = (marked[0] || rows.find(r => r.card && canBeCommander(r.card))) || null;
+        cmd = (marked.find(r => canBeCommander(r.card)) || rows.find(r => r.card && canBeCommander(r.card))) || null;
+        cmd2 = impSecondFor(rows, cmd, marked);
     }
-    IMP = { text, name: $('impName').value.trim(), fmt, rows, cmdRow: cmd, partners: fmt === 'commander' ? rows.filter(r => parsed.commander.includes(all[rows.indexOf(r)]) && r !== cmd).length : 0 };
+    IMP = { text, name: $('impName').value.trim(), fmt, rows, cmdRow: cmd, cmd2Row: cmd2, partners: fmt === 'commander' ? rows.filter(r => parsed.commander.includes(all[rows.indexOf(r)]) && r !== cmd).length : 0 };
     renderImport();
 }
 // Which copies come from your collection, and what's left to buy
-function importPlan(rows, cmdRow) {
+function importPlan(rows, cmdRow, cmd2Row) {
     const owned = ownedByName();
     const use = new Map(); // id -> copies used so far
     const plan = rows.filter(r => r.card).map(r => {
@@ -1045,14 +1122,14 @@ function importPlan(rows, cmdRow) {
             if (k > 0) { from.push([id, k]); use.set(id, (use.get(id) || 0) + k); need -= k; }
             if (!need) break;
         }
-        return { r, free, from, buy: free ? 0 : need, price: importPrice(r.card), isCmd: r === cmdRow };
+        return { r, free, from, buy: free ? 0 : need, price: importPrice(r.card), isCmd: r === cmdRow, isCmd2: !!cmd2Row && r === cmd2Row };
     });
     const cost = cashOn() ? plan.reduce((a, p) => a + p.buy * p.price, 0) : 0;
     return { plan, cost: Math.round(cost * 100) / 100 };
 }
 function renderImport() {
-    const { rows, fmt, cmdRow } = IMP;
-    const { plan, cost } = importPlan(rows, cmdRow);
+    const { rows, fmt, cmdRow, cmd2Row } = IMP;
+    const { plan, cost } = importPlan(rows, cmdRow, cmd2Row);
     const missing = rows.filter(r => !r.card);
     const cash = profile.usd || 0;
     const count = rows.filter(r => r.card).reduce((a, r) => a + r.n, 0);
@@ -1069,7 +1146,7 @@ function renderImport() {
             ${cashOn() ? `<div><span class="pos-k">Cost</span><strong class="money">${usd(cost)}</strong></div>
             <div><span class="pos-k">Your cash</span><strong class="${short ? 'warn' : 'ok'}">${usd(cash)}</strong></div>` : '<div><span class="pos-k">Cost</span><strong class="ok">Free</strong></div>'}
         </div>
-        ${fmt === 'commander' ? `<div class="row" style="margin:8px 0;"><label class="note" for="impCmd">👑 Commander</label><select id="impCmd" onchange="IMP.cmdRow = IMP.rows[this.value]; renderImport();">${legends.length ? legends.map(r => `<option value="${rows.indexOf(r)}"${r === cmdRow ? ' selected' : ''}>${esc(r.card.fullName)}</option>`).join('') : '<option>No legendary creature in the list</option>'}</select>${IMP.partners ? '<span class="note">This game has one commander: the other one plays in the deck.</span>' : ''}</div>` : ''}
+        ${fmt === 'commander' ? `<div class="row" style="margin:8px 0;"><label class="note" for="impCmd">👑 Commander</label><select id="impCmd" onchange="impPickCmd(this.value)">${legends.length ? legends.map(r => `<option value="${rows.indexOf(r)}"${r === cmdRow ? ' selected' : ''}>${esc(r.card.fullName)}</option>`).join('') : '<option>No legendary creature in the list</option>'}</select>${cmdRow ? (() => { const opts = rows.filter(r => r.card && r !== cmdRow && pairKind(cmdRow.card, r.card)); return opts.length || cmd2Row ? `<label class="note" for="impCmd2">👑 Second commander</label><select id="impCmd2" onchange="impPickCmd2(this.value)"><option value="">None</option>${opts.map(r => `<option value="${rows.indexOf(r)}"${r === cmd2Row ? ' selected' : ''}>${esc(r.card.fullName)} (${esc(pairKind(cmdRow.card, r.card))})</option>`).join('')}</select>` : ''; })() : ''}</div>` : ''}
         ${missing.length ? `<p class="warn">Not found on Scryfall (left out): ${missing.map(r => esc(r.name)).join(', ')}</p>` : ''}
         ${notYet.length ? `<p class="note">⚠ ${notYet.length} card${notYet.length === 1 ? '' : 's'} can't be cast in the game yet (marked "Not yet"): ${notYet.slice(0, 8).map(p => esc(p.r.card.name)).join(', ')}${notYet.length > 8 ? '…' : ''}.</p>` : ''}
         <details class="note" ${toBuy && toBuy <= 30 ? 'open' : ''}><summary>What you'd buy (${toBuy} card${toBuy === 1 ? '' : 's'}, most expensive first)</summary>
@@ -1082,11 +1159,11 @@ function renderImport() {
         <p class="note">${short ? `You need <strong>${usd(short)}</strong> more. Earn it in the 🏪 Shop, then buy the missing cards from the deck builder (🛒 Buy missing). ` : ''}${cashOn() ? `Prices are Scryfall's TCGplayer market price for that printing (cards with no price cost ${usd(IMPORT_NO_PRICE)}). Bought cards arrive Mint.` : 'Cards you add arrive Mint, at no cost.'}</p>`;
 }
 function finishImport(buy) {
-    const { rows, fmt, cmdRow } = IMP;
-    const { plan, cost } = importPlan(rows, cmdRow);
+    const { rows, fmt, cmdRow, cmd2Row } = IMP;
+    const { plan, cost } = importPlan(rows, cmdRow, cmd2Row);
     if (buy && cost > (profile.usd || 0)) { toast('Not enough shop cash.'); return; }
     const cards = {};
-    let commander = null;
+    let commander = null, commander2 = null;
     plan.forEach(p => {
         // Owned printings first, then the list's printing (bought or missing)
         p.from.forEach(([id, k]) => { cards[id] = (cards[id] || 0) + k; });
@@ -1096,12 +1173,13 @@ function finishImport(buy) {
             cards[p.r.card.id] = (cards[p.r.card.id] || 0) + p.buy;
         }
         if (p.isCmd) { const id = p.from.length ? p.from[0][0] : p.r.card.id; commander = id; cards[id]--; if (!cards[id]) delete cards[id]; }
+        else if (p.isCmd2) { const id = p.from.length ? p.from[0][0] : p.r.card.id; commander2 = id; cards[id]--; if (!cards[id]) delete cards[id]; }
     });
     if (buy && cashOn()) {
         profile.usd = Math.round(((profile.usd || 0) - cost) * 100) / 100;
         (profile.shopLedger = profile.shopLedger || []).push({ day: profile.shopDay || 1, note: `Bought ${plan.reduce((a, p) => a + p.buy, 0)} cards for an imported deck`, usd: -cost });
     }
-    const deck = { id: `d${Date.now()}`, name: IMP.name || (commander ? CARDS.get(commander).name : 'Imported deck'), format: fmt, cards, commander, starter: false, imported: true };
+    const deck = { id: `d${Date.now()}`, name: IMP.name || (commander ? CARDS.get(commander).name + (commander2 ? ' & ' + CARDS.get(commander2).name.split(',')[0] : '') : 'Imported deck'), format: fmt, cards, commander, commander2, starter: false, imported: true };
     profile.decks.push(deck);
     saveProfile();
     renderCoins();
@@ -1115,6 +1193,7 @@ function deckMissing(deck) {
     const need = [];
     const use = { ...deck.cards };
     if (deck.commander) use[deck.commander] = (use[deck.commander] || 0) + 1;
+    if (deck.commander2) use[deck.commander2] = (use[deck.commander2] || 0) + 1;
     Object.entries(use).forEach(([id, n]) => {
         const c = CARDS.get(id);
         if (!c || isBasic(c)) return;
@@ -1149,19 +1228,23 @@ async function listToOppDeck(text, wantFormat) {
     const rows = await resolveDeckCards(all);
     const total = all.reduce((a, e) => a + e.n, 0);
     const format = wantFormat === 'commander' || parsed.commander.length || (total >= 98 && total <= 101) ? 'commander' : 'casual';
-    let commander = null;
+    let commander = null, commander2 = null;
     if (format === 'commander') {
-        const c = rows.find(r => parsed.commander.includes(all[rows.indexOf(r)]) && r.card) || rows.find(r => r.card && canBeCommander(r.card));
+        const marked = rows.filter(r => parsed.commander.includes(all[rows.indexOf(r)]) && r.card);
+        const c = marked.find(r => canBeCommander(r.card)) || rows.find(r => r.card && canBeCommander(r.card));
         if (!c) throw new Error('That list has no commander (a legendary creature, or a planeswalker that can be your commander).');
         commander = c.card;
+        const second = impSecondFor(rows, c, marked);
+        commander2 = second ? second.card : null;
     }
-    const ci = (commander ? commander.ci : [...new Set(rows.filter(r => r.card).flatMap(r => r.card.ci))]).filter(c => BASIC_IDS[c]);
+    const ci = (commander ? [...new Set([...commander.ci, ...(commander2 ? commander2.ci : [])])] : [...new Set(rows.filter(r => r.card).flatMap(r => r.card.ci))]).filter(c => BASIC_IDS[c]);
     const entries = [];
-    let swapped = 0, used = false;
+    let swapped = 0, used = false, used2 = false;
     rows.forEach(r => {
         if (!r.card) { swapped += r.n; return; }
         let n = r.n;
         if (commander && r.card.id === commander.id && !used) { used = true; n--; }
+        else if (commander2 && r.card.id === commander2.id && !used2) { used2 = true; n--; }
         if (!n) return;
         if (rulesFor(r.card).support === 'none' && !isBasic(r.card)) { swapped += n; return; }
         entries.push({ card: r.card, n });
@@ -1172,7 +1255,7 @@ async function listToOppDeck(text, wantFormat) {
         const e = entries.find(x => x.card.id === id);
         if (e) e.n++; else entries.push({ card: CARDS.get(id), n: 1 });
     }
-    return { name: commander ? commander.name : 'Pasted deck', format, commander, entries, swapped, source: `pasted decklist${swapped ? `, ${swapped} cards swapped for lands` : ''}` };
+    return { name: commander ? commander.name : 'Pasted deck', format, commander, commander2, entries, swapped, source: `pasted decklist${swapped ? `, ${swapped} cards swapped for lands` : ''}` };
 }
 function pasteOpponentDialog() {
     menuSheet('📋 Face a pasted decklist', `
@@ -1335,7 +1418,7 @@ async function buildCommanderDeck(slug) {
 function generatedToDeck(gen, name) {
     const cards = {};
     gen.entries.forEach(e => { cards[e.card.id] = (cards[e.card.id] || 0) + e.n; });
-    return { id: `d${Date.now()}`, name, format: gen.format, cards, commander: gen.commander ? gen.commander.id : null, starter: true };
+    return { id: `d${Date.now()}`, name, format: gen.format, cards, commander: gen.commander ? gen.commander.id : null, commander2: gen.commander2 ? gen.commander2.id : null, starter: true };
 }
 
 // Decks checked card by card (every card Automated, rule checks and AI games; owner's decks, 2026-10-07 and 2026-10-08).
@@ -1354,7 +1437,7 @@ const VERIFIED_DECKS = [
     { key: 'jenova', name: "Jenova, Ancient Calamity", colors: ["B", "G"], desc: "Golgari graveyard reanimator: sacrifice and edict effects, Mutant counters from Jenova every combat, and a pile of ways to bring creatures back (the owner's list)", checked: '2026-10-21', text: "1 Accursed Marauder\n1 Agadeem's Awakening\n1 Aid the Fallen\n1 Archenemy's Charm\n1 Archfiend of Ifnir\n1 Badlands Revival\n1 Bala Ged Recovery\n1 Behold the Sinister Six!\n1 Black Market Connections\n1 Call Damage Control\n1 Campfire\n1 Command Tower\n1 Deadly Brew\n1 Deathcap Glade\n1 Desperate Plea\n1 Dina, Essence Brewer\n1 Dina's Guidance\n1 Doc Samson, Super Psychiatrist\n1 Dose of Dawnglow\n1 Dryad's Revival\n1 Dutiful Attendant\n1 Eldritch Evolution\n1 Elixir of Immortality\n1 Emeritus of Abundance\n1 Emeritus of Woe\n1 Evil Reawakened\n1 Evolution Witness\n1 Fell the Profane\n1 Find // Finality\n1 Flare of Malice\n1 Fleshbag Marauder\n9 Forest\n1 Galuf's Final Act\n1 Garruk, Veiled Butcher\n1 Golgari Rot Farm\n1 Groundchuck & Dirtbag\n1 Heroic Intervention\n1 High Market\n1 Kami of Whispered Hopes\n1 Leatherhead, Iron Gator\n1 Llanowar Wastes\n1 Malakir Rebirth\n1 Michelangelo, the Heart\n1 Mona Lisa, Ever Adaptable\n1 Mona Lisa, Science Geek\n1 Necroblossom Snarl\n1 Origin of Metalbending\n1 Overgrown Tomb\n1 Overkill\n1 Reanimate\n1 Regrowth\n1 Revitalizing Repast\n1 Rise of the Dark Realms\n1 Rise of the Witch-king\n1 Ruthless Technomancer\n1 Sephiroth, Fabled SOLDIER\n1 Sphere Grid\n1 Splinter, the Mentor\n1 Squirrelanoids\n1 Strength of Will\n1 Summon: Fenrir\n1 Super Shredder\n9 Swamp\n1 The Warring Triad\n1 Tom, Bert, and William\n1 Topiary Lecturer\n1 Travel Through Caradhras\n1 Troop of Ponies\n1 Turbulent Fen\n1 Twilight Mire\n1 Undergrowth Stadium\n1 Vastwood Fortification\n1 Victimize\n1 Viridescent Bog\n1 Warden of the Grove\n1 Winter, Tormented Loner\n1 Witherbloom, the Balancer\n1 Wolverine, Claws Out\n1 Woodland Cemetery\n1 X-23, Deadly Weapon\n1 Yavimaya, Cradle of Growth\n1 Zero Point Ballad\n1 Zodiark, Umbral God\n\n1 Jenova, Ancient Calamity\n" },
     { key: 'bertha', name: "Big Bertha", colors: ["G"], desc: "Mono-green Mutant counters: Big Bertha grows every turn, with counter doublers (Fangs of Kalonia, Study the Classics, Hardened Scales), Mutagen tokens and big green mana (the owner's list)", checked: '2026-10-27', text: "1 Atraxa's Fall\n1 Beast Within\n1 Big Mother Mouser\n1 Bighorner Rancher\n1 Biophagus\n1 Branching Evolution\n1 Brass Infiniscope\n1 Bushmaster, Coiled Henchman\n1 Claim the Kingdom\n1 Doc Samson, Super Psychiatrist\n1 Earthbender Ascension\n1 Elementalist's Palette\n1 Emil, Vastlands Roamer\n1 Fangs of Kalonia\n1 Fertilid\n1 Flopsie, Bumi's Buddy\n36 Forest\n1 Galuf's Final Act\n1 Gamma Grotesque\n1 Goldvein Hydra\n1 Goliath, Mass Manipulator\n1 Groundchuck & Dirtbag\n1 Gyre Sage\n1 Hardened Scales\n1 Incubation Druid\n1 Inspiring Call\n1 Jocasta, Automaton Avenger\n1 Ka-Zar of the Savage Land\n1 Kami of Whispered Hopes\n1 Knight of Wundagore\n1 Leatherhead, Iron Gator\n1 Lifeblood Hydra\n1 Lily Bowen, Raging Grandma\n1 Mana Bloom\n1 Medusa, Inhuman Queen\n1 Michelangelo, Weirdness to 11\n1 Mister Hyde, Monster Within\n1 Mona Lisa, Science Geek\n1 Mutagen Man, Living Ooze\n1 Nesting Grounds\n1 Nev, the Practical Dean\n1 Origin of Metalbending\n1 Ornery Tumblewagg\n1 Ozolith, the Shattered Spire\n1 Palazzo Archers\n1 Pest Infestation\n1 Power Fist\n1 Railway Brawler\n1 Rampaging Yao Guai\n1 Sazh's Chocobo\n1 Scythecat Cub\n1 Shang-Chi, Martial Mentor\n1 Silkguard\n1 Sporocyst\n1 Study the Classics\n1 Summon: Fenrir\n1 Synchronized Charge\n1 The Earth King\n1 The Ooze\n1 Training Regimen\n1 Unbound Flourishing\n1 Vision, Synthezoid Avenger\n1 Voracious Brood\n1 Yavimaya Bloomsage\n1 Zanarkand, Ancient Metropolis\n\n1 Big Bertha\n" },
     { key: 'samutdf', name: "Samut, the Driving Force", colors: ["W","R","G"], desc: "Naya speed: Samut gives your other creatures +X/+0 where X is your speed, with Mercenary tokens, Paradigm lessons, convoke legends and big attackers (the owner's list)", checked: '2026-10-27', text: "1 Adeline, Resplendent Cathar\n1 Amonkhet Raceway\n1 An Unexpected Party\n1 Angelic Sell-Sword\n1 Anim Pakal, Thousandth Moon\n1 Animist's Awakening\n1 Arcane Signet\n1 Astral Cornucopia\n1 Avishkar Raceway\n1 Battlefield Forge\n1 Become the Avalanche\n1 Blunt the Assault\n1 Borrowed Knowledge\n1 Brass Infiniscope\n1 Burnout Bashtronaut\n1 Clifftop Retreat\n1 Collector's Vault\n1 Command Tower\n1 Congregate\n1 Daily Bugle Newspaper\n1 Decree of Savagery\n1 Devastating Onslaught\n1 Elementalist's Palette\n1 Elixir\n1 Endless Foot Assault\n1 Endrider Catalyzer\n1 Exotic Orchard\n7 Forest\n1 Form a Posse\n1 Forth Eorlingas!\n1 Garruk's Uprising\n1 Germination Practicum\n1 Gogo, Mysterious Mime\n1 Hazoret, Godseeker\n1 Horn of Valhalla\n1 Howlsquad Heavy\n1 Hulkling, Young Avenger\n1 Hunting Pack\n1 Improvisation Capstone\n1 Jaheira's Respite\n1 Jetmir's Garden\n1 Krenko, Tin Street Kingpin\n1 Lifestream's Blessing\n1 March of the Multitudes\n1 Mirage Mirror\n7 Mountain\n1 Muraganda Raceway\n1 Myr Battlesphere\n1 Open the Way\n1 Overgrown Farmland\n1 Oviya, Automech Artisan\n1 Parhelion II\n1 Phylath, World Sculptor\n7 Plains\n1 Point the Way\n1 Primeval Herald\n1 Racers' Scoreboard\n1 Radha, Heir to Keld\n1 Rampant Frogantua\n1 Restoration Seminar\n1 Return of the Wildspeaker\n1 Rockfall Vale\n1 Rolling Hamsphere\n1 Rootbound Crag\n1 Royal Talon Fighter Jet\n1 Sacred Foundry\n1 Sol Ring\n1 Song of Totentanz\n1 Spectator Seating\n1 Spire Garden\n1 Stomping Ground\n1 Sunpetal Grove\n1 Temple Garden\n1 The Earth King\n1 Threefold Thunderhulk\n1 Travel Through Caradhras\n1 Treacherous Terrain\n1 True Conviction\n1 Thran Dynamo\n1 We Ride at Dawn\n1 World Map\n1\n\n1 Samut, the Driving Force" },
-    { key: 'othelm', name: "Othelm and Wernog", colors: ["W","B","G"], desc: "Abzan Clues and recursion: Wernog and Othelm (partners) with sacrifice outlets, Clues, Reveillark, The Gitrog and plenty of ways to bring creatures back (the owner's list; the game has one commander, so Wernog plays from the deck; the list's 35 Command Towers are one Command Tower and 34 basics, since Commander is singleton)", checked: '2026-10-27', text: "1 Angel of the Ruins\n1 Arcane Signet\n1 Athreos, God of Passage\n1 Bala Ged Recovery\n1 Bebop & Rocksteady\n1 Behold the Sinister Six!\n1 Brainspoil\n1 Braulios of Pheres Band\n1 Burning-Rune Demon\n1 Burnished Hart\n1 Cauldron of Essence\n1 Command Tower\n14 Swamp\n12 Forest\n8 Plains\n1 Crash of Rhino Beetles\n1 Dawntreader Elk\n1 Deadly Dispute\n1 Demonic Taskmaster\n1 Dimir House Guard\n1 Dimir Machinations\n1 Dryad's Revival\n1 Eternal Witness\n1 Genesis Wave\n1 Havengul Laboratory\n1 Healing Technique\n1 High Market\n1 Insidious Fungus\n1 June, Bounty Hunter\n1 Karmic Guide\n1 Lazotep Quarry\n1 Lifestream's Blessing\n1 Magus of the Balance\n1 Malboro\n1 Merchant of Truth\n1 Mind Stone\n1 Moldervine Reclamation\n1 Momentous Fall\n1 Netherborn Phalanx\n1 Noble Heritage\n1 Nurgle's Conscription\n1 Nyla, Shirshu Sleuth\n1 Obsessive Pursuit\n1 Persuasive Interrogators\n1 Pitiless Carnage\n1 Priest of Fell Rites\n1 Primeval Herald\n1 Prismatic Undercurrents\n1 Raven Eagle\n1 Reveillark\n1 Rise of the Dark Realms\n1 Sakura-Tribe Elder\n1 Sandman, Shifting Scoundrel\n1 Shadowheart, Dark Justiciar\n1 Shred Memory\n1 Sol Ring\n1 Summon: Fenrir\n1 Summon: Titan\n1 Sylvan Reclamation\n1 The Gitrog, Ravenous Ride\n1 The Soul Stone\n1 Timeless Witness\n1 Troll of Khazad-d\u00fbm\n1 Ulvenwald Hydra\n1 What Must Be Done\n1 Witch Enchanter\n1 Yavimaya Elder\n\n1 Othelm, Sigardian Outcast\n1 Wernog, Rider's Chaplain\n" },
+    { key: 'othelm', name: "Othelm and Wernog", colors: ["W","B","G"], desc: "Abzan Clues and recursion: Wernog and Othelm (partners) with sacrifice outlets, Clues, Reveillark, The Gitrog and plenty of ways to bring creatures back (the owner's list, with both as commanders (Friends forever); the list's 35 Command Towers are one Command Tower and 34 basics, since Commander is singleton)", checked: '2026-10-27', text: "1 Angel of the Ruins\n1 Arcane Signet\n1 Athreos, God of Passage\n1 Bala Ged Recovery\n1 Bebop & Rocksteady\n1 Behold the Sinister Six!\n1 Brainspoil\n1 Braulios of Pheres Band\n1 Burning-Rune Demon\n1 Burnished Hart\n1 Cauldron of Essence\n1 Command Tower\n14 Swamp\n12 Forest\n8 Plains\n1 Crash of Rhino Beetles\n1 Dawntreader Elk\n1 Deadly Dispute\n1 Demonic Taskmaster\n1 Dimir House Guard\n1 Dimir Machinations\n1 Dryad's Revival\n1 Eternal Witness\n1 Genesis Wave\n1 Havengul Laboratory\n1 Healing Technique\n1 High Market\n1 Insidious Fungus\n1 June, Bounty Hunter\n1 Karmic Guide\n1 Lazotep Quarry\n1 Lifestream's Blessing\n1 Magus of the Balance\n1 Malboro\n1 Merchant of Truth\n1 Mind Stone\n1 Moldervine Reclamation\n1 Momentous Fall\n1 Netherborn Phalanx\n1 Noble Heritage\n1 Nurgle's Conscription\n1 Nyla, Shirshu Sleuth\n1 Obsessive Pursuit\n1 Persuasive Interrogators\n1 Pitiless Carnage\n1 Priest of Fell Rites\n1 Primeval Herald\n1 Prismatic Undercurrents\n1 Raven Eagle\n1 Reveillark\n1 Rise of the Dark Realms\n1 Sakura-Tribe Elder\n1 Sandman, Shifting Scoundrel\n1 Shadowheart, Dark Justiciar\n1 Shred Memory\n1 Sol Ring\n1 Summon: Fenrir\n1 Summon: Titan\n1 Sylvan Reclamation\n1 The Gitrog, Ravenous Ride\n1 The Soul Stone\n1 Timeless Witness\n1 Troll of Khazad-d\u00fbm\n1 Ulvenwald Hydra\n1 What Must Be Done\n1 Witch Enchanter\n1 Yavimaya Elder\n\n1 Othelm, Sigardian Outcast\n1 Wernog, Rider's Chaplain\n" },
     { key: 'gishath', name: "Gishath, Sun's Avatar", colors: ["R", "G", "W"], desc: "Naya Dinosaurs: ramp into huge Dinosaurs and cast free spells, with a 8-mana haste commander that puts more Dinosaurs onto the battlefield when it connects (the owner's list)", checked: '2026-10-15', text: "1 Order // Chaos\n1 Ornery Dilophosaur\n1 Giant Cindermaw\n1 Soaring Sandwing\n1 Snakeskin Veil\n1 Annoyed Altisaur\n1 Rampaging Ceratops\n1 Tyrranax Atrocity\n1 Feat of Resistance\n1 Ravenous Sailback\n1 Game Trail\n1 Commander's Sphere\n1 Nurturing Bristleback\n1 Panicked Altisaur\n1 Scytheclaw Raptor\n1 Zetalpa, Primal Dawn\n1 Sheltering Landscape\n1 Earthshaker Dreadmaw\n1 Rampaging Brontodon\n1 Burning Sun's Avatar\n1 Ancestors' Aid\n1 Cinder Glade\n9 Plains\n1 Terminus\n1 Etali, Primal Storm\n1 Farseek\n1 Wakening Sun's Avatar\n1 Kinjalli's Sunwing\n1 Cultivate\n1 Gaea's Gift\n1 Regal Behemoth\n1 Rampant Growth\n1 Regisaur Alpha\n1 Karplusan Forest\n1 Marauding Raptor\n1 Tyvar's Stand\n1 Ghalta and Mavren\n1 Inspiring Vantage\n1 Kodama's Reach\n1 Impact Tremors\n6 Mountain\n1 Crop Rotation\n1 Eldritch Evolution\n1 Command Tower\n1 Thran Dynamo\n1 Trumpeting Carnosaur\n7 Forest\n1 Rampaging Ferocidon\n1 Virtue of Strength\n1 Nature's Rhythm\n1 Rebuff the Wicked\n1 Tyrranax Rex\n1 Zacama, Primal Calamity\n1 Monster Manual\n1 Temple Garden\n1 Stomping Ground\n1 Don't Move\n1 Command Beacon\n1 Sol Ring\n1 The Skullspore Nexus\n1 Titanoth Rex\n1 Lightning Greaves\n1 Bonehoard Dracosaur\n1 Helm of the Host\n1 Pantlaza, Sun-Favored\n1 Polyraptor\n1 Jetmir's Garden\n1 Flawless Maneuver\n1 Windswept Heath\n1 Reflecting Pool\n1 Sacred Foundry\n1 Etali, Primal Conqueror\n1 Worldly Tutor\n1 Arid Mesa\n1 Savage Order\n1 Ghalta, Stampede Tyrant\n1 Enlightened Tutor\n1 Roaming Throne\n1 Cavern of Souls\n1 Arcane Signet\n\n1 Gishath, Sun's Avatar\n" },
     { key: 'samut', name: "Samut, Hazoret's Champion", colors: ["R"], style: 'ramp', desc: "Mono-red ramp into bombs: about 29 mana rocks, rituals and mana creatures (plus 29 lands) get dragons, Titans and Embercleave out early, with card draw to find them. Samut gives every creature haste, so the big things attack the turn they land. About $284 at the cheapest printings (Scryfall prices, 2026-10-15)", checked: '2026-10-15', text: "24 Mountain\n1 Castle Embereth\n1 Sokenzan, Crucible of Defiance\n1 Myriad Landscape\n1 Treasure Vault\n1 Kher Keep\n1 Sol Ring\n1 Arcane Signet\n1 Mind Stone\n1 Fellwar Stone\n1 Thought Vessel\n1 Commander's Sphere\n1 Everflowing Chalice\n1 Worn Powerstone\n1 Fire Diamond\n1 Prismatic Lens\n1 Gilded Lotus\n1 Thran Dynamo\n1 Basalt Monolith\n1 Hedron Archive\n1 Dragon's Hoard\n1 Burnished Hart\n1 Solemn Simulacrum\n1 Palladium Myr\n1 Ornithopter of Paradise\n1 Iron Myr\n1 Mana Geyser\n1 Jeska's Will\n1 Seething Song\n1 Rite of Flame\n1 Big Score\n1 Seize the Spoils\n1 Unexpected Windfall\n1 Wheel of Fortune\n1 Tormenting Voice\n1 Thrill of Possibility\n1 Faithless Looting\n1 Light Up the Stage\n1 Skullclamp\n1 Outpost Siege\n1 Terror of the Peaks\n1 Goldspan Dragon\n1 Bonehoard Dracosaur\n1 Glorybringer\n1 Inferno Titan\n1 Etali, Primal Storm\n1 Lathliss, Dragon Queen\n1 Scourge of the Throne\n1 Hellkite Tyrant\n1 Utvara Hellkite\n1 Drakuseth, Maw of Flames\n1 Angrath's Marauders\n1 Skyline Despot\n1 Hellkite Charger\n1 Myr Battlesphere\n1 Combustible Gearhulk\n1 Steel Hellkite\n1 Siege-Gang Commander\n1 Thundermane Dragon\n1 Hellrider\n1 Torbran, Thane of Red Fell\n1 Krenko, Mob Boss\n1 Embercleave\n1 Fiery Emancipation\n1 Fireball\n1 Lightning Bolt\n1 Abrade\n1 Mizzium Mortars\n1 Mana Vault\n1 Ruby Medallion\n1 Pyretic Ritual\n1 Simian Spirit Guide\n1 Wayfarer's Bauble\n1 Springleaf Drum\n1 Shimmer Myr\n1 Pristine Talisman\n\n1 Samut, Hazoret's Champion" },
     { key: 'giada', name: "Giada, Font of Hope (Calling All Angels)", colors: ["W"], desc: "Mono-white Angels and lifegain: Angels that gain you life as they enter, with a 2-mana flying commander (Commander precon, FDC)", checked: '2026-10-15', text: "1 Always Watching\n1 Angel of the Ruins\n1 Angelic Destiny\n1 Angelic Field Marshal\n1 Angelic Sleuth\n1 Archangel of Tithes\n1 Austere Command\n1 Bishop of Wings\n1 Cleansing Nova\n1 Court of Grace\n1 Day of Judgment\n1 Emeria Shepherd\n1 Exemplar of Light\n1 Fateful Absence\n1 Firemane Commando\n1 Grasp of Fate\n1 Herald of Eternal Dawn\n1 Herald of War\n1 Linvala, the Preserver\n1 Lyra Dawnbringer\n1 Merchant of Truth\n1 Metropolis Reformer\n1 Norn's Choirmaster\n1 Reya Dawnbringer\n1 Righteous Valkyrie\n1 Search the Premises\n1 Sephara, Sky's Blade\n1 Seraph of the Sword\n1 Serra Avenger\n1 Speaker of the Heavens\n1 Sunblast Angel\n1 Wojek Investigator\n1 Endless Atlas\n1 Metallic Mimic\n1 Tome of Legends\n1 Vanquisher's Banner\n1 Bonders' Enclave\n1 War Room\n1 Angel of Finality\n1 Angel of Vitality\n1 Cut a Deal\n1 Dazzling Angel\n1 Defy Death\n1 Destroy Evil\n1 Exorcise\n1 Inspiring Overseer\n1 Invoke the Divine\n1 Secret Rendezvous\n1 Segovian Angel\n1 Starnheim Aspirant\n1 Swords to Plowshares\n1 Thraben Watcher\n1 Valorous Stance\n1 Vanguard Seraph\n1 Youthful Valkyrie\n1 Arcane Signet\n1 Commander's Sphere\n1 Heraldic Banner\n1 Marble Diamond\n1 Mind Stone\n1 Patchwork Banner\n1 Sol Ring\n1 Swiftfoot Boots\n1 Radiant Fountain\n1 Secluded Steppe\n1 Seraph Sanctuary\n1 Temple of the False God\n16 Plains\n16 Plains\n\n1 Giada, Font of Hope" },
@@ -1485,12 +1568,12 @@ async function startFriendMatch() {
     if (!mine || !theirs) { toast('Pick both decks first.'); return; }
     showModal('<h2>Shuffling up...</h2><p class="loading">Loading both decks...</p>');
     try {
-        await cardsByIds([...Object.keys(mine.cards), mine.commander, ...Object.keys(theirs.cards), theirs.commander].filter(Boolean));
+        await cardsByIds([...Object.keys(mine.cards), mine.commander, mine.commander2, ...Object.keys(theirs.cards), theirs.commander, theirs.commander2].filter(Boolean));
         await loadBasics();
         const A = deckToEntries(mine), B = deckToEntries(theirs);
         const fmt = mine.format === 'commander' && theirs.format === 'commander' ? 'commander' : 'casual';
         A.format = B.format = fmt;
-        if (fmt !== 'commander') { A.commander = null; B.commander = null; }
+        if (fmt !== 'commander') { A.commander = null; B.commander = null; A.commander2 = null; B.commander2 = null; }
         closeModal();
         newGame(A, B, { accounts: [accounts.current, name] });
     } catch (e) {
@@ -1568,9 +1651,9 @@ async function savedToOppDeck(who, idx) {
     const prof = who === accounts.current ? profile : store.get(`profile:${who}`, null), d = prof && prof.decks[idx];
     if (!d) throw new Error('That deck is gone.');
     await loadBasics();
-    await cardsByIds([...Object.keys(d.cards), d.commander].filter(Boolean));
-    const commander = d.commander ? CARDS.get(d.commander) : null;
-    const ci = (commander ? commander.ci : [...new Set(Object.keys(d.cards).map(id => CARDS.get(id)).filter(Boolean).flatMap(c => c.ci))]).filter(c => BASIC_IDS[c]);
+    await cardsByIds([...Object.keys(d.cards), d.commander, d.commander2].filter(Boolean));
+    const commander = d.commander ? CARDS.get(d.commander) : null, commander2 = d.commander2 ? CARDS.get(d.commander2) : null;
+    const ci = (commander ? [...new Set([...commander.ci, ...(commander2 ? commander2.ci : [])])] : [...new Set(Object.keys(d.cards).map(id => CARDS.get(id)).filter(Boolean).flatMap(c => c.ci))]).filter(c => BASIC_IDS[c]);
     const entries = []; let swapped = 0;
     Object.entries(d.cards).forEach(([id, n]) => {
         const card = CARDS.get(id);
@@ -1583,7 +1666,7 @@ async function savedToOppDeck(who, idx) {
         const e = entries.find(x => x.card.id === id);
         if (e) e.n++; else entries.push({ card: CARDS.get(id), n: 1 });
     }
-    return { name: d.name, format: d.format, commander, entries, swapped, source: `${who}'s saved deck${swapped ? `, ${swapped} cards swapped for lands` : ''}` };
+    return { name: d.name, format: d.format, commander, commander2, entries, swapped, source: `${who}'s saved deck${swapped ? `, ${swapped} cards swapped for lands` : ''}` };
 }
 function oppChosenLine() {
     if (!chosenOpponent) return '<div class="note" style="margin-bottom:8px;">No opponent picked yet.</div>';

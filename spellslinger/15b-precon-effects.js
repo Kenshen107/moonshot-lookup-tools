@@ -149,7 +149,7 @@ async function preconEffect(P, e, t, src, O, name) {
             if (n) log(`${name} exiles ${n} more ${nm} from ${X.name}'s graveyard, hand and library.`);
             break;
         }
-        case 'drawHostCtl': { const h = src.attachedTo && onBf(src.attachedTo); if (h) { const X = G.players[h.owner]; drawCards(X, 1); log(`${X.name} ${you(X) ? 'draw' : 'draws'} an additional card.`); } break; }
+        case 'drawHostCtl': { const h = src.attachedTo && onBf(src.attachedTo); const X = h ? G.players[h.owner] : G.players[G.active]; if (X && !X.out) { drawCards(X, 1); log(`${X.name} ${you(X) ? 'draw' : 'draws'} an additional card (${src.card.name}).`); } break; } // an Aura draws for the enchanted creature's controller; Howling Mine and Kami of the Crescent Moon for the player whose draw step it is
         case 'lockLastLand': (G.lastTargets || []).forEach(x => { if (x.o && onBf(x.o.uid)) x.o.lockedBy = src.uid; }); break;
         case 'callWild': {
             const c = P.library[P.library.length - 1]; if (!c) break;

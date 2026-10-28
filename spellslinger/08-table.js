@@ -119,7 +119,7 @@ function podFocus(i) { G.focusPick = i; renderGame(); }
 function barHTML(P) {
     const m = G.mode;
     const targetable = m && m.type === 'target' && m.valid.some(v => v.p && v.p.i === P.i);
-    const cmd = P.command.map(o => `<button type="button" class="btn small" onclick="showGameCard(${o.uid})">👑 ${esc(o.card.name.split(',')[0])}${P.tax ? ` (+${P.tax * 2})` : ''}</button>`).join('');
+    const cmd = P.command.map(o => `<button type="button" class="btn small" onclick="showGameCard(${o.uid})">👑 ${esc(o.card.name.split(',')[0])}${(() => { const t = P.commanderUid2 ? (P.cmdCastN[o.cmdSlot || 0] || 0) : P.tax; return t ? ` (+${t * 2})` : ""; })()}</button>`).join('');
     return `
         <span class="who">${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? '🧙 You' : `🤖 ${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
         <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}">❤️ ${P.life}</button>

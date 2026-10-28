@@ -14,7 +14,7 @@ function playtestDeck(deck) {
     const cards = [];
     Object.entries(d.cards).forEach(([id, n]) => { const c = CARDS.get(id); if (c) for (let k = 0; k < n; k++) cards.push(c); });
     if (!cards.length) { toast('Add some cards first.'); return; }
-    PT = { name: d.name, format: d.format, cards, commander: d.commander ? CARDS.get(d.commander) : null };
+    PT = { name: d.name, format: d.format, cards, commander: d.commander ? CARDS.get(d.commander) : null, commander2: d.commander2 ? CARDS.get(d.commander2) : null };
     $('playtest').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     ptRestart();
@@ -24,7 +24,7 @@ function playtestSaved(i) { playtestDeck(profile.decks[i]); }
 function ptObj(card, extra) { return Object.assign({ uid: ptUid++, card, tapped: false, counters: 0 }, extra || {}); }
 
 function ptRestart() {
-    Object.assign(PT, { library: shuffle(PT.cards.map(c => ptObj(c))), hand: [], bf: [], gy: [], exile: [], command: PT.commander ? [ptObj(PT.commander)] : [],
+    Object.assign(PT, { library: shuffle(PT.cards.map(c => ptObj(c))), hand: [], bf: [], gy: [], exile: [], command: PT.commander ? [ptObj(PT.commander), ...(PT.commander2 ? [ptObj(PT.commander2)] : [])] : [],
         life: FORMATS[PT.format].life, turn: 1, mulligans: 0, log: [] , bottoming: 0 });
     ptDraw(7, true);
     ptLog('New game: drew 7.');
@@ -152,7 +152,7 @@ function ptCardClick(e, uid) {
     Object.entries(PT_ZONES).forEach(([z, label]) => {
         if (z === f.z) return;
         if (z === 'library') { items.push(['To top of library', `ptMove(${uid}, 'library', 'top')`], ['To bottom of library', `ptMove(${uid}, 'library', 'bottom')`]); return; }
-        if (z === 'command' && !(PT.commander && f.o.card.id === PT.commander.id)) return;
+        if (z === 'command' && !([PT.commander, PT.commander2].some(c => c && f.o.card.id === c.id))) return;
         items.push([`To ${label.toLowerCase()}`, `ptMove(${uid}, '${z}')`]);
     });
     items.push(['🔍 View card', `closePtMenu(); showCardSheet('${f.o.card.id}')`]);

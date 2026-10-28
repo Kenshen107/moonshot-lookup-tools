@@ -157,11 +157,11 @@ window.LAB = (() => {
     L.listDeck = text => {
         const byName = new Map(); L.pool.forEach(c => { if (!byName.has(c.fullName)) byName.set(c.fullName, c); if (!byName.has(c.name)) byName.set(c.name, c); });
         const blocks = text.trim().split(/\n\s*\n/), entries = [];
-        let commander = null;
-        const read = (blk, isCmd) => blk.split('\n').forEach(l => { const m = l.match(/^(\d+)\s+(.+)$/); if (!m) return; const c = byName.get(m[2].trim()); if (!c) throw new Error('deck: unknown card ' + m[2]); if (isCmd) commander = c; else entries.push({ card: c, n: Number(m[1]) }); });
+        let commander = null, commander2 = null;
+        const read = (blk, isCmd) => blk.split('\n').forEach(l => { const m = l.match(/^(\d+)\s+(.+)$/); if (!m) return; const c = byName.get(m[2].trim()); if (!c) throw new Error('deck: unknown card ' + m[2]); if (isCmd) { if (commander) commander2 = c; else commander = c; } else entries.push({ card: c, n: Number(m[1]) }); });
         read(blocks[0], false); if (blocks[1]) read(blocks[1], true);
         const sm = text.match(/^\s*(?:#|\/\/)\s*style:\s*(\w+)/m); // an optional first line "# style: aggro" picks the playstyle (default control)
-        return { name: `${commander ? commander.name : 'List'} (list)`, format: 'commander', commander, entries, source: 'lab', aiStyle: sm ? sm[1] : 'control' };
+        return { name: `${commander ? commander.name : 'List'} (list)`, format: 'commander', commander, commander2, entries, source: 'lab', aiStyle: sm ? sm[1] : 'control' };
     };
 
     // One game. opts: { seed, kind: 'commander'|'modern', la, lb, timeout }. Returns a plain result object.

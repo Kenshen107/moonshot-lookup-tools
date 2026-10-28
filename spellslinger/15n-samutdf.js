@@ -15,13 +15,13 @@ COND_EXTRA.push([/^you have max speed$/, () => P => sdSpeed(P) >= 4]);
         if (!G || G.over) return r;
         if (ev === 'enters' && ctx && ctx.o && Rx(ctx.o).startEngines) {
             const X = G.players[ctx.o.owner];
-            if (X && !sdSpeed(X)) { X.speed = 1; log(`${X.name} start${you(X) ? '' : 's'} their engines: speed 1.`); }
+            if (X && !sdSpeed(X)) { X.speed = 1; log(you(X) ? 'You start your engines: speed 1.' : `${X.name} starts their engines: speed 1.`); }
         }
         if ((ev === 'loseLife' || ev === 'playerDamaged') && ctx && ctx.P && (ctx.n || 0) > 0 && G.active !== undefined && G.active !== null) {
             const A = G.players[G.active];
             if (A && ctx.P !== A && !ctx.P.out && sdSpeed(A) > 0 && sdSpeed(A) < 4 && A.speedTurn !== G.turn) {
                 A.speed = sdSpeed(A) + 1; A.speedTurn = G.turn;
-                log(`${A.name}'s speed increases to ${A.speed}${A.speed >= 4 ? ' (max speed)' : ''}.`);
+                log(`${you(A) ? 'Your' : `${A.name}'s`} speed increases to ${A.speed}${A.speed >= 4 ? ' (max speed)' : ''}.`);
             }
         }
         // Forth Eorlingas!: until end of turn, combat damage to a player makes you the monarch
