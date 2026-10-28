@@ -2,7 +2,7 @@
 
 Added 2026-10-28 at the owner's request ("improve the bot interaction ... robust just like a real game of magic", then "build C, B and A in that order and start to document how it all works intricately"). Code: `spellslinger/07i-table-sense.js` (loaded right after `07h-deal-tension.js`). Tests: `tests/suites/tablesense.js`. This file is the long version; CLAUDE.md has the short one.
 
-## Why these three
+## Why these (A to C, then D)
 
 The research (Commander strategy writers, bluffing and priority discussions, and what the existing bots lacked) kept coming back to three habits that separate a table of people from a table of scripts:
 
@@ -27,6 +27,8 @@ The lab had already shown that *what* the bots cast matters little (random casti
 | `trickWindow` | 1 | Cast tricks and instant removal after blocks (0 = off). |
 | `trickAtk` | 1 | Attack into a bad block when a trick wins it (0 = off). |
 | `fear` | 1 | Hold small attackers back from open mana (0 = off). |
+| `quiet` | 1 | Stay-quiet trait: 1 = control / ramp / spellslinger bots and Marcus, Trevor, Sarah; 0 = off; 2 = every bot. |
+| `quietRounds` | 9 | Most rounds a quiet bot hides. |
 | `duels` | 0 | 1 = also use all of this in two-player games. |
 
 ## C. Let somebody else answer it
@@ -88,6 +90,26 @@ The held mana is what powers B on the opponents' turns (the lands stay untapped 
 
 **Known simplifications.** The bot reads open mana, not the opponent's actual hand, so a hand of lands scares it as much as a hand of tricks (that is the point of a bluff, and it works on bots and people alike). Mana held by *abilities* the bot activates later in the turn (`aiUseAbilities`) isn't accounted for.
 
+## D. Stay quiet
+
+**What it does.** A "quiet" bot plays the long game the way a quiet player at a real table does: it doesn't attack people who haven't hurt it (an attack makes an enemy and a target), and while it is near the top of the table's threat ranking it holds back its one big play. It comes out of hiding when it has a reason. Code: `spellslinger/07j-stay-quiet.js`.
+
+**Who is quiet (`isQuiet`).** The Control, Ramp and Spellslinger styles, the characters Marcus, Trevor and Sarah (`CHARACTER_HABITS[..].quiet = 1`), and decks themed Pillowfort or Stax. The knob `AI_TUNE.quiet`: 1 = those bots, 0 = nobody, 2 = every bot (the lab uses 2 to measure the trait on a bot that wouldn't normally have it).
+
+**When it stops hiding (`quietState`).** Any one of these ends it, and the reason is kept:
+1. it can finish somebody (`winThreat(P)`);
+2. it is at 12 life or less;
+3. it is the archenemy, because the table is already after it;
+4. `quietRounds` rounds (default 9, so 36 turns in a 4-player pod) have passed;
+5. only two players are left.
+
+**What it changes while hiding.**
+- `aiChooseAttackers` is wrapped: only creatures that must attack (goaded, "attacks each combat") go. The bot says one line ("I'm just building. Nothing to see here."), counter `quietNoAttack`. When it comes out it says "Alright, enough sitting back." (counter `reveals`).
+- `aiScore` is wrapped: a creature, artifact or enchantment costing 5 or more is scored 0 while hiding **and** the bot's `podThreat` is within 85% of the highest other player (`nearTop`), unless the hand is 7 cards (it would discard). Counter `quietHolds`. If another player is far ahead, the bot casts it, since it isn't giving itself away.
+- `dealScore` is wrapped: a quiet bot gives a peace or hands-off deal +1.
+
+**Not built.** Holding a wrath for a better moment is C, not D; deliberately under-developing a board (casting 3 of 4 castable cheap spells); and a quiet bot lying about its hand.
+
 ## How to check it
 
 - `node tests/suites/tablesense.js` (or `python3 tests/run_all.py tablesense`): 36 checks, one per habit and per switch, plus the duel guard.
@@ -96,7 +118,6 @@ The held mana is what powers B on the opponents' turns (the lands stay untapped 
 
 ## Not built (offered)
 
-- **D, "stay quiet"**: a playstyle trait where a bot avoids being the top threat (holds back its biggest play, doesn't over-attack) until it can finish the game.
 - Multi-turn sequencing (play the tapped land now so next turn has the mana), smarter mulligans, and the legend rule choice.
 - Bluffing with **nothing** on purpose (leaving mana up on a turn the bot could have used it), and mana held for flash creatures at the end step.
 - Using the same habits in duels (`AI_TUNE.duels = 1`; it needs the 2-player baseline re-saved).
