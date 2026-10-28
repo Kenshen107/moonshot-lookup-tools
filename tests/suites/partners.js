@@ -7,7 +7,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
 
 (async () => {
     const h = await launch({ profileDir: undefined });
-    const NAMES = ['Thrasios, Triton Hero','Tymna the Weaver','Pir, Imaginative Rascal','Toothy, Imaginary Friend','Othelm, Sigardian Outcast',"Wernog, Rider's Chaplain",'Wilson, Refined Grizzly','Raised by Giants','Kratos, Stoic Father','Atreus, Impulsive Son','The Second Doctor','Ace, Fearless Rebel','Grizzly Bears','Hill Giant','Sol Ring'];
+    const NAMES = ['Thrasios, Triton Hero','Tymna the Weaver','Pir, Imaginative Rascal','Toothy, Imaginary Friend','Othelm, Sigardian Outcast',"Wernog, Rider's Chaplain",'Wilson, Refined Grizzly','Raised by Giants','Kratos, Stoic Father','Atreus, Impulsive Son','The Second Doctor','Ace, Fearless Rebel','Grizzly Bears','Hill Giant','Sol Ring','Plains','Forest','Swamp'];
     // the Othelm deck's cards come with the verified list
     const { page, errors } = await openTestPage(h.ctx, h.server);
     await installHelpers(page);
@@ -73,6 +73,35 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
                 ok('Othelm and Wernog deck: both are commanders', gen.commander && gen.commander2 && [gen.commander.name, gen.commander2.name].sort().join('|') === "Othelm, Sigardian Outcast|Wernog, Rider's Chaplain", [gen.commander && gen.commander.name, gen.commander2 && gen.commander2.name]);
                 const deck = generatedToDeck(gen, 'x');
                 ok('Othelm and Wernog deck: exactly 100 cards with no problems', deckCount(deck) === 100 && deckProblems(deck).length === 0, [deckCount(deck), deckProblems(deck).slice(0, 3)]);
+            }
+            // a deck saved before second commanders (partner left in the 99) starts a game with both commanders
+            {
+                const old = { id: 'old', name: 'old', format: 'commander', cards: { [have('Plains').id]: 98, [have("Wernog, Rider's Chaplain").id]: 1 }, commander: have('Othelm, Sigardian Outcast').id, starter: true };
+                ok('Old deck: the partner in the 99 is found', legacyPartnerId(old) === have("Wernog, Rider's Chaplain").id, legacyPartnerId(old));
+                const ent = deckToEntries(old);
+                ok('Old deck: it starts with both commanders and the same 100 cards', ent.commander2 && ent.commander2.name.startsWith('Wernog') && ent.entries.reduce((a, e) => a + e.n, 0) === 98, [ent.commander2 && ent.commander2.name, ent.entries.reduce((a, e) => a + e.n, 0)]);
+                ok('Old deck: the saved deck itself is not changed', old.cards[have("Wernog, Rider's Chaplain").id] === 1 && !old.commander2, old.cards);
+            }
+            // end to end: a saved two-commander deck starts a game, and a person casts the second commander from the command zone (twice, with tax)
+            {
+                const deck = { id: 'e2e', name: 'e2e', format: 'commander', cards: { [have('Plains').id]: 90 }, commander: have('Othelm, Sigardian Outcast').id, commander2: have("Wernog, Rider's Chaplain").id, starter: true };
+                const ent = deckToEntries(deck);
+                ok('deckToEntries carries the second commander', ent.commander2 && ent.commander2.name === "Wernog, Rider's Chaplain", ent.commander2 && ent.commander2.name);
+                const [A, B] = await T.newGame();
+                const P = makePlayer(0, 'You', ent, false);
+                G.players[0] = P; P.isAI = false; G.view = 0; G.active = 0; G.phase = 'main1'; G.busy = false; G.stack = []; G.mode = null; manaMode = 'auto'; G.turn = 6;
+                for (let i = 0; i < 8; i++) putOntoBattlefield(P, makeObj(have('Forest'), 0));
+                for (let i = 0; i < 4; i++) putOntoBattlefield(P, makeObj(have('Swamp'), 0)); for (let i = 0; i < 4; i++) putOntoBattlefield(P, makeObj(have('Plains'), 0));
+                P.hand.length = 0;
+                const second = P.command.find(c => c.cmdSlot === 1);
+                ok('Game: the second commander is in the command zone and can be cast', !!second && canCastNow(P, second) && canPay(P, second), [!!second, second && canCastNow(P, second), second && canPay(P, second)]);
+                await humanCast(second.uid); await settle(); await settle();
+                ok('Cast: the second commander resolves onto the battlefield', P.bf.includes(second) && !P.command.includes(second), [P.bf.includes(second), P.command.map(c => c.card.name)]);
+                ok('Cast: casting it counted a cast for its own slot only', (P.cmdCastN[1] || 0) === 1 && !(P.cmdCastN[0] || 0), P.cmdCastN);
+                const first = P.command.find(c => c.cmdSlot === 0);
+                ok('Tax: the other commander still costs no extra', extraCost(P, first) === 0, extraCost(P, first));
+                dieOrLeave(second, 'gy'); await settle(); await settle();
+                ok('Dying: it can return to the command zone with tax {2}', (P.command.includes(second) || P.gy.includes(second)) && (!P.command.includes(second) || extraCost(P, second) === 2), [P.command.includes(second), P.gy.includes(second), extraCost(P, second)]);
             }
             // the game: both start in the command zone, with their own tax and commander damage
             {

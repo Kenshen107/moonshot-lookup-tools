@@ -313,6 +313,17 @@ const FORMATS = {
     limited: { name: 'Limited', size: 40, copies: 99, life: 20 }
 };
 
+// A deck saved before second commanders existed keeps its partner in the 99: the one card there that pairs with the commander (null if none or several)
+function legacyPartnerId(deck) {
+    if (deck.format !== 'commander' || deck.commander2 || !deck.commander) return null;
+    const cmd = CARDS.get(deck.commander); if (!cmd) return null;
+    const ids = Object.keys(deck.cards || {}).filter(id => CARDS.get(id) && deck.cards[id] > 0 && pairKind(cmd, CARDS.get(id)));
+    return ids.length === 1 ? ids[0] : null;
+}
+function moveToCommandZone(id) {
+    if (!editing || editing.commander2) return;
+    takeFromMain(id); editing.commander2 = id; builderChanged();
+}
 function deckCount(deck) { return Object.values(deck.cards).reduce((a, b) => a + b, 0) + (deck.commander ? 1 : 0) + (deck.commander2 ? 1 : 0); }
 
 // Who can lead a Commander deck: a legendary creature, or a card that says "can be your commander" (a few planeswalkers, 903.3)
@@ -757,7 +768,7 @@ function renderDeckPanel() {
         </div>
         ${probs.length ? `<details class="mx-probs"><summary class="warn">⚠ ${probs.length} thing${probs.length === 1 ? '' : 's'} to fix before this deck can play</summary><ul>${probs.map(p => `<li>${esc(p)}</li>`).join('')}</ul></details>` : ''}
         <div class="mx-cols${BX.view === 'visual' ? ' visual' : ''}">
-            ${d.format === 'commander' ? `<section class="mx-group mx-cmd"><h3>Commander${cmd2 ? 's' : ''} <span class="mx-gn">(${(cmd ? 1 : 0) + (cmd2 ? 1 : 0)})</span></h3>${cmd ? `<div class="${BX.view === 'visual' ? 'mx-stack' : 'mx-rows'}">${bxRowHTML(cmd, 1, true)}${cmd2 ? bxRowHTML(cmd2, 1, true) : ''}</div>${cmd2 ? `<p class="note">Together: ${esc(pairKind(cmd, cmd2) || 'not a legal pair')}.</p>` : '<p class="note">A partner, Friends forever, Background or Doctor\'s companion goes in the second slot: open it and choose 👑 Make second commander.</p>'}` : '<p class="note">None yet. Open a legendary creature and choose 👑 Make commander.</p>'}</section>` : ''}
+            ${d.format === 'commander' ? `<section class="mx-group mx-cmd"><h3>Commander${cmd2 ? 's' : ''} <span class="mx-gn">(${(cmd ? 1 : 0) + (cmd2 ? 1 : 0)})</span></h3>${cmd ? `<div class="${BX.view === 'visual' ? 'mx-stack' : 'mx-rows'}">${bxRowHTML(cmd, 1, true)}${cmd2 ? bxRowHTML(cmd2, 1, true) : ''}</div>${cmd2 ? `<p class="note">Together: ${esc(pairKind(cmd, cmd2) || 'not a legal pair')}.</p>` : `<p class="note">A partner, Friends forever, Background or Doctor\'s companion goes in the second slot: open it and choose 👑 Make second commander.</p>${legacyPartnerId(d) ? `<p class="note"><strong>${esc(CARDS.get(legacyPartnerId(d)).name)}</strong> is in the main deck but pairs with your commander. <button type="button" class="btn small gold" onclick="moveToCommandZone('${legacyPartnerId(d)}')">👑 Move it to the command zone</button></p>` : ''}`}` : '<p class="note">None yet. Open a legendary creature and choose 👑 Make commander.</p>'}</section>` : ''}
             ${groups || (d.format === 'commander' ? '' : '<p class="note">No cards yet. Use "Find and add cards" above, or browse your collection below.</p>')}
             ${tokens.length ? `<section class="mx-group"><h3>Tokens <span class="mx-gn">(${tokens.length})</span></h3><div class="mx-rows">${tokens.map(([t, from]) => `<div class="mx-row mx-token" title="Made by ${esc(from.join(', '))}"><span class="n"></span><span class="nm">${esc(t)}</span><span class="note">${esc(from.length === 1 ? from[0] : `${from.length} cards`)}</span></div>`).join('')}</div></section>` : ''}
         </div>`;

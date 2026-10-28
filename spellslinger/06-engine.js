@@ -211,6 +211,8 @@ function makePlayer(i, name, deck, isAI) {
 }
 
 function deckToEntries(deck) {
+    // an older deck with its partner left in the 99 now starts with both commanders (same 100 cards)
+    if (typeof legacyPartnerId === 'function') { const lp = legacyPartnerId(deck); if (lp) { deck = { ...deck, cards: { ...deck.cards }, commander2: lp }; deck.cards[lp]--; if (!deck.cards[lp]) delete deck.cards[lp]; } }
     return {
         name: deck.name, format: deck.format, commander: deck.commander ? CARDS.get(deck.commander) : null, commander2: deck.commander2 ? CARDS.get(deck.commander2) : null,
         entries: Object.entries(deck.cards).map(([id, n]) => ({ card: CARDS.get(id), n })).filter(e => e.card)
