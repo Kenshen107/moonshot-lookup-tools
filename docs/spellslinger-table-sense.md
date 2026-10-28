@@ -41,12 +41,13 @@ The lab had already shown that *what* the bots cast matters little (random casti
 - `removalWorthIt(P, o)` is wrapped. The old test (is the target worth the card?) runs first; if it says yes and the permanent belongs to another player, `podWaits` can still say "not yet". `aiBestPlay` already zeroes the score of a removal spell whose target fails `removalWorthIt`, so the bot casts something else.
 - `aiScore(P, o, target)` is wrapped for board wipes (`wipe`, `massBounce` effects). The wipe waits on the leader (the foe with the highest `podThreat`).
 
-**`threatIsMine(P, F)`: when it stops waiting.** It returns true (answer now) if any of these holds:
+**`threatIsMine(P, F)`: when it stops waiting.** It returns true (answer now) if any of these holds (the answer is cached for the rest of the turn, because it is asked once per card per call to `aiBestPlay`):
 1. `winThreat(F)` is non-null: F can kill somebody next turn (lethal range, commander damage 14+, poison 7+). A table that waits then loses.
-2. P is at 12 life or less.
-3. P holds a grudge of 6+ against F (F has been hurting it).
-4. F has dealt P 10+ commander damage.
-5. F's combined creature power is at least 30% of P's life **and** P is at least as exposed as every other opponent of F (`power / life` ratio).
+2. F has run away: 60 or more permanents, or `runawayPlayer()` is F (more threat than everyone else combined). Added after lab seed 5380, where four bots waited politely while one board grew to 2,451 permanents.
+3. P is at 12 life or less.
+4. P holds a grudge of 6+ against F (F has been hurting it).
+5. F has dealt P 10+ commander damage.
+6. F's combined creature power is at least 30% of P's life **and** P is at least as exposed as every other opponent of F (`power / life` ratio).
 
 A permanent with no creature power behind it (an enchantment engine, say) is therefore waited on until one of 1 to 4 happens or the patience runs out.
 
