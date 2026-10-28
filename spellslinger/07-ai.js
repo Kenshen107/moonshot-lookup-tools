@@ -380,7 +380,8 @@ function aiBestPlay(P) {
     const cands = [];
     const O = opp(P);
     const untapped = P.bf.filter(o => !o.tapped && Rx(o).mana).length;
-    const reserve = P.aiStyle === 'control' && P.aiLevel !== 'easy' && G.active === P.i && O.hand.length ? heldInstantCost(P) : 0;
+    let reserve = P.aiStyle === 'control' && P.aiLevel !== 'easy' && G.active === P.i && O.hand.length ? heldInstantCost(P) : 0;
+    if (!reserve && typeof tableReserve === 'function') reserve = tableReserve(P); // table sense (07i): mana up for a counterspell or a trick
     const faces = [];
     const libTop = P.library[P.library.length - 1];
     for (const o of [...P.hand, ...P.command, ...P.gy.filter(x => Rx(x).flashback || mayhemOk(P, x) || gyCastOk(P, x) || x.gyCastTurn === G.turn || (Rx(x).gyCast && Rx(x).gyCast.exile) || castAsOk(P, x, 'blitz') || castAsOk(P, x, 'disturb') || castAsOk(P, x, 'retrace') || castAsOk(P, x, 'beam') || lockerOk(P, x)), ...P.exile.filter(x => x.playUntil >= G.turn || x.advReady || (x.foretoldTurn && x.foretoldTurn < G.turn) || (x.warpedTurn && x.warpedTurn < G.turn)), ...(libTop && ((P.bf.some(x => Rx(x).castTopCreatures) && Rx(libTop).kind === 'creature') || pitTop(P) === libTop) ? [libTop] : [])]) {
