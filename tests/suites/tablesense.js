@@ -1,10 +1,10 @@
-// Table sense (2026-10-28): C let somebody else answer it, B combat tricks after blocks, A mana up. See docs/spellslinger-table-sense.md.
+// Stay quiet (D) 2026-10-28, part of table sense. Table sense: C let somebody else answer it, B combat tricks after blocks, A mana up. See docs/spellslinger-table-sense.md.
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const { launch, openTestPage, installHelpers, formatChecks, printResults, writeOut, ROOT } = require('../lib/harness');
 
-const NAMES = ['Mountain', 'Forest', 'Island', 'Plains', 'Grizzly Bears', 'Hill Giant', 'Giant Growth', 'Counterspell', 'Terror', 'Swamp', 'Wrath of God', 'Wall of Wood', 'Tyrox, Saurid Tyrant'];
+const NAMES = ['Mountain', 'Forest', 'Island', 'Plains', 'Grizzly Bears', 'Hill Giant', 'Giant Growth', 'Counterspell', 'Terror', 'Swamp', 'Wrath of God', 'Serra Angel', 'Wall of Wood', 'Tyrox, Saurid Tyrant'];
 const SETUP = async function ([n, NAMES]) {
     if (!window.LOCAL) {
         const raw = await (await fetch('/__cards.json')).json();
@@ -105,6 +105,7 @@ const RESET = function () {
             const give = (P, n) => { const o = makeObj(C[n], P.i); P.hand.push(o); return o; };
             const lands = (P, n, k) => { for (let i = 0; i < k; i++) T.put(P, C[n]); };
             const creature = (P, n) => { const o = T.put(P, C[n]); o.sick = false; return o; };
+            const picked = P => { const p = aiBestPlay(P); return p ? p.o.card.name : null; };
             const cast = o => G.stack.some(i => i.o === o) || !G.players.some(P => P.hand.includes(o));
 
             // A: reading open mana
@@ -162,6 +163,36 @@ const RESET = function () {
             const terror = give(A, 'Terror'); G.attackers = [bears8.uid]; G.blocks = { [bears8.uid]: [hg8.uid] };
             G.busy = true; await aiCombatTricks(); await settle();
             ok('window: Terror on the blocker that would kill the attacker', !A.hand.includes(terror) && !onBf(hg8.uid), [A.hand.length, !!onBf(hg8.uid)]);
+
+            // ---------------- D. Stay quiet ----------------
+            const atkNames = P => aiChooseAttackers(P).map(o => o.card.name);
+            reset(); A.aiStyle = 'control'; const q1 = creature(A, 'Hill Giant'); G.defender = B.i;
+            ok('D: a control bot hiding does not attack a player who has not hurt it', atkNames(A).length === 0, atkNames(A));
+            A.aiStyle = 'aggro'; A.quietWas = undefined;
+            ok('D: ... an aggro bot does', atkNames(A).includes('Hill Giant'), atkNames(A));
+            A.aiStyle = 'control'; A.tune = { quiet: 0 };
+            ok('D: the knob turns it off', atkNames(A).includes('Hill Giant'));
+            A.aiStyle = 'aggro'; A.tune = { quiet: 2 };
+            ok('D: quiet=2 makes every bot quiet', atkNames(A).length === 0, atkNames(A));
+            A.aiStyle = 'control'; A.tune = {}; A.life = 10;
+            ok('D: reveals when it is in trouble (12 life or less)', atkNames(A).includes('Hill Giant'), atkNames(A));
+            A.life = 40; B.life = 8; creature(A, 'Hill Giant'); creature(A, 'Hill Giant');
+            ok('D: reveals when it can finish somebody', atkNames(A).length >= 2, atkNames(A));
+            B.life = 40; A.bf.splice(1);
+            ok('D: hiding again once nobody is in reach', atkNames(A).length === 0, atkNames(A));
+            G.turn = 100;
+            ok('D: reveals when the game has gone on long enough', atkNames(A).includes('Hill Giant'), atkNames(A));
+            G.turn = 8; A.grudge = {};
+            // development: the big play waits while near the top
+            reset(); A.aiStyle = 'control'; lands(A, 'Plains', 5); creature(A, 'Hill Giant'); give(A, 'Serra Angel');
+            ok('D: a hiding bot at the top of the table holds its 5-drop (' + podThreat(A).toFixed(1) + ' vs ' + podThreat(B).toFixed(1) + ')', picked(A) === null, picked(A));
+            reset(); A.aiStyle = 'control'; lands(A, 'Plains', 5); creature(A, 'Hill Giant'); give(A, 'Serra Angel'); for (let i = 0; i < 6; i++) creature(B, 'Hill Giant');
+            ok('D: ... but casts it when somebody else is far ahead', picked(A) === 'Serra Angel', picked(A));
+            reset(); A.aiStyle = 'aggro'; lands(A, 'Plains', 5); creature(A, 'Hill Giant'); give(A, 'Serra Angel');
+            ok('D: ... and a non-quiet bot casts it', picked(A) === 'Serra Angel', picked(A));
+            // deals
+            reset(); A.aiStyle = 'control'; const dq = dealScore(A, B, 'peace').score; A.aiStyle = 'aggro'; const dn = dealScore(A, B, 'peace').score;
+            ok('D: a quiet bot likes a peace deal a little more', dq - dn >= 0.99, [dq, dn]);
 
             // Off switch, easy bots, duels
             reset(); G.phase = 'declareBlocks'; G.active = 0; G.defender = B.i; A.tune = { trickWindow: 0 };
