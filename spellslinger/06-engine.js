@@ -234,12 +234,17 @@ async function startMatch(again) {
     try {
         await cardsByIds([...Object.keys(deck.cards), deck.commander, deck.commander2].filter(Boolean));
         let oppDeck;
+        // Commanders already at the table, so a rolled computer seat never repeats one (lowercase names)
+        const tableCommanders = new Set();
+        const addCmdr = d => { const c = d && d.commander && (typeof d.commander === 'string' ? CARDS.get(d.commander) : d.commander); if (c && c.name) tableCommanders.add(c.name.toLowerCase()); };
+        addCmdr(deck);
         if (chosenOpponent.type === 'theme') {
             const theme = MODERN_THEMES.find(t => t.key === chosenOpponent.key);
             oppDeck = await buildThemeDeck(theme);
             oppDeck.source = 'Scryfall theme deck';
         } else if (chosenOpponent.type === 'random') {
-            oppDeck = chosenOpponent.fmt === 'commander' ? await buildRandomCommanderDeck(null, undefined, randomThemeChoice || undefined) : await buildRandomModernDeck();
+            // A Commander "Surprise me" rolls 60% saved decks and Ready precons, 40% EDHREC (04c-random-decks.js); a theme picked by hand skips the roll
+            oppDeck = chosenOpponent.fmt === 'commander' ? (randomThemeChoice ? await buildRandomCommanderDeck(null, undefined, randomThemeChoice) : await buildAiCommanderDeck({ avoid: tableCommanders })) : await buildRandomModernDeck();
         } else if (chosenOpponent.type === 'precon') {
             const pc = (await loadPreconList()).find(x => x.file === chosenOpponent.key);
             oppDeck = await preconForAI(await loadPreconDeck(pc));
@@ -259,10 +264,11 @@ async function startMatch(again) {
             oppDeck = await buildCommanderDeck(chosenOpponent.key);
             oppDeck.source = `EDHREC average deck${oppDeck.swapped ? `, ${oppDeck.swapped} cards swapped for lands` : ''}`;
         }
-        // A pod (3 or 4 players, Commander only): the other seats are random playable Commander decks
+        // A pod (3 or 4 players, Commander only): the other seats roll 60% saved decks and Ready precons, 40% EDHREC (`buildAiCommanderDeck`)
         const more = [];
         const seatStyles = shuffled(PLAYSTYLE_KEYS.filter(k => k !== oppDeck.aiStyle));
-        for (let k = 2; k < (deck.format === 'commander' ? podSize : 2); k++) { more.push(await buildRandomCommanderDeck(null, seatStyles[k - 2])); }
+        addCmdr(oppDeck);
+        for (let k = 2; k < (deck.format === 'commander' ? podSize : 2); k++) { const sd = await buildAiCommanderDeck({ style: seatStyles[k - 2], avoid: tableCommanders }); addCmdr(sd); more.push(sd); }
         // Every opponent has a way of playing: the style of a built-for-it random deck, or the one a finished deck looks most like
         if (!PLAYSTYLES[oppDeck.aiStyle]) oppDeck.aiStyle = inferStyle(oppDeck.entries);
         closeModal();

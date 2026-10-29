@@ -146,3 +146,66 @@ async function buildRandomModernDeck() {
     Object.entries(split).forEach(([col, n]) => { if (n > 0 && BASIC_IDS[col]) entries.push({ card: CARDS.get(BASIC_IDS[col]), n }); });
     return { name: `${colors.map(c => ({ W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' })[c]).join('-')} random`, format: 'modern', commander: null, entries, source: 'random playable deck: every card is fully automated' };
 }
+
+// ---- Where the computer's Commander decks come from (2026-10-28, owner: "have the ai use my user made decks and precons 60% of the time
+// and edhrec the other 40%") ----
+// Every computer seat in a Commander game rolls for itself: the "🎲 Surprise me" opponent and seats 3 and 4 of a pod (the opponent you pick
+// by name, from Saved decks or from Ready decks, is never rolled).
+//   60%: one deck from a single pool of (a) the Commander decks saved by any player on this device and (b) the Ready Commander precons
+//        (`VERIFIED_DECKS`, the fully working decks), all equally likely;
+//   40%: a fully automated commander's random build from EDHREC's cards (`buildEdhrecRandomDeck`, weighted by how many decks play each card).
+// If the pool is empty the roll goes to EDHREC; if EDHREC can't be reached (or four tries all meet a commander already at the table) the old
+// themed random deck (`buildRandomCommanderDeck`) is built, so a game always starts. No two seats share a commander.
+const AI_OWN_SHARE = 0.6;
+// 'own' with chance AI_OWN_SHARE when the pool has anything in it, else 'edhrec' (`roll` is a number from 0 up to but not including 1, passed in by tests)
+function aiDeckSource(ownCount, roll = Math.random()) { return ownCount > 0 && roll < AI_OWN_SHARE ? 'own' : 'edhrec'; }
+// Saved Commander decks (every account on this device; 99+ cards and a commander) and the Ready Commander precons
+function aiOwnPool() {
+    const pool = [];
+    accounts.list.forEach(who => {
+        const prof = who === accounts.current ? profile : store.get(`profile:${who}`, null);
+        ((prof && prof.decks) || []).forEach((d, idx) => { if (d.format === 'commander' && d.commander && deckCount(d) >= 99) { const c = CARDS.get(d.commander); pool.push({ kind: 'saved', who, idx, label: d.name, cmdr: c ? c.name : null }); } });
+    });
+    VERIFIED_DECKS.forEach(v => pool.push({ kind: 'precon', key: v.key, label: v.name, cmdr: v.name.replace(/ \(.*$/, '') })); // "Giada, Font of Hope (Calling All Angels)" -> the commander's name
+    return pool;
+}
+async function verifiedToOppDeck(key) {
+    const v = VERIFIED_DECKS.find(x => x.key === key);
+    if (!v) throw new Error('That deck is gone.');
+    const d = await listToOppDeck(v.text, 'commander');
+    d.source = `fully working deck (checked ${v.checked})`;
+    if (v.style && PLAYSTYLES[v.style]) d.aiStyle = v.style; // a deck can name the playstyle it was tuned with
+    return d;
+}
+// `opts.avoid`: a Set of lowercase commander names already at the table; `opts.style`: the playstyle for the themed fallback deck.
+// The deck comes back with `aiPick`: 'own' (saved or precon), 'edhrec', or 'fallback' (the themed random deck).
+async function buildAiCommanderDeck(opts = {}) {
+    const avoid = opts.avoid || new Set(), pool = aiOwnPool();
+    const clash = d => !!(d && d.commander && avoid.has(d.commander.name.toLowerCase()));
+    for (let attempt = 0; attempt < 4; attempt++) {
+        const src = aiDeckSource(pool.length);
+        try {
+            let d;
+            if (src === 'own') {
+                // Skip decks whose commander is already at the table (known by name before the deck is loaded, else checked once it is) without using up a try
+                while (pool.length && !d) {
+                    const i = Math.floor(Math.random() * pool.length), pick = pool.splice(i, 1)[0];
+                    if (pick.cmdr && avoid.has(pick.cmdr.toLowerCase())) continue;
+                    const cand = pick.kind === 'saved' ? await savedToOppDeck(pick.who, pick.idx) : await verifiedToOppDeck(pick.key);
+                    if (!clash(cand)) d = cand;
+                }
+                if (!d) continue; // the pool is used up: the next try rolls EDHREC
+            } else {
+                const c = await pickRandomCommander();
+                if (clash({ commander: c })) continue;
+                d = await buildEdhrecRandomDeck(edhrecSlug(c.name));
+            }
+            d.aiPick = src;
+            if (!PLAYSTYLES[d.aiStyle]) d.aiStyle = inferStyle(d.entries);
+            return d;
+        } catch (e) { console.warn(`AI deck (${src}) failed:`, e && e.message); }
+    }
+    const d = await buildRandomCommanderDeck(null, opts.style);
+    d.aiPick = 'fallback';
+    return d;
+}
