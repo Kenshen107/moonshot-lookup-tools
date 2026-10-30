@@ -40,7 +40,7 @@ const RESET = function () {
             const give = (P, n) => { const o = makeObj(C[n], P.i); P.hand.push(o); return o; };
             const lands = (P, n, k) => { for (let i = 0; i < k; i++) T.put(P, C[n]); };
             const creature = (P, n) => { const o = T.put(P, C[n]); o.sick = false; return o; };
-            const picked = P => { const p = aiBestPlay(P); return p ? p.o.card.name : null; };
+            const picked = P => { P.tmCache = {}; P.leaderCache = null; const p = aiBestPlay(P); return p ? p.o.card.name : null; };
 
             // ---------------- C. Let somebody else answer it ----------------
             reset(); lands(A, 'Swamp', 2); lands(A, 'Island', 2); give(A, 'Terror'); creature(B, 'Hill Giant'); Cc.life = 40;
@@ -105,7 +105,7 @@ const RESET = function () {
             const give = (P, n) => { const o = makeObj(C[n], P.i); P.hand.push(o); return o; };
             const lands = (P, n, k) => { for (let i = 0; i < k; i++) T.put(P, C[n]); };
             const creature = (P, n) => { const o = T.put(P, C[n]); o.sick = false; return o; };
-            const picked = P => { const p = aiBestPlay(P); return p ? p.o.card.name : null; };
+            const picked = P => { P.tmCache = {}; P.leaderCache = null; const p = aiBestPlay(P); return p ? p.o.card.name : null; };
             const cast = o => G.stack.some(i => i.o === o) || !G.players.some(P => P.hand.includes(o));
 
             // A: reading open mana

@@ -38,7 +38,17 @@ const targetOk = (P, e, src, x) => validTargets(P, e, src).some(v => v.o && v.o.
 // =====================================================================
 // Is F's threat P's problem right now? Yes when somebody is about to die, P is low, F has been hitting P, or P is the player F's board points at most.
 function threatIsMine(P, F) {
-    if (winThreat(F)) return true; // somebody is about to lose: waiting is how a table loses
+    // The answer is asked once per candidate card per call to aiBestPlay, and on a 250-permanent board that was slow enough to look like a hang (lab seed 5380): it is kept for the rest of the turn.
+    const ck = `${G.turn}:${P.i}:${F.i}`;
+    P.tmCache = P.tmCache || {};
+    if (P.tmCache[ck] !== undefined) return P.tmCache[ck];
+    const v = threatIsMineNow(P, F);
+    for (const k of Object.keys(P.tmCache)) if (!k.startsWith(G.turn + ':')) delete P.tmCache[k];
+    return (P.tmCache[ck] = v);
+}
+function threatIsMineNow(P, F) {
+    if (winThreat(F)) return true;
+    if (F.bf.length >= 60 || runawayPlayer() === F) return true; // a board that has run away (lab seed 5380 grew to 2,451 permanents while everybody waited): somebody has to act // somebody is about to lose: waiting is how a table loses
     if (P.life <= 12) return true;
     if (P.grudge && (P.grudge[F.i] || 0) >= 6) return true;
     if (P.cmdBy && (P.cmdBy[F.i] || 0) >= 10) return true;
@@ -79,7 +89,8 @@ const _aiScore = aiScore;
 aiScore = function (P, o, target) {
     const s = _aiScore(P, o, target);
     if (s > 0 && tsOn(P) && G.players.length > 2 && isWipeSpell(o)) {
-        const leader = foes(P).slice().sort((a, b) => podThreat(b) - podThreat(a) || a.i - b.i)[0];
+        P.leaderCache = P.leaderCache && P.leaderCache.turn === G.turn ? P.leaderCache : { turn: G.turn, i: (foes(P).slice().sort((a, b) => podThreat(b) - podThreat(a) || a.i - b.i)[0] || {}).i };
+        const leader = G.players[P.leaderCache.i];
         if (leader && podWaits(P, leader, 'wipe:' + leader.i)) return 0;
     }
     return s;

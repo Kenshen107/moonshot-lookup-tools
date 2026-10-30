@@ -327,7 +327,7 @@ function midControlsHTML() {
         return `${phase}<span class="prompt">🎯 Choose a target for ${esc(m.source.card.name)}</span>${m.cancelable ? '<button class="btn" onclick="cancelTarget()">Cancel</button>' : ''}`;
     }
     if (m && m.type === 'attack') {
-        return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button><button class="btn" onclick="cancelAttack()">Back</button>`;
+        return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button>${typeof attackListButton === 'function' ? attackListButton() : ''}<button class="btn" onclick="cancelAttack()">Back</button>`;
     }
     if (m && m.type === 'respond') {
         const it = m.item;

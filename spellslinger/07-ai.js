@@ -425,7 +425,7 @@ function aiBestPlay(P) {
     }
     faces.forEach(([o]) => { o.card = o.front || o.card; o.overloaded = false; o.evoked = false; o.altCast = false; o.castAs = null; });
     if (!cands.length) return null;
-    const pick = (P.aiRand && P.aiRand.cast) || (P.aiLevel === 'easy' && Math.random() < 0.4) ? cands[rand(cands.length)] : cands.sort((a, b) => b.s - a.s)[0];
+    const pick = (P.aiRand && P.aiRand.cast) || (P.aiLevel === 'easy' && Math.random() < 0.4) ? cands[rand(cands.length)] : (typeof seqOn === 'function' && seqOn(P) ? seqPick(P, cands, untapped - reserve) : cands.sort((a, b) => b.s - a.s)[0]);
     pick.o.card = pick.face; // cast the half it chose
     pick.o.overloaded = pick.ov;
     pick.o.evoked = pick.ev;

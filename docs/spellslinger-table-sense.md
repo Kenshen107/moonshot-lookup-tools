@@ -29,6 +29,8 @@ The lab had already shown that *what* the bots cast matters little (random casti
 | `fear` | 1 | Hold small attackers back from open mana (0 = off). |
 | `quiet` | 1 | Stay-quiet trait: 1 = control / ramp / spellslinger bots and Marcus, Trevor, Sarah; 0 = off; 2 = every bot. |
 | `quietRounds` | 9 | Most rounds a quiet bot hides. |
+| `sequencing` | 1 | Smarter mulligans, land drops, mana pieces and mana use (0 = off). |
+| `maxMulls` | 2 | Most mulligans a bot takes. |
 | `duels` | 0 | 1 = also use all of this in two-player games. |
 
 ## C. Let somebody else answer it
@@ -39,12 +41,13 @@ The lab had already shown that *what* the bots cast matters little (random casti
 - `removalWorthIt(P, o)` is wrapped. The old test (is the target worth the card?) runs first; if it says yes and the permanent belongs to another player, `podWaits` can still say "not yet". `aiBestPlay` already zeroes the score of a removal spell whose target fails `removalWorthIt`, so the bot casts something else.
 - `aiScore(P, o, target)` is wrapped for board wipes (`wipe`, `massBounce` effects). The wipe waits on the leader (the foe with the highest `podThreat`).
 
-**`threatIsMine(P, F)`: when it stops waiting.** It returns true (answer now) if any of these holds:
+**`threatIsMine(P, F)`: when it stops waiting.** It returns true (answer now) if any of these holds (the answer is cached for the rest of the turn, because it is asked once per card per call to `aiBestPlay`):
 1. `winThreat(F)` is non-null: F can kill somebody next turn (lethal range, commander damage 14+, poison 7+). A table that waits then loses.
-2. P is at 12 life or less.
-3. P holds a grudge of 6+ against F (F has been hurting it).
-4. F has dealt P 10+ commander damage.
-5. F's combined creature power is at least 30% of P's life **and** P is at least as exposed as every other opponent of F (`power / life` ratio).
+2. F has run away: 60 or more permanents, or `runawayPlayer()` is F (more threat than everyone else combined). Added after lab seed 5380, where four bots waited politely while one board grew to 2,451 permanents.
+3. P is at 12 life or less.
+4. P holds a grudge of 6+ against F (F has been hurting it).
+5. F has dealt P 10+ commander damage.
+6. F's combined creature power is at least 30% of P's life **and** P is at least as exposed as every other opponent of F (`power / life` ratio).
 
 A permanent with no creature power behind it (an enchantment engine, say) is therefore waited on until one of 1 to 4 happens or the patience runs out.
 
@@ -110,6 +113,26 @@ The held mana is what powers B on the opponents' turns (the lands stay untapped 
 
 **Not built.** Holding a wrath for a better moment is C, not D; deliberately under-developing a board (casting 3 of 4 castable cheap spells); and a quiet bot lying about its hand.
 
+## E. Sequencing (planning a turn or two ahead)
+
+Added 2026-10-28 ("Let's do part 5", chosen from the list: multi-turn sequencing). Code: `spellslinger/07k-sequencing.js`; hooks: `mulligan` (`06-engine.js`) and the pick in `aiBestPlay` (`07-ai.js`). Same gate as the rest (`tsOn`, pods; `AI_TUNE.duels` for duels) plus its own knob `AI_TUNE.sequencing` (0 = off) and `AI_TUNE.maxMulls` (default 2).
+
+**Mulligans (`mulliganWanted`, `mullBottomPick`, `aiMulligan`).** Before, a bot only counted lands (mulligan once on fewer than 2 or more than 5) and kept whatever came next. Now it judges the seven it drew:
+- mulligan on 0 or 1 land, or on every card but one being a land;
+- on two lands, unless it has two castable plays costing 2 or less;
+- on five lands with no castable play costing 3 or less;
+- when the lands' colors can't cast a single spell in hand;
+- after one mulligan it accepts any hand with 2 to 5 lands; it never takes more than `maxMulls`.
+It repeats until the hand is keepable. London mulligan: the cards to put on the bottom are the ones worth least: lands past the fourth first, then spells the lands can't cast, then the most expensive spells (`mullBottomPick`). In pods the first mulligan is still free.
+
+**Land drops (`aiPlayLand` wrapper).** A tapped land costs nothing on a turn when the extra mana wouldn't be used, and a lot when it would. The bot checks whether its hand holds a spell costing exactly one more than its mana, or two spells that fit together only with one more mana (`needsMana`). If so, an untapped land is preferred (a tapped one gets -4); otherwise a tapped land is preferred (+1.5). Colors the hand still needs weigh more than either (+3 per missing color), as before. Only lands that always enter tapped (`entersTapped`) count; check lands and shock lands are treated as untapped. Counter: `landChoices`.
+
+**Mana pieces (`aiScore` wrapper).** A mana rock or dork that makes a spell castable *next turn* that wouldn't otherwise be (`cap1 < cmc <= cap1 + n`, where `cap1` is the mana next turn without it, counting a land drop from hand) gets +4. Ramp-style bots already had `rampUrgency`, so they are skipped. Counter: `rockPlans`.
+
+**Spending the turn's mana (`seqPick`).** `aiBestPlay` used to cast the highest-scored play first; with limited mana that can waste mana (a 3-drop at 4 mana beats two 2-drops by score, but the two 2-drops use everything). Now it looks at the best 8 plays, tries every combination that fits in the mana the bot has (net of any mana it is holding up for tricks), values each as the sum of scores plus half a point per mana spent, and starts with the best-scoring play of the winning combination. The loop in `aiMain` calls `aiBestPlay` again after each cast, so a combination that doesn't work out (a colour problem, say) just falls back. Costs are by mana value; X costs and alternative costs are treated as their printed mana value. Counter: `seqPicks`.
+
+**Known simplifications.** No look-ahead past the next turn; mulligans don't consider the commander or the deck's real curve; X spells and alternative costs are approximated by mana value; a land that is conditionally tapped is treated as untapped.
+
 ## How to check it
 
 - `node tests/suites/tablesense.js` (or `python3 tests/run_all.py tablesense`): 36 checks, one per habit and per switch, plus the duel guard.
@@ -118,6 +141,6 @@ The held mana is what powers B on the opponents' turns (the lands stay untapped 
 
 ## Not built (offered)
 
-- Multi-turn sequencing (play the tapped land now so next turn has the mana), smarter mulligans, and the legend rule choice.
+- The legend rule choice (still keeps the newest copy).
 - Bluffing with **nothing** on purpose (leaving mana up on a turn the bot could have used it), and mana held for flash creatures at the end step.
 - Using the same habits in duels (`AI_TUNE.duels = 1`; it needs the 2-player baseline re-saved).
