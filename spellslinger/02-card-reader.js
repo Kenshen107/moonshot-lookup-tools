@@ -621,6 +621,8 @@ function rulesFor(card) {
         if ((m = line.match(/^([^:"]+): Choose one —$/)) && lines[li + 1] && lines[li + 1].startsWith('•')) {
             const bullets = [];
             while (li + 1 < lines.length && lines[li + 1].startsWith('•')) bullets.push(lines[++li].replace(/^•\s*/, '').replace(/^[A-Z][A-Za-z'-]+(?: [A-Za-z'-]+){0,3} — /, ''));
+            const hk = typeof MODAL_ACT_HOOKS !== 'undefined' ? MODAL_ACT_HOOKS.find(([re]) => re.test(line)) : null; // whole-card readings of modal activated abilities (rules/trekdecks.js)
+            if (hk) { hk[1](R, line, bullets); continue; }
             const modes = bullets.map(b => parseEffects(b));
             const act = modes.every(Boolean) && parseActivated(`${m[1]}: Draw a card.`, R);
             if (act) { act.effects = [{ t: 'modal', modes, n: 1 }]; act.text = line; R.acts.push(act); continue; }

@@ -1781,11 +1781,14 @@ function moveSpellCard(o, zone) {
     if (o.flashedBack) { o.flashedBack = false; if (!Rx(o).flashbackKeep) { zone = 'exile'; log(`${o.card.name} is exiled (flashback).`); } }
     // Rebound (702.88): cast from your hand, it's exiled and you may cast it again at your next upkeep
     if (zone === 'gy' && Rx(o).rebound && o.castFromHand === G.turn && !o.isCommander) { zone = 'exile'; (G.delayed = G.delayed || []).push({ at: 'upkeep', own: true, P: owner, after: G.turn, effects: [{ t: 'reboundCast', uid: o.uid }], src: o, label: `${o.card.name}: rebound` }); log(`${o.card.name} is exiled (rebound).`); }
+    const chronoSusp = zone === 'gy' && o.chronoPending && !o.isCommander; // Chronomantic Escape: exiled with three time counters (suspend)
+    if (chronoSusp) zone = 'exile';
     o.overloaded = false;
     if (o.front) o.card = o.front;
     resetObj(o);
     if (o.isCommander && zone === 'library') { owner.command.push(o); log(`${o.card.name} returns to the command zone.`); }
     else owner[zone].push(o);
+    if (chronoSusp) { o.chronoPending = false; o.suspended = true; o.ctr.time = 3; log(`${o.card.name} is exiled with three time counters on it.`); }
 }
 
 function targetName(t) { return t.p ? (you(t.p) ? 'you' : t.p.name) : t.item ? t.item.name : t.o.card.name; }
