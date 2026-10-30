@@ -272,15 +272,20 @@ async function preconEffect(P, e, t, src, O, name) {
             else { log(`${src.card.name} is sacrificed (upkeep cost not paid).`); fire('sacrificed', { o: src }); dieOrLeave(src, 'gy'); }
             break;
         }
-        case 'exploreSelf': {
-            if (!onBf(src.uid)) break;
-            const top = P.library[P.library.length - 1];
-            if (!top) { putCounters(src, 1, P); log(`${src.card.name} explores: no card, +1/+1 counter.`); break; }
-            if (Rx(top).kind === 'land') { P.library.pop(); P.hand.push(top); log(`${src.card.name} explores: ${top.card.name} is a land and goes to hand.`); }
-            else {
-                putCounters(src, 1, P);
-                const keep = P.isAI ? (top.card.cmc || 0) <= 2 : await askYes(P, `${src.card.name} explores: ${top.card.name} is not a land (+1/+1 counter). Keep it on top?`, { card: top.card, yes: 'Keep on top', no: 'Put in graveyard' });
-                if (!keep) { P.library.pop(); P.gy.push(top); log(`${top.card.name} goes to the graveyard.`); } else log(`${src.card.name} explores: ${top.card.name} stays on top, +1/+1 counter.`);
+        case 'explore': case 'exploreSelf': {
+            // Explore (701.44): reveal the top card; a land goes to hand, otherwise +1/+1 counter and you may put the card in the graveyard
+            const o = e.target && t && t.o ? t.o : src;
+            for (let i = 0; i < (e.n || 1); i++) {
+                if (!o || !onBf(o.uid)) break;
+                const top = P.library[P.library.length - 1];
+                if (!top) { putCounters(o, 1, P); log(`${o.card.name} explores: no card, +1/+1 counter.`); }
+                else if (Rx(top).kind === 'land') { P.library.pop(); P.hand.push(top); log(`${o.card.name} explores: ${top.card.name} is a land and goes to hand.`); }
+                else {
+                    putCounters(o, 1, P);
+                    const keep = P.isAI ? (top.card.cmc || 0) <= 2 : await askYes(P, `${o.card.name} explores: ${top.card.name} is not a land (+1/+1 counter). Keep it on top?`, { card: top.card, yes: 'Keep on top', no: 'Put in graveyard' });
+                    if (!keep) { P.library.pop(); P.gy.push(top); log(`${top.card.name} goes to the graveyard.`); } else log(`${o.card.name} explores: ${top.card.name} stays on top, +1/+1 counter.`);
+                }
+                fire('explores', { o, P });
             }
             break;
         }
@@ -658,3 +663,9 @@ function preconLure() {
         log(`${atk.card.name} is Lured: ${must.map(b => b.card.name).join(', ')} must block it.`);
     });
 }
+
+// Explore triggers (rules/explore.js)
+Object.assign(TRIG_FN, {
+    exploreMine: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && isCreature(ctx.o),
+    exploreSelfOnly: (o, ctx) => !!ctx.o && ctx.o === o
+});
