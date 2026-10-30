@@ -44,7 +44,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             const arthurSmall = dealScore(B, A, 'peace');
             ok('Arthur will not deal with small fry', arthurSmall.parts.respect === -3 && arthurSmall.reason === "I don't deal with small fry.", arthurSmall);
             const lukeScore = dealScore(Cc, A, 'peace'), samScore = dealScore(D, A, 'peace');
-            ok('Luke leans yes (+1 on everything), Sam leans no on peace (-1) and yes on a gang-up', lukeScore.parts.character === 1 && samScore.parts.character === -1 && dealScore(D, A, 'pact', B.i).parts.character === 1, { l: lukeScore.parts.character, s: samScore.parts.character });
+            ok('Luke leans yes (+1 on everything), Sam leans no on peace (-1) and yes on a gang-up', lukeScore.parts.character === 1 && samScore.parts.character === -1 && dealScore(D, A, 'pact', Cc.i).parts.character === 1, { l: lukeScore.parts.character, s: samScore.parts.character, p: dealScore(D, A, 'pact', Cc.i).parts });
             // ---- loyalty ----
             [A, B, Cc, D] = await fresh(['greg', 'sam', 'trevor']);
             ok('Greg never breaks a peace', charBreaksPeace(G.players[1], A, 99, true) === false);

@@ -255,6 +255,8 @@ const MODAL_ACT_HOOKS = [[/^\{T\}, Remove a counter from ~: Choose one —$/, (R
 clx('Players can\'t activate planeswalkers\' loyalty abilities.', R => { R.immortalSun = true; });
 clx('At the beginning of your draw step, draw an additional card.', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [{ t: 'draw', n: 1 }] }); });
 clx('Spells you cast cost {1} less to cast.', R => { R.reducer = { what: 'any', n: 1 }; });
+// Hit It! (Oracle wording of 2026-10: reveal instead of look)
+clx('When ~ enters, reveal the top five cards of your library. Put a land card from among them onto the battlefield tapped and the rest into your graveyard.', R => { R.etb.push(cmd('tkHitIt')); });
 
 registerRules({
     name: 'trekdecks',
