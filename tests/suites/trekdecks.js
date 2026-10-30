@@ -205,6 +205,13 @@ DECKS.forEach(d => fs.readFileSync(path.join(ROOT, 'tests', 'decks', d + '.txt')
             ok('Queen\'s Diamond: a mana per charge counter, for a legendary spell', A.pool.length === 3 && A.pool.every(c => /Legendary/.test(c)), A.pool);
             reset(); const jur = put(A, 'Jurati, Cordial Queen'); const tokB = put(A, 'Stratagem Emulator'); tokB.token = true; G.combatDmgStep = 2; await CMD.td_jurati(A, {}, null, jur);
             ok('Jurati: a token copy of an artifact token', A.bf.filter(o => o.token).length === 2, A.bf.length);
+            for (const key of ['trk_federation', 'trk_landing', 'trk_klingon', 'trk_borg']) {
+                const v = VERIFIED_DECKS.find(x => x.key === key);
+                const gen = await listToOppDeck(v.text, 'commander');
+                const deck = generatedToDeck(gen, v.name);
+                const probs = deckProblems(deck);
+                ok(v.name + ': no deck problems (cards of a set that isn\'t out yet count as legal)', probs.length === 0, probs.slice(0, 3));
+            }
             reset(); ok('No broken invariants', T.invariants().length === 0, T.invariants());
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;

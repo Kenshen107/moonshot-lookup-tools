@@ -364,6 +364,13 @@ function deckCi(deck) {
     const mate = Object.keys(deck.cards || {}).map(id => CARDS.get(id)).find(c => c && c !== cmd && /\bLegendary\b/.test(c.type || '') && partnerKind(c) === kind);
     return mate ? [...new Set([...cmd.ci, ...mate.ci])] : cmd.ci;
 }
+// Scryfall marks a card "not legal" until its set is released. A card from a set that isn't out yet (the Star Trek Commander decks before 2026-11-13) counts as legal
+// here, so a deck of previewed cards isn't flagged as needing fixes; banned and restricted cards are still refused.
+function legalNow(c, format) {
+    const l = c.legal && c.legal[format];
+    if (!l || l === 'legal') return true;
+    return l === 'not_legal' && !!c.released && c.released > new Date().toISOString().slice(0, 10);
+}
 function deckProblems(deck) {
     const F = FORMATS[deck.format];
     const out = [];
@@ -384,7 +391,7 @@ function deckProblems(deck) {
         const c = CARDS.get(id);
         if (!c) continue;
         if (!isBasic(c) && n > F.copies) out.push(`${c.name}: ${n} copies (${F.copies} max).`);
-        if (c.legal[deck.format] && c.legal[deck.format] !== 'legal') out.push(`${c.name} isn't legal in ${F.name} (${c.legal[deck.format].replace('_', ' ')}).`);
+        if (!legalNow(c, deck.format)) out.push(`${c.name} isn't legal in ${F.name} (${c.legal[deck.format].replace('_', ' ')}).`);
         if (cmd && c.ci.some(col => !deckCi(deck).includes(col))) out.push(`${c.name} is outside ${cmd.name}'s colors.`);
         if (!deck.starter && !isBasic(c) && n + (deck.commander === id ? 1 : 0) + (deck.commander2 === id ? 1 : 0) > (profile.collection[id] || 0)) out.push(`You own ${profile.collection[id] || 0} ${c.name} but the deck uses ${n}.`);
     }
@@ -486,7 +493,7 @@ async function openBuilder() {
 function cardColorsKey(c) { return c.colors.length > 1 ? 'M' : (c.colors[0] || 'C'); }
 
 function usableIn(deck, c) {
-    if (c.legal[deck.format] && c.legal[deck.format] !== 'legal') return false;
+    if (!legalNow(c, deck.format)) return false;
     const cmd = deck.commander && CARDS.get(deck.commander);
     if (cmd && c.ci.some(col => !cmd.ci.includes(col))) return false;
     return true;
