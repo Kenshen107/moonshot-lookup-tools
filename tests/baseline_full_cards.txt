@@ -3324,6 +3324,7 @@ Defibrillating Current
 Defile
 Defiled Crypt // Cadaver Lab
 Defiling Daemogoth
+Defossilize
 Deft Duelist
 Defy Death
 Defy Gravity
@@ -4234,6 +4235,7 @@ Ensouled Scimitar
 Entangling Vines
 Enter the Enigma
 Enter the God-Eternals
+Enter the Unknown
 Enterprise NX-01
 Enthusiastic Mechanaut
 Entomb
@@ -7060,6 +7062,8 @@ Jade Avenger
 Jade Guardian
 Jade Mage
 Jadecraft Artisan
+Jadelight Ranger
+Jadelight Spelunker
 Jadzi, Oracle of Arcavios // Journey to the Oracle
 Jagged Barrens
 Jagged Lightning
@@ -8099,6 +8103,7 @@ Lunge
 Lunk Errant
 Lurching Rotbeast
 Lure
+Lurking Chupacabra
 Lurking Crocodile
 Lurking Lizards
 Lurking Nightstalker
@@ -8497,6 +8502,7 @@ Merciless Javelineer
 Mercurial Geists
 Merfolk
 Merfolk Branchwalker
+Merfolk Cave-Diver
 Merfolk Coralsmith
 Merfolk Looter
 Merfolk Mesmerist
@@ -8640,6 +8646,7 @@ Mindwarper
 Mine Bearer
 Minecart Daredevil // Ride the Rails
 Miner's Bane
+Miner's Guidewing
 Mines of Moria
 Mineshaft Spider
 Minion of the Mighty
@@ -11897,6 +11904,7 @@ Shadowbeast Sighting
 Shadowblood Egg
 Shadowblood Ridge
 Shadowcloak Vampire
+Shadowed Caravel
 Shadowfax, Lord of Horses
 Shadowfeed
 Shadowheart, Dark Justiciar
@@ -15588,6 +15596,7 @@ Wilderness Reclamation
 Wildfire
 Wildfire Emissary
 Wildfire Wickerfolk
+Wildgrowth Walker
 Wildheart Invoker
 Wildsear, Scouring Maw
 Wildsize
