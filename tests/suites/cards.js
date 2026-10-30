@@ -18,6 +18,7 @@ const GROUPS = {
     starter: { must100: true, desc: 'MTGJSON Starter Kits (20 decks)' },
     cmdr: { must100: true, desc: 'the Commander precons of FDC, FRC, SOC and MSC marked done in tests/data/cmdr_decks.json' },
     cmdr300: { must100: true, desc: 'the 300 more commanders of 2026-10-26 (tests/data/cmdr300_names.json)' },
+    trekdecks: { must100: true, desc: 'the 107 cards the four official Star Trek Commander decks needed (tests/data/trekdecks_names.json)' },
     trek: { must100: true, desc: 'every Star Trek card (TRK, TRC, SDS: tests/data/trek_names.json)' },
     precon: { must100: true, desc: 'every Ready precon that is not a Welcome Deck or Starter Kit (spellslinger/data/precon-ready.json)' }
 };
@@ -42,6 +43,10 @@ const BODY = async function (group, mustBe100) {
         let names = [];
         for (const f of ['cmdr300', 'cmdr300b', 'cmdr300c', 'cmdr300d', 'cmdr300e', 'cmdr300f', 'cmdr300g', 'cmdr300h', 'cmdr300i', 'cmdr300j']) names = names.concat(await (await fetch('/tests/data/' + f + '_names.json')).json());
         names = [...new Set(names)];
+        const got = await T.cards(names);
+        names.forEach(n => { if (got[n]) cards.push(got[n]); });
+    } else if (group === 'trekdecks') {
+        const names = await (await fetch('/tests/data/trekdecks_names.json')).json();
         const got = await T.cards(names);
         names.forEach(n => { if (got[n]) cards.push(got[n]); });
     } else if (group === 'trek') {

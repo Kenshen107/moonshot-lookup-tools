@@ -23,6 +23,7 @@ const tdCounterTotal = o => (o.counters > 0 ? o.counters : 0) + Object.entries(o
     };
 })();
 const tdDiedThisTurn = x => x.diedAtTurn === G.turn;
+const tdFakeSrc = P => ({ card: { name: 'Klingon Warrior', id: 'td-src', type: 'Token' }, uid: -1, owner: P.i });
 
 // ---- Entering as a copy of a card in a graveyard (Ezri Dax: yours, died this turn; Voq: any graveyard) ----
 (function () {
@@ -125,20 +126,20 @@ Object.assign(CMD, {
             const arts = allPerms().filter(x => /\bArtifact\b/.test(x.card.type));
             if (!arts.length) return;
             const mine = arts.filter(x => x.owner === P.i);
-            const pick = (P.isAI || AUTOPLAY) ? (mine.length ? mine : arts).slice().sort((a, b) => ((stationCreature(a) ? 1 : 0) - (stationCreature(b) ? 1 : 0)) || ((b.ctr.charge || 0) - (a.ctr.charge || 0)))[0]
+            const pick = (P.isAI || AUTOPLAY) ? (mine.length ? mine : arts).slice().sort((a, b) => ((a === src ? 1 : 0) - (b === src ? 1 : 0)) || ((tkIsShip(b) ? 1 : 0) - (tkIsShip(a) ? 1 : 0)) || ((stationCreature(a) ? 1 : 0) - (stationCreature(b) ? 1 : 0)) || ((b.ctr.charge || 0) - (a.ctr.charge || 0)))[0]
                 : await pickCard(P, arts, `${src.card.name}: put two charge counters on up to one target artifact`, { optional: true });
             if (pick) tkCounters(pick, 'charge', 2);
         }
     },
     // Rom and Leeta: tapped Treasures
-    async td_tappedTreasures(P, e) {
+    async td_tappedTreasures(P, e, t, src) {
         const before = new Set(P.bf);
-        await applyEffect(P, { t: 'artToken', n: e.n, kind: 'treasure' }, null, null);
+        await applyEffect(P, { t: 'artToken', n: e.n, kind: 'treasure' }, null, src || { card: { name: 'Treasure', id: 'td-treasure', type: 'Token' }, uid: -1, owner: P.i });
         P.bf.filter(x => !before.has(x)).forEach(x => { x.tapped = true; });
     },
     // B'Elanna Torres: surveil 2, then you may reveal the top card; draw if it's an artifact, else two +1/+1 counters on her
     async td_belanna(P, e, t, src) {
-        await applyEffect(P, { t: 'surveil', n: 2 }, null, src);
+        await applyChoiceEffect(P, { t: 'surveil', n: 2 }, src, null);
         const top = P.library[P.library.length - 1];
         let drew = false;
         if (top) {
@@ -334,7 +335,7 @@ const tdKlingonToken = n => ({ t: 'token', n, p: 2, q: 1, name: 'red Klingon War
                 if (H.rvTurn === G.turn && src.owner !== H.i && onBf(src.uid)) {
                     log(`${src.card.name} dealt combat damage to ${H.name}: it is destroyed (Right of Vengeance).`);
                     if (!has(src, 'indestructible')) dieOrLeave(src, 'gy');
-                    applyEffect(H, tdKlingonToken(1), null, null);
+                    applyEffect(H, tdKlingonToken(1), null, tdFakeSrc(H));
                 }
             });
             if (src.grilkaTreasure && src.stolenTurn === G.turn && (ctx.n || 0) > 0) {
@@ -972,7 +973,7 @@ Object.assign(CMD, {
         if (src.counters > 0) src.counters--; else if (src.ctr.charge > 0) src.ctr.charge--; else { const k = Object.keys(src.ctr || {}).find(q => src.ctr[q] > 0); if (!k) return; src.ctr[k]--; }
         const lands = P.bf.filter(x => /\bLand\b/.test(x.card.type)).length;
         const landMode = (P.isAI || AUTOPLAY) ? lands < 6 && P.library.some(x => Rx(x).kind === 'land' && /Basic/.test(x.card.type)) : await askYes(P, `${src.card.name}: search for a basic land (tapped)? (No: draw a card)`, { card: src.card, yes: 'Basic land', no: 'Draw a card' });
-        if (landMode) await applyEffect(P, { t: 'fetchLand', n: 1, what: 'basic land', bf: true, tapped: true }, null, src); else drawCards(P, 1);
+        if (landMode) await applyChoiceEffect(P, { t: 'fetchLand', n: 1, what: 'basic land', bf: true, tapped: true }, src, null); else drawCards(P, 1);
     }
 });
 Object.assign(CMD_SCORE, { td_incursion: () => 5, td_regen: () => 2, td_stratagem: () => 3, td_grow: () => 3, td_gift: () => 7, td_transwarp: () => 4, td_vox: () => 2, td_wounded: P => (foes(P).some(F => F.gy.some(c => tdCreatureCard(c) && tdDiedThisTurn(c))) ? 8 : 0), td_assessorEtb: () => 4, td_assessorAttack: () => 6, td_wolf359: P => { const X = P.bf.filter(x => isCreature(x) && /\bArtifact\b/.test(x.card.type)).length; return X >= 2 ? 7 : 0; }, td_integrant: () => 2, td_reclaim: () => 1, td_bobw1: () => 8, td_bobw2: () => 3, td_bobw3: () => 1, td_deliver: () => 7, td_replicate: () => 4, td_jurati: () => 4, td_queensDiamond: () => 3, td_recon: () => 3 });

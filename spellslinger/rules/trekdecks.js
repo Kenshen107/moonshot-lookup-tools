@@ -108,7 +108,6 @@ clx('Whenever one or more goaded creatures attack, put a +1/+1 counter on target
 // Own the Day / World at War
 clx('Battlefront — This spell costs {1} less to cast for each opponent you attacked this turn.', R => { R.costLess = { n: 1, what: 'the number of opponents you attacked this turn' }; });
 clx('~ costs {1} less to cast for each opponent you attacked this turn.', R => { R.costLess = { n: 1, what: 'the number of opponents you attacked this turn' }; });
-tdRW(/Untap all creatures that attacked this turn\. After this main phase, there is an additional combat phase followed by an additional main phase\./, 'tdOwnDay', cmd('td_extraCombat'));
 tdRW(/After the second main phase this turn, there's an additional combat phase followed by an additional main phase\. At the beginning of that combat, untap all creatures that attacked this turn\./, 'tdWorld', cmd('td_extraCombat'));
 // Qo'noS Quartermaster
 clx('Whenever ~ attacks, add one mana of any color. Until end of turn, you don\'t lose this mana as steps and phases end.', R => { R.trig.push({ ev: 'attacks', fn: 'selfAttacks', effects: [cmd('td_quartermaster')] }); });
@@ -137,7 +136,6 @@ tdRW(/Destroy all nonland permanents with mana value 1 or less\./, 'tdPest', cmd
 clx('Equipped creature gets +2/+2 and has protection from white and from black.', R => { R.buff = { p: 2, q: 2, kw: ['pro:W', 'pro:B'] }; });
 clx('Whenever equipped creature deals combat damage to a player, you gain 3 life and you may return up to one target creature card from your graveyard to your hand.', R => { R.trig.push({ ev: 'hitPlayer', host: true, effects: [{ t: 'gain', n: 3 }, cmd('td_swordLS')] }); });
 tdRW(/Exile target artifact or enchantment\. If you cast ~ during your main phase, you may exile up to one other target artifact or enchantment\./, 'tdReturnDust', { t: 'cmd', id: 'td_returnToDust', target: 'perm', filter: 'artifact or enchantment', good: false });
-tdRW(/Exile target nonland permanent\./, 'tdRiteExile', { t: 'exile', target: 'perm', filter: 'nonland permanent', good: false });
 clx('As an additional cost to cast ~, sacrifice a nonland permanent.', R => { R.addCost = { sac: 'nonland permanent' }; });
 
 // ================= Landing Party =================
@@ -257,7 +255,6 @@ const MODAL_ACT_HOOKS = [[/^\{T\}, Remove a counter from ~: Choose one —$/, (R
 clx('Players can\'t activate planeswalkers\' loyalty abilities.', R => { R.immortalSun = true; });
 clx('At the beginning of your draw step, draw an additional card.', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [{ t: 'draw', n: 1 }] }); });
 clx('Spells you cast cost {1} less to cast.', R => { R.reducer = { what: 'any', n: 1 }; });
-clx('Creatures you control get +1/+1.', R => { R.statics.push({ type: 'Creature', p: 1, q: 1, kw: [] }); });
 
 registerRules({
     name: 'trekdecks',

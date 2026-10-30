@@ -78,9 +78,9 @@ DECKS.forEach(d => fs.readFileSync(path.join(ROOT, 'tests', 'decks', d + '.txt')
             ok('Reg Barclay: a non-legendary Illusion artifact copy with haste', tk && !/Legendary/.test(tk.card.type) && /Artifact/.test(tk.card.type) && /Illusion/.test(tk.card.type) && has(tk, 'haste'), tk && tk.card.type);
             await endSteps();
             ok('... that is exiled at the next end step', !A.bf.some(o => o.token));
-            reset(); const ent = put(A, 'Grizzly Bears'); give(A, 'Hill Giant'); give(A, 'Hill Giant'); const ecSrc = put(A, 'U.S.S. Enterprise-C, Time-Tossed');
+            reset(); const ent = put(A, 'Grizzly Bears'); give(A, 'Hill Giant'); give(A, 'Hill Giant'); give(A, 'Hill Giant'); const ecSrc = put(A, 'U.S.S. Enterprise-C, Time-Tossed');
             await CMD.td_discardHandDraw(A, {}, null, ecSrc);
-            ok('Enterprise-C: discard the hand, draw that many', A.hand.length === 2 && A.gy.length === 2, [A.hand.length, A.gy.length]);
+            ok('Enterprise-C: discard the hand, draw that many', A.hand.length === 3 && A.gy.length === 3, [A.hand.length, A.gy.length]);
             reset(); const pro = put(A, 'U.S.S. Prometheus, Prototype'); G.ctxRaw = { n: 4, hit: [B] }; await CMD.td_multivector(A, {}, null, pro);
             ok('Prometheus: the other opponents take the damage too', Cc.life === 36 && D.life === 36 && B.life === 40, G.players.map(P => P.life));
             reset(); const sg = put(A, 'U.S.S. Stargazer, Here and There'); sg.atkTo = 1; await CMD.td_stargazer(A, {}, null, sg);
@@ -113,8 +113,8 @@ DECKS.forEach(d => fs.readFileSync(path.join(ROOT, 'tests', 'decks', d + '.txt')
             ok('Korok: +X/+X where X is the opponents attacked', pow(kA) === pk + 2, [pow(kA), pk]);
             const kurn = put(A, 'Kurn, Son of Mogh'); const h0 = A.hand.length; CMD.td_kurn(A, {}, null, kurn);
             ok('Kurn: draws X and loses X life', A.hand.length === h0 + 2 && A.life === 38, [A.hand.length - h0, A.life]);
-            const mar = put(A, 'Martok, Hero of the Empire'); const c0 = kA.counters + kB.counters + mar.counters; await CMD.td_martok(A, {}, null, mar);
-            ok('Martok: a counter on each of up to X creatures', kA.counters + kB.counters + mar.counters === c0 + 2);
+            const mar = put(A, 'Martok, Hero of the Empire'); const cnt = () => A.bf.reduce((a, o) => a + o.counters, 0); const c0 = cnt(); await CMD.td_martok(A, {}, null, mar);
+            ok('Martok: a counter on each of up to X creatures', cnt() === c0 + 2, [cnt(), c0]);
             reset(); const clk = put(A, 'Qo\'noS Quartermaster'); CMD.td_quartermaster(A); ok('Qo\'noS Quartermaster: a mana that stays until end of turn', A.pool.length === 1 && A.keepPoolTurn === G.turn);
             reset(); put(A, 'Grizzly Bears'); G.attackers = []; const sb = put(A, 'Grizzly Bears'); G.phase = 'main1'; CMD.td_extraCombat(A, {}, null, sb);
             ok('Own the Day / World at War: an additional combat phase', G.extraCombat === 1);
@@ -145,7 +145,7 @@ DECKS.forEach(d => fs.readFileSync(path.join(ROOT, 'tests', 'decks', d + '.txt')
             await CMD.td_pikeYes(A, {}, null, pike);
             ok('Pike (Yes): untaps two other creatures', !tp1.tapped && !tp2.tapped);
             reset(); const am = put(A, 'Giant Space Amoeba'); am.atkTo = 1; const vv = put(B, 'Serra Angel'); await CMD.td_amoeba(A, {}, null, am);
-            ok('Giant Space Amoeba: -3/-0 and a token copy', pow(vv) === 0 && A.bf.filter(o => o.token).length === 1, [pow(vv), A.bf.length]);
+            ok('Giant Space Amoeba: -3/-0 and a token copy', pow(vv) === 1 && A.bf.filter(o => o.token).length === 1, [pow(vv), A.bf.length]);
             reset(); const arex = put(A, 'Lt. Arex, Ever-Adapting'); give(A, 'Forest'); give(A, 'Island'); lib(A, 'Forest'); await CMD.td_arex(A, {}, null, arex);
             ok('Lt. Arex: draws three and puts lands from hand onto the battlefield', A.bf.filter(o => /Land/.test(o.card.type)).length >= 2, A.bf.map(o => o.card.name));
             reset(); const mc = put(A, 'McCoy, Not a Bricklayer'); const b1 = put(A, 'Grizzly Bears'); CMD.td_counterAll(A);

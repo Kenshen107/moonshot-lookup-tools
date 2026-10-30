@@ -36,7 +36,7 @@ function ensureProfile() {
 
 // How much of Magic the game can run: every paper card (one per name, from Scryfall) through rulesFor.
 // Measured after each rules round with the coverage test; update these numbers when it's rerun.
-const CARD_COVERAGE = { measured: '2026-10-27', total: 34142, full: 15736, partial: 14323, none: 4083, top1000: { full: 873, partial: 91, none: 36 } };
+const CARD_COVERAGE = { measured: '2026-10-30', total: 34489, full: 16023, partial: 14380, none: 4086, top1000: { full: 875, partial: 89, none: 36 } };
 function coverageHTML() {
     const c = CARD_COVERAGE, pct = n => Math.round(100 * n / c.total), play = c.full + c.partial;
     const seg = (n, cls, label) => `<span class="cov-seg ${cls}" style="width:${(100 * n / c.total).toFixed(2)}%" title="${label}: ${n.toLocaleString()} cards (${pct(n)}%)"></span>`;
