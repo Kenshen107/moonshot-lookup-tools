@@ -396,6 +396,7 @@ Ancestral Vengeance
 Ancestral Vision
 Anchor to the Aether
 Anchovy & Banana Pizza
+Ancient Amphitheater
 Ancient Brontodon
 Ancient Carp
 Ancient Copper Dragon
@@ -823,6 +824,7 @@ Augury Owl
 Augury Raven
 Augusta, Order Returned
 Aunt May
+Auntie's Hovel
 Auntie's Sentence
 Aura Blast
 Aura Fracture
@@ -4863,6 +4865,7 @@ Flamekin Brawler
 Flamekin Gildweaver
 Flamekin Harbinger
 Flamekin Spitfire
+Flamekin Village
 Flames of the Firebrand
 Flameshadow Conjuring
 Flamespeaker Adept
@@ -5046,6 +5049,7 @@ Forsaken Drifters
 Forsaken Monument
 Forsaken Sanctuary
 Forth Eorlingas!
+Fortified Beachhead
 Fortified Rampart
 Fortified Village
 Fortify
@@ -5475,6 +5479,7 @@ Gilded Scuttler
 Gilded Sentinel
 Gilgamesh, Master-at-Arms
 Gilraen, Dúnedain Protector
+Gilt-Leaf Palace
 Gilt-Leaf Seer
 Gilt-Leaf's Embrace
 Giltgrove Stalker
@@ -8967,6 +8972,7 @@ Murderous Redcap
 Murdock's Crusade
 Murk Dwellers
 Murky Sewer
+Murmuring Bosk
 Murmuring Mystic
 Murmuring Phantasm
 Murmuring Volume
@@ -11686,6 +11692,7 @@ Seasoned Marshal
 Seasoned Warrenguard
 Seat of the Synod
 Secluded Courtyard
+Secluded Glen
 Secluded Steppe
 Second Breakfast
 Second Harvest
@@ -13692,6 +13699,7 @@ Temple of Mystery
 Temple of Plenty
 Temple of Silence
 Temple of Triumph
+Temple of the Dragon Queen
 Temple of the False God
 Temporal Adept
 Temporal Cascade
@@ -15322,6 +15330,7 @@ Wandering Wolf
 Wanderlight Spirit
 Wanderlust
 Wanderwine Distracter
+Wanderwine Hub
 Waning Wurm
 Wanted Griffin
 War Behemoth

@@ -1352,6 +1352,29 @@ function pickChosenColor(P, not) {
     [...P.bf, ...P.hand, ...P.library].forEach(x => (x.card.colors || []).forEach(c => { if (c !== not) cnt[c] = (cnt[c] || 0) + 1; }));
     return Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] || COLORS.find(c => c !== not);
 }
+// Does a land enter tapped? (reads R.entersTapped, entersTappedUnlessLands and the "unless ..." descriptor from parseTappedUnless)
+function permHasTerms(x, words) {
+    const t = (x.card.type || '').toLowerCase(), cols = x.card.colors || [];
+    const C = { white: 'W', blue: 'U', black: 'B', red: 'R', green: 'G' };
+    return words.every(w => C[w] ? cols.includes(C[w]) : w === 'colorless' ? !cols.length : t.includes(w));
+}
+function landTappedOnEntry(P, o) {
+    const R = Rx(o);
+    if (R.entersTapped) return true;
+    const isLand = x => /\bLand\b/.test(x.card.type);
+    if (R.entersTappedUnlessLands && P.bf.filter(isLand).length < R.entersTappedUnlessLands) return true;
+    const d = R.tappedUnless;
+    if (!d) return false;
+    const living = G.players.filter(X => !X.out);
+    if (d.min !== undefined) return P.bf.filter(x => d.of.some(w => permHasTerms(x, w))).length < d.min;
+    if (d.max !== undefined) return P.bf.filter(x => d.of.some(w => permHasTerms(x, w))).length > d.max;
+    if (d.has) return !P.bf.some(x => d.has.some(w => permHasTerms(x, w)));
+    if (d.anyLife) return !living.some(X => X.life <= d.anyLife);
+    if (d.opps) return living.length - 1 < d.opps;
+    if (d.oppLands) return !living.some(X => X !== P && X.bf.filter(isLand).length >= d.oppLands);
+    if (d.earlyTurn) return Math.ceil(G.turn / Math.max(1, living.length)) > d.earlyTurn;
+    return false;
+}
 async function playLand(P, o) {
     const fromExile = P.exile.includes(o);
     if (fromExile) fire('playedFromExile', { P, o });
@@ -1361,9 +1384,9 @@ async function playLand(P, o) {
     P.landsPlayed++;
     resetObj(o);
     if (viaParagon) { P.paragonTurn = G.turn; o.paragonExile = true; log(`${o.card.name} was played from the graveyard (Serra Paragon).`); }
-    o.tapped = !!Rx(o).entersTapped || (!!Rx(o).entersTappedUnlessLands && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < Rx(o).entersTappedUnlessLands);
+    o.tapped = landTappedOnEntry(P, o);
     const rv = Rx(o).revealTypes;
-    if (rv) { const show = P.hand.find(h => rv.some(t => new RegExp(`\\b${t}\\b`).test(h.card.type))); o.tapped = !show; if (show) log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${show.card.name}.`); }
+    if (rv) { const show = P.hand.find(h => rv.some(t => new RegExp(`\\b${t}\\b`).test(h.card.type))); o.tapped = !show && !(Rx(o).revealOrControl && P.bf.some(x => permHasTerms(x, [Rx(o).revealOrControl.toLowerCase()]))); if (show) log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${show.card.name}.`); }
     const sl = Rx(o).shockLife;
     if (sl) {
         let pay = false;
@@ -2298,7 +2321,7 @@ async function applyChoiceEffect(P, e, src, t) {
             firstPick = firstPick || pick; G.lastFetched = pick;
             pull(P.library, pick);
             resetObj(pick);
-            if (e.bf) { pick.tapped = !!e.tapped || !!Rx(pick).entersTapped || (!!Rx(pick).entersTappedUnlessLands && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < Rx(pick).entersTappedUnlessLands); P.bf.push(pick); fire('landfall', { o: pick }); }
+            if (e.bf) { pick.tapped = !!e.tapped || landTappedOnEntry(P, pick); P.bf.push(pick); fire('landfall', { o: pick }); }
             else if (e.top) { shuffle(P.library); P.library.push(pick); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${pick.card.name} on top of the library.`); return; }
             else P.hand.push(pick);
             log(`${P.name} ${you(P) ? 'search' : 'searches'} for ${pick.card.name} and ${e.bf ? `${you(P) ? 'put' : 'puts'} it onto the battlefield${pick.tapped ? ' tapped' : ''}` : `${you(P) ? 'put' : 'puts'} it in hand`}.`);
@@ -4287,7 +4310,7 @@ async function beginTurn() {
     await upkeepGyActs(P);
     if (G.over) return;
     const skipDraw = (P.skip && P.skip.turn === G.turn && P.skip.what === 'draw') || P.bf.some(x => Rx(x).skipDraw && !lostAbilities(x));
-    if (!G.firstTurn && !skipDraw) { G.inDrawStep = true; drawCards(P, 1, P.i !== 0); G.inDrawStep = false; }
+    if ((!G.firstTurn || G.players.length > 2) && !skipDraw) { G.inDrawStep = true; drawCards(P, 1, P.i !== 0); G.inDrawStep = false; }
     G.firstTurn = false;
     // Sagas get a lore counter at the start of the precombat main phase (714.3b)
     P.bf.filter(o => Rx(o).saga && !o.sagaDone).forEach(o => { o.ctr.lore = (o.ctr.lore || 0) + 1; sagaChapter(P, o); });
