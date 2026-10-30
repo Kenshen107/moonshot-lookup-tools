@@ -495,6 +495,32 @@ function parseEffects(text) {
     return out.length ? out : null;
 }
 
+// "enters tapped unless <cond>" -> a descriptor read by landTappedOnEntry (06-engine.js); null when the wording isn't understood
+function parseTappedUnless(c) {
+    let m;
+    const NUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, thirteen: 13 };
+    const nn = x => NUM[x] || +x;
+    if ((m = c.match(/^you control (two|three|four|five|\d+) or (more|fewer) other lands$/))) return m[2] === 'more' ? { min: nn(m[1]), of: [['land']] } : { max: nn(m[1]), of: [['land']] };
+    if ((m = c.match(/^you control (two|three|four|five|\d+) or more (?:other )?basic lands$/))) return { min: nn(m[1]), of: [['basic']] };
+    if ((m = c.match(/^you control (two|three|four|five|\d+) or more other (\w+?)s?$/)) && /^[A-Z]/.test(m[2])) return { min: nn(m[1]), of: [[m[2].toLowerCase()]] };
+    if ((m = c.match(/^(?:a|any) player has (\d+) or less life$/))) return { anyLife: +m[1] };
+    if ((m = c.match(/^you have (two|three|\d+) or more opponents$/))) return { opps: nn(m[1]) };
+    if ((m = c.match(/^your opponents control (\w+) or more lands$/))) return { oppLands: nn(m[1]) };
+    if ((m = c.match(/^it's your (?:first|second|third)(?:, (?:first|second|third))?(?:,? or (?:first|second|third))? turn of the game$/))) return { earlyTurn: /third/.test(c) ? 3 : /second/.test(c) ? 2 : 1 };
+    if ((m = c.match(/^you control (.+)$/))) {
+        const parts = m[1].split(/,? or |, /).map(x => x.trim().replace(/^(?:an?|any)\s+/, '')).filter(Boolean);
+        if (!parts.length || parts.length > 4) return null;
+        const of = [];
+        for (const pt of parts) {
+            const words = pt.toLowerCase().split(/\s+/).filter(w => w !== 'permanent');
+            if (words.length > 3 || !words.length && !/permanent/.test(pt)) return null;
+            if (words.some(w => /[^a-z'-]/.test(w))) return null;
+            of.push(words);
+        }
+        return { has: of };
+    }
+    return null;
+}
 function rulesFor(card) {
     if (card._r) return card._r;
     const R = { kind: 'other', kw: new Set(), etb: [], spell: null, mana: null, entersTapped: false, buff: null, equip: null, aura: false, unhandled: [], support: 'full', why: '',
@@ -753,12 +779,16 @@ function rulesFor(card) {
         if (/^~ enters tapped\.$/.test(line)) { R.entersTapped = true; continue; }
         // Shock lands and pathway-style MDFC lands: pay N life or it enters tapped (you choose; the AI pays when it has a play)
         if (R.kind === 'land' && (m = line.match(/^As ~ enters(?: the battlefield)?, you may pay (\d+) life\. If you don't, it enters tapped\.$/))) { R.shockLife = +m[1]; continue; }
-        // Reveal lands ("you may reveal an Island or Swamp card from your hand"): untapped when you hold one
-        if (R.kind === 'land' && (m = line.match(/^As ~ enters(?: the battlefield)?, you may reveal an? (\w+) or (\w+) card from your hand\. If you don't, ~ enters tapped\.$/))) { R.revealTypes = [m[1], m[2]]; continue; }
+        // Reveal lands ("you may reveal an Island or Swamp card from your hand", Snarls, tribal reveal lands): untapped when you hold one
+        if (R.kind === 'land' && (m = line.match(/^As ~ enters(?: the battlefield)?, you may reveal an? (\w+)(?: or (\w+))? card from your hand\. (?:If you don't, ~ enters tapped\.|~ enters tapped unless you revealed an? \w+ card this way or you control an? (\w+)\.)$/))) { R.revealTypes = [m[1], m[2]].filter(Boolean); if (m[3]) R.revealOrControl = m[3]; continue; }
         if (/^You may play an additional land on each of your turns\.$/.test(line)) { R.extraLand = 1; continue; }
         if (/^You have no maximum hand size\.$/.test(line)) { R.noMaxHand = true; continue; }
-        if (R.kind === 'land' && (m = line.match(/^~ enters tapped unless you control (two|three|four|\d+) or more other lands\.$/))) { R.entersTappedUnlessLands = num(m[1]); continue; } // Star Trek (2026-10-24): checked when the land is played
-        if (R.kind === 'land' && /^~ enters tapped unless/.test(line)) { R.entersTapped = true; continue; } // approximation
+        // Conditional "enters tapped unless ..." lands (check, fast, slow, battle, bond, tribal, Horizon-style): evaluated by landTappedOnEntry (06-engine.js)
+        if (R.kind === 'land' && (m = line.match(/^~ enters tapped unless (.+)\.$/))) {
+            const d = parseTappedUnless(m[1]);
+            if (d) { R.tappedUnless = d; continue; }
+            R.entersTapped = true; continue; // approximation: wording not understood
+        }
         if ((m = line.match(/^When ~ enters(?: the battlefield)?, (.+)$/))) { const fx = parseEffects(m[1]); if (fx) { R.etb.push(...fx); continue; } }
         if ((m = line.match(/^When(?:ever)? ~ enters(?: the battlefield)? or attacks, (.+)$/))) { const fx = parseEffects(m[1]); if (fx) { R.etb.push(...fx); R.trig.push({ ev: 'attacks', effects: fx }); continue; } }
         if ((R.kind === 'instant' || R.kind === 'sorcery')) {
