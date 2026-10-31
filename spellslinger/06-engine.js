@@ -1531,6 +1531,7 @@ async function castSpell(P, o, presetTarget) {
 
 // Triggered "when this enters" abilities go on the stack (603.3). Targets
 // are chosen now; with no legal target the ability is removed (603.3d).
+function trigKey(effects) { try { return JSON.stringify(effects); } catch (er) { return null; } }
 async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
     const te = effects.find(e => needsTarget(e) && !e.late);
     let target = null;
@@ -1539,7 +1540,19 @@ async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
         target = await chooseTarget(P, te, source, false);
         if (!target) { log(`${source.card.name}'s ability has no legal target and is removed from the stack (rule 603.3d).`); return; }
     }
-    G.stack.push({ id: stackSeq++, kind: 'trigger', o: source, P, target, effects, name: `${source.card.name}'s ability`, ctxObj, ctxCount, raw });
+    // Identical triggers from permanents with the same name (Scute Swarm, two Starship Enterprises) share one stack line, so a crowd of them doesn't bury the table (2026-10-31). Each source still resolves in turn.
+    if (!target && !ctxObj && source && source.card && actOn()) {
+        const key = trigKey(effects);
+        const same = G.stack.find(it => it.kind === 'trigger' && it.P === P && !it.target && !it.ctxObj && it.o && it.o.card.name === source.card.name && (it.ctxCount || 0) === (ctxCount || 0) && key !== null && it.key === key);
+        if (same) {
+            (same.also = same.also || []).push(source);
+            same.name = `${source.card.name}'s ability ×${1 + same.also.length}`;
+            log(`${source.card.name}'s ability triggers again (×${1 + same.also.length} on the stack).`);
+            renderGame();
+            return;
+        }
+    }
+    G.stack.push({ id: stackSeq++, kind: 'trigger', o: source, P, target, effects, name: `${source.card.name}'s ability`, ctxObj, ctxCount, raw, key: !target && !ctxObj ? trigKey(effects) : null });
     if (target && target.o && !(te && te.ctx)) fire('targeted', { o: target.o, by: P.i }); // Magic 2010: Illusionary Servant, Ice Cage
     log(`${source.card.name}'s ability triggers${target ? ` ${te && te.ctx ? 'for' : 'targeting'} ${targetName(target)}` : ''}.`);
     renderGame();
@@ -1675,6 +1688,7 @@ async function resolveTop() {
         G.ctxObj = item.ctxObj || null; G.ctxCount = item.ctxCount || 0; G.ctxRaw = item.raw || null;
         { G.resMap = G.resMap || new Map(); const per = G.resMap.get(item.effects) || {}; G.resMap.set(item.effects, per); const k = item.o ? item.o.uid : 0; per[k] = per[k] && per[k].turn === G.turn ? { turn: G.turn, n: per[k].n + 1 } : { turn: G.turn, n: 1 }; G.resolveN = per[k].n; }
         await resolveEffects(item.P, item.effects, item.target, item.o);
+        for (const src2 of item.also || []) { if (G.over) break; G.resolveN = (G.resolveN || 0) + 1; await resolveEffects(item.P, item.effects, null, src2); }
         G.ctxObj = null;
     } else {
         const o = item.o, r = Rx(o);

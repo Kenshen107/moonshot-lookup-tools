@@ -48,7 +48,7 @@ cl(/^III — You and target opponent each draw two cards\.$/, R => { R.saga = R.
 // U.S.S. Enterprise-C, Time-Tossed
 clx('When ~ enters or dies, you may discard your hand. If you do, draw a card for each card discarded this way.', R => { R.etb.push(cmd('td_discardHandDraw')); R.trig.push({ ev: 'dies', effects: [cmd('td_discardHandDraw')] }); });
 // U.S.S. Prometheus, Prototype
-cl(/^8\+ \| Multivector Assault Mode — Whenever ~ deals combat damage to an opponent, it deals that much damage to each other opponent\.$/, R => { R.stationTiers = (R.stationTiers || []).concat(8); R.trig.push({ ev: 'hitPlayer', cond: 'it has 8 or more charge counters on it', effects: [cmd('td_multivector')] }); });
+cl(/^8\+ \| Multivector Assault Mode — Whenever ~ deals combat damage to an opponent, it deals that much damage to each other opponent\.$/, (R, m, ctx) => { R.stationTiers = (R.stationTiers || []).concat(8); if (tkShip(ctx.card)) R.stationAt = Math.max(R.stationAt || 0, 8); R.trig.push({ ev: 'hitPlayer', cond: 'it has 8 or more charge counters on it', effects: [cmd('td_multivector')] }); });
 // U.S.S. Stargazer, Here and There
 clx('Picard Maneuver — Whenever U.S.S. Stargazer attacks, create a tapped and attacking 4/3 colorless Spacecraft Illusion artifact creature token with flying. Exile that token at end of combat.', R => { R.trig.push({ ev: 'attacks', fn: 'selfAttacks', effects: [cmd('td_stargazer')] }); });
 clx('Whenever ~ attacks, create a tapped and attacking 4/3 colorless Spacecraft Illusion artifact creature token with flying. Exile that token at end of combat.', R => { R.trig.push({ ev: 'attacks', fn: 'selfAttacks', effects: [cmd('td_stargazer')] }); });
@@ -198,7 +198,7 @@ clx('{4}, {T}: Draw a card. You may put a land card from your hand onto the batt
 clx('Whenever ~ deals combat damage to a player, put a +1/+1 counter on it for each land that player controls.', R => { R.trig.push({ ev: 'hitPlayer', effects: [cmd('td_planetKiller')] }); });
 // S.S. Botany Bay
 clx('{T}: Each opponent exiles a card from their graveyard. You may exile a card from your graveyard.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('td_botanyBay')]); });
-cl(/^8\+ \| Flying$/, R => { R.stationTiers = (R.stationTiers || []).concat(8); selfCond(R, { cond: TK_COND(8), p: 0, q: 0, kw: ['flying'] }); });
+cl(/^8\+ \| Flying$/, (R, m, ctx) => { R.stationTiers = (R.stationTiers || []).concat(8); if (tkShip(ctx.card)) R.stationAt = Math.max(R.stationAt || 0, 8); selfCond(R, { cond: TK_COND(8), p: 0, q: 0, kw: ['flying'] }); });
 clx('Whenever ~ deals combat damage to a player, return each creature card you own exiled with it to the battlefield.', R => { R.trig.push({ ev: 'hitPlayer', cond: TK_COND(8), effects: [cmd('td_botanyReturn')] }); });
 // U.S.S. Defiant, Mirror Migrant
 clx('When ~ enters, it and up to one target creature you control phase out.', R => { R.etb.push(cmd('td_defiant')); });
