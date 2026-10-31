@@ -31,6 +31,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
                 if (!hasPT && isCreature(o)) bad.push(c.name + ' (should not be a creature)');
             }
             ok('every Spacecraft with printed P/T is an artifact creature at its top tier (' + seen.size + ' checked)', bad.length === 0, bad);
+            window.__GROUP_TRIGGERS = true; // grouping is off in autoplay and the lab, so the test turns it on
             // Grouped triggers: three Scute Swarms and a land make one stack line
             T.clear(); G.stack.length = 0;
             const sw = [1, 2, 3].map(() => { const o = T.put(A, C['Scute Swarm']); o.sick = false; return o; });
@@ -41,6 +42,15 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             ok('three Scute Swarm triggers share one stack line', G.stack.filter(it => it.kind === 'trigger').length <= 1, G.stack.map(it => it.name));
             await settle(); await settle();
             ok('all three still resolve: three Insect tokens are made', A.bf.filter(o => o.token).length >= 3, A.bf.filter(o => o.token).length);
+            // A crowd: twelve Swarms and a land make one stack line, twelve tokens and one summary log line
+            T.clear(); G.stack.length = 0; G.log.length = 0;
+            for (let i = 0; i < 12; i++) { const o = T.put(A, C['Scute Swarm']); o.sick = false; }
+            await settle(); await settle(); G.stack.length = 0; A.bf.filter(o => o.token).forEach(o => pull(A.bf, o)); G.log.length = 0;
+            const land2 = makeObj(C['Forest'], A.i); A.hand.push(land2); await playLand(A, land2); await flushTriggers();
+            const lines = G.stack.filter(it => it.kind === 'trigger').length;
+            await settle(); await settle();
+            ok('twelve Scute Swarm triggers are one stack line', lines <= 1, lines);
+            ok('they all resolve (twelve new tokens) with one summary line', A.bf.filter(o => o.token).length === 12 && G.log.filter(l => /triggers resolved/.test(l)).length === 1, [A.bf.filter(o => o.token).length, G.log.filter(l => /Scute Swarm/.test(l)).length]);
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;
     });
