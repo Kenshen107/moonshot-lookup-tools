@@ -813,8 +813,9 @@ async function activate(P, o, a, presetTarget, presetX) {
     if (a.crew !== undefined) {
         const crew = await chooseCrew(P, o, a.crew, 'Crew');
         if (!crew) return false;
+        if (Rx(o).crewOnce && o.crewed === G.turn) { log(`${o.card.name} can be crewed only once each turn.`); return false; }
         crew.forEach(c => { c.tapped = true; });
-        o.crewed = G.turn;
+        o.crewed = G.turn; o.crewN = crew.length; o.crewTurn = G.turn;
         log(`${P.name} ${you(P) ? 'crew' : 'crews'} ${o.card.name} with ${crew.map(c => c.card.name).join(', ')}: it's an artifact creature until end of turn.`);
         renderGame();
         return true;
@@ -995,7 +996,7 @@ function aiCrew(P) {
         const crew = crewPick(P, v, n);
         if (!crew) continue;
         const lost = crew.filter(canAttackWith).reduce((a, c) => a + pow(c), 0);
-        if ((Number(v.card.power) || 0) > lost) { crew.forEach(c => { c.tapped = true; }); v.crewed = G.turn; log(`${P.name} crews ${v.card.name}.`); }
+        if ((Number(v.card.power) || 0) > lost) { crew.forEach(c => { c.tapped = true; }); v.crewed = G.turn; v.crewN = crew.length; v.crewTurn = G.turn; log(`${P.name} crews ${v.card.name}.`); }
     }
 }
 

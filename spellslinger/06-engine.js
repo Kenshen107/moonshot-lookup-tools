@@ -96,7 +96,7 @@ function findObj(uid) {
     return null;
 }
 const ctrl = o => G.players[o.owner];
-const isCreature = o => !o.enchOnly && !o.artOnly && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (typeof stationCreature === 'function' && stationCreature(o)) || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
+const isCreature = o => !o.enchOnly && !o.artOnly && !(o.hgNotCr && G && o.hgNotCr === G.turn) && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (typeof stationCreature === 'function' && stationCreature(o)) || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
 function buffsOn(o) {
     const b = { p: 0, q: 0, kw: [] };
     const perms0 = attachmentsOf(o.uid);
@@ -1799,7 +1799,7 @@ function moveSpellCard(o, zone) {
     if (o.ceases) return; // a copy of a card that was cast ceases to exist (707.10a)
     if (o.suspendAfter) { const n = o.suspendAfter; o.suspendAfter = 0; if (o.front) o.card = o.front; resetObj(o); o.ctr.time = n; o.suspended = true; owner.exile.push(o); log(`${o.card.name} is exiled with ${n} time counters on it.`); return; }
     if (o.bottomIfGy && zone === 'gy') { o.bottomIfGy = false; if (o.front) o.card = o.front; resetObj(o); owner.library.unshift(o); log(`${o.card.name} is put on the bottom of its owner's library instead.`); return; }
-    if (o.exileAfter) { o.exileAfter = false; zone = 'exile'; }
+    if (o.exileAfter) { o.exileAfter = false; o.exiledAfterCast = true; zone = 'exile'; }
     if (o.shuffleIn) { o.shuffleIn = false; resetObj(o); if (o.front) o.card = o.front; owner.library.splice(rand(owner.library.length + 1), 0, o); log(`${o.card.name} is shuffled into its owner's library.`); return; }
     if (o.flashedBack) { o.flashedBack = false; if (!Rx(o).flashbackKeep) { zone = 'exile'; log(`${o.card.name} is exiled (flashback).`); } }
     // Rebound (702.88): cast from your hand, it's exiled and you may cast it again at your next upkeep
@@ -2070,6 +2070,7 @@ function wipeMatches(o, what, P) {
         case 'battles': return isBattle(o);
         case 'legendary creatures': return isCreature(o) && /\bLegendary\b/.test(o.card.type);
         case 'nonlegendary creatures': return isCreature(o) && !/\bLegendary\b/.test(o.card.type);
+        case 'nonartifact creatures': return isCreature(o) && !/\bArtifact\b/.test(o.card.type);
     }
     let m0 = what.match(/^nonland permanents with mana value (\d+) or less$/);
     if (m0) return !/\bLand\b/.test(o.card.type) && (o.card.cmc || 0) <= +m0[1];
