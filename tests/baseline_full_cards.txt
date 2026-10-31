@@ -556,6 +556,7 @@ Arc Mage
 Arc Reactor
 Arc Runner
 Arc-Slogger
+Arcade Cabinet
 Arcane Amphisbaena
 Arcane Denial
 Arcane Encyclopedia
@@ -1827,6 +1828,7 @@ Broken Dam
 Broken Fall
 Broken Wings
 Brokers Hideout
+Bronze Guardian
 Bronze Sable
 Bronze Sword
 Bronze Walrus
@@ -2082,6 +2084,7 @@ Careful Study
 Caregiver
 Careless Celebrant
 Caretakers
+Cargo Ship
 Carmen, Cruel Skymarcher
 Carnage Altar
 Carnage Tyrant
@@ -2180,6 +2183,7 @@ Cayth, Famed Mechanist
 Cazur, Ruthless Stalker
 Ceaseless Conflict
 Celeborn the Wise
+Celebrate the Mountain-king
 Celebrity Fencer
 Celestial Ancient
 Celestial Archon
@@ -2547,6 +2551,8 @@ Cogwork Wrestler
 Cogworker's Puzzleknot
 Coiled Tinviper
 Coiling Woodworm
+Coin of Fate
+Coin of Mastery
 Cold Case Cracker
 Cold-Blooded Crew
 Cold-Water Snapper
@@ -2575,6 +2581,7 @@ Colossal Dreadmaw
 Colossal Dreadmaw and Storm Crow
 Colossal Majesty
 Colossal Might
+Colossal Plow
 Colossal Skyturtle
 Colossal Whale
 Colossapede
@@ -3004,6 +3011,8 @@ Cutthroat Contender
 Cutthroat Maneuver
 Cutthroat il-Dal
 Cyan, Vengeful Samurai
+Cyberdrive Awakener
+Cybermat
 Cybernetic Specialist
 Cycle of Renewal
 Cycling
@@ -3361,6 +3370,7 @@ Demonic Appetite
 Demonic Dread
 Demonic Embrace
 Demonic Gifts
+Demonic Junker
 Demonic Pact
 Demonic Ruckus
 Demonic Taskmaster
@@ -4294,6 +4304,7 @@ Escape Tunnel
 Escape from Orthanc
 Escaped Null
 Escarpment Fortress
+Esgaroth Garrison
 Eshki Dragonclaw
 Eshki, Temur's Roar
 Esior, Wardwing Familiar
@@ -4342,6 +4353,7 @@ Etherium Sculptor
 Etherium Spinner
 Etherium-Horn Sorcerer
 Ethersworn Adjudicator
+Ethersworn Shieldmage
 Ethersworn Sphinx
 Etherwrought Page
 Ettercap // Web Shot
@@ -5885,6 +5897,7 @@ Greasewrench Goblin
 Great Fierce Bee
 Great Forest Druid
 Great Furnace
+Great Gilded Boat
 Great Goblin, Foul-Hearted
 Great Hart
 Great Lakes Avengers
@@ -7016,6 +7029,7 @@ Isochron Scepter
 Isolate
 Isolated Chapel
 Isolation Cell
+Isolinear Processor
 Isperia's Skywatch
 Isperia, Supreme Judge
 Isshin, Two Heavens as One
@@ -7652,6 +7666,7 @@ Lagac Lizard
 Lagonna-Band Elder
 Lagonna-Band Trailblazer
 Lake-town
+Lake-town Lookout
 Lake-town Mariners // Gone Fishing
 Lake-town Toymaker
 Lakeshore Apothecary
@@ -7980,6 +7995,7 @@ Lonely Arroyo
 Lonely Sandbar
 Lonesome Unicorn // Rider in Need
 Long Goodbye
+Long Lake Nuisance
 Long-Finned Skywhale
 Long-Forgotten Gohei
 Longbow Archer
@@ -8113,6 +8129,7 @@ Lush Oasis
 Lush Portico
 Lutri, the Spellchaser
 Luxurious Libation
+Luxurious Locomotive
 Luxury Suite
 Lydia Frye
 Lyev Decree
@@ -8780,6 +8797,7 @@ Moldering Karok
 Moldervine Reclamation
 Moldgraf Scavenger
 Mole Man, Moloid Master
+Mole Module
 Mole Worms
 Molecular Modifier
 Molecule Man
@@ -9349,6 +9367,7 @@ Noxious Newt
 Noxious Toad
 Nuclear Fallout
 Nuisance Engine
+Nuka-Cola Vending Machine
 Null Brooch
 Null Group Biological Assets
 Nullpriest of Oblivion
@@ -9601,6 +9620,7 @@ Oreplate Pangolin
 Oreskos Swiftclaw
 Organ Grinder
 Organic Avulsion Unit
+Organic Extinction
 Ori, Plate Stacker
 Origin Spellbomb
 Origin of Metalbending
@@ -9776,6 +9796,7 @@ Path to the World Tree
 Pathbreaker Ibex
 Pathfinding Axejaw
 Pathmaker Initiate
+Patient Instructor
 Patriot, Shield Wielder
 Patriot, Young Avenger
 Patrol Hound
@@ -10783,6 +10804,7 @@ Refocus
 Reforge the Soul
 Refresh
 Refurbish
+Refurbished Familiar
 Refuse to Yield
 Refute
 Reg Barclay, Fidgety Fantasist
@@ -13843,6 +13865,7 @@ The Chase Is On
 The City on the Edge of Forever
 The Cruelty of Gix
 The Crystal's Chosen
+The Cyber-Controller
 The Dawning Archaic
 The Destined Black Mage
 The Destined White Mage
@@ -13899,6 +13922,7 @@ The Mighty Thor, Jane Foster
 The Mindskinner
 The Misty Mountains Cold
 The Modern Age // Vector Glider
+The Mountain-king's Return
 The Mouth of Sauron
 The Notary Hobbits
 The Ooze
@@ -13948,6 +13972,7 @@ The Wiley Speedster
 The Wind Crystal
 The Wrath of Khan
 Theft of Dreams
+Their Name Is Death
 Thelonite Hermit
 Theoretical Necromancer
 Theorix Annex
@@ -14268,6 +14293,7 @@ Tormod's Cryptkeeper
 Tormod, the Desecrator
 Tornado Elemental
 Torpor Dust
+Torrential Gearhulk
 Torsten Von Ursus
 Torsten, Founder of Benalia
 Tortoise Formation
@@ -15476,6 +15502,7 @@ Web-Warriors
 Webweaver Changeling
 Wedgelight Rammer
 Wee Dragonauts
+Weeping Angel
 Weftblade Enhancer
 Wei Ambush Force
 Wei Assassins
