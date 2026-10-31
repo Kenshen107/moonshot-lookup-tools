@@ -96,7 +96,7 @@ function findObj(uid) {
     return null;
 }
 const ctrl = o => G.players[o.owner];
-const isCreature = o => !o.enchOnly && !o.artOnly && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (typeof stationCreature === 'function' && stationCreature(o)) || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
+const isCreature = o => !o.enchOnly && !o.artOnly && !(o.hgNotCr && G && o.hgNotCr === G.turn) && !(o.impending && o.ctr && o.ctr.time > 0) && !(o.bestowed && o.attachedTo) && (marchCreature(o) || !!o.permAnimated || (typeof stationCreature === 'function' && stationCreature(o)) || (Rx(o).kind === 'creature' && !(Rx(o).selfCond && Rx(o).selfCond.some(c => c.notCreature && !!G && condOk(c.cond, ctrl(o), o)))) || (!!G && (o.crewed === G.turn || (!!o.animated && o.animated.turn === G.turn))));
 function buffsOn(o) {
     const b = { p: 0, q: 0, kw: [] };
     const perms0 = attachmentsOf(o.uid);
@@ -1531,6 +1531,7 @@ async function castSpell(P, o, presetTarget) {
 
 // Triggered "when this enters" abilities go on the stack (603.3). Targets
 // are chosen now; with no legal target the ability is removed (603.3d).
+function trigKey(effects) { try { return JSON.stringify(effects); } catch (er) { return null; } }
 async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
     const te = effects.find(e => needsTarget(e) && !e.late);
     let target = null;
@@ -1539,7 +1540,19 @@ async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
         target = await chooseTarget(P, te, source, false);
         if (!target) { log(`${source.card.name}'s ability has no legal target and is removed from the stack (rule 603.3d).`); return; }
     }
-    G.stack.push({ id: stackSeq++, kind: 'trigger', o: source, P, target, effects, name: `${source.card.name}'s ability`, ctxObj, ctxCount, raw });
+    // Identical triggers from permanents with the same name (Scute Swarm, two Starship Enterprises) share one stack line, so a crowd of them doesn't bury the table (2026-10-31). Each source still resolves in turn.
+    if (!target && !ctxObj && source && source.card && actOn()) {
+        const key = trigKey(effects);
+        const same = G.stack.find(it => it.kind === 'trigger' && it.P === P && !it.target && !it.ctxObj && it.o && it.o.card.name === source.card.name && (it.ctxCount || 0) === (ctxCount || 0) && key !== null && it.key === key);
+        if (same) {
+            (same.also = same.also || []).push(source);
+            same.name = `${source.card.name}'s ability ×${1 + same.also.length}`;
+            log(`${source.card.name}'s ability triggers again (×${1 + same.also.length} on the stack).`);
+            renderGame();
+            return;
+        }
+    }
+    G.stack.push({ id: stackSeq++, kind: 'trigger', o: source, P, target, effects, name: `${source.card.name}'s ability`, ctxObj, ctxCount, raw, key: !target && !ctxObj ? trigKey(effects) : null });
     if (target && target.o && !(te && te.ctx)) fire('targeted', { o: target.o, by: P.i }); // Magic 2010: Illusionary Servant, Ice Cage
     log(`${source.card.name}'s ability triggers${target ? ` ${te && te.ctx ? 'for' : 'targeting'} ${targetName(target)}` : ''}.`);
     renderGame();
@@ -1675,6 +1688,7 @@ async function resolveTop() {
         G.ctxObj = item.ctxObj || null; G.ctxCount = item.ctxCount || 0; G.ctxRaw = item.raw || null;
         { G.resMap = G.resMap || new Map(); const per = G.resMap.get(item.effects) || {}; G.resMap.set(item.effects, per); const k = item.o ? item.o.uid : 0; per[k] = per[k] && per[k].turn === G.turn ? { turn: G.turn, n: per[k].n + 1 } : { turn: G.turn, n: 1 }; G.resolveN = per[k].n; }
         await resolveEffects(item.P, item.effects, item.target, item.o);
+        for (const src2 of item.also || []) { if (G.over) break; G.resolveN = (G.resolveN || 0) + 1; await resolveEffects(item.P, item.effects, null, src2); }
         G.ctxObj = null;
     } else {
         const o = item.o, r = Rx(o);
@@ -1799,7 +1813,7 @@ function moveSpellCard(o, zone) {
     if (o.ceases) return; // a copy of a card that was cast ceases to exist (707.10a)
     if (o.suspendAfter) { const n = o.suspendAfter; o.suspendAfter = 0; if (o.front) o.card = o.front; resetObj(o); o.ctr.time = n; o.suspended = true; owner.exile.push(o); log(`${o.card.name} is exiled with ${n} time counters on it.`); return; }
     if (o.bottomIfGy && zone === 'gy') { o.bottomIfGy = false; if (o.front) o.card = o.front; resetObj(o); owner.library.unshift(o); log(`${o.card.name} is put on the bottom of its owner's library instead.`); return; }
-    if (o.exileAfter) { o.exileAfter = false; zone = 'exile'; }
+    if (o.exileAfter) { o.exileAfter = false; o.exiledAfterCast = true; zone = 'exile'; }
     if (o.shuffleIn) { o.shuffleIn = false; resetObj(o); if (o.front) o.card = o.front; owner.library.splice(rand(owner.library.length + 1), 0, o); log(`${o.card.name} is shuffled into its owner's library.`); return; }
     if (o.flashedBack) { o.flashedBack = false; if (!Rx(o).flashbackKeep) { zone = 'exile'; log(`${o.card.name} is exiled (flashback).`); } }
     // Rebound (702.88): cast from your hand, it's exiled and you may cast it again at your next upkeep
@@ -2070,6 +2084,7 @@ function wipeMatches(o, what, P) {
         case 'battles': return isBattle(o);
         case 'legendary creatures': return isCreature(o) && /\bLegendary\b/.test(o.card.type);
         case 'nonlegendary creatures': return isCreature(o) && !/\bLegendary\b/.test(o.card.type);
+        case 'nonartifact creatures': return isCreature(o) && !/\bArtifact\b/.test(o.card.type);
     }
     let m0 = what.match(/^nonland permanents with mana value (\d+) or less$/);
     if (m0) return !/\bLand\b/.test(o.card.type) && (o.card.cmc || 0) <= +m0[1];

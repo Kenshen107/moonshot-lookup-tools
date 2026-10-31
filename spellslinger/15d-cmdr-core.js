@@ -161,6 +161,7 @@ async function castFreeFrom(P, c, target) {
     pull(from[zone], c); c.freeCast = true; c.playUntil = G.turn; P.exile.push(c);
     let cast = true;
     try { cast = await castSpell(P, c, target); } catch (er) { cast = false; }
+    if (c.exiledAfterCast) { c.exiledAfterCast = false; return true; } // it was cast and then exiled as it resolved (Torrential Gearhulk, jump-start): leave it there
     if (P.exile.includes(c)) { pull(P.exile, c); from[zone].push(c); c.freeCast = false; return false; }
     return true;
 }
