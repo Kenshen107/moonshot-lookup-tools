@@ -405,6 +405,8 @@ function aiBestPlay(P) {
         if (r.kicker) o.kicked = canKick(P, o);
         o.giftPromised = !!r.gift && typeof giftWanted === 'function' && giftWanted(P, o);
         if (r.multikicker) { o.kickN = maxKick(P, o); o.kicked = o.kickN > 0; } else o.kickN = 0;
+        o.repN = 0;
+        if (repCostOf(P, o) && !(r.kind === 'instant' || r.kind === 'sorcery') && permValue(o) >= 2) o.repN = Math.min(maxRep(P, o), 3); // permanents are worth copying; spells need a target-aware score, so the computer skips them
         o.buyback = !!r.buyback && canBuyback(P, o) && (untapped - (o.card.cmc || 0)) >= 3;
         if (r.cost.x) o.xVal = maxX(P, o);
         if (r.xFromTarget) { const te0 = firstTargetEffect(o), t0 = te0 ? aiPickTarget(P, te0, o) : null; if (!t0 || !t0.o || (t0.o.card.cmc || 0) > o.xVal) continue; o.xVal = t0.o.card.cmc || 0; }
