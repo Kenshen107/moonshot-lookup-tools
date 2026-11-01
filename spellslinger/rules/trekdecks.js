@@ -245,8 +245,9 @@ cl(/^I — Assimilate target nonartifact creature an opponent controls\.$/, R =>
 cl(/^II — Artifact creatures you control get \+2\/\+2 until end of turn\.$/, R => { R.saga = R.saga || {}; (R.saga[2] = R.saga[2] || []).push(cmd('td_bobw2')); });
 cl(/^III — Exile the Borg assimilated with ~, then return it to the battlefield under its owner's control\.$/, R => { R.saga = R.saga || {}; (R.saga[3] = R.saga[3] || []).push(cmd('td_bobw3')); });
 tdRW(/Exile target artifact or creature\. Create X 1\/1 colorless Borg artifact creature tokens, where X is that permanent's mana value\./, 'tdDeliver', { t: 'cmd', id: 'td_deliver', target: 'perm', filter: 'artifact or creature', good: false });
-clx('Artifact spells you cast have replicate {2}{U}. (Whenever you cast an artifact spell, copy it for each time you paid its replicate cost. Each copy becomes a token.)', R => { R.trig.push({ ev: 'cast', filter: 'types:Artifact', effects: [cmd('td_replicate')] }); });
-clx('Artifact spells you cast have replicate {2}{U}.', R => { R.trig.push({ ev: 'cast', filter: 'types:Artifact', effects: [cmd('td_replicate')] }); });
+// Real replicate (2026-11-01): the grant is read by repCostOf in 06-engine.js; the cost is paid as part of the spell's total cost
+clx('Artifact spells you cast have replicate {2}{U}. (Whenever you cast an artifact spell, copy it for each time you paid its replicate cost. Each copy becomes a token.)', R => { R.repGrant = { type: 'Artifact', cost: parseCost('{2}{U}') }; });
+clx('Artifact spells you cast have replicate {2}{U}.', R => { R.repGrant = { type: 'Artifact', cost: parseCost('{2}{U}') }; });
 clx('Whenever one or more artifact creatures you control deal combat damage to a player, create a token that\'s a copy of target artifact token you control.', R => { R.trig.push({ ev: 'hitPlayer', anyMine: true, only: 'artifact', effects: [cmd('td_jurati')] }); });
 clx('Artifact creatures you control have flying, double strike, vigilance, menace, lifelink, and ward {2}.', R => { R.statics.push({ type: 'Artifact', p: 0, q: 0, kw: ['flying', 'double strike', 'vigilance', 'menace', 'lifelink', 'ward:2'] }); });
 clx('{T}: Choose a color. Add one mana of that color for each charge counter on ~. Spend this mana only to cast your commander.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('td_queensDiamond')], a => { a.manaLike = true; }); });

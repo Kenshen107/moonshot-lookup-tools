@@ -926,6 +926,14 @@ function altOk(P, o) {
 function altTapFliers(P, o, n) { return P.bf.filter(x => isCreature(x) && !x.tapped && has(x, 'flying') && x !== o).slice(0, n); }
 function canPay(P, o) { return (!o.altCast || altOk(P, o)) && addCostOk(P, o) && !!planPayment(P, costOf(P, o), extraCost(P, o) + (costOf(P, o).x ? xMult(o) : 0), null, payOpts(o)); }
 function maxKick(P, o) { const m = Rx(o).multikicker; if (!m) return 0; const was = o.kickN; let n = 0; while (n < 20) { o.kickN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) })) break; n++; } o.kickN = was; return n; }
+// Replicate (CR 702.56, 2026-11-01): an additional cost paid any number of times as you cast the spell, locked into its total cost; each payment copies the spell.
+// Granted by a permanent with R.repGrant ({ type, cost }), e.g. Hugh, First of Many: artifact spells you cast have replicate {2}{U}.
+function repCostOf(P, o) {
+    if (Rx(o).replicate && typeof Rx(o).replicate === 'object') return Rx(o).replicate;
+    const src = P.bf.find(x => { const g = Rx(x).repGrant; return g && !lostAbilities(x) && (!g.type || hasType(o, g.type)); });
+    return src ? Rx(src).repGrant.cost : null;
+}
+function maxRep(P, o) { if (!repCostOf(P, o)) return 0; const was = o.repN; let n = 0; while (n < 30) { o.repN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) })) break; n++; } o.repN = was; return n; }
 function canBuyback(P, o) { const b = Rx(o).buyback; if (!b || Rx(o).kind === 'creature') return false; const was = o.buyback; o.buyback = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) }); o.buyback = was; return ok; }
 function canKick(P, o) { const k = Rx(o).kicker; if (!k) return false; if (Rx(o).kickSac && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < Rx(o).kickSac.n + (P.isAI ? 2 : 0)) return false; const was = o.kicked; o.kicked = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) }); o.kicked = was; return ok; }
 // "As an additional cost to cast ~, sacrifice a creature / discard a card / pay N life"
@@ -1046,6 +1054,7 @@ function totalCost(P, o) {
     if (Rx(o).escalate && Array.isArray(o.mode) && o.mode.length > 1) Object.keys(Rx(o).escalate).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).escalate[k] * (o.mode.length - 1); }); // Collective Resistance
     if (o.kicked && Rx(o).kicker) Object.keys(Rx(o).kicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).kicker[k]; });
     if (o.kickN && Rx(o).multikicker) Object.keys(Rx(o).multikicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).multikicker[k] * o.kickN; });
+    if (o.repN) { const rc = repCostOf(P, o); if (rc) Object.keys(rc).forEach(k => { if (typeof c[k] === 'number') c[k] += rc[k] * o.repN; }); }
     if (o.buyback && Rx(o).buyback) Object.keys(Rx(o).buyback).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).buyback[k]; });
     return c;
 }
@@ -1481,7 +1490,7 @@ async function castSpell(P, o, presetTarget) {
     if (Rx(o).kind === 'creature' && P.nextCreatureCounter === G.turn) { o.extraEnterCounter = 1; P.nextCreatureCounter = 0; } // Summon: Fenrir II
     removeFromZones(o);
     if (fromCommand) { P.tax++; P.cmdCastN[o.cmdSlot || 0] = (P.cmdCastN[o.cmdSlot || 0] || 0) + 1; }
-    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x || (Rx(o).addCost && Rx(o).addCost.lifeX) || (castAs === 'warp' && Rx(o).warp.x) || (castAs === 'bestow' && Rx(o).bestow.x) ? (o.xVal || 0) : undefined, kicked: !!o.kicked, kickN: o.kickN || 0, buyback: !!o.buyback, castAs, paragon };
+    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x || (Rx(o).addCost && Rx(o).addCost.lifeX) || (castAs === 'warp' && Rx(o).warp.x) || (castAs === 'bestow' && Rx(o).bestow.x) ? (o.xVal || 0) : undefined, kicked: !!o.kicked, kickN: o.kickN || 0, repN: o.repN || 0, buyback: !!o.buyback, castAs, paragon };
     if (castAs) log(`(${o.card.name} is cast with ${castAs === 'energy' ? 'energy' : castAs}.)`);
     o.buyback = false;
     G.stack.push(item);
@@ -1511,6 +1520,13 @@ async function castSpell(P, o, presetTarget) {
     { const gn = (Rx(o).gravestorm && G.permsToGy && G.permsToGy.turn === G.turn ? G.permsToGy.n : 0) + (o.sacCopies || 0); o.sacCopies = 0;
       for (let k = 0; k < gn; k++) G.stack.push({ id: stackSeq++, kind: 'trigger', o, P, target: item.target, effects: withX(spellEffects(o), item.x), name: `${o.card.name} (copy)`, copy: true });
       if (gn) log(`${o.card.name}: ${gn} cop${gn === 1 ? 'y' : 'ies'}.`); }
+    // Replicate (702.56a): when you cast it, copy it for each time its replicate cost was paid. A copy of a permanent spell becomes a token when it resolves.
+    if (item.repN) {
+        const perm = !['instant', 'sorcery'].includes(Rx(o).kind);
+        for (let k = 0; k < item.repN; k++) G.stack.push({ id: stackSeq++, kind: 'trigger', o, P, target: perm ? null : item.target, effects: perm ? [{ t: 'cmd', id: 'repToken' }] : withX(spellEffects(o), item.x), name: `${o.card.name} (replicate copy)`, copy: true });
+        log(`Replicate: ${item.repN} cop${item.repN === 1 ? 'y' : 'ies'} of ${o.card.name}.`);
+    }
+    o.repN = 0;
     // Cascade (702.85): exile until a cheaper nonland card, cast it free
     if (Rx(o).kw.has('cascade')) await cascade(P, o);
     // Demonstrate (702.144): you may copy it; then an opponent copies it too
@@ -4464,6 +4480,8 @@ async function humanCast(uid) {
     if (Rx(o).kicker && canKick(P, o)) o.kicked = await askYes(P, Rx(o).offspring ? `Pay offspring for ${o.card.name}? (A 1/1 token copy of it enters too.)` : Rx(o).entwine ? `Pay the entwine cost ${costSymbols(Rx(o).kicker)} for ${o.card.name}? (You get both modes.)` : `Pay the kicker cost for ${o.card.name}?`, { card: o.card });
     o.kickN = 0;
     if (Rx(o).multikicker) { const mk = maxKick(P, o); if (mk > 0) { const v = await askNumber(P, `How many times do you pay the multikicker cost for ${o.card.name}?`, 0, mk, 0, { card: o.card, ok: 'Continue' }); o.kickN = v > 0 ? Math.min(v, mk) : 0; o.kicked = o.kickN > 0; } }
+    o.repN = 0;
+    if (repCostOf(P, o)) { const mr = maxRep(P, o); if (mr > 0) { const v = await askNumber(P, `How many times do you pay the replicate cost ${costSymbols(repCostOf(P, o))} for ${o.card.name}? (One copy each.)`, 0, mr, 0, { card: o.card, ok: 'Continue' }); o.repN = v > 0 ? Math.min(v, mr) : 0; } }
     o.giftPromised = false;
     if (Rx(o).gift && oppsOf(P).length) o.giftPromised = await askYes(P, `Promise a gift with ${o.card.name}? (An opponent draws a card; you get the bonus effect.)`, { card: o.card, yes: 'Promise the gift', no: 'No gift' });
     o.buyback = false;

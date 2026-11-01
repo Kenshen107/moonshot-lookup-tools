@@ -934,7 +934,9 @@ Object.assign(CMD, {
         log(`${x.card.name} is exiled.`); leaveBattlefield(x, 'exile');
         await tkBorgs(P, mv, src);
     },
-    // Hugh: artifact spells you cast have replicate {2}{U} (approximation: the copies become tokens as the spell is cast)
+    // A replicate copy of a permanent spell resolves as a token copy (CR 707.10f); the cost is paid in castSpell (repCostOf, 06-engine.js)
+    repToken(P, e, t, src) { if (src && src.card) tokenCopyOf(P, src.front && src.card === src.front ? src.front : src.card); },
+    // Old after-cast version, no longer wired to any card (kept so saved references don't break)
     async td_replicate(P, e, t, src) {
         const c = tdCtx().o; if (!c || !c.card) return;
         const R = Rx(c); if (['instant', 'sorcery', 'land'].includes(R.kind)) return;
