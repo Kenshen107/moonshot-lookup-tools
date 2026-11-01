@@ -11,6 +11,7 @@ const ABOUT_FEATURES = [
     ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log.']
 ];
 const ABOUT_LOG = [
+    ['Nov 1 (table look)', ['The game table has a refreshed look: a woven felt mat, a seam through the middle with the turn phases as a track of lamps (finished phases are crossed off), life totals on plaques, and the hand resting on a ledge. Only colors and shadows changed, so every Look still restyles it.']],
     ['Nov 1 (replicate)', ['Hugh, First of Many\'s replicate now follows the real rule: you choose how many times to pay {2}{U} as you cast an artifact spell, it is part of the spell\'s total cost (so cost reducers help), and each payment puts a copy on the stack that you can respond to. Copies of permanents become tokens, and there is no limit of three.']],
     ['Oct 31 (spacecraft and trigger crowds)', ['Spacecraft such as Uthros Scanship and Romulan Bird-of-Prey now become creatures when they reach their top station level (they never did). Identical triggers from permanents with the same name, like three Scute Swarms or two Starship Enterprises, now share one line on the stack with a count (x3), so a big board no longer buries the table.']],
     ['Oct 31 (Hugh deck)', ['New fully working Commander deck: Hugh, First of Many (Esper artifacts). Recruit, Vehicles that make Treasures, Coin of Fate, The Cyber-Controller, Weeping Angel and the rest of the list all play now. Find it under Starter decks or as an opponent.']],
