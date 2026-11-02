@@ -629,6 +629,7 @@ function rulesFor(card) {
         }
         // Modal: "Choose one —" (or "When ~ enters, choose one —") and its bullet lines
         // "Choose one. If you control a commander as you cast ~, you may choose both instead." (Akroma's Will)
+        if (/^Choose one\. If an opponent has eight or more cards in their graveyard, you may choose both instead\.$/.test(line)) lines[li] = 'Choose one —', R.modeBothOppGy8 = true;
         if (/^Choose one\. If you control a commander as you cast ~, you may choose both instead\.$/.test(line)) lines[li] = 'Choose one —', R.modeCmdBoth = true;
         if ((m = lines[li].match(/^(?:(When ~ enters(?: the battlefield)?|At the beginning of your upkeep), )?choose (one|one or both|two|three|one or more|up to one|up to two) ?—$/i))) {
             const bullets = [];
@@ -638,7 +639,7 @@ function rulesFor(card) {
                 if (m[1] && /^At the beginning of your upkeep$/.test(m[1])) { R.trig.push({ ev: 'upkeep', who: 'your', effects: [{ t: 'modal', modes, n: 1 }] }); continue; }
                 if (m[1]) R.etbModes = modes; else R.modes = modes;
                 const cnt = { one: [1, 1], 'up to one': [1, 1], two: [2, 2], three: [3, 3], 'one or both': [1, 2], 'up to two': [1, 2], 'one or more': [1, modes.length] }[m[2].toLowerCase()];
-                R.modeN = { min: Math.min(cnt[0], modes.length), max: Math.min(R.modeCmdBoth ? 2 : cnt[1], modes.length) };
+                R.modeN = { min: Math.min(cnt[0], modes.length), max: Math.min(R.modeCmdBoth || R.modeBothOppGy8 ? 2 : cnt[1], modes.length) };
                 continue;
             }
             R.unhandled.push(line, ...bullets);

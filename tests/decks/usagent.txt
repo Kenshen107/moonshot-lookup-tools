@@ -1,0 +1,78 @@
+1 Acrobatic Maneuver
+1 Airbender's Reversal
+1 Angel of the Ruins
+1 Angelsong
+1 Arcane Signet
+1 Archfiend of Ifnir
+1 Ardenn, Intrepid Archaeologist
+1 Armory Automaton
+1 Ash Barrens
+1 Astral Drift
+1 Astral Slide
+1 Auriok Steelshaper
+1 Barren Moor
+1 Beatrix, Loyal General
+1 Bleachbone Verge
+1 Brainspoil
+1 Brightclimb Pathway
+1 Caves of Koilos
+1 Charcoal Diamond
+1 Charming Prince
+1 Cloudshift
+1 Command Tower
+1 Conciliator's Duelist
+1 Conjurer's Closet
+1 Costly Plunder
+1 Deadly Dispute
+1 Desolate Mire
+1 Dimir Machinations
+1 Distinguished Conjurer
+1 Dune Drifter
+1 Eclipsed Steppe
+1 Elesh Norn
+1 Elesh Norn, Mother of Machines
+1 Emerge from the Cocoon
+1 Envoy of the Ancestors
+1 Ephemerate
+1 Evil Reawakened
+1 Eviscerator's Insight
+1 Far Traveler
+1 Flickerwisp
+1 Getaway Glamer
+1 Gix, Yawgmoth Praetor
+1 God-Eternal Bontu
+1 Godless Shrine
+1 Guardian of Ghirapur
+1 Heavenly Blademaster
+1 Infernal Rebirth
+1 Late to Dinner
+1 Lazotep Quarry
+1 Malboro
+1 Mantle of the Ancients
+1 Marble Diamond
+1 Moon-Blessed Cleric
+1 Morningtide's Light
+1 Netherborn Phalanx
+1 Orzhov Signet
+1 Panharmonicon
+1 Pitiless Carnage
+14 Plains
+1 Realmbreaker, the Invasion Tree
+1 Scrollshift
+1 Secluded Steppe
+1 Sol Ring
+1 Spectacular Pileup
+1 Street Wraith
+1 Susurian Voidborn
+11 Swamp
+1 Talisman of Hierarchy
+1 Teleportation Circle
+1 Timeless Dragon
+1 Troll of Khazad-dûm
+1 Turbulent Moor
+1 Umbral Expanse
+1 Unburden
+1 Unforgiving One
+1 Void Beckoner
+
+1 U.S.Agent, John Walker

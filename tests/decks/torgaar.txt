@@ -1,0 +1,65 @@
+1 Agent Venom
+1 Ancient Vendetta
+1 Another Chance
+1 Armaggon, Future Shark
+1 Bastion of Remembrance
+1 Big Mother Mouser
+1 Blight Mound
+1 Boggart Trawler
+1 Cadaver Imp
+1 Callous Bloodmage
+1 Chalice of Life
+1 Circle of Power
+1 Clattering Augur
+1 Cornered by Black Mages
+1 Corpse Augur
+1 Court of Ambition
+1 Cryptolith Fragment
+1 Deadly Embrace
+1 Disciple of Perdition
+1 Dogged Detective
+1 Exsanguinate
+1 Fell the Profane
+1 Finale of Eternity
+1 Foot Chopper
+1 Game Over
+1 Hedron Archive
+1 Hierophant's Chalice
+1 Idol of Oblivion
+1 Intimidation Tactics
+1 Malboro
+1 Marketback Walker
+1 Midnight Reaper
+1 Morbid Opportunist
+1 No Mercy
+1 Nullpriest of Oblivion
+1 Nurgle's Conscription
+1 Nyla, Shirshu Sleuth
+1 Obsessive Pursuit
+1 Oversold Cemetery
+1 Rabid Attack
+1 Reassembling Skeleton
+1 Revenge of Ravens
+1 Ruthless Technomancer
+1 Send in the Pest
+1 Shredder, Shadow Master
+1 Shredder's Revenge
+1 Sol Ring
+1 Splinter's Technique
+37 Swamp
+1 Tallyman of Nurgle
+1 The Eternity Elevator
+1 The Falcon, Airship Restored
+1 Thran Dynamo
+1 Tithing Blade
+1 Transmogrant Altar
+1 Transpose
+1 Trespasser's Curse
+1 Troll of Khazad-dûm
+1 Underworld Hermit
+1 Victimize
+1 Worn Powerstone
+1 Young Necromancer
+1 Zuko's Conviction
+
+1 Torgaar, Famine Incarnate

@@ -108,6 +108,7 @@ function buffsOn(o) {
         if (!R.buff) continue;
         b.p += R.buff.p; b.q += R.buff.q; b.kw.push(...R.buff.kw);
         if (R.buffCmdr) { const x = Math.max(0, ...[...G.players[a.owner].command, ...G.players[a.owner].bf].filter(c => c.isCommander && c.owner === a.owner).map(c => c.card.cmc || 0)); b.p += x; b.q += x; } // Tangleweave Armor
+        if (R.buffPerAttached) { const k = allPerms().filter(x => x.attachedTo === o.uid && /\b(?:Aura|Equipment)\b/.test(x.card.type)).length; b.p += R.buffPerAttached.p * k; b.q += R.buffPerAttached.q * k; } // Mantle of the Ancients
         if (R.buffPer) { const k = countFn(R.buffPer.what)(R.buffPer.host ? o : a); b.p += R.buffPer.p * k; b.q += R.buffPer.q * k; }
         if (R.eidolon) { const k = eidolonN(a); b.p += k; b.q += k; } // Eidolon of Countless Battles, on its host
     }
@@ -165,6 +166,7 @@ function basePT(o, which) {
     if (o.animated && G && o.animated.turn === G.turn) return o.animated[which];
     if (o.baseSet && G && o.baseSet.turn === G.turn) return o.baseSet[which];
     if (o.permAnimated && G) return countFn(o.permAnimated.what)(o);
+    if (which === 'p' && o.bpHand === G.turn && G) return G.players[o.owner].hand.length; // Ms. Marvel: base power equals the cards in hand until end of turn
     if (o.baseForever) return o.baseForever[which]; // Seven of Nine, Unassimilated: base power and toughness 7/9
     const baseSet = (R.selfCond || []).find(c => c.base && G && condOk(c.cond, ctrl(o), o));
     let v = baseSet ? baseSet.base[which] : R.cdaSet && R.cdaSet[which] ? countFn(R.cdaSet[which])(o) + (which === 'q' ? R.cdaSet.qPlus || 0 : 0) : Number(which === 'p' ? o.card.power : o.card.toughness) || 0;
@@ -785,7 +787,7 @@ function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
     const srcs = [
         ...Array.from({ length: channelN }, () => ({ o: { pool: true, color: 'C', channel: true }, colors: ['C'], n: 1, rank: 3 })),
         ...(P.pool || []).filter(c => !c.includes(':') || (opts.forType && new RegExp(`\\b${c.split(':')[1]}\\b`).test(opts.forType))).map(c => ({ o: { pool: true, color: c }, colors: [c[0]], n: 1, rank: -2 })),
-        ...real.filter(o => (!manaOf(o).only || (opts.spellKind && manaOf(o).only.split(' or ').includes(opts.spellKind))) && (!manaOf(o).onlyType || (opts.forType && new RegExp(`\\b${manaOf(o).onlyType}\\b`).test(opts.forType)))).map(o => ({ o, colors: srcColors(o, opts), n: manaOf(o).n, pain: manaOf(o).pain, rank: 0 })).filter(s => s.colors.length),
+        ...real.filter(o => (!manaOf(o).only || (opts.spellKind && manaOf(o).only.split(' or ').includes(opts.spellKind))) && (!manaOf(o).onlyType || (opts.forType && (manaOf(o).onlyType === 'noncreature' ? !/\bCreature\b/.test(opts.forType) : new RegExp(`\\b${manaOf(o).onlyType}\\b`).test(opts.forType))))).map(o => ({ o, colors: srcColors(o, opts), n: manaOf(o).n, pain: manaOf(o).pain, rank: 0 })).filter(s => s.colors.length),
         ...(opts.virt || []).map(c => ({ o: { pool: true, virtual: true, color: c }, colors: [c], n: 1, rank: 3 })), // the mana a Signet will make (see the planPayment wrapper)
         ...(opts.improvise && !opts.poolOnly ? P.bf.filter(a => /Artifact/.test(a.card.type) && !a.tapped && !real.includes(a)).map(a => ({ o: a, colors: [], n: 1, rank: 2 })) : []),
         ...(opts.convoke && !opts.poolOnly ? P.bf.filter(c => isCreature(c) && !c.tapped && !real.includes(c)).map(c => ({ o: c, colors: (c.card.colors || []).filter(x => COLORS.includes(x)), n: 1, rank: 2 })) : [])
@@ -812,7 +814,7 @@ function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
     chosen.forEach(s => { if (!s.o.pool) s.o._payColor = s.payColor; });
     return chosen.map(s => s.o);
 }
-function extraCost(P, o) { return (o.isCommander && P.command.includes(o) ? (P.commanderUid2 ? (P.cmdCastN[o.cmdSlot || 0] || 0) : P.tax) * 2 : 0) - (Rx(o).harmonize && P.gy.includes(o) ? harmonizeCut(P) : 0); } // Harmonize: tapping a creature pays generic mana equal to its power
+function extraCost(P, o) { return (Rx(o).taxOffTurn && G.active !== P.i ? Rx(o).taxOffTurn : 0) + (o.isCommander && P.command.includes(o) ? (P.commanderUid2 ? (P.cmdCastN[o.cmdSlot || 0] || 0) : P.tax) * 2 : 0) - (Rx(o).harmonize && P.gy.includes(o) ? harmonizeCut(P) : 0); } // Harmonize: tapping a creature pays generic mana equal to its power
 // X spells need X of at least 1; xVal is the X chosen for this cast
 // Flashback (702.34): from the graveyard, for the flashback cost
 // Gitrog deck: other ways to cast (o.castAs)
@@ -840,6 +842,7 @@ function castAsOk(P, o, mode) {
 function dashCost(P, o) { const c = { ...Rx(o).dash }; const less = P.bf.filter(x => Rx(x).dashLess && !lostAbilities(x)).length * 2; if (less && typeof c.generic === 'number') c.generic = Math.max(0, c.generic - less); return c; }
 function costOf(P, o) {
     const R = Rx(o);
+    if (o.airbentCost && P.exile.includes(o)) return { ...parseCost('{2}') }; // airbend: its owner may cast it from exile for {2}
     if (o.castAs && castAsOk(P, o, o.castAs)) {
         o._delve = 0; o._free = o.castAs === 'energy';
         if (o.castAs === 'warp') return { ...R.warp };
@@ -1050,7 +1053,10 @@ function maxX(P, o) {
     return x;
 }
 function totalCost(P, o) {
+    if (Rx(o).freeOnTurn && G.active === P.i) return { ...parseCost('') }; // Discontinuity: costs {2}{U}{U} less during your turn
     const c = { ...costOf(P, o) };
+    if (Rx(o).spreeCosts && o.mode !== undefined && o.mode !== null) [].concat(o.mode).forEach(i => { const sc = Rx(o).spreeCosts[i]; if (sc) Object.keys(sc).forEach(k => { if (typeof c[k] === 'number') c[k] += sc[k]; }); }); // Spree: each chosen mode adds its cost
+    if (o.exileBlueN && Rx(o).exileBlueReduce) c.generic = Math.max(0, (c.generic || 0) - Rx(o).exileBlueReduce * o.exileBlueN); // March of Swirling Mist
     if (Rx(o).escalate && Array.isArray(o.mode) && o.mode.length > 1) Object.keys(Rx(o).escalate).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).escalate[k] * (o.mode.length - 1); }); // Collective Resistance
     if (o.kicked && Rx(o).kicker) Object.keys(Rx(o).kicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).kicker[k]; });
     if (o.kickN && Rx(o).multikicker) Object.keys(Rx(o).multikicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).multikicker[k] * o.kickN; });
@@ -1260,6 +1266,8 @@ function validTargets(P, e, src) {
     if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.powLtSrc || pow(o) < pow(src)) && (!e.withCounters || o.counters > 0) && (!e.unenchanted || !allPerms().some(a => a.attachedTo === o.uid && /\bAura\b/.test(a.card.type)))).map(o => ({ o })));
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && (!e.mine || o.owner === P.i) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
+    if (e.target === 'spellOrPerm') { out.push(...allPerms().filter(o => !/\bLand\b/.test(o.card.type) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i)).map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); } // Commit
+    if (e.target === 'myCreatureAbility') out.push(...G.stack.filter(it => it.kind === 'trigger' && !it.copy && it.P === P && it.o && onBf(it.o.uid) && isCreature(it.o)).map(item => ({ item }))); // Echo, Perceptive Prodigy
     if (e.target === 'spellOrCreature') { out.push(...creatures.map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); }
     if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(p.protAll && G.turn < p.protAll) && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a))) && !(p !== P && p.hexTurn === G.turn)).map(p => ({ p })));
     if (e.target === 'spell') out.push(...G.stack.filter(it => stackMatches(it, e.filter) && !(e.filter === 'notMine' && it.P === P) && !(e.filter === 'oppInstSorc' && it.P === P) && !(e.filter === 'myInstSorc' && it.P !== P) && !(e.filter === 'targetsMine' && !(it.target && it.target.o && it.target.o.owner === P.i))).map(item => ({ item })));
