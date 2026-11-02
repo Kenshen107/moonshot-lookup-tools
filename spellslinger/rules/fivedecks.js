@@ -13,8 +13,8 @@ frRW(/Exile up to one other target creature or artifact you control\. Return it 
 frRW(/Exile target nontoken creature\. Return it to the battlefield under its owner's control at the beginning of the next end step\./, 'frGlamer', cmd('fr_blinkEnd', { target: 'creature', filter: 'nontoken creature', good: true }));
 FR.push([/^destroy target creature if no other creature has greater power$/i, () => cmd('fr_destroyIfBiggest', { target: 'creature' })]);
 FR.push([/^until your next turn, prevent all damage that would be dealt to you$/i, () => cmd('fr_shieldYou')]);
-frRW(/Exile any number of target creatures\. At the beginning of the next end step, return those cards to the battlefield tapped under their owners' control\./, 'frMorningtide', cmd('fr_morningtide'));
-frRW(/Exile any number of other target permanents you control\. Return those cards to the battlefield under their owner's control at the beginning of the next end step\. If a land enters this way, it enters tapped\./, 'frSurfer', cmd('fr_surfer'));
+frRW(/Exile any number of target creatures\. At the beginning of the next end step, return those cards to the battlefield tapped under their owners' control\./, 'frMorningtide', cmd('fr_morningtide', { multi: 'morningtide' }));
+frRW(/Exile any number of other target permanents you control\. Return those cards to the battlefield under their owner's control at the beginning of the next end step\. If a land enters this way, it enters tapped\./, 'frSurfer', cmd('fr_surfer', { multi: 'surfer' }));
 frRW(/Exile target artifact or creature, then return it to the battlefield under its owner's control with a \+1\/\+1 counter on it\./, 'frSpaceshift', cmd('fr_blinkNow', { target: 'perm', filter: 'artifact or creature', good: true, counter: 1 }));
 frRW(/Exile target artifact or creature, then return that card to the battlefield under its owner's control with a \+1\/\+1 counter on it\./, 'frSpaceshift2', cmd('fr_blinkNow', { target: 'perm', filter: 'artifact or creature', good: true, counter: 1 }));
 frRW(/Exile up to one target artifact, creature, or enchantment you control, then return it to the battlefield under its owner's control\./, 'frScrollshift', cmd('fr_blinkNow', { target: 'perm', filter: 'artifact, creature, or enchantment', mine: true, optional: true, good: true }));
@@ -29,10 +29,10 @@ registerRules({ name: 'fivedecks', effects: FR });
 // ----- U.S. Agent deck -----
 clx('When ~ enters, create a colorless Equipment artifact token named Sturdy Shield with "Equipped creature gets +1/+2" and equip {2}. Attach it to ~.', R => { R.etb.push(cmd('fr_sturdy')); });
 clx('At the beginning of combat on your turn, you may attach any number of Auras and Equipment you control to target permanent or player.', R => { R.trig.push({ ev: 'combat', fn: 'myTurnCombat', effects: [cmd('fr_ardenn')] }); });
-clx('Whenever ~ enters or attacks, you may attach any number of target Equipment to it.', R => { R.etb.push(cmd('fr_attachAll', { equipOnly: true })); R.trig.push({ ev: 'attacks', fn: 'fr_selfAttacks', effects: [cmd('fr_attachAll', { equipOnly: true })] }); });
+clx('Whenever ~ enters or attacks, you may attach any number of target Equipment to it.', R => { R.etb.push(cmd('fr_attachAll', { equipOnly: true, multi: 'equip' })); R.trig.push({ ev: 'attacks', fn: 'fr_selfAttacks', effects: [cmd('fr_attachAll', { equipOnly: true, multi: 'equip' })] }); });
 clx('When ~ enters, you may attach any number of Auras and Equipment you control to it.', R => { R.etb.push(cmd('fr_attachAll')); });
 clx('Other creatures you control get +1/+1 for each Aura and Equipment attached to ~.', R => { R.statics.push({ other: true, type: 'Creature', p: 1, q: 1, kw: [], perAttached: true }); });
-clx('When ~ enters, return any number of target Aura and/or Equipment cards from your graveyard to the battlefield attached to enchanted creature.', R => { R.etb.push(cmd('fr_mantle')); });
+clx('When ~ enters, return any number of target Aura and/or Equipment cards from your graveyard to the battlefield attached to enchanted creature.', R => { R.etb.push(cmd('fr_mantle', { multi: 'mantle' })); });
 clx('Enchanted creature gets +1/+1 for each Aura and Equipment attached to it.', R => { R.buffPerAttached = { p: 1, q: 1 }; });
 clx('Whenever you cycle ~ or cycle another card while ~ is on the battlefield, you may exile target creature. If you do, return that card to the battlefield under its owner\'s control at the beginning of the next end step.', R => { R.trig.push({ ev: 'cycled', fn: 'fr_myCycle', effects: [cmd('fr_blinkEnd', { target: 'creature', optional: true })] }); R.cycleTrig = [cmd('fr_blinkEnd', { target: 'creature', optional: true })]; });
 clx('Whenever a player cycles a card, you may exile target creature. If you do, return that card to the battlefield under its owner\'s control at the beginning of the next end step.', R => { R.trig.push({ ev: 'cycled', fn: 'fr_anyCycle', effects: [cmd('fr_blinkEnd', { target: 'creature', optional: true })] }); });
@@ -83,7 +83,7 @@ frRW(/Copy target spell\. You may choose new targets for the copy\./, 'frCopyAny
 frRW(/Copy target instant or sorcery spell\. You may choose new targets for the copy\./, 'frCopySpell', cmd('fr_copySpell', { target: 'spell', filter: 'any' }));
 clx('~ can\'t be copied.', R => { R.cantBeCopied = true; });
 clx('As an additional cost to cast ~, you may exile any number of blue cards from your hand. ~ costs {2} less to cast for each card exiled this way.', R => { R.exileBlueReduce = 2; });
-frRW(/Up to 97 target creatures phase out\./, 'frPhaseX', cmd('fr_phaseOutX', { n: 'X' }));
+frRW(/Up to 97 target creatures phase out\./, 'frPhaseX', cmd('fr_phaseOutX', { n: 'X', multi: 'phase' }));
 clx('Whenever you cast a spell that targets a creature you control, draw a card. Until end of turn, ~ gains "~\'s base power is equal to the number of cards in your hand."', R => { R.trig.push({ ev: 'cast', fn: 'fr_castTargetsMyCreature', effects: [cmd('fr_msMarvel')] }); });
 clx('The first time you would draw a card each turn except the first card you draw during each of your draw steps, you draw four cards instead.', R => { R.reedDraw = true; });
 clx('{5}, Exile ~ from your graveyard: Choose target creature. Put four +1/+1 counters, a flying counter, a vigilance counter, a trample counter, and a lifelink counter on that creature. Activate only as a sorcery.', (R, m, ctx) => { const a = act(R, ctx.line, '{5}', [cmd('fr_brawler', { target: 'creature', good: true })], a => { a.cost.exileSelfGy = true; a.sorcery = true; }); R.acts.pop(); (R.gyActs = R.gyActs || []).push(a); });
@@ -106,11 +106,11 @@ clx('At the beginning of your end step, if you descended this turn, put a bore c
 FR.push([/^return all artifact and enchantment cards from your graveyard to the battlefield$/i, () => cmd('fr_brilliant')]);
 clx('Whenever another nontoken artifact creature or Vehicle you control enters, draw a card.', R => { R.trig.push({ ev: 'enters', fn: 'fr_nontokenArtCreatureOrVehicle', effects: [{ t: 'draw', n: 1 }] }); });
 clx('When ~ enters, each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest.', R => { R.etb.push(cmd('fr_gearhulk')); });
-frRW(/Exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and\/or up to one target land\. For each permanent exiled this way, its controller reveals cards from the top of their library until they reveal a card that shares a card type with it, puts that card onto the battlefield, then shuffles\./, 'frChaotic', cmd('fr_chaotic'));
+frRW(/Exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and\/or up to one target land\. For each permanent exiled this way, its controller reveals cards from the top of their library until they reveal a card that shares a card type with it, puts that card onto the battlefield, then shuffles\./, 'frChaotic', cmd('fr_chaotic', { multi: 'chaotic' }));
 clx('Whenever you discard a card, ~ deals 2 damage to each opponent.', R => { R.trig.push({ ev: 'discarded', effects: [{ t: 'dmgOpp', n: 2 }] }); });
 clx('When ~ becomes level 3, search your library for a card, put it into your hand, shuffle, then discard a card at random.', R => { R.trig.push({ ev: 'levelUp', fn: 'fr_levelThree', effects: [cmd('fr_tutorDiscardRandom')] }); });
 clx('Whenever ~ becomes crewed, each artifact creature card in your graveyard gains unearth {3} until end of turn.', R => { R.trig.push({ ev: 'crewed', fn: 'fr_selfCrewed', effects: [cmd('fr_ghostArk')] }); });
-frRW(/Return target permanent card from your graveyard to the battlefield, then distribute four \+1\/\+1 counters among any number of creatures and\/or Vehicles target player controls\./, 'frInvoke', cmd('fr_invokeJustice'));
+frRW(/Return target permanent card from your graveyard to the battlefield, then distribute four \+1\/\+1 counters among any number of creatures and\/or Vehicles target player controls\./, 'frInvoke', cmd('fr_invokeJustice', { multi: 'invoke' }));
 clx('{T}: Put a +1/+1 counter on each artifact creature and\/or Vehicle you control.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('fr_ironSpider')]); });
 clx('{2}, Remove two +1/+1 counters from among artifacts you control: Draw a card.', (R, m, ctx) => { act(R, ctx.line, '{2}', [cmd('fr_ironDraw')], a => { a.onlyIf = 'artifacts you control have two or more +1/+1 counters among them'; }); });
 clx('Whenever ~ or a commander you control attacks alone, return target artifact card from your graveyard to the battlefield.', R => { R.trig.push({ ev: 'attacks', fn: 'fr_enforcerAlone', effects: [cmd('fr_returnArtifact')] }); });
@@ -118,7 +118,7 @@ clx('At the beginning of combat on your turn, choose an opponent at random. ~ at
 clx('When ~ dies, it deals 4 damage to target opponent chosen at random.', R => { R.trig.push({ ev: 'dies', fn: 'fr_selfDies', effects: [cmd('fr_rampagerDies')] }); });
 clx('Whenever ~ attacks, mill three cards. For each creature card milled this way, create a 2/2 black Necron Warrior artifact creature token.', R => { R.trig.push({ ev: 'attacks', fn: 'fr_selfAttacks', effects: [cmd('fr_necron')] }); });
 clx('{3}: Until end of turn, ~\'s base power becomes equal to the number of Towns you control.', (R, m, ctx) => { act(R, ctx.line, '{3}', [cmd('fr_pupu')]); });
-frRW(/Return any number of target creature cards with total power 10 or less from your graveyard to the battlefield\. Exile ~\./, 'frReunion', cmd('fr_reunion'));
+frRW(/Return any number of target creature cards with total power 10 or less from your graveyard to the battlefield\. Exile ~\./, 'frReunion', cmd('fr_reunion', { multi: 'reunion' }));
 clx('Whenever you attack, other creatures you control get +2/+2 and gain indestructible until end of turn.', R => { R.trig.push({ ev: 'attacks', fn: 'anyAttackMine', once: 'fr_colossus', effects: [{ t: 'teamPump', other: true, p: 2, q: 2, kw: ['indestructible'] }] }); });
 clx('Unearth—Pay eight {E}.', R => { (R.gyActs = R.gyActs || []).push({ cost: { mana: parseCost(''), tap: false, energy: 8 }, effects: [{ t: 'unearth' }], text: 'Unearth—Pay eight {E}' }); });
 clx('When ~ enters, choose an opponent. If that player has more cards in hand than you, draw cards equal to the difference.', R => { R.etb.push(cmd('fr_oracle')); });
@@ -137,8 +137,8 @@ frRW(/Put any number of cards from your hand on the bottom of your library, then
 clx('When ~ enters, return a land you control to its owner\'s hand. If another Desert was returned this way, surveil 1.', R => { R.etb.push(cmd('fr_archway')); });
 clx('When ~ enters, sacrifice it unless you return an untapped Island you control to its owner\'s hand.', R => { R.etb.push(cmd('fr_karoo', { land: 'Island' })); });
 clx('When ~ enters, sacrifice it unless you return an untapped Forest you control to its owner\'s hand.', R => { R.etb.push(cmd('fr_karoo', { land: 'Forest' })); });
-frRW(/For each of 97 target permanents, create 97 tokens that are copies of that permanent\./, 'frDoppel', cmd('fr_doppelgang', { n: 'X' }));
-clx('Assist', R => { R.kw.add('assist'); }); // approximation: nobody helps pay (the caster pays the whole cost)
+frRW(/For each of 97 target permanents, create 97 tokens that are copies of that permanent\./, 'frDoppel', cmd('fr_doppelgang', { n: 'X', multi: 'doppel' }));
+clx('Assist', R => { R.kw.add('assist'); R.assist = true; }); // another person at the table may pay part of the generic cost (frAssistAsk)
 clx('When ~ enters, you may change the target of target instant or sorcery spell with a single target to ~.', R => { R.etb.push(cmd('fr_hydro', { target: 'spell', filter: 'any', optional: true })); });
 clx('Whenever you draw a card, target opponent mills two cards. If two nonland cards that share a color were milled this way, repeat this process.', R => { R.trig.push({ ev: 'draw', who: 'you', effects: [cmd('fr_sphinx')] }); });
 clx('{T}, Return a land you control to its owner\'s hand: Draw a card. Then discard a card unless that land had a nonbasic land type.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('fr_wonderscape')], a => { a.onlyIf = 'you control a land'; }); });
@@ -152,12 +152,12 @@ clx('When ~ dies, you draw X cards and you lose X life, where X is the number of
 clx('At the beginning of your upkeep, each opponent loses 3 life unless they discard a card. If you\'re the monarch, instead each opponent loses 6 life unless they discard two cards.', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [cmd('fr_court')] }); });
 clx('At the beginning of your upkeep, if each player has 10 or less life, transform ~.', R => { R.trig.push({ ev: 'upkeep', who: 'your', cond: 'each player has 10 or less life', effects: [{ t: 'transform' }] }); });
 cl(/^When ~ dies, choose one\. If you have exactly 13 life, you may choose both instead\.$/, (R, m, ctx) => { let k = ctx.li + 1; while (k < ctx.lines.length && ctx.lines[k].startsWith('•')) k++; R.trig.push({ ev: 'dies', fn: 'fr_selfDies', effects: [cmd('fr_disciple')] }); ctx.li = k - 1; return true; });
-frRW(/Destroy up to three target creatures with toughness 97 or less\. If 97 is 10 or more, return all creature cards from your graveyard to the battlefield\./, 'frFinale', cmd('fr_finale', { n: 'X' }));
+frRW(/Destroy up to three target creatures with toughness 97 or less\. If 97 is 10 or more, return all creature cards from your graveyard to the battlefield\./, 'frFinale', cmd('fr_finale', { n: 'X', multi: 'finale' }));
 clx('Whenever equipped creature deals combat damage to a player, you may sacrifice it. If you do, draw cards equal to its power.', R => { R.trig.push({ ev: 'hitPlayer', fn: 'fr_hostHitsPlayer', effects: [cmd('fr_footChopper')] }); });
 clx('~ costs {2} less to cast if a player\'s life total is less than or equal to half their starting life total.', R => { R.costLessLowLife = 2; });
 frRW(/Target opponent reveals their hand\. You choose an artifact or creature card from it\. Exile that card\./, 'frIntimidation', cmd('fr_intimidation'));
 clx('Whenever a creature deals damage to you, destroy it.', R => { R.trig.push({ ev: 'dealsDamage', fn: 'fr_creatureHurtsMe', effects: [cmd('fr_noMercy')] }); });
-frRW(/Until end of turn, any number of target creatures you control each get \+1\/\+0 and gain "When ~ dies, draw a card\."/, 'frRabid', cmd('fr_rabid'));
+frRW(/Until end of turn, any number of target creatures you control each get \+1\/\+0 and gain "When ~ dies, draw a card\."/, 'frRabid', cmd('fr_rabid', { multi: 'rabid' }));
 frRW(/Each opponent discards a card\. You create a 1\/1 black and green Pest creature token with "Whenever ~ attacks, you gain 1 life\."/, 'frPest', cmd('fr_pest'));
 clx('Sneak {1}{B} (You may cast this spell for {1}{B} if you also return an unblocked attacker you control to hand during the declare blockers step.)', R => { R.sneak = parseCost('{1}{B}'); });
 clx('Sneak {1}{B}', R => { R.sneak = parseCost('{1}{B}'); });

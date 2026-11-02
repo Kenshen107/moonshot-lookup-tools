@@ -412,6 +412,8 @@ function aiBestPlay(P) {
         o.buyback = !!r.buyback && canBuyback(P, o) && (untapped - (o.card.cmc || 0)) >= 3;
         if (r.cost.x) o.xVal = maxX(P, o);
         if (r.xFromTarget) { const te0 = firstTargetEffect(o), t0 = te0 ? aiPickTarget(P, te0, o) : null; if (!t0 || !t0.o || (t0.o.card.cmc || 0) > o.xVal) continue; o.xVal = t0.o.card.cmc || 0; }
+        o.multi = null; if (typeof frMultiOf === 'function' && frMultiOf(o)) o.multi = frMultiAI(P, o, frMultiOf(o).multi, o.xVal || 0);
+        o.assist = []; o.assistN = 0;
         if (r.teamwork) o.teamworked = !!teamworkCrew(P, o) && P.bf.filter(canAttackWith).length <= 1;
         if (r.modes && modeRange(P, r, o).max > 1) o.mode = aiPickModes(P, r, r.modes, o);
         else if (r.modes) { let bi = 0, bs = -1; r.modes.forEach((fx, i) => { o.mode = i; const te2 = firstTargetEffect(o); const t2 = te2 ? aiPickTarget(P, te2, o) : null; if (te2 && !t2) return; const sc = aiScore(P, o, t2); if (sc > bs) { bs = sc; bi = i; } }); o.mode = bi; }

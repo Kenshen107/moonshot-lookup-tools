@@ -706,3 +706,204 @@ Object.assign(CMD, {
         src.exileAfter = true;
     }
 });
+
+// ================= Fixes of the approximations (2026-11-02, owner: "Can fix the approximations?") =================
+// ---- Type any card name (Ancient Vendetta) ----
+function askName(P, msg, opts = {}) {
+    if (AUTOPLAY && !(G && G.hotseat)) return Promise.resolve(opts.def ?? null);
+    if (G && G.hotseat && P && G.view !== P.i) return handTo(P).then(() => askName(P, msg, opts));
+    if (actBusy()) return actDrain().then(() => askName(P, msg, opts));
+    return new Promise(resolve => {
+        window.__ask = ok => { const v = ok ? String((document.getElementById('askNameBox') || {}).value || '').trim() : null; closeModal(); window.__ask = null; renderGame(); resolve(v || null); };
+        const names = [...new Set([...CARDS.values()].map(c => c.name))].sort().slice(0, 4000);
+        showModal(`<div class="ask" role="dialog" aria-label="Name a card">${choiceCardHTML(opts.card)}<div class="ask-body">
+            ${G && G.hotseat && P ? `<div class="lane-label">${esc(P.name)} decides</div>` : ''}
+            <h2>${esc(msg)}</h2>
+            <input type="text" id="askNameBox" list="askNameList" autocomplete="off" placeholder="Type a card name" style="width:100%" onkeydown="if(event.key==='Enter')__ask(true)">
+            <datalist id="askNameList">${names.map(n => `<option value="${esc(n)}"></option>`).join('')}</datalist>
+            <div class="ask-actions"><button class="btn primary" onclick="__ask(true)">✔ ${esc(opts.ok || 'Name it')}</button><button class="btn" onclick="__ask(false)">Cancel</button></div></div></div>`);
+        setTimeout(() => { const b = document.getElementById('askNameBox'); if (b) b.focus(); }, 30);
+    });
+}
+// ---- Assist: another person at the table pays part of the generic cost ----
+async function frAssistAsk(P, o) {
+    const gen = () => Math.max(0, (totalCost(P, o).generic || 0) + ((costOf(P, o).x ? (o.xVal || 0) * xMult(o) : 0)));
+    for (const X of foes(P)) {
+        if (X.isAI || AUTOPLAY) continue; // the computer never helps
+        const free = (() => { let n = 0; while (n < 20 && planPayment(X, { ...parseCost('') }, n + 1)) n++; return n; })();
+        const mx = Math.min(gen(), free); if (mx <= 0) continue;
+        const n = await askNumber(X, `${o.card.name}: pay up to {${mx}} of its cost (assist)?`, 0, mx, 0, { card: o.card, ok: 'Pay' });
+        if (n > 0) { o.assist.push({ X, n }); o.assistN += n; }
+    }
+}
+function frAssistPay(P, o) {
+    for (const a of o.assist) {
+        const plan = planPayment(a.X, { ...parseCost('') }, a.n);
+        if (plan) { plan.forEach(s => tapSource(a.X, s)); log(`${a.X.name} ${you(a.X) ? 'pay' : 'pays'} {${a.n}} of ${o.card.name}'s cost (assist).`); }
+    }
+}
+// ---- "Any number of target ...": chosen as the spell is cast (or the ability goes on the stack), checked again as it resolves ----
+const frLegalCreature = (P, x) => isCreature(x) && !has(x, 'shroud') && !(has(x, 'hexproof') && x.owner !== P.i);
+const FR_MULTI = {
+    morningtide: { title: 'exile a creature', pool: P => allPerms().filter(x => frLegalCreature(P, x)), max: () => Infinity, ai: (P, pool) => pool.filter(x => x.owner === P.i && frEtbValue(x) >= 3) },
+    rabid: { title: 'choose a creature', pool: P => P.bf.filter(x => frLegalCreature(P, x)), max: () => Infinity, ai: (P, pool) => pool },
+    reunion: { title: 'return a creature card', pool: P => P.gy.filter(c => /\bCreature\b/.test(c.card.type) && (Number(c.card.power) || 0) <= 10), budget: c => Number(c.card.power) || 0, total: 10, max: () => Infinity, ai: (P, pool) => pool.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)) },
+    doppel: { title: 'choose a permanent', pool: P => allPerms().filter(x => !has(x, 'shroud') && !(has(x, 'hexproof') && x.owner !== P.i)), max: x => x, ai: (P, pool) => pool.filter(y => y.owner === P.i).sort((a, b) => permValue(b) - permValue(a)) },
+    finale: { title: 'destroy a creature', pool: (P, x) => allPerms().filter(c => frLegalCreature(P, c) && tou(c) <= x), max: () => 3, ai: (P, pool) => pool.filter(c => c.owner !== P.i).sort((a, b) => creatureValue(b) - creatureValue(a)) },
+    phase: { title: 'phase out a creature', pool: P => allPerms().filter(c => frLegalCreature(P, c)), max: x => x, ai: (P, pool) => pool.filter(c => c.owner !== P.i).sort((a, b) => creatureValue(b) - creatureValue(a)) },
+    surfer: { title: 'exile another permanent you control', pool: (P, x, src) => P.bf.filter(y => y !== src), max: () => Infinity, ai: (P, pool) => pool.filter(y => frEtbValue(y) >= 3) },
+    mantle: { title: 'return an Aura or Equipment card', pool: P => P.gy.filter(c => /\b(?:Aura|Equipment)\b/.test(c.card.type)), max: () => Infinity, ai: (P, pool) => pool },
+    equip: { title: 'attach an Equipment', pool: (P, x, src) => allPerms().filter(y => /\bEquipment\b/.test(y.card.type) && !(src && y.attachedTo === src.uid) && !has(y, 'shroud') && !(has(y, 'hexproof') && y.owner !== P.i)), max: () => Infinity, ai: (P, pool) => pool.filter(y => y.owner === P.i) }
+};
+function frMultiOf(o) { const r = Rx(o); return (r.spell || []).find(e => e && e.multi) || null; }
+function frMultiAI(P, src, kind, x) {
+    if (kind === 'invoke') { const c = P.gy.filter(k => !/Instant|Sorcery/.test(k.card.type)).sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0] || null; return { card: c, player: P }; }
+    if (kind === 'chaotic') {
+        const list = [];
+        for (const kd of ['Artifact', 'Creature', 'Enchantment', 'Planeswalker', 'Land']) {
+            const pool = allPerms().filter(y => (kd === 'Creature' ? isCreature(y) : new RegExp(`\\b${kd}\\b`).test(y.card.type)) && !has(y, 'shroud') && !(has(y, 'hexproof') && y.owner !== P.i));
+            const theirs = pool.filter(y => y.owner !== P.i).sort((a, b) => permValue(b) - permValue(a))[0];
+            const mine = pool.filter(y => y.owner === P.i && permValue(y) <= 2 && !/\bLand\b/.test(y.card.type) && !y.isCommander).sort((a, b) => permValue(a) - permValue(b))[0];
+            const pick = theirs && kd !== 'Land' ? theirs : mine || null; if (pick) list.push(pick);
+        }
+        return { list };
+    }
+    const cfg = FR_MULTI[kind]; if (!cfg) return { list: [] };
+    const pool = cfg.pool(P, x, src), max = cfg.max(x); let list = cfg.ai(P, pool);
+    if (cfg.budget) { let left = cfg.total; list = list.filter(c => { const w = cfg.budget(c); if (w <= left) { left -= w; return true; } return false; }); }
+    return { list: list.slice(0, Number.isFinite(max) ? max : undefined) };
+}
+async function frMultiChoose(P, src, kind, x) {
+    if (P.isAI || AUTOPLAY) return frMultiAI(P, src, kind, x);
+    const name = src && src.card ? src.card.name : 'Choose';
+    if (kind === 'invoke') {
+        const cards = P.gy.filter(k => !/Instant|Sorcery/.test(k.card.type));
+        const card = cards.length ? await pickCard(P, cards, `${name}: choose a permanent card in your graveyard`, { required: true }) : null;
+        const player = await frPickPlayer(P, `${name}: distribute four +1/+1 counters among creatures and Vehicles of which player?`, G.players.filter(pl => !pl.out)) || P;
+        return { card, player };
+    }
+    if (kind === 'chaotic') {
+        const list = [];
+        for (const kd of ['Artifact', 'Creature', 'Enchantment', 'Planeswalker', 'Land']) {
+            const pool = allPerms().filter(y => (kd === 'Creature' ? isCreature(y) : new RegExp(`\\b${kd}\\b`).test(y.card.type)) && !has(y, 'shroud') && !(has(y, 'hexproof') && y.owner !== P.i));
+            if (!pool.length) continue;
+            const pick = await pickCard(P, pool, `${name}: exile up to one ${kd.toLowerCase()}`, { optional: true }); if (pick) list.push(pick);
+        }
+        return { list };
+    }
+    const cfg = FR_MULTI[kind]; if (!cfg) return { list: [] };
+    const out = []; let left = cfg.budget ? cfg.total : 0; const max = cfg.max(x); const pool = cfg.pool(P, x, src).slice();
+    for (let k = 0; k < max && pool.length; k++) {
+        const ok = cfg.budget ? pool.filter(c => cfg.budget(c) <= left) : pool; if (!ok.length) break;
+        const c = await pickCard(P, ok, `${name}: ${cfg.title}${Number.isFinite(max) ? ` (${k + 1} of up to ${max})` : ' (or stop)'}${cfg.budget ? ` - total power left ${left}` : ''}`, { optional: true });
+        if (!c) break; out.push(c); pool.splice(pool.indexOf(c), 1); if (cfg.budget) left -= cfg.budget(c);
+    }
+    return { list: out };
+}
+const frMulti = async (P, src, kind, x) => G.curMulti || await frMultiChoose(P, src, kind, x);
+// ---- "Descended": a permanent card was put into your graveyard from anywhere this turn ----
+function frDescendWatch() {
+    if (!G || !G.players) return;
+    G.players.forEach(P => {
+        const seen = P.frGySeen;
+        if (seen) P.gy.forEach(c => { if (!seen.has(c.uid) && /Artifact|Creature|Enchantment|Land|Planeswalker|Battle/.test(c.card.type)) P.descendTurn = G.turn; });
+        P.frGySeen = new Set(P.gy.map(c => c.uid));
+    });
+}
+(function () {
+    const sb = sba; sba = function () { const r = sb.apply(this, arguments); frDescendWatch(); return r; };
+    const st = settle; settle = async function () { const r = await st.apply(this, arguments); frDescendWatch(); return r; };
+    // Knight Rampager: it attacks the chosen player (matters in a pod)
+    const da = declareAttackers;
+    declareAttackers = function (P, attackers) { (attackers || []).forEach(x => { if (x.frForceTurn === G.turn && x.frForceTo !== undefined && G.players[x.frForceTo] && !G.players[x.frForceTo].out && G.players.length > 2) { x.atkTo = x.frForceTo; delete x.attackPW; } }); return da.apply(this, arguments); };
+})();
+Object.assign(CMD, {
+    fr_bore(P, e, t, src) {
+        if (!onBf(src.uid) || P.descendTurn !== G.turn) return;
+        src.ctr.bore = (src.ctr.bore || 0) + 1; log(`${src.card.name} gets a bore counter (${src.ctr.bore}).`);
+        if (src.ctr.bore >= 3) { src.ctr.bore = 0; applyEffect(P, { t: 'transform' }, null, src); }
+    },
+    fr_rampagerCombat(P, e, t, src) {
+        if (!onBf(src.uid)) return; const fs = foes(P); if (!fs.length) return;
+        const F = fs[Math.floor(Math.random() * fs.length)]; src.frForceTurn = G.turn; src.frForceTo = F.i; src.frForceAtk = G.turn;
+        log(`${src.card.name} must attack ${F.name === 'You' ? 'you' : F.name} this combat if able.`);
+    },
+    async fr_morningtide(P, e, t, src) { const m = await frMulti(P, src, 'morningtide', 0); (m.list || []).filter(x => onBf(x.uid)).forEach(x => frBlinkPerm(P, x, { tapped: true })); },
+    async fr_surfer(P, e, t, src) { const m = await frMulti(P, src, 'surfer', 0); (m.list || []).filter(x => onBf(x.uid) && x !== src).forEach(x => frBlinkPerm(P, x, { landTapped: true })); },
+    async fr_rabid(P, e, t, src) {
+        const m = await frMulti(P, src, 'rabid', 0); const chosen = (m.list || []).filter(x => onBf(x.uid));
+        chosen.forEach(c => { c.tp += 1; c.frDieDraw = G.turn; });
+        log(`${chosen.length} creature${chosen.length === 1 ? ' gets' : 's get'} +1/+0 and "when this creature dies, draw a card" until end of turn.`);
+    },
+    async fr_reunion(P, e, t, src) {
+        const m = await frMulti(P, src, 'reunion', 0); let budget = 10;
+        (m.list || []).filter(c => P.gy.includes(c)).forEach(c => { const w = Number(c.card.power) || 0; if (w <= budget) { budget -= w; pull(P.gy, c); putOntoBattlefield(P, c, false); } });
+        src.exileAfter = true;
+    },
+    async fr_doppelgang(P, e, t, src) {
+        const x = G.curX || 0; if (x <= 0) return; const m = await frMulti(P, src, 'doppel', x);
+        (m.list || []).filter(y => onBf(y.uid)).forEach(y => { for (let k = 0; k < x; k++) tokenCopyOf(P, y.card); });
+    },
+    async fr_finale(P, e, t, src) {
+        const x = G.curX || 0; const m = await frMulti(P, src, 'finale', x);
+        (m.list || []).filter(c => onBf(c.uid) && tou(c) <= x).forEach(c => destroy(c));
+        if (x >= 10) { const back = P.gy.filter(c => /\bCreature\b/.test(c.card.type)); back.forEach(c => putOntoBattlefield(P, c, false)); }
+    },
+    async fr_phaseOutX(P, e, t, src) { const x = G.curX || 0; if (x <= 0) return; const m = await frMulti(P, src, 'phase', x); (m.list || []).filter(c => onBf(c.uid)).forEach(c => phaseOut(c)); },
+    async fr_mantle(P, e, t, src) {
+        const host = onBf(src.attachedTo); if (!host) return; const m = await frMulti(P, src, 'mantle', 0);
+        const back = (m.list || []).filter(x => P.gy.includes(x));
+        back.forEach(x => { putOntoBattlefield(P, x, false); x.attachedTo = host.uid; });
+        if (back.length) log(`${back.map(x => x.card.name).join(', ')} return${back.length === 1 ? 's' : ''} attached to ${host.card.name}.`);
+    },
+    async fr_attachAll(P, e, t, src) {
+        if (!onBf(src.uid)) return;
+        let pool;
+        if (e.multi) { const m = await frMulti(P, src, e.multi, 0); pool = (m.list || []).filter(x => onBf(x.uid) && x !== src); }
+        else {
+            const all = P.bf.filter(x => x !== src && x.attachedTo !== src.uid && (/\bEquipment\b/.test(x.card.type) || (!e.equipOnly && /\bAura\b/.test(x.card.type))));
+            pool = (P.isAI || AUTOPLAY) ? all : await frPickMany(P, all, `${src.card.name}: attach an Aura or Equipment you control to it`, all.length, all);
+        }
+        if (!pool.length) return;
+        pool.forEach(x => { x.attachedTo = src.uid; });
+        log(`${P.name} ${you(P) ? 'attach' : 'attaches'} ${pool.map(x => x.card.name).join(', ')} to ${src.card.name}.`);
+    },
+    async fr_chaotic(P, e, t, src) {
+        const m = await frMulti(P, src, 'chaotic', 0);
+        for (const x of (m.list || [])) {
+            if (!onBf(x.uid)) continue;
+            const X = G.players[x.owner]; const types = x.card.type.split(' — ')[0].split(' ').filter(w => ['Artifact', 'Creature', 'Enchantment', 'Planeswalker', 'Land', 'Battle'].includes(w));
+            leaveBattlefield(x, 'exile'); log(`${x.card.name} is exiled.`);
+            let found = null; const revealed = [];
+            while (X.library.length) { const c = X.library.pop(); if (types.some(ty => new RegExp(`\\b${ty}\\b`).test(c.card.type))) { found = c; break; } revealed.push(c); }
+            X.library.unshift(...revealed); X.library = shuffle(X.library);
+            if (found) putOntoBattlefield(X, found, false); else log(`${X.name} ${you(X) ? 'have' : 'has'} no card to put onto the battlefield.`);
+        }
+    },
+    async fr_invokeJustice(P, e, t, src) {
+        const m = await frMulti(P, src, 'invoke', 0);
+        if (m.card && P.gy.includes(m.card)) { pull(P.gy, m.card); putOntoBattlefield(P, m.card, false); }
+        const X = m.player || P; const pool = X.bf.filter(x => isCreature(x) || hasType(x, 'Vehicle')); if (!pool.length) return;
+        for (let k = 0; k < 4; k++) { const x = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (pow(b) + tou(b)) - (pow(a) + tou(a)))[0] : await pickCard(P, pool, `${src.card.name}: put a +1/+1 counter on (${k + 1} of 4)`, { required: true }); if (x) putCounters(x, 1, P); }
+    },
+    async fr_vendetta(P, e, t, src) {
+        const O = await frOpp(P, `${src.card.name}: target opponent`); if (!O) return;
+        let name;
+        if (P.isAI || AUTOPLAY) { const cnt = {}; [...O.hand, ...O.library].forEach(c => { cnt[c.card.name] = (cnt[c.card.name] || 0) + 1; }); name = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0]; }
+        else name = await askName(P, `${src.card.name}: choose a card name`, { card: src.card });
+        if (!name) return;
+        const lc = name.toLowerCase(); let n = 0, said = name;
+        for (const zone of [O.gy, O.hand, O.library]) { for (const c of zone.slice()) { if (n >= 4) break; if (c.card.name.toLowerCase() === lc) { said = c.card.name; pull(zone, c); O.exile.push(c); n++; } } }
+        O.library = shuffle(O.library); log(`${P.name} ${you(P) ? 'name' : 'names'} ${said}: ${n} card${n === 1 ? '' : 's'} exiled.`);
+    },
+    async fr_echo(P, e, t, src) {
+        const it = t && t.item; if (!it || !G.stack.includes(it)) return;
+        const copy = { ...it, id: stackSeq++, copy: true, also: undefined, key: null };
+        const te = (it.effects || []).find(x => needsTarget(x) && !x.late);
+        if (te && !(P.isAI || AUTOPLAY)) {
+            const valid = validTargets(P, te, it.o);
+            if (valid.length > 1 && await askYes(P, `Copy of ${it.name}: choose a new target?`, { card: it.o.card, yes: 'New target', no: 'Same target' })) { const saved = G.mode; const pick = await chooseTarget(P, te, it.o, true); G.mode = saved; if (pick) copy.target = pick; }
+        }
+        G.stack.push(copy); log(`${src.card.name}: ${it.name} is copied.`);
+    }
+});

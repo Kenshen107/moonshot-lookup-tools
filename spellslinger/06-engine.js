@@ -1059,6 +1059,7 @@ function totalCost(P, o) {
     if (Rx(o).freeOnTurn && G.active === P.i) return { ...parseCost('') }; // Discontinuity: costs {2}{U}{U} less during your turn
     const c = { ...costOf(P, o) };
     if (Rx(o).spreeCosts && o.mode !== undefined && o.mode !== null) [].concat(o.mode).forEach(i => { const sc = Rx(o).spreeCosts[i]; if (sc) Object.keys(sc).forEach(k => { if (typeof c[k] === 'number') c[k] += sc[k]; }); }); // Spree: each chosen mode adds its cost
+    if (o.assistN && Rx(o).assist) c.generic = Math.max(0, (c.generic || 0) - o.assistN); // Assist: another player pays part of the generic cost
     if (o.sacN && Rx(o).sacReduce) c.generic = Math.max(0, (c.generic || 0) - Rx(o).sacReduce * o.sacN); // Torgaar
     if (o.exileBlueN && Rx(o).exileBlueReduce) c.generic = Math.max(0, (c.generic || 0) - Rx(o).exileBlueReduce * o.exileBlueN); // March of Swirling Mist
     if (Rx(o).escalate && Array.isArray(o.mode) && o.mode.length > 1) Object.keys(Rx(o).escalate).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).escalate[k] * (o.mode.length - 1); }); // Collective Resistance
@@ -1467,6 +1468,7 @@ async function castSpell(P, o, presetTarget) {
     if (!payFor(P, o)) { o._tgt = null; return false; }
     if (harmonizeBy) { harmonizeBy.tapped = true; fire('tapped', { o: harmonizeBy }); log(`${P.name} ${you(P) ? 'tap' : 'taps'} ${harmonizeBy.card.name} to help pay for ${o.card.name} (harmonize).`); }
     o.castAs = null;
+    if (o.assist && o.assist.length && typeof frAssistPay === 'function') frAssistPay(P, o);
     if (o.plotTurn) { delete o.plotTurn; o.freeCast = false; o.playUntil = 0; }
     if (castAs === 'disturb') { o.card = o.front.back; o.disturbed = true; log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name} with disturb.`); }
     if (castAs === 'retrace') { const lands = P.hand.filter(x => Rx(x).kind === 'land'); const d = P.isAI ? lands.sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0] : await pickCard(P, lands, `${o.card.name}: discard a land card (retrace)`, { required: true }); if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} (retrace).`); } }
@@ -1507,9 +1509,9 @@ async function castSpell(P, o, presetTarget) {
     if (Rx(o).kind === 'creature' && P.nextCreatureCounter === G.turn) { o.extraEnterCounter = 1; P.nextCreatureCounter = 0; } // Summon: Fenrir II
     removeFromZones(o);
     if (fromCommand) { P.tax++; P.cmdCastN[o.cmdSlot || 0] = (P.cmdCastN[o.cmdSlot || 0] || 0) + 1; }
-    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x || (Rx(o).addCost && Rx(o).addCost.lifeX) || (castAs === 'warp' && Rx(o).warp.x) || (castAs === 'bestow' && Rx(o).bestow.x) ? (o.xVal || 0) : undefined, kicked: !!o.kicked, kickN: o.kickN || 0, repN: o.repN || 0, buyback: !!o.buyback, castAs, paragon };
+    const item = { id: stackSeq++, kind: 'spell', o, P, target: presetTarget, name: o.card.name, x: Rx(o).cost.x || (Rx(o).addCost && Rx(o).addCost.lifeX) || (castAs === 'warp' && Rx(o).warp.x) || (castAs === 'bestow' && Rx(o).bestow.x) ? (o.xVal || 0) : undefined, kicked: !!o.kicked, kickN: o.kickN || 0, repN: o.repN || 0, multi: o.multi || null, buyback: !!o.buyback, castAs, paragon };
     if (castAs) log(`(${o.card.name} is cast with ${castAs === 'energy' ? 'energy' : castAs}.)`);
-    o.buyback = false;
+    o.buyback = false; o.multi = null; o.assist = []; o.assistN = 0;
     G.stack.push(item);
     log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name}${item.kicked ? ' (kicked)' : ''}${o._free ? ' without paying its mana cost' : ''}${item.x !== undefined ? ` (X=${item.x})` : ''}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax > 1 ? ` (commander tax ${(P.tax - 1) * 2})` : ''}.`);
     if (!wardCheck(P, presetTarget, o.card.name)) { pull(G.stack, item); moveSpellCard(o, 'gy'); renderGame(); return true; }
@@ -1573,8 +1575,9 @@ async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
         target = await chooseTarget(P, te, source, false);
         if (!target) { log(`${source.card.name}'s ability has no legal target and is removed from the stack (rule 603.3d).`); return; }
     }
+    let multi = null; { const me = effects.find(e => e && e.multi); if (me && typeof frMultiChoose === 'function') { multi = await frMultiChoose(P, source, me.multi, 0); if (!multi) return; } }
     // Identical triggers from permanents with the same name (Scute Swarm, two Starship Enterprises) share one stack line, so a crowd of them doesn't bury the table (2026-10-31). Each source still resolves in turn.
-    if (!target && source && source.card && !G.hotseat && (!AUTOPLAY || window.__GROUP_TRIGGERS)) {
+    if (!target && !multi && source && source.card && !G.hotseat && (!AUTOPLAY || window.__GROUP_TRIGGERS)) {
         const key = trigKey(effects);
         const same = G.stack.find(it => it.kind === 'trigger' && it.P === P && !it.target && (it.ctxObj || null) === (ctxObj || null) && it.o && it.o.card.name === source.card.name && (it.ctxCount || 0) === (ctxCount || 0) && key !== null && it.key === key);
         if (same) {
@@ -1584,7 +1587,7 @@ async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
             return;
         }
     }
-    G.stack.push({ id: stackSeq++, kind: 'trigger', o: source, P, target, effects, name: `${source.card.name}'s ability`, ctxObj, ctxCount, raw, key: !target ? trigKey(effects) : null });
+    G.stack.push({ id: stackSeq++, kind: 'trigger', o: source, P, target, effects, name: `${source.card.name}'s ability`, ctxObj, ctxCount, raw, multi, key: !target && !multi ? trigKey(effects) : null });
     if (target && target.o && !(te && te.ctx)) fire('targeted', { o: target.o, by: P.i }); // Magic 2010: Illusionary Servant, Ice Cage
     log(`${source.card.name}'s ability triggers${target ? ` ${te && te.ctx ? 'for' : 'targeting'} ${targetName(target)}` : ''}.`);
     renderGame();
@@ -1719,7 +1722,9 @@ async function resolveTop() {
     if (item.kind === 'trigger') {
         G.ctxObj = item.ctxObj || null; G.ctxCount = item.ctxCount || 0; G.ctxRaw = item.raw || null;
         { G.resMap = G.resMap || new Map(); const per = G.resMap.get(item.effects) || {}; G.resMap.set(item.effects, per); const k = item.o ? item.o.uid : 0; per[k] = per[k] && per[k].turn === G.turn ? { turn: G.turn, n: per[k].n + 1 } : { turn: G.turn, n: 1 }; G.resolveN = per[k].n; }
+        G.curMulti = item.multi || null;
         await resolveEffects(item.P, item.effects, item.target, item.o);
+        G.curMulti = null;
         if ((item.also || []).length) {
             // a crowd of identical triggers resolves with one summary line instead of hundreds (Scute Swarm)
             const before = G.players.reduce((n, X) => n + X.bf.length, 0), realLog = log; log = () => {};
@@ -1731,7 +1736,9 @@ async function resolveTop() {
         const o = item.o, r = Rx(o);
         G.curX = item.x || 0;
         if (r.kind === 'instant' || r.kind === 'sorcery') {
+            G.curMulti = item.multi || null;
             await resolveEffects(item.P, withX(spellEffects(o), item.x), item.target, o);
+            G.curMulti = null;
             // An adventure goes on an adventure: exile, and the creature can be cast from there (715.4)
             if (o.front && o.front.layout === 'adventure' && o.card !== o.front && !o.flashedBack) {
                 o.card = o.front; resetObj(o); o.advReady = true; G.players[o.owner].exile.push(o);
@@ -4427,16 +4434,14 @@ async function endTurn(P) {
     G.mode = null;
     G.phase = 'end';
     emptyPools();
-    if (G.monarch === P.i) { log(`${P.name} ${you(P) ? 'are' : 'is'} the monarch and ${you(P) ? 'draw' : 'draws'} a card (rule 724.2).`); drawCards(P, 1); }
-    P.bf.filter(o => o.impending && o.ctr.time > 0).forEach(o => { o.ctr.time--; log(`${o.card.name} loses a time counter (${o.ctr.time} left).`); });
-    fire('end');
-    await settle();
-    if (G.over) return;
-    await endStepWindow(P);
-    if (G.over) return;
-    allPerms().filter(o => o.dashTurn === G.turn).forEach(o => { o.dashTurn = 0; log(`${o.card.name} returns to its owner's hand (dash).`); leaveBattlefield(o, 'hand'); });
-    allPerms().filter(o => o.sacAtEnd === G.turn).forEach(o => { log(`${o.card.name} is sacrificed at the end of the turn.`); dieOrLeave(o, 'gy'); });
-    if (typeof runEndQueue === 'function') await runEndQueue();
+    const skipEnd = G.endTurnAt === G.turn; // "End the turn": the end step never happens (CR 723.1)
+    if (skipEnd) { log('The end step is skipped: the turn goes straight to cleanup.'); }
+    else if (G.monarch === P.i) { log(`${P.name} ${you(P) ? 'are' : 'is'} the monarch and ${you(P) ? 'draw' : 'draws'} a card (rule 724.2).`); drawCards(P, 1); }
+    if (!skipEnd) P.bf.filter(o => o.impending && o.ctr.time > 0).forEach(o => { o.ctr.time--; log(`${o.card.name} loses a time counter (${o.ctr.time} left).`); });
+    if (!skipEnd) { fire('end'); await settle(); if (G.over) return; await endStepWindow(P); if (G.over) return; }
+    if (!skipEnd) allPerms().filter(o => o.dashTurn === G.turn).forEach(o => { o.dashTurn = 0; log(`${o.card.name} returns to its owner's hand (dash).`); leaveBattlefield(o, 'hand'); });
+    if (!skipEnd) allPerms().filter(o => o.sacAtEnd === G.turn).forEach(o => { log(`${o.card.name} is sacrificed at the end of the turn.`); dieOrLeave(o, 'gy'); });
+    if (typeof runEndQueue === 'function' && !skipEnd) await runEndQueue(); // delayed "next end step" abilities wait for a real end step
     // Magic 2010: Stone Giant's flier is destroyed; Protean Hydra gets its counters back
     allPerms().filter(o => o.destroyAtEnd === G.turn).forEach(o => { delete o.destroyAtEnd; destroy(o, 'is destroyed (Stone Giant)'); });
     allPerms().filter(o => o.proteanDue > 0).forEach(o => { const k = o.proteanDue; o.proteanDue = 0; putCounters(o, k); log(`${o.card.name} gets ${k} +1/+1 counters.`); });
@@ -4512,6 +4517,12 @@ async function humanCast(uid) {
         if (!(v >= 1 && v <= mx)) { renderGame(); return; }
         o.xVal = v;
     }
+    // Assist: another person at the table may pay part of the generic cost (the computer never helps)
+    o.assist = []; o.assistN = 0;
+    if (Rx(o).assist && typeof frAssistAsk === 'function') await frAssistAsk(P, o);
+    // "Any number of target ...": the targets are chosen now, as the spell is cast (CR 601.2c), not when it resolves
+    o.multi = null;
+    if (typeof frMultiOf === 'function' && frMultiOf(o)) { o.multi = await frMultiChoose(P, o, frMultiOf(o).multi, o.xVal || 0); if (!o.multi) { renderGame(); return; } }
     let target = null;
     const te = firstTargetEffect(o);
     if (te) {
