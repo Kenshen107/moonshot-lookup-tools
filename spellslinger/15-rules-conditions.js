@@ -590,7 +590,7 @@ function fire(ev, ctx = {}) {
     if (ev === 'landfall' && ctx.o) { fire('selfEnters', { o: ctx.o }); if (Rx(ctx.o).etb.length) (G.trigQ = G.trigQ || []).push({ P: G.players[ctx.o.owner], o: ctx.o, effects: Rx(ctx.o).etb }); }
     if (ev === 'attacks') G.attackedTurn = G.turn;
     const perms = (ev === 'dies' || ev === 'toGy' || ev === 'leaves') && ctx.o ? [ctx.o, ...allPerms().filter(x => x !== ctx.o)] : allPerms();
-    if (ev === 'draw' && ctx.P) { if (ctx.P.drawTurn !== G.turn) { ctx.P.drawTurn = G.turn; ctx.P.drawN = 0; } ctx.n = ++ctx.P.drawN; if (ctx.n === 1 && ctx.o && Rx(ctx.o).miracle && G.phase !== 'setup') { ctx.o.miracleTurn = G.turn; (G.miracleQ = G.miracleQ || []).push({ P: ctx.P, o: ctx.o }); } }
+    if (ev === 'draw' && ctx.P) { if (ctx.P.drawTurn !== G.turn) { ctx.P.drawTurn = G.turn; ctx.P.drawN = 0; } ctx.n = ++ctx.P.drawN; if (ctx.n === 1 && ctx.o && (Rx(ctx.o).miracle || (typeof frMiracle === 'function' && frMiracle(ctx.o))) && G.phase !== 'setup') { ctx.o.miracleTurn = G.turn; (G.miracleQ = G.miracleQ || []).push({ P: ctx.P, o: ctx.o }); } }
     for (const o of perms) {
         if (lostAbilities(o)) continue;
         // Built-in keyword triggers
@@ -710,7 +710,7 @@ function grantsOn(o) { return attachmentsOf(o.uid).filter(a => Rx(a).grant).map(
 function actsOf(o) {
     const R = Rx(o);
     const zoneP = G && G.players.find(X => X.hand.includes(o) || X.gy.includes(o));
-    if (zoneP) return zoneP.hand.includes(o) ? (R.handActs || []) : (R.gyActs || []);
+    if (zoneP) return zoneP.hand.includes(o) ? (R.handActs || []) : [...(R.gyActs || []), ...(o.grantUnearthTurn === G.turn && typeof FR_UNEARTH_ACT !== 'undefined' ? [FR_UNEARTH_ACT] : [])]; // Ghost Ark
     if (lostAbilities(o)) return [];
     const out = [...R.acts, ...grantsOn(o).flatMap(g => g.acts), ...(R.condActs || []).filter(c => condOk(c.cond, ctrl(o), o)).map(c => c.act), ...(o.borrowed && o.borrowed.turn === G.turn ? o.borrowed.acts : [])];
     if (R.crew !== null && R.crew !== undefined) out.push({ crew: R.crew, effects: [], text: `Crew ${R.crew}` });
@@ -818,7 +818,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (!crew) return false;
         if (Rx(o).crewOnce && o.crewed === G.turn) { log(`${o.card.name} can be crewed only once each turn.`); return false; }
         crew.forEach(c => { c.tapped = true; });
-        o.crewed = G.turn; o.crewN = crew.length; o.crewTurn = G.turn;
+        o.crewed = G.turn; o.crewN = crew.length; o.crewTurn = G.turn; fire('crewed', { o });
         log(`${P.name} ${you(P) ? 'crew' : 'crews'} ${o.card.name} with ${crew.map(c => c.card.name).join(', ')}: it's an artifact creature until end of turn.`);
         renderGame();
         return true;
@@ -1002,7 +1002,7 @@ function aiCrew(P) {
         const crew = crewPick(P, v, n);
         if (!crew) continue;
         const lost = crew.filter(canAttackWith).reduce((a, c) => a + pow(c), 0);
-        if ((Number(v.card.power) || 0) > lost) { crew.forEach(c => { c.tapped = true; }); v.crewed = G.turn; v.crewN = crew.length; v.crewTurn = G.turn; log(`${P.name} crews ${v.card.name}.`); }
+        if ((Number(v.card.power) || 0) > lost) { crew.forEach(c => { c.tapped = true; }); v.crewed = G.turn; v.crewN = crew.length; v.crewTurn = G.turn; fire('crewed', { o: v }); log(`${P.name} crews ${v.card.name}.`); }
     }
 }
 

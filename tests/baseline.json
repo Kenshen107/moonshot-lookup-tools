@@ -4,15 +4,15 @@
     "mirrodin": []
   },
   "coverage": {
-    "measured": "2026-10-31",
+    "measured": "2026-11-02",
     "total": 34489,
-    "full": 16069,
-    "partial": 14339,
-    "none": 4081,
+    "full": 16219,
+    "partial": 14277,
+    "none": 3993,
     "top1000": {
-      "full": 876,
-      "partial": 88,
-      "none": 36
+      "full": 881,
+      "partial": 86,
+      "none": 33
     }
   }
 }

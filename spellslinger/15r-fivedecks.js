@@ -340,3 +340,369 @@ Object.assign(CMD_AITARGET, {
     fr_blinkEnd: (P, e, src, valid) => { const mine = valid.filter(v => v.o && v.o.owner === P.i).sort((a, b) => frEtbValue(b.o) - frEtbValue(a.o))[0]; return mine && frEtbValue(mine.o) >= 3 ? mine : null; },
     fr_blinkNow: (P, e, src, valid) => { const mine = valid.filter(v => v.o && v.o.owner === P.i).sort((a, b) => frEtbValue(b.o) - frEtbValue(a.o))[0]; return mine && (frEtbValue(mine.o) >= 3 || e.counter) ? mine : null; }
 });
+
+// ================= Lorehold, the Historian / Jadzi / Torgaar decks =================
+const FR_UNEARTH_ACT = { cost: { mana: parseCost('{3}'), tap: false }, effects: [{ t: 'unearth' }], text: 'Unearth {3} (granted by Ghost Ark)' };
+function frMiracle(o) {
+    if (!G || !o || o.owner === undefined) return null;
+    if (!['instant', 'sorcery'].includes(Rx(o).kind)) return null;
+    const P = G.players[o.owner];
+    return P && P.bf.some(a => Rx(a).grantMiracle && !lostAbilities(a)) ? parseCost('{2}') : null; // Lorehold, the Historian
+}
+// Sneak (Splinter's Technique): return an unblocked attacker you control to hand as you cast it during the declare blockers step
+function frSneakAttackers(P) { return P.bf.filter(x => G.attackers.includes(x.uid) && !Object.values(G.blocks || {}).flat().includes(x.uid) && !Object.keys(G.blocks || {}).includes(String(x.uid)) ? true : G.attackers.includes(x.uid) && !(G.blocks && G.blocks[x.uid] && G.blocks[x.uid].length)); }
+async function frSneakReturn(P, o) {
+    const pool = frSneakAttackers(P); if (!pool.length) return;
+    const x = await frPick(P, pool, `${o.card.name}: return an unblocked attacker you control to your hand (sneak)`, { rank: (a, b) => (a.card.cmc || 0) - (b.card.cmc || 0) });
+    if (x) { G.attackers = G.attackers.filter(u => u !== x.uid); leaveBattlefield(x, 'hand'); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${x.card.name} to hand (sneak).`); }
+}
+// The computer sacrifices tokens and 1-power creatures to make an expensive Torgaar castable
+function frAiSac(P, o) {
+    const fodder = P.bf.filter(x => isCreature(x) && (x.token || pow(x) <= 1) && !x.isCommander).sort((a, b) => creatureValue(a) - creatureValue(b));
+    o.sacN = 0; o.sacList = [];
+    for (let k = 0; k < fodder.length; k++) { if (planPayment(P, totalCost(P, o), extraCost(P, o), null, { convoke: hasConvoke(o) })) break; o.sacList.push(fodder[k]); o.sacN = o.sacList.length; }
+    if (!planPayment(P, totalCost(P, o), extraCost(P, o), null, { convoke: hasConvoke(o) })) { o.sacN = 0; o.sacList = []; }
+}
+COND_EXTRA.push(
+    [/^artifacts you control have two or more \+1\/\+1 counters among them$/, () => P => P.bf.filter(x => /\bArtifact\b/.test(x.card.type)).reduce((a, x) => a + Math.max(0, x.counters), 0) >= 2],
+    [/^your graveyard has historic cards with total mana value 30 or greater$/, () => P => P.gy.filter(c => /Artifact|Legendary|Saga/.test(c.card.type)).reduce((a, c) => a + (c.card.cmc || 0), 0) >= 30],
+    [/^each player has 10 or less life$/, () => P => G.players.filter(X => !X.out).every(X => X.life <= 10)],
+    [/^you control a land$/, () => P => P.bf.some(x => /\bLand\b/.test(x.card.type))],
+    [/^~ has 20 or more charge counters$/, () => (P, o) => !!o && ((o.ctr && o.ctr.charge) || 0) >= 20],
+    [/^you have a creature to craft with$/, () => P => P.bf.some(isCreature) || P.gy.some(c => /\bCreature\b/.test(c.card.type))]
+);
+Object.assign(TRIG_FN, {
+    fr_selfDies: (o, ctx) => ctx.o === o,
+    fr_levelThree: (o, ctx) => ctx.o === o && ctx.lvl === 3,
+    fr_selfCrewed: (o, ctx) => ctx.o === o,
+    fr_enforcerAlone: (o, ctx) => (ctx.list || []).length === 1 && (ctx.list[0] === o || (ctx.list[0].isCommander && ctx.list[0].owner === o.owner)),
+    fr_nontokenArtCreatureOrVehicle: (o, ctx) => !!ctx.o && ctx.o !== o && ctx.o.owner === o.owner && !ctx.o.token && ((isCreature(ctx.o) && /\bArtifact\b/.test(ctx.o.card.type)) || hasType(ctx.o, 'Vehicle')),
+    fr_hostHitsPlayer: (o, ctx) => !!ctx.src && ctx.src.uid === o.attachedTo && (ctx.hit || []).some(H => H.i !== o.owner),
+    fr_creatureHurtsMe: (o, ctx) => !!ctx.src && isCreature(ctx.src) && !!ctx.P && ctx.P.i === o.owner,
+    fr_curseEnter: (o, ctx) => o.hostPlayer !== undefined && !!ctx.o && isCreature(ctx.o) && ctx.o.owner === o.hostPlayer
+});
+// Count creatures that died this turn (Tallyman of Nurgle) and the Rabid Attack "when this dies, draw" gift
+(function () {
+    const f = fire;
+    fire = function (ev, ctx) {
+        if (G && ctx && ctx.o && (ev === 'dies' || ev === 'creatureDies') && isCreature(ctx.o)) {
+            if (ev === 'dies') { if (!G.frDied || G.frDied.turn !== G.turn) G.frDied = { turn: G.turn, n: 0 }; G.frDied.n++; if (ctx.o.frDieDraw === G.turn) { const X = G.players[ctx.o.owner]; (G.trigQ = G.trigQ || []).push({ P: X, o: ctx.o, effects: [{ t: 'draw', n: 1 }] }); } }
+        }
+        return f.apply(this, arguments);
+    };
+    const cf = typeof cmdForcedAttackers === 'function' ? cmdForcedAttackers : null;
+    if (cf) cmdForcedAttackers = function (P) { return [...new Set([...cf.apply(this, arguments), ...P.bf.filter(x => x.frForceAtk === G.turn && canAttackWith(x))])]; };
+})();
+const frBasicTypes = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'];
+const frHist = c => /Artifact|Legendary|Saga/.test(c.card.type);
+// "Discard any number of cards, then draw that many plus one" (Brass's Tunnel-Grinder, Colossus of the Blood Age, and Valakut Awakening's bottom variant)
+async function frWheel(P, src, bottom) {
+    const human = !(P.isAI || AUTOPLAY);
+    let chosen = [];
+    if (human) { const left = P.hand.slice(); for (;;) { if (!left.length) break; const x = await pickCard(P, left, `${src.card.name}: ${bottom ? 'put a card on the bottom of your library' : 'discard a card'} (or stop)`, { optional: true }); if (!x) break; chosen.push(x); left.splice(left.indexOf(x), 1); } }
+    else chosen = P.hand.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b)).filter(c => aiKeepValue(P, c) < 3).slice(0, 3);
+    chosen.forEach(c => { pull(P.hand, c); if (bottom) P.library.unshift(c); else { P.gy.push(c); c.discardTurn = G.turn; } });
+    if (chosen.length && !bottom) noteDiscard(P, chosen.length);
+    log(`${P.name} ${you(P) ? (bottom ? 'put' : 'discard') : (bottom ? 'puts' : 'discards')} ${chosen.length} card${chosen.length === 1 ? '' : 's'}${bottom ? ' on the bottom of the library' : ''}.`);
+    drawCards(P, chosen.length + 1);
+}
+// Pick up to `limit` objects from a pool, one at a time (people choose, the computer takes `ai`)
+async function frPickMany(P, pool, title, limit, ai) {
+    if (P.isAI || AUTOPLAY) return ai.slice(0, limit);
+    const out = []; const left = pool.slice();
+    for (let k = 0; k < limit && left.length; k++) { const x = await pickCard(P, left, `${title} (${k + 1} of up to ${limit})`, { optional: true }); if (!x) break; out.push(x); left.splice(left.indexOf(x), 1); }
+    return out;
+}
+Object.assign(CMD, {
+    fr_surveyor(P, e, t, src) {
+        const Q = opp(P); if (P.bf.filter(x => /\bLand\b/.test(x.card.type)).length >= Q.bf.filter(x => /\bLand\b/.test(x.card.type)).length) return;
+        const pl = P.library.find(c => /\bBasic\b/.test(c.card.type) && hasType(c, 'Plains')); if (!pl) { P.library = shuffle(P.library); return; }
+        pull(P.library, pl); putOntoBattlefield(P, pl, true); P.library = shuffle(P.library);
+    },
+    fr_rats(P, e, t, src) { const n = foes(P).length; if (n > 0) applyEffect(P, { t: 'token', n, p: 1, q: 1, name: 'black Rat', kw: [] }, null, src); },
+    fr_brassBounty(P, e, t, src) { const n = P.bf.filter(x => /\bLand\b/.test(x.card.type)).length; for (let k = 0; k < n; k++) makeArtifactToken(P, 'treasure'); log(`${P.name} ${you(P) ? 'create' : 'creates'} ${n} Treasure token${n === 1 ? '' : 's'}.`); },
+    async fr_wheelPlus(P, e, t, src) { await frWheel(P, src, false); },
+    async fr_valakut(P, e, t, src) { await frWheel(P, src, true); },
+    fr_bore(P, e, t, src) {
+        if (!onBf(src.uid)) return;
+        const descended = P.gy.some(c => /Artifact|Creature|Enchantment|Land|Planeswalker|Battle/.test(c.card.type) && (c.discardTurn === G.turn || c.diedAtTurn === G.turn || c.gyTurn === G.turn));
+        if (!descended) return;
+        src.ctr.bore = (src.ctr.bore || 0) + 1; log(`${src.card.name} gets a bore counter (${src.ctr.bore}).`);
+        if (src.ctr.bore >= 3) { src.ctr.bore = 0; applyEffect(P, { t: 'transform' }, null, src); }
+    },
+    fr_brilliant(P, e, t, src) { const back = P.gy.filter(c => /Artifact|Enchantment/.test(c.card.type)); back.forEach(c => putOntoBattlefield(P, c, false)); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${back.length} artifact and enchantment card${back.length === 1 ? '' : 's'} to the battlefield.`); },
+    async fr_gearhulk(P, e, t, src) {
+        const keep = new Set();
+        for (const X of G.players.filter(pl => !pl.out)) {
+            for (const kind of ['Artifact', 'Creature', 'Enchantment', 'Planeswalker']) {
+                const pool = X.bf.filter(x => !/\bLand\b/.test(x.card.type) && (kind === 'Creature' ? isCreature(x) : new RegExp(`\\b${kind}\\b`).test(x.card.type)) && !keep.has(x));
+                if (!pool.length) continue;
+                const pick = await chooseFrom(X, pool.slice(), `${src.card.name}: choose ${kind === 'Artifact' || kind === 'Enchantment' ? 'an' : 'a'} ${kind.toLowerCase()} to keep`, false);
+                // chooseFrom gives up the least valuable one for the computer; here a computer keeps the MOST valuable
+                const best = (X.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => permValue(b) - permValue(a))[0] : pick;
+                if (best) keep.add(best);
+            }
+        }
+        const lose = allPerms().filter(x => !/\bLand\b/.test(x.card.type) && !keep.has(x));
+        lose.forEach(x => { if (onBf(x.uid)) { fire('sacrificed', { o: x }); dieOrLeave(x, 'gy'); } });
+        log(`${src.card.name}: ${lose.length} permanents are sacrificed.`);
+    },
+    async fr_chaotic(P, e, t, src) {
+        const kinds = ['Artifact', 'Creature', 'Enchantment', 'Planeswalker', 'Land'];
+        const exiled = [];
+        for (const kind of kinds) {
+            const pool = allPerms().filter(x => (kind === 'Creature' ? isCreature(x) : new RegExp(`\\b${kind}\\b`).test(x.card.type)) && !has(x, 'shroud') && !(has(x, 'hexproof') && x.owner !== P.i));
+            if (!pool.length) continue;
+            let x = null;
+            if (P.isAI || AUTOPLAY) { const theirs = pool.filter(y => y.owner !== P.i).sort((a, b) => permValue(b) - permValue(a))[0]; const mine = pool.filter(y => y.owner === P.i && permValue(y) <= 2 && !/\bLand\b/.test(y.card.type) && !y.isCommander).sort((a, b) => permValue(a) - permValue(b))[0]; x = theirs && kind !== 'Land' ? theirs : mine || null; }
+            else x = await pickCard(P, pool, `${src.card.name}: exile up to one ${kind.toLowerCase()}`, { optional: true });
+            if (x) exiled.push([x, kind]);
+        }
+        for (const [x, kind] of exiled) {
+            if (!onBf(x.uid)) continue;
+            const X = G.players[x.owner]; const types = x.card.type.split(' — ')[0].split(' ').filter(w => ['Artifact', 'Creature', 'Enchantment', 'Planeswalker', 'Land', 'Battle'].includes(w));
+            leaveBattlefield(x, 'exile'); log(`${x.card.name} is exiled.`);
+            let found = null; const revealed = [];
+            while (X.library.length) { const c = X.library.pop(); if (types.some(ty => new RegExp(`\\b${ty}\\b`).test(c.card.type))) { found = c; break; } revealed.push(c); }
+            X.library.unshift(...revealed); X.library = shuffle(X.library);
+            if (found) putOntoBattlefield(X, found, false); else log(`${X.name} ${you(X) ? 'have' : 'has'} no card to put onto the battlefield.`);
+        }
+    },
+    fr_tutorDiscardRandom(P, e, t, src) {
+        const c = P.library.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0];
+        if (c) { pull(P.library, c); P.hand.push(c); log(`${P.name} ${you(P) ? 'search' : 'searches'} for ${c.card.name}.`); }
+        P.library = shuffle(P.library);
+        if (P.hand.length) { const d = P.hand[Math.floor(Math.random() * P.hand.length)]; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} at random.`); }
+    },
+    fr_ghostArk(P, e, t, src) { const n = P.gy.filter(c => /\bArtifact\b/.test(c.card.type) && /\bCreature\b/.test(c.card.type)); n.forEach(c => { c.grantUnearthTurn = G.turn; }); if (n.length) log(`${n.length} artifact creature card${n.length === 1 ? '' : 's'} in your graveyard gain unearth {3} until end of turn.`); },
+    async fr_invokeJustice(P, e, t, src) {
+        const c = await frPick(P, P.gy.filter(x => !/Instant|Sorcery/.test(x.card.type)), `${src.card.name}: return a permanent card from your graveyard to the battlefield`);
+        if (c) { pull(P.gy, c); putOntoBattlefield(P, c, false); }
+        let X = P; if (!(P.isAI || AUTOPLAY)) X = await frPickPlayer(P, `${src.card.name}: distribute four +1/+1 counters among creatures and Vehicles of which player?`, G.players.filter(pl => !pl.out)) || P;
+        const pool = X.bf.filter(x => isCreature(x) || hasType(x, 'Vehicle')); if (!pool.length) return;
+        for (let k = 0; k < 4; k++) { const x = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (pow(b) + tou(b)) - (pow(a) + tou(a)))[0] : await pickCard(P, pool, `${src.card.name}: put a +1/+1 counter on (${k + 1} of 4)`, { required: true }); if (x) putCounters(x, 1, P); }
+    },
+    fr_ironSpider(P, e, t, src) { const hit = P.bf.filter(x => (isCreature(x) && /\bArtifact\b/.test(x.card.type)) || hasType(x, 'Vehicle')); hit.forEach(x => putCounters(x, 1, P)); log(`${hit.length} artifact creature${hit.length === 1 ? '' : 's'} and Vehicles get a +1/+1 counter.`); },
+    fr_ironDraw(P, e, t, src) {
+        let need = 2; const pool = P.bf.filter(x => /\bArtifact\b/.test(x.card.type) && x.counters > 0).sort((a, b) => a.counters - b.counters);
+        for (const x of pool) { while (need > 0 && x.counters > 0) { x.counters--; need--; } }
+        if (need === 0) { log(`${P.name} ${you(P) ? 'remove' : 'removes'} two +1/+1 counters from artifacts.`); drawCards(P, 1); }
+    },
+    async fr_returnArtifact(P, e, t, src) { const c = await frPick(P, P.gy.filter(x => /\bArtifact\b/.test(x.card.type)), `${src.card.name}: return an artifact card to the battlefield`); if (c) { pull(P.gy, c); putOntoBattlefield(P, c, false); } },
+    fr_rampagerCombat(P, e, t, src) { if (!onBf(src.uid)) return; const fs = foes(P); if (!fs.length) return; src.frForceAtk = G.turn; const F = fs[Math.floor(Math.random() * fs.length)]; src.atkTo = F.i; log(`${src.card.name} must attack ${F.name === 'You' ? 'you' : F.name} this combat if able.`); },
+    fr_rampagerDies(P, e, t, src) { const fs = foes(P); if (!fs.length) return; const F = fs[Math.floor(Math.random() * fs.length)]; damage(F, 4, src); },
+    fr_necron(P, e, t, src) {
+        const milled = doMill(P, 3) || []; const n = milled.filter(c => /\bCreature\b/.test(c.card.type)).length;
+        if (n) applyEffect(P, { t: 'token', n, p: 2, q: 2, name: 'black Necron Warrior', kw: [], artifact: true }, null, src);
+    },
+    fr_pupu(P, e, t, src) { if (!onBf(src.uid)) return; const n = P.bf.filter(x => hasType(x, 'Town')).length; src.baseSet = { turn: G.turn, p: n, q: Number(src.card.toughness) || 0 }; log(`${src.card.name}'s base power becomes ${n} until end of turn.`); },
+    async fr_reunion(P, e, t, src) {
+        let budget = 10; const pool = P.gy.filter(c => /\bCreature\b/.test(c.card.type) && (Number(c.card.power) || 0) <= budget); const got = [];
+        if (P.isAI || AUTOPLAY) { for (const c of pool.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))) { const pw = Number(c.card.power) || 0; if (pw <= budget) { got.push(c); budget -= pw; } } }
+        else { const left = pool.slice(); for (;;) { const ok = left.filter(c => (Number(c.card.power) || 0) <= budget); if (!ok.length) break; const c = await pickCard(P, ok, `${src.card.name}: return a creature card (total power left: ${budget})`, { optional: true }); if (!c) break; got.push(c); budget -= Number(c.card.power) || 0; left.splice(left.indexOf(c), 1); } }
+        got.forEach(c => { pull(P.gy, c); putOntoBattlefield(P, c, false); });
+        src.exileAfter = true;
+    },
+    fr_oracle(P, e, t, src) { const O = foes(P).sort((a, b) => b.hand.length - a.hand.length)[0]; if (O && O.hand.length > P.hand.length) drawCards(P, O.hand.length - P.hand.length); },
+    async fr_snort(P, e, t, src) {
+        const order = [P, ...foes(P)]; const did = [];
+        for (const X of order) {
+            const yes = (X.isAI || AUTOPLAY) ? X.hand.length <= 3 : await askYes(X, `${src.card.name}: discard your hand and draw five cards?`, { card: src.card, yes: 'Discard and draw five', no: 'Keep my hand' });
+            if (!yes) continue;
+            X.hand.splice(0).forEach(c => { X.gy.push(c); c.discardTurn = G.turn; }); drawCards(X, 5); did.push(X);
+        }
+        did.filter(X => X !== P).forEach(X => damage(X, 5, src));
+    },
+    fr_stormOfSouls(P, e, t, src) {
+        const back = P.gy.filter(c => /\bCreature\b/.test(c.card.type));
+        back.forEach(c => { putOntoBattlefield(P, c, false); c.baseForever = { p: 1, q: 1 }; c.addedTypes = [...(c.addedTypes || []), 'Spirit']; c.ctr.flying = (c.ctr.flying || 0) + 1; });
+        src.exileAfter = true; log(`${back.length} creature card${back.length === 1 ? '' : 's'} return as 1/1 Spirits with flying.`);
+    },
+    fr_bahamut(P, e, t, src) { const n = P.bf.filter(x => x !== src).reduce((a, x) => a + (x.card.cmc || 0), 0); foes(P).forEach(F => damage(F, n, src)); },
+    fr_knights(P, e, t, src) { P.bf.filter(x => isCreature(x) && x !== src).forEach(x => { x.tp += 2; x.tq += 2; x.ctr.indestructible = (x.ctr.indestructible || 0) + 1; }); log('Other creatures you control get +2/+2 until end of turn and an indestructible counter.'); },
+    async fr_kujata(P, e, t, src) {
+        if (!P.hand.length) { drawCards(P, 2); return; }
+        const d = await chooseDiscard(P, src.card.name); if (!d) { drawCards(P, 2); return; }
+        pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); drawCards(P, 2);
+        const n = d.card.cmc || 0; foes(P).forEach(F => damage(F, n, src));
+    },
+    fr_triadEmblem(P, e, t, src) {
+        let need = 30; const out = []; for (const c of P.gy.filter(frHist).sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))) { if (need <= 0) break; out.push(c); need -= c.card.cmc || 0; }
+        if (need > 0) return; out.forEach(c => { pull(P.gy, c); P.exile.push(c); });
+        (P.emblems = P.emblems || []).push('frNine'); log(`${P.name} ${you(P) ? 'get' : 'gets'} an emblem: creatures you control have base power and toughness 9/9.`);
+    },
+    fr_tripleTriad(P, e, t, src) {
+        const exiled = G.players.filter(X => !X.out && X.library.length).map(X => ({ X, c: X.library.pop() }));
+        exiled.forEach(({ X, c }) => { c.realOwner = X.i; });
+        const mine = exiled.find(r => r.X === P); const mv = mine ? (mine.c.card.cmc || 0) : -1;
+        exiled.forEach(({ X, c }) => { const ok = X === P || (c.card.cmc || 0) < mv; if (ok) { c.owner = P.i; c.playUntil = G.turn; c.freeCast = true; P.exile.push(c); } else X.exile.push(c); });
+        log(`Each player exiles the top card of their library: ${exiled.map(r => r.c.card.name).join(', ')}.`);
+    },
+    async fr_tuneUp(P, e, t, src) {
+        const c = await frPick(P, P.gy.filter(x => /\bArtifact\b/.test(x.card.type)), `${src.card.name}: return an artifact card to the battlefield`); if (!c) return;
+        pull(P.gy, c); putOntoBattlefield(P, c, false);
+        if (hasType(c, 'Vehicle') && onBf(c.uid)) { c.permAnimated = { p: Number(c.card.power) || 0, q: Number(c.card.toughness) || 0 }; log(`${c.card.name} becomes an artifact creature.`); }
+    },
+    // ---- Jadzi ----
+    async fr_archway(P, e, t, src) {
+        const l = await frBounceLand(P, src, () => true); if (l && l !== src && hasType(l, 'Desert')) await applyEffect(P, { t: 'surveil', n: 1 }, null, src);
+    },
+    async fr_karoo(P, e, t, src) {
+        const pool = P.bf.filter(x => hasType(x, e.land) && !x.tapped && x !== src);
+        const l = pool.length ? ((P.isAI || AUTOPLAY) ? pool[0] : await pickCard(P, pool, `${src.card.name}: return an untapped ${e.land} you control to hand (or sacrifice it)`, { optional: true })) : null;
+        if (l) { leaveBattlefield(l, 'hand'); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${l.card.name} to hand.`); }
+        else if (onBf(src.uid)) { log(`${src.card.name} is sacrificed.`); fire('sacrificed', { o: src }); dieOrLeave(src, 'gy'); }
+    },
+    async fr_doppelgang(P, e, t, src) {
+        const x = G.curX || 0; if (x <= 0) return;
+        const pool = allPerms().filter(y => !has(y, 'shroud') && !(has(y, 'hexproof') && y.owner !== P.i));
+        const chosen = await frPickMany(P, pool, `${src.card.name}: choose a permanent`, x, pool.filter(y => y.owner === P.i).sort((a, b) => permValue(b) - permValue(a)));
+        chosen.forEach(y => { for (let k = 0; k < x; k++) tokenCopyOf(P, y.card); });
+    },
+    fr_hydro(P, e, t, src) {
+        const it = t && t.item; if (!it || it.kind !== 'spell' || !G.stack.includes(it) || !onBf(src.uid)) return;
+        if (!it.target || it.target.p) { if (!it.target || !it.target.o) return; }
+        const te = firstTargetEffect(it.o); if (!te) return;
+        if (!validTargets(it.P, te, it.o).some(v => v.o === src)) { log(`${src.card.name} can't be the new target of ${it.name}.`); return; }
+        it.target = { o: src }; log(`${it.name} now targets ${src.card.name}.`);
+    },
+    fr_sphinx(P, e, t, src) {
+        const O = foes(P).sort((a, b) => b.library.length - a.library.length)[0]; if (!O) return;
+        for (let k = 0; k < 20; k++) {
+            const m = doMill(O, 2) || []; const nl = m.filter(c => !/\bLand\b/.test(c.card.type));
+            if (!(nl.length === 2 && (nl[0].card.colors || []).some(c => (nl[1].card.colors || []).includes(c)))) break;
+        }
+    },
+    async fr_wonderscape(P, e, t, src) {
+        const l = await frBounceLand(P, src, () => true); if (!l) return;
+        drawCards(P, 1);
+        const nonbasic = (l.card.type.split(' — ')[1] || '').split(' ').filter(Boolean).some(w => !frBasicTypes.includes(w));
+        if (!nonbasic && P.hand.length) { const d = await chooseDiscard(P, src.card.name); if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); } }
+    },
+    // ---- Torgaar ----
+    fr_torgaar(P, e, t, src) { const pl = t && t.p; if (!pl) return; pl.life = Math.floor((pl.startLife || 20) / 2); log(`${pl.name === 'You' ? 'Your' : `${pl.name}'s`} life total becomes ${pl.life}.`); },
+    async fr_vendetta(P, e, t, src) {
+        const O = await frOpp(P, `${src.card.name}: target opponent`); if (!O) return;
+        const known = [...new Set([...O.bf, ...O.gy, ...O.exile].map(x => x.card.name))];
+        let name;
+        if (P.isAI || AUTOPLAY) { const cnt = {}; [...O.hand, ...O.library].forEach(c => { cnt[c.card.name] = (cnt[c.card.name] || 0) + 1; }); name = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0]; }
+        else name = known.length ? await pickWord(P, `${src.card.name}: choose a card name`, known) : null;
+        if (!name) return;
+        let n = 0; for (const zone of [O.gy, O.hand, O.library]) { for (const c of zone.slice()) { if (n >= 4) break; if (c.card.name === name) { pull(zone, c); O.exile.push(c); n++; } } }
+        O.library = shuffle(O.library); log(`${P.name} ${you(P) ? 'name' : 'names'} ${name}: ${n} card${n === 1 ? '' : 's'} exiled.`);
+    },
+    async fr_anotherChance(P, e, t, src) {
+        if (P.library.length > 2 && ((P.isAI || AUTOPLAY) ? P.gy.filter(c => /\bCreature\b/.test(c.card.type)).length < 2 : await askYes(P, `${src.card.name}: mill two cards?`, { card: src.card }))) doMill(P, 2);
+        const got = await frPickMany(P, P.gy.filter(c => /\bCreature\b/.test(c.card.type)), `${src.card.name}: return a creature card to your hand`, 2, P.gy.filter(c => /\bCreature\b/.test(c.card.type)).sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)));
+        got.forEach(c => { pull(P.gy, c); P.hand.push(c); });
+    },
+    fr_corpseAugur(P, e, t, src) { const pl = t && t.p; if (!pl) return; const n = pl.gy.filter(c => /\bCreature\b/.test(c.card.type)).length; if (n) { drawCards(P, n); P.life -= n; log(`${P.name} ${you(P) ? 'lose' : 'loses'} ${n} life.`); } },
+    async fr_court(P, e, t, src) {
+        const monarch = G.monarch === P.i; const lose = monarch ? 6 : 3, disc = monarch ? 2 : 1;
+        for (const F of foes(P)) {
+            const can = F.hand.length >= disc;
+            const pay = can && ((F.isAI || AUTOPLAY) ? F.hand.length > 3 || F.life <= lose + 3 : await askYes(F, `${src.card.name}: discard ${disc} card${disc === 1 ? '' : 's'} instead of losing ${lose} life?`, { card: src.card, yes: `Discard ${disc}`, no: `Lose ${lose} life` }));
+            if (pay) { for (let k = 0; k < disc; k++) { const d = await chooseDiscard(F, src.card.name); if (d) { pull(F.hand, d); F.gy.push(d); d.discardTurn = G.turn; noteDiscard(F, 1); } } }
+            else { F.life -= lose; log(`${F.name} ${you(F) ? 'lose' : 'loses'} ${lose} life.`); }
+        }
+    },
+    async fr_disciple(P, e, t, src) {
+        const both = P.life === 13 && ((P.isAI || AUTOPLAY) || await askYes(P, `${src.card.name}: choose both modes?`, { card: src.card, yes: 'Both', no: 'Just one' }));
+        let m1 = both, m2 = both;
+        if (!both) { if (P.isAI || AUTOPLAY) { m1 = P.life > 4; m2 = !m1; } else { m1 = await askYes(P, `${src.card.name}: draw a card and lose 1 life (Yes) or exile an opponent's graveyard and make them lose 1 life (No)?`, { card: src.card, yes: 'Draw a card', no: 'Exile graveyard' }); m2 = !m1; } }
+        if (m1) { drawCards(P, 1); P.life -= 1; }
+        if (m2) { const O = foes(P).sort((a, b) => b.gy.length - a.gy.length)[0]; if (O) { O.gy.splice(0).forEach(c => O.exile.push(c)); O.life -= 1; log(`${O.name === 'You' ? 'Your' : `${O.name}'s`} graveyard is exiled and ${O.name === 'You' ? 'you lose' : `${O.name} loses`} 1 life.`); } }
+    },
+    async fr_finale(P, e, t, src) {
+        const x = G.curX || 0;
+        const pool = allPerms().filter(c => isCreature(c) && tou(c) <= x && !has(c, 'shroud') && !(has(c, 'hexproof') && c.owner !== P.i));
+        const ai = pool.filter(c => c.owner !== P.i).sort((a, b) => creatureValue(b) - creatureValue(a));
+        const chosen = await frPickMany(P, pool, `${src.card.name}: destroy a creature with toughness ${x} or less`, 3, ai);
+        chosen.forEach(c => { if (onBf(c.uid)) destroy(c); });
+        if (x >= 10) { const back = P.gy.filter(c => /\bCreature\b/.test(c.card.type)); back.forEach(c => putOntoBattlefield(P, c, false)); }
+    },
+    async fr_footChopper(P, e, t, src) {
+        const host = onBf(src.attachedTo); if (!host) return;
+        const yes = (P.isAI || AUTOPLAY) ? pow(host) >= 4 : await askYes(P, `${src.card.name}: sacrifice ${host.card.name} to draw ${pow(host)} cards?`, { card: src.card });
+        if (!yes) return; const n = pow(host); fire('sacrificed', { o: host }); dieOrLeave(host, 'gy'); drawCards(P, n);
+    },
+    async fr_intimidation(P, e, t, src) {
+        const O = await frOpp(P, `${src.card.name}: target opponent`); if (!O) return;
+        const pool = O.hand.filter(c => /Artifact|Creature/.test(c.card.type)); log(`${O.name} reveals ${O.hand.length ? O.hand.map(c => c.card.name).join(', ') : 'no cards'}.`);
+        const c = await frPick(P, pool, `${src.card.name}: choose an artifact or creature card to exile`); if (c) { pull(O.hand, c); O.exile.push(c); log(`${c.card.name} is exiled.`); }
+    },
+    fr_noMercy(P, e, t, src) { const raw = G.ctxRaw || {}; const c = raw.src; if (c && onBf(c.uid)) destroy(c); },
+    async fr_rabid(P, e, t, src) {
+        const pool = P.bf.filter(isCreature);
+        const chosen = await frPickMany(P, pool, `${src.card.name}: choose a creature`, pool.length, pool);
+        chosen.forEach(c => { c.tp += 1; c.frDieDraw = G.turn; });
+        log(`${chosen.length} creature${chosen.length === 1 ? ' gets' : 's get'} +1/+0 and "when this creature dies, draw a card" until end of turn.`);
+    },
+    async fr_pest(P, e, t, src) {
+        for (const F of foes(P)) { if (!F.hand.length) continue; const d = await chooseDiscard(F, src.card.name); if (d) { pull(F.hand, d); F.gy.push(d); d.discardTurn = G.turn; noteDiscard(F, 1); } }
+        await applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'black Pest', kw: [], text: 'Whenever ~ attacks, you gain 1 life.' }, null, src);
+    },
+    fr_tallyman(P, e, t, src) {
+        const n = G.frDied && G.frDied.turn === G.turn ? G.frDied.n : 0; if (!n) return;
+        if (n >= 7) { drawCards(P, 7); P.life -= 7; } else { drawCards(P, 1); P.life -= 1; }
+    },
+    async fr_elevator(P, e, t, src) {
+        const n = (src.ctr && src.ctr.charge) || 0; if (n <= 0) return;
+        const cols = ['W', 'U', 'B', 'R', 'G']; let c = cols[Math.floor(Math.random() * 0)] || 'B';
+        if (!(P.isAI || AUTOPLAY)) { const w = await pickWord(P, `${src.card.name}: choose a color`, cols.map(k => COLOR_NAMES[k])); c = cols.find(k => COLOR_NAMES[k] === w) || c; }
+        else if (typeof bestPoolColor === 'function') c = bestPoolColor(P) || c;
+        P.pool = (P.pool || []).concat(Array(n).fill(c)); log(`${P.name} add${you(P) ? '' : 's'} ${('{' + c + '}').repeat(Math.min(n, 12))}.`);
+    },
+    async fr_craft(P, e, t, src) {
+        if (!onBf(src.uid)) return;
+        const pool = [...P.bf.filter(x => isCreature(x) && x !== src), ...P.gy.filter(c => /\bCreature\b/.test(c.card.type))];
+        const x = await frPick(P, pool, `${src.card.name}: exile a creature you control or a creature card from your graveyard (craft)`, { rank: (a, b) => creatureValue(a) - creatureValue(b) }); if (!x) return;
+        if (onBf(x.uid)) leaveBattlefield(x, 'exile'); else { pull(P.gy, x); P.exile.push(x); }
+        log(`${x.card.name} is exiled (craft).`);
+        await applyEffect(P, { t: 'exileReturnTransformed' }, null, src);
+    },
+    async fr_transpose(P, e, t, src) {
+        drawCards(P, 1); if (P.hand.length) { const d = await chooseDiscard(P, src.card.name); if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); } }
+        P.life -= 1; log(`${P.name} ${you(P) ? 'lose' : 'loses'} 1 life.`);
+        if (src.castFromHand === G.turn) await applyEffect(P, { t: 'token', n: 1, p: 0, q: 1, name: 'black Wizard', kw: [], text: 'Whenever you cast a noncreature spell, ~ deals 1 damage to each opponent.' }, null, src);
+    },
+    fr_curseTick(P, e, t, src) { const pl = G.players[src.hostPlayer]; if (!pl || pl.out) return; pl.life -= 1; P.life += 1; log(`${pl.name} ${you(pl) ? 'lose' : 'loses'} 1 life and ${P.name} ${you(P) ? 'gain' : 'gains'} 1 life (${src.card.name}).`); },
+    fr_hermit(P, e, t, src) { const n = devotion(P, ['B']); if (n > 0) applyEffect(P, { t: 'token', n, p: 1, q: 1, name: 'green Squirrel', kw: [] }, null, src); },
+    async fr_necromancer(P, e, t, src) {
+        if (P.gy.length < 2 || !P.gy.some(c => /\bCreature\b/.test(c.card.type))) return;
+        const yes = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: exile two cards from your graveyard to return a creature card?`, { card: src.card });
+        if (!yes) return;
+        const target = await frPick(P, P.gy.filter(c => /\bCreature\b/.test(c.card.type)), `${src.card.name}: return which creature card?`); if (!target) return;
+        const fodder = P.gy.filter(c => c !== target).sort((a, b) => (a.card.cmc || 0) - (b.card.cmc || 0));
+        const two = (P.isAI || AUTOPLAY) ? fodder.slice(0, 2) : await frPickMany(P, fodder, `${src.card.name}: exile a card from your graveyard`, 2, fodder);
+        if (two.length < 2) return; two.forEach(c => { pull(P.gy, c); P.exile.push(c); });
+        pull(P.gy, target); putOntoBattlefield(P, target, false);
+    },
+    async fr_zuko(P, e, t, src) {
+        const c = await frPick(P, P.gy.filter(x => /\bCreature\b/.test(x.card.type)), `${src.card.name}: return a creature card from your graveyard`); if (!c) return;
+        pull(P.gy, c); if (src.kicked) putOntoBattlefield(P, c, true); else { P.hand.push(c); log(`${c.card.name} returns to hand.`); }
+    }
+});
+async function frBounceLand(P, src, filt) {
+    const ls = P.bf.filter(x => /\bLand\b/.test(x.card.type) && filt(x)).sort((a, b) => (b.tapped - a.tapped) || (isBasic(b.card) - isBasic(a.card)) || ((a === src) - (b === src)));
+    if (!ls.length) return null;
+    const l = (P.isAI || AUTOPLAY || ls.length === 1) ? ls[0] : await pickCard(P, ls, `${src.card.name}: choose a land to return to your hand`, { required: true });
+    if (l) { leaveBattlefield(l, 'hand'); log(`${P.name} ${you(P) ? 'return' : 'returns'} ${l.card.name} to hand.`); }
+    return l || null;
+}
+
+Object.assign(CMD, {
+    fr_sinkStupor(P, e, t, src) {
+        if (!t) return;
+        if (t.item) { const it = t.item; if (!G.stack.includes(it)) return; pull(G.stack, it); const X = G.players[it.o.owner]; resetObj(it.o); X.hand.push(it.o); log(`${it.name} is returned to its owner's hand.`); return; }
+        const x = t.o; if (x && onBf(x.uid)) { leaveBattlefield(x, 'hand'); log(`${x.card.name} is returned to its owner's hand.`); }
+    },
+    async fr_stepBetween(P, e, t, src) {
+        for (const X of [P, ...foes(P)]) {
+            const yes = (X.isAI || AUTOPLAY) ? X.hand.length < 4 : await askYes(X, `${src.card.name}: shuffle your hand and graveyard into your library and draw seven cards?`, { card: src.card, yes: 'Shuffle and draw seven', no: 'Keep them' });
+            if (!yes) continue;
+            X.library.push(...X.hand.splice(0), ...X.gy.splice(0)); X.library = shuffle(X.library); drawCards(X, 7);
+        }
+        src.exileAfter = true;
+    }
+});

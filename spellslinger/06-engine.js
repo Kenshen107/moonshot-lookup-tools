@@ -160,6 +160,7 @@ function basePT(o, which) {
     if (G && G.marchOn && R.kind !== 'creature' && /\bArtifact\b/.test(o.card.type) && !o.permAnimated) return o.card.cmc || 0; // March of the Machines
     if (o.permAnimated && o.permAnimated.life && G) return Math.max(0, G.players[o.owner].life); // Ajani Goldmane's Avatar
     if (o.permAnimated && o.permAnimated.p !== undefined) return o.permAnimated[which];
+    if (G && isCreature(o) && ((G.players[o.owner].emblems) || []).includes('frNine')) return 9; // The Capitoline Triad's emblem
     if (G && isCreature(o)) { const lb = allPerms().find(a => a.owner === o.owner && a !== o && Rx(a).lordBase && !lostAbilities(a)); if (lb) return Rx(lb).lordBase[which]; } // Graaz: other creatures you control have base power and toughness 5/3
     if (R.duplicant && o.imprinted && /Creature/.test(o.imprinted.card.type)) return Number(which === 'p' ? o.imprinted.card.power : o.imprinted.card.toughness) || 0;
     if (G) { const st = allPerms().find(a => a.attachedTo === o.uid && Rx(a).buffBase); if (st) return Rx(st).buffBase[which]; }
@@ -814,7 +815,7 @@ function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
     chosen.forEach(s => { if (!s.o.pool) s.o._payColor = s.payColor; });
     return chosen.map(s => s.o);
 }
-function extraCost(P, o) { return (Rx(o).taxOffTurn && G.active !== P.i ? Rx(o).taxOffTurn : 0) + (o.isCommander && P.command.includes(o) ? (P.commanderUid2 ? (P.cmdCastN[o.cmdSlot || 0] || 0) : P.tax) * 2 : 0) - (Rx(o).harmonize && P.gy.includes(o) ? harmonizeCut(P) : 0); } // Harmonize: tapping a creature pays generic mana equal to its power
+function extraCost(P, o) { return (Rx(o).taxOffTurn && G.active !== P.i ? Rx(o).taxOffTurn : 0) - (Rx(o).costLessHistoricGy ? P.gy.filter(c => /Artifact|Legendary|Saga/.test(c.card.type) && c !== o).length : 0) - (Rx(o).costLessLowLife && G.players.some(X => !X.out && X.life <= Math.floor((X.startLife || 20) / 2)) ? Rx(o).costLessLowLife : 0) + (o.isCommander && P.command.includes(o) ? (P.commanderUid2 ? (P.cmdCastN[o.cmdSlot || 0] || 0) : P.tax) * 2 : 0) - (Rx(o).harmonize && P.gy.includes(o) ? harmonizeCut(P) : 0); } // Harmonize: tapping a creature pays generic mana equal to its power
 // X spells need X of at least 1; xVal is the X chosen for this cast
 // Flashback (702.34): from the graveyard, for the flashback cost
 // Gitrog deck: other ways to cast (o.castAs)
@@ -825,7 +826,8 @@ function pitTop(P) { const top = P.library[P.library.length - 1]; return top && 
 function castAsOk(P, o, mode) {
     const R = Rx(o);
     if (mode === 'disturb') return !!R.disturb && P.gy.includes(o) && !!o.front && !!o.front.back;
-    if (mode === 'miracle') return !!R.miracle && P.hand.includes(o) && o.miracleTurn === G.turn;
+    if (mode === 'miracle') return !!(R.miracle || (typeof frMiracle === 'function' && frMiracle(o))) && P.hand.includes(o) && o.miracleTurn === G.turn;
+    if (mode === 'sneak') return !!R.sneak && P.hand.includes(o) && G.active === P.i && G.phase === 'afterBlocks' && typeof frSneakAttackers === 'function' && frSneakAttackers(P).length > 0; // Splinter's Technique
     if (mode === 'retrace') return !!R.retrace && P.gy.includes(o) && P.hand.some(x => Rx(x).kind === 'land');
     if (mode === 'beam') return typeof beamOk === 'function' && beamOk(P, o);
     if (mode === 'morph') return !!R.morph && P.hand.includes(o) && R.kind === 'creature' && !o.fdCard;
@@ -855,7 +857,8 @@ function costOf(P, o) {
         if (o.castAs === 'disturb') return { ...R.disturb };
         if (o.castAs === 'retrace') return { ...R.cost };
         if (o.castAs === 'beam') return beamCost(P, o);
-        if (o.castAs === 'miracle') return { ...R.miracle };
+        if (o.castAs === 'miracle') return { ...(R.miracle || (typeof frMiracle === 'function' && frMiracle(o))) };
+        if (o.castAs === 'sneak') return { ...R.sneak };
         if (o.castAs === 'energy') return parseCost('');
         if (o.castAs === 'escape') return R.escape ? { ...R.escape.cost } : { ...P.lockerCost };
     }
@@ -1056,6 +1059,7 @@ function totalCost(P, o) {
     if (Rx(o).freeOnTurn && G.active === P.i) return { ...parseCost('') }; // Discontinuity: costs {2}{U}{U} less during your turn
     const c = { ...costOf(P, o) };
     if (Rx(o).spreeCosts && o.mode !== undefined && o.mode !== null) [].concat(o.mode).forEach(i => { const sc = Rx(o).spreeCosts[i]; if (sc) Object.keys(sc).forEach(k => { if (typeof c[k] === 'number') c[k] += sc[k]; }); }); // Spree: each chosen mode adds its cost
+    if (o.sacN && Rx(o).sacReduce) c.generic = Math.max(0, (c.generic || 0) - Rx(o).sacReduce * o.sacN); // Torgaar
     if (o.exileBlueN && Rx(o).exileBlueReduce) c.generic = Math.max(0, (c.generic || 0) - Rx(o).exileBlueReduce * o.exileBlueN); // March of Swirling Mist
     if (Rx(o).escalate && Array.isArray(o.mode) && o.mode.length > 1) Object.keys(Rx(o).escalate).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).escalate[k] * (o.mode.length - 1); }); // Collective Resistance
     if (o.kicked && Rx(o).kicker) Object.keys(Rx(o).kicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).kicker[k]; });
@@ -1213,6 +1217,7 @@ function canCastNow(P, o) {
     const fromTop = (r.kind === 'creature' && P.library[P.library.length - 1] === o && topCastOk(P, o)) || pitTop(P) === o;
     if (o.castAs && !castAsOk(P, o, o.castAs)) return false;
     if (o.castAs === 'madness') return true;
+    if (o.castAs === 'sneak') return G.active === P.i && G.phase === 'afterBlocks' && !G.stack.length && G.priority === null;
     if (o.plotTurn && o.plotTurn >= G.turn && P.exile.includes(o)) return false; // plot: a later turn
     const otherZone = (['blitz', 'disturb', 'retrace', 'beam'].includes(o.castAs) && P.gy.includes(o)) || o.castAs === 'escape' || (P.exile.includes(o) && o.warpedTurn && o.warpedTurn < G.turn);
     if (!fromTop && !emry && !otherZone && !P.hand.includes(o) && !P.command.includes(o) && !(P.gy.includes(o) && (r.flashback || mayhemOk(P, o) || gyCastOk(P, o) || (r.gyCast && P.life > r.gyCast.life && P.hand.length >= r.gyCast.discard))) && !(P.exile.includes(o) && (o.playUntil >= G.turn || (o.advReady && o.card === o.front) || (o.foretoldTurn && o.foretoldTurn < G.turn && r.foretell)))) return false;
@@ -1266,7 +1271,7 @@ function validTargets(P, e, src) {
     if (e.target === 'any' || e.target === 'creature') out.push(...creatures.filter(o => (!e.mine || o.owner === P.i) && !(e.theirs && o.owner === P.i) && !(e.notSelf && o === src) && (!e.only || permMatches(o, e.only, P)) && (!e.powLtSrc || pow(o) < pow(src)) && (!e.withCounters || o.counters > 0) && (!e.unenchanted || !allPerms().some(a => a.attachedTo === o.uid && /\bAura\b/.test(a.card.type)))).map(o => ({ o })));
     if (e.target === 'any') out.push(...allPerms().filter(o => isPlaneswalker(o) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
     if (e.target === 'perm') out.push(...allPerms().filter(o => !(e.notSelf && o === src) && (!e.mine || o.owner === P.i) && permMatches(o, e.filter, P) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !protFrom(o, src)).map(o => ({ o })));
-    if (e.target === 'spellOrPerm') { out.push(...allPerms().filter(o => !/\bLand\b/.test(o.card.type) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i)).map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); } // Commit
+    if (e.target === 'spellOrPerm') { out.push(...allPerms().filter(o => !/\bLand\b/.test(o.card.type) && !has(o, 'shroud') && !(has(o, 'hexproof') && o.owner !== P.i) && !(e.theirs && o.owner === P.i)).map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell' && !(e.theirs && it.P === P)).map(item => ({ item }))); } // Commit, Sink into Stupor
     if (e.target === 'myCreatureAbility') out.push(...G.stack.filter(it => it.kind === 'trigger' && !it.copy && it.P === P && it.o && onBf(it.o.uid) && isCreature(it.o)).map(item => ({ item }))); // Echo, Perceptive Prodigy
     if (e.target === 'spellOrCreature') { out.push(...creatures.map(o => ({ o }))); out.push(...G.stack.filter(it => it.kind === 'spell').map(item => ({ item }))); }
     if (e.target === 'any' || e.target === 'player') out.push(...G.players.filter(p => !p.out && !(p.protAll && G.turn < p.protAll) && !(e.oppOnly && p === P) && !(p !== P && p.bf.some(a => Rx(a).playerHexproof && !lostAbilities(a))) && !(p !== P && p.hexTurn === G.turn)).map(p => ({ p })));
@@ -1466,6 +1471,10 @@ async function castSpell(P, o, presetTarget) {
     if (castAs === 'disturb') { o.card = o.front.back; o.disturbed = true; log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name} with disturb.`); }
     if (castAs === 'retrace') { const lands = P.hand.filter(x => Rx(x).kind === 'land'); const d = P.isAI ? lands.sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0] : await pickCard(P, lands, `${o.card.name}: discard a land card (retrace)`, { required: true }); if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} (retrace).`); } }
     if (castAs === 'beam') await beamReturn(P, o);
+    if (castAs === 'sneak') await frSneakReturn(P, o);
+    // Torgaar: sacrifice the creatures that paid for the discount; March of Swirling Mist: exile the blue cards that paid for it
+    if (o.sacList && o.sacList.length) { o.sacList.forEach(x => { if (onBf(x.uid)) { fire('sacrificed', { o: x }); dieOrLeave(x, 'gy'); } }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${o.sacList.map(x => x.card.name).join(', ')} (additional cost).`); o.sacList = []; }
+    if (o.exileBlueList && o.exileBlueList.length) { o.exileBlueList.forEach(x => { if (P.hand.includes(x)) { pull(P.hand, x); P.exile.push(x); } }); log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${o.exileBlueList.map(x => x.card.name).join(', ')} from ${you(P) ? 'your' : 'their'} hand (additional cost).`); o.exileBlueList = []; }
     if (castAs === 'morph') { o.fdCard = o.card; o.card = faceDownCard(!!Rx(o).disguise); log(`${P.name} ${you(P) ? 'cast' : 'casts'} a creature face down.`); }
     if (o._tgt && o._tgt.o) fire('targeted', { o: o._tgt.o, by: P.i });
     if (castAs === 'blitz' && Rx(o).blitz.life) { P.life -= Rx(o).blitz.life; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${Rx(o).blitz.life} life (blitz).`); }
@@ -4490,6 +4499,9 @@ async function humanCast(uid) {
     if (Rx(o).multikicker) { const mk = maxKick(P, o); if (mk > 0) { const v = await askNumber(P, `How many times do you pay the multikicker cost for ${o.card.name}?`, 0, mk, 0, { card: o.card, ok: 'Continue' }); o.kickN = v > 0 ? Math.min(v, mk) : 0; o.kicked = o.kickN > 0; } }
     o.repN = 0;
     if (repCostOf(P, o)) { const mr = maxRep(P, o); if (mr > 0) { const v = await askNumber(P, `How many times do you pay the replicate cost ${costSymbols(repCostOf(P, o))} for ${o.card.name}? (One copy each.)`, 0, mr, 0, { card: o.card, ok: 'Continue' }); o.repN = v > 0 ? Math.min(v, mr) : 0; } }
+    o.sacN = 0; o.sacList = []; o.exileBlueN = 0; o.exileBlueList = [];
+    if (Rx(o).sacReduce) { const fod = P.bf.filter(isCreature); if (fod.length) { const n = await askNumber(P, `Sacrifice how many creatures to reduce the cost of ${o.card.name} by {${Rx(o).sacReduce}} each?`, 0, fod.length, 0, { card: o.card, ok: 'Continue' }); if (n > 0) { const left = fod.slice(); for (let k = 0; k < n; k++) { const x = await pickCard(P, left, `${o.card.name}: sacrifice a creature (${k + 1} of ${n})`, { required: true }); if (!x) break; left.splice(left.indexOf(x), 1); o.sacList.push(x); } o.sacN = o.sacList.length; } } }
+    if (Rx(o).exileBlueReduce) { const blue = P.hand.filter(x => x !== o && (x.card.colors || []).includes('U')); if (blue.length) { const n = await askNumber(P, `Exile how many blue cards from your hand to reduce the cost of ${o.card.name}?`, 0, blue.length, 0, { card: o.card, ok: 'Continue' }); if (n > 0) { const left = blue.slice(); for (let k = 0; k < n; k++) { const x = await pickCard(P, left, `${o.card.name}: exile a blue card (${k + 1} of ${n})`, { required: true }); if (!x) break; left.splice(left.indexOf(x), 1); o.exileBlueList.push(x); } o.exileBlueN = o.exileBlueList.length; } } }
     o.giftPromised = false;
     if (Rx(o).gift && oppsOf(P).length) o.giftPromised = await askYes(P, `Promise a gift with ${o.card.name}? (An opponent draws a card; you get the bonus effect.)`, { card: o.card, yes: 'Promise the gift', no: 'No gift' });
     o.buyback = false;

@@ -30,7 +30,7 @@ Object.assign(CMD, {
         if (!src || !onBf(src.uid) || !Rx(src).preparedSpell || src.prepared) return;
         src.prepared = true; log(`${src.card.name} becomes prepared.`);
     },
-    levelUp(P, e, t, src) { src.level = e.lvl; log(`${src.card.name} becomes level ${e.lvl}.`); },
+    levelUp(P, e, t, src) { src.level = e.lvl; log(`${src.card.name} becomes level ${e.lvl}.`); fire('levelUp', { o: src, lvl: e.lvl }); },
     // Advanced Reconstruction level 1
     async advRecon(P, e, t, src) {
         doMill(P, 1);
