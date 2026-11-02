@@ -353,7 +353,7 @@ function hasType(o, type) {
 }
 const isEquipped = o => allPerms().some(a => a.attachedTo === o.uid && Rx(a).isEquipment);
 // "Enchanted creature ... loses all other abilities" (Stasis Field)
-function lostAbilities(o) { if (!G || !o || o.uid === undefined) return false; const ps = attachmentsOf(o.uid); for (let i = 0; i < ps.length; i++) if (Rx(ps[i]).buffLose) return true; return false; }
+function lostAbilities(o) { if (!G || !o || o.uid === undefined) return false; if (o.noAbilBy && allPerms().some(a => a.uid === o.noAbilBy)) return true; const ps = attachmentsOf(o.uid); for (let i = 0; i < ps.length; i++) if (Rx(ps[i]).buffLose) return true; return false; }
 function staticMatch(o, what) {
     switch (what) {
         case 'token': return !!o.token;
@@ -391,7 +391,7 @@ function staticBuffs(o) {
             if (s.colorChosen && !(a.chosenColor && (o.card.colors || []).includes(a.chosenColor))) continue;
             if (s.lvl && (a.level || 1) < s.lvl) continue;
             if (s.cond && !condOk(s.cond, G.players[a.owner], a)) continue;
-            { const mult = s.perSpeed ? (G.players[a.owner].speed || 0) : s.perCmdCast ? commanderCasts(G.players[a.owner]) : s.perCtr ? ((a.ctr && a.ctr[s.perCtr]) || 0) : 1; b.p += s.p * mult; b.q += s.q * mult; } b.kw.push(...s.kw);
+            { const mult = s.perSpeed ? (G.players[a.owner].speed || 0) : s.perCmdCast ? commanderCasts(G.players[a.owner]) : s.perCtr ? ((a.ctr && a.ctr[s.perCtr]) || 0) : s.perAttached ? allPerms().filter(x => x.attachedTo === a.uid && /\b(?:Aura|Equipment)\b/.test(x.card.type)).length : 1; b.p += s.p * mult; b.q += s.q * mult; } b.kw.push(...s.kw);
         }
     }
     } finally { staticDepth--; }
@@ -590,7 +590,7 @@ function fire(ev, ctx = {}) {
     if (ev === 'landfall' && ctx.o) { fire('selfEnters', { o: ctx.o }); if (Rx(ctx.o).etb.length) (G.trigQ = G.trigQ || []).push({ P: G.players[ctx.o.owner], o: ctx.o, effects: Rx(ctx.o).etb }); }
     if (ev === 'attacks') G.attackedTurn = G.turn;
     const perms = (ev === 'dies' || ev === 'toGy' || ev === 'leaves') && ctx.o ? [ctx.o, ...allPerms().filter(x => x !== ctx.o)] : allPerms();
-    if (ev === 'draw' && ctx.P) { if (ctx.P.drawTurn !== G.turn) { ctx.P.drawTurn = G.turn; ctx.P.drawN = 0; } ctx.n = ++ctx.P.drawN; if (ctx.n === 1 && ctx.o && Rx(ctx.o).miracle && G.phase !== 'setup') { ctx.o.miracleTurn = G.turn; (G.miracleQ = G.miracleQ || []).push({ P: ctx.P, o: ctx.o }); } }
+    if (ev === 'draw' && ctx.P) { if (ctx.P.drawTurn !== G.turn) { ctx.P.drawTurn = G.turn; ctx.P.drawN = 0; } ctx.n = ++ctx.P.drawN; if (ctx.n === 1 && ctx.o && (Rx(ctx.o).miracle || (typeof frMiracle === 'function' && frMiracle(ctx.o))) && G.phase !== 'setup') { ctx.o.miracleTurn = G.turn; (G.miracleQ = G.miracleQ || []).push({ P: ctx.P, o: ctx.o }); } }
     for (const o of perms) {
         if (lostAbilities(o)) continue;
         // Built-in keyword triggers
@@ -598,6 +598,7 @@ function fire(ev, ctx = {}) {
         for (const tr of [...(Rx(o).trig || []), ...grantsOn(o).flatMap(g => g.trig)]) {
             if (!trigMatches(tr, ev, o, ctx)) continue;
             if (tr.lvl && (o.level || 1) < tr.lvl) continue; // Class levels
+            if ((ev === 'enters' || ev === 'landfall' || ev === 'selfEnters') && typeof frNoEnterTrig === 'function' && frNoEnterTrig(o)) continue; // Elesh Norn, Mother of Machines
             if (tr.cond && !condOk(tr.cond, G.players[o.owner], o)) continue; // intervening "if" (603.4)
             if (tr.once) { o.onceTurn = o.onceTurn || {}; if (o.onceTurn[tr.once] === G.turn) continue; o.onceTurn[tr.once] = G.turn; }
             if ((G.trigCount = (G.trigCount || 0) + 1) > 250) { if (G.trigCount === 251) log('Too many triggers this turn - the rest are skipped.'); continue; }
@@ -618,7 +619,8 @@ async function flushTriggers() {
         if (G && G.gyLeaveP && G.gyLeaveP.size) { const ps = [...G.gyLeaveP]; G.gyLeaveP.clear(); ps.forEach(i => { const X = G.players[i]; X.gyLeftLast = (X.gyLeftNow || []).splice(0); fire('gyLeave', { P: X }); }); }
         if (!(G && G.trigQ && G.trigQ.length && !G.over)) break;
         const t = G.trigQ.shift();
-        if (t.o && t.o.card && t.effects === Rx(t.o).etb && !t.doubled) { const k = throneBoost(t.o) + (typeof yarokBoost === 'function' ? yarokBoost(t.o) : 0); for (let i = 0; i < k; i++) G.trigQ.push({ ...t, doubled: true }); } // Roaming Throne
+        if (t.o && t.o.card && t.effects === Rx(t.o).etb && typeof frNoEnterTrig === 'function' && frNoEnterTrig(t.o)) continue; // Elesh Norn, Mother of Machines
+        if (t.o && t.o.card && t.effects === Rx(t.o).etb && !t.doubled) { const k = throneBoost(t.o) + (typeof yarokBoost === 'function' ? yarokBoost(t.o) : 0) + (typeof frPanBoost === 'function' ? frPanBoost(t.o) : 0); for (let i = 0; i < k; i++) G.trigQ.push({ ...t, doubled: true }); } // Roaming Throne
         await putTriggers(t.P, t.o, t.effects, t.ctx, t.ctxCount, t.raw);
     }
 }
@@ -669,6 +671,7 @@ function actPlan(P, o, a, xExtra = 0) {
     if (a.cost.sacOthers && P.bf.filter(x => (isCreature(x) || (a.cost.sacAny && /Artifact/.test(x.card.type))) && x !== o).length < a.cost.sacOthers) return null;
     if (a.cost.mill && P.library.length < a.cost.mill) return null;
     if (a.cost.removeNamed && !((o.ctr[a.cost.removeNamed] || 0) > 0)) return null;
+    if (a.cost.removeNamedN && (o.ctr[a.cost.removeNamedN.kind] || 0) < a.cost.removeNamedN.n) return null; // Weather Maker
     if (a.cost.removeAny && !P.bf.some(x => x.counters > 0 || Object.values(x.ctr || {}).some(v => v > 0))) return null;
     if (a.cost.removeCounter && o.counters < a.cost.removeCounter) return null;
     if (a.cost.energy && (P.energy || 0) < a.cost.energy) return null;
@@ -707,7 +710,7 @@ function grantsOn(o) { return attachmentsOf(o.uid).filter(a => Rx(a).grant).map(
 function actsOf(o) {
     const R = Rx(o);
     const zoneP = G && G.players.find(X => X.hand.includes(o) || X.gy.includes(o));
-    if (zoneP) return zoneP.hand.includes(o) ? (R.handActs || []) : (R.gyActs || []);
+    if (zoneP) return zoneP.hand.includes(o) ? (R.handActs || []) : [...(R.gyActs || []), ...(o.grantUnearthTurn === G.turn && typeof FR_UNEARTH_ACT !== 'undefined' ? [FR_UNEARTH_ACT] : [])]; // Ghost Ark
     if (lostAbilities(o)) return [];
     const out = [...R.acts, ...grantsOn(o).flatMap(g => g.acts), ...(R.condActs || []).filter(c => condOk(c.cond, ctrl(o), o)).map(c => c.act), ...(o.borrowed && o.borrowed.turn === G.turn ? o.borrowed.acts : [])];
     if (R.crew !== null && R.crew !== undefined) out.push({ crew: R.crew, effects: [], text: `Crew ${R.crew}` });
@@ -815,7 +818,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (!crew) return false;
         if (Rx(o).crewOnce && o.crewed === G.turn) { log(`${o.card.name} can be crewed only once each turn.`); return false; }
         crew.forEach(c => { c.tapped = true; });
-        o.crewed = G.turn; o.crewN = crew.length; o.crewTurn = G.turn;
+        o.crewed = G.turn; o.crewN = crew.length; o.crewTurn = G.turn; fire('crewed', { o });
         log(`${P.name} ${you(P) ? 'crew' : 'crews'} ${o.card.name} with ${crew.map(c => c.card.name).join(', ')}: it's an artifact creature until end of turn.`);
         renderGame();
         return true;
@@ -858,6 +861,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (a.cost.removeCounter) { o.counters -= a.cost.removeCounter; log(`${o.card.name}: a +1/+1 counter is removed.`); }
         if (a.cost.minusSelf) { o.counters -= a.cost.minusSelf; log(`${o.card.name} gets a -1/-1 counter.`); }
         if (a.cost.exileTop) { const ex = P.library.splice(-a.cost.exileTop).reverse(); P.exile.push(...ex); log(`${P.name} ${you(P) ? 'exile' : 'exiles'} the top ${ex.length} cards of the library.`); }
+        if (a.cost.removeNamedN) { o.ctr[a.cost.removeNamedN.kind] -= a.cost.removeNamedN.n; log(`${a.cost.removeNamedN.n} ${a.cost.removeNamedN.kind} counters are removed from ${o.card.name}.`); }
         if (a.cost.removeNamed) { o.ctr[a.cost.removeNamed]--; log(`A ${a.cost.removeNamed} counter is removed from ${o.card.name}.`); }
         if (a.cost.removeAny) await removeAnyCounter(P, o);
         if (a.cost.exileGy) { const ex = P.gy.slice().sort((x, y) => (x.card.cmc || 0) - (y.card.cmc || 0)).slice(0, a.cost.exileGy); ex.forEach(x => { pull(P.gy, x); P.exile.push(x); }); log(`${P.name} ${you(P) ? 'exile' : 'exiles'} ${ex.map(x => x.card.name).join(', ')} from ${you(P) ? 'your' : 'their'} graveyard.`); }
@@ -885,15 +889,17 @@ async function activate(P, o, a, presetTarget, presetX) {
     return true;
 }
 // Cycling: pay, discard this card from your hand, draw a card (702.29)
-function canCycle(P, o) { const c = Rx(o).cycling; return !!c && P.hand.includes(o) && !G.over && actTimingOk(P, {}) && !!planPayment(P, c); }
+function canCycle(P, o) { const c = Rx(o).cycling; return !!c && P.hand.includes(o) && !G.over && actTimingOk(P, {}) && (!Rx(o).cyclingLife || P.life > Rx(o).cyclingLife) && !!planPayment(P, c); }
 async function cycle(P, o) {
     if (!canCycle(P, o)) return false;
     let cx;
     if (Rx(o).cycling.x) { let mx = 0; while (mx < 30 && planPayment(P, Rx(o).cycling, mx + 1)) mx++; cx = P.isAI || AUTOPLAY ? mx : await askNumber(P, `Cycling ${o.card.name}: choose X`, 0, mx, mx, { card: o.card, ok: 'Cycle' }); if (cx === null) return false; planPayment(P, Rx(o).cycling, cx).forEach(s => tapSource(P, s)); }
     else planPayment(P, Rx(o).cycling).forEach(s => tapSource(P, s));
+    if (Rx(o).cyclingLife) { P.life -= Rx(o).cyclingLife; log(`${P.name} ${you(P) ? 'pay' : 'pays'} ${Rx(o).cyclingLife} life (cycling).`); }
     pull(P.hand, o);
     P.gy.push(o); o.discardTurn = G.turn; // cycling discards the card (Archfiend of Ifnir, Megrim)
     log(`${P.name} ${you(P) ? 'cycle' : 'cycles'} ${o.card.name}.`);
+    fire('cycled', { P, o }); // Astral Slide, Astral Drift
     if (Rx(o).cycleTrig) (G.trigQ = G.trigQ || []).push({ P, o, effects: cx !== undefined ? Rx(o).cycleTrig.map(e => ({ ...e, x: cx })) : Rx(o).cycleTrig });
     drawCards(P, 1);
     renderGame();
@@ -996,7 +1002,7 @@ function aiCrew(P) {
         const crew = crewPick(P, v, n);
         if (!crew) continue;
         const lost = crew.filter(canAttackWith).reduce((a, c) => a + pow(c), 0);
-        if ((Number(v.card.power) || 0) > lost) { crew.forEach(c => { c.tapped = true; }); v.crewed = G.turn; v.crewN = crew.length; v.crewTurn = G.turn; log(`${P.name} crews ${v.card.name}.`); }
+        if ((Number(v.card.power) || 0) > lost) { crew.forEach(c => { c.tapped = true; }); v.crewed = G.turn; v.crewN = crew.length; v.crewTurn = G.turn; fire('crewed', { o: v }); log(`${P.name} crews ${v.card.name}.`); }
     }
 }
 
@@ -1040,6 +1046,7 @@ function modeRange(P, R, src) {
     if (R.escalate && src && !(R.modeTeamwork)) { let k = 0; while (k + 1 < n.max) { const c = { ...costOf(P, src) }; Object.keys(R.escalate).forEach(x => { if (typeof c[x] === 'number') c[x] += R.escalate[x] * (k + 1); }); if (!planPayment(P, c, extraCost(P, src))) break; k++; } return { min: n.min, max: Math.min(n.max, 1 + k) }; }
     if (R.escalateTap && src) { const free = P.bf.filter(x => isCreature(x) && !x.tapped).length; return { min: n.min, max: Math.min(n.max, 1 + free) }; }
     if (R.modeTeamwork) return { min: 1, max: src && src.teamworked ? 2 : 1 };
+    if (R.modeBothOppGy8) return { min: n.min, max: foes(P).some(F => F.gy.length >= 8) ? 2 : 1 }; // See Double
     return { min: n.min, max: R.modeCmdBoth ? (P.bf.some(x => x.isCommander) ? 2 : 1) : n.max };
 }
 // Teamwork N (an optional additional cost): tap untapped creatures with total power N or more

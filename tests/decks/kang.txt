@@ -1,0 +1,64 @@
+1 Arcane Signet
+1 Archaeomancer
+1 Blur
+1 Boon of the Wish-Giver
+1 Borne Upon a Wind
+1 Chameleon, Master of Disguise
+1 Collector's Vault
+1 Commit/Memory
+1 Curse of the Swine
+1 Daily Bugle Newspaper
+1 Discontinuity
+1 Dismissive Denial
+1 Displacer Kitten
+1 Donnie & April, Adorkable Duo
+1 Echo, Perceptive Prodigy
+1 Edgar, King of Figaro
+1 Ember Island Production
+1 Essence Flux
+1 Fantastic Elasticity
+1 Frantic Search
+1 Ghostly Flicker
+1 Gilded Lotus
+1 Glasses of Urza
+1 H.E.R.B.I.E. Scout Unit
+1 Hurkyl's Final Meditation
+1 Immortus, Master of Eternity
+1 Insidious Will
+1 Inventive Iteration
+38 Island
+1 Lórien Revealed
+1 March of Swirling Mist
+1 Meneldor, Swift Savior
+1 Mind Stone
+1 Ms. Marvel, Kamala Khan
+1 Panharmonicon
+1 Peregrine Drake
+1 Planar Incision
+1 Professor Hulk
+1 Ravenform
+1 Reality Shift
+1 Reed Richards, Smartest Man
+1 Roil Cartographer
+1 Ruin Crab
+1 Scavenged Brawler
+1 See Double
+1 Silver Surfer, Cosmic Voyager
+1 Siren's Ruse
+1 Sky Diamond
+1 Skycoach Conductor
+1 Snap
+1 Sol Ring
+1 Solemn Simulacrum
+1 Spaceshift
+1 Stone of Erech
+1 The Vision
+1 The Wondrous Wasp
+1 Time Stop
+1 Turnabout
+1 Thran Dynamo
+1 Vision, Synthezoid Avenger
+1 Weather Maker
+1 Worn Powerstone
+
+1 Kang the Conqueror
