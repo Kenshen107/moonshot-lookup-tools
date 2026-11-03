@@ -6818,10 +6818,11 @@
         .sl-blk { flex: none; display: flex; align-items: center; justify-content: center; background: var(--c); }
         .sl-blk .sl-sym { background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; }
         .sl-blk img { width: 78%; height: 78%; object-fit: contain; }
-        .sl-txt { flex: 1; min-width: 0; padding: 0 0.07in; display: flex; flex-direction: column; justify-content: center; border-top: 0.06in solid var(--c); }
+        .sl-txt { flex: 1; min-width: 0; overflow: hidden; padding: 0 0.07in; display: flex; flex-direction: column; justify-content: center; border-top: 0.06in solid var(--c); }
+        .sl-row { display: flex; align-items: baseline; gap: 5pt; }
         .sl-txt b { line-height: 1; letter-spacing: 0.02em; }
-        .sl-txt span { font-weight: 700; line-height: 1.1; margin-top: 1px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .sl-txt small { color: #333; margin-top: 1px; }
+        .sl-txt span { font-weight: 700; line-height: 1.08; margin-top: 2pt; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .sl-txt small { color: #333; font-weight: 700; }
         .sl-preview { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 6px 0 12px; }
         @media print { .ht-page.slabels { justify-content: center; align-content: start; padding: 0.5in; } }
         #htPrintArea { display: none; }
@@ -17140,7 +17141,10 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const pt = f => (lh * 72 * f).toFixed(1) + 'pt';
             const symSize = (lh * 0.84).toFixed(3) + 'in';
             const sym = SD.symbols && set.icon_svg_uri ? `<img src="${escapeAttr(set.icon_svg_uri)}" alt="" onerror="this.remove()">` : `<span style="font-size:${pt(0.2)}">${escapeAttr(code.slice(0, 3))}</span>`;
-            return `<div class="sl-lab${i % 2 ? ' flip' : ''}" style="--c:${color};width:${lw}in;height:${lh}in;"><div class="sl-blk" style="width:${(lh * 1.05).toFixed(3)}in;"><div class="sl-sym" style="width:${symSize};height:${symSize};">${sym}</div></div><div class="sl-txt"><b style="font-size:${pt(0.5)}">${escapeAttr(code)}</b><span style="font-size:${pt(set.name.length > 30 ? 0.115 : set.name.length > 20 ? 0.135 : 0.17)}">${escapeAttr(set.name)}</span><small style="font-size:${pt(0.13)}">${escapeAttr(year)}</small></div></div>`;
+            // The code and year share one line; the name gets up to two lines under it, sized to fit the room left.
+            const textW = (lw - lh * 1.05) * 72 - 10;
+            const nameFont = Math.max(5, Math.min(lh * 72 * 0.17, (textW * 2) / (0.56 * set.name.length)));
+            return `<div class="sl-lab${i % 2 ? ' flip' : ''}" style="--c:${color};width:${lw}in;height:${lh}in;"><div class="sl-blk" style="width:${(lh * 1.05).toFixed(3)}in;"><div class="sl-sym" style="width:${symSize};height:${symSize};">${sym}</div></div><div class="sl-txt"><div class="sl-row"><b style="font-size:${pt(0.4)}">${escapeAttr(code)}</b><small style="font-size:${pt(0.15)}">${escapeAttr(year)}</small></div><span style="font-size:${nameFont.toFixed(1)}pt">${escapeAttr(set.name)}</span></div></div>`;
         }
         function sdLabelGrid() {
             const cols = Math.max(1, Math.floor(7.5 / SD.lw)), rows = Math.max(1, Math.floor(10 / SD.lh));
