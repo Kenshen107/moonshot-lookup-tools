@@ -6790,6 +6790,37 @@
         .sl-foot { text-align: center; margin-top: 12px; }
         .sl-btn { width: auto; margin: 0; padding: 7px 14px; font-size: 0.85em; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; }
         .sl-btn:hover { border-color: var(--brand-light); }
+        #htPrintArea { display: none; }
+        @media print {
+            body.ht-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
+            body.ht-printing > *:not(#htPrintArea) { display: none !important; }
+            body.ht-printing #htPrintArea { display: grid; grid-template-columns: repeat(3, 2.5in); gap: 0; justify-content: center; padding: 0.25in 0; font-family: sans-serif; color: #000; }
+            .ht-tag { width: 2.5in; height: 1in; box-sizing: border-box; border: 1px dashed #888; display: flex; align-items: center; gap: 0.08in; padding: 0 0.1in; break-inside: avoid; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .ht-tag svg { width: 0.42in; height: 0.52in; flex: none; }
+            .ht-tag div { min-width: 0; flex: 1; }
+            .ht-tag small { display: block; font-size: 6.5pt; font-weight: 700; letter-spacing: 0.14em; color: #c2410c; }
+            .ht-tag b { display: block; font-size: 11pt; line-height: 1.1; margin: 1px 0 3px; overflow-wrap: anywhere; }
+            .ht-tag b.long { font-size: 9pt; }
+            .ht-tag span { display: block; font-size: 7pt; color: #333; line-height: 1.2; }
+        }
+        @media print {
+            body.ht-printing #htPrintArea.strips { grid-template-columns: repeat(3, 2.5in); }
+            .ht-strip { width: 2.5in; height: 0.25in; box-sizing: border-box; border: 0.5px dashed #999; display: flex; align-items: center; gap: 0.04in; padding: 0 0.05in; overflow: hidden; white-space: nowrap; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .ht-strip svg { width: 0.14in; height: 0.18in; flex: none; }
+            .ht-strip b { font-size: 7.5pt; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+            .ht-strip b.long { font-size: 6.5pt; }
+            .ht-strip span { font-size: 6pt; color: #333; margin-left: auto; flex: none; }
+        }
+        @media print {
+            body.ht-printing #htPrintArea.labels { grid-template-columns: repeat(2, 4in); }
+            .ht-label { width: 4in; height: 1.45in; box-sizing: border-box; border: 1px dashed #888; display: flex; align-items: center; gap: 0.14in; padding: 0 0.16in; break-inside: avoid; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .ht-label svg { width: 0.62in; height: 0.78in; flex: none; }
+            .ht-label div { min-width: 0; flex: 1; }
+            .ht-label small { display: block; font-size: 8pt; font-weight: 700; letter-spacing: 0.16em; color: #c2410c; }
+            .ht-label b { display: block; font-size: 20pt; line-height: 1.05; margin: 2px 0 4px; overflow-wrap: anywhere; }
+            .ht-label b.long { font-size: 15pt; }
+            .ht-label span { display: block; font-size: 10pt; color: #222; line-height: 1.3; }
+        }
         #slPrintArea { display: none; }
         @media print {
             body.sl-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
@@ -9025,6 +9056,12 @@
             <div class="search-box" style="max-width:500px; margin:0 auto 24px;">
                 <input type="text" id="caseMapSearch" class="text-input" aria-label="Search the case map by card name or category" placeholder="Search by card name or category... (Enter jumps to it)" autocomplete="off">
                 <div class="autocomplete-list" id="caseMapAutocomplete"></div>
+            </div>
+            <div style="text-align:center; margin:-8px 0 20px;">
+                <button type="button" class="sl-btn" onclick="printHotlistTags()">🖨️ Print hotlist tags</button>
+                <button type="button" class="sl-btn" onclick="printHotlistLabels()">🖨️ Print case labels</button>
+                <button type="button" class="sl-btn" onclick="printHotlistStrips()">🖨️ Print divider strips</button>
+                <div class="bk-note" style="margin-top:6px;">Tags: one small flame tag for every card, with its name and spot, in case order. Divider strips: a thin one-line sticker per card for the white edge of its card divider. Case labels: one bigger label for each section of the case (shelf, side, category and spot range) to mark where it starts.</div>
             </div>
             <div id="caseMapResults"></div>
         </div>
@@ -16907,6 +16944,50 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const done = () => { document.body.classList.remove('sl-printing'); area.remove(); window.removeEventListener('afterprint', done); };
             window.addEventListener('afterprint', done);
             window.print();
+        }
+
+        // Hotlist printouts. Tags: one per card in the Case Map, in case order, 30 to a letter page (3 x 10).
+        // Divider strips: a thin one-line sticker per card for the white edge of its card divider. Case labels: one bigger label per section of the case (a run of the same shelf, side and category), 14 to a page (2 x 7).
+        const HOTLIST_FLAME = '<svg viewBox="0 0 62 78" aria-hidden="true"><path d="M31 3C33 18 48 26 48 46C48 60 40 72 31 74C22 72 14 60 14 46C14 38 18 32 22 28C22 36 26 40 30 40C26 30 27 14 31 3Z" fill="#e8590c" stroke="#000" stroke-width="3" stroke-linejoin="round"/><path d="M31 74C25 72 22 66 23 59C24 52 30 49 31 42C34 48 40 52 39 60C39 67 36 72 31 74Z" fill="#ffd43b" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/></svg>';
+        function hotlistCards() {
+            return CASE_MAP_DATA.filter(c => c.name && c.name.trim() && c.name.trim() !== 'N/A').sort((x, y) => x.spot - y.spot);
+        }
+        function printHotlistSheet(html, cls) {
+            let area = document.getElementById('htPrintArea'); if (area) area.remove();
+            area = document.createElement('div'); area.id = 'htPrintArea'; area.className = cls || '';
+            area.innerHTML = html;
+            document.body.appendChild(area);
+            document.body.classList.add('ht-printing');
+            const done = () => { document.body.classList.remove('ht-printing'); area.remove(); window.removeEventListener('afterprint', done); };
+            window.addEventListener('afterprint', done);
+            window.print();
+        }
+        function printHotlistTags() {
+            printHotlistSheet(hotlistCards().map(c => {
+                const name = c.name.trim();
+                const where = [c.shelf, c.side, 'spot ' + c.spot].filter(Boolean).join(' · ');
+                return `<div class="ht-tag">${HOTLIST_FLAME}<div><small>HOTLIST</small><b class="${name.length > 24 ? 'long' : ''}">${escapeAttr(name)}</b><span>${escapeAttr(c.category)}<br>${escapeAttr(where)}</span></div></div>`;
+            }).join(''));
+        }
+        function printHotlistStrips() {
+            printHotlistSheet(hotlistCards().map(c => {
+                const name = c.name.trim();
+                const where = c.shelf.replace('Shelf ', 'S') + (c.side ? c.side[0] : '') + ' · ' + c.spot;
+                return `<div class="ht-strip">${HOTLIST_FLAME}<b class="${name.length > 24 ? 'long' : ''}">${escapeAttr(name)}</b><span>${escapeAttr(where)}</span></div>`;
+            }).join(''), 'strips');
+        }
+        function printHotlistLabels() {
+            const groups = [];
+            hotlistCards().forEach(c => {
+                const g = groups[groups.length - 1];
+                if (g && g.shelf === c.shelf && g.side === c.side && g.category === c.category) { g.last = c.spot; g.n++; }
+                else groups.push({ shelf: c.shelf, side: c.side, category: c.category, first: c.spot, last: c.spot, n: 1 });
+            });
+            printHotlistSheet(groups.map(g => {
+                const place = [g.shelf, g.side].filter(Boolean).join(' · ');
+                const range = g.first === g.last ? 'spot ' + g.first : `spots ${g.first}-${g.last}`;
+                return `<div class="ht-label">${HOTLIST_FLAME}<div><small>HOTLIST CASE</small><b class="${g.category.length > 16 ? 'long' : ''}">${escapeAttr(g.category)}</b><span>${escapeAttr(place)}<br>${range} (${g.n} card${g.n === 1 ? '' : 's'})</span></div></div>`;
+            }).join(''), 'labels');
         }
 
         // ============== COMMANDER BRACKETS ==============
