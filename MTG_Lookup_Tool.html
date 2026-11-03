@@ -6813,8 +6813,10 @@
             .ht-page.dividers .sd-card { position: relative; }
         }
         .sd-sec { margin: 16px 0 6px; text-align: center; }
-        .sl-lab { flex: none; box-sizing: border-box; display: flex; align-items: stretch; background: #fff; color: #000; font-family: sans-serif; border: 1px dashed #777; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .sl-lab.flip { flex-direction: row-reverse; }
+        .sl-lab { flex: none; box-sizing: border-box; display: flex; flex-direction: column; align-items: stretch; background: #fff; color: #000; font-family: sans-serif; border: 1px dashed #777; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .sl-main { flex: 1; min-height: 0; display: flex; align-items: stretch; }
+        .sl-main.flip { flex-direction: row-reverse; }
+        .sl-flap { flex: none; display: flex; align-items: center; justify-content: center; background: var(--c); color: var(--ct); font-weight: 800; letter-spacing: 0.12em; border-bottom: 1px dashed rgba(255,255,255,0.85); }
         .sl-blk { flex: none; display: flex; align-items: center; justify-content: center; background: var(--c); }
         .sl-blk .sl-sym { background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; }
         .sl-blk img { width: 78%; height: 78%; object-fit: contain; }
@@ -17055,7 +17057,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             other: { label: 'Promos, tokens, Un-sets, other', types: null },
             all: { label: 'Everything', types: null }
         };
-        const SD = { sets: null, loading: false, error: '', sel: new Set(), kind: 'main', q: '', asc: false, symbols: true, color: 'era', lw: 2.3, lh: 0.75 };
+        const SD = { sets: null, loading: false, error: '', sel: new Set(), kind: 'main', q: '', asc: false, symbols: true, color: 'era', lw: 2.3, lh: 0.75, flap: 0.45, flapFlip: true };
         const SD_ERAS = [[1996, '#7b4fb8', 'Early, to 1996'], [2002, '#a0722a', '1997-2002'], [2014, '#2f6fcf', '2003-2014'], [2019, '#2f9e52', '2015-2019'], [2023, '#e8812a', '2020-2023'], [9999, '#d64545', '2024 on']];
         function sdEra(set) { const y = +(set.released_at || '0').slice(0, 4); return SD_ERAS.find(e => y <= e[0]) || SD_ERAS[SD_ERAS.length - 1]; }
         try { const saved = JSON.parse(localStorage.getItem('setDividersSel') || '[]'); if (Array.isArray(saved)) saved.forEach(c => SD.sel.add(c)); } catch (e) {}
@@ -17115,6 +17117,8 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <b>Label:</b>
                     <label style="font-size:0.85em;">Width <input type="number" step="0.05" min="0.5" max="7.5" value="${SD.lw}" style="width:70px" onchange="sdSetNum('lw', this)"> in</label>
                     <label style="font-size:0.85em;">Height <input type="number" step="0.05" min="0.4" max="5" value="${SD.lh}" style="width:70px" onchange="sdSetNum('lh', this)"> in</label>
+                    <label style="font-size:0.85em;" title="A solid color strip above the label. Fold it over the top of the divider so the color shows from above. 0 turns it off.">Color flap <input type="number" step="0.05" min="0" max="2" value="${SD.flap}" style="width:70px" onchange="sdSetNum('flap', this)"> in</label>
+                    <label style="font-size:0.85em;" title="Prints the code on the flap upside down, so it reads right side up once the flap is folded over the top to the back of the divider."><input type="checkbox" ${SD.flapFlip ? 'checked' : ''} onchange="SD.flapFlip=this.checked; renderSetDividers()"> Flap text upside down</label>
                     <select aria-label="Label color" onchange="SD.color=this.value; renderSetDividers()"><option value="era"${SD.color === 'era' ? ' selected' : ''}>Color by era (recommended)</option><option value="alt"${SD.color === 'alt' ? ' selected' : ''}>Alternate colors each set</option><option value="none"${SD.color === 'none' ? ' selected' : ''}>No color (black)</option></select>
                     <span class="bk-note">${sdLabelGrid().per} labels to a page</span>
                 </div>
@@ -17135,7 +17139,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         // Block with the set symbol + big code + name + year. Color follows the era (hue says roughly how old a set is) and the
         // block swaps sides on every other set, so the start of a new set shows as a shift even when two sets share a color.
         function sdLabelHTML(set, i) {
-            const lw = SD.lw, lh = SD.lh;
+            const lw = SD.lw, lh = SD.lh, flap = SD.flap;
             const color = SD.color === 'none' ? '#222' : SD.color === 'alt' ? SD_COLORS[i % SD_COLORS.length][0] : sdEra(set)[1];
             const code = set.code.toUpperCase(), year = (set.released_at || '').slice(0, 4);
             const pt = f => (lh * 72 * f).toFixed(1) + 'pt';
@@ -17144,11 +17148,14 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             // The code and year share one line; the name gets up to two lines under it, sized to fit the room left.
             const textW = (lw - lh * 1.05) * 72 - 10;
             const nameFont = Math.max(5, Math.min(lh * 72 * 0.17, (textW * 2) / (0.56 * set.name.length)));
-            return `<div class="sl-lab${i % 2 ? ' flip' : ''}" style="--c:${color};width:${lw}in;height:${lh}in;"><div class="sl-blk" style="width:${(lh * 1.05).toFixed(3)}in;"><div class="sl-sym" style="width:${symSize};height:${symSize};">${sym}</div></div><div class="sl-txt"><div class="sl-row"><b style="font-size:${pt(0.4)}">${escapeAttr(code)}</b><small style="font-size:${pt(0.15)}">${escapeAttr(year)}</small></div><span style="font-size:${nameFont.toFixed(1)}pt">${escapeAttr(set.name)}</span></div></div>`;
+            const textCol = hex => { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) > 170 ? '#000' : '#fff'; };
+            const flapHTML = flap > 0.04 ? `<div class="sl-flap" style="height:${flap}in;font-size:${Math.min(flap * 72 * 0.6, 14).toFixed(1)}pt;"><span${SD.flapFlip ? ' style="display:inline-block;transform:rotate(180deg);"' : ''}>${escapeAttr(code)}</span></div>` : '';
+            return `<div class="sl-lab" style="--c:${color};--ct:${textCol(color)};width:${lw}in;height:${(lh + (flapHTML ? flap : 0)).toFixed(3)}in;">${flapHTML}<div class="sl-main${i % 2 ? ' flip' : ''}"><div class="sl-blk" style="width:${(lh * 1.05).toFixed(3)}in;"><div class="sl-sym" style="width:${symSize};height:${symSize};">${sym}</div></div><div class="sl-txt"${flapHTML ? ' style="border-top:0"' : ''}><div class="sl-row"><b style="font-size:${pt(0.4)}">${escapeAttr(code)}</b><small style="font-size:${pt(0.15)}">${escapeAttr(year)}</small></div><span style="font-size:${nameFont.toFixed(1)}pt">${escapeAttr(set.name)}</span></div></div></div>`;
         }
         function sdLabelGrid() {
-            const cols = Math.max(1, Math.floor(7.5 / SD.lw)), rows = Math.max(1, Math.floor(10 / SD.lh));
-            return { cols, rows, per: cols * rows, style: `grid-template-columns:repeat(${cols},${SD.lw}in);grid-auto-rows:${SD.lh}in;` };
+            const th = +(SD.lh + (SD.flap > 0.04 ? SD.flap : 0)).toFixed(3);
+            const cols = Math.max(1, Math.floor(7.5 / SD.lw)), rows = Math.max(1, Math.floor(10 / th));
+            return { cols, rows, per: cols * rows, style: `grid-template-columns:repeat(${cols},${SD.lw}in);grid-auto-rows:${th}in;` };
         }
         function printSetLabels() {
             const chosen = sdChosen();
@@ -17156,7 +17163,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const g = sdLabelGrid();
             printHotlistSheet(chosen.map((st, i) => sdLabelHTML(st, i)), 'slabels', g.per, g.style);
         }
-        function sdSetNum(key, el) { const v = parseFloat(el.value); if (v > 0.3 && v < 7.5) { SD[key] = v; renderSetDividers(); } }
+        function sdSetNum(key, el) { const v = parseFloat(el.value); if (key === 'flap' ? (v >= 0 && v <= 2) : (v > 0.3 && v < 7.5)) { SD[key] = v; renderSetDividers(); } }
         function printSetDividers() {
             const chosen = sdChosen();
             if (!chosen.length) return;
