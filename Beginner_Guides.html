@@ -687,14 +687,33 @@
         }
         document.body.appendChild(area);
         document.body.classList.add('printing');
+        // Some browsers (Safari, iPads, phones) fire "afterprint" as the print
+        // dialog opens, which used to remove the sheet and print the whole page
+        // instead. The sheet is now only removed once the dialog has really
+        // closed (print media off after being on, a late "afterprint", or the
+        // next tap / key press). It is hidden on screen, so waiting is harmless.
+        let started = 0, sawPrint = false;
+        const mq = window.matchMedia ? window.matchMedia('print') : null;
         const done = () => {
             document.body.classList.remove('printing');
             area.remove();
-            window.removeEventListener('afterprint', done);
+            window.removeEventListener('afterprint', onAfter);
+            window.removeEventListener('pointerdown', onTouch, true);
+            window.removeEventListener('keydown', onTouch, true);
+            if (mq && mq.removeEventListener) mq.removeEventListener('change', onMq);
         };
-        window.addEventListener('afterprint', done);
+        const onAfter = () => { if (started && Date.now() - started > 2000) done(); };
+        const onTouch = () => { if (started && Date.now() - started > 2000) done(); };
+        const onMq = e => { if (e.matches) sawPrint = true; else if (sawPrint) done(); };
+        window.addEventListener('afterprint', onAfter);
+        if (mq && mq.addEventListener) mq.addEventListener('change', onMq);
         const imgs = [...area.querySelectorAll('img')];
-        Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => window.print());
+        Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => {
+            started = Date.now();
+            window.addEventListener('pointerdown', onTouch, true);
+            window.addEventListener('keydown', onTouch, true);
+            window.print();
+        });
     }
 
     function renderGear() {

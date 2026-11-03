@@ -14927,6 +14927,7 @@
             sos: { WB: 'Silverquill: repartee', UR: 'Prismari: opus', BG: 'Witherbloom: infusion', RW: 'Lorehold: flashback', GU: 'Quandrix: increment' },
             msh: { WU: 'Teamwork', UB: 'Draw two', BR: 'Villains', RG: 'Power-up stompy', GW: 'Heroes', WB: 'Attack alone', UR: 'Artifacts', BG: 'Graveyard', RW: 'Noncreature spells', GU: '+1/+1 counters' },
             hob: { WU: 'Draw two', BR: 'Amass Goblins', BG: 'Ferocious (power 4+)', RW: 'Storied', GU: 'Landfall' },
+            trk: { WU: 'Spacecraft', UB: 'Dilemmas', BR: 'Klingon sacrifice', RG: 'Landfall', GW: '+1/+1 counters', WB: 'Artifact creatures (Borg)', UR: 'Noncreature spells', BG: 'Cards leave graveyard', RW: 'Power 8 or more', GU: 'Strange new worlds (lands)' },
             ktk: { WBG: 'Abzan: outlast & +1/+1 counters', URW: 'Jeskai: prowess & spells', BGU: 'Sultai: delve & graveyard', RWB: 'Mardu: raid aggro', GUR: 'Temur: ferocious, big creatures' }
         };
         // Wizards' official pages for each set, for the printed card's QR
@@ -15004,7 +15005,8 @@
             sos: { guide: 'secrets-of-strixhaven-prerelease-guide', notes: 'secrets-of-strixhaven-release-notes' },
             msh: { guide: 'marvel-super-heroes-prerelease-guide', notes: 'marvel-super-heroes-release-notes' },
             hob: { guide: 'the-hobbit-prerelease-guide', notes: 'the-hobbit-release-notes' },
-            fra: { guide: 'reality-fracture-prerelease-guide', notes: 'reality-fracture-release-notes' }
+            fra: { guide: 'reality-fracture-prerelease-guide', notes: 'reality-fracture-release-notes' },
+            trk: { guide: 'star-trek-prerelease-guide', notes: 'star-trek-release-notes' }
         };
         const PRERELEASE_MIN_KEYWORD_CARDS = 3;
         // Scryfall lists keyword actions like "double" as keywords; skip them.
@@ -15998,15 +16000,36 @@
             }
             document.body.appendChild(area);
             document.body.classList.add('pr-printing');
+            // Some browsers (Safari, iPads, phones) fire "afterprint" the moment
+            // the print dialog opens and draw the preview afterwards, which used
+            // to remove this sheet and print the whole page instead. So the sheet
+            // is only removed once the dialog has really closed: the print media
+            // query turns off after it was on, an "afterprint" at least 2 seconds
+            // after print() was called, or the next tap / key press once the
+            // dialog is gone. The sheet is hidden on screen, so waiting is harmless.
+            let started = 0, sawPrint = false;
+            const mq = window.matchMedia ? window.matchMedia('print') : null;
             const done = () => {
                 document.body.classList.remove('pr-printing');
                 area.remove();
-                window.removeEventListener('afterprint', done);
+                window.removeEventListener('afterprint', onAfter);
+                window.removeEventListener('pointerdown', onTouch, true);
+                window.removeEventListener('keydown', onTouch, true);
+                if (mq && mq.removeEventListener) mq.removeEventListener('change', onMq);
             };
-            window.addEventListener('afterprint', done);
+            const onAfter = () => { if (started && Date.now() - started > 2000) done(); };
+            const onTouch = () => { if (started && Date.now() - started > 2000) done(); };
+            const onMq = e => { if (e.matches) sawPrint = true; else if (sawPrint) done(); };
+            window.addEventListener('afterprint', onAfter);
+            if (mq && mq.addEventListener) mq.addEventListener('change', onMq);
             // Let the QR images load before the print dialog opens.
             const imgs = [...area.querySelectorAll('img')];
-            Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => window.print());
+            Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => {
+                started = Date.now();
+                window.addEventListener('pointerdown', onTouch, true);
+                window.addEventListener('keydown', onTouch, true);
+                window.print();
+            });
         }
 
 
