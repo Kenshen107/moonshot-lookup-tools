@@ -6812,6 +6812,18 @@
             .ht-page.dividers { grid-template-columns: repeat(3, 2.75in); grid-auto-rows: 4.75in; padding: 0.5in 0.125in; }
             .ht-page.dividers .sd-card { position: relative; }
         }
+        .sd-sec { margin: 16px 0 6px; text-align: center; }
+        .sl-lab { flex: none; box-sizing: border-box; display: flex; align-items: stretch; background: #fff; color: #000; font-family: sans-serif; border: 1px dashed #777; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .sl-lab.flip { flex-direction: row-reverse; }
+        .sl-blk { flex: none; display: flex; align-items: center; justify-content: center; background: var(--c); }
+        .sl-blk .sl-sym { background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+        .sl-blk img { width: 78%; height: 78%; object-fit: contain; }
+        .sl-txt { flex: 1; min-width: 0; padding: 0 0.07in; display: flex; flex-direction: column; justify-content: center; border-top: 0.06in solid var(--c); }
+        .sl-txt b { line-height: 1; letter-spacing: 0.02em; }
+        .sl-txt span { font-weight: 700; line-height: 1.1; margin-top: 1px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .sl-txt small { color: #333; margin-top: 1px; }
+        .sl-preview { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 6px 0 12px; }
+        @media print { .ht-page.slabels { justify-content: center; align-content: start; padding: 0.5in; } }
         #htPrintArea { display: none; }
         @media print {
             body.ht-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
@@ -16983,11 +16995,11 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             return CASE_MAP_DATA.filter(c => c.name && c.name.trim() && c.name.trim() !== 'N/A').sort((x, y) => x.spot - y.spot);
         }
         // items = one HTML string per tag; perPage fills each letter page exactly (fixed 0.5 in margins, so rows never split across pages)
-        function printHotlistSheet(items, cls, perPage) {
+        function printHotlistSheet(items, cls, perPage, pageStyle) {
             let area = document.getElementById('htPrintArea'); if (area) area.remove();
             area = document.createElement('div'); area.id = 'htPrintArea';
             let html = '';
-            for (let i = 0; i < items.length; i += perPage) html += `<div class="ht-page ${cls || ''}">${items.slice(i, i + perPage).join('')}</div>`;
+            for (let i = 0; i < items.length; i += perPage) html += `<div class="ht-page ${cls || ''}"${pageStyle ? ` style="${pageStyle}"` : ''}>${items.slice(i, i + perPage).join('')}</div>`;
             area.innerHTML = html;
             document.body.appendChild(area);
             document.body.classList.add('ht-printing');
@@ -17042,7 +17054,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             other: { label: 'Promos, tokens, Un-sets, other', types: null },
             all: { label: 'Everything', types: null }
         };
-        const SD = { sets: null, loading: false, error: '', sel: new Set(), kind: 'main', q: '', asc: false, symbols: true };
+        const SD = { sets: null, loading: false, error: '', sel: new Set(), kind: 'main', q: '', asc: false, symbols: true, color: 'era', lw: 2.3, lh: 0.75 };
+        const SD_ERAS = [[1996, '#7b4fb8', 'Early, to 1996'], [2002, '#a0722a', '1997-2002'], [2014, '#2f6fcf', '2003-2014'], [2019, '#2f9e52', '2015-2019'], [2023, '#e8812a', '2020-2023'], [9999, '#d64545', '2024 on']];
+        function sdEra(set) { const y = +(set.released_at || '0').slice(0, 4); return SD_ERAS.find(e => y <= e[0]) || SD_ERAS[SD_ERAS.length - 1]; }
         try { const saved = JSON.parse(localStorage.getItem('setDividersSel') || '[]'); if (Array.isArray(saved)) saved.forEach(c => SD.sel.add(c)); } catch (e) {}
         function sdSave() { try { localStorage.setItem('setDividersSel', JSON.stringify([...SD.sel])); } catch (e) {} }
         function sdInKind(set) {
@@ -17081,7 +17095,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             if (!SD.sets) return;
             const shown = sdShown(), chosen = sdChosen();
             root.innerHTML = `
-                <div class="formats-intro">Divider cards for the singles boxes. Each tab has a big set code and the year, and the <b>tab color and tab position change from set to set</b>, so you can see where a new set starts at a glance. Pick the sets you keep in the boxes, then print. Fan-made sorting aid, not made or run by the store.</div>
+                <div class="formats-intro">Labels and divider cards for the singles boxes. A <b>set label</b> is a sticker for the tab of a plain divider (the symbol, a big set code, the name and year); its color shows the set's era and the symbol block swaps sides on every other set, so a new set stands out. A full divider card is the older option. Pick the sets you keep in the boxes, then print. Fan-made sorting aid, not made or run by the store.</div>
                 <div class="sd-controls">
                     <select id="sdKind" aria-label="Kind of set" onchange="SD.kind=this.value; renderSetDividers()">${Object.entries(SD_KINDS).map(([k, v]) => `<option value="${k}"${SD.kind === k ? ' selected' : ''}>${v.label}</option>`).join('')}</select>
                     <input type="text" id="sdSearch" class="text-input" aria-label="Search sets" placeholder="Search name or code…" value="${escapeAttr(SD.q)}" oninput="SD.q=this.value; sdRefreshList()">
@@ -17091,11 +17105,22 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 <div class="sd-controls">
                     <button type="button" class="sl-btn" onclick="sdSelectShown()">Select all shown (${shown.length})</button>
                     <button type="button" class="sl-btn" onclick="sdClear()">Clear</button>
-                    <button type="button" class="sl-btn" onclick="printSetDividers()"${chosen.length ? '' : ' disabled'}>🖨️ Print ${chosen.length} divider${chosen.length === 1 ? '' : 's'}</button>
+                    <button type="button" class="sl-btn" onclick="printSetLabels()"${chosen.length ? '' : ' disabled'}>🖨️ Print ${chosen.length} set label${chosen.length === 1 ? '' : 's'}</button>
+                    <button type="button" class="sl-btn" onclick="printSetDividers()"${chosen.length ? '' : ' disabled'}>🖨️ Print ${chosen.length} full divider card${chosen.length === 1 ? '' : 's'}</button>
                 </div>
                 <div class="sd-list" id="sdList">${sdListHTML(shown)}</div>
                 <div class="bk-note" style="text-align:center;">The colors and tab positions follow the order of the sets you picked (${SD.asc ? 'oldest' : 'newest'} first), so neighbors never match. Print on cardstock at 100% scale with Margins set to None, then cut along the dashed lines. Set list and symbols from Scryfall.</div>
-                <h3 style="text-align:center;">Preview</h3>
+                <div class="sd-controls">
+                    <b>Label:</b>
+                    <label style="font-size:0.85em;">Width <input type="number" step="0.05" min="0.5" max="7.5" value="${SD.lw}" style="width:70px" onchange="sdSetNum('lw', this)"> in</label>
+                    <label style="font-size:0.85em;">Height <input type="number" step="0.05" min="0.4" max="5" value="${SD.lh}" style="width:70px" onchange="sdSetNum('lh', this)"> in</label>
+                    <select aria-label="Label color" onchange="SD.color=this.value; renderSetDividers()"><option value="era"${SD.color === 'era' ? ' selected' : ''}>Color by era (recommended)</option><option value="alt"${SD.color === 'alt' ? ' selected' : ''}>Alternate colors each set</option><option value="none"${SD.color === 'none' ? ' selected' : ''}>No color (black)</option></select>
+                    <span class="bk-note">${sdLabelGrid().per} labels to a page</span>
+                </div>
+                <div class="bk-note" style="text-align:center;">${SD.color === 'era' ? 'Era colors: ' + SD_ERAS.map(e => `<b style="color:${e[1]}">■</b> ${e[2]}`).join(' &nbsp; ') : ''}</div>
+                <h3 class="sd-sec">Set label preview</h3>
+                <div class="sl-preview">${chosen.length ? chosen.slice(0, 10).map((st, i) => sdLabelHTML(st, i)).join('') : '<div class="bk-note">Pick at least one set to see the labels.</div>'}</div>
+                <h3 class="sd-sec">Full divider card preview</h3>
                 <div class="sd-preview">${chosen.length ? chosen.slice(0, 8).map((st, i) => sdCardHTML(st, i)).join('') : '<div class="bk-note">Pick at least one set to see the dividers.</div>'}</div>`;
         }
         function sdListHTML(shown) {
@@ -17105,6 +17130,29 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         function sdToggle(box) { const c = box.dataset.code; if (box.checked) SD.sel.add(c); else SD.sel.delete(c); sdSave(); renderSetDividers(); }
         function sdSelectShown() { sdShown().forEach(st => SD.sel.add(st.code)); sdSave(); renderSetDividers(); }
         function sdClear() { SD.sel.clear(); sdSave(); renderSetDividers(); }
+        // Set labels: a sticker for the tab of a plain divider (owner: they use BCW dividers and want a label every set shares).
+        // Block with the set symbol + big code + name + year. Color follows the era (hue says roughly how old a set is) and the
+        // block swaps sides on every other set, so the start of a new set shows as a shift even when two sets share a color.
+        function sdLabelHTML(set, i) {
+            const lw = SD.lw, lh = SD.lh;
+            const color = SD.color === 'none' ? '#222' : SD.color === 'alt' ? SD_COLORS[i % SD_COLORS.length][0] : sdEra(set)[1];
+            const code = set.code.toUpperCase(), year = (set.released_at || '').slice(0, 4);
+            const pt = f => (lh * 72 * f).toFixed(1) + 'pt';
+            const symSize = (lh * 0.84).toFixed(3) + 'in';
+            const sym = SD.symbols && set.icon_svg_uri ? `<img src="${escapeAttr(set.icon_svg_uri)}" alt="" onerror="this.remove()">` : `<span style="font-size:${pt(0.2)}">${escapeAttr(code.slice(0, 3))}</span>`;
+            return `<div class="sl-lab${i % 2 ? ' flip' : ''}" style="--c:${color};width:${lw}in;height:${lh}in;"><div class="sl-blk" style="width:${(lh * 1.05).toFixed(3)}in;"><div class="sl-sym" style="width:${symSize};height:${symSize};">${sym}</div></div><div class="sl-txt"><b style="font-size:${pt(0.5)}">${escapeAttr(code)}</b><span style="font-size:${pt(set.name.length > 30 ? 0.115 : set.name.length > 20 ? 0.135 : 0.17)}">${escapeAttr(set.name)}</span><small style="font-size:${pt(0.13)}">${escapeAttr(year)}</small></div></div>`;
+        }
+        function sdLabelGrid() {
+            const cols = Math.max(1, Math.floor(7.5 / SD.lw)), rows = Math.max(1, Math.floor(10 / SD.lh));
+            return { cols, rows, per: cols * rows, style: `grid-template-columns:repeat(${cols},${SD.lw}in);grid-auto-rows:${SD.lh}in;` };
+        }
+        function printSetLabels() {
+            const chosen = sdChosen();
+            if (!chosen.length) return;
+            const g = sdLabelGrid();
+            printHotlistSheet(chosen.map((st, i) => sdLabelHTML(st, i)), 'slabels', g.per, g.style);
+        }
+        function sdSetNum(key, el) { const v = parseFloat(el.value); if (v > 0.3 && v < 7.5) { SD[key] = v; renderSetDividers(); } }
         function printSetDividers() {
             const chosen = sdChosen();
             if (!chosen.length) return;
