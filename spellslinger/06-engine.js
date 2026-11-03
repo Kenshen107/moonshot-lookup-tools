@@ -1232,7 +1232,7 @@ function canCastNow(P, o) {
     return G.active === P.i && MAIN.includes(G.phase);
 }
 function landLimit(P) { if (P.skip && P.skip.turn === G.turn && P.skip.what === 'main') return 0; return 1 + P.bf.reduce((a, x) => a + (Rx(x).extraLand || 0), 0) + allPerms().reduce((a, x) => a + (Rx(x).extraLandAll || 0), 0) + (P.extraLandTurn === G.turn ? P.extraLandN || 1 : 0); }
-function canPlayLand(P, o) { return Rx(o).kind === 'land' && G.active === P.i && MAIN.includes(G.phase) && P.landsPlayed < landLimit(P) && (P.hand.includes(o) || (P.exile.includes(o) && o.playUntil >= G.turn) || extraLandZones(P).includes(o)) && !G.over; }
+function canPlayLand(P, o) { return Rx(o).kind === 'land' && G.active === P.i && MAIN.includes(G.phase) && P.landsPlayed < landLimit(P) && (P.hand.includes(o) || (P.exile.includes(o) && (o.playUntil >= G.turn || (o.advReady && o.card === o.front))) || extraLandZones(P).includes(o)) && !G.over; }
 // Crucible of Worlds (lands from your graveyard), Courser-style (lands from the top of your library)
 function extraLandZones(P) {
     const out = [];
@@ -1522,6 +1522,7 @@ async function castSpell(P, o, presetTarget) {
     (G.castBy = G.castBy || Z())[P.i]++;
     // "When you cast ~" triggers go on the stack above the spell (Hydroid Krasis)
     if (Rx(o).castTrig) G.stack.push({ id: stackSeq++, kind: 'trigger', o, P, target: null, effects: withX(Rx(o).castTrig, item.x), name: `${o.card.name}'s cast trigger` });
+    G.lastCastMv = o.card.cmc || 0;
     fire('cast', { P, o, target: item.target });
     // Casualty (702.153): sacrifice a creature with enough power as you cast it, and the spell is copied
     if (Rx(o).casualty && Rx(o).kind !== 'creature') {
@@ -1752,7 +1753,7 @@ async function resolveTop() {
                     : await pickCard(item.P, item.P.bf.filter(isCreature), `${o.card.name}: encode it on a creature (cipher), or skip`);
                 if (host) { host.ciphered = [...(host.ciphered || []), o.front || o.card]; o.card = o.front || o.card; resetObj(o); item.P.exile.push(o); log(`${o.card.name} is encoded on ${host.card.name} (cipher).`); }
                 else moveSpellCard(o, 'gy');
-            } else { if (item.buyback) log(`${o.card.name} returns to its owner's hand (buyback).`); moveSpellCard(o, item.buyback ? 'hand' : 'gy'); }
+            } else { if (item.buyback) log(`${o.card.name} returns to its owner's hand (buyback).`); moveSpellCard(o, item.buyback || o.frToHand ? 'hand' : 'gy'); o.frToHand = false; }
         } else {
             const mode = o.mode, face = o.card, evoked = o.evoked;
             delete o.evoked;
@@ -4559,7 +4560,7 @@ async function humanCastBack(uid) {
     o.card = o.front.back;
     if (rulesFor(o.card).kind === 'land') { if (!canPlayLand(me(), o)) { o.card = o.front; toast('You can only play one land a turn, in your main phase.'); closeSheet(); return; } humanPlayLand(uid); return; }
     await humanCast(uid);
-    if (me().hand.includes(o)) o.card = o.front; // not cast after all
+    if (me().hand.includes(o) || me().command.includes(o) || me().gy.includes(o)) o.card = o.front; // not cast after all
 }
 // Foretell (702.143): during your turn, pay {2} and exile the card face down; cast it on a later turn for its foretell cost
 async function humanForetell(uid) {
@@ -4825,10 +4826,11 @@ function showGameCard(uid) {
             : cols.map(c => `<button class="btn" onclick="tapForMana(${uid}, '${c}')">💧 Tap for ${pipsHTML(Array(mm.n).fill(c))}</button>`).join('');
     }
     actions += abilityButtonsHTML(P, o);
-    if (P.hand.includes(o) && o.front && o.front.back && ['modal_dfc', 'adventure', 'split'].includes(o.front.layout) && o.card === o.front) {
+    if ((P.hand.includes(o) || P.command.includes(o)) && o.front && o.front.back && ['modal_dfc', 'adventure', 'split'].includes(o.front.layout) && o.card === o.front && !rulesFor(o.front.back).aftermath && !(P.command.includes(o) && rulesFor(o.front.back).kind === 'land')) {
         const b = o.front.back, land = rulesFor(b).kind === 'land';
         actions += `<button class="btn" onclick="humanCastBack(${uid})" title="${esc(b.type)}: ${esc(b.text)}">${land ? `Play ${esc(b.name)} (land)` : `Cast ${esc(b.name)} ${esc(b.cost)}`}</button>`;
     }
+    if (P.gy.includes(o) && o.front && o.front.back && o.front.layout === 'split' && rulesFor(o.front.back).aftermath && o.card === o.front) { const b = o.front.back; actions += `<button class="btn" onclick="humanCastBack(${uid})" title="Aftermath: cast it only from your graveyard, then it is exiled">Cast ${esc(b.name)} ${esc(b.cost)} (aftermath)</button>`; }
     if (P.hand.includes(o) && r.foretell && G.active === P.i && !G.stack.length && planPayment(P, parseCost('{2}'))) actions += `<button class="btn" onclick="humanForetell(${uid})" title="Foretell: pay {2} and exile it face down; cast it on a later turn for ${esc(costSymbols(r.foretell))} (rule 702.143)">Foretell {2}</button>`;
     if (P.hand.includes(o) && r.alt && altOk(P, o)) actions += `<button class="btn" onclick="humanCastAlt(${uid})" title="Alternative cost: cast it without paying its mana cost (rule 118.9)">Cast: ${esc(r.alt.text)}</button>`;
     if (P.hand.includes(o) && r.evoke) actions += `<button class="btn" onclick="humanCastEvoke(${uid})" title="Evoke: cast it for its evoke cost; it's sacrificed when it enters (rule 702.74)">Evoke ${esc(costSymbols(r.evoke))}</button>`;

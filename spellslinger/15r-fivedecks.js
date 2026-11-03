@@ -907,3 +907,57 @@ Object.assign(CMD, {
         G.stack.push(copy); log(`${src.card.name}: ${it.name} is copied.`);
     }
 });
+
+Object.assign(CMD, {
+    // Journey to the Oracle: put any number of land cards from your hand onto the battlefield; with eight or more lands you may discard a card to return it to hand
+    async fr_journey(P, e, t, src) {
+        const lands = P.hand.filter(c => Rx(c).kind === 'land');
+        const put = await frPickMany(P, lands, `${src.card.name}: put a land card from your hand onto the battlefield`, lands.length, lands);
+        put.forEach(l => { if (P.hand.includes(l)) { pull(P.hand, l); putOntoBattlefield(P, l, false); } });
+        if (put.length) log(`${P.name} ${you(P) ? 'put' : 'puts'} ${put.length} land${put.length === 1 ? '' : 's'} onto the battlefield.`);
+        if (P.bf.filter(x => /\bLand\b/.test(x.card.type)).length >= 8 && P.hand.length) {
+            const yes = (P.isAI || AUTOPLAY) ? P.hand.some(c => aiKeepValue(P, c) < 3) : await askYes(P, `${src.card.name}: discard a card to return it to your hand?`, { card: src.card });
+            if (yes) { const d = await chooseDiscard(P, src.card.name); if (d) { pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; noteDiscard(P, 1); src.frToHand = true; log(`${src.card.name} returns to its owner's hand.`); } }
+        }
+    }
+});
+
+Object.assign(CMD, {
+    fr_millHalf(P, e, t, src) { const X = t && t.p; if (!X) return; doMill(X, Math.floor(X.library.length / 2)); },
+    async fr_heroLands(P, e, t, src) {
+        await applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'colorless Hero', kw: [] }, null, src);
+        const tok = G.lastMade; const n = P.bf.filter(x => /\bLand\b/.test(x.card.type)).length;
+        if (tok && onBf(tok.uid) && n > 0) putCounters(tok, n, P);
+    }
+});
+
+// ---- Back faces: The Argent Etchings, Tecutlan, Living Breakthrough ----
+MANA_RIDERS.frTecutlan = function (P, o, srcPerm) {
+    if (['instant', 'sorcery', 'land'].includes(Rx(o).kind)) return;
+    (G.trigQ = G.trigQ || []).push({ P, o: srcPerm || o, effects: [{ t: 'discover', n: o.card.cmc || 0 }] });
+};
+Object.assign(CMD, {
+    async fr_etch1(P, e, t, src) {
+        for (let k = 0; k < 5; k++) { G.lastWipeN = 2; await CMD.incubate(P, {}, null, src); }
+        for (const tok of P.bf.filter(x => x.incubatorN)) await CMD.incubatorTransform(P, {}, null, tok);
+    },
+    async fr_etch3(P, e, t, src) {
+        const hit = allPerms().filter(x => x !== src && !/Artifact|Land/.test(x.card.type) && !hasType(x, 'Phyrexian'));
+        log(`${src.card.name}: destroy ${hit.length} permanents (not artifacts, lands or Phyrexians).`);
+        hit.forEach(x => { if (onBf(x.uid)) destroy(x); });
+        if (!onBf(src.uid) || !src.front) return;
+        const X = G.players[src.owner]; leaveBattlefield(src, 'exile');
+        if (X.exile.includes(src)) { pull(X.exile, src); src.card = src.front; putOntoBattlefield(X, src, false); }
+    },
+    // Living Breakthrough: opponents can't cast spells with the same mana value as a spell you cast, until your next turn
+    fr_breakthrough(P, e, t, src) {
+        const o = G.ctxObjCast || null; const mv = G.lastCastMv;
+        if (mv === undefined) return;
+        foes(P).forEach(F => { (F.noCastMV = (F.noCastMV || []).filter(x => G.turn < x.until)).push({ mv, until: G.turn + Math.max(2, G.players.filter(X => !X.out).length) }); });
+        log(`${src.card.name}: opponents can't cast spells with mana value ${mv} until ${you(P) ? 'your' : `${P.name}'s`} next turn.`);
+    }
+});
+(function () {
+    const c = canCastNow;
+    canCastNow = function (P, o) { if (P && o && P.noCastMV && P.noCastMV.some(x => G.turn < x.until && x.mv === (o.card.cmc || 0)) && Rx(o).kind !== 'land') return false; return c.apply(this, arguments); };
+})();
