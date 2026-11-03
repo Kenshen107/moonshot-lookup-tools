@@ -15998,15 +15998,36 @@
             }
             document.body.appendChild(area);
             document.body.classList.add('pr-printing');
+            // Some browsers (Safari, iPads, phones) fire "afterprint" the moment
+            // the print dialog opens and draw the preview afterwards, which used
+            // to remove this sheet and print the whole page instead. So the sheet
+            // is only removed once the dialog has really closed: the print media
+            // query turns off after it was on, an "afterprint" at least 2 seconds
+            // after print() was called, or the next tap / key press once the
+            // dialog is gone. The sheet is hidden on screen, so waiting is harmless.
+            let started = 0, sawPrint = false;
+            const mq = window.matchMedia ? window.matchMedia('print') : null;
             const done = () => {
                 document.body.classList.remove('pr-printing');
                 area.remove();
-                window.removeEventListener('afterprint', done);
+                window.removeEventListener('afterprint', onAfter);
+                window.removeEventListener('pointerdown', onTouch, true);
+                window.removeEventListener('keydown', onTouch, true);
+                if (mq && mq.removeEventListener) mq.removeEventListener('change', onMq);
             };
-            window.addEventListener('afterprint', done);
+            const onAfter = () => { if (started && Date.now() - started > 2000) done(); };
+            const onTouch = () => { if (started && Date.now() - started > 2000) done(); };
+            const onMq = e => { if (e.matches) sawPrint = true; else if (sawPrint) done(); };
+            window.addEventListener('afterprint', onAfter);
+            if (mq && mq.addEventListener) mq.addEventListener('change', onMq);
             // Let the QR images load before the print dialog opens.
             const imgs = [...area.querySelectorAll('img')];
-            Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => window.print());
+            Promise.all(imgs.map(img => (img.complete ? null : new Promise(r => { img.onload = img.onerror = r; })))).then(() => {
+                started = Date.now();
+                window.addEventListener('pointerdown', onTouch, true);
+                window.addEventListener('keydown', onTouch, true);
+                window.print();
+            });
         }
 
 
