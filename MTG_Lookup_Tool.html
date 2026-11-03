@@ -6790,6 +6790,28 @@
         .sl-foot { text-align: center; margin-top: 12px; }
         .sl-btn { width: auto; margin: 0; padding: 7px 14px; font-size: 0.85em; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; }
         .sl-btn:hover { border-color: var(--brand-light); }
+        /* Set Dividers tab (2026-11-03). The divider cards print in fixed colors, like the other print sheets. */
+        .sd-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin: 0 0 10px; }
+        .sd-controls input[type=text], .sd-controls select { width: auto; min-width: 150px; }
+        .sd-list { max-height: 320px; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px 12px; padding: 10px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 12px; }
+        .sd-list label { display: flex; gap: 6px; align-items: baseline; font-size: 0.85em; cursor: pointer; }
+        .sd-list label b { font-family: monospace; }
+        .sd-list label span { color: var(--text-soft); }
+        .sd-preview { display: flex; gap: 14px; overflow-x: auto; padding: 8px 4px 14px; }
+        .sd-card { flex: none; width: 2.75in; height: 4.75in; box-sizing: border-box; position: relative; background: #fff; color: #000; font-family: sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .sd-tab { position: absolute; top: 0; width: 1.4in; height: 1in; box-sizing: border-box; background: var(--sd); color: var(--sdt); border: 1px dashed #666; border-bottom: 0; border-radius: 0.12in 0.12in 0 0; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .sd-tab b { display: block; font-size: 30pt; line-height: 1; letter-spacing: 0.02em; }
+        .sd-tab small { display: block; font-size: 10pt; margin-top: 3px; font-weight: 700; }
+        .sd-body { position: absolute; top: 1in; left: 0; right: 0; bottom: 0; border: 1px dashed #666; border-top: 0.16in solid var(--sd); padding: 0.14in 0.14in; text-align: center; }
+        .sd-body .sd-name { font-size: 16pt; font-weight: 700; line-height: 1.1; overflow-wrap: anywhere; }
+        .sd-body .sd-meta { font-size: 10pt; margin-top: 4px; color: #333; }
+        .sd-body img { display: block; margin: 0.25in auto 0; width: 1.2in; height: 1.2in; object-fit: contain; }
+        .sd-body .sd-code { font-size: 44pt; font-weight: 800; margin-top: 0.15in; line-height: 1; }
+        @media print {
+            @page htsheet { size: 8.5in 11in; margin: 0; }
+            .ht-page.dividers { grid-template-columns: repeat(3, 2.75in); grid-auto-rows: 4.75in; padding: 0.5in 0.125in; }
+            .ht-page.dividers .sd-card { position: relative; }
+        }
         #htPrintArea { display: none; }
         @media print {
             body.ht-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
@@ -9069,6 +9091,7 @@
             <div id="caseMapResults"></div>
         </div>
         <div id="sleevesApp" style="display:none;"></div>
+        <div id="setDividersApp" style="display:none;"></div>
         <div id="shelfPlannerApp" style="display:none;">
         <div class="app">
           <header class="top">
@@ -9310,6 +9333,7 @@
             grading:      { appId: 'gradingApp',      icon: '🔍', navLabel: 'Grading & Fakes', title: '🔍 Grading & Spotting Fakes', desc: 'Card grading basics and how to spot counterfeits', keywords: 'grade psa bgs fake counterfeit condition' },
             shelves:      { appId: 'shelfPlannerApp', icon: '🗄️', navLabel: 'Shelf Planner',  title: '🗄️ Shelf Planner', desc: 'Plan a wall of shelves on 70-hole uprights and lay products out in rainbow order', keywords: 'shelf shelves planner wall sleeves layout uprights pegboard stocking', onShow: () => window.showShelfPlanner && window.showShelfPlanner() },
             sleeves:      { appId: 'sleevesApp',    icon: '🎨', navLabel: 'Sleeve Wall',     title: '🎨 Sleeve Wall', desc: 'Dragon Shield sleeve colors in rainbow order, for laying out the wall', keywords: 'dragon shield sleeves colors rainbow wall layout matte classic dual', onShow: renderSleeves },
+            setdividers:  { appId: 'setDividersApp', icon: '🗂️', navLabel: 'Set Dividers', title: '🗂️ Set Dividers', desc: 'Print color-coded divider cards with a big set code, so every set stands out in the singles boxes', keywords: 'set dividers singles boxes tabs labels code color print sort', onShow: renderSetDividers },
             quiz:         { appId: 'quizApp',         icon: '🧠', navLabel: 'Card Quiz',       title: '🧠 Card Quiz', desc: 'Practice card knowledge, prices and the case map', keywords: 'quiz practice train learn test', onShow: showQuizTab }
         };
 
@@ -9477,7 +9501,7 @@
         // quick-jump search, are built from NAV_GROUPS + APP_VIEWS, so a new
         // tool only needs adding in those two places.
         const NAV_GROUPS = [
-            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap', 'shelves', 'sleeves'] },
+            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap', 'shelves', 'sleeves', 'setdividers'] },
             { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'prerelease', 'valuevintage', 'judge'] },
             { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'podcast', 'grading', 'quiz'] }
         ];
@@ -16970,7 +16994,10 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const pm = document.createElement('style'); pm.textContent = '@page { size: letter; margin: 0; }'; document.head.appendChild(pm);
             const done = () => { pm.remove(); document.body.classList.remove('ht-printing'); area.remove(); window.removeEventListener('afterprint', done); };
             window.addEventListener('afterprint', done);
-            window.print();
+            // wait for card pictures (set symbols) so they're in the print, but never longer than 6 seconds
+            const imgs = [...area.querySelectorAll('img')].filter(im => !im.complete);
+            if (!imgs.length) { window.print(); return; }
+            Promise.race([Promise.all(imgs.map(im => new Promise(r => { im.onload = im.onerror = r; }))), new Promise(r => setTimeout(r, 6000))]).then(() => window.print());
         }
         function printHotlistTags() {
             printHotlistSheet(hotlistCards().map(c => {
@@ -16999,6 +17026,91 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 return `<div class="ht-label">${HOTLIST_FLAME}<div><small>HOTLIST CASE</small><b class="${g.category.length > 16 ? 'long' : ''}">${escapeAttr(g.category)}</b><span>${escapeAttr(place)}<br>${range} (${g.n} card${g.n === 1 ? '' : 's'})</span></div></div>`;
             }), 'labels', 14);
         }
+
+        // ============== SET DIVIDERS ==============
+        // Color-coded divider cards for the singles boxes (owner, 2026-11-03: "we have problems not being able to
+        // tell where the different sets are in the boxes"). Each divider has a tab with a big set code and the
+        // year; the tab color and the tab position (left / middle / right) both change from one set to the next, so
+        // a new set always stands out. Sets come from Scryfall's set list. Prints 6 to a letter page (cut out and
+        // use on cardstock, or stick the tab on a blank divider).
+        const SD_COLORS = [['#d64545', '#fff'], ['#e8812a', '#000'], ['#f0c419', '#000'], ['#3fa34d', '#fff'], ['#1f9cb0', '#fff'], ['#3b6fd4', '#fff'], ['#8a4fc7', '#fff'], ['#d6509b', '#fff']];
+        const SD_KINDS = {
+            main: { label: 'Core & expansion sets', types: ['core', 'expansion'] },
+            masters: { label: 'Masters & draft sets', types: ['masters', 'draft_innovation', 'eternal'] },
+            commander: { label: 'Commander & multiplayer', types: ['commander', 'planechase', 'archenemy'] },
+            precon: { label: 'Duel Decks, Vault, starters', types: ['duel_deck', 'from_the_vault', 'premium_deck', 'spellbook', 'starter', 'box'] },
+            other: { label: 'Promos, tokens, Un-sets, other', types: null },
+            all: { label: 'Everything', types: null }
+        };
+        const SD = { sets: null, loading: false, error: '', sel: new Set(), kind: 'main', q: '', asc: false, symbols: true };
+        try { const saved = JSON.parse(localStorage.getItem('setDividersSel') || '[]'); if (Array.isArray(saved)) saved.forEach(c => SD.sel.add(c)); } catch (e) {}
+        function sdSave() { try { localStorage.setItem('setDividersSel', JSON.stringify([...SD.sel])); } catch (e) {} }
+        function sdInKind(set) {
+            if (SD.kind === 'all') return true;
+            if (SD.kind === 'other') return !Object.entries(SD_KINDS).some(([k, v]) => v.types && v.types.includes(set.set_type));
+            return SD_KINDS[SD.kind].types.includes(set.set_type);
+        }
+        function sdShown() {
+            const q = SD.q.trim().toLowerCase();
+            return (SD.sets || []).filter(sdInKind).filter(st => !q || st.name.toLowerCase().includes(q) || st.code.toLowerCase().includes(q));
+        }
+        function sdChosen() {
+            const list = (SD.sets || []).filter(st => SD.sel.has(st.code));
+            list.sort((a, b) => (a.released_at || '').localeCompare(b.released_at || '') * (SD.asc ? 1 : -1) || a.name.localeCompare(b.name));
+            return list;
+        }
+        function sdCardHTML(set, i) {
+            const [bg, fg] = SD_COLORS[i % SD_COLORS.length];
+            const left = ['0', '0.675in', '1.35in'][i % 3];
+            const year = (set.released_at || '').slice(0, 4);
+            return `<div class="sd-card" style="--sd:${bg};--sdt:${fg};"><div class="sd-tab" style="left:${left};"><b>${escapeAttr(set.code.toUpperCase())}</b><small>${escapeAttr(year)}</small></div><div class="sd-body"><div class="sd-name">${escapeAttr(set.name)}</div><div class="sd-meta">${escapeAttr(set.code.toUpperCase())} · ${escapeAttr(year)}</div>${SD.symbols && set.icon_svg_uri ? `<img src="${escapeAttr(set.icon_svg_uri)}" alt="" onerror="this.remove()">` : ''}</div></div>`;
+        }
+        async function renderSetDividers() {
+            const root = document.getElementById('setDividersApp');
+            if (!SD.sets && !SD.loading) {
+                SD.loading = true; SD.error = '';
+                root.innerHTML = '<div class="loading">Loading sets from Scryfall…</div>';
+                try {
+                    const r = await fetch('https://api.scryfall.com/sets');
+                    const d = await r.json();
+                    SD.sets = (d.data || []).filter(st => !st.digital);
+                } catch (e) { SD.error = 'Could not load the set list from Scryfall. Check the connection and open this tab again.'; }
+                SD.loading = false;
+            }
+            if (SD.error) { root.innerHTML = `<div class="formats-intro">${SD.error}</div>`; return; }
+            if (!SD.sets) return;
+            const shown = sdShown(), chosen = sdChosen();
+            root.innerHTML = `
+                <div class="formats-intro">Divider cards for the singles boxes. Each tab has a big set code and the year, and the <b>tab color and tab position change from set to set</b>, so you can see where a new set starts at a glance. Pick the sets you keep in the boxes, then print. Fan-made sorting aid, not made or run by the store.</div>
+                <div class="sd-controls">
+                    <select id="sdKind" aria-label="Kind of set" onchange="SD.kind=this.value; renderSetDividers()">${Object.entries(SD_KINDS).map(([k, v]) => `<option value="${k}"${SD.kind === k ? ' selected' : ''}>${v.label}</option>`).join('')}</select>
+                    <input type="text" id="sdSearch" class="text-input" aria-label="Search sets" placeholder="Search name or code…" value="${escapeAttr(SD.q)}" oninput="SD.q=this.value; sdRefreshList()">
+                    <select aria-label="Order in the box" onchange="SD.asc=this.value==='old'; renderSetDividers()"><option value="new"${SD.asc ? '' : ' selected'}>Newest set first</option><option value="old"${SD.asc ? ' selected' : ''}>Oldest set first</option></select>
+                    <label style="font-size:0.85em;"><input type="checkbox" ${SD.symbols ? 'checked' : ''} onchange="SD.symbols=this.checked; renderSetDividers()"> Set symbol</label>
+                </div>
+                <div class="sd-controls">
+                    <button type="button" class="sl-btn" onclick="sdSelectShown()">Select all shown (${shown.length})</button>
+                    <button type="button" class="sl-btn" onclick="sdClear()">Clear</button>
+                    <button type="button" class="sl-btn" onclick="printSetDividers()"${chosen.length ? '' : ' disabled'}>🖨️ Print ${chosen.length} divider${chosen.length === 1 ? '' : 's'}</button>
+                </div>
+                <div class="sd-list" id="sdList">${sdListHTML(shown)}</div>
+                <div class="bk-note" style="text-align:center;">The colors and tab positions follow the order of the sets you picked (${SD.asc ? 'oldest' : 'newest'} first), so neighbors never match. Print on cardstock at 100% scale with Margins set to None, then cut along the dashed lines. Set list and symbols from Scryfall.</div>
+                <h3 style="text-align:center;">Preview</h3>
+                <div class="sd-preview">${chosen.length ? chosen.slice(0, 8).map((st, i) => sdCardHTML(st, i)).join('') : '<div class="bk-note">Pick at least one set to see the dividers.</div>'}</div>`;
+        }
+        function sdListHTML(shown) {
+            return shown.map(st => `<label><input type="checkbox" data-code="${escapeAttr(st.code)}" ${SD.sel.has(st.code) ? 'checked' : ''} onchange="sdToggle(this)"><b>${escapeAttr(st.code.toUpperCase())}</b> ${escapeAttr(st.name)} <span>${escapeAttr((st.released_at || '').slice(0, 4))}</span></label>`).join('') || '<div class="bk-note">No sets match.</div>';
+        }
+        function sdRefreshList() { const el = document.getElementById('sdList'); if (el) el.innerHTML = sdListHTML(sdShown()); }
+        function sdToggle(box) { const c = box.dataset.code; if (box.checked) SD.sel.add(c); else SD.sel.delete(c); sdSave(); renderSetDividers(); }
+        function sdSelectShown() { sdShown().forEach(st => SD.sel.add(st.code)); sdSave(); renderSetDividers(); }
+        function sdClear() { SD.sel.clear(); sdSave(); renderSetDividers(); }
+        function printSetDividers() {
+            const chosen = sdChosen();
+            if (!chosen.length) return;
+            printHotlistSheet(chosen.map((st, i) => sdCardHTML(st, i)), 'dividers', 6);
+        }
+
 
         // ============== COMMANDER BRACKETS ==============
         // The bracket rules themselves can't be fetched (Wizards publishes
