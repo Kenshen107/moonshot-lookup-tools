@@ -6790,6 +6790,17 @@
         .sl-foot { text-align: center; margin-top: 12px; }
         .sl-btn { width: auto; margin: 0; padding: 7px 14px; font-size: 0.85em; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; }
         .sl-btn:hover { border-color: var(--brand-light); }
+        #htPrintArea { display: none; }
+        @media print {
+            body.ht-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
+            body.ht-printing > *:not(#htPrintArea) { display: none !important; }
+            body.ht-printing #htPrintArea { display: grid; grid-template-columns: repeat(3, 2.5in); gap: 0; justify-content: center; padding: 0.25in 0; font-family: sans-serif; color: #000; }
+            .ht-tag { width: 2.5in; height: 1in; box-sizing: border-box; border: 1px dashed #888; display: flex; align-items: center; gap: 0.1in; padding: 0 0.12in; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .ht-tag svg { width: 0.62in; height: 0.78in; flex: none; }
+            .ht-tag b { display: block; font-size: 15pt; letter-spacing: 0.06em; line-height: 1.05; }
+            .ht-tag span { display: block; font-size: 8pt; color: #333; margin-top: 2px; }
+            .ht-tag i { display: block; font-style: normal; font-size: 7.5pt; color: #333; margin-top: 5px; border-bottom: 1px solid #000; }
+        }
         #slPrintArea { display: none; }
         @media print {
             body.sl-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
@@ -9025,6 +9036,10 @@
             <div class="search-box" style="max-width:500px; margin:0 auto 24px;">
                 <input type="text" id="caseMapSearch" class="text-input" aria-label="Search the case map by card name or category" placeholder="Search by card name or category... (Enter jumps to it)" autocomplete="off">
                 <div class="autocomplete-list" id="caseMapAutocomplete"></div>
+            </div>
+            <div style="text-align:center; margin:-8px 0 20px;">
+                <button type="button" class="sl-btn" onclick="printHotlistTags()">🖨️ Print hotlist tags</button>
+                <div class="bk-note" style="margin-top:6px;">A sheet of small flame tags to cut out and tuck in with a card, so anyone can tell it belongs in the hotlist case.</div>
             </div>
             <div id="caseMapResults"></div>
         </div>
@@ -16882,6 +16897,20 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             document.body.appendChild(area);
             document.body.classList.add('sl-printing');
             const done = () => { document.body.classList.remove('sl-printing'); area.remove(); window.removeEventListener('afterprint', done); };
+            window.addEventListener('afterprint', done);
+            window.print();
+        }
+
+        // Hotlist tags: a letter sheet (3 x 10) of small flame tags with a write-in line for the case spot.
+        function printHotlistTags() {
+            let area = document.getElementById('htPrintArea'); if (area) area.remove();
+            area = document.createElement('div'); area.id = 'htPrintArea';
+            const flame = '<svg viewBox="0 0 62 78" aria-hidden="true"><path d="M31 3C33 18 48 26 48 46C48 60 40 72 31 74C22 72 14 60 14 46C14 38 18 32 22 28C22 36 26 40 30 40C26 30 27 14 31 3Z" fill="#e8590c" stroke="#000" stroke-width="3" stroke-linejoin="round"/><path d="M31 74C25 72 22 66 23 59C24 52 30 49 31 42C34 48 40 52 39 60C39 67 36 72 31 74Z" fill="#ffd43b" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/></svg>';
+            const tag = `<div class="ht-tag">${flame}<div><b>HOTLIST</b><span>Case card - keep in the case</span><i>Spot:&nbsp;&nbsp;</i></div></div>`;
+            area.innerHTML = tag.repeat(30);
+            document.body.appendChild(area);
+            document.body.classList.add('ht-printing');
+            const done = () => { document.body.classList.remove('ht-printing'); area.remove(); window.removeEventListener('afterprint', done); };
             window.addEventListener('afterprint', done);
             window.print();
         }

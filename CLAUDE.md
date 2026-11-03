@@ -190,6 +190,10 @@ Paste a Shopify fulfillment screen or a pick ticket; it looks every card up on S
 
 `CASE_MAP_DATA` holds only spot, shelf, side, category and card name. The old "location" and "notes" fields (which slots were chain-wide vs local picks) were removed on 2026-09-27 at the owner's request, since the repo is public. Don't add merchandising notes back.
 
+## Hotlist tags (`MTG_Lookup_Tool.html`, added 2026-11-03, owner's request)
+
+A "🖨️ Print hotlist tags" button on the Case Map tab (`printHotlistTags`, `#htPrintArea`, `body.ht-printing`) prints a letter sheet of 30 small tags (3 x 10, each 2.5 x 1 in, dashed cut lines): a code-drawn flame, "HOTLIST", "Case card - keep in the case" and a blank "Spot:" line. They go in with a card so staff can tell it belongs in the hotlist case. Fixed print colors, no store name or logo, like the other print sheets.
+
 ## Sleeve Wall tab (`MTG_Lookup_Tool.html`, added 2026-10-17, owner's request)
 
 🎨 Sleeve Wall (under At the counter, `APP_VIEWS.sleeves`, `renderSleeves`): Dragon Shield sleeve colors in rainbow order, for laying out the sleeve wall the same way every time. Five lines (`SLEEVE_LINES`): Matte, Classic, Dual Matte, Non-Glare / Outer / Clear and Art (owner's choice of lines; standard size only). Tap a swatch to cycle Active, Out of stock, Not carried (`sleeveCycle`); "Show colors I don't carry" reveals the hidden ones; ➕ adds a color (name, line, swatch color); "Reset my changes" clears it. Everything the staff change is saved in the browser on that device only (`dsSleeves` in localStorage), so it isn't shared between devices. "🖨️ Print the wall" (`printSleeveWall`, `#slPrintArea`, `body.sl-printing`) prints each line in rainbow order, with out-of-stock colors marked and not-carried ones left off.
