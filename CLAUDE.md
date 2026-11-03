@@ -192,7 +192,7 @@ Paste a Shopify fulfillment screen or a pick ticket; it looks every card up on S
 
 ## Hotlist tags (`MTG_Lookup_Tool.html`, added 2026-11-03, owner's request)
 
-A "🖨️ Print hotlist tags" button on the Case Map tab (`printHotlistTags`, `#htPrintArea`, `body.ht-printing`) prints one tag for every card in `CASE_MAP_DATA` (N/A slots skipped, in spot order, 298 tags, about 10 pages, 30 to a letter page, 3 x 10, each 2.5 x 1 in, dashed cut lines): a code-drawn flame, "HOTLIST", the card name (trimmed; names print as typed in the data), its category, and shelf, side and spot number. They go in with a card so staff can tell it belongs in the hotlist case. Names over 24 characters print smaller. Fixed print colors, no store name or logo, like the other print sheets.
+A "🖨️ Print hotlist tags" button on the Case Map tab (`printHotlistTags`, `#htPrintArea`, `body.ht-printing`) prints one tag for every card in `CASE_MAP_DATA` (N/A slots skipped, in spot order, 298 tags, about 10 pages, 30 to a letter page, 3 x 10, each 2.5 x 1 in, dashed cut lines): a code-drawn flame, "HOTLIST", the card name (trimmed; names print as typed in the data), its category, and shelf and spot number (no left / right side, since the case doesn't use sides yet; owner, 2026-11-03). They go in with a card so staff can tell it belongs in the hotlist case. Names over 24 characters print smaller. Fixed print colors, no store name or logo, like the other print sheets.
 
 ## Sleeve Wall tab (`MTG_Lookup_Tool.html`, added 2026-10-17, owner's request)
 

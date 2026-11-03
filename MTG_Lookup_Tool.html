@@ -16911,7 +16911,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const cards = CASE_MAP_DATA.filter(c => c.name && c.name.trim() && c.name.trim() !== 'N/A').sort((x, y) => x.spot - y.spot);
             area.innerHTML = cards.map(c => {
                 const name = c.name.trim();
-                const where = [c.shelf, c.side, 'spot ' + c.spot].filter(Boolean).join(' · ');
+                const where = [c.shelf, 'spot ' + c.spot].join(' · ');
                 return `<div class="ht-tag">${flame}<div><small>HOTLIST</small><b class="${name.length > 24 ? 'long' : ''}">${escapeAttr(name)}</b><span>${escapeAttr(c.category)}<br>${escapeAttr(where)}</span></div></div>`;
             }).join('');
             document.body.appendChild(area);
