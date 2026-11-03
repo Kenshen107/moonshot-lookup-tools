@@ -6794,7 +6794,12 @@
         @media print {
             body.ht-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
             body.ht-printing > *:not(#htPrintArea) { display: none !important; }
-            body.ht-printing #htPrintArea { display: grid; grid-template-columns: repeat(3, 2.5in); gap: 0; justify-content: center; padding: 0.25in 0; font-family: sans-serif; color: #000; }
+            @page htsheet { size: 8.5in 11in; margin: 0; }
+            body.ht-printing #htPrintArea { display: block; padding: 0; color: #000; font-family: sans-serif; }
+            .ht-page { page: htsheet; box-sizing: border-box; width: 8.5in; height: 11in; padding: 0.5in 0.5in; display: grid; grid-template-columns: repeat(3, 2.5in); grid-auto-rows: 1in; align-content: start; break-after: page; overflow: hidden; }
+            .ht-page:last-child { break-after: auto; }
+            .ht-page.strips { grid-auto-rows: 0.25in; }
+            .ht-page.labels { grid-template-columns: repeat(2, 4in); grid-auto-rows: 1.4in; justify-content: start; }
             .ht-tag { width: 2.5in; height: 1in; box-sizing: border-box; border: 1px dashed #888; display: flex; align-items: center; gap: 0.08in; padding: 0 0.1in; break-inside: avoid; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .ht-tag svg { width: 0.42in; height: 0.52in; flex: none; }
             .ht-tag div { min-width: 0; flex: 1; }
@@ -6804,7 +6809,6 @@
             .ht-tag span { display: block; font-size: 7pt; color: #333; line-height: 1.2; }
         }
         @media print {
-            body.ht-printing #htPrintArea.strips { grid-template-columns: repeat(3, 2.5in); }
             .ht-strip { width: 2.5in; height: 0.25in; box-sizing: border-box; border: 0.5px dashed #999; display: flex; align-items: center; gap: 0.04in; padding: 0 0.05in; overflow: hidden; white-space: nowrap; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .ht-strip svg { width: 0.14in; height: 0.18in; flex: none; }
             .ht-strip b { font-size: 7.5pt; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -6812,8 +6816,7 @@
             .ht-strip span { font-size: 6pt; color: #333; margin-left: auto; flex: none; }
         }
         @media print {
-            body.ht-printing #htPrintArea.labels { grid-template-columns: repeat(2, 4in); }
-            .ht-label { width: 4in; height: 1.45in; box-sizing: border-box; border: 1px dashed #888; display: flex; align-items: center; gap: 0.14in; padding: 0 0.16in; break-inside: avoid; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .ht-label { width: 4in; height: 1.4in; box-sizing: border-box; border: 1px dashed #888; display: flex; align-items: center; gap: 0.14in; padding: 0 0.16in; break-inside: avoid; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .ht-label svg { width: 0.62in; height: 0.78in; flex: none; }
             .ht-label div { min-width: 0; flex: 1; }
             .ht-label small { display: block; font-size: 8pt; font-weight: 700; letter-spacing: 0.16em; color: #c2410c; }
@@ -16952,9 +16955,12 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         function hotlistCards() {
             return CASE_MAP_DATA.filter(c => c.name && c.name.trim() && c.name.trim() !== 'N/A').sort((x, y) => x.spot - y.spot);
         }
-        function printHotlistSheet(html, cls) {
+        // items = one HTML string per tag; perPage fills each letter page exactly (fixed 0.5 in margins, so rows never split across pages)
+        function printHotlistSheet(items, cls, perPage) {
             let area = document.getElementById('htPrintArea'); if (area) area.remove();
-            area = document.createElement('div'); area.id = 'htPrintArea'; area.className = cls || '';
+            area = document.createElement('div'); area.id = 'htPrintArea';
+            let html = '';
+            for (let i = 0; i < items.length; i += perPage) html += `<div class="ht-page ${cls || ''}">${items.slice(i, i + perPage).join('')}</div>`;
             area.innerHTML = html;
             document.body.appendChild(area);
             document.body.classList.add('ht-printing');
@@ -16967,14 +16973,14 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 const name = c.name.trim();
                 const where = [c.shelf, c.side, 'spot ' + c.spot].filter(Boolean).join(' · ');
                 return `<div class="ht-tag">${HOTLIST_FLAME}<div><small>HOTLIST</small><b class="${name.length > 24 ? 'long' : ''}">${escapeAttr(name)}</b><span>${escapeAttr(c.category)}<br>${escapeAttr(where)}</span></div></div>`;
-            }).join(''));
+            }), '', 30);
         }
         function printHotlistStrips() {
             printHotlistSheet(hotlistCards().map(c => {
                 const name = c.name.trim();
                 const where = c.shelf.replace('Shelf ', 'S') + (c.side ? c.side[0] : '') + ' · ' + c.spot;
                 return `<div class="ht-strip">${HOTLIST_FLAME}<b class="${name.length > 24 ? 'long' : ''}">${escapeAttr(name)}</b><span>${escapeAttr(where)}</span></div>`;
-            }).join(''), 'strips');
+            }), 'strips', 120);
         }
         function printHotlistLabels() {
             const groups = [];
@@ -16987,7 +16993,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 const place = [g.shelf, g.side].filter(Boolean).join(' · ');
                 const range = g.first === g.last ? 'spot ' + g.first : `spots ${g.first}-${g.last}`;
                 return `<div class="ht-label">${HOTLIST_FLAME}<div><small>HOTLIST CASE</small><b class="${g.category.length > 16 ? 'long' : ''}">${escapeAttr(g.category)}</b><span>${escapeAttr(place)}<br>${range} (${g.n} card${g.n === 1 ? '' : 's'})</span></div></div>`;
-            }).join(''), 'labels');
+            }), 'labels', 14);
         }
 
         // ============== COMMANDER BRACKETS ==============
