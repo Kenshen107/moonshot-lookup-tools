@@ -154,7 +154,7 @@
             body.printing { background: #fff !important; margin: 0 !important; padding: 0 !important; }
             body.printing > *:not(#printArea) { display: none !important; }
             body.printing #printArea { display: block; }
-            .print-sheet { page: sheet; width: 8.5in; height: 11in; margin: 0; overflow: hidden; }
+            .print-sheet { page: sheet; width: 8.5in; height: 10.98in; margin: 0; overflow: hidden; break-after: avoid; }
             .print-cards { position: relative; display: grid; grid-template-columns: 4.25in 4.25in; grid-template-rows: 5.5in 5.5in; }
             .print-cards::before, .print-cards::after { content: ''; position: absolute; }
             .print-cards::before { left: 4.25in; top: 0; bottom: 0; border-left: 1px dashed #999; }
@@ -694,7 +694,9 @@
         // next tap / key press). It is hidden on screen, so waiting is harmless.
         let started = 0, sawPrint = false;
         const mq = window.matchMedia ? window.matchMedia('print') : null;
+        const pm = document.createElement('style'); pm.textContent = '@page { size: letter; margin: 0; }'; document.head.appendChild(pm);
         const done = () => {
+            pm.remove();
             document.body.classList.remove('printing');
             area.remove();
             window.removeEventListener('afterprint', onAfter);
