@@ -173,3 +173,16 @@ frRW(/Return target creature card from your graveyard to your hand\. If ~ was ki
 
 FR.push([/^return target spell or nonland permanent an opponent controls to its owner's hand$/i, () => cmd('fr_sinkStupor', { target: 'spellOrPerm', theirs: true })]);
 frRW(/Each player may shuffle their hand and graveyard into their library\. Each player who does draws seven cards\. Exile ~\./, 'frStepBetween', cmd('fr_stepBetween'));
+
+// ----- Jadzi's back face: Journey to the Oracle (2026-11-03, owner: "you can't cast the backside of the commander") -----
+frRW(/You may put any number of land cards from your hand onto the battlefield\. Then if you control eight or more lands, you may discard a card\. If you do, return ~ to its owner's hand\./, 'frJourney', cmd('fr_journey'));
+
+// ----- Back faces of the Jadzi and Kang decks (2026-11-03) -----
+clx('Aftermath', R => { R.aftermath = true; R.flashback = { ...R.cost }; }); // Memory: cast only from the graveyard, then exiled
+FR.push([/^target opponent mills half their library, rounded down$/i, () => cmd('fr_millHalf', { target: 'player', oppOnly: true })]);
+frRW(/Create a 1\/1 colorless Hero creature token\. Put a \+1\/\+1 counter on it for each land you control\./, 'frHeroLands', cmd('fr_heroLands'));
+// The Argent Etchings (Elesh Norn's back face), Tecutlan (Brass's Tunnel-Grinder's back) and Living Breakthrough (Inventive Iteration's back)
+frRW(/Incubate 2 five times, then transform all Incubator tokens you control\./, 'frEtch1', cmd('fr_etch1'));
+frRW(/Destroy all other permanents except for artifacts, lands, and Phyrexians\. Exile ~, then return it to the battlefield ?\./, 'frEtch3', cmd('fr_etch3'));
+clx('Whenever you cast a permanent spell using mana produced by ~, discover X, where X is that spell\'s mana value.', R => { if (!R.mana) return false; R.mana = { ...R.mana, rider: 'frTecutlan' }; });
+clx('Whenever you cast a spell, your opponents can\'t cast spells with the same mana value as that spell until your next turn.', R => { R.trig.push({ ev: 'cast', effects: [cmd('fr_breakthrough')] }); });
