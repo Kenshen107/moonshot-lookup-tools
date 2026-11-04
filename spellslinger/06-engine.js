@@ -4676,6 +4676,7 @@ async function confirmAttack() {
         }
     } else if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected
     if (!pod && G.players.length > 2 && hasPeace(me().i, G.defender) && !(await askYes(me(), `You have a peace deal with ${nm(foe())}. Attack anyway? (You break your word and they will remember.)`, { card: foe().command[0] && foe().command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
+    if (typeof hhAnnexAsk === 'function') await hhAnnexAsk(me(), sel); // Norn's Annex: pay {W}, pay 2 life or don't attack
     declareAttackers(me(), sel);
     await exertChoices(me(), sel);
     G.phase = 'declareBlocks';
