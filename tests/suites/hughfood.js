@@ -90,6 +90,10 @@ const SICKBAY = {"id": "05735357-3cca-42be-a3ae-5b4fc1fd5f47", "name": "Sickbay"
               const land = put(B, 'Exotic Orchard'); const basic = put(B, 'Mountain'); ok('Spectrum Sentinel: triggers on nonbasic opposing lands only', TRIG_FN.hh_oppNonbasic(ss, { o: land }) && !TRIG_FN.hh_oppNonbasic(ss, { o: basic }) && !TRIG_FN.hh_oppNonbasic(ss, { o: put(A, 'Exotic Orchard') }), []); }
             reset(); { const sp = put(A, 'Sphinx of the Revelation'); G.ctxRaw = { n: 4 }; CMD.hh_sphinx(A, {}, null, sp); G.ctxRaw = null; ok('Sphinx of the Revelation: gets that many energy', A.energy === 4, A.energy);
               A.energy = 3; const r = Rx(sp); ok('Sphinx of the Revelation: its draw ability reads', (r.acts || []).length >= 1, (r.acts || []).length); }
+            reset(); { put(A, 'Hugh, First of Many'); for (let i = 0; i < 3; i++) put(A, 'Island'); for (let i = 0; i < 6; i++) { const st = makeArtifactToken(A, 'powerstone'); st.sick = false; } const cart = give(A, 'Hot Dog Cart');
+              ok('Replicate: the most you can pay counts artifact-only mana (Powerstones) as well as lands', maxRep(A, cart) === 2, [maxRep(A, cart)]);
+              A.isAI = false; manaMode = 'auto'; G.view = 0; const was = askNumber; let seen = null; askNumber = async (P, m, mn, mx) => { seen = mx; return mx; }; G.busy = false; await humanCast(cart.uid); askNumber = was; await settle2(); let g = 0; while (G.stack.length && g++ < 20) await resolveTop(); await settle2(); A.isAI = true;
+              ok('Replicate: paying the maximum makes that many copies (the card plus two tokens)', seen === 2 && A.bf.filter(o => o.card.name === 'Hot Dog Cart').length === 3, [seen, A.bf.filter(o => o.card.name === 'Hot Dog Cart').length]); }
             reset(); { G.attackers = []; ok('No broken invariants', T.invariants().length === 0, T.invariants()); }
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;
