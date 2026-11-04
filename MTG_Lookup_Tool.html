@@ -17279,30 +17279,65 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             }
             throw last;
         }
+        // one card at a time (the slow way): used for names the batch lookup could not match exactly, so typos still resolve
+        async function hlpLoadOne(c) {
+            const nm = HLP.st.alias[c.key] || c.key;
+            const r = await hlpFetch('https://api.scryfall.com/cards/named?fuzzy=' + encodeURIComponent(nm));
+            if (!r.ok) { HLP.prints[c.key] = { err: 1 }; hlpSavePrints(); return; }
+            const card = await r.json();
+            const sets = new Set(); let url = card.prints_search_uri, pages = 0;
+            while (url && pages < 5) {
+                await hlpSleep(HLP.delay);
+                const pr = await hlpFetch(url); if (!pr.ok) break;
+                const d = await pr.json();
+                (d.data || []).forEach(x => { if ((x.games || []).includes('paper') && !x.digital) sets.add(x.set); });
+                url = d.has_more ? d.next_page : null; pages++;
+            }
+            HLP.prints[c.key] = { n: card.name, sets: [...sets] }; hlpSavePrints();
+        }
+        // fast path: Scryfall's collection endpoint matches 75 exact names per request, then one search per 12 cards lists all their printings
         async function hlpLoad(limit) {
             if (HLP.loading) return;
             HLP.loading = true; HLP.stop = false;
             await hlpLoadSets();
             const need = hlpCards().filter(c => !HLP.hidden.has(c.key) && !HLP.prints[c.key]).slice(0, limit || 9999);
             let done = 0, fails = 0;
-            for (const c of need) {
-                if (HLP.stop) break;
-                HLP.status = `Looking up printings: ${done} of ${need.length} (${c.key})…`; hlpStatusRefresh();
-                try {
-                    const nm = HLP.st.alias[c.key] || c.key;
-                    const r = await hlpFetch('https://api.scryfall.com/cards/named?fuzzy=' + encodeURIComponent(nm));
-                    if (!r.ok) { HLP.prints[c.key] = { err: 1 }; hlpSavePrints(); done++; await hlpSleep(HLP.delay); continue; }
-                    const card = await r.json();
-                    const sets = new Set(); let url = card.prints_search_uri, pages = 0;
-                    while (url && pages < 5) {
+            const rest = [];
+            try {
+                const found = []; // { c, name } with Scryfall's own spelling of the name
+                for (let i = 0; i < need.length && !HLP.stop; i += 75) {
+                    const chunk = need.slice(i, i + 75);
+                    HLP.status = `Matching card names: ${i} of ${need.length}…`; hlpStatusRefresh();
+                    const r = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ identifiers: chunk.map(c => ({ name: HLP.st.alias[c.key] || c.key })) }) });
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    const d = await r.json();
+                    const byName = {}; (d.data || []).forEach(x => { byName[x.name.toLowerCase()] = x.name; byName[x.name.split(' // ')[0].toLowerCase()] = x.name; });
+                    chunk.forEach(c => { const nm = byName[(HLP.st.alias[c.key] || c.key).toLowerCase()]; if (nm) found.push({ c, name: nm }); else rest.push(c); });
+                    await hlpSleep(HLP.delay);
+                }
+                for (let i = 0; i < found.length && !HLP.stop; i += 12) {
+                    const grp = found.slice(i, i + 12), names = [...new Set(grp.map(g => g.name))];
+                    HLP.status = `Looking up printings: ${done} of ${need.length}…`; hlpStatusRefresh();
+                    const bySet = {}; names.forEach(n => { bySet[n] = new Set(); });
+                    const q = '(' + names.map(n => '!"' + n.replace(/"/g, '') + '"').join(' or ') + ') game:paper';
+                    let url = 'https://api.scryfall.com/cards/search?unique=prints&include_extras=true&include_variations=true&q=' + encodeURIComponent(q), pages = 0, ok = true;
+                    while (url && pages < 30) {
                         await hlpSleep(HLP.delay);
-                        const pr = await hlpFetch(url); if (!pr.ok) break;
+                        const pr = await hlpFetch(url); if (!pr.ok) { ok = false; break; }
                         const d = await pr.json();
-                        (d.data || []).forEach(x => { if ((x.games || []).includes('paper') && !x.digital) sets.add(x.set); });
+                        (d.data || []).forEach(x => { if (!x.digital && bySet[x.name]) bySet[x.name].add(x.set); });
                         url = d.has_more ? d.next_page : null; pages++;
                     }
-                    HLP.prints[c.key] = { n: card.name, sets: [...sets] }; hlpSavePrints();
-                } catch (e) { if (++fails >= 3) { HLP.status = 'Scryfall is not answering (' + (e && e.message) + '). Stopped: press Look up printings to carry on.'; break; } await hlpSleep(15000); continue; }
+                    grp.forEach(g => { if (ok && bySet[g.name].size) { HLP.prints[g.c.key] = { n: g.name, sets: [...bySet[g.name]] }; done++; } else rest.push(g.c); });
+                    hlpSavePrints(); fails = 0;
+                }
+            } catch (e) { HLP.status = 'Scryfall is not answering (' + (e && e.message) + '). Stopped: press Look up printings to carry on.'; HLP.loading = false; renderHlp(); return; }
+            // anything the fast path could not settle (typos, odd names) goes one by one
+            for (const c of rest) {
+                if (HLP.stop) break;
+                HLP.status = `Looking up printings: ${done} of ${need.length} (${c.key})…`; hlpStatusRefresh();
+                try { await hlpLoadOne(c); }
+                catch (e) { if (++fails >= 3) { HLP.status = 'Scryfall is not answering (' + (e && e.message) + '). Stopped: press Look up printings to carry on.'; break; } await hlpSleep(15000); continue; }
                 fails = 0; done++; await hlpSleep(HLP.delay);
             }
             HLP.loading = false;
