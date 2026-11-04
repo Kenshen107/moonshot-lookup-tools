@@ -6827,6 +6827,27 @@
         .sl-txt small { color: #333; font-weight: 700; }
         .sl-preview { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 6px 0 12px; }
         @media print { .ht-page.slabels { justify-content: center; align-content: start; padding: 0.5in; } }
+        /* Set box placeholders (Case Map tab). The slips print in fixed colors, like the other print sheets. */
+        .hlp-wrap { max-width: 1100px; margin: 0 auto 20px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; }
+        .hlp-wrap > summary { cursor: pointer; font-weight: 600; }
+        .hlp-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+        .hlp-bar input[type=text], .hlp-bar select { width: auto; min-width: 140px; }
+        .hlp-bar label { font-size: 0.85em; }
+        .hlp-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        .hlp-table td, .hlp-table th { padding: 4px 6px; border-bottom: 1px solid var(--border-subtle); text-align: left; vertical-align: top; }
+        .hlp-scroll { max-height: 460px; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+        .hlp-chip { display: inline-block; width: auto; margin: 1px 2px; padding: 1px 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-panel-raised); color: var(--text-primary); font: 0.8em monospace; cursor: pointer; }
+        .hlp-chip.off { opacity: 0.4; text-decoration: line-through; }
+        .hlp-chip.done { border-color: var(--color-success); }
+        .hlp-err { color: var(--color-warning); }
+        .hp-slip { flex: none; box-sizing: border-box; display: flex; align-items: center; gap: 0.06in; padding: 0 0.1in 0 0.08in; background: #fff; color: #000; font-family: sans-serif; border: 1px dashed #777; border-top: 0.06in solid var(--c); overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .hp-slip svg { flex: none; width: 0.32in; height: 0.4in; }
+        .hp-txt { flex: 1; min-width: 0; line-height: 1.1; }
+        .hp-txt small { display: block; font-size: 6pt; font-weight: 700; letter-spacing: 0.14em; color: #c2410c; }
+        .hp-txt b { display: block; margin: 1px 0; overflow-wrap: anywhere; }
+        .hp-txt span { display: block; font-size: 6.5pt; color: #333; }
+        .hp-code { flex: none; text-align: center; font-weight: 800; padding: 0 0.04in; border-left: 1px solid #ccc; line-height: 1; }
+        .hp-code i { display: block; font-style: normal; font-size: 6pt; font-weight: 700; color: #444; margin-top: 2px; }
         #htPrintArea { display: none; }
         @media print {
             body.ht-printing { background: #fff !important; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
@@ -9103,6 +9124,10 @@
                 <button type="button" class="sl-btn" onclick="printHotlistStrips()">🖨️ Print divider strips</button>
                 <div class="bk-note" style="margin-top:6px;">Tags: one small flame tag for every card, with its name and spot, in case order. Divider strips: a thin one-line sticker per card for the white edge of its card divider. Case labels: one bigger label for each section of the case (shelf, side, category and spot range) to mark where it starts.</div>
             </div>
+            <details id="hlpDetails" class="hlp-wrap" ontoggle="if (this.open) renderHlp()">
+                <summary>🗂️ Set box placeholders: one slip for each card in each set it was printed in</summary>
+                <div id="hlPhApp"><div class="loading">Opening…</div></div>
+            </details>
             <div id="caseMapResults"></div>
         </div>
         <div id="sleevesApp" style="display:none;"></div>
@@ -17002,7 +17027,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             let area = document.getElementById('htPrintArea'); if (area) area.remove();
             area = document.createElement('div'); area.id = 'htPrintArea';
             let html = '';
-            for (let i = 0; i < items.length; i += perPage) html += `<div class="ht-page ${cls || ''}"${pageStyle ? ` style="${pageStyle}"` : ''}>${items.slice(i, i + perPage).join('')}</div>`;
+            const st = pageStyle ? ` style="${pageStyle}"` : '';
+            if (items.length && Array.isArray(items[0])) items.forEach(pg => { html += `<div class="ht-page ${cls || ''}"${st}>${pg.join('')}</div>`; });
+            else for (let i = 0; i < items.length; i += perPage) html += `<div class="ht-page ${cls || ''}"${st}>${items.slice(i, i + perPage).join('')}</div>`;
             area.innerHTML = html;
             document.body.appendChild(area);
             document.body.classList.add('ht-printing');
@@ -17170,6 +17197,213 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             printHotlistSheet(chosen.map((st, i) => sdCardHTML(st, i)), 'dividers', 6);
         }
 
+
+        // ============== SET BOX PLACEHOLDERS (Case Map tab) ==============
+        // Owner (2026-11-04): "print out a slot for every set that card appears in so we can make a hotlist placeholder for that
+        // card in our set boxes ... customizable so as new cards come in or we need to replace something we don't have to print
+        // the whole thing out again." Every card in CASE_MAP_DATA is looked up on Scryfall once (fuzzy name, then every paper
+        // printing's set; cached in this browser). One slip per card per set, in set order. Hide a card, skip single sets, add cards
+        // by hand, set a different lookup name, and remember what was printed so "Print only new" prints just the rest.
+        const HLP_KEY = 'hotlistPlaceholdersV1', HLP_PKEY = 'hotlistPrintsV1';
+        const HLP = { delay: 150, loading: false, stop: false, status: '', q: '', cat: '', setList: null, prints: {}, hidden: new Set(), skip: new Set(), printed: new Set(),
+            st: { extra: [], alias: {}, kinds: { main: 1, masters: 1, commander: 1, precon: 1, other: 0 }, onlyDividers: false, newPage: false, w: 2.5, h: 1, mark: true, seeded: false } };
+        try {
+            const sv = JSON.parse(localStorage.getItem(HLP_KEY) || 'null');
+            if (sv) { Object.assign(HLP.st, sv.st || {}); (sv.hidden || []).forEach(k => HLP.hidden.add(k)); (sv.skip || []).forEach(k => HLP.skip.add(k)); (sv.printed || []).forEach(k => HLP.printed.add(k)); }
+            HLP.prints = JSON.parse(localStorage.getItem(HLP_PKEY) || '{}') || {};
+        } catch (e) {}
+        function hlpSave() { try { localStorage.setItem(HLP_KEY, JSON.stringify({ st: HLP.st, hidden: [...HLP.hidden], skip: [...HLP.skip], printed: [...HLP.printed] })); } catch (e) {} }
+        function hlpSavePrints() { try { localStorage.setItem(HLP_PKEY, JSON.stringify(HLP.prints)); } catch (e) {} }
+        function hlpKey(n) { return String(n || '').replace(/\s*\([^)]*\)\s*$/, '').trim(); }
+        function hlpCards() {
+            const map = new Map();
+            CASE_MAP_DATA.forEach(c => {
+                const n = (c.name || '').trim(); if (!n || n === 'N/A') return;
+                const k = hlpKey(n); if (!k) return;
+                let e = map.get(k.toLowerCase());
+                if (!e) { e = { key: k, cat: c.category, locs: [] }; map.set(k.toLowerCase(), e); }
+                e.locs.push([c.shelf, c.side, 'spot ' + c.spot].filter(Boolean).join(' · '));
+            });
+            HLP.st.extra.forEach(x => { const k = hlpKey(x.name); if (k && !map.has(k.toLowerCase())) map.set(k.toLowerCase(), { key: k, cat: 'Added by hand', locs: x.loc ? [x.loc] : [], extra: true }); });
+            if (!HLP.st.seeded) { // the Flashy Showcase cards are specific printings, so they start unticked
+                CASE_MAP_DATA.forEach(c => { if (c.category === 'Flashy Showcase') HLP.hidden.add(hlpKey(c.name)); });
+                HLP.st.seeded = true; hlpSave();
+            }
+            return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
+        }
+        function hlpKindOf(set) { const f = Object.entries(SD_KINDS).find(([k, v]) => v.types && v.types.includes(set.set_type)); return f ? f[0] : 'other'; }
+        function hlpSetMap() { const m = {}; (HLP.setList || []).forEach(s => { m[s.code] = s; }); return m; }
+        function hlpSlips() {
+            const sm = hlpSetMap(), out = [];
+            hlpCards().forEach(c => {
+                if (HLP.hidden.has(c.key)) return;
+                const p = HLP.prints[c.key]; if (!p || !p.sets) return;
+                p.sets.forEach(code => {
+                    const set = sm[code]; if (!set || !HLP.st.kinds[hlpKindOf(set)]) return;
+                    if (HLP.st.onlyDividers && !SD.sel.has(code)) return;
+                    const pk = c.key + '|' + code; if (HLP.skip.has(pk)) return;
+                    out.push({ card: c, set, pk });
+                });
+            });
+            out.sort((a, b) => -(a.set.released_at || '').localeCompare(b.set.released_at || '') || a.set.code.localeCompare(b.set.code) || a.card.key.localeCompare(b.card.key));
+            return out;
+        }
+        function hlpSlipHTML(sl) {
+            const w = HLP.st.w, h = HLP.st.h, set = sl.set, name = sl.card.key, code = set.code.toUpperCase(), year = (set.released_at || '').slice(0, 4);
+            const color = sdEra(set)[1];
+            let shown = (HLP.prints[sl.card.key] && HLP.prints[sl.card.key].n) || name;
+            if (shown.includes(' // ') && !name.includes('//')) shown = shown.split(' // ')[0]; // two-faced cards: front face only
+            const avail = Math.max(0.5, w - 0.32 - 0.62 - 0.3) * 72;
+            const nf = Math.max(5.5, Math.min(h * 72 * 0.145, (avail * 2) / (0.56 * shown.length)));
+            const loc = sl.card.locs.join(' | ');
+            return `<div class="hp-slip" style="--c:${color};width:${w}in;height:${h}in;">${HOTLIST_FLAME}<div class="hp-txt"><small>HOTLIST CARD</small><b style="font-size:${nf.toFixed(1)}pt">${escapeAttr(shown)}</b><span>${escapeAttr(set.name)}${year ? ' · ' + year : ''}</span>${loc ? `<span>In the case: ${escapeAttr(loc)}</span>` : ''}</div><div class="hp-code" style="font-size:${(h * 72 * 0.2).toFixed(1)}pt;width:0.62in">${escapeAttr(code)}<i>${escapeAttr(year)}</i></div></div>`;
+        }
+        function hlpGrid() { const w = HLP.st.w, h = HLP.st.h; const cols = Math.max(1, Math.floor(7.5 / w)), rows = Math.max(1, Math.floor(10 / h)); return { cols, rows, per: cols * rows, style: `grid-template-columns:repeat(${cols},${w}in);grid-auto-rows:${h}in;` }; }
+        async function hlpLoadSets() {
+            if (HLP.setList) return;
+            if (SD.sets) { HLP.setList = SD.sets; return; }
+            try { const r = await fetch('https://api.scryfall.com/sets'); const d = await r.json(); HLP.setList = (d.data || []).filter(st => !st.digital); if (!SD.sets) SD.sets = HLP.setList; } catch (e) { HLP.status = 'Could not load the set list from Scryfall.'; }
+        }
+        const hlpSleep = ms => new Promise(r => setTimeout(r, ms));
+        // fetch with retries: a busy or dropped request (429, 5xx, no answer) waits and tries again; only a real 404 counts as "not found"
+        async function hlpFetch(url) {
+            let last;
+            for (let i = 0; i < 7; i++) {
+                try {
+                    const r = await fetch(url);
+                    if (r.ok || r.status === 404) { HLP.delay = Math.max(150, HLP.delay * 0.97); return r; }
+                    last = new Error('HTTP ' + r.status);
+                } catch (e) { last = e; } // a rate-limited reply can arrive without CORS headers, which shows up here
+                HLP.delay = Math.min(600, HLP.delay * 1.6);
+                await hlpSleep(Math.min(10000, 1000 * (i + 1)));
+            }
+            throw last;
+        }
+        async function hlpLoad(limit) {
+            if (HLP.loading) return;
+            HLP.loading = true; HLP.stop = false;
+            await hlpLoadSets();
+            const need = hlpCards().filter(c => !HLP.hidden.has(c.key) && !HLP.prints[c.key]).slice(0, limit || 9999);
+            let done = 0, fails = 0;
+            for (const c of need) {
+                if (HLP.stop) break;
+                HLP.status = `Looking up printings: ${done} of ${need.length} (${c.key})…`; hlpStatusRefresh();
+                try {
+                    const nm = HLP.st.alias[c.key] || c.key;
+                    const r = await hlpFetch('https://api.scryfall.com/cards/named?fuzzy=' + encodeURIComponent(nm));
+                    if (!r.ok) { HLP.prints[c.key] = { err: 1 }; hlpSavePrints(); done++; await hlpSleep(HLP.delay); continue; }
+                    const card = await r.json();
+                    const sets = new Set(); let url = card.prints_search_uri, pages = 0;
+                    while (url && pages < 5) {
+                        await hlpSleep(HLP.delay);
+                        const pr = await hlpFetch(url); if (!pr.ok) break;
+                        const d = await pr.json();
+                        (d.data || []).forEach(x => { if ((x.games || []).includes('paper') && !x.digital) sets.add(x.set); });
+                        url = d.has_more ? d.next_page : null; pages++;
+                    }
+                    HLP.prints[c.key] = { n: card.name, sets: [...sets] }; hlpSavePrints();
+                } catch (e) { if (++fails >= 3) { HLP.status = 'Scryfall is not answering (' + (e && e.message) + '). Stopped: press Look up printings to carry on.'; break; } await hlpSleep(15000); continue; }
+                fails = 0; done++; await hlpSleep(HLP.delay);
+            }
+            HLP.loading = false;
+            if (!HLP.stop && !/Stopped/.test(HLP.status)) HLP.status = `Done: ${need.length} card${need.length === 1 ? '' : 's'} looked up.`;
+            renderHlp();
+        }
+        function hlpStatusRefresh() { const el = document.getElementById('hlpStatus'); if (el) el.textContent = HLP.status; }
+        function hlpRowHTML(c, sm) {
+            const p = HLP.prints[c.key], on = !HLP.hidden.has(c.key);
+            let sets = '';
+            if (HLP.loading && !p) sets = '<span class="bk-note">waiting…</span>';
+            else if (!p) sets = '<span class="bk-note">not looked up yet</span>';
+            else if (p.err) sets = `<span class="hlp-err">Scryfall couldn't find this name.</span> <input type="text" class="text-input" style="width:170px;padding:2px 6px" placeholder="exact card name" value="${escapeAttr(HLP.st.alias[c.key] || '')}" onchange="hlpAlias(this)" data-k="${escapeAttr(c.key)}">`;
+            else {
+                const list = (p.sets || []).map(code => sm[code]).filter(st => st && HLP.st.kinds[hlpKindOf(st)]).sort((a, b) => -(a.released_at || '').localeCompare(b.released_at || ''));
+                sets = list.map(st => { const pk = c.key + '|' + st.code; return `<button type="button" class="hlp-chip${HLP.skip.has(pk) ? ' off' : ''}${HLP.printed.has(pk) ? ' done' : ''}" title="${escapeAttr(st.name)} ${(st.released_at || '').slice(0, 4)}${HLP.printed.has(pk) ? ' (printed)' : ''}. Click to skip or restore this slip." data-pk="${escapeAttr(pk)}" onclick="hlpSkip(this)">${escapeAttr(st.code.toUpperCase())}</button>`; }).join('') || '<span class="bk-note">no sets in the chosen kinds</span>';
+            }
+            return `<tr><td><input type="checkbox" ${on ? 'checked' : ''} data-k="${escapeAttr(c.key)}" onchange="hlpToggleCard(this)" aria-label="Include ${escapeAttr(c.key)}"></td><td><b>${escapeAttr(c.key)}</b>${c.extra ? ` <button type="button" class="hlp-chip" data-k="${escapeAttr(c.key)}" onclick="hlpRemoveExtra(this)" title="Remove this card you added">✕</button>` : ''}<div class="bk-note">${escapeAttr(c.cat)}${c.locs.length ? ' · ' + escapeAttr(c.locs.join(' | ')) : ''}</div></td><td>${sets}</td></tr>`;
+        }
+        function renderHlp() {
+            const root = document.getElementById('hlPhApp'); if (!root) return;
+            if (!HLP.setList) { root.innerHTML = '<div class="loading">Loading the set list from Scryfall…</div>'; hlpLoadSets().then(renderHlp); return; }
+            const sm = hlpSetMap(), cards = hlpCards();
+            const cats = [...new Set(cards.map(c => c.cat))].sort();
+            const q = HLP.q.trim().toLowerCase();
+            const shown = cards.filter(c => (!HLP.cat || c.cat === HLP.cat) && (!q || c.key.toLowerCase().includes(q)));
+            const slips = hlpSlips(), fresh = slips.filter(sl => !HLP.printed.has(sl.pk));
+            const looked = cards.filter(c => !HLP.hidden.has(c.key) && HLP.prints[c.key]).length, total = cards.filter(c => !HLP.hidden.has(c.key)).length;
+            const bySet = {}; slips.forEach(sl => { bySet[sl.set.code] = sl.set; });
+            const g = hlpGrid();
+            root.innerHTML = `
+                <div class="bk-note">One slip for each hotlist card in each set it was printed in, so a placeholder can stand in that set's box where the card would be filed. Printings come from Scryfall (looked up once, then kept in this browser). Untick a card to leave it out, click a set code to skip that one slip, add cards by hand, and use <b>Print only new</b> so you never reprint what's already cut out. Everything you change is saved on this device only.</div>
+                <div class="hlp-bar">
+                    <button type="button" class="sl-btn" onclick="hlpLoad()" ${HLP.loading ? 'disabled' : ''}>🔎 Look up printings (${total - looked} left)</button>
+                    ${HLP.loading ? '<button type="button" class="sl-btn" onclick="HLP.stop=true">Stop</button>' : '<button type="button" class="sl-btn" onclick="hlpRefreshAll()" title="Look every card up again, for example after Scryfall adds a new printing">Refresh all</button>'}
+                    <span class="bk-note" id="hlpStatus">${escapeAttr(HLP.status)}</span>
+                </div>
+                <div class="hlp-bar">
+                    <b>Sets to include:</b>
+                    ${Object.entries(SD_KINDS).filter(([k]) => k !== 'all').map(([k, v]) => `<label><input type="checkbox" ${HLP.st.kinds[k] ? 'checked' : ''} onchange="hlpKind('${k}', this.checked)"> ${v.label}</label>`).join('')}
+                    <label><input type="checkbox" ${HLP.st.onlyDividers ? 'checked' : ''} onchange="HLP.st.onlyDividers=this.checked; hlpSave(); renderHlp()"> Only sets picked on the Set Dividers tab (${SD.sel.size})</label>
+                </div>
+                <div class="hlp-bar">
+                    <b>Slip size:</b>
+                    <label>Width <input type="number" step="0.05" min="1.2" max="7.5" value="${HLP.st.w}" style="width:70px" onchange="hlpNum('w', this)"> in</label>
+                    <label>Height <input type="number" step="0.05" min="0.6" max="5" value="${HLP.st.h}" style="width:70px" onchange="hlpNum('h', this)"> in</label>
+                    <span class="bk-note">${g.per} to a page</span>
+                    <label><input type="checkbox" ${HLP.st.newPage ? 'checked' : ''} onchange="HLP.st.newPage=this.checked; hlpSave()"> New page for each set</label>
+                    <label><input type="checkbox" ${HLP.st.mark ? 'checked' : ''} onchange="HLP.st.mark=this.checked; hlpSave()"> Remember what I print</label>
+                </div>
+                <div class="hlp-bar">
+                    <b>${slips.length} slip${slips.length === 1 ? '' : 's'}</b> <span class="bk-note">in ${Object.keys(bySet).length} sets, ${slips.length - fresh.length} already printed</span>
+                    <button type="button" class="sl-btn" onclick="hlpPrint('new')" ${fresh.length ? '' : 'disabled'}>🖨️ Print only new (${fresh.length})</button>
+                    <button type="button" class="sl-btn" onclick="hlpPrint('all')" ${slips.length ? '' : 'disabled'}>🖨️ Print all (${slips.length})</button>
+                    <select id="hlpSetPick" aria-label="One set"><option value="">One set…</option>${Object.values(bySet).sort((a, b) => -(a.released_at || '').localeCompare(b.released_at || '')).map(st => `<option value="${escapeAttr(st.code)}">${escapeAttr(st.code.toUpperCase())} · ${escapeAttr(st.name)}</option>`).join('')}</select>
+                    <button type="button" class="sl-btn" onclick="hlpPrint('set')">🖨️ Print that set</button>
+                    <button type="button" class="sl-btn" onclick="hlpMarkAll()">Mark all as printed</button>
+                    <button type="button" class="sl-btn" onclick="hlpResetPrinted()">Forget printed</button>
+                </div>
+                <div class="hlp-bar">
+                    <input type="text" class="text-input" id="hlpAdd" placeholder="Add a card by name…" aria-label="Add a card by name">
+                    <button type="button" class="sl-btn" onclick="hlpAddCard()">➕ Add card</button>
+                    <input type="text" class="text-input" placeholder="Search the list…" aria-label="Search the list" value="${escapeAttr(HLP.q)}" oninput="HLP.q=this.value; hlpRefreshList()">
+                    <select aria-label="Category" onchange="HLP.cat=this.value; renderHlp()"><option value="">All categories</option>${cats.map(c => `<option${HLP.cat === c ? ' selected' : ''}>${escapeAttr(c)}</option>`).join('')}</select>
+                </div>
+                <div class="hlp-scroll"><table class="hlp-table"><thead><tr><th></th><th>Card</th><th>Sets (click a code to skip that slip)</th></tr></thead><tbody id="hlpRows">${shown.map(c => hlpRowHTML(c, sm)).join('')}</tbody></table></div>
+                <h4 style="margin:12px 0 6px;">Preview</h4>
+                <div class="sl-preview">${slips.slice(0, 6).map(sl => hlpSlipHTML(sl)).join('') || '<div class="bk-note">Look up printings to see slips here.</div>'}</div>`;
+        }
+        function hlpRefreshList() {
+            const sm = hlpSetMap(), q = HLP.q.trim().toLowerCase(), tb = document.getElementById('hlpRows'); if (!tb) return;
+            tb.innerHTML = hlpCards().filter(c => (!HLP.cat || c.cat === HLP.cat) && (!q || c.key.toLowerCase().includes(q))).map(c => hlpRowHTML(c, sm)).join('');
+        }
+        function hlpToggleCard(el) { const k = el.dataset.k; if (el.checked) HLP.hidden.delete(k); else HLP.hidden.add(k); hlpSave(); renderHlp(); }
+        function hlpSkip(el) { const k = el.dataset.pk; if (HLP.skip.has(k)) HLP.skip.delete(k); else HLP.skip.add(k); hlpSave(); el.classList.toggle('off'); }
+        function hlpKind(k, on) { HLP.st.kinds[k] = on ? 1 : 0; hlpSave(); renderHlp(); }
+        function hlpNum(key, el) { const v = parseFloat(el.value); if (v > 0.5 && v < 7.5) { HLP.st[key] = v; hlpSave(); renderHlp(); } }
+        function hlpAlias(el) { const k = el.dataset.k, v = el.value.trim(); if (v) HLP.st.alias[k] = v; else delete HLP.st.alias[k]; delete HLP.prints[k]; hlpSave(); hlpSavePrints(); hlpLoad(); }
+        function hlpAddCard() {
+            const el = document.getElementById('hlpAdd'), n = (el.value || '').trim(); if (!n) return;
+            const k = hlpKey(n);
+            if (!hlpCards().some(c => c.key.toLowerCase() === k.toLowerCase())) HLP.st.extra.push({ name: k, loc: '' });
+            HLP.hidden.delete(k); hlpSave(); renderHlp(); hlpLoad();
+        }
+        function hlpRemoveExtra(el) { const k = el.dataset.k; HLP.st.extra = HLP.st.extra.filter(x => hlpKey(x.name) !== k); hlpSave(); renderHlp(); }
+        function hlpRefreshAll() { if (!confirm('Look every card up again? This takes a couple of minutes.')) return; HLP.prints = {}; hlpSavePrints(); renderHlp(); hlpLoad(); }
+        function hlpMarkAll() { hlpSlips().forEach(sl => HLP.printed.add(sl.pk)); hlpSave(); renderHlp(); }
+        function hlpResetPrinted() { if (!confirm('Forget which slips were printed? "Print only new" will then print everything.')) return; HLP.printed.clear(); hlpSave(); renderHlp(); }
+        function hlpPrint(mode) {
+            let slips = hlpSlips();
+            if (mode === 'new') slips = slips.filter(sl => !HLP.printed.has(sl.pk));
+            if (mode === 'set') { const code = (document.getElementById('hlpSetPick') || {}).value; if (!code) { alert('Pick a set first.'); return; } slips = slips.filter(sl => sl.set.code === code); }
+            if (!slips.length) return;
+            const g = hlpGrid();
+            let pages;
+            if (HLP.st.newPage) { pages = []; const by = new Map(); slips.forEach(sl => { if (!by.has(sl.set.code)) by.set(sl.set.code, []); by.get(sl.set.code).push(hlpSlipHTML(sl)); }); by.forEach(list => { for (let i = 0; i < list.length; i += g.per) pages.push(list.slice(i, i + g.per)); }); }
+            else { const all = slips.map(sl => hlpSlipHTML(sl)); pages = []; for (let i = 0; i < all.length; i += g.per) pages.push(all.slice(i, i + g.per)); }
+            if (HLP.st.mark) { slips.forEach(sl => HLP.printed.add(sl.pk)); hlpSave(); }
+            printHotlistSheet(pages, 'slabels', g.per, g.style);
+            setTimeout(renderHlp, 300);
+        }
 
         // ============== COMMANDER BRACKETS ==============
         // The bracket rules themselves can't be fetched (Wizards publishes
