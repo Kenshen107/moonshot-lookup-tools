@@ -1026,6 +1026,7 @@ Bant Battlemage
 Bant Panorama
 Bar the Door
 Barad-dûr
+Baral's Expertise
 Barbarian General
 Barbarian Horde
 Barbarian Lunatic
@@ -1038,6 +1039,7 @@ Barbed Battlegear
 Barbed Bloodletter
 Barbed Field
 Barbed Lightning
+Barbed Servitor
 Barbed Sextant
 Barbed Spike
 Barbtooth Wurm
@@ -2174,6 +2176,7 @@ Cathodion
 Cats
 Cats
 Cats
+Caught Red-Handed
 Cauldron Familiar
 Cauldron of Essence
 Caustic Caterpillar
@@ -2794,6 +2797,7 @@ Cosi's Ravager
 Cosmic Crucible
 Cosmic Spider-Man
 Cosmium Blast
+Cosmos Elixir
 Cost of Brilliance
 Costly Plunder
 Council of Advisors
@@ -3426,6 +3430,7 @@ Deputized Protester
 Deranged Assistant
 Deranged Outcast
 Deranged Whelp
+Desculpting Blast
 Desecration Elemental
 Desecration Plague
 Desert Cerodon
@@ -3510,6 +3515,7 @@ Dig Through Time
 Digsite Engineer
 Diligent Excavator
 Dimension X
+Dimension X Pizzasaur
 Diminish
 Dimir Aqueduct
 Dimir Cluestone
@@ -3717,6 +3723,7 @@ Draconic Disciple
 Draconic Lore
 Draconic Muralists
 Dracosaur Auxiliary
+Drafna, Founder of Lat-Nam
 Drag Under
 Drag the Canal
 Dragon Bell Monk
@@ -4252,6 +4259,7 @@ Enduring Innocence
 Enduring Tenacity
 Enduring Victory
 Enduring Vitality
+Enemy of the Guildpact
 Energize
 Energizer
 Energy Bolt
@@ -4781,6 +4789,7 @@ Field Creeper
 Field Research
 Field of Ruin
 Field of the Dead
+Field-Tested Frying Pan
 Fields of Strife
 Fiend Artisan
 Fiend Binder
@@ -5788,6 +5797,7 @@ Goblinslide
 God-Eternal Bontu
 God-Eternal Oketra
 God-Eternal Rhonas
+God-Pharaoh's Statue
 Goddric, Cloaked Reveler
 Godless Shrine
 Gods Willing
@@ -6180,6 +6190,7 @@ Hall
 Hall Monitor
 Hall of Heliod's Generosity
 Hall of Oracles
+Hall of Tagsin
 Hall of Triumph
 Hallowed Burial
 Hallowed Fountain
@@ -6457,6 +6468,7 @@ Hidden Courtyard
 Hidden Dragonslayer
 Hidden Footblade
 Hidden Grotto
+Hidden Hideout
 Hidden Horror
 Hidden Necropolis
 Hidden Nursery
@@ -7100,6 +7112,7 @@ Isolinear Processor
 Isperia's Skywatch
 Isperia, Supreme Judge
 Isshin, Two Heavens as One
+It Doesn't Add Up
 It'll Quench Ya!
 It's Clobberin' Time!
 Item Shopkeep
@@ -7109,6 +7122,7 @@ Itzquinth, Firstborn of Gishath
 Ivory Charm
 Ivory Crane Netsuke
 Ivory Cup
+Ivory Tower
 Ivy Dancer
 Ivy Elemental
 Ivy Lane Denizen
@@ -7857,6 +7871,7 @@ Legolas, Counter of Kills
 Legolas, Master Archer
 Leinore, Autumn Sovereign
 Leitmotif Composer
+Lembas
 Lens Flare
 Leonardo
 Leonardo, Worldly Warrior
@@ -9422,6 +9437,7 @@ Norika Yamazaki, the Poet
 Norin the Wary
 Norin, Swift Survivalist
 Norman Osborn // Green Goblin
+Norn's Annex
 Norn's Choirmaster
 North Pole Gates
 Northern Paladin
@@ -9845,6 +9861,7 @@ Papalymo Totolymo
 Papercraft Decoy
 Paradise Druid
 Paradise Mantle
+Paradise Plume
 Paradox Engine
 Paradox Gardens
 Parallel Lives
@@ -9954,6 +9971,7 @@ Perpetual Timepiece
 Perplex
 Perplexing Test
 Persistent Specimen
+Person of Interest
 Personal Tutor
 Personify
 Persuasion
@@ -10229,6 +10247,7 @@ Power Sink
 Power of Fire
 Powerful
 Powerstone Fracture
+Powerstone Shard
 Powerstones
 Pradesh Gypsies
 Prairie Stream
@@ -12243,6 +12262,7 @@ Sibilant Spirit
 Sibsig Icebreakers
 Sibsig Muckdraggers
 Sicarian Infiltrator
+Sickbay
 Sickbay Orderly
 Sicken
 Sickle Ripper
@@ -12463,6 +12483,7 @@ Skyclave Apparition
 Skyclave Cleric // Skyclave Basilica
 Skyclave Geopede
 Skyclave Pick-Axe
+Skyclave Relic
 Skycloud Egg
 Skycloud Expanse
 Skycoach Conductor // All Aboard
@@ -12677,6 +12698,7 @@ Soldevi Simulacrum
 Soldier On
 Soldier Replica
 Soldier of the Grey Host
+Soldier of the Pantheon
 Solemn Offering
 Solemn Simulacrum
 Solidarity
@@ -12826,6 +12848,7 @@ Spectral Procession
 Spectral Reserves
 Spectral Rider
 Spectral Sailor
+Spectrum Sentinel
 Speed, Young Avenger
 Speedy
 Spell Blast
@@ -12861,6 +12884,7 @@ Sphinx of Enlightenment
 Sphinx of Jwar Isle
 Sphinx of Magosi
 Sphinx of the Final Word
+Sphinx of the Revelation
 Sphinx of the Steel Wind
 Sphinx's Revelation
 Sphinx's Tutelage
