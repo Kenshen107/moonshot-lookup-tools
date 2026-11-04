@@ -1,6 +1,6 @@
 // Spellslinger Duels - engine pieces for the Hugh, First of Many food and mana-rock deck (2026-11-04). Wordings: rules/hughfood.js. CMD ids start with hh_.
 // Approximations (nothing is marked Partly): choices inside resolving abilities (Pizzasaur's destroy target, Hidden Hideout's and Sickbay's creature)
-// are made as they resolve; Norn's Annex is paid automatically ({W} when the attacker's controller has it, else 2 life, never below 5 life);
+// are made as they resolve; Norn's Annex asks a person ({W}, 2 life or not attacking, per creature); the computer pays {W} if it can, else 2 life above 6 life;
 // suspect lasts until the creature leaves the battlefield and shows as a menace counter; Drafna's copy is a token copy of the artifact spell.
 
 Object.assign(TRIG_FN, {
@@ -32,14 +32,13 @@ FR_MULTI.expertise = {
         if (m && o && o.uid && G && Rx(o).hhShard) { const n = G.players[o.owner].bf.filter(x => x.card.name === o.card.name).length; return n ? { ...m, n, fixed: true } : null; }
         return m;
     };
-    // Norn's Annex: {W/P} for each creature that attacks its controller (pay {W} if you can, else 2 life)
+    // Norn's Annex: {W/P} for each creature that attacks its controller. A person chooses {W}, 2 life or not attacking (hhAnnexAsk, before attackers are declared); the computer pays {W} if it can, else 2 life above 6 life
     const da = declareAttackers;
     declareAttackers = function (P, list) {
         if (G && list && list.length) {
             const keep = [];
             for (const o of list.slice().sort((a, b) => pow(b) - pow(a))) {
-                const D = G.players.length === 2 ? opp(P) : G.players[o.atkTo != null ? o.atkTo : (G.defender != null ? G.defender : opp(P).i)];
-                const k = D ? D.bf.filter(x => Rx(x).annexTax && !lostAbilities(x)).length : 0;
+                const k = o.annexPaid === G.turn ? 0 : hhAnnexCount(P, o);
                 let ok = true;
                 for (let i = 0; i < k && ok; i++) {
                     const plan = planPayment(P, parseCost('{W}'));
@@ -54,6 +53,31 @@ FR_MULTI.expertise = {
         return da.apply(this, [P, list].concat([].slice.call(arguments, 2)));
     };
 })();
+
+
+// Norn's Annex helpers: how many {W/P} an attacker owes, and the choice a person makes for each
+function hhAnnexCount(P, o) {
+    const D = G.players.length === 2 ? opp(P) : G.players[o.atkTo != null ? o.atkTo : (G.defender != null ? G.defender : opp(P).i)];
+    return D ? D.bf.filter(x => Rx(x).annexTax && !lostAbilities(x)).length : 0;
+}
+async function hhAnnexAsk(P, sel) {
+    if (P.isAI || !sel || !sel.length) return;
+    for (const o of sel.slice()) {
+        const k = hhAnnexCount(P, o); let ok = true;
+        for (let i = 0; i < k && ok; i++) {
+            const canW = !!planPayment(P, parseCost('{W}')), canLife = P.life >= 2;
+            const labels = [], acts = [];
+            if (canW) { labels.push('Pay {W}'); acts.push('w'); }
+            if (canLife) { labels.push('Pay 2 life'); acts.push('l'); }
+            labels.push(`Don't attack with ${o.card.name}`); acts.push('n');
+            const pick = acts[await askMode(P, `Norn's Annex: ${o.card.name} needs {W/P} to attack`, labels)];
+            if (pick === 'w') { planPayment(P, parseCost('{W}')).forEach(s => tapSource(P, s)); log(`${P.name} pay {W} for ${o.card.name} to attack (Norn's Annex).`); }
+            else if (pick === 'l') { P.life -= 2; P.lostTurn = G.turn; fire('loseLife', { P, n: 2 }); log(`${P.name} pay 2 life for ${o.card.name} to attack (Norn's Annex).`); }
+            else ok = false;
+        }
+        if (ok) o.annexPaid = G.turn; else sel.splice(sel.indexOf(o), 1);
+    }
+}
 
 Object.assign(CMD, {
     // Barbed Servitor: suspected = menace and can't block, until it leaves the battlefield
