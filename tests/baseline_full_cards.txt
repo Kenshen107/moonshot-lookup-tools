@@ -779,6 +779,7 @@ Assert Perfection
 Assimilate the Wounded
 Assimilation Assessor
 Assure // Assemble
+Astonishing Spider-Man
 Astral Cornucopia
 Astral Drift
 Astral Slide
@@ -2059,6 +2060,7 @@ Captain America, Steve Rogers
 Captain America, Team Leader
 Captain America, Wings of Freedom
 Captain Benjamin Sisko
+Captain Howler, Sea Scourge
 Captain James T. Kirk
 Captain Janeway, Endgame
 Captain Jean-Luc Picard
@@ -2293,6 +2295,7 @@ Chandra's Pyrohelix
 Chandra's Triumph
 Chandra, Novice Pyromancer
 Chandra, Pyrogenius
+Change of Fortune
 Changeling Outcast
 Changeling Sentinel
 Changeling Wayfinder
@@ -4910,6 +4913,7 @@ Fit of Rage
 Five Hundred Year Diary
 Fixer, Techno Terror
 Flagstones of Trokair
+Flame Blitz
 Flame Elemental
 Flame Jab
 Flame Javelin
@@ -4924,6 +4928,7 @@ Flame Wave
 Flame-Blessed Bolt
 Flame-Chain Mauler
 Flame-Kin Zealot
+Flameblade Adept
 Flameborn Hellion
 Flameborn Viron
 Flamecache Gecko
@@ -5623,6 +5628,7 @@ Glimpse the Sun God
 Glimpse the Unthinkable
 Glint
 Glint-Eye Nephilim
+Glint-Horn Buccaneer
 Glint-Nest Crane
 Glint-Sleeve Artisan
 Glintwing Invoker
@@ -6788,6 +6794,7 @@ Illvoi Galeblade
 Illvoi Light Jammer
 Ilysian Caryatid
 Imaginary Friends
+Imaginary Threats
 Imaryll, Elfhame Elite
 Immersturm Raider
 Immersturm Skullcairn
@@ -7119,6 +7126,7 @@ Item Shopkeep
 Ith, High Arcanist
 Ithilien Kingfisher
 Itzquinth, Firstborn of Gishath
+Ivora, Insatiable Heir
 Ivory Charm
 Ivory Crane Netsuke
 Ivory Cup
@@ -8280,6 +8288,7 @@ Magma Phoenix
 Magma Rift
 Magma Spray
 Magma Vein
+Magmakin Artillerist
 Magmaquake
 Magmatic Chasm
 Magmatic Force
@@ -8393,6 +8402,7 @@ Marauding Blight-Priest
 Marauding Boneslasher
 Marauding Brinefang
 Marauding Looter
+Marauding Mako
 Marauding Raptor
 Marble Chalice
 Marble Diamond
@@ -8572,6 +8582,7 @@ Memorial to Folly
 Memorial to Genius
 Memorial to Glory
 Memorial to War
+Memory Deluge
 Memory Drain
 Memory Erosion
 Memory Guardian
@@ -8805,6 +8816,7 @@ Mirror of Fate
 Mirror of Galadriel
 Mirror-Sigil Sergeant
 Mirrorpool
+Mirrorshell Crab
 Mirrorwing Dragon
 Mirrorworks
 Miscalculation
@@ -9149,6 +9161,7 @@ Mystic Melting
 Mystic Mischief
 Mystic Monastery
 Mystic Penitent
+Mystic Redaction
 Mystic Reflection
 Mystic Remora
 Mystic Restraints
@@ -9373,6 +9386,7 @@ Nimana Skydancer
 Nimble Birdsticker
 Nimble Innovator
 Nimble Mongoose
+Nimble Obstructionist
 Nimble Thopterist
 Nimble-Blade Khenra
 Nimblewright Schematic
@@ -9620,6 +9634,7 @@ Omenspeaker
 Ominous Asylum
 Ominous Harvest
 Ominous Parcel
+Ominous Seas
 Omnath, Locus of Creation
 Omnath, Locus of Rage
 Omnath, Locus of the Roil
@@ -9893,6 +9908,10 @@ Path of Ancestry
 Path of Anger's Flame
 Path of Discovery
 Path of Peace
+Path of the Animist
+Path of the Enigma
+Path of the Ghosthunter
+Path of the Pyromancer
 Path to Exile
 Path to Redemption
 Path to the World Tree
@@ -11405,6 +11424,7 @@ Rural Recruit
 Ruric Thar, Biomagus
 Ruric Thar, the Unbowed
 Rush of Adrenaline
+Rush of Inspiration // Crackling Falls
 Rush of Vitality
 Rushing River
 Rushwood Dryad
@@ -11776,6 +11796,7 @@ Scroll of Griselbrand
 Scroll of Origins
 Scrollshift
 Scrounger of Souls
+Scrounging Skyray
 Scrubland
 Scryb Sprites
 Scrying
@@ -12906,6 +12927,7 @@ Spider-Man Noir
 Spider-Man, Brooklyn Visionary
 Spider-Man, Hometown Hero
 Spider-Man, Miles Morales
+Spider-Man, New Champion
 Spider-Man, Peter Parker
 Spider-Man, Web-Slinger
 Spider-Man, Web-Spinner
@@ -14876,6 +14898,7 @@ Undermine
 Undersea Invader
 Undertaker
 Underwater
+Underworld Breach
 Underworld Coinsmith
 Underworld Connections
 Underworld Dreams
