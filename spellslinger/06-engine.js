@@ -931,7 +931,7 @@ function altOk(P, o) {
 }
 function altTapFliers(P, o, n) { return P.bf.filter(x => isCreature(x) && !x.tapped && has(x, 'flying') && x !== o).slice(0, n); }
 function canPay(P, o) { return (!o.altCast || altOk(P, o)) && addCostOk(P, o) && !!planPayment(P, costOf(P, o), extraCost(P, o) + (costOf(P, o).x ? xMult(o) : 0), null, payOpts(o)); }
-function maxKick(P, o) { const m = Rx(o).multikicker; if (!m) return 0; const was = o.kickN; let n = 0; while (n < 20) { o.kickN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) })) break; n++; } o.kickN = was; return n; }
+function maxKick(P, o) { const m = Rx(o).multikicker; if (!m) return 0; const was = o.kickN; let n = 0; while (n < 20) { o.kickN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? (o.xVal || 1) * xMult(o) : 0), null, payOpts(o))) break; n++; } o.kickN = was; return n; }
 // Replicate (CR 702.56, 2026-11-01): an additional cost paid any number of times as you cast the spell, locked into its total cost; each payment copies the spell.
 // Granted by a permanent with R.repGrant ({ type, cost }), e.g. Hugh, First of Many: artifact spells you cast have replicate {2}{U}.
 function repCostOf(P, o) {
@@ -939,7 +939,7 @@ function repCostOf(P, o) {
     const src = P.bf.find(x => { const g = Rx(x).repGrant; return g && !lostAbilities(x) && (!g.type || hasType(o, g.type)); });
     return src ? Rx(src).repGrant.cost : null;
 }
-function maxRep(P, o) { if (!repCostOf(P, o)) return 0; const was = o.repN; let n = 0; while (n < 30) { o.repN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) })) break; n++; } o.repN = was; return n; }
+function maxRep(P, o) { if (!repCostOf(P, o)) return 0; const was = o.repN; let n = 0; while (n < 60) { o.repN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? (o.xVal || 1) * xMult(o) : 0), null, payOpts(o))) break; n++; } o.repN = was; return n; }
 function canBuyback(P, o) { const b = Rx(o).buyback; if (!b || Rx(o).kind === 'creature') return false; const was = o.buyback; o.buyback = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) }); o.buyback = was; return ok; }
 function canKick(P, o) { const k = Rx(o).kicker; if (!k) return false; if (Rx(o).kickSac && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < Rx(o).kickSac.n + (P.isAI ? 2 : 0)) return false; const was = o.kicked; o.kicked = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) }); o.kicked = was; return ok; }
 // "As an additional cost to cast ~, sacrifice a creature / discard a card / pay N life"
