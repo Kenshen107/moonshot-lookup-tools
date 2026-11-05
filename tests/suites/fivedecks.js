@@ -84,7 +84,12 @@ const NAMES = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'Grizzly Bears
               ok('casting the back face from the command zone puts the lands from hand onto the battlefield', !A.hand.includes(l1) && !A.hand.includes(l2) && A.bf.filter(x => x.card.name === 'Forest').length === 6, A.bf.length);
               ok('the commander is a normal front-face card again afterwards', j.card === j.front && (A.command.includes(j) || A.gy.includes(j) || A.hand.includes(j)), [j.card.name]);
               ok('...and the commander tax went up', A.tax >= 1 || (A.cmdCastN && A.cmdCastN[0] >= 1), [A.tax]);
-              // eight or more lands: discard a card to return it to hand
+                // the computer considers the back face from the command zone (2026-11-05)
+              { const [C0] = await fresh(); C0.isAI = true; C0.command.length = 0; const jj = makeObj(have('Jadzi, Oracle of Arcavios'), 0); jj.isCommander = true; C0.command.push(jj); for (let i = 0; i < 5; i++) put(C0, 'Forest'); C0.hand.length = 0; for (let i = 0; i < 4; i++) give(C0, 'Forest');
+                const bb = jj.front.back; const bp = aiBestPlay(C0); ok('the computer finds a play from the command zone with Jadzi', !!bp, bp && bp.face && bp.face.name);
+                jj.card = bb; const cn = canCastNow(C0, jj) && canPay(C0, jj); jj.card = jj.front; ok('...and the back face is castable for it with lands in hand', cn); if (bp) { bp.o.card = bp.o.front; }
+                const sc = (() => { jj.card = bb; const v = aiScore(C0, jj, null); jj.card = jj.front; return v; })(); ok('...and scores above zero with several lands in hand', sc > 0, sc); }
+            // eight or more lands: discard a card to return it to hand
               const [B] = await fresh(); for (let i = 0; i < 8; i++) put(B, 'Forest'); B.hand.length = 0; give(B, 'Grizzly Bears'); const sp = give(B, 'Counterspell'); const old = aiKeepValue; aiKeepValue = () => 0;
               await CMD.fr_journey(B, {}, null, sp); aiKeepValue = old; ok('with eight lands the spell can discard a card to return to hand', sp.frToHand === true && B.gy.some(c => c.card.name === 'Grizzly Bears'), [sp.frToHand]); }
             // Back faces (2026-11-03)
