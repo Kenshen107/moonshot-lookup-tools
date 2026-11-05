@@ -505,6 +505,7 @@
         .log div:last-child { color: var(--text-heading); }
         .opp-hand { display: flex; gap: 2px; }
         .opp-hand i { width: 12px; height: 17px; border-radius: 2px; background: repeating-linear-gradient(45deg, var(--brand) 0 3px, var(--felt-1) 3px 6px); border: 1px solid var(--brand-light); }
+        .pool-n { display: inline-flex; gap: 2px; align-items: center; }
         .pool { display: inline-flex; gap: 3px; align-items: center; font-size: 0.85rem; }
         @media (max-width: 700px) {
             :root { --card-w: clamp(50px, 8vh, 64px); --land-w: 40px; --hand-w: clamp(56px, 9vh, 78px); }
@@ -947,6 +948,9 @@
             .pod-chip b { max-width: 8ch; }
             .pod-chip .atk { display: none; }
             .pbar .pool { white-space: nowrap; overflow: hidden; }
+            #meBar { flex-wrap: wrap; overflow: visible; row-gap: 4px; }
+            #meBar .cmd-zone { flex: 0 0 auto; order: -1; }
+            #meBar .floating { flex: 0 0 auto; }
             .gm-btn { margin-left: auto; min-width: 40px; min-height: 36px; }
             .dock { grid-template-columns: minmax(0, 1fr); }
             .hand-tools, .logwrap { display: none; }
