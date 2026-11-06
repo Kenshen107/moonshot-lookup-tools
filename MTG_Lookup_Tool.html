@@ -6790,6 +6790,32 @@
         .sl-foot { text-align: center; margin-top: 12px; }
         .sl-btn { width: auto; margin: 0; padding: 7px 14px; font-size: 0.85em; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; }
         .sl-btn:hover { border-color: var(--brand-light); }
+        /* Drawer Map tab (2026-11-06). Everything uses the theme tokens. */
+        .dc-bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: center; margin: 0 0 12px; font-size: 0.9em; color: var(--text-soft); }
+        .dc-bar input[type=text] { width: auto; min-width: 200px; }
+        .dc-scroll { overflow-x: auto; padding: 4px 2px 10px; }
+        .dc-grid { display: grid; grid-template-columns: repeat(7, minmax(84px, 1fr)); gap: 6px; min-width: 620px; max-width: 1100px; margin: 0 auto; }
+        .dc-head { text-align: center; font-weight: bold; font-size: 0.85em; color: var(--text-heading); padding: 2px 0; }
+        .dc-top { min-height: 52px; padding: 6px; border: 1px dashed var(--border); border-radius: var(--radius-sm); background: var(--bg-inset); color: var(--text-secondary); font-size: 0.8em; text-align: center; line-height: 1.3; display: flex; align-items: center; justify-content: center; }
+        .dc-drawer { position: relative; min-height: 64px; padding: 6px 6px 16px; text-align: left; background: var(--bg-panel-raised); border: 1px solid var(--border); border-left: 5px solid var(--dc, var(--border)); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85em; line-height: 1.25; cursor: pointer; display: block; width: 100%; margin: 0; overflow: hidden; }
+        .dc-drawer:hover, .dc-drawer:focus-visible { border-color: var(--brand-light); border-left-color: var(--dc, var(--brand-light)); outline: none; }
+        .dc-drawer::after { content: ''; position: absolute; left: 50%; bottom: 5px; width: 34%; height: 4px; transform: translateX(-50%); border-radius: 3px; background: var(--text-muted); opacity: 0.8; }
+        .dc-num { display: block; font-size: 0.8em; color: var(--text-secondary); font-family: monospace; margin-bottom: 2px; }
+        .dc-label { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+        .dc-empty .dc-label { color: var(--text-muted); font-style: italic; }
+        .dc-tokens { cursor: default; background: var(--bg-inset); border-style: dashed; border-left-style: dashed; color: var(--text-secondary); }
+        .dc-hit { box-shadow: 0 0 0 2px var(--color-warning); }
+        .dc-dim { opacity: 0.3; }
+        .dc-sel { box-shadow: 0 0 0 2px var(--brand-light); }
+        .dc-bottom { min-height: 78px; padding: 8px 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-panel); color: var(--text-secondary); font-size: 0.8em; text-align: center; line-height: 1.3; display: flex; align-items: center; justify-content: center; position: relative; }
+        .dc-bottom::before, .dc-bottom::after { content: ''; position: absolute; top: 12px; width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted); }
+        .dc-bottom::before { left: calc(50% - 9px); } .dc-bottom::after { left: calc(50% + 4px); }
+        .dc-edit { max-width: 760px; margin: 12px auto; padding: 12px 14px; background: var(--bg-panel); border: 1px solid var(--brand-light); border-radius: var(--radius-md); }
+        .dc-edit h3 { margin: 0 0 8px; font-size: 1.1em; color: var(--text-heading); }
+        .dc-edit-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .dc-edit-row input[type=text] { flex: 1 1 220px; }
+        .dc-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; margin: 10px 0 0; font-size: 0.85em; color: var(--text-soft); }
+        .dc-legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; background: var(--dc, var(--border)); vertical-align: -1px; }
         /* Set Dividers tab (2026-11-03). The divider cards print in fixed colors, like the other print sheets. */
         .sd-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin: 0 0 10px; }
         .sd-controls input[type=text], .sd-controls select { width: auto; min-width: 150px; }
@@ -9131,6 +9157,7 @@
             <div id="caseMapResults"></div>
         </div>
         <div id="sleevesApp" style="display:none;"></div>
+        <div id="drawerMapApp" style="display:none;"></div>
         <div id="setDividersApp" style="display:none;"></div>
         <div id="shelfPlannerApp" style="display:none;">
         <div class="app">
@@ -9373,6 +9400,7 @@
             grading:      { appId: 'gradingApp',      icon: '🔍', navLabel: 'Grading & Fakes', title: '🔍 Grading & Spotting Fakes', desc: 'Card grading basics and how to spot counterfeits', keywords: 'grade psa bgs fake counterfeit condition' },
             shelves:      { appId: 'shelfPlannerApp', icon: '🗄️', navLabel: 'Shelf Planner',  title: '🗄️ Shelf Planner', desc: 'Plan a wall of shelves on 70-hole uprights and lay products out in rainbow order', keywords: 'shelf shelves planner wall sleeves layout uprights pegboard stocking', onShow: () => window.showShelfPlanner && window.showShelfPlanner() },
             sleeves:      { appId: 'sleevesApp',    icon: '🎨', navLabel: 'Sleeve Wall',     title: '🎨 Sleeve Wall', desc: 'Dragon Shield sleeve colors in rainbow order, for laying out the wall', keywords: 'dragon shield sleeves colors rainbow wall layout matte classic dual', onShow: renderSleeves },
+            drawers:      { appId: 'drawerMapApp', icon: '🗃️', navLabel: 'Drawer Map', title: '🗃️ Drawer Map', desc: 'The 7 sealed-product cabinets: label what each drawer holds and find it fast', keywords: 'drawers cabinets cabinet sealed product boxes storage where find map back stock', onShow: renderDrawerMap },
             setdividers:  { appId: 'setDividersApp', icon: '🗂️', navLabel: 'Set Dividers', title: '🗂️ Set Dividers', desc: 'Print color-coded divider cards with a big set code, so every set stands out in the singles boxes', keywords: 'set dividers singles boxes tabs labels code color print sort', onShow: renderSetDividers },
             quiz:         { appId: 'quizApp',         icon: '🧠', navLabel: 'Card Quiz',       title: '🧠 Card Quiz', desc: 'Practice card knowledge, prices and the case map', keywords: 'quiz practice train learn test', onShow: showQuizTab }
         };
@@ -9541,7 +9569,7 @@
         // quick-jump search, are built from NAV_GROUPS + APP_VIEWS, so a new
         // tool only needs adding in those two places.
         const NAV_GROUPS = [
-            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap', 'shelves', 'sleeves', 'setdividers'] },
+            { key: 'counter', icon: '🛒', label: 'At the counter', short: 'Counter', views: ['buyersguide', 'products', 'buylist', 'market', 'pulllist', 'casemap', 'shelves', 'sleeves', 'drawers', 'setdividers'] },
             { key: 'rules',   icon: '📖', label: 'Rules & events', short: 'Rules',   views: ['formats', 'brackets', 'prerelease', 'valuevintage', 'judge'] },
             { key: 'learn',   icon: '🧠', label: 'Learn & train',  short: 'Learn',   views: ['setprimer', 'podcast', 'grading', 'quiz'] }
         ];
@@ -17014,6 +17042,89 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const done = () => { document.body.classList.remove('sl-printing'); area.remove(); window.removeEventListener('afterprint', done); };
             window.addEventListener('afterprint', done);
             window.print();
+        }
+
+        // Drawer Map (2026-11-06, owner's request): the 7 cabinets of sealed-product drawers. Each cabinet has a top shelf
+        // (packs for sale, paperwork), 6 drawers and a big bottom cabinet. Cabinet 1's drawer 2 holds tokens, so it isn't
+        // counted or editable. Labels are typed by staff and saved on this device only (localStorage 'drawerMapV1').
+        const DC_COLS = 7, DC_ROWS = 6, DC_TOKENS = '1-2';
+        const DC_CATS = [
+            { key: '',        label: 'Not set',  color: '--border' },
+            { key: 'magic',   label: 'Magic',    color: '--chart-1' },
+            { key: 'pokemon', label: 'Pokémon',  color: '--chart-4' },
+            { key: 'other',   label: 'Other games', color: '--chart-3' },
+            { key: 'supply',  label: 'Supplies', color: '--chart-2' }
+        ];
+        const dcUI = { sel: null, q: '' };
+        function dcStore() {
+            try { const s = JSON.parse(localStorage.getItem('drawerMapV1') || '{}'); return (s && s.cells) ? s : { cells: {} }; } catch (e) { return { cells: {} }; }
+        }
+        function dcSave(s) { try { localStorage.setItem('drawerMapV1', JSON.stringify(s)); } catch (e) { /* storage blocked: changes last until the page closes */ } dcMem = s; }
+        let dcMem = null;
+        function dcGet() { return dcMem || (dcMem = dcStore()); }
+        function dcCat(key) { return DC_CATS.find(c => c.key === key) || DC_CATS[0]; }
+        function renderDrawerMap() {
+            const root = document.getElementById('drawerMapApp');
+            if (!root) return;
+            const st = dcGet(), q = dcUI.q.trim().toLowerCase();
+            let used = 0, total = DC_COLS * DC_ROWS - 1;
+            const byCat = {};
+            let html = '';
+            for (let c = 1; c <= DC_COLS; c++) html += `<div class="dc-head">Cabinet ${c}</div>`;
+            for (let c = 1; c <= DC_COLS; c++) html += `<div class="dc-top">Top shelf:<br>packs for sale &amp; paperwork</div>`;
+            for (let r = 1; r <= DC_ROWS; r++) {
+                for (let c = 1; c <= DC_COLS; c++) {
+                    const id = `${c}-${r}`;
+                    if (id === DC_TOKENS) { html += `<div class="dc-drawer dc-tokens"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">Tokens (not counted)</span></div>`; continue; }
+                    const cell = st.cells[id] || {}, label = (cell.label || '').trim(), cat = dcCat(cell.cat);
+                    if (label) { used++; byCat[cat.key] = (byCat[cat.key] || 0) + 1; }
+                    const hit = q && label.toLowerCase().includes(q);
+                    const cls = ['dc-drawer', label ? '' : 'dc-empty', q ? (hit ? 'dc-hit' : 'dc-dim') : '', dcUI.sel === id ? 'dc-sel' : ''].filter(Boolean).join(' ');
+                    html += `<button type="button" class="${cls}" style="--dc:var(${cat.color})" onclick="dcSelect('${id}')" aria-label="Cabinet ${c}, drawer ${r}: ${escapeAttr(label || 'empty')}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">${label ? escapeAttr(label) : 'Tap to label'}</span></button>`;
+                }
+            }
+            for (let c = 1; c <= DC_COLS; c++) html += `<div class="dc-bottom">Bottom cabinet:<br>other product</div>`;
+            let editor = '';
+            if (dcUI.sel) {
+                const [c, r] = dcUI.sel.split('-'), cell = st.cells[dcUI.sel] || {};
+                editor = `<div class="dc-edit" id="dcEditor"><h3>Cabinet ${c}, drawer ${r}</h3>
+                    <div class="dc-edit-row">
+                        <input type="text" id="dcLabel" class="text-input" maxlength="80" placeholder="What's in this drawer? (e.g. Foundations boxes)" value="${escapeAttr(cell.label || '')}" aria-label="Drawer contents" onkeydown="if(event.key==='Enter')dcApply()">
+                        <select id="dcCat" class="text-input" aria-label="Kind of product">${DC_CATS.map(k => `<option value="${k.key}"${(cell.cat || '') === k.key ? ' selected' : ''}>${k.label}</option>`).join('')}</select>
+                        <button type="button" class="sl-btn" onclick="dcApply()">Save</button>
+                        <button type="button" class="sl-btn" onclick="dcClear()">Empty it</button>
+                        <button type="button" class="sl-btn" onclick="dcSelect(null)">Close</button>
+                    </div></div>`;
+            }
+            root.innerHTML = `
+                <div class="formats-intro">A picture of the seven sealed-product cabinets, left to right, with six drawers each. Tap a drawer to say what's in it, or search to light up where something lives. Saved on this device only.</div>
+                <div class="dc-bar">
+                    <input type="text" id="dcSearch" class="text-input" placeholder="🔍 Find a product…" value="${escapeAttr(dcUI.q)}" oninput="dcSearch(this.value)" aria-label="Find a product in the drawers">
+                    <span><b>${used}</b> of ${total} drawers labeled</span>
+                    <button type="button" class="sl-btn" onclick="dcReset()">Reset labels</button>
+                </div>
+                <div class="dc-scroll"><div class="dc-grid">${html}</div></div>
+                ${editor}
+                <div class="dc-legend">${DC_CATS.filter(k => k.key).map(k => `<span style="--dc:var(${k.color})">${k.label}${byCat[k.key] ? ' (' + byCat[k.key] + ')' : ''}</span>`).join('')}</div>
+                <div class="sl-note" style="margin-top:14px;">ℹ️ Cabinet 1's second drawer holds tokens, so it isn't counted. The top shelf (packs for sale, paperwork) and the big bottom cabinets aren't tracked. Labels are whatever staff type; nothing here is read from the store's stock.</div>`;
+            if (dcUI.sel) { const i = document.getElementById('dcLabel'); if (i && !i.value) i.focus(); }
+        }
+        function dcSelect(id) { dcUI.sel = (id === dcUI.sel) ? null : id; renderDrawerMap(); if (dcUI.sel) { const e = document.getElementById('dcEditor'); if (e && e.scrollIntoView) e.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
+        function dcSearch(v) {
+            dcUI.q = v; renderDrawerMap();
+            const i = document.getElementById('dcSearch'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); }
+        }
+        function dcApply() {
+            if (!dcUI.sel) return;
+            const s = dcGet(), label = document.getElementById('dcLabel').value.trim(), cat = document.getElementById('dcCat').value;
+            if (label || cat) s.cells[dcUI.sel] = { label, cat }; else delete s.cells[dcUI.sel];
+            dcSave(s); dcUI.sel = null; renderDrawerMap();
+        }
+        function dcClear() { if (!dcUI.sel) return; const s = dcGet(); delete s.cells[dcUI.sel]; dcSave(s); dcUI.sel = null; renderDrawerMap(); }
+        function dcReset() {
+            if (!confirm('Clear every drawer label on this device?')) return;
+            try { localStorage.removeItem('drawerMapV1'); } catch (e) { /* nothing saved */ }
+            dcMem = { cells: {} }; dcUI.sel = null; renderDrawerMap();
         }
 
         // Hotlist printouts. Tags: one per card in the Case Map, in case order, 30 to a letter page (3 x 10).
