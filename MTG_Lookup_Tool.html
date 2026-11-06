@@ -17078,6 +17078,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         function dcSave(s) { try { localStorage.setItem('drawerMapV1', JSON.stringify(s)); } catch (e) { /* storage blocked: changes last until the page closes */ } dcMem = s; }
         let dcMem = null;
         function dcGet() { return dcMem || (dcMem = dcStore()); }
+        // Cabinets 1-5 (C1 D1 to C5 D6) are Magic (owner, 2026-11-06); a drawer's own choice, including "Not set", wins.
+        function dcDefaultCat(id) { return (+id.split('-')[0] <= 5) ? 'magic' : ''; }
+        function dcCellCat(id, cell) { return (cell && cell.cat !== undefined) ? cell.cat : dcDefaultCat(id); }
         function dcCat(key) { return DC_CATS.find(c => c.key === key) || DC_CATS[0]; }
         function renderDrawerMap() {
             const root = document.getElementById('drawerMapApp');
@@ -17094,8 +17097,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 for (let c = 1; c <= DC_COLS; c++) {
                     const id = `${c}-${r}`;
                     if (id === DC_TOKENS) { html += `<div class="dc-drawer dc-tokens" style="${ar(D.dh)}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">Tokens (not counted)</span></div>`; continue; }
-                    const cell = st.cells[id] || {}, label = (cell.label || '').trim(), cat = dcCat(cell.cat);
-                    if (label) { used++; byCat[cat.key] = (byCat[cat.key] || 0) + 1; }
+                    const cell = st.cells[id] || {}, label = (cell.label || '').trim(), cat = dcCat(dcCellCat(id, cell));
+                    if (label) used++;
+                    byCat[cat.key] = (byCat[cat.key] || 0) + 1;
                     const hit = q && label.toLowerCase().includes(q);
                     const cls = ['dc-drawer', label ? '' : 'dc-empty', q ? (hit ? 'dc-hit' : 'dc-dim') : '', dcUI.sel === id ? 'dc-sel' : ''].filter(Boolean).join(' ');
                     html += `<button type="button" class="${cls}" style="--dc:var(${cat.color});${ar(D.dh)}" title="${escapeAttr(label || 'Empty')}" onclick="dcSelect('${id}')" aria-label="Cabinet ${c}, drawer ${r}: ${escapeAttr(label || 'empty')}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">${label ? escapeAttr(label) : 'Tap to label'}</span></button>`;
@@ -17108,7 +17112,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 editor = `<div class="dc-edit" id="dcEditor"><h3>Cabinet ${c}, drawer ${r}</h3>
                     <div class="dc-edit-row">
                         <input type="text" id="dcLabel" class="text-input" maxlength="80" placeholder="What's in this drawer? (e.g. Foundations boxes)" value="${escapeAttr(cell.label || '')}" aria-label="Drawer contents" onkeydown="if(event.key==='Enter')dcApply()">
-                        <select id="dcCat" class="text-input" aria-label="Kind of product">${DC_CATS.map(k => `<option value="${k.key}"${(cell.cat || '') === k.key ? ' selected' : ''}>${k.label}</option>`).join('')}</select>
+                        <select id="dcCat" class="text-input" aria-label="Kind of product">${DC_CATS.map(k => `<option value="${k.key}"${dcCellCat(dcUI.sel, cell) === k.key ? ' selected' : ''}>${k.label}</option>`).join('')}</select>
                         <button type="button" class="sl-btn" onclick="dcApply()">Save</button>
                         <button type="button" class="sl-btn" onclick="dcClear()">Empty it</button>
                         <button type="button" class="sl-btn" onclick="dcSelect(null)">Close</button>
@@ -17134,7 +17138,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <p style="margin:8px 0 0;">The starting sizes are guessed from the photos. Measure one cabinet and type the real numbers to make the picture match.</p>
                 </details>
                 ${editor}
-                <div class="dc-legend">${DC_CATS.filter(k => k.key).map(k => `<span style="--dc:var(${k.color})">${k.label}${byCat[k.key] ? ' (' + byCat[k.key] + ')' : ''}</span>`).join('')}</div>
+                <div class="dc-legend">${DC_CATS.filter(k => k.key).map(k => `<span style="--dc:var(${k.color})">${k.label}${byCat[k.key] ? ' (' + byCat[k.key] + ' drawers)' : ''}</span>`).join('')}</div>
                 <div class="sl-note" style="margin-top:14px;">ℹ️ Cabinet 1's first drawer (C1 · D1) holds tokens, so it isn't counted. The top shelf (packs for sale, paperwork) and the bottom double-door cabinets aren't tracked. Labels are whatever staff type; nothing here is read from the store's stock.</div>`;
             if (dcUI.sel) { const i = document.getElementById('dcLabel'); if (i && !i.value) i.focus(); }
         }
@@ -17146,7 +17150,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         function dcApply() {
             if (!dcUI.sel) return;
             const s = dcGet(), label = document.getElementById('dcLabel').value.trim(), cat = document.getElementById('dcCat').value;
-            if (label || cat) s.cells[dcUI.sel] = { label, cat }; else delete s.cells[dcUI.sel];
+            if (label || cat !== dcDefaultCat(dcUI.sel)) s.cells[dcUI.sel] = { label, cat }; else delete s.cells[dcUI.sel];
             dcSave(s); dcUI.sel = null; renderDrawerMap();
         }
         function dcSetDims(reset) {
@@ -17155,7 +17159,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             dcSave(s); renderDrawerMap();
             const d = document.querySelector('.dc-size'); if (d) d.open = true;
         }
-        function dcClear() { if (!dcUI.sel) return; const s = dcGet(); delete s.cells[dcUI.sel]; dcSave(s); dcUI.sel = null; renderDrawerMap(); }
+        function dcClear() { if (!dcUI.sel) return; const s = dcGet(); const cur = s.cells[dcUI.sel]; if (cur && cur.cat !== undefined && cur.cat !== dcDefaultCat(dcUI.sel)) s.cells[dcUI.sel] = { label: '', cat: cur.cat }; else delete s.cells[dcUI.sel]; dcSave(s); dcUI.sel = null; renderDrawerMap(); }
         function dcReset() {
             if (!confirm('Clear every drawer label on this device?')) return;
             try { localStorage.removeItem('drawerMapV1'); } catch (e) { /* nothing saved */ }
