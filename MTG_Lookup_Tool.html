@@ -6790,26 +6790,35 @@
         .sl-foot { text-align: center; margin-top: 12px; }
         .sl-btn { width: auto; margin: 0; padding: 7px 14px; font-size: 0.85em; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; }
         .sl-btn:hover { border-color: var(--brand-light); }
-        /* Drawer Map tab (2026-11-06). Everything uses the theme tokens. */
+        /* Drawer Map tab (2026-11-06). Sizes follow the real cabinets (inches typed on the page set each box's aspect ratio). Everything uses the theme tokens. */
         .dc-bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: center; margin: 0 0 12px; font-size: 0.9em; color: var(--text-soft); }
         .dc-bar input[type=text] { width: auto; min-width: 200px; }
         .dc-scroll { overflow-x: auto; padding: 4px 2px 10px; }
-        .dc-grid { display: grid; grid-template-columns: repeat(7, minmax(84px, 1fr)); gap: 6px; min-width: 620px; max-width: 1100px; margin: 0 auto; }
+        .dc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px 4px; min-width: 980px; max-width: 1400px; margin: 0 auto; }
         .dc-head { text-align: center; font-weight: bold; font-size: 0.85em; color: var(--text-heading); padding: 2px 0; }
-        .dc-top { min-height: 52px; padding: 6px; border: 1px dashed var(--border); border-radius: var(--radius-sm); background: var(--bg-inset); color: var(--text-secondary); font-size: 0.8em; text-align: center; line-height: 1.3; display: flex; align-items: center; justify-content: center; }
-        .dc-drawer { position: relative; min-height: 64px; padding: 6px 6px 16px; text-align: left; background: var(--bg-panel-raised); border: 1px solid var(--border); border-left: 5px solid var(--dc, var(--border)); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85em; line-height: 1.25; cursor: pointer; display: block; width: 100%; margin: 0; overflow: hidden; }
+        .dc-top { box-sizing: border-box; padding: 4px 6px; border: 1px dashed var(--border); border-bottom: 0; border-radius: var(--radius-sm) var(--radius-sm) 0 0; background: var(--bg-inset); color: var(--text-secondary); font-size: 0.8em; text-align: center; line-height: 1.3; display: flex; align-items: center; justify-content: center; }
+        .dc-slab { height: 9px; margin: 0 -2px 2px; background: var(--text-secondary); border-radius: 2px; opacity: 0.55; grid-column: 1 / -1; }
+        .dc-drawer { position: relative; box-sizing: border-box; width: 100%; margin: 0; padding: 0 8px 0 10px; display: flex; align-items: center; gap: 8px; text-align: left; background: var(--bg-panel-raised); border: 1px solid var(--border); border-left: 5px solid var(--dc, var(--border)); border-radius: 3px; color: var(--text-primary); font-size: 0.8em; line-height: 1.1; cursor: pointer; overflow: hidden; }
         .dc-drawer:hover, .dc-drawer:focus-visible { border-color: var(--brand-light); border-left-color: var(--dc, var(--brand-light)); outline: none; }
-        .dc-drawer::after { content: ''; position: absolute; left: 50%; bottom: 5px; width: 34%; height: 4px; transform: translateX(-50%); border-radius: 3px; background: var(--text-muted); opacity: 0.8; }
-        .dc-num { display: block; font-size: 0.8em; color: var(--text-secondary); font-family: monospace; margin-bottom: 2px; }
-        .dc-label { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+        .dc-drawer::after { content: ''; position: absolute; left: 50%; top: 4px; width: 22%; height: 4px; transform: translateX(-50%); border-radius: 3px; background: var(--text-muted); opacity: 0.85; }
+        .dc-num { flex: none; font-size: 0.8em; color: var(--text-secondary); font-family: monospace; }
+        .dc-label { flex: 1 1 auto; min-width: 0; padding-top: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
         .dc-empty .dc-label { color: var(--text-muted); font-style: italic; }
         .dc-tokens { cursor: default; background: var(--bg-inset); border-style: dashed; border-left-style: dashed; color: var(--text-secondary); }
         .dc-hit { box-shadow: 0 0 0 2px var(--color-warning); }
         .dc-dim { opacity: 0.3; }
         .dc-sel { box-shadow: 0 0 0 2px var(--brand-light); }
-        .dc-bottom { min-height: 78px; padding: 8px 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-panel); color: var(--text-secondary); font-size: 0.8em; text-align: center; line-height: 1.3; display: flex; align-items: center; justify-content: center; position: relative; }
-        .dc-bottom::before, .dc-bottom::after { content: ''; position: absolute; top: 12px; width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted); }
-        .dc-bottom::before { left: calc(50% - 9px); } .dc-bottom::after { left: calc(50% + 4px); }
+        .dc-doors { display: flex; gap: 3px; margin-top: 3px; }
+        .dc-door { position: relative; flex: 1 1 0; box-sizing: border-box; border: 1px solid var(--border); border-radius: 3px; background: var(--bg-panel); }
+        .dc-door::after { content: ''; position: absolute; top: 10%; width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
+        .dc-door:first-child::after { right: 8%; } .dc-door:last-child::after { left: 8%; }
+        .dc-doors-note { position: absolute; left: 0; right: 0; bottom: 8%; text-align: center; font-size: 0.72em; color: var(--text-muted); pointer-events: none; }
+        .dc-toe { margin-top: 3px; background: var(--bg-inset); border-radius: 0 0 3px 3px; }
+        .dc-size { max-width: 760px; margin: 8px auto; color: var(--text-soft); font-size: 0.9em; }
+        .dc-size summary { cursor: pointer; }
+        .dc-size-row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 10px; }
+        .dc-size-row label { display: inline-flex; gap: 6px; align-items: center; }
+        .dc-size-row input { width: 72px; }
         .dc-edit { max-width: 760px; margin: 12px auto; padding: 12px 14px; background: var(--bg-panel); border: 1px solid var(--brand-light); border-radius: var(--radius-md); }
         .dc-edit h3 { margin: 0 0 8px; font-size: 1.1em; color: var(--text-heading); }
         .dc-edit-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -17056,6 +17065,13 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             { key: 'supply',  label: 'Supplies', color: '--chart-2' }
         ];
         const dcUI = { sel: null, q: '' };
+        // Sizes in inches, estimated from the owner's photos (wide, shallow drawers about 5.3 : 1; bottom doors about 2.2 drawers tall). Staff can type real tape-measure numbers.
+        const DC_DIMS = { w: 24, dh: 4.5, bh: 10, toe: 3 };
+        function dcDims() {
+            const d = Object.assign({}, DC_DIMS, dcGet().dims || {});
+            Object.keys(DC_DIMS).forEach(k => { d[k] = Math.min(60, Math.max(1, +d[k] || DC_DIMS[k])); });
+            return d;
+        }
         function dcStore() {
             try { const s = JSON.parse(localStorage.getItem('drawerMapV1') || '{}'); return (s && s.cells) ? s : { cells: {} }; } catch (e) { return { cells: {} }; }
         }
@@ -17070,20 +17086,22 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             let used = 0, total = DC_COLS * DC_ROWS - 1;
             const byCat = {};
             let html = '';
+            const D = dcDims(), ar = (h) => `aspect-ratio:${D.w} / ${h}`;
             for (let c = 1; c <= DC_COLS; c++) html += `<div class="dc-head">Cabinet ${c}</div>`;
-            for (let c = 1; c <= DC_COLS; c++) html += `<div class="dc-top">Top shelf:<br>packs for sale &amp; paperwork</div>`;
+            for (let c = 1; c <= DC_COLS; c++) html += `<div class="dc-top" style="${ar(D.dh * 1.6)}">Top shelf: packs for sale &amp; paperwork</div>`;
+            html += '<div class="dc-slab" aria-hidden="true"></div>';
             for (let r = 1; r <= DC_ROWS; r++) {
                 for (let c = 1; c <= DC_COLS; c++) {
                     const id = `${c}-${r}`;
-                    if (id === DC_TOKENS) { html += `<div class="dc-drawer dc-tokens"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">Tokens (not counted)</span></div>`; continue; }
+                    if (id === DC_TOKENS) { html += `<div class="dc-drawer dc-tokens" style="${ar(D.dh)}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">Tokens (not counted)</span></div>`; continue; }
                     const cell = st.cells[id] || {}, label = (cell.label || '').trim(), cat = dcCat(cell.cat);
                     if (label) { used++; byCat[cat.key] = (byCat[cat.key] || 0) + 1; }
                     const hit = q && label.toLowerCase().includes(q);
                     const cls = ['dc-drawer', label ? '' : 'dc-empty', q ? (hit ? 'dc-hit' : 'dc-dim') : '', dcUI.sel === id ? 'dc-sel' : ''].filter(Boolean).join(' ');
-                    html += `<button type="button" class="${cls}" style="--dc:var(${cat.color})" onclick="dcSelect('${id}')" aria-label="Cabinet ${c}, drawer ${r}: ${escapeAttr(label || 'empty')}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">${label ? escapeAttr(label) : 'Tap to label'}</span></button>`;
+                    html += `<button type="button" class="${cls}" style="--dc:var(${cat.color});${ar(D.dh)}" title="${escapeAttr(label || 'Empty')}" onclick="dcSelect('${id}')" aria-label="Cabinet ${c}, drawer ${r}: ${escapeAttr(label || 'empty')}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">${label ? escapeAttr(label) : 'Tap to label'}</span></button>`;
                 }
             }
-            for (let c = 1; c <= DC_COLS; c++) html += `<div class="dc-bottom">Bottom cabinet:<br>other product</div>`;
+            for (let c = 1; c <= DC_COLS; c++) html += `<div><div class="dc-doors" style="${ar(D.bh)}"><div class="dc-door"></div><div class="dc-door"></div></div><div class="dc-toe" style="${ar(D.toe)}"></div></div>`;
             let editor = '';
             if (dcUI.sel) {
                 const [c, r] = dcUI.sel.split('-'), cell = st.cells[dcUI.sel] || {};
@@ -17104,9 +17122,20 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <button type="button" class="sl-btn" onclick="dcReset()">Reset labels</button>
                 </div>
                 <div class="dc-scroll"><div class="dc-grid">${html}</div></div>
+                <details class="dc-size"><summary>📏 Cabinet sizes (inches)</summary>
+                    <div class="dc-size-row">
+                        <label>Cabinet width <input type="number" id="dcW" class="text-input" min="1" max="60" step="0.25" value="${D.w}"></label>
+                        <label>Drawer height <input type="number" id="dcDh" class="text-input" min="1" max="60" step="0.25" value="${D.dh}"></label>
+                        <label>Bottom door height <input type="number" id="dcBh" class="text-input" min="1" max="60" step="0.25" value="${D.bh}"></label>
+                        <label>Toe kick <input type="number" id="dcToe" class="text-input" min="1" max="60" step="0.25" value="${D.toe}"></label>
+                        <button type="button" class="sl-btn" onclick="dcSetDims()">Apply</button>
+                        <button type="button" class="sl-btn" onclick="dcSetDims(true)">Back to estimates</button>
+                    </div>
+                    <p style="margin:8px 0 0;">The starting sizes are guessed from the photos. Measure one cabinet and type the real numbers to make the picture match.</p>
+                </details>
                 ${editor}
                 <div class="dc-legend">${DC_CATS.filter(k => k.key).map(k => `<span style="--dc:var(${k.color})">${k.label}${byCat[k.key] ? ' (' + byCat[k.key] + ')' : ''}</span>`).join('')}</div>
-                <div class="sl-note" style="margin-top:14px;">ℹ️ Cabinet 1's first drawer (C1 · D1) holds tokens, so it isn't counted. The top shelf (packs for sale, paperwork) and the big bottom cabinets aren't tracked. Labels are whatever staff type; nothing here is read from the store's stock.</div>`;
+                <div class="sl-note" style="margin-top:14px;">ℹ️ Cabinet 1's first drawer (C1 · D1) holds tokens, so it isn't counted. The top shelf (packs for sale, paperwork) and the bottom double-door cabinets aren't tracked. Labels are whatever staff type; nothing here is read from the store's stock.</div>`;
             if (dcUI.sel) { const i = document.getElementById('dcLabel'); if (i && !i.value) i.focus(); }
         }
         function dcSelect(id) { dcUI.sel = (id === dcUI.sel) ? null : id; renderDrawerMap(); if (dcUI.sel) { const e = document.getElementById('dcEditor'); if (e && e.scrollIntoView) e.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
@@ -17119,6 +17148,12 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const s = dcGet(), label = document.getElementById('dcLabel').value.trim(), cat = document.getElementById('dcCat').value;
             if (label || cat) s.cells[dcUI.sel] = { label, cat }; else delete s.cells[dcUI.sel];
             dcSave(s); dcUI.sel = null; renderDrawerMap();
+        }
+        function dcSetDims(reset) {
+            const s = dcGet();
+            if (reset) delete s.dims; else s.dims = { w: +document.getElementById('dcW').value, dh: +document.getElementById('dcDh').value, bh: +document.getElementById('dcBh').value, toe: +document.getElementById('dcToe').value };
+            dcSave(s); renderDrawerMap();
+            const d = document.querySelector('.dc-size'); if (d) d.open = true;
         }
         function dcClear() { if (!dcUI.sel) return; const s = dcGet(); delete s.cells[dcUI.sel]; dcSave(s); dcUI.sel = null; renderDrawerMap(); }
         function dcReset() {
