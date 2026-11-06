@@ -17045,9 +17045,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         }
 
         // Drawer Map (2026-11-06, owner's request): the 7 cabinets of sealed-product drawers. Each cabinet has a top shelf
-        // (packs for sale, paperwork), 6 drawers and a big bottom cabinet. Cabinet 1's drawer 2 holds tokens, so it isn't
+        // (packs for sale, paperwork), 6 drawers and a big bottom cabinet. Cabinet 1's drawer 1 holds tokens, so it isn't
         // counted or editable. Labels are typed by staff and saved on this device only (localStorage 'drawerMapV1').
-        const DC_COLS = 7, DC_ROWS = 6, DC_TOKENS = '1-2';
+        const DC_COLS = 7, DC_ROWS = 6, DC_TOKENS = '1-1';
         const DC_CATS = [
             { key: '',        label: 'Not set',  color: '--border' },
             { key: 'magic',   label: 'Magic',    color: '--chart-1' },
@@ -17106,7 +17106,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 <div class="dc-scroll"><div class="dc-grid">${html}</div></div>
                 ${editor}
                 <div class="dc-legend">${DC_CATS.filter(k => k.key).map(k => `<span style="--dc:var(${k.color})">${k.label}${byCat[k.key] ? ' (' + byCat[k.key] + ')' : ''}</span>`).join('')}</div>
-                <div class="sl-note" style="margin-top:14px;">ℹ️ Cabinet 1's second drawer holds tokens, so it isn't counted. The top shelf (packs for sale, paperwork) and the big bottom cabinets aren't tracked. Labels are whatever staff type; nothing here is read from the store's stock.</div>`;
+                <div class="sl-note" style="margin-top:14px;">ℹ️ Cabinet 1's first drawer (C1 · D1) holds tokens, so it isn't counted. The top shelf (packs for sale, paperwork) and the big bottom cabinets aren't tracked. Labels are whatever staff type; nothing here is read from the store's stock.</div>`;
             if (dcUI.sel) { const i = document.getElementById('dcLabel'); if (i && !i.value) i.focus(); }
         }
         function dcSelect(id) { dcUI.sel = (id === dcUI.sel) ? null : id; renderDrawerMap(); if (dcUI.sel) { const e = document.getElementById('dcEditor'); if (e && e.scrollIntoView) e.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }
