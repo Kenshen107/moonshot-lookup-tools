@@ -6847,6 +6847,11 @@
         .plr-list th { color: var(--text-secondary); font-weight: normal; }
         .plr-list tr.plr-cur td { background: var(--bg-inset); }
         .plr-warn { color: var(--color-warning); font-size: 0.85em; margin-top: 6px; }
+        .plr-items { margin: 12px 0; padding: 10px 12px; background: var(--bg-inset); border-radius: var(--radius-sm); font-size: 0.9em; color: var(--text-soft); }
+        .plr-items .plr-row input[type=text] { flex: 1 1 260px; }
+        .plr-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+        .plr-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 8px; background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); }
+        .plr-chip button { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.1em; padding: 0 4px; width: auto; margin: 0; }
         .pl-drawer { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: var(--radius-sm); background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-heading); font-size: 0.85em; white-space: nowrap; }
         .pl-drawer.none { color: var(--text-muted); border-style: dashed; }
         /* Set Dividers tab (2026-11-03). The divider cards print in fixed colors, like the other print sheets. */
@@ -17089,7 +17094,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             { key: 'other',   label: 'Other games', color: '--chart-3' },
             { key: 'supply',  label: 'Supplies', color: '--chart-2' }
         ];
-        const dcUI = { sel: null, q: '' };
+        const dcUI = { sel: null, q: '', imp: null };
         // Sizes in inches, estimated from the owner's photos (wide, shallow drawers about 5.3 : 1; bottom doors about 2.2 drawers tall). Staff can type real tape-measure numbers.
         const DC_DIMS = { w: 24, dh: 4.5, bh: 10, toe: 3 };
         function dcDims() {
@@ -17123,11 +17128,11 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     const id = `${c}-${r}`;
                     if (id === DC_TOKENS) { html += `<div class="dc-drawer dc-tokens" style="${ar(D.dh)}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">Tokens (not counted)</span></div>`; continue; }
                     const cell = st.cells[id] || {}, label = (cell.label || '').trim(), cat = dcCat(dcCellCat(id, cell));
-                    if (label) used++;
+                    if (label || cell.range || (cell.items && cell.items.length)) used++;
                     byCat[cat.key] = (byCat[cat.key] || 0) + 1;
-                    const hit = q && label.toLowerCase().includes(q);
+                    const hit = q && ([label, cell.range ? plrSummary(cell.range) : '', ...(cell.items || [])].join(' | ').toLowerCase().includes(q));
                     const cls = ['dc-drawer', label ? '' : 'dc-empty', q ? (hit ? 'dc-hit' : 'dc-dim') : '', dcUI.sel === id ? 'dc-sel' : ''].filter(Boolean).join(' ');
-                    html += `<button type="button" class="${cls}" style="--dc:var(${cat.color});${ar(D.dh)}" title="${escapeAttr(label || 'Empty')}" onclick="dcSelect('${id}')" aria-label="Cabinet ${c}, drawer ${r}: ${escapeAttr(label || 'empty')}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">${label ? escapeAttr(label) : (cell.range ? escapeAttr(plrSummary(cell.range)) : 'Tap to label')}</span></button>`;
+                    html += `<button type="button" class="${cls}" style="--dc:var(${cat.color});${ar(D.dh)}" title="${escapeAttr([label, cell.range ? plrSummary(cell.range) : '', ...(cell.items || [])].filter(Boolean).join(' · ') || 'Empty')}" onclick="dcSelect('${id}')" aria-label="Cabinet ${c}, drawer ${r}: ${escapeAttr(label || 'empty')}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">${label ? escapeAttr(label) : (cell.range ? escapeAttr(plrSummary(cell.range)) : (cell.items && cell.items.length ? escapeAttr(cell.items.join(', ')) : 'Tap to label'))}</span></button>`;
                 }
             }
             for (let c = 1; c <= DC_COLS; c++) html += `<div><div class="dc-doors" style="${ar(D.bh)}"><div class="dc-door"></div><div class="dc-door"></div></div><div class="dc-toe" style="${ar(D.toe)}"></div></div>`;
@@ -17149,7 +17154,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <input type="text" id="dcSearch" class="text-input" placeholder="🔍 Find a product…" value="${escapeAttr(dcUI.q)}" oninput="dcSearch(this.value)" aria-label="Find a product in the drawers">
                     <span><b>${used}</b> of ${total} drawers labeled</span>
                     <button type="button" class="sl-btn" onclick="dcReset()">Reset labels</button>
+                    ${dcShareButtonsHTML()}
                 </div>
+                ${dcImportPanelHTML()}
                 <div class="dc-scroll"><div class="dc-grid">${html}</div></div>
                 <details class="dc-size"><summary>📏 Cabinet sizes (inches)</summary>
                     <div class="dc-size-row">
@@ -17175,7 +17182,8 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         function dcApply() {
             if (!dcUI.sel) return;
             const s = dcGet(), label = document.getElementById('dcLabel').value.trim(), cat = document.getElementById('dcCat').value;
-            if (label || cat !== dcDefaultCat(dcUI.sel)) s.cells[dcUI.sel] = { label, cat }; else delete s.cells[dcUI.sel];
+            const prev = s.cells[dcUI.sel] || {}, keeps = !!prev.range || !!(prev.items && prev.items.length);
+            if (label || cat !== dcDefaultCat(dcUI.sel) || keeps) s.cells[dcUI.sel] = Object.assign({}, prev, { label, cat }); else delete s.cells[dcUI.sel];
             dcSave(s); dcUI.sel = null; renderDrawerMap();
         }
         function dcSetDims(reset) {
@@ -17184,7 +17192,82 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             dcSave(s); renderDrawerMap();
             const d = document.querySelector('.dc-size'); if (d) d.open = true;
         }
-        function dcClear() { if (!dcUI.sel) return; const s = dcGet(); const cur = s.cells[dcUI.sel]; if (cur && cur.cat !== undefined && cur.cat !== dcDefaultCat(dcUI.sel)) s.cells[dcUI.sel] = { label: '', cat: cur.cat }; else delete s.cells[dcUI.sel]; dcSave(s); dcUI.sel = null; renderDrawerMap(); }
+        function dcClear() { if (!dcUI.sel) return; const s = dcGet(); const cur = s.cells[dcUI.sel]; if (cur && (cur.range || (cur.items && cur.items.length) || (cur.cat !== undefined && cur.cat !== dcDefaultCat(dcUI.sel)))) { const keep = Object.assign({}, cur, { label: '' }); s.cells[dcUI.sel] = keep; } else delete s.cells[dcUI.sel]; dcSave(s); dcUI.sel = null; renderDrawerMap(); }
+        // ===== Share the layout (2026-11-07, owner: "a method to export a file to upload it into another person's so they can have the same singles layout") =====
+        // One small .json file holds every drawer's label, kind, range and typed items plus the cabinet sizes and filing order.
+        const DC_FILE_APP = 'moonshot-fan-tools-drawer-map';
+        function dcExportData() {
+            const s = dcGet();
+            return { app: DC_FILE_APP, version: 1, exported: new Date().toISOString().slice(0, 10), data: { cells: s.cells || {}, dims: s.dims, rangeDir: s.rangeDir, rangeKind: s.rangeKind } };
+        }
+        function dcExport() {
+            const text = JSON.stringify(dcExportData(), null, 2);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+            a.download = `drawer-layout-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a); a.click();
+            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        }
+        // Keeps only fields this page knows, so a damaged or odd file can't put junk in the saved data.
+        function dcCleanImport(obj) {
+            if (!obj || obj.app !== DC_FILE_APP || !obj.data || typeof obj.data !== 'object') throw new Error("This doesn't look like a drawer layout file from this tool.");
+            const src = obj.data.cells && typeof obj.data.cells === 'object' ? obj.data.cells : {}, cells = {};
+            const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+            const catKeys = DC_CATS.map(c => c.key);
+            Object.keys(src).forEach(id => {
+                if (!/^[1-7]-[1-6]$/.test(id) || id === DC_TOKENS || !src[id] || typeof src[id] !== 'object') return;
+                const c = src[id], out = {};
+                if (typeof c.label === 'string') out.label = str(c.label, 120);
+                if (typeof c.cat === 'string' && catKeys.includes(c.cat)) out.cat = c.cat;
+                if (c.range && c.range.f && c.range.t) {
+                    const side = x => ({ s: str(x.s, 16).toLowerCase(), k: /^[a-z]$/i.test(x.k || '') ? x.k.toLowerCase() : 'a', n: str(x.n, 120) });
+                    const f = side(c.range.f), t = side(c.range.t);
+                    if (f.s && t.s) out.range = { f, t };
+                }
+                if (Array.isArray(c.items)) { const items = c.items.map(x => str(x, 120)).filter(Boolean).slice(0, 300); if (items.length) out.items = items; }
+                if (Object.keys(out).length) cells[id] = out;
+            });
+            const res = { cells };
+            const d = obj.data.dims;
+            if (d && typeof d === 'object') { const dims = {}; ['w', 'dh', 'bh', 'toe'].forEach(k => { const n = +d[k]; if (n >= 1 && n <= 60) dims[k] = n; }); if (Object.keys(dims).length) res.dims = dims; }
+            if (obj.data.rangeDir === 'old' || obj.data.rangeDir === 'new') res.rangeDir = obj.data.rangeDir;
+            if (typeof PLR_KINDS !== 'undefined' && PLR_KINDS[obj.data.rangeKind]) res.rangeKind = obj.data.rangeKind;
+            return { data: res, count: Object.keys(cells).length, exported: str(obj.exported, 20) };
+        }
+        function dcImportPanelHTML() {
+            const i = dcUI.imp; if (!i) return '';
+            if (i.error) return `<div class="dc-edit"><div class="plr-warn">⚠ ${escapeAttr(i.error)}</div><div class="plr-row"><button type="button" class="sl-btn" onclick="dcCancelImport()">Close</button></div></div>`;
+            return `<div class="dc-edit"><h3>Import a drawer layout</h3>
+                <p style="margin:0 0 8px;color:var(--text-soft);">The file has <b>${i.count}</b> drawer${i.count === 1 ? '' : 's'} filled in${i.exported ? ' (exported ' + escapeAttr(i.exported) + ')' : ''}. Nothing changes until you pick one:</p>
+                <div class="plr-row"><button type="button" class="sl-btn" onclick="dcApplyImport('replace')">Replace my layout with the file</button><button type="button" class="sl-btn" onclick="dcApplyImport('fill')">Only fill my empty drawers</button><button type="button" class="sl-btn" onclick="dcCancelImport()">Cancel</button></div></div>`;
+        }
+        function dcRefreshAll() { renderDrawerMap(); if (typeof plrUI !== 'undefined' && plrUI.loaded && document.getElementById('plShelves')) plrRender(); if (typeof pullListItems !== 'undefined' && pullListItems.length) renderPullList(); }
+        function dcPickImport(input) {
+            const f = input.files && input.files[0]; input.value = '';
+            if (!f) return;
+            if (f.size > 2 * 1024 * 1024) { dcUI.imp = { error: 'That file is too big to be a drawer layout.' }; dcRefreshAll(); return; }
+            const r = new FileReader();
+            r.onload = () => { try { dcUI.imp = dcCleanImport(JSON.parse(r.result)); } catch (e) { dcUI.imp = { error: e instanceof SyntaxError ? "That file isn't readable (it should be a .json file exported from this tool)." : e.message }; } dcRefreshAll(); };
+            r.onerror = () => { dcUI.imp = { error: 'Could not read that file.' }; dcRefreshAll(); };
+            r.readAsText(f);
+        }
+        function dcApplyImport(mode) {
+            const i = dcUI.imp; if (!i || !i.data) return;
+            const s = dcGet();
+            if (mode === 'replace') {
+                s.cells = i.data.cells;
+                ['dims', 'rangeDir', 'rangeKind'].forEach(k => { if (i.data[k] !== undefined) s[k] = i.data[k]; });
+            } else {
+                const empty = c => !c || (!(c.label || '').trim() && !c.range && !(c.items && c.items.length));
+                Object.keys(i.data.cells).forEach(id => { if (empty(s.cells[id])) s.cells[id] = i.data.cells[id]; });
+            }
+            dcSave(s); dcUI.imp = null; dcUI.sel = null; plrUI.drawer = '';
+            dcRefreshAll();
+        }
+        function dcCancelImport() { dcUI.imp = null; dcRefreshAll(); }
+        function dcShareButtonsHTML() {
+            return `<button type="button" class="sl-btn" onclick="dcExport()">⬇️ Export layout</button><label class="sl-btn" style="cursor:pointer;">⬆️ Import layout<input type="file" accept=".json,application/json" style="display:none;" onchange="dcPickImport(this)"></label>`;
+        }
         function dcReset() {
             if (!confirm('Clear every drawer label on this device?')) return;
             try { localStorage.removeItem('drawerMapV1'); } catch (e) { /* nothing saved */ }
@@ -22723,7 +22806,10 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         }
         function plDrawerFor(item) {
             const st = dcGet(), pos = plrCardPos(item.card, item.baseName), hits = [];
-            plrDrawerIds().forEach(id => { const cell = st.cells[id]; if (cell && cell.range && plrInRange(pos, cell.range)) hits.push(id); });
+            const nm = [item.baseName, item.card && item.card.name].filter(Boolean).map(x => String(x).trim().toLowerCase());
+            // a card typed into a drawer's "also keep" list wins over a range
+            plrDrawerIds().forEach(id => { const cell = st.cells[id]; if (cell && Array.isArray(cell.items) && cell.items.some(x => nm.includes(String(x).trim().toLowerCase()))) hits.push(id); });
+            plrDrawerIds().forEach(id => { const cell = st.cells[id]; if (cell && cell.range && !hits.includes(id) && plrInRange(pos, cell.range)) hits.push(id); });
             return hits;
         }
         function plDrawerBadge(item) {
@@ -22770,6 +22856,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const letterSel = (id, v) => `<select id="${id}" aria-label="Letter">${letters.map(l => `<option value="${l.toLowerCase()}"${v === l.toLowerCase() ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
             const max = Math.max(0, tl.length - 1);
             const rows = ids.map(id => { const rg = (st.cells[id] || {}).range; return { id, rg }; }).filter(x => x.rg);
+            const allRows = ids.map(id => { const c = st.cells[id] || {}; return { id, rg: c.range, items: c.items }; }).filter(x => x.rg || (x.items && x.items.length));
             // overlap warnings: neighbours in filing order whose ranges cross
             const warns = [];
             for (let i = 1; i < rows.length; i++) {
@@ -22784,6 +22871,8 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <label>Filing order <select onchange="plrSetPref('rangeDir', this.value)"><option value="old"${plrDir() === 1 ? ' selected' : ''}>Oldest set first</option><option value="new"${plrDir() === -1 ? ' selected' : ''}>Newest set first</option></select></label>
                     <label>Sets on the slider <select onchange="plrSetPref('rangeKind', this.value)">${Object.entries(PLR_KINDS).map(([k, v]) => `<option value="${k}"${plrKind() === k ? ' selected' : ''}>${v.label}</option>`).join('')}</select></label>
                 </div>
+                <div class="plr-row"><label>🔍 Where is… <input type="text" id="plrFind" class="text-input" placeholder="type a product, card or set" value="${escapeAttr(plrUI.find || '')}" oninput="plrFindRun(this.value)"></label></div>
+                <div id="plrFindOut" class="bk-note" style="margin:0 0 8px;"></div>
                 ${tl.length ? `<div class="plr-slider" id="plrSlider">
                     <div class="plr-track"></div><div class="plr-fill" id="plrFill"></div>
                     <input type="range" id="plrLo" min="0" max="${max}" step="1" value="${plrUI.lo}" aria-label="First set in this drawer" oninput="plrSlide()">
@@ -22794,11 +22883,53 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <div><b>Starts at</b><span id="plrFromTxt"></span><div class="plr-row" style="margin:6px 0 0;">Letter ${letterSel('plrSk', plrUI.sk)} or card <input type="text" id="plrSn" class="text-input" placeholder="exact card name (optional)" value="${escapeAttr(plrUI.sn)}" aria-label="Start at this card"></div></div>
                     <div><b>Ends at</b><span id="plrToTxt"></span><div class="plr-row" style="margin:6px 0 0;">Letter ${letterSel('plrEk', plrUI.ek)} or card <input type="text" id="plrEn" class="text-input" placeholder="exact card name (optional)" value="${escapeAttr(plrUI.en)}" aria-label="End at this card"></div></div>
                 </div>
+                ${dcImportPanelHTML()}
                 <div class="plr-row"><button type="button" class="sl-btn" onclick="plrSave()">💾 Save to ${plrName(plrUI.drawer)}</button><button type="button" class="sl-btn" onclick="plrClear()">Clear this drawer</button><span id="plrStatus"></span></div>
-                ${rows.length ? `<table class="plr-list"><thead><tr><th>Drawer</th><th>Holds</th></tr></thead><tbody>${rows.map(x => `<tr class="${x.id === plrUI.drawer ? 'plr-cur' : ''}"><td>${plrName(x.id)}</td><td>${escapeAttr(plrSummary(x.rg))}</td></tr>`).join('')}</tbody></table>` : '<div class="bk-note">No drawer has a range yet.</div>'}
+                <div class="plr-row"><span>Share this layout:</span>${dcShareButtonsHTML()}</div>
+                <div class="plr-items"><b>Also keep in ${plrName(plrUI.drawer)}:</b> any product or card, typed in by name
+                    <div class="plr-row" style="margin:6px 0;"><input type="text" id="plrItem" class="text-input" maxlength="120" placeholder="e.g. Foundations Play Booster Box, Lightning Bolt" aria-label="Add a product or card to this drawer" onkeydown="if(event.key==='Enter')plrAddItem()"><button type="button" class="sl-btn" onclick="plrAddItem()">➕ Add</button></div>
+                    <div class="plr-chips">${(((st.cells[plrUI.drawer] || {}).items) || []).map((x, i) => `<span class="plr-chip">${escapeAttr(x)} <button type="button" onclick="plrRemoveItem(${i})" aria-label="Remove ${escapeAttr(x)}">×</button></span>`).join('') || '<span class="bk-note">Nothing typed in yet.</span>'}</div>
+                    <div class="bk-note">A typed card name that matches a card on the pull list puts it in this drawer, even if the range says otherwise. Products show on the Drawer Map and in the search.</div>
+                </div>
+                ${allRows.length ? `<table class="plr-list"><thead><tr><th>Drawer</th><th>Range</th><th>Typed in</th></tr></thead><tbody>${allRows.map(x => `<tr class="${x.id === plrUI.drawer ? 'plr-cur' : ''}"><td>${plrName(x.id)}</td><td>${x.rg ? escapeAttr(plrSummary(x.rg)) : ''}</td><td>${escapeAttr((x.items || []).join(', '))}</td></tr>`).join('')}</tbody></table>` : '<div class="bk-note">No drawer has a range or typed products yet.</div>'}
                 ${warns.length ? `<div class="plr-warn">⚠ ${warns.map(escapeAttr).join('<br>⚠ ')}</div>` : ''}
             </details>`;
             plrSlide(true);
+            plrFindRun(plrUI.find || '');
+        }
+        function plrFindRun(v) {
+            plrUI.find = v;
+            const out = document.getElementById('plrFindOut'); if (!out) return;
+            const q = v.trim().toLowerCase();
+            if (!q) { out.textContent = ''; return; }
+            const st = dcGet(), hits = [];
+            plrDrawerIds().forEach(id => {
+                const c = st.cells[id] || {}, why = [];
+                if ((c.label || '').toLowerCase().includes(q)) why.push('label: ' + c.label);
+                (c.items || []).forEach(x => { if (x.toLowerCase().includes(q)) why.push(x); });
+                if (c.range && plrSummary(c.range).toLowerCase().includes(q)) why.push('range ' + plrSummary(c.range));
+                if (c.range) {
+                    const a = plrSetInfo(c.range.f.s), b = plrSetInfo(c.range.t.s);
+                    [a, b].forEach(x => { if (x && x.name.toLowerCase().includes(q) && !why.some(w => w.startsWith('range'))) why.push('range starts or ends at ' + x.name); });
+                }
+                if (why.length) hits.push(`<a href="#" onclick="plrPick('${id}'); return false;"><b>${plrName(id)}</b></a> — ${escapeAttr(why.join('; '))}`);
+            });
+            out.innerHTML = hits.length ? hits.join('<br>') : 'Not typed into any drawer yet.';
+        }
+        function plrAddItem() {
+            const inp = document.getElementById('plrItem'); if (!inp || !plrUI.drawer) return;
+            const v = inp.value.trim().slice(0, 120); if (!v) { inp.focus(); return; }
+            const s = dcGet(), cell = s.cells[plrUI.drawer] || {}, items = (cell.items || []).slice();
+            if (!items.some(x => x.toLowerCase() === v.toLowerCase())) items.push(v);
+            s.cells[plrUI.drawer] = Object.assign({}, cell, { items });
+            dcSave(s); plrRender(); const n = document.getElementById('plrItem'); if (n) n.focus();
+            if (pullListItems.length) renderPullList();
+        }
+        function plrRemoveItem(i) {
+            const s = dcGet(), cell = s.cells[plrUI.drawer]; if (!cell || !cell.items) return;
+            cell.items.splice(i, 1); if (!cell.items.length) delete cell.items;
+            if (!cell.label && cell.cat === undefined && !cell.range && !cell.items) delete s.cells[plrUI.drawer];
+            dcSave(s); plrRender(); if (pullListItems.length) renderPullList();
         }
         function plrSlide(quiet) {
             const tl = plrTimeline(); if (!tl.length) return;
@@ -22830,7 +22961,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         function plrClear() {
             const s = dcGet(), cell = s.cells[plrUI.drawer]; if (!cell) return;
             delete cell.range;
-            if (!cell.label && cell.cat === undefined) delete s.cells[plrUI.drawer];
+            if (!cell.label && cell.cat === undefined && !(cell.items && cell.items.length)) delete s.cells[plrUI.drawer];
             dcSave(s); plrLoadDrawer(plrUI.drawer); plrRender(); if (pullListItems.length) renderPullList();
         }
 
