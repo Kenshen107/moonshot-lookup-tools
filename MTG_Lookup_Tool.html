@@ -6846,6 +6846,10 @@
         .plr-list td, .plr-list th { padding: 4px 8px; border-bottom: 1px solid var(--border-subtle); text-align: left; color: var(--text-primary); }
         .plr-list th { color: var(--text-secondary); font-weight: normal; }
         .plr-list tr.plr-cur td { background: var(--bg-inset); }
+        .plr-kinds { margin: 6px 0; }
+        .plr-kinds summary { cursor: pointer; font-size: 0.9em; color: var(--text-soft); }
+        .plr-kind { display: inline-flex; align-items: center; gap: 4px; }
+        .plr-kind input { width: auto; margin: 0; }
         .plr-warn { color: var(--color-warning); font-size: 0.85em; margin-top: 6px; }
         .plr-items { margin: 12px 0; padding: 10px 12px; background: var(--bg-inset); border-radius: var(--radius-sm); font-size: 0.9em; color: var(--text-soft); }
         .plr-items .plr-row input[type=text] { flex: 1 1 260px; }
@@ -17208,7 +17212,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         const DC_FILE_APP = 'moonshot-fan-tools-drawer-map';
         function dcExportData() {
             const s = dcGet();
-            return { app: DC_FILE_APP, version: 1, exported: new Date().toISOString().slice(0, 10), data: { cells: s.cells || {}, dims: s.dims, rangeDir: s.rangeDir, rangeKind: s.rangeKind } };
+            return { app: DC_FILE_APP, version: 1, exported: new Date().toISOString().slice(0, 10), data: { cells: s.cells || {}, dims: s.dims, rangeDir: s.rangeDir, rangeKind: s.rangeKind, rangeKinds: s.rangeKinds } };
         }
         function dcExport() {
             const text = JSON.stringify(dcExportData(), null, 2);
@@ -17245,7 +17249,8 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const d = obj.data.dims;
             if (d && typeof d === 'object') { const dims = {}; ['w', 'dh', 'bh', 'toe'].forEach(k => { const n = +d[k]; if (n >= 1 && n <= 60) dims[k] = n; }); if (Object.keys(dims).length) res.dims = dims; }
             if (obj.data.rangeDir === 'old' || obj.data.rangeDir === 'new') res.rangeDir = obj.data.rangeDir;
-            if (typeof PLR_KINDS !== 'undefined' && PLR_KINDS[obj.data.rangeKind]) res.rangeKind = obj.data.rangeKind;
+            if (typeof PLR_LEGACY !== 'undefined' && PLR_LEGACY[obj.data.rangeKind]) res.rangeKind = obj.data.rangeKind;
+            if (typeof PLR_GROUPS !== 'undefined' && Array.isArray(obj.data.rangeKinds)) { const k = obj.data.rangeKinds.filter(x => PLR_GROUPS[x]); if (k.length) res.rangeKinds = k.filter((x, i) => k.indexOf(x) === i); }
             return { data: res, count: Object.keys(cells).length, exported: str(obj.exported, 20) };
         }
         function dcImportPanelHTML() {
@@ -17270,7 +17275,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const s = dcGet();
             if (mode === 'replace') {
                 s.cells = i.data.cells;
-                ['dims', 'rangeDir', 'rangeKind'].forEach(k => { if (i.data[k] !== undefined) s[k] = i.data[k]; });
+                ['dims', 'rangeDir', 'rangeKind', 'rangeKinds'].forEach(k => { if (i.data[k] !== undefined) s[k] = i.data[k]; });
             } else {
                 const empty = c => !c || (!(c.label || '').trim() && !c.range && !c.prod && !(c.items && c.items.length));
                 Object.keys(i.data.cells).forEach(id => { if (empty(s.cells[id])) s.cells[id] = i.data.cells[id]; });
@@ -22767,19 +22772,35 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         // Each drawer on the Drawer Map can hold a range of the singles: from a set (and a letter or card name in it) to another
         // set (and a letter or card name). The sets sit on a slider in release-date order. Ranges live in the Drawer Map's saved
         // data (drawerMapV1, cell.range). The pull list then shows each card's drawer and can group by drawer.
-        const PLR_KINDS = {
-            main: { label: 'Core & expansion sets', types: ['core', 'expansion'] },
-            more: { label: 'Core, expansion, Masters & Commander', types: ['core', 'expansion', 'masters', 'draft_innovation', 'commander', 'planechase', 'archenemy', 'eternal'] },
-            all: { label: 'Every paper set', types: null }
+        // Which kinds of sets show on the slider (2026-11-07, owner: "I need to see none major sets like conspiracy or duel decks etc.").
+        // Scryfall's set types are put in groups; the saved choice is a list of group keys (rangeKinds). Older files keep the three presets.
+        const PLR_GROUPS = {
+            main: { label: 'Core & expansion', types: ['core', 'expansion'] },
+            masters: { label: 'Masters & eternal', types: ['masters', 'masterpiece', 'eternal'] },
+            draft: { label: 'Draft innovation (Conspiracy, Battlebond…)', types: ['draft_innovation'] },
+            commander: { label: 'Commander, Planechase, Archenemy', types: ['commander', 'planechase', 'archenemy'] },
+            decks: { label: 'Duel Decks, Premium Decks, From the Vault, Spellbooks, starters', types: ['duel_deck', 'premium_deck', 'from_the_vault', 'spellbook', 'starter', 'box', 'arsenal', 'treasure_chest', 'vanguard'] },
+            promo: { label: 'Promos, tokens, memorabilia', types: ['promo', 'token', 'memorabilia', 'minigame'] },
+            funny: { label: 'Un-sets & funny', types: ['funny'] },
+            other: { label: 'Anything else', types: null }
         };
+        const PLR_LEGACY = { main: ['main'], more: ['main', 'masters', 'draft', 'commander'], all: Object.keys(PLR_GROUPS) };
+        function plrGroupOf(type) {
+            for (const k of Object.keys(PLR_GROUPS)) if (PLR_GROUPS[k].types && PLR_GROUPS[k].types.includes(type)) return k;
+            return 'other';
+        }
+        function plrKinds() {
+            const st = dcGet();
+            if (Array.isArray(st.rangeKinds)) { const k = st.rangeKinds.filter(x => PLR_GROUPS[x]); if (k.length) return k; }
+            return PLR_LEGACY[st.rangeKind] || PLR_LEGACY.main;
+        }
         const plrUI = { drawer: '', lo: 0, hi: 0, sk: 'a', sn: '', ek: 'z', en: '', loaded: false };
         const plView = { group: 'set' };
         function plrDir() { return dcGet().rangeDir === 'new' ? -1 : 1; }
-        function plrKind() { return PLR_KINDS[dcGet().rangeKind] ? dcGet().rangeKind : 'main'; }
         function plrTimeline() {
             const raw = (typeof rawSetsCache !== 'undefined' && rawSetsCache) ? rawSetsCache : [];
-            const t = PLR_KINDS[plrKind()].types, dir = plrDir();
-            return raw.filter(x => x.released_at && !x.digital && (!t || t.includes(x.set_type)))
+            const kinds = plrKinds(), dir = plrDir();
+            return raw.filter(x => x.released_at && !x.digital && kinds.includes(plrGroupOf(x.set_type)))
                 .sort((a, b) => dir * (a.released_at.localeCompare(b.released_at)) || a.name.localeCompare(b.name));
         }
         function plrSetInfo(code) {
@@ -22787,10 +22808,11 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             return raw.find(x => x.code.toLowerCase() === String(code).toLowerCase()) || null;
         }
         function plrDay(dateStr) { const t = Date.parse(dateStr || ''); return isNaN(t) ? 0 : Math.round(t / 86400000) * plrDir(); }
-        function plrStop(side) {
+        function plrStop(side, isEnd) {
             // a stop is [day, code, nameKey, isEnd]; names compare as lower-case text
             const info = plrSetInfo(side.s);
-            const key = (side.n || '').trim().toLowerCase() || (side.k || '').toLowerCase();
+            const exactName = (side.n || '').trim().toLowerCase();
+            const key = exactName || ((side.k || '').toLowerCase() === 'a' && !isEnd ? '' : (side.k || '').toLowerCase());
             return { day: plrDay(info ? info.released_at : ''), code: String(side.s).toLowerCase(), key, exact: !!(side.n || '').trim() };
         }
         function plrCardPos(card, baseName) {
@@ -22800,7 +22822,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
         function plrCmpSet(a, b) { return (a.day - b.day) || (a.code < b.code ? -1 : a.code > b.code ? 1 : 0); }
         function plrInRange(pos, range) {
             if (!range || !range.f || !range.t || !range.f.s || !range.t.s) return false;
-            const f = plrStop(range.f), t = plrStop(range.t);
+            const f = plrStop(range.f), t = plrStop(range.t, true);
             const cf = plrCmpSet(pos, f), ct = plrCmpSet(pos, t);
             if (cf < 0 || ct > 0) return false;
             if (cf === 0 && pos.name < f.key) return false;
@@ -22859,6 +22881,49 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             plrUI.sk = (range && range.f && range.f.k) || 'a'; plrUI.sn = (range && range.f && range.f.n) || '';
             plrUI.ek = (range && range.t && range.t.k) || 'z'; plrUI.en = (range && range.t && range.t.n) || '';
         }
+        // where the next drawer should start so nothing falls between two drawers: the letter after this one's end, or the next set's A
+        function plrAfter(t, tl) {
+            if (!t || !t.s) return null;
+            const nameKey = (t.n || '').trim().toLowerCase();
+            const k = (nameKey ? nameKey[0] : (t.k || 'z')).toLowerCase();
+            const i = tl.findIndex(x => x.code.toLowerCase() === t.s.toLowerCase());
+            if (!nameKey && k === 'z') return i >= 0 && i + 1 < tl.length ? { s: tl[i + 1].code, k: 'a' } : null;
+            if (nameKey) return { s: t.s, k: /[a-y]/.test(k) ? String.fromCharCode(k.charCodeAt(0) + 1) : k, exact: true };
+            return { s: t.s, k: String.fromCharCode(k.charCodeAt(0) + 1) };
+        }
+        function plrContinue() {
+            const ids = plrDrawerIds(), st = dcGet(), tl = plrTimeline();
+            let prev = null;
+            for (let i = ids.indexOf(plrUI.drawer) - 1; i >= 0; i--) { const r = (st.cells[ids[i]] || {}).range; if (r && r.t) { prev = { id: ids[i], r }; break; } }
+            const m = document.getElementById('plrStatus');
+            if (!prev) { if (m) m.textContent = 'No drawer before this one has a range yet.'; return; }
+            const nx = plrAfter(prev.r.t, tl);
+            if (!nx) { if (m) m.textContent = `${plrName(prev.id)} already ends at the last set on the slider.`; return; }
+            plrUI.lo = plrIndexFor({ s: nx.s }, tl, 0); if (plrUI.hi < plrUI.lo) plrUI.hi = plrUI.lo;
+            plrUI.sk = nx.k; plrUI.sn = '';
+            plrRender();
+            const m2 = document.getElementById('plrStatus');
+            if (m2) m2.textContent = `Start set to follow ${plrName(prev.id)} (${plrSummary(prev.r)}). Now move the end handle and Save.` + (nx.exact ? ' It ended on a named card, so check the start letter.' : '');
+        }
+        function plrSetFind(which, text) {
+            const tl = plrTimeline(), q = String(text || '').trim().toLowerCase();
+            if (!q) return;
+            let i = tl.findIndex(x => plrSetLabel(x).toLowerCase() === q);
+            if (i < 0) i = tl.findIndex(x => x.code.toLowerCase() === q);
+            if (i < 0) i = tl.findIndex(x => x.name.toLowerCase() === q);
+            if (i < 0) i = tl.findIndex(x => x.name.toLowerCase().includes(q));
+            const m = document.getElementById('plrStatus');
+            if (i < 0) { if (m) m.textContent = `No set on the slider matches "${text}". Tick the kind of set below to add it.`; return; }
+            if (which === 'f') { plrUI.lo = i; if (plrUI.hi < i) plrUI.hi = i; } else { plrUI.hi = i; if (plrUI.lo > i) plrUI.lo = i; }
+            if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+            setTimeout(plrRender, 0); // not inside the input's own change event
+        }
+        function plrToggleKind(key) {
+            const s = dcGet(), cur = plrKinds().slice(), i = cur.indexOf(key);
+            if (i >= 0) { if (cur.length === 1) return; cur.splice(i, 1); } else cur.push(key);
+            s.rangeKinds = cur; dcSave(s);
+            plrLoadDrawer(plrUI.drawer); plrRender(); if (pullListItems.length) renderPullList();
+        }
         function plrSetLabel(x) { return x ? `${x.name} (${x.code.toUpperCase()}, ${new Date(x.released_at + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', year: 'numeric' })})` : 'None'; }
         function plrRender() {
             const root = document.getElementById('plShelves');
@@ -22874,7 +22939,12 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             // overlap warnings: neighbours in filing order whose ranges cross
             const warns = [];
             for (let i = 1; i < rows.length; i++) {
-                const a = plrStop(rows[i - 1].rg.t), b = plrStop(rows[i].rg.f);
+                const nx = plrAfter(rows[i - 1].rg.t, tl), fs = rows[i].rg.f;
+                if (nx && fs && !(fs.n || '').trim()) {
+                    const ia = plrIndexFor({ s: nx.s }, tl, 0), ib = plrIndexFor(fs, tl, 0);
+                    if (ib > ia || (ib === ia && (fs.k || 'a') > nx.k)) warns.push(`Gap: ${plrName(rows[i - 1].id)} ends at ${plrSummary({ f: rows[i - 1].rg.t, t: rows[i - 1].rg.t }).split(' → ')[0]}, but ${plrName(rows[i].id)} starts later, so cards in between aren't in any drawer.`);
+                }
+                const a = plrStop(rows[i - 1].rg.t, true), b = plrStop(rows[i].rg.f);
                 const c = plrCmpSet(a, b);
                 if (c > 0 || (c === 0 && (a.exact ? a.key : a.key + '￿') >= b.key)) warns.push(`${plrName(rows[i - 1].id)} ends after ${plrName(rows[i].id)} starts (they overlap).`);
             }
@@ -22883,8 +22953,11 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 <div class="plr-row">
                     <label>Drawer <select id="plrDrawer" onchange="plrPick(this.value)">${ids.map(id => { const rg = (st.cells[id] || {}).range; return `<option value="${id}"${plrUI.drawer === id ? ' selected' : ''}>${plrName(id)}${rg ? ' — ' + escapeAttr(plrSummary(rg)) : ''}</option>`; }).join('')}</select></label>
                     <label>Filing order <select onchange="plrSetPref('rangeDir', this.value)"><option value="old"${plrDir() === 1 ? ' selected' : ''}>Oldest set first</option><option value="new"${plrDir() === -1 ? ' selected' : ''}>Newest set first</option></select></label>
-                    <label>Sets on the slider <select onchange="plrSetPref('rangeKind', this.value)">${Object.entries(PLR_KINDS).map(([k, v]) => `<option value="${k}"${plrKind() === k ? ' selected' : ''}>${v.label}</option>`).join('')}</select></label>
                 </div>
+                <details class="plr-kinds" open><summary>Kinds of sets on the slider (${plrKinds().length} of ${Object.keys(PLR_GROUPS).length} on, ${tl.length} sets)</summary>
+                    <div class="plr-row">${Object.entries(PLR_GROUPS).map(([k, v]) => { const n = (typeof rawSetsCache !== 'undefined' && rawSetsCache ? rawSetsCache : []).filter(x => x.released_at && !x.digital && plrGroupOf(x.set_type) === k).length; return `<label class="plr-kind"><input type="checkbox" ${plrKinds().includes(k) ? 'checked ' : ''}onchange="plrToggleKind('${k}')"> ${v.label} <small>(${n})</small></label>`; }).join('')}</div>
+                    <div class="bk-note">Tick a kind to put its sets on the slider so a drawer can start or stop at one. Cards are filed by release date, so a set you leave off still lands in whichever drawer its date falls in.</div>
+                </details>
                 <div class="plr-row"><label>🔍 Where is… <input type="text" id="plrFind" class="text-input" placeholder="type a product, card or set" value="${escapeAttr(plrUI.find || '')}" oninput="plrFindRun(this.value)"></label></div>
                 <div id="plrFindOut" class="bk-note" style="margin:0 0 8px;"></div>
                 ${tl.length ? `<div class="plr-slider" id="plrSlider">
@@ -22892,7 +22965,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <input type="range" id="plrLo" min="0" max="${max}" step="1" value="${plrUI.lo}" aria-label="First set in this drawer" oninput="plrSlide()">
                     <input type="range" id="plrHi" min="0" max="${max}" step="1" value="${plrUI.hi}" aria-label="Last set in this drawer" oninput="plrSlide()">
                 </div>
-                <div class="plr-ends"><span>${escapeAttr(plrSetLabel(tl[0]))}</span><span>${escapeAttr(plrSetLabel(tl[max]))}</span></div>` : '<div class="plr-warn">No sets to show for this choice.</div>'}
+                <div class="plr-ends"><span>${escapeAttr(plrSetLabel(tl[0]))}</span><span>${escapeAttr(plrSetLabel(tl[max]))}</span></div>
+                <datalist id="plrSetList">${tl.map(x => `<option value="${escapeAttr(plrSetLabel(x))}"></option>`).join('')}</datalist>
+                <div class="plr-row"><label>Jump the start to a set <input type="text" list="plrSetList" class="text-input" placeholder="e.g. Dragons of Tarkir or DTK" onchange="plrSetFind('f', this.value)"></label><label>Jump the end to a set <input type="text" list="plrSetList" class="text-input" placeholder="e.g. DTK" onchange="plrSetFind('t', this.value)"></label><button type="button" class="sl-btn" onclick="plrContinue()" title="Set this drawer's start to just after the previous drawer's end">⤵ Start where the drawer before ended</button></div>`: '<div class="plr-warn">No sets to show for this choice.</div>'}
                 <div class="plr-read">
                     <div><b>Starts at</b><span id="plrFromTxt"></span><div class="plr-row" style="margin:6px 0 0;">Letter ${letterSel('plrSk', plrUI.sk)} or card <input type="text" id="plrSn" class="text-input" placeholder="exact card name (optional)" value="${escapeAttr(plrUI.sn)}" aria-label="Start at this card"></div></div>
                     <div><b>Ends at</b><span id="plrToTxt"></span><div class="plr-row" style="margin:6px 0 0;">Letter ${letterSel('plrEk', plrUI.ek)} or card <input type="text" id="plrEn" class="text-input" placeholder="exact card name (optional)" value="${escapeAttr(plrUI.en)}" aria-label="End at this card"></div></div>
