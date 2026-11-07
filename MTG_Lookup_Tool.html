@@ -17094,7 +17094,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             { key: 'other',   label: 'Other games', color: '--chart-3' },
             { key: 'supply',  label: 'Supplies', color: '--chart-2' }
         ];
-        const dcUI = { sel: null, q: '' };
+        const dcUI = { sel: null, q: '', imp: null };
         // Sizes in inches, estimated from the owner's photos (wide, shallow drawers about 5.3 : 1; bottom doors about 2.2 drawers tall). Staff can type real tape-measure numbers.
         const DC_DIMS = { w: 24, dh: 4.5, bh: 10, toe: 3 };
         function dcDims() {
@@ -17154,7 +17154,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <input type="text" id="dcSearch" class="text-input" placeholder="🔍 Find a product…" value="${escapeAttr(dcUI.q)}" oninput="dcSearch(this.value)" aria-label="Find a product in the drawers">
                     <span><b>${used}</b> of ${total} drawers labeled</span>
                     <button type="button" class="sl-btn" onclick="dcReset()">Reset labels</button>
+                    ${dcShareButtonsHTML()}
                 </div>
+                ${dcImportPanelHTML()}
                 <div class="dc-scroll"><div class="dc-grid">${html}</div></div>
                 <details class="dc-size"><summary>📏 Cabinet sizes (inches)</summary>
                     <div class="dc-size-row">
@@ -17191,6 +17193,81 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             const d = document.querySelector('.dc-size'); if (d) d.open = true;
         }
         function dcClear() { if (!dcUI.sel) return; const s = dcGet(); const cur = s.cells[dcUI.sel]; if (cur && (cur.range || (cur.items && cur.items.length) || (cur.cat !== undefined && cur.cat !== dcDefaultCat(dcUI.sel)))) { const keep = Object.assign({}, cur, { label: '' }); s.cells[dcUI.sel] = keep; } else delete s.cells[dcUI.sel]; dcSave(s); dcUI.sel = null; renderDrawerMap(); }
+        // ===== Share the layout (2026-11-07, owner: "a method to export a file to upload it into another person's so they can have the same singles layout") =====
+        // One small .json file holds every drawer's label, kind, range and typed items plus the cabinet sizes and filing order.
+        const DC_FILE_APP = 'moonshot-fan-tools-drawer-map';
+        function dcExportData() {
+            const s = dcGet();
+            return { app: DC_FILE_APP, version: 1, exported: new Date().toISOString().slice(0, 10), data: { cells: s.cells || {}, dims: s.dims, rangeDir: s.rangeDir, rangeKind: s.rangeKind } };
+        }
+        function dcExport() {
+            const text = JSON.stringify(dcExportData(), null, 2);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+            a.download = `drawer-layout-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a); a.click();
+            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        }
+        // Keeps only fields this page knows, so a damaged or odd file can't put junk in the saved data.
+        function dcCleanImport(obj) {
+            if (!obj || obj.app !== DC_FILE_APP || !obj.data || typeof obj.data !== 'object') throw new Error("This doesn't look like a drawer layout file from this tool.");
+            const src = obj.data.cells && typeof obj.data.cells === 'object' ? obj.data.cells : {}, cells = {};
+            const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+            const catKeys = DC_CATS.map(c => c.key);
+            Object.keys(src).forEach(id => {
+                if (!/^[1-7]-[1-6]$/.test(id) || id === DC_TOKENS || !src[id] || typeof src[id] !== 'object') return;
+                const c = src[id], out = {};
+                if (typeof c.label === 'string') out.label = str(c.label, 120);
+                if (typeof c.cat === 'string' && catKeys.includes(c.cat)) out.cat = c.cat;
+                if (c.range && c.range.f && c.range.t) {
+                    const side = x => ({ s: str(x.s, 16).toLowerCase(), k: /^[a-z]$/i.test(x.k || '') ? x.k.toLowerCase() : 'a', n: str(x.n, 120) });
+                    const f = side(c.range.f), t = side(c.range.t);
+                    if (f.s && t.s) out.range = { f, t };
+                }
+                if (Array.isArray(c.items)) { const items = c.items.map(x => str(x, 120)).filter(Boolean).slice(0, 300); if (items.length) out.items = items; }
+                if (Object.keys(out).length) cells[id] = out;
+            });
+            const res = { cells };
+            const d = obj.data.dims;
+            if (d && typeof d === 'object') { const dims = {}; ['w', 'dh', 'bh', 'toe'].forEach(k => { const n = +d[k]; if (n >= 1 && n <= 60) dims[k] = n; }); if (Object.keys(dims).length) res.dims = dims; }
+            if (obj.data.rangeDir === 'old' || obj.data.rangeDir === 'new') res.rangeDir = obj.data.rangeDir;
+            if (typeof PLR_KINDS !== 'undefined' && PLR_KINDS[obj.data.rangeKind]) res.rangeKind = obj.data.rangeKind;
+            return { data: res, count: Object.keys(cells).length, exported: str(obj.exported, 20) };
+        }
+        function dcImportPanelHTML() {
+            const i = dcUI.imp; if (!i) return '';
+            if (i.error) return `<div class="dc-edit"><div class="plr-warn">⚠ ${escapeAttr(i.error)}</div><div class="plr-row"><button type="button" class="sl-btn" onclick="dcCancelImport()">Close</button></div></div>`;
+            return `<div class="dc-edit"><h3>Import a drawer layout</h3>
+                <p style="margin:0 0 8px;color:var(--text-soft);">The file has <b>${i.count}</b> drawer${i.count === 1 ? '' : 's'} filled in${i.exported ? ' (exported ' + escapeAttr(i.exported) + ')' : ''}. Nothing changes until you pick one:</p>
+                <div class="plr-row"><button type="button" class="sl-btn" onclick="dcApplyImport('replace')">Replace my layout with the file</button><button type="button" class="sl-btn" onclick="dcApplyImport('fill')">Only fill my empty drawers</button><button type="button" class="sl-btn" onclick="dcCancelImport()">Cancel</button></div></div>`;
+        }
+        function dcRefreshAll() { renderDrawerMap(); if (typeof plrUI !== 'undefined' && plrUI.loaded && document.getElementById('plShelves')) plrRender(); if (typeof pullListItems !== 'undefined' && pullListItems.length) renderPullList(); }
+        function dcPickImport(input) {
+            const f = input.files && input.files[0]; input.value = '';
+            if (!f) return;
+            if (f.size > 2 * 1024 * 1024) { dcUI.imp = { error: 'That file is too big to be a drawer layout.' }; dcRefreshAll(); return; }
+            const r = new FileReader();
+            r.onload = () => { try { dcUI.imp = dcCleanImport(JSON.parse(r.result)); } catch (e) { dcUI.imp = { error: e instanceof SyntaxError ? "That file isn't readable (it should be a .json file exported from this tool)." : e.message }; } dcRefreshAll(); };
+            r.onerror = () => { dcUI.imp = { error: 'Could not read that file.' }; dcRefreshAll(); };
+            r.readAsText(f);
+        }
+        function dcApplyImport(mode) {
+            const i = dcUI.imp; if (!i || !i.data) return;
+            const s = dcGet();
+            if (mode === 'replace') {
+                s.cells = i.data.cells;
+                ['dims', 'rangeDir', 'rangeKind'].forEach(k => { if (i.data[k] !== undefined) s[k] = i.data[k]; });
+            } else {
+                const empty = c => !c || (!(c.label || '').trim() && !c.range && !(c.items && c.items.length));
+                Object.keys(i.data.cells).forEach(id => { if (empty(s.cells[id])) s.cells[id] = i.data.cells[id]; });
+            }
+            dcSave(s); dcUI.imp = null; dcUI.sel = null; plrUI.drawer = '';
+            dcRefreshAll();
+        }
+        function dcCancelImport() { dcUI.imp = null; dcRefreshAll(); }
+        function dcShareButtonsHTML() {
+            return `<button type="button" class="sl-btn" onclick="dcExport()">⬇️ Export layout</button><label class="sl-btn" style="cursor:pointer;">⬆️ Import layout<input type="file" accept=".json,application/json" style="display:none;" onchange="dcPickImport(this)"></label>`;
+        }
         function dcReset() {
             if (!confirm('Clear every drawer label on this device?')) return;
             try { localStorage.removeItem('drawerMapV1'); } catch (e) { /* nothing saved */ }
@@ -22806,7 +22883,9 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <div><b>Starts at</b><span id="plrFromTxt"></span><div class="plr-row" style="margin:6px 0 0;">Letter ${letterSel('plrSk', plrUI.sk)} or card <input type="text" id="plrSn" class="text-input" placeholder="exact card name (optional)" value="${escapeAttr(plrUI.sn)}" aria-label="Start at this card"></div></div>
                     <div><b>Ends at</b><span id="plrToTxt"></span><div class="plr-row" style="margin:6px 0 0;">Letter ${letterSel('plrEk', plrUI.ek)} or card <input type="text" id="plrEn" class="text-input" placeholder="exact card name (optional)" value="${escapeAttr(plrUI.en)}" aria-label="End at this card"></div></div>
                 </div>
+                ${dcImportPanelHTML()}
                 <div class="plr-row"><button type="button" class="sl-btn" onclick="plrSave()">💾 Save to ${plrName(plrUI.drawer)}</button><button type="button" class="sl-btn" onclick="plrClear()">Clear this drawer</button><span id="plrStatus"></span></div>
+                <div class="plr-row"><span>Share this layout:</span>${dcShareButtonsHTML()}</div>
                 <div class="plr-items"><b>Also keep in ${plrName(plrUI.drawer)}:</b> any product or card, typed in by name
                     <div class="plr-row" style="margin:6px 0;"><input type="text" id="plrItem" class="text-input" maxlength="120" placeholder="e.g. Foundations Play Booster Box, Lightning Bolt" aria-label="Add a product or card to this drawer" onkeydown="if(event.key==='Enter')plrAddItem()"><button type="button" class="sl-btn" onclick="plrAddItem()">➕ Add</button></div>
                     <div class="plr-chips">${(((st.cells[plrUI.drawer] || {}).items) || []).map((x, i) => `<span class="plr-chip">${escapeAttr(x)} <button type="button" onclick="plrRemoveItem(${i})" aria-label="Remove ${escapeAttr(x)}">×</button></span>`).join('') || '<span class="bk-note">Nothing typed in yet.</span>'}</div>
