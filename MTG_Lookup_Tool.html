@@ -6825,6 +6825,30 @@
         .dc-edit-row input[type=text] { flex: 1 1 220px; }
         .dc-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; margin: 10px 0 0; font-size: 0.85em; color: var(--text-soft); }
         .dc-legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; background: var(--dc, var(--border)); vertical-align: -1px; }
+        /* Pull List: where cards live (drawer ranges, 2026-11-07). Theme tokens only. */
+        .plr { max-width: 860px; margin: 0 auto 18px; padding: 12px 14px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); }
+        .plr summary { cursor: pointer; font-weight: bold; color: var(--text-heading); }
+        .plr-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 10px 0; font-size: 0.9em; color: var(--text-soft); }
+        .plr-row select, .plr-row input[type=text] { width: auto; min-width: 120px; }
+        .plr-slider { position: relative; height: 34px; margin: 6px 6px 2px; }
+        .plr-track { position: absolute; left: 0; right: 0; top: 15px; height: 4px; border-radius: 2px; background: var(--border); }
+        .plr-fill { position: absolute; top: 15px; height: 4px; border-radius: 2px; background: var(--brand-light); }
+        .plr-slider input[type=range] { position: absolute; left: 0; width: 100%; top: 4px; margin: 0; height: 26px; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; }
+        .plr-slider input[type=range]::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--brand); border: 2px solid var(--text-heading); cursor: pointer; }
+        .plr-slider input[type=range]::-moz-range-thumb { pointer-events: auto; width: 16px; height: 16px; border-radius: 50%; background: var(--brand); border: 2px solid var(--text-heading); cursor: pointer; }
+        .plr-slider input[type=range]::-webkit-slider-runnable-track { background: none; }
+        .plr-slider input[type=range]::-moz-range-track { background: none; }
+        .plr-ends { display: flex; justify-content: space-between; font-size: 0.8em; color: var(--text-secondary); margin: 0 6px; }
+        .plr-read { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; margin: 8px 0; }
+        .plr-read > div { padding: 8px 10px; background: var(--bg-inset); border-radius: var(--radius-sm); font-size: 0.9em; color: var(--text-primary); }
+        .plr-read b { display: block; font-size: 0.85em; color: var(--text-secondary); font-weight: normal; }
+        .plr-list { width: 100%; border-collapse: collapse; font-size: 0.85em; margin-top: 8px; }
+        .plr-list td, .plr-list th { padding: 4px 8px; border-bottom: 1px solid var(--border-subtle); text-align: left; color: var(--text-primary); }
+        .plr-list th { color: var(--text-secondary); font-weight: normal; }
+        .plr-list tr.plr-cur td { background: var(--bg-inset); }
+        .plr-warn { color: var(--color-warning); font-size: 0.85em; margin-top: 6px; }
+        .pl-drawer { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: var(--radius-sm); background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-heading); font-size: 0.85em; white-space: nowrap; }
+        .pl-drawer.none { color: var(--text-muted); border-style: dashed; }
         /* Set Dividers tab (2026-11-03). The divider cards print in fixed colors, like the other print sheets. */
         .sd-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin: 0 0 10px; }
         .sd-controls input[type=text], .sd-controls select { width: auto; min-width: 150px; }
@@ -9141,6 +9165,7 @@
                 <textarea id="pullListInput" class="text-input" aria-label="Paste order or pick-ticket text" placeholder="Paste the order text here..." rows="8"></textarea>
                 <button type="button" onclick="parsePullList()">Parse & Sort</button>
             </div>
+            <div id="plShelves"></div>
             <div id="pullListResults"></div>
         </div>
 
@@ -9397,7 +9422,7 @@
             products:     { appId: 'productsApp',     icon: '🛍️', navLabel: 'Products',        title: '🛍️ Sealed Products', desc: "Every sealed product in a set and what's inside: packs, promos, spindowns", keywords: 'sealed box bundle booster collector commander deck prerelease spindown promo preorder', onShow: showProductsTab },
             buylist:      { appId: 'buylistApp',      icon: '💰', navLabel: 'Buylist',         title: '💰 Buylist / Store Credit Calculator', desc: 'Work out cash and store-credit offers for a stack of cards', keywords: 'buy trade in credit cash offer', onShow: showBuylistTab },
             market:       { appId: 'marketApp',       icon: '📈', navLabel: 'Market Watch',    title: '📈 Market Watch', desc: 'Price spikes, ban changes, trending commanders and new-set demand', keywords: 'price spike jump reprice trend market ban unban trending restock new set demand', onShow: showMarketTab },
-            pulllist:     { appId: 'pullListApp',     icon: '📋', navLabel: 'Pull List',       title: '📋 Pull List', desc: 'Paste online orders and pull them set by set', keywords: 'orders online shopify pick pull' },
+            pulllist:     { appId: 'pullListApp',     icon: '📋', navLabel: 'Pull List',       title: '📋 Pull List', desc: 'Paste online orders and pull them set by set, and see which drawer each card lives in', keywords: 'orders online shopify pick pull drawer shelf where cards live range slider', onShow: plShowTab },
             casemap:      { appId: 'caseMapApp',      icon: '🗂️', navLabel: 'Case Map',        title: '🗂️ Hotlist Case Map', desc: 'Where every card sits in the hotlist case', keywords: 'hotlist case where location find' , onShow: showCaseMapTab },
             formats:      { appId: 'formatsApp',      icon: '📖', navLabel: 'Format Rules',    title: '📖 Format Rules', desc: 'Every way to play, deck rules, rotation and live ban lists', keywords: 'standard modern pioneer legacy vintage pauper banned legal rotation commander oathbreaker two-headed giant archenemy planechase draft sealed pick-two brawl historic timeless alchemy arena which format', onShow: renderFormatsGrid },
             brackets:     { appId: 'bracketsApp',     icon: '🪜', navLabel: 'Brackets',        title: '🪜 Commander Brackets', desc: 'Commander brackets, Game Changers, and card and deck checkers', keywords: 'commander edh bracket game changers power level', onShow: renderBracketsGuide },
@@ -17102,7 +17127,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     byCat[cat.key] = (byCat[cat.key] || 0) + 1;
                     const hit = q && label.toLowerCase().includes(q);
                     const cls = ['dc-drawer', label ? '' : 'dc-empty', q ? (hit ? 'dc-hit' : 'dc-dim') : '', dcUI.sel === id ? 'dc-sel' : ''].filter(Boolean).join(' ');
-                    html += `<button type="button" class="${cls}" style="--dc:var(${cat.color});${ar(D.dh)}" title="${escapeAttr(label || 'Empty')}" onclick="dcSelect('${id}')" aria-label="Cabinet ${c}, drawer ${r}: ${escapeAttr(label || 'empty')}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">${label ? escapeAttr(label) : 'Tap to label'}</span></button>`;
+                    html += `<button type="button" class="${cls}" style="--dc:var(${cat.color});${ar(D.dh)}" title="${escapeAttr(label || 'Empty')}" onclick="dcSelect('${id}')" aria-label="Cabinet ${c}, drawer ${r}: ${escapeAttr(label || 'empty')}"><span class="dc-num">C${c} · D${r}</span><span class="dc-label">${label ? escapeAttr(label) : (cell.range ? escapeAttr(plrSummary(cell.range)) : 'Tap to label')}</span></button>`;
                 }
             }
             for (let c = 1; c <= DC_COLS; c++) html += `<div><div class="dc-doors" style="${ar(D.bh)}"><div class="dc-door"></div><div class="dc-door"></div></div><div class="dc-toe" style="${ar(D.toe)}"></div></div>`;
@@ -22568,14 +22593,26 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
             }
 
             const groups = {};
+            const byDrawer = plView.group === 'drawer';
+            const drawerOrder = plrDrawerIds();
             pullListItems.forEach((item, idx) => {
-                const key = item.card.set.toUpperCase();
-                if (!groups[key]) {
-                    groups[key] = { setCode: key, setName: item.card.set_name, releasedAt: item.card.released_at, itemIdxs: [] };
+                let key, init;
+                if (byDrawer) {
+                    const hit = plDrawerFor(item)[0] || '';
+                    key = hit || 'none';
+                    init = { setCode: hit ? plrName(hit) : '', setName: hit ? plrName(hit) : 'No drawer set', drawerNote: hit ? plrSummary((dcGet().cells[hit] || {}).range) : 'No drawer range covers these cards yet', sortKey: hit ? drawerOrder.indexOf(hit) : 9999, itemIdxs: [] };
+                } else {
+                    key = item.card.set.toUpperCase();
+                    init = { setCode: key, setName: item.card.set_name, releasedAt: item.card.released_at, itemIdxs: [] };
                 }
+                if (!groups[key]) groups[key] = init;
                 groups[key].itemIdxs.push(idx);
             });
-            const groupList = Object.values(groups).sort((a, b) => new Date(b.releasedAt) - new Date(a.releasedAt));
+            const groupList = byDrawer ? Object.values(groups).sort((a, b) => a.sortKey - b.sortKey) : Object.values(groups).sort((a, b) => new Date(b.releasedAt) - new Date(a.releasedAt));
+            if (byDrawer) {
+                const dir = plrDir();
+                groupList.forEach(g => g.itemIdxs.sort((x, y) => { const p = plrCardPos(pullListItems[x].card, pullListItems[x].baseName), q = plrCardPos(pullListItems[y].card, pullListItems[y].baseName); return plrCmpSet(p, q) || (p.name < q.name ? -1 : p.name > q.name ? 1 : 0); }));
+            }
 
             let html = `<div class="pulllist-progress">${pullListProgressHTML()}</div>${pullListPrintBarHTML()}`;
 
@@ -22592,7 +22629,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
 
             groupList.forEach(group => {
                 const year = group.releasedAt ? new Date(group.releasedAt).getFullYear() : '?';
-                const adjacent = getAdjacentSets(group.setCode, group.releasedAt);
+                const adjacent = byDrawer ? { prev: null, next: null } : getAdjacentSets(group.setCode, group.releasedAt);
                 const adjacentParts = [];
                 if (adjacent.prev) adjacentParts.push(`← Before: ${adjacent.prev.name} (${new Date(adjacent.prev.released_at).getFullYear()})`);
                 if (adjacent.next) adjacentParts.push(`After →: ${adjacent.next.name} (${new Date(adjacent.next.released_at).getFullYear()})`);
@@ -22600,7 +22637,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 html += `
                     <div class="pulllist-group">
                         <div class="pulllist-group-header">
-                            <span class="pulllist-group-title">${group.setName} <span class="pulllist-group-year">(${group.setCode}, ${year})</span></span>
+                            <span class="pulllist-group-title">${byDrawer ? escapeAttr(group.setName) + ' <span class="pulllist-group-year">' + escapeAttr(group.drawerNote) + '</span>' : group.setName + ' <span class="pulllist-group-year">(' + group.setCode + ', ' + year + ')</span>'}</span>
                         </div>
                         ${adjacentParts.length > 0 ? `<div class="pulllist-adjacent">${adjacentParts.join(' &nbsp;·&nbsp; ')}</div>` : ''}
                         ${group.itemIdxs.map(idx => {
@@ -22613,7 +22650,7 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                                     ${imgUrl ? `<img class="pulllist-item-img" src="${imgUrl}" alt="${safeName}">` : `<div class="pulllist-item-noimg"></div>`}
                                     <div class="pulllist-item-info">
                                         <div class="pulllist-item-name">${item.rawName}</div>
-                                        <div class="pulllist-item-meta">${item.condition}${item.isFoil ? ' · FOIL' : ''}${item.sku ? ' · ' + item.sku : ''}</div>
+                                        <div class="pulllist-item-meta">${item.condition}${item.isFoil ? ' · FOIL' : ''}${item.sku ? ' · ' + item.sku : ''}${byDrawer ? ' · ' + escapeAttr(item.card.set.toUpperCase()) : plDrawerBadge(item)}</div>
                                     </div>
                                     <div class="pulllist-item-qty">×${item.quantity}</div>
                                     <div class="pulllist-item-price">${item.unitPrice !== null ? '$' + item.unitPrice.toFixed(2) : ''}</div>
@@ -22626,6 +22663,175 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
 
             resultsDiv.innerHTML = html;
             savePullListState();
+        }
+
+
+        // ===== Where cards live (2026-11-07, owner: "track what MTG cards are in what shelf ... a slider bar to select a date range ... and what card in the set or alphabet letter stops ... tie into pull list") =====
+        // Each drawer on the Drawer Map can hold a range of the singles: from a set (and a letter or card name in it) to another
+        // set (and a letter or card name). The sets sit on a slider in release-date order. Ranges live in the Drawer Map's saved
+        // data (drawerMapV1, cell.range). The pull list then shows each card's drawer and can group by drawer.
+        const PLR_KINDS = {
+            main: { label: 'Core & expansion sets', types: ['core', 'expansion'] },
+            more: { label: 'Core, expansion, Masters & Commander', types: ['core', 'expansion', 'masters', 'draft_innovation', 'commander', 'planechase', 'archenemy', 'eternal'] },
+            all: { label: 'Every paper set', types: null }
+        };
+        const plrUI = { drawer: '', lo: 0, hi: 0, sk: 'a', sn: '', ek: 'z', en: '', loaded: false };
+        const plView = { group: 'set' };
+        function plrDir() { return dcGet().rangeDir === 'new' ? -1 : 1; }
+        function plrKind() { return PLR_KINDS[dcGet().rangeKind] ? dcGet().rangeKind : 'main'; }
+        function plrTimeline() {
+            const raw = (typeof rawSetsCache !== 'undefined' && rawSetsCache) ? rawSetsCache : [];
+            const t = PLR_KINDS[plrKind()].types, dir = plrDir();
+            return raw.filter(x => x.released_at && !x.digital && (!t || t.includes(x.set_type)))
+                .sort((a, b) => dir * (a.released_at.localeCompare(b.released_at)) || a.name.localeCompare(b.name));
+        }
+        function plrSetInfo(code) {
+            const raw = (typeof rawSetsCache !== 'undefined' && rawSetsCache) ? rawSetsCache : [];
+            return raw.find(x => x.code.toLowerCase() === String(code).toLowerCase()) || null;
+        }
+        function plrDay(dateStr) { const t = Date.parse(dateStr || ''); return isNaN(t) ? 0 : Math.round(t / 86400000) * plrDir(); }
+        function plrStop(side) {
+            // a stop is [day, code, nameKey, isEnd]; names compare as lower-case text
+            const info = plrSetInfo(side.s);
+            const key = (side.n || '').trim().toLowerCase() || (side.k || '').toLowerCase();
+            return { day: plrDay(info ? info.released_at : ''), code: String(side.s).toLowerCase(), key, exact: !!(side.n || '').trim() };
+        }
+        function plrCardPos(card, baseName) {
+            const info = plrSetInfo(card.set);
+            return { day: plrDay(info ? info.released_at : card.released_at), code: String(card.set).toLowerCase(), name: String(card.name || baseName || '').toLowerCase() };
+        }
+        function plrCmpSet(a, b) { return (a.day - b.day) || (a.code < b.code ? -1 : a.code > b.code ? 1 : 0); }
+        function plrInRange(pos, range) {
+            if (!range || !range.f || !range.t || !range.f.s || !range.t.s) return false;
+            const f = plrStop(range.f), t = plrStop(range.t);
+            const cf = plrCmpSet(pos, f), ct = plrCmpSet(pos, t);
+            if (cf < 0 || ct > 0) return false;
+            if (cf === 0 && pos.name < f.key) return false;
+            if (ct === 0 && pos.name > (t.exact ? t.key : t.key + '￿')) return false;
+            return true;
+        }
+        function plrDrawerIds() {
+            const out = [];
+            for (let c = 1; c <= DC_COLS; c++) for (let r = 1; r <= DC_ROWS; r++) { const id = `${c}-${r}`; if (id !== DC_TOKENS) out.push(id); }
+            return out;
+        }
+        function plrName(id) { const [c, r] = id.split('-'); return `C${c} · D${r}`; }
+        function plrSummary(range) {
+            if (!range || !range.f || !range.t) return '';
+            const side = (x, last) => `${String(x.s).toUpperCase()} ${((x.n || '').trim() || (x.k || (last ? 'z' : 'a'))).toUpperCase()}`;
+            return `${side(range.f, false)} → ${side(range.t, true)}`;
+        }
+        function plDrawerFor(item) {
+            const st = dcGet(), pos = plrCardPos(item.card, item.baseName), hits = [];
+            plrDrawerIds().forEach(id => { const cell = st.cells[id]; if (cell && cell.range && plrInRange(pos, cell.range)) hits.push(id); });
+            return hits;
+        }
+        function plDrawerBadge(item) {
+            const hits = plDrawerFor(item);
+            if (!hits.length) return `<span class="pl-drawer none" title="No drawer range covers this card yet">📍 no drawer</span>`;
+            return `<span class="pl-drawer" title="${hits.length > 1 ? 'Ranges overlap: also in ' + hits.slice(1).map(plrName).join(', ') : 'Where this card is filed'}">📍 ${plrName(hits[0])}${hits.length > 1 ? ' +' + (hits.length - 1) : ''}</span>`;
+        }
+        async function plShowTab() {
+            const root = document.getElementById('plShelves');
+            if (!root) return;
+            if (!plrUI.loaded) {
+                root.innerHTML = '<div class="loading">Loading the set list for the drawer ranges…</div>';
+                try { await fetchRawSets(); } catch (e) { root.innerHTML = '<div class="plr"><div class="plr-warn">Could not load the set list from Scryfall, so drawer ranges are unavailable. Open this tab again to retry.</div></div>'; return; }
+                plrUI.loaded = true;
+                if (pullListItems.length) renderPullList();
+            }
+            plrRender();
+        }
+        function plrIndexFor(side, tl, fallbackEnd) {
+            if (!side || !side.s) return fallbackEnd;
+            const i = tl.findIndex(x => x.code.toLowerCase() === side.s.toLowerCase());
+            if (i >= 0) return i;
+            const day = plrDay((plrSetInfo(side.s) || {}).released_at);
+            let best = fallbackEnd, bd = Infinity;
+            tl.forEach((x, j) => { const d = Math.abs(plrDay(x.released_at) - day); if (d < bd) { bd = d; best = j; } });
+            return best;
+        }
+        function plrLoadDrawer(id) {
+            const tl = plrTimeline(), range = (dcGet().cells[id] || {}).range;
+            plrUI.drawer = id;
+            plrUI.lo = plrIndexFor(range && range.f, tl, 0);
+            plrUI.hi = plrIndexFor(range && range.t, tl, Math.max(0, tl.length - 1));
+            plrUI.sk = (range && range.f && range.f.k) || 'a'; plrUI.sn = (range && range.f && range.f.n) || '';
+            plrUI.ek = (range && range.t && range.t.k) || 'z'; plrUI.en = (range && range.t && range.t.n) || '';
+        }
+        function plrSetLabel(x) { return x ? `${x.name} (${x.code.toUpperCase()}, ${new Date(x.released_at + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', year: 'numeric' })})` : 'None'; }
+        function plrRender() {
+            const root = document.getElementById('plShelves');
+            if (!root) return;
+            const st = dcGet(), tl = plrTimeline(), ids = plrDrawerIds();
+            if (!plrUI.drawer) plrLoadDrawer(ids[0]);
+            plrUI.lo = Math.min(plrUI.lo, tl.length - 1); plrUI.hi = Math.min(plrUI.hi, tl.length - 1);
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            const letterSel = (id, v) => `<select id="${id}" aria-label="Letter">${letters.map(l => `<option value="${l.toLowerCase()}"${v === l.toLowerCase() ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
+            const max = Math.max(0, tl.length - 1);
+            const rows = ids.map(id => { const rg = (st.cells[id] || {}).range; return { id, rg }; }).filter(x => x.rg);
+            // overlap warnings: neighbours in filing order whose ranges cross
+            const warns = [];
+            for (let i = 1; i < rows.length; i++) {
+                const a = plrStop(rows[i - 1].rg.t), b = plrStop(rows[i].rg.f);
+                const c = plrCmpSet(a, b);
+                if (c > 0 || (c === 0 && (a.exact ? a.key : a.key + '￿') >= b.key)) warns.push(`${plrName(rows[i - 1].id)} ends after ${plrName(rows[i].id)} starts (they overlap).`);
+            }
+            root.innerHTML = `<details class="plr" open><summary>🗃️ Where the cards live: drawer ranges</summary>
+                <div class="bk-note" style="margin:8px 0;">Pick a drawer, slide the two handles to the first and last <b>set</b> it holds (sets are in release-date order), then choose the letter, or type a card name, to start and stop at inside those two sets. The pull list below shows each card's drawer, and can group by drawer. Saved on this device only, like the Drawer Map.</div>
+                <div class="plr-row">
+                    <label>Drawer <select id="plrDrawer" onchange="plrPick(this.value)">${ids.map(id => { const rg = (st.cells[id] || {}).range; return `<option value="${id}"${plrUI.drawer === id ? ' selected' : ''}>${plrName(id)}${rg ? ' — ' + escapeAttr(plrSummary(rg)) : ''}</option>`; }).join('')}</select></label>
+                    <label>Filing order <select onchange="plrSetPref('rangeDir', this.value)"><option value="old"${plrDir() === 1 ? ' selected' : ''}>Oldest set first</option><option value="new"${plrDir() === -1 ? ' selected' : ''}>Newest set first</option></select></label>
+                    <label>Sets on the slider <select onchange="plrSetPref('rangeKind', this.value)">${Object.entries(PLR_KINDS).map(([k, v]) => `<option value="${k}"${plrKind() === k ? ' selected' : ''}>${v.label}</option>`).join('')}</select></label>
+                </div>
+                ${tl.length ? `<div class="plr-slider" id="plrSlider">
+                    <div class="plr-track"></div><div class="plr-fill" id="plrFill"></div>
+                    <input type="range" id="plrLo" min="0" max="${max}" step="1" value="${plrUI.lo}" aria-label="First set in this drawer" oninput="plrSlide()">
+                    <input type="range" id="plrHi" min="0" max="${max}" step="1" value="${plrUI.hi}" aria-label="Last set in this drawer" oninput="plrSlide()">
+                </div>
+                <div class="plr-ends"><span>${escapeAttr(plrSetLabel(tl[0]))}</span><span>${escapeAttr(plrSetLabel(tl[max]))}</span></div>` : '<div class="plr-warn">No sets to show for this choice.</div>'}
+                <div class="plr-read">
+                    <div><b>Starts at</b><span id="plrFromTxt"></span><div class="plr-row" style="margin:6px 0 0;">Letter ${letterSel('plrSk', plrUI.sk)} or card <input type="text" id="plrSn" class="text-input" placeholder="exact card name (optional)" value="${escapeAttr(plrUI.sn)}" aria-label="Start at this card"></div></div>
+                    <div><b>Ends at</b><span id="plrToTxt"></span><div class="plr-row" style="margin:6px 0 0;">Letter ${letterSel('plrEk', plrUI.ek)} or card <input type="text" id="plrEn" class="text-input" placeholder="exact card name (optional)" value="${escapeAttr(plrUI.en)}" aria-label="End at this card"></div></div>
+                </div>
+                <div class="plr-row"><button type="button" class="sl-btn" onclick="plrSave()">💾 Save to ${plrName(plrUI.drawer)}</button><button type="button" class="sl-btn" onclick="plrClear()">Clear this drawer</button><span id="plrStatus"></span></div>
+                ${rows.length ? `<table class="plr-list"><thead><tr><th>Drawer</th><th>Holds</th></tr></thead><tbody>${rows.map(x => `<tr class="${x.id === plrUI.drawer ? 'plr-cur' : ''}"><td>${plrName(x.id)}</td><td>${escapeAttr(plrSummary(x.rg))}</td></tr>`).join('')}</tbody></table>` : '<div class="bk-note">No drawer has a range yet.</div>'}
+                ${warns.length ? `<div class="plr-warn">⚠ ${warns.map(escapeAttr).join('<br>⚠ ')}</div>` : ''}
+            </details>`;
+            plrSlide(true);
+        }
+        function plrSlide(quiet) {
+            const tl = plrTimeline(); if (!tl.length) return;
+            const lo = document.getElementById('plrLo'), hi = document.getElementById('plrHi'); if (!lo || !hi) return;
+            let a = +lo.value, b = +hi.value;
+            if (a > b) { if (document.activeElement === lo) { b = a; hi.value = b; } else { a = b; lo.value = a; } }
+            plrUI.lo = a; plrUI.hi = b;
+            const max = Math.max(1, tl.length - 1), fill = document.getElementById('plrFill');
+            if (fill) { fill.style.left = (a / max * 100) + '%'; fill.style.width = ((b - a) / max * 100) + '%'; }
+            const f = document.getElementById('plrFromTxt'), t = document.getElementById('plrToTxt');
+            if (f) f.textContent = plrSetLabel(tl[a]); if (t) t.textContent = plrSetLabel(tl[b]);
+        }
+        function plrPick(id) { plrLoadDrawer(id); plrRender(); }
+        function plrSetPref(k, v) {
+            const s = dcGet(); s[k] = v; dcSave(s);
+            const range = (s.cells[plrUI.drawer] || {}).range;
+            plrLoadDrawer(plrUI.drawer); plrRender(); if (pullListItems.length) renderPullList();
+        }
+        function plrSave() {
+            const tl = plrTimeline(); if (!tl.length || !plrUI.drawer) return;
+            const a = tl[plrUI.lo], b = tl[plrUI.hi];
+            const range = { f: { s: a.code, k: document.getElementById('plrSk').value, n: document.getElementById('plrSn').value.trim() }, t: { s: b.code, k: document.getElementById('plrEk').value, n: document.getElementById('plrEn').value.trim() } };
+            const s = dcGet(), cell = s.cells[plrUI.drawer] || {};
+            s.cells[plrUI.drawer] = Object.assign({}, cell, { range });
+            dcSave(s); plrLoadDrawer(plrUI.drawer); plrRender();
+            const m = document.getElementById('plrStatus'); if (m) m.textContent = '✔ Saved';
+            if (pullListItems.length) renderPullList();
+        }
+        function plrClear() {
+            const s = dcGet(), cell = s.cells[plrUI.drawer]; if (!cell) return;
+            delete cell.range;
+            if (!cell.label && cell.cat === undefined) delete s.cells[plrUI.drawer];
+            dcSave(s); plrLoadDrawer(plrUI.drawer); plrRender(); if (pullListItems.length) renderPullList();
         }
 
         function pullListProgressHTML() {
@@ -22681,6 +22887,12 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
 
         function pullListPrintBarHTML() {
             return `<div class="pulllist-printbar">
+                <label>Group by
+                    <select onchange="plView.group = this.value; renderPullList()">
+                        <option value="set"${plView.group === 'set' ? ' selected' : ''}>Set (newest first)</option>
+                        <option value="drawer"${plView.group === 'drawer' ? ' selected' : ''}>Drawer</option>
+                    </select>
+                </label>
                 <button type="button" class="pulllist-print-btn" onclick="printPullList()">🖨️ Print pull list</button>
                 <label>Cards within each set
                     <select onchange="plPrintOpts.within = this.value">
@@ -22743,7 +22955,8 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                     <table class="plp-table"><thead><tr class="plp-set-row"><th colspan="${6 + (plPrintOpts.pictures ? 1 : 0) + (hasLoc ? 1 : 0) + (priced ? 2 : 0)}"><div class="plp-set-head"><h2>${escapeAttr(g.setName)}</h2><span class="plp-code">${escapeAttr(g.setCode)}</span><span class="plp-rel">${year} · ${escapeAttr(rel)}</span><span class="plp-count">${copies} ${copies === 1 ? 'copy' : 'copies'}${gPriced ? ' · ' + plMoney(sub) : ''}</span></div></th></tr><tr><th class="c-box"></th><th class="c-qty">Qty</th>${plPrintOpts.pictures ? '<th class="c-img"></th>' : ''}<th>Card</th><th class="c-num">No.</th><th class="c-cond">Cond.</th><th>Notes</th>${hasLoc ? '<th class="c-loc">Bin / order</th>' : ''}${priced ? '<th class="c-price">Each</th><th class="c-price">Line</th>' : ''}</tr></thead><tbody>`;
                 g.rows.forEach(({ item }) => {
                     const card = item.card, img = plPrintOpts.pictures ? getCardImageSmall(card) : null;
-                    const notes = [item.isFoil ? '<span class="plp-foil">FOIL</span>' : '', item.sku ? `<span class="plp-sku">${escapeAttr(item.sku)}</span>` : ''].filter(Boolean).join(' ');
+                    const dHit = plDrawerFor(item)[0];
+                    const notes = [item.isFoil ? '<span class="plp-foil">FOIL</span>' : '', item.sku ? `<span class="plp-sku">${escapeAttr(item.sku)}</span>` : '', dHit ? `<span class="plp-sku">📍 ${escapeAttr(plrName(dHit))}</span>` : ''].filter(Boolean).join(' ');
                     const rar = plRarityLabel(card);
                     html += `<tr class="${item.checked ? 'done' : ''}"><td class="c-box"><span class="plp-box">${item.checked ? '✔' : ''}</span></td>
                         <td class="c-qty">${item.quantity > 1 ? `<b class="plp-multi">×${item.quantity}</b>` : '×1'}</td>
