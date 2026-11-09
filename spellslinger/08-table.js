@@ -58,7 +58,9 @@ function groupPerms(list, min) {
         const plain = !m && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.counters && !Object.keys(o.ctr || {}).length && !o.dmg && !o.tp && !o.tq && !o.tkw.length
             && !G.attackers.includes(o.uid) && !Object.values(G.blocks).some(bs => bs.includes(o.uid)) && !o.isCommander;
         if (!plain) { out.push([o]); return; }
-        const key = `${o.card.id}|${o.tapped}|${isCreature(o) && o.sick && !has(o, 'haste')}|${o.token}`;
+        // Tokens each get their own card id, so identical ones are matched by name and stats (16 Soldier tokens are one pile)
+        const ident = o.token ? `${o.card.name}|${o.card.power}|${o.card.toughness}|${o.card.type}|${(o.card.colors || []).join('')}|${o.card.text || ''}` : o.card.id;
+        const key = `${ident}|${o.tapped}|${isCreature(o) && o.sick && !has(o, 'haste')}|${o.token}`;
         if (byKey.has(key)) byKey.get(key).push(o);
         else { const g = [o]; byKey.set(key, g); out.push(g); }
     });
@@ -72,7 +74,8 @@ function groupPerms(list, min) {
 function sideHTML(P) {
     const tucked = o => !!(o.attachedTo && onBf(o.attachedTo));
     const lands = P.bf.filter(o => Rx(o).kind === 'land' && !tucked(o));
-    const creatures = P.bf.filter(o => isCreature(o) && !tucked(o));
+    // Your commander leads the row so a crowded board never hides it
+    const creatures = P.bf.filter(o => isCreature(o) && !tucked(o)).sort((x, y) => (y.isCommander ? 1 : 0) - (x.isCommander ? 1 : 0));
     const other = P.bf.filter(o => !isCreature(o) && Rx(o).kind !== 'land' && !tucked(o));
     const lane = (list, extra = '', min = 2) => `<div class="lane ${extra}">${groupPerms(list, min).map(g => permWrapHTML(g[0], g.length)).join('')}</div>`;
     const power = creatures.reduce((a, o) => a + Math.max(0, pow(o)), 0);
@@ -411,7 +414,7 @@ function fitSide(side) {
     const items = [...front.children];
     items.forEach(c => { c.style.marginLeft = ''; });
     const Hf = H - (back ? back.offsetHeight : 0) - 10 - (front.querySelector('.perm-wrap') ? 30 : 0);
-    const W = front.clientWidth, n = items.length;
+    const W = Math.min(front.clientWidth, side.clientWidth - 8, innerWidth - 16), n = items.length; // never wider than the screen
     // Like Arena, never shrink cards past readable: below this they overlap instead
     const minW = phone ? 46 : 64;
     let w = 132, fits = false;

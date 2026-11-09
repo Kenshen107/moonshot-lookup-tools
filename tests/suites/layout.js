@@ -59,6 +59,24 @@ async function main() {
             results.push({ label: `${tag}: rows and their cards stay on screen`, ok: m.laneOut === 0 && m.laneKids === 0, detail: JSON.stringify({ lanes: m.laneOut, cards: m.laneKids }) });
         }
     }
+    // Many identical tokens and a commander on a phone (2026-11-09, owner's screenshot: 16 Soldier tokens pushed the commander off the screen)
+    await page.setViewportSize({ width: 412, height: 915 });
+    const crowd = await page.evaluate(async () => {
+        const C = await T.cards(['Plains', 'Grizzly Bears', 'Hill Giant', 'Serra Angel', 'Llanowar Elves', 'Savannah Lions']);
+        const [A, B] = await T.newGame(); T.clear();
+        for (let i = 0; i < 6; i++) T.put(A, C['Plains']);
+        for (const n of ['Grizzly Bears', 'Hill Giant', 'Serra Angel', 'Llanowar Elves', 'Savannah Lions']) T.put(A, C[n]);
+        const cmd = T.put(A, C['Hill Giant']); cmd.isCommander = true; cmd.counters = 3;
+        for (let i = 0; i < 20; i++) await applyEffect(A, { t: 'token', n: 1, p: 1, q: 1, name: 'white Soldier', kw: [] }, null, cmd);
+        G.active = 0; G.phase = 'main1'; $('game').classList.remove('hidden'); renderGame(); fitTable();
+        await new Promise(r => setTimeout(r, 250));
+        const kids = [...document.querySelectorAll('#meSide .lane.creatures > *')];
+        const rect = k => k.getBoundingClientRect();
+        const soldiers = kids.filter(k => /Soldier/.test(k.textContent));
+        return { n: kids.length, soldierPiles: soldiers.length, first: kids[0] && /👑/.test(kids[0].textContent), out: kids.filter(k => rect(k).right > innerWidth + 1 || rect(k).left < -1).length, scrollX: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+    });
+    results.push({ label: '412px wide, 20 identical tokens: they share one pile', ok: crowd.soldierPiles === 1, detail: JSON.stringify(crowd) });
+    results.push({ label: '...the commander leads the row and every creature stays on screen', ok: crowd.first === true && crowd.out === 0 && crowd.scrollX <= 0, detail: JSON.stringify(crowd) });
     const good = printResults('layout', results, errors);
     writeOut('layout', { results, errors });
     await h.close();
