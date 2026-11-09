@@ -1744,6 +1744,7 @@ Brambleweft Behemoth
 Branchblight Stalker
 Branching Bolt
 Branching Evolution
+Branching Timeline
 Branchloft Pathway // Boulderloft Pathway
 Branchsnap Lorian
 Brandywine Farmer
@@ -2618,6 +2619,7 @@ Colossus Hammer
 Colossus of Sardia
 Colossus of the Blood Age
 Colossus, Steel Stalwart
+Combadge
 Combat Calligrapher
 Combat Celebrant
 Combat Courier
@@ -3673,6 +3675,7 @@ Dokuchi Shadow-Walker
 Dominate
 Dominator Drone
 Domineer
+Dominion Assault Force
 Dominion Saboteur
 Dominion Supervisor
 Domri's Nodorog
@@ -4095,6 +4098,7 @@ Elemental Bond
 Elemental Eruption
 Elemental Masterpiece
 Elemental Summoning
+Elemental Teachings
 Elemental Uprising
 Elementalist Adept
 Elementalist's Palette
@@ -4205,6 +4209,7 @@ Emerald Oryx
 Emerge Unscathed
 Emerge from the Cocoon
 Emergence Zone
+Emergency Holographic Crew
 Emergency Medical Hologram
 Emergency Phytomedic // Seed Suture
 Emergency Regeneration
@@ -4355,6 +4360,7 @@ Escape Artist
 Escape Routes
 Escape Tunnel
 Escape from Orthanc
+Escape to the Wilds
 Escaped Null
 Escarpment Fortress
 Esgaroth Garrison
@@ -4677,6 +4683,7 @@ Fault Line
 Fault Riders
 Faultgrinder
 Favorable Winds
+Fblthp, Knows the Way
 Fear
 Fear of Being Hunted
 Fear of Failed Tests
@@ -5240,6 +5247,7 @@ Fuel the Flames
 Fugitive Listener
 Fugitive Wizard
 Fugue
+Full Throttle
 Fulminator Mage
 Fulminous Forte
 Fume Spitter
@@ -6049,6 +6057,7 @@ Grixis Slavedriver
 Grizzled Leotau
 Grizzled Outcasts // Krallenhorde Wantons
 Grizzled Outrider
+Grizzlegom, Hurloon Hero
 Grizzly Bears
 Grizzly Ghoul
 Groffskithur
@@ -7823,6 +7832,7 @@ Lavacore Elemental
 Lavafume Invoker
 Lavakin Brawler
 Lavalanche
+Lavaspur Boots
 Lavastep Raider
 Lavinia of the Tenth
 Law
@@ -8183,7 +8193,6 @@ Lt. Cmdr. Geordi La Forge
 Lu Meng, Wu General
 Lu Su, Wu Advisor
 Lu Xun, Scholar General
-Lu Xun, Scholar General // Lu Xun, Scholar General
 Lucent Liminid
 Lucky Offering
 Luke Cage, Hero for Hire
@@ -8517,6 +8526,7 @@ Master's Call
 Master's Rebuke
 Masterful Flourish
 Masters of Evil
+Matca Rioters
 Mathas, Fiend Seeker
 Matoya, Archon Elder
 Maturation Chamber
@@ -8574,6 +8584,7 @@ Melancholy
 Meldweb Curator
 Melesse Spirit
 Meletis Astronomer
+Melkotian Adjudicator
 Meloku the Clouded Mirror
 Meltstrider's Gear
 Memnarch, the Warden
@@ -8635,6 +8646,7 @@ Merfolk Sovereign
 Merfolk Traders
 Merfolk of the Depths
 Merfolk of the Pearl Trident
+Meria's Outrider
 Meriadoc Brandybuck
 Merrow Bonegnawer
 Merrow Harbinger
@@ -9269,6 +9281,7 @@ Needlethorn Drake
 Needletooth Pack
 Needletooth Raptor
 Needleverge Pathway // Pillarverge Pathway
+Neelix, Moral Support
 Nef-Crop Entangler
 Nefarious
 Nefarox, Overlord of Grixis
@@ -9408,6 +9421,7 @@ Ninjas
 Nip Gwyllion
 Nirkana Assassin
 Nirkana Revenant
+Nishoba Brawler
 Nissa's Expedition
 Nissa's Renewal
 Nissa, Leyline Tamer
@@ -10517,6 +10531,7 @@ Pyromantic Pilgrim
 Pyrotechnics
 Pyrrhic Blast
 Python
+Q Continuum
 Q, Stacking the Deck
 Qala, Ajani's Pridemate
 Qasali Pridemage
@@ -11655,6 +11670,7 @@ Saved by the Shell
 Savior of the Sleeping
 Savor
 Savvy Hunter
+Savvy Profiteer
 Saw It Coming
 Sazh Katzroy
 Sazh's Chocobo
@@ -12818,6 +12834,7 @@ Sower of Chaos
 Sowing Mycospawn
 Space Marine Devastator
 Space Marine Scout
+Spacecraft Illusion
 Spaceshift
 Spara's Headquarters
 Spare Dagger
@@ -12999,7 +13016,6 @@ Spirit Link
 Spirit Loop
 Spirit Mantle
 Spirit Mascot
-Spirit Sorcerer Token
 Spirit Summoning
 Spirit Weaver
 Spirit of Malevolence
@@ -13104,6 +13120,7 @@ Sram, Senior Edificer
 Stab
 Stab Wound
 Stabbing Pain
+Stable Wormhole
 Stadium Headliner
 Stadium Tidalmage
 Staff of Compleation
@@ -13458,6 +13475,7 @@ Sultai Scavenger
 Sultai Skullkeeper
 Sumala Rumblers
 Sumala Woodshaper
+Summer Bloom
 Summit Apes
 Summit Intimidator
 Summit Prowler
@@ -13739,6 +13757,7 @@ Taken by Nightmares
 Takenuma Bleeder
 Takenuma, Abandoned Mire
 Tal Shiar Analyst
+Tal Shiar Operative
 Talarian Hook Spider
 Talas Air Ship
 Talas Explorer
@@ -13924,6 +13943,7 @@ Temur Devotee
 Temur Monument
 Temur Tawnyback
 Tenacious
+Tenacious Drone
 Tenacious Tosk
 Tenacious Underdog
 Tend the Pests
@@ -13963,6 +13983,7 @@ Terrian, World Tyrant
 Territorial Baloth
 Territorial Boar
 Territorial Hammerskull
+Territorial Kavu
 Territorial Roc
 Territorial Scythecat
 Territory Culler
@@ -14141,6 +14162,7 @@ The Warrior
 The Wasp, Janet Van Dyne
 The Wasp, Winsome Avenger
 The Water Crystal
+The Weatherseed Treaty
 The Whizzer, Classic Speedster
 The Wiley Speedster
 The Wind Crystal
@@ -14274,6 +14296,7 @@ Throne of Bone
 Throne of Geth
 Throne of the High City
 Throttle
+Through the Forest Gate
 Throwing Knife
 Thrull Retainer
 Thrull Surgeon
@@ -14625,6 +14648,7 @@ Treva's Charm
 Treva's Ruins
 Tri-Sentinel, Act of Vengeance
 Triangle of War
+Tribal Flames
 Tribble Cluster
 Tribute to the World Tree
 Triceraton Regenta
@@ -14662,6 +14686,7 @@ Troll-Horn Cameo
 Trollbred Guardian
 Trollhide
 Trolls of Tel-Jilad
+Tromp the Domains
 Troop of Ponies
 Tropical Island
 Trostani Discordant
@@ -14792,6 +14817,7 @@ Tyrranax Atrocity
 Tyrranax Rex
 Tyvar's Stand
 U.S.Agent, John Walker
+U.S.S. Cerritos, Following Up
 U.S.S. Defiant, Mirror Migrant
 U.S.S. Defiant, Tough Little Ship
 U.S.S. Discovery, at Black Alert
@@ -14804,6 +14830,7 @@ U.S.S. Farragut, Bold Explorer
 U.S.S. Prometheus, Prototype
 U.S.S. Reliant, From Hell's Heart
 U.S.S. Stargazer, Here and There
+U.S.S. Voyager, Lone Wanderer
 Ubul Sar Gatekeepers
 Uglúk of the White Hand
 Ukkima, Stalking Shadow
