@@ -88,8 +88,14 @@ function permWrapHTML(o, count) {
     return `<div class="perm-wrap" style="--tucks:${att.length}">${att.map((a, i) => `<button type="button" class="tuck" style="--i:${i}" data-uid="${a.uid}" onclick="permClick(${a.uid})" title="${esc(a.card.name)} (attached)">${cardImg(a.card)}</button>`).join('')}${permHTML(o, count)}</div>`;
 }
 
+// Pooled mana as counts per color (a big pool stays short): 3<pip> 2<pip>
+function poolCountsHTML(pool) {
+    const c = {};
+    pool.forEach(m => { const k = m[0][0]; c[k] = (c[k] || 0) + 1; });
+    return `<b>${pool.length}</b>` + Object.entries(c).map(([k, n]) => ` <span class="pool-n">${n}<span class="pip ${k}" title="${k}"></span></span>`).join('');
+}
 function manaSummary(P) {
-    const floating = (P.pool || []).length ? `<span class="floating" title="Mana in your pool: it empties at the end of the step">Pool ${pipsHTML(P.pool.map(c => c[0]))}</span>` : '';
+    const floating = (P.pool || []).length ? `<span class="floating" title="Mana in your pool: it empties at the end of the step">Pool ${poolCountsHTML(P.pool)}</span>` : '';
     return manaSourcesSummary(P) + floating;
 }
 function manaSourcesSummary(P) {

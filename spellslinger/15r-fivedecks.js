@@ -334,7 +334,7 @@ Object.assign(CMD, {
         await applyEffect(X, { t: 'lose', n: 2 }, null, src);
     }
 });
-Object.assign(CMD_SCORE, { fr_blinkEnd: () => 1, fr_blinkNow: P => (P.bf.some(x => frEtbValue(x) >= 3) ? 6 : 0), fr_endTurn: P => (foes(P).reduce((a, F) => a + F.bf.filter(isCreature).length, 0) > P.bf.filter(isCreature).length + 2 ? 6 : 0), fr_commit: () => 4, fr_phaseOutX: () => 3, fr_pileup: P => { const d = foes(P).reduce((a, F) => a + F.bf.filter(isCreature).reduce((s, x) => s + permValue(x), 0), 0) - P.bf.filter(isCreature).reduce((s, x) => s + permValue(x), 0); return d > 6 ? d : 0; } });
+Object.assign(CMD_SCORE, { fr_journey: P => { const n = P.hand.filter(c => Rx(c).kind === 'land').length; return n >= 2 ? 4 + n * 2 : 0; }, fr_blinkEnd: () => 1, fr_blinkNow: P => (P.bf.some(x => frEtbValue(x) >= 3) ? 6 : 0), fr_endTurn: P => (foes(P).reduce((a, F) => a + F.bf.filter(isCreature).length, 0) > P.bf.filter(isCreature).length + 2 ? 6 : 0), fr_commit: () => 4, fr_phaseOutX: () => 3, fr_pileup: P => { const d = foes(P).reduce((a, F) => a + F.bf.filter(isCreature).reduce((s, x) => s + permValue(x), 0), 0) - P.bf.filter(isCreature).reduce((s, x) => s + permValue(x), 0); return d > 6 ? d : 0; } });
 // AI: blink the creature or artifact whose enter-the-battlefield ability is worth the most; never one of the other side's
 Object.assign(CMD_AITARGET, {
     fr_blinkEnd: (P, e, src, valid) => { const mine = valid.filter(v => v.o && v.o.owner === P.i).sort((a, b) => frEtbValue(b.o) - frEtbValue(a.o))[0]; return mine && frEtbValue(mine.o) >= 3 ? mine : null; },
