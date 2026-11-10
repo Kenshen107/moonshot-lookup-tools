@@ -1638,7 +1638,7 @@ function renderPlayView() {
             ${counts[PLAYSEL.type] > 6 ? `<input type="search" id="playDeckQ" value="${esc(PLAYSEL.q)}" placeholder="Find one of your ${esc(FORMATS[PLAYSEL.type].name)} decks" aria-label="Find a deck" oninput="playDeckSearch(this.value)" style="width:100%; margin-bottom:8px;">` : ''}
             <div class="opp-grid deck-pick">${mine.map(([d, i]) => { const pr = deckProblems(d); return `<button type="button" class="opp" aria-pressed="${i === chosen}" onclick="playPickDeck(${i})"><strong>${esc(d.name)}</strong><small>${deckCount(d)} cards${pr.length ? ` · ⚠ ${pr.length} to fix` : ' · ✓ ready'}</small></button>`; }).join('') || '<p class="note">No deck matches.</p>'}</div>${randomBuild}`;
     }
-    $('oppHead').textContent = cur ? `2. Your opponent - ${FORMATS[PLAYSEL.type].name} decks, so it's a fair match` : '2. Your opponent';
+    $('oppHead').innerHTML = `<span class="step-n">2</span> Your opponent${cur ? ` <small>${esc(FORMATS[PLAYSEL.type].name)} decks, so it's a fair match</small>` : ''}`;
     renderOpponents();
 }
 
@@ -1695,17 +1695,28 @@ async function savedToOppDeck(who, idx) {
     }
     return { name: d.name, format: d.format, commander, commander2, entries, swapped, source: `${who}'s saved deck${swapped ? `, ${swapped} cards swapped for lands` : ''}` };
 }
+function oppName() {
+    const o = chosenOpponent;
+    if (!o) return '';
+    return o.name || (o.type === 'random' ? 'Random playable deck' : o.type === 'theme' ? (MODERN_THEMES.find(t => t.key === o.key) || {}).name : o.type === 'verified' ? (VERIFIED_DECKS.find(v => v.key === o.key) || {}).name : o.key) || o.type;
+}
 function oppChosenLine() {
     if (!chosenOpponent) return '<div class="note" style="margin-bottom:8px;">No opponent picked yet.</div>';
-    const o = chosenOpponent;
-    const nm = o.name || (o.type === 'random' ? 'Random playable deck' : o.type === 'theme' ? (MODERN_THEMES.find(t => t.key === o.key) || {}).name : o.type === 'verified' ? (VERIFIED_DECKS.find(v => v.key === o.key) || {}).name : o.key) || o.type;
-    return `<div class="note" style="margin-bottom:8px;">Opponent: <strong>${esc(nm)}</strong></div>`;
+    return `<div class="note" style="margin-bottom:8px;">Opponent: <strong>${esc(oppName())}</strong></div>`;
+}
+// The "you vs them" strip above the Start button (2026-11-10, game-style Play tab)
+function renderVs() {
+    const el = $('vsStrip'); if (!el) return;
+    const deck = profile.decks[$('playDeck').value], opp = chosenOpponent ? oppName() : '';
+    setHTML(el, `<div class="vs-side"><small>You</small><strong>${deck ? esc(deck.name) : 'No deck yet'}</strong></div><div class="vs-x">VS</div><div class="vs-side${opp ? '' : ' empty'}"><small>Opponent</small><strong>${opp ? esc(opp) : 'Pick one above'}</strong></div>`);
+    $('startBtn').classList.toggle('ready', !!(deck && chosenOpponent));
 }
 async function renderOpponents() {
     const deck = profile.decks[$('playDeck').value];
     const list = $('oppList');
     $('startBtn').disabled = !deck;
     if (!deck) {
+        renderVs();
         $('playDeckNote').innerHTML = '';
         list.innerHTML = '<p class="note">Make a deck first: build one in Collection &amp; Decks, or <button class="btn small gold" onclick="starterPicker()">🎁 get a starter deck</button>.</p>';
         return;
@@ -1765,6 +1776,7 @@ async function renderOpponents() {
     if (chosenOpponent && chosenOpponent.type === 'saved' && chosenOpponent.fmt !== deck.format) chosenOpponent = null;
     if (chosenOpponent && chosenOpponent.type === 'theme' && deck.format !== 'modern') chosenOpponent = null;
     $('startNote').textContent = chosenOpponent ? '' : 'Pick an opponent.';
+    renderVs();
 }
 // One tap: a random fully automated commander with a themed random deck (the "Surprise me" opponent), and the game starts
 function playRandomCommander() {

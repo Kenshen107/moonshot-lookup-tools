@@ -276,7 +276,7 @@
 
         <section id="view-play" class="hidden">
             <div class="panel">
-                <h2>1. Your deck</h2>
+                <h2><span class="step-n">1</span> Your deck</h2>
                 <div class="row">
                     <select id="playDeck" aria-label="Your deck" onchange="renderPlayView()" hidden></select>
                     <div id="deckPick" style="flex:1 1 100%;"></div>
@@ -284,10 +284,11 @@
                 </div>
             </div>
             <div class="panel">
-                <h2 id="oppHead">2. Your opponent</h2>
+                <h2 id="oppHead"><span class="step-n">2</span> Your opponent</h2>
                 <div id="oppList"></div>
             </div>
-            <div class="panel">
+            <div class="panel play-go">
+                <div class="vs-strip" id="vsStrip" aria-live="polite"></div>
                 <div class="row">
                     <button class="btn primary" id="startBtn" onclick="startMatch()">⚔️ Start the game</button>
                     <span class="note" id="startNote"></span>
