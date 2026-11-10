@@ -47,7 +47,9 @@ function permHTML(o, count = 1) {
     const atkLabel = G.players.length > 2 && o.atkTo != null && G.attackers.includes(o.uid) && G.players[o.atkTo] ? `<span class="blocklabel">→ ${esc(who(G.players[o.atkTo]).split(',')[0])}</span>` : '';
     const blockLabel = blockedAtk ? `<span class="blocklabel">blocks ${esc(blockedAtk.card.name.split(',')[0])}</span>` : '';
     if (count > 1) cls.push('pile');
-    return `<button type="button" class="${cls.join(' ')}" data-uid="${o.uid}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}${count > 1 ? ` ×${count}` : ''}">${cardImg(o.card)}<span class="chips">${chips.join('')}</span>${pt}${blockLabel || atkLabel}${count > 1 ? `<span class="pile-n">×${count}</span>` : ''}</button>`;
+    const cols = o.card.colors || [];
+    const cc = cols.length > 1 ? 'var(--gold)' : cols.length === 1 ? `var(--mana-${cols[0]})` : 'var(--mana-C)';
+    return `<button type="button" class="${cls.join(' ')}" data-uid="${o.uid}" style="--cc:${cc}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}${count > 1 ? ` ×${count}` : ''}">${cardImg(o.card)}<span class="pname">${esc(o.card.name.split(',')[0])}</span><span class="chips">${chips.join('')}</span>${pt}${blockLabel || atkLabel}${count > 1 ? `<span class="pile-n">×${count}</span>` : ''}</button>`;
 }
 // Identical permanents share one pile (lands and others from 2, creatures
 // from 3, only while nothing is being chosen) so a full board fits.
@@ -55,12 +57,12 @@ function groupPerms(list, min) {
     const m = G.mode;
     const out = [], byKey = new Map();
     list.forEach(o => {
-        const plain = !m && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.counters && !Object.keys(o.ctr || {}).length && !o.dmg && !o.tp && !o.tq && !o.tkw.length
+        const plain = !m && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.dmg && !o.tp && !o.tq && !o.tkw.length
             && !G.attackers.includes(o.uid) && !Object.values(G.blocks).some(bs => bs.includes(o.uid)) && !o.isCommander;
         if (!plain) { out.push([o]); return; }
         // Tokens each get their own card id, so identical ones are matched by name and stats (16 Soldier tokens are one pile)
         const ident = o.token ? `${o.card.name}|${o.card.power}|${o.card.toughness}|${o.card.type}|${(o.card.colors || []).join('')}|${o.card.text || ''}` : o.card.id;
-        const key = `${ident}|${o.tapped}|${isCreature(o) && o.sick && !has(o, 'haste')}|${o.token}`;
+        const key = `${ident}|${o.counters || 0}|${JSON.stringify(o.ctr || {})}|${o.tapped}|${isCreature(o) && o.sick && !has(o, 'haste')}|${o.token}`;
         if (byKey.has(key)) byKey.get(key).push(o);
         else { const g = [o]; byKey.set(key, g); out.push(g); }
     });
@@ -80,7 +82,7 @@ function sideHTML(P) {
     const lane = (list, extra = '', min = 2) => `<div class="lane ${extra}">${groupPerms(list, min).map(g => permWrapHTML(g[0], g.length)).join('')}</div>`;
     const power = creatures.reduce((a, o) => a + Math.max(0, pow(o)), 0);
     const untapped = lands.filter(o => !o.tapped).length;
-    const front = `<div class="row-front"><span class="board-sum" title="Creatures and their total power">${creatures.length ? `⚔️ ${creatures.length} · power ${power}` : 'No creatures'}</span>${creatures.length ? lane(creatures, 'creatures', 3) : ''}</div>`;
+    const front = `<div class="row-front"><button type="button" class="board-sum" onclick="boardOverview(${P.i})" title="Creatures and their total power: tap to see the whole board">${creatures.length ? `⚔️ ${creatures.length} · power ${power}` : 'No creatures'}</button>${creatures.length ? lane(creatures, 'creatures', 3) : ''}</div>`;
     const back = `<div class="row-back"><div class="back-lands" title="Lands: ${lands.length}, ${untapped} untapped">${lane(lands, 'lands')}</div>${other.length ? `<div class="back-other">${lane(other, 'stack')}</div>` : ''}</div>`;
     return you(P) ? front + back : back + front;
 }
@@ -400,6 +402,7 @@ function applyHandSize() {
     $('game').dataset.hand = handSize;
     document.querySelectorAll('.seg [data-hs]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.hs === handSize)));
 }
+const LANE_SCROLL = {}; // where each side's compact creature list was scrolled to, kept across redraws
 function fitSide(side) {
     const front = side.querySelector('.lane.creatures');
     const back = side.querySelector('.row-back');
@@ -410,25 +413,27 @@ function fitSide(side) {
     const paying = G && G.mode && G.mode.type === 'pay' && side.id === 'meSide';
     side.style.setProperty('--land-w', `${Math.max(paying ? 44 : 32, Math.min(paying ? 84 : 70, Math.round(H * (paying ? 0.4 : 0.27) * 63 / 88)))}px`);
     if (!front) return;
-    front.classList.remove('crowded');
+    front.classList.remove('crowded', 'compact');
+    front.style.maxHeight = '';
     const items = [...front.children];
     items.forEach(c => { c.style.marginLeft = ''; });
     const Hf = H - (back ? back.offsetHeight : 0) - 10 - (front.querySelector('.perm-wrap') ? 30 : 0);
     const W = Math.min(front.clientWidth, side.clientWidth - 8, innerWidth - 16), n = items.length; // never wider than the screen
-    // Like Arena, never shrink cards past readable: below this they overlap instead
-    const minW = phone ? 46 : 64;
+    // Cards never shrink past readable. When they would have to, the row becomes compact tiles
+    // (art thumbnail, name, power/toughness, status) that wrap and scroll, so every creature can be read and tapped.
+    const minW = phone ? 58 : 76;
     let w = 132, fits = false;
     for (; w >= minW; w -= 4) {
         const perRow = Math.max(1, Math.floor((W + 8) / (w + 8)));
         if (Math.ceil(n / perRow) * (w * 88 / 63 + 12) <= Hf) { fits = true; break; }
     }
     if (!fits) {
-        // One row at the largest readable size, cards cascading over each other
-        w = Math.max(minW, Math.min(132, Math.floor((Hf - 12) * 63 / 88)));
-        front.classList.add('crowded');
-        const step = n > 1 ? Math.min(w + 8, (W - w) / (n - 1)) : 0;
-        items.forEach((c, i) => { if (i) c.style.marginLeft = `${Math.round(step - w)}px`; });
-    }
+        w = minW;
+        front.classList.add('compact');
+        front.style.maxHeight = `${Math.max(96, Hf)}px`;
+        front.onscroll = () => { LANE_SCROLL[side.id] = front.scrollTop; };
+        if (LANE_SCROLL[side.id]) front.scrollTop = LANE_SCROLL[side.id];
+    } else delete LANE_SCROLL[side.id];
     side.style.setProperty('--card-w', `${w}px`);
 }
 function fitHand() {

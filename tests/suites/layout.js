@@ -77,6 +77,35 @@ async function main() {
     });
     results.push({ label: '412px wide, 20 identical tokens: they share one pile', ok: crowd.soldierPiles === 1, detail: JSON.stringify(crowd) });
     results.push({ label: '...the commander leads the row and every creature stays on screen', ok: crowd.first === true && crowd.out === 0 && crowd.scrollX <= 0, detail: JSON.stringify(crowd) });
+    // Compact tiles (2026-11-10): a row too full for readable cards shows every creature as a tile that can be read and tapped
+    for (const [w, ht] of [[360, 740], [412, 915], [1280, 800]]) {
+        await page.setViewportSize({ width: w, height: ht });
+        const t = await page.evaluate(async () => {
+            const names = ['Grizzly Bears', 'Hill Giant', 'Serra Angel', 'Llanowar Elves', 'Savannah Lions'];
+            const C = await T.cards(['Plains', ...names]);
+            const [A] = await T.newGame(); T.clear();
+            for (let i = 0; i < 6; i++) T.put(A, C['Plains']);
+            for (let i = 0; i < 26; i++) { const o = T.put(A, C[names[i % names.length]]); o.counters = i; } // 26 creatures that can't share a pile
+            G.active = 0; G.phase = 'main1'; $('game').classList.remove('hidden'); renderGame(); fitTable();
+            await new Promise(r => setTimeout(r, 250));
+            const lane = document.querySelector('#meSide .lane.creatures'), kids = [...lane.children];
+            const rect = k => k.getBoundingClientRect();
+            const laneR = rect(lane);
+            lane.scrollTop = lane.scrollHeight; const last = rect(kids[kids.length - 1]);
+            const out = { compact: lane.classList.contains('compact'), n: kids.length, minW: Math.round(Math.min(...kids.map(k => rect(k).width))), minH: Math.round(Math.min(...kids.map(k => rect(k).height))),
+                offX: kids.filter(k => rect(k).right > innerWidth + 1 || rect(k).left < -1).length, names: kids.filter(k => { const p = k.querySelector('.pname'); return p && getComputedStyle(p).display !== 'none' && p.textContent.trim(); }).length,
+                lastReachable: last.bottom <= laneR.bottom + 2 && last.top >= laneR.top - 2, scrollX: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+            kids[kids.length - 1].querySelector('.perm, button.perm') ? kids[kids.length - 1].click() : kids[kids.length - 1].click();
+            await new Promise(r => setTimeout(r, 150));
+            out.sheet = !!document.querySelector('.sheet:not(.hidden), .modal:not(.hidden)');
+            if (typeof closeSheet === 'function') closeSheet();
+            return out;
+        });
+        const tag = `${w}px wide, 26 different creatures`;
+        results.push({ label: `${tag}: the row becomes compact tiles`, ok: t.compact && t.n === 26, detail: JSON.stringify(t) });
+        results.push({ label: `${tag}: every tile is on screen sideways, shows its name and is big enough to tap`, ok: t.offX === 0 && t.names === 26 && t.minW >= 88 && t.minH >= 44 && t.scrollX <= 0, detail: JSON.stringify(t) });
+        results.push({ label: `${tag}: the last creature can be scrolled to and tapped`, ok: t.lastReachable && t.sheet, detail: JSON.stringify(t) });
+    }
     const good = printResults('layout', results, errors);
     writeOut('layout', { results, errors });
     await h.close();
