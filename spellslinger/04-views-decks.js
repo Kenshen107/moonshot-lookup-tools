@@ -49,11 +49,15 @@ function renderHome() {
     $('homeCoverage').innerHTML = coverageHTML();
     $('homePrecon').classList.toggle('hidden', !!profile.starterDeck);
     const owned = Object.values(profile.collection).reduce((a, b) => a + b, 0);
-    $('homeStats').innerHTML = `
-        <div>🪙 <strong>${profile.coins.toLocaleString()}</strong> coins${profile.freePacks ? ` · 🎁 <strong>${profile.freePacks}</strong> free pack${profile.freePacks === 1 ? '' : 's'} to open` : ''}</div>
-        <div>🃏 <strong>${owned}</strong> cards collected (${Object.keys(profile.collection).length} different) from ${profile.packs} pack${profile.packs === 1 ? '' : 's'}</div>
-        <div>🗂️ <strong>${profile.decks.length}</strong> deck${profile.decks.length === 1 ? '' : 's'}</div>
-        <div>⚔️ <strong>${profile.wins}</strong> win${profile.wins === 1 ? '' : 's'} · <strong>${profile.losses}</strong> loss${profile.losses === 1 ? '' : 'es'}</div>`;
+    const chip = (ico, n, label) => `<div class="hstat"><span class="hs-ico">${ico}</span><strong>${n}</strong><span>${label}</span></div>`;
+    const plural = (n, w, pl) => n === 1 ? w : (pl || w + 's');
+    $('homeStats').innerHTML =
+        chip('🪙', profile.coins.toLocaleString(), 'coins') +
+        (profile.freePacks ? chip('🎁', profile.freePacks, `free ${plural(profile.freePacks, 'pack')} to open`) : '') +
+        chip('🃏', owned.toLocaleString(), `cards (${Object.keys(profile.collection).length} different)`) +
+        chip('🗂️', profile.decks.length, plural(profile.decks.length, 'deck')) +
+        chip('🏆', profile.wins, plural(profile.wins, 'win')) +
+        chip('💀', profile.losses, plural(profile.losses, 'loss', 'losses'));
 }
 
 // ---------------------------------------------------------------------

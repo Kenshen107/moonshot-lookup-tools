@@ -110,6 +110,46 @@
         .ctile .meta { font-size: 0.8rem; color: var(--text-soft); line-height: 1.25; }
         .ctile:hover img { outline: 2px solid var(--brand-light); }
         .ctile.dim img { opacity: 0.4; }
+        /* Home (game-style) */
+        .home-hero { position: relative; overflow: hidden; border-radius: var(--radius-lg, 14px); padding: 28px 22px 20px; margin-bottom: 14px; border: 1px solid var(--gold); text-align: center;
+            background: radial-gradient(120% 140% at 50% 0%, color-mix(in srgb, var(--brand) 45%, var(--bg-panel)) 0%, var(--bg-panel) 60%, var(--bg-canvas) 100%); box-shadow: 0 0 28px -8px var(--brand); }
+        .home-hero::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--gold) 6%, transparent) 14px 15px); pointer-events: none; }
+        .home-hero > * { position: relative; }
+        .home-pips { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .home-pips i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--bg-canvas); box-shadow: 0 0 8px currentColor; animation: pip-bob 3s ease-in-out infinite; }
+        .home-pips .pip-W { background: var(--mana-W); color: var(--mana-W); } .home-pips .pip-U { background: var(--mana-U); color: var(--mana-U); animation-delay: .3s; }
+        .home-pips .pip-B { background: var(--mana-B); color: var(--mana-B); animation-delay: .6s; } .home-pips .pip-R { background: var(--mana-R); color: var(--mana-R); animation-delay: .9s; }
+        .home-pips .pip-G { background: var(--mana-G); color: var(--mana-G); animation-delay: 1.2s; }
+        @keyframes pip-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        .home-kicker { font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+        .home-title { font-family: var(--font-display, inherit); font-size: clamp(1.9rem, 7vw, 3rem); line-height: 1.05; margin: 4px 0 6px; color: var(--text-heading); text-shadow: 0 2px 0 var(--bg-canvas), 0 0 22px var(--brand); }
+        .home-tag { color: var(--text-soft); max-width: 46ch; margin: 0 auto 16px; }
+        .home-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .hstat { display: inline-flex; align-items: baseline; gap: 6px; padding: 5px 12px; border-radius: 999px; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); border: 1px solid var(--border); font-size: 0.85rem; color: var(--text-soft); }
+        .hstat .hs-ico { font-size: 1rem; line-height: 1; flex: none; }
+        .hstat .hs-ico img, .hstat img { width: 18px; height: 18px; }
+        .hstat strong { color: var(--text-heading); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+        .home-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 14px; }
+        .home-tile { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; text-align: left; padding: 14px 16px; min-height: 76px; border-radius: var(--radius-md, 10px); color: var(--text-primary); cursor: pointer; font: inherit;
+            background: linear-gradient(160deg, color-mix(in srgb, var(--tc, var(--brand)) 30%, var(--bg-panel-raised)), var(--bg-panel)); border: 1px solid var(--tc, var(--brand)); box-shadow: 0 3px 0 color-mix(in srgb, var(--tc, var(--brand)) 55%, var(--bg-canvas)); transition: transform .12s, box-shadow .12s; }
+        .home-tile:hover { transform: translateY(-2px); box-shadow: 0 5px 0 color-mix(in srgb, var(--tc, var(--brand)) 55%, var(--bg-canvas)), 0 0 18px -4px var(--tc, var(--brand)); }
+        .home-tile:active { transform: translateY(2px); box-shadow: 0 1px 0 color-mix(in srgb, var(--tc, var(--brand)) 55%, var(--bg-canvas)); }
+        .home-tile .ht-ico { grid-row: 1 / 3; font-size: 2rem; }
+        .home-tile .ht-name { font-family: var(--font-display, inherit); font-weight: 700; font-size: 1.1rem; color: var(--text-heading); }
+        .home-tile .ht-sub { font-size: 0.85rem; color: var(--text-soft); }
+        .home-tile.t-play { --tc: var(--mana-R); grid-column: 1 / -1; min-height: 92px; } .home-tile.t-play .ht-name { font-size: 1.4rem; } .home-tile.t-play .ht-ico { font-size: 2.6rem; }
+        .home-tile.t-packs { --tc: var(--gold); } .home-tile.t-draft { --tc: var(--mana-U); } .home-tile.t-welcome { --tc: var(--mana-G); } .home-tile.t-precon { --tc: var(--mythic); }
+        .home-tile.hidden { display: none; }
+        .home-card h3 { font-size: 1.1rem; margin-bottom: 10px; }
+        .home-steps { list-style: none; padding: 0; display: grid; gap: 10px; }
+        .home-steps li { display: flex; gap: 12px; align-items: flex-start; }
+        .home-steps li > div { display: grid; gap: 2px; font-size: 0.9rem; color: var(--text-soft); }
+        .home-steps li > div > strong { color: var(--text-heading); font-size: 1rem; }
+        .hs-n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: var(--bg-canvas); background: var(--gold); box-shadow: 0 0 10px -2px var(--gold); }
+        .home-engine > summary { cursor: pointer; font-weight: 700; color: var(--text-heading); }
+        .home-engine-body { margin-top: 10px; }
+        @media (max-width: 600px) { .home-hero { padding: 22px 14px 16px; } .home-actions { grid-template-columns: 1fr 1fr; gap: 10px; } .home-tile { grid-template-columns: 1fr; text-align: center; justify-items: center; row-gap: 2px; padding: 12px 8px; } .home-tile .ht-ico { grid-row: auto; } .home-tile.t-play { grid-template-columns: auto 1fr; text-align: left; justify-items: start; } .home-tile.t-play .ht-ico { grid-row: 1 / 3; } }
+        @media (prefers-reduced-motion: reduce) { .home-pips i { animation: none; } .home-tile { transition: none; } }
         /* Card coverage on Home */
         .coverage { margin: 10px 0 4px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-inset); display: grid; gap: 6px; }
         .cov-bar { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--border); gap: 2px; }

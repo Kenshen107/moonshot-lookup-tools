@@ -53,39 +53,40 @@
     <main>
         <!-- ============ HOME ============ -->
         <section id="view-home">
-            <div class="panel">
-                <h2>Welcome to Spellslinger Duels</h2>
-                <div class="coverage" id="homeCoverage"></div>
-                <p>A test game: open packs with free coins, build a deck, and play Magic against an opponent playing a real deck theme.</p>
-                <div class="grid-2" style="margin-top:12px;">
-                    <div>
-                        <h3 style="font-size:1rem; margin-bottom:6px;">How it works</h3>
-                        <ol class="note" style="padding-left:18px; display:grid; gap:4px;">
-                            <li><strong>Packs:</strong> spend coins on packs from any set, Alpha to today. What's inside follows the real pack odds (from MTGJSON).</li>
-                            <li><strong>Decks:</strong> build a <strong>Modern</strong> deck (60 cards, up to 4 of each) or a <strong>Commander</strong> deck (100 cards, one of each, plus a commander). Basic lands are free. Or grab a ready-made starter deck.</li>
-                            <li><strong>Play:</strong> pick an opponent. Modern opponents play themed decks built from Scryfall; Commander opponents play EDHREC's average deck for this week's trending commanders.</li>
-                            <li><strong>Earn:</strong> 150 coins for a win (200 in Commander), 40 for trying.</li>
-                            <li><strong>Shop:</strong> run a card shop. Put cards in your display case, haggle with customers, and close up each day (rent is due). Each card you open has a condition, and a rare few are serialized.</li>
-                        </ol>
-                    </div>
-                    <div>
-                        <h3 style="font-size:1rem; margin-bottom:6px;">Your stats</h3>
-                        <div id="homeStats" class="note"></div>
-                        <div class="row" style="margin-top:10px;">
-                            <button class="btn primary" data-needs="play" onclick="showView('play')">⚔️ Play a game</button>
-                            <button class="btn gold" data-needs="packs" onclick="showView('packs')">🎴 Open packs</button>
-                            <button class="btn" data-needs="welcome" onclick="showView('welcome')">🎁 Welcome Deck Duels</button>
-                            <button class="btn" data-needs="draft" onclick="showView('draft')">🃏 Draft</button>
-                            <button class="btn gold" id="homePrecon" onclick="preconPicker()">🎁 Free starter precon</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="home-hero">
+                <div class="home-pips" aria-hidden="true"><i class="pip-W"></i><i class="pip-U"></i><i class="pip-B"></i><i class="pip-R"></i><i class="pip-G"></i></div>
+                <div class="home-kicker">Test build · fan-made</div>
+                <h2 class="home-title">Spellslinger Duels</h2>
+                <p class="home-tag">Crack packs, build a deck and duel real Magic decks. Free coins, real pack odds.</p>
+                <div class="home-stats" id="homeStats"></div>
             </div>
-            <div class="panel">
-                <h2>What the rules engine does (and doesn't, yet)</h2>
+            <div class="home-actions">
+                <button class="home-tile t-play" data-needs="play" onclick="showView('play')"><span class="ht-ico">⚔️</span><span class="ht-name">Play a game</span><span class="ht-sub">Pick a deck and an opponent</span></button>
+                <button class="home-tile t-packs" data-needs="packs" onclick="showView('packs')"><span class="ht-ico">🎴</span><span class="ht-name">Open packs</span><span class="ht-sub">Any set, Alpha to today</span></button>
+                <button class="home-tile t-draft" data-needs="draft" onclick="showView('draft')"><span class="ht-ico">🃏</span><span class="ht-name">Draft</span><span class="ht-sub">8 players, 3 packs, 3 rounds</span></button>
+                <button class="home-tile t-welcome" data-needs="welcome" onclick="showView('welcome')"><span class="ht-ico">🎁</span><span class="ht-name">Welcome Deck Duels</span><span class="ht-sub">Battle a ready-made deck</span></button>
+                <button class="home-tile t-precon" id="homePrecon" onclick="preconPicker()"><span class="ht-ico">✨</span><span class="ht-name">Free starter precon</span><span class="ht-sub">Pick your first deck</span></button>
+            </div>
+            <div class="panel home-card">
+                <h3>🗺️ How it works</h3>
+                <ol class="home-steps">
+                    <li><span class="hs-n">1</span><div><strong>Packs</strong><span>Spend coins on packs from any set. What's inside follows the real pack odds (MTGJSON).</span></div></li>
+                    <li><span class="hs-n">2</span><div><strong>Decks</strong><span><strong>Modern</strong> (60 cards, up to 4 of each) or <strong>Commander</strong> (100 cards, singleton, plus a commander). Basic lands are free, or grab a starter deck.</span></div></li>
+                    <li><span class="hs-n">3</span><div><strong>Play</strong><span>Modern opponents play themed decks; Commander opponents play EDHREC's average deck for this week's trending commanders.</span></div></li>
+                    <li><span class="hs-n">4</span><div><strong>Earn</strong><span>150 coins for a win (200 in Commander), 40 for trying.</span></div></li>
+                    <li><span class="hs-n">5</span><div><strong>Shop</strong><span>Run a card shop: fill your display case, haggle with customers and close up each day (rent is due). Every card has a condition, and a rare few are serialized.</span></div></li>
+                </ol>
+            </div>
+            <div class="panel home-card">
+                <h3>📚 Card library</h3>
+                <div class="coverage" id="homeCoverage"></div>
+            </div>
+            <details class="panel home-card home-engine">
+                <summary>⚙️ What the rules engine does (and doesn't, yet)</summary><div class="home-engine-body">
                 <p class="note">This is a base model. It plays real turns: untap, draw, a land a turn, mana from lands and mana rocks, summoning sickness, combat with attackers and blockers, and Commander damage and commander tax. These keywords work: flying, reach, trample, first strike, double strike, deathtouch, lifelink, vigilance, haste, defender, menace, indestructible and hexproof. Card text is read automatically: damage, destroy / exile / bounce, draw, life gain and loss, pump spells, +1/+1 counters, tapping, tokens, discard, auras and equipment that give +N/+N, and "when this enters" effects.</p>
                 <p class="note" style="margin-top:6px;">Every card shows how much of its text the game can run: <span class="badge sup-full">Automated</span> <span class="badge sup-partial">Partly</span> <span class="badge sup-none">Not yet</span>. "Partly" cards still play, but the text the game can't read does nothing. "Not yet" cards (planeswalkers, X spells and most complex text) can't be cast yet. Spells and "when this enters" abilities use the stack: the other player can respond with instants (including counterspells) before each one resolves, and a spell whose target is gone doesn't resolve. The <a href="#rules" onclick="showView('rules'); return false;">📖 Rules</a> tab has the official Comprehensive Rules to look things up.</p>
             </div>
+            </details>
         </section>
 
         <!-- ============ PACKS ============ -->
