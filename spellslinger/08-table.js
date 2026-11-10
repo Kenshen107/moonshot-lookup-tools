@@ -137,15 +137,22 @@ function barHTML(P) {
         ${G.format === 'commander' ? `<span class="zone-count" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
         ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
  ${P === me() && P.bf.some(o => Rx(o).peekTop) && P.library.length ? `<span class="pc" title="You may look at the top card of your library any time">👁 ${esc(P.library[P.library.length - 1].card.name)}</span>` : ''}
-        <button type="button" class="btn small desk-only" onclick="playerSheet(${P.i})" title="Track life, poison, energy and experience">🧮</button>
         <button type="button" class="btn small" onclick="boardOverview(${P.i})" title="See every permanent on this side in one place">👁 Board</button>
-        <span class="zone-count" title="Library">📚 ${P.library.length}</span>
-        <button type="button" class="zone-count zone-btn" title="Graveyard: tap to look" onclick="showGraveyard(${P.i})">🪦 ${P.gy.length}</button>
+        <span class="zones"><span class="zone-count" title="Library">📚 ${P.library.length}</span>
+        <button type="button" class="zone-count zone-btn" title="Graveyard: tap to look" onclick="showGraveyard(${P.i})">🪦 ${P.gy.length}</button></span>
         ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
         <span class="cmd-zone">${cmd}</span>
-        ${P !== me() ? `<span class="note deckname" style="margin-left:auto;">${styleOf(P) ? `${styleOf(P).emoji} ${esc(styleOf(P).name)} · ` : ''}${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</span>` : `<span style="margin-left:auto;" class="row desk-only"><button class="btn small danger" onclick="concede()">Concede</button></span><button type="button" class="btn small phone-only gm-btn" onclick="gameMenu()" aria-label="Game menu: log, life tracker, mana mode, concede">⋯</button>`}`;
+        ${P !== me() ? `<span class="note deckname" style="margin-left:auto;">${styleOf(P) ? `${styleOf(P).emoji} ${esc(styleOf(P).name)} · ` : ''}${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</span>` : `<span style="margin-left:auto;" class="desk-only"></span><button type="button" class="btn small phone-only gm-btn" onclick="gameMenu()" aria-label="Game menu: log, life tracker, mana mode, concede">⋯</button>`}
+        <button type="button" class="btn small desk-only bar-more" onclick="barMenu(${P.i})" title="Life and counters tracker${P === me() ? ', concede' : ''}" aria-label="More for ${esc(P.name)}">⋯</button>`;
 }
 
+// Desktop: the "⋯" on each player bar holds the tracker (and Concede on your own bar), so the bar stays calm (2026-11-10)
+function barMenu(i) {
+    const P = G.players[i];
+    menuSheet(you(P) ? 'You' : esc(P.name), `<div class="menu-list">
+        <button class="btn" onclick="closeSheet(); playerSheet(${i})">🧮 Life, poison, energy and experience</button>
+        ${you(P) ? '<button class="btn danger" onclick="closeSheet(); concede()">🏳️ Concede</button>' : `<p class="note">${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</p>`}</div>`);
+}
 // Phones: the game menu (log, trackers, paying mana, concede) and the full log
 function gameMenu() {
     menuSheet('Game', `<div class="menu-list">
@@ -311,7 +318,8 @@ function turnButtonHTML() {
     else if (m && m.type === 'attack') sub = 'Skips combat';
     else if (G.phase === 'afterBlocks') sub = 'Deals damage first';
     else if (G.phase === 'main1') sub = 'Skips combat';
-    return `<button type="button" id="turnBtn" class="turn-btn${dis ? '' : ' ready'}" ${dis ? 'disabled' : ''} onclick="endMyTurn()" title="${esc(title)}"><span class="tb-label">${label}${G.active === G.view ? ' ⏭' : ''}</span>${sub ? `<span class="tb-sub">${esc(sub)}</span>` : ''}</button>`;
+    const nudge = !dis && typeof MAIN !== 'undefined' && MAIN.includes(G.phase) && !m && !G.busy && !nextStepHint();
+    return `<button type="button" id="turnBtn" class="turn-btn${dis ? '' : ' ready'}${nudge ? ' nudge' : ''}" ${dis ? 'disabled' : ''} onclick="endMyTurn()" title="${esc(title)}"><span class="tb-label">${label}${G.active === G.view ? ' ⏭' : ''}</span>${sub ? `<span class="tb-sub">${esc(sub)}</span>` : ''}</button>`;
 }
 // A short hint about what you can do right now
 function nextStepHint() {
@@ -338,7 +346,7 @@ function midControlsHTML() {
         return `${phase}<span class="prompt">🎯 Choose a target for ${esc(m.source.card.name)}</span>${m.cancelable ? '<button class="btn" onclick="cancelTarget()">Cancel</button>' : ''}`;
     }
     if (m && m.type === 'attack') {
-        return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button>${typeof attackListButton === 'function' ? attackListButton() : ''}<button class="btn" onclick="cancelAttack()">Back</button>`;
+        return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary act-atk" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button>${typeof attackListButton === 'function' ? attackListButton() : ''}<button class="btn" onclick="cancelAttack()">Back</button>`;
     }
     if (m && m.type === 'respond') {
         const it = m.item;
@@ -351,8 +359,8 @@ function midControlsHTML() {
     if (G.active === G.view && !G.busy) {
         const hint = nextStepHint();
         const hintHTML = hint ? `<span class="hint">${esc(hint)}</span>` : '';
-        if (G.phase === 'main1') return `${hintHTML}<button class="btn primary" onclick="goToCombat()">⚔️ Go to combat</button>`;
-        if (G.phase === 'afterBlocks') return `<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary" onclick="dealDamage()">💥 Deal damage</button>`;
+        if (G.phase === 'main1') return `${hintHTML}<button class="btn primary act-go" onclick="goToCombat()">⚔️ Go to combat</button>`;
+        if (G.phase === 'afterBlocks') return `<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary act-atk" onclick="dealDamage()">💥 Deal damage</button>`;
         if (G.phase === 'main2') return hintHTML || '<span class="hint">Second main phase: cast anything else, then end your turn.</span>';
     }
     return `<span class="note">${G.active === 1 ? `${esc(foe().name)} is thinking…` : ''}</span>`;
