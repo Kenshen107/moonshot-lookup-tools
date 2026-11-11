@@ -1763,7 +1763,7 @@ async function resolveTop() {
                 log(`${o.card.name} goes on an adventure (exiled; you can cast the creature later).`);
             } else if (r.paradigm && !o.ceases && !o.flashedBack) {
                 // Paradigm (Secrets of Strixhaven): exile it; each of your first main phases you may cast a copy for free (see 15n-samutdf.js)
-                resetObj(o); o.paradigmP = item.P.i; item.P.exile.push(o); log(`${o.card.name} is exiled (paradigm).`);
+                resetObj(o); o.freeCast = false; o.playUntil = 0; o.paradigmP = item.P.i; item.P.exile.push(o); log(`${o.card.name} is exiled (paradigm).`);
             } else if (r.cipher && item.P.bf.some(isCreature) && !o.flashedBack) {
                 // Cipher (702.99): exile it encoded on a creature you control
                 const host = item.P.isAI ? item.P.bf.filter(isCreature).sort((a, b) => (has(b, 'flying') || has(b, 'unblockable') ? 5 : 0) + pow(b) - ((has(a, 'flying') || has(a, 'unblockable') ? 5 : 0) + pow(a)))[0]

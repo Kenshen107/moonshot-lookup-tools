@@ -14,7 +14,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         const out = [];
         try {
             const ok = (label, cond, detail) => out.push([label, !!cond, detail]);
-            const C = await T.cards([...NAMES, 'Shivan Dragon', 'Vnwxt, Verbose Host', 'Hill Giant', 'Grizzly Bears', 'Island', 'Plains', 'Forest', 'Lightning Bolt', 'Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Grizzly Bears', 'Hill Giant', 'Serra Angel', 'Llanowar Elves', 'Sol Ring', 'Lightning Bolt', 'Counterspell', 'Divination', 'Shock', 'Treasure Map', 'Giant Growth', 'Ancestral Recall', 'Dark Ritual', 'Goblin Guide', 'Shivan Dragon', 'Air Elemental', 'Wall of Omens', 'Bear Cub', 'Ornithopter', 'Black Lotus', 'Cultivate', 'Island', 'Terror', 'Doom Blade', 'Rhystic Study', 'Mind Stone', 'Furnace Whelp', 'Wall of Omens']);
+            const C = await T.cards([...NAMES, 'Shivan Dragon', 'Vnwxt, Verbose Host', 'Germination Practicum', 'Hill Giant', 'Grizzly Bears', 'Island', 'Plains', 'Forest', 'Lightning Bolt', 'Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Grizzly Bears', 'Hill Giant', 'Serra Angel', 'Llanowar Elves', 'Sol Ring', 'Lightning Bolt', 'Counterspell', 'Divination', 'Shock', 'Treasure Map', 'Giant Growth', 'Ancestral Recall', 'Dark Ritual', 'Goblin Guide', 'Shivan Dragon', 'Air Elemental', 'Wall of Omens', 'Bear Cub', 'Ornithopter', 'Black Lotus', 'Cultivate', 'Island', 'Terror', 'Doom Blade', 'Rhystic Study', 'Mind Stone', 'Furnace Whelp', 'Wall of Omens']);
             manaMode = 'auto';
             window.pickCard = async (P, list) => list[0];
             const have = n => { if (!C[n]) throw new Error('no card ' + n); return C[n]; };
@@ -102,6 +102,14 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
               pull(A.hand, s); G.stack.push({ P: A, o: s, kind: 'spell' }); await resolveTop(); await settle2();
               ok('Paradigm: the spell is exiled after resolving', A.exile.includes(s) && s.paradigmP === 0, [A.exile.length]);
               fire('main1'); await settle2(); ok('Paradigm: a free copy is cast at the start of your first main phase', A.exile.filter(x => x.card.name === 'Improvisation Capstone').length === 1 && A.exile.includes(s), 0); }
+            // Paradigm copies are not re-exiled as new paradigm cards (pod record 2026-11-11: 12 Germination Practicum casts in one turn)
+            { const [A] = await fresh(); for (let i = 0; i < 3; i++) { const x = makeObj(have('Germination Practicum'), 0); x.paradigmP = 0; A.exile.push(x); } G.turn = 8; fire('main1'); await settle2(); await settle2();
+              const n = A.exile.filter(x => x.card.name === 'Germination Practicum').length; ok('Paradigm: three exiled cards make three copies and stay three', n === 3, [n, A.exile.length, G.log ? 0 : 0]);
+              fire('main1'); await settle2(); await settle2(); ok('Paradigm: a second main phase does not grow the exile', A.exile.filter(x => x.card.name === 'Germination Practicum').length === 3, 0); }
+            // A paradigm card cast free this turn (Improvisation Capstone) can't be recast from exile that same turn (pod record 2026-11-11)
+            { const [A] = await fresh(); const x = makeObj(have('Germination Practicum'), 0); A.exile.push(x); x.freeCast = true; x.playUntil = G.turn; pull(A.exile, x); G.stack.push({ P: A, o: x, kind: 'spell' }); await resolveTop(); await settle2();
+              ok('Paradigm: free-cast card is exiled paradigm', A.exile.includes(x) && x.paradigmP === 0, [A.exile.length]);
+              ok('Paradigm: it is not castable again from exile this turn', !(x.playUntil >= G.turn) && !x.freeCast, [x.playUntil, x.freeCast]); }
             // Max-speed mana abilities replace the card's own only at max speed
             { const [A] = await fresh(); const r = put(A, 'Muraganda Raceway'); const e = put(A, 'Endrider Catalyzer'); ok('Muraganda Raceway: one mana below max speed', manaOf(r) && manaOf(r).n === 1, manaOf(r)); ok('Endrider Catalyzer: no mana below max speed', !manaOf(e), manaOf(e)); A.speed = 4; ok('Muraganda Raceway: {C}{C} at max speed', manaOf(r) && manaOf(r).n === 2, manaOf(r)); ok('Endrider Catalyzer: {R}{R} at max speed', manaOf(e) && manaOf(e).n === 2 && manaOf(e).colors.includes('R'), manaOf(e)); }
             // Other max-speed flags are switched on only at max speed
