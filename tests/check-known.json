@@ -1,0 +1,9 @@
+{
+  "_note": "Problems the standard check (tests/check.js) already knows about, by deck name: a listed problem (matched as text) doesn't fail the run; a new one does. Remove an entry once it is fixed. Owner decides how to fix list problems.",
+  "big-bertha": [
+    "101/100 cards"
+  ],
+  "brudiclad": [
+    "Dockside Extortionist isn't legal in Commander (banned)"
+  ]
+}

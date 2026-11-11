@@ -8,6 +8,7 @@ python3 tests/run_all.py --changed  # only the suites named after the files you 
 python3 tests/run_all.py --cards    # fast + coverage, rules snapshot, every deck and commander-round suite
 python3 tests/run_all.py --games    # fast + about 40 whole AI games and the card-by-card test of the verified decks
 python3 tests/run_all.py --full     # everything (Welcome Decks, Starter Kits, ~100 games), about 40 minutes
+node tests/check.js tests/decks/x.txt   # the standard check for one deck (or --cards "A|B" for single cards); see the top of check.js
 python3 tests/run_all.py engine pod # only suites whose name contains these words (--list shows the groups, --jobs N sets the parallelism)
 ```
 

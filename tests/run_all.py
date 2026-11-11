@@ -3,7 +3,7 @@
 
     python3 tests/run_all.py                the fast run (about 4 minutes): gameplay, screens, Ascent and the 300-game lab
     python3 tests/run_all.py --changed      only the suites that match the files you changed (plus the fast set if the core changed)
-    python3 tests/run_all.py --cards        fast + card-reader work: coverage, rules snapshot, every deck and commander-round suite
+    python3 tests/run_all.py --cards        fast + card-reader work: coverage, rules snapshot, every deck and commander-round suite, and the standard check of every deck
     python3 tests/run_all.py --games        fast + whole AI games (about 40) and the card-by-card test of the verified decks
     python3 tests/run_all.py --full         everything, including the Welcome Decks, Starter Kits and ~100 games (about 40 minutes)
     python3 tests/run_all.py engine pod     only the named suites (any part of a suite's name)
@@ -47,6 +47,27 @@ def suite(n, group):
     return {'name': n, 'cmd': [n + '.js'], 'limit': lim, 'group': group}
 
 
+CHECK = os.path.join(HERE, 'check.js')
+
+
+def check_steps(files=None, builtin=True):
+    """The standard check (tests/check.js) once per deck: every list file in tests/decks and every built-in verified deck."""
+    steps = []
+    if files is None:
+        d = os.path.join(HERE, 'decks')
+        files = sorted(os.path.join(d, f) for f in os.listdir(d) if f.endswith('.txt'))
+    for f in files:
+        steps.append({'name': 'standard: ' + os.path.basename(f)[:-4], 'cmd': [CHECK, f, '--quick'], 'limit': 900, 'group': 'standard'})
+    if builtin:
+        try:
+            keys = subprocess.run(['node', CHECK, '--builtin', '--list-builtin'], capture_output=True, text=True, timeout=120).stdout.split()
+        except Exception:
+            keys = []
+        for k in keys:
+            steps.append({'name': 'standard: ' + k, 'cmd': [CHECK, '--builtin', '--key', k, '--quick'], 'limit': 900, 'group': 'standard'})
+    return steps
+
+
 def plan(mode, only, changed):
     have_cards = os.path.exists(os.path.join(HERE, 'data', 'cards_all.json'))
     groups = [(PLAY, 'play'), (SCREENS, 'screens'), (ASCENT, 'ascent')]
@@ -60,6 +81,8 @@ def plan(mode, only, changed):
         steps += [suite(n, 'decks') for n in DECKS]
         steps.append({'name': 'coverage', 'cmd': ['coverage.js'], 'limit': 900, 'group': 'heavy'})
         steps.append({'name': 'rules snapshot', 'cmd': ['rules-snapshot.js'], 'limit': 900, 'group': 'heavy'})
+        if have_cards:
+            steps += check_steps()  # the standard check for every deck
     if mode == 'full':
         steps.append({'name': 'cards (all groups)', 'cmd': ['cards.js', 'all'], 'limit': 3600, 'group': 'heavy'})
         steps.append({'name': 'games (full)', 'cmd': ['games.js', '--full'], 'limit': 3600, 'group': 'heavy'})
@@ -95,6 +118,10 @@ def pick_changed(steps, changed):
     every = {n: suite(n, 'x') for n in PLAY + SCREENS + ASCENT + LIVE + DECKS}
     chosen, rest = {}, False
     for f in changed:
+        if f.startswith('tests/decks/') and f.endswith('.txt'):
+            for st in check_steps([os.path.join(ROOT, f)], builtin=False):
+                chosen[st['name']] = st
+            continue
         base = os.path.basename(f)
         stem = re.sub(r'\.\w+$', '', base)
         stem = re.sub(r'^\d+[a-z]?-', '', stem)
@@ -119,7 +146,7 @@ def run_step(step, lock, profile):
     env = dict(os.environ, TEST_PROFILE=profile)
     t0 = time.time()
     try:
-        p = subprocess.run(['node', os.path.join(SUITES, step['cmd'][0])] + step['cmd'][1:], timeout=step['limit'], capture_output=True, text=True, env=env)
+        p = subprocess.run(['node', step['cmd'][0] if os.path.isabs(step['cmd'][0]) else os.path.join(SUITES, step['cmd'][0])] + step['cmd'][1:], timeout=step['limit'], capture_output=True, text=True, env=env)
         ok, out = p.returncode == 0, p.stdout + p.stderr
     except subprocess.TimeoutExpired as e:
         ok, out = False, f"TIMED OUT after {step['limit']}s\n" + ((e.stdout or b'').decode('utf8', 'ignore') if isinstance(e.stdout, bytes) else (e.stdout or ''))
