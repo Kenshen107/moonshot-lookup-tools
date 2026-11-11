@@ -20,6 +20,7 @@ async function chooseBlocksAll(P, { hardRemoval = false, aiPause = 0, idlePause 
         const D = G.players[g.d];
         G.defender = D.i; G.attackers = g.uids.slice(); G.blocks = {};
         if (hardRemoval && D.isAI && D.aiLevel === 'hard') { await aiRemoveAttacker(D); if (G.over) return false; }
+        if (D.isAI && typeof aiCastFog === 'function') { await aiCastFog(D); if (G.over) return false; }
         if (odricActive()) { /* Odric, Master Tactician: the attacker chooses the blocks */ }
         else if (D.isAI) { if (aiPause) await pause(aiPause); G.blocks = aiChooseBlocks(D, P); }
         else if (D.bf.some(o => isCreature(o) && !o.tapped) || D.hand.some(o => canCastNow(D, o) && canPay(D, o))) {

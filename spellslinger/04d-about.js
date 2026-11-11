@@ -11,6 +11,7 @@ const ABOUT_FEATURES = [
     ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log.']
 ];
 const ABOUT_LOG = [
+    ['Nov 11 (smarter Fog)', ['Computer players no longer cast Fog-type spells (prevent all combat damage) in their own main phase. They hold them and cast one after attackers are declared when the attack is lethal or too big to block, or would be 21 commander damage.']],
     ['Nov 11 (extra combat fixed)', ['Additional combat phases now work in every case: made in your second main phase, made when nothing was attacking, or waiting when you press End turn (the button reads "Extra combat" and starts it). The computer plays them too, followed by an additional main phase. Aggravated Assault is now fully read.']],
     ['Nov 11 (paradigm loop fixed)', ['A card cast for free (Improvisation Capstone casting Germination Practicum) could be cast again and again from exile the same turn, which gave one turn twelve free casts. Paradigm cards now leave exile for good until your next first main phase. Game records also no longer list one choice twice.']],
     ['Nov 11 (sharper Play tab)', ['The Sandbox start screen is sharper: deck tiles carry a stripe and dots in the deck colors, each seat of a pod is its own card with a numbered badge, the strip above Start names every seat (You vs Seat 2, 3 and 4), drop-downs have a cleaner look, panels slide in, a picked tile pops, and a light sweeps across Start the game once everything is chosen.']],

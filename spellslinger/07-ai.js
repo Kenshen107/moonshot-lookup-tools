@@ -114,6 +114,7 @@ function aiScoreBase(P, o, target) {
     if (r.kind === 'artifact' || r.kind === 'enchantment') return r.mana ? tn(P, 'rockScore') : 4;
     if (r.kind === 'battle') return 6 + Math.max(r.etb.length ? scoreEffects(P, r.etb, null, o) : 0, ...(r.etbModes || []).map(fx => scoreEffects(P, fx, null, o)));
     let fx = spellEffects(o);
+    if (fx.some(e => e.t === 'fog')) return 0; // a Fog is only worth casting when an attack is coming at you: see aiCastFog (never in its own main phase)
     if (r.cost.x) fx = withX(fx, o.xVal || maxX(P, o));
     return scoreEffects(P, fx, target, o);
 }
@@ -456,6 +457,25 @@ function removalWorthIt(P, o) {
     return permValue(o) >= 8; // an artifact or enchantment: only the expensive ones
 }
 // Hard AI: when you attack, kill the biggest attacker with instant removal before blocks
+// A Fog-type instant ("prevent all combat damage") is cast after attackers are declared when the attack hurts: lethal, or what blockers can't stop
+// is a big share of its life (or a commander hit that would be 21). Never on its own turn, and never when damage is already prevented.
+async function aiCastFog(D) {
+    if (G.fog === G.turn || G.noPrevent === G.turn || D.aiLevel === 'easy') return false;
+    const fogs = D.hand.filter(x => Rx(x).kind === 'instant' && (Rx(x).spell || []).some(e => e.t === 'fog') && canCastNow(D, x) && canPay(D, x));
+    if (!fogs.length) return false;
+    const atks = G.attackers.map(onBf).filter(x => x && x.owner !== D.i);
+    if (!atks.length) return false;
+    const blockers = D.bf.filter(x => isCreature(x) && !x.tapped).length;
+    const powers = atks.map(x => Math.max(0, pow(x))).sort((a, b) => b - a);
+    const total = powers.reduce((a, b) => a + b, 0), residual = powers.slice(blockers).reduce((a, b) => a + b, 0);
+    const cmdrHit = atks.some(x => x.isCommander && (D.cmdBy && (D.cmdBy[x.owner] || 0)) + Math.max(0, pow(x)) >= 21);
+    const worth = total >= D.life || residual >= D.life - 4 || residual >= D.life * 0.4 || cmdrHit;
+    if (!worth) return false;
+    await pause(400);
+    await castSpell(D, fogs[0], null);
+    await settle();
+    return true;
+}
 async function aiRemoveAttacker(P) {
     const atks = G.attackers.map(onBf).filter(Boolean).sort((a, b) => creatureValue(b) - creatureValue(a));
     if (!atks.length) return;
