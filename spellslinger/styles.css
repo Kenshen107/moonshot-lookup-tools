@@ -1288,3 +1288,9 @@ details.get-deck > summary { color: var(--brand-light); }
         @keyframes turn-nudge { 0%, 100% { box-shadow: 0 0 10px color-mix(in srgb, var(--gold) 35%, transparent); } 50% { box-shadow: 0 0 22px 2px color-mix(in srgb, var(--gold) 75%, transparent); } }
         @media (max-width: 600px) { #game .side { margin: 0 4px; } .pbar .life { font-size: 1.4rem; min-width: 0; padding: 0 8px; flex: none; }   .phase-strip { font-size: 0.78em; } .phase-strip li { padding: 3px 6px; white-space: nowrap; } .phase-strip li.now { transform: none; } .zones { gap: 6px; padding: 2px 8px; } .turn-btn.ready { min-height: 54px; min-width: 110px; } }
         @media (prefers-reduced-motion: reduce) { .turn-btn.nudge { animation: none; } .phase-strip li.now { transform: none; } }
+
+        /* Pod seat pickers (2026-11-11): one deck drop-down per extra seat; long deck names must not widen the page */
+        .pod-seats { min-width: 0; max-width: 100%; }
+        .pod-seat { display: grid; gap: 2px; min-width: 0; }
+        .pod-seat select { width: 100%; max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+        .pod-seats .btn { justify-self: start; }
