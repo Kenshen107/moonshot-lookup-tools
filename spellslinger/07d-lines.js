@@ -156,6 +156,12 @@ const TALK = {
         sarah: ["That was great! Who's winning?"], leo: ["A fine ending to my chapter."], greg: ["Good game, {foe}. Really."], trevor: ["Game over. Good play, {foe}."]
     },
     // ---- Cool plays (impressed) ----
+    // ---- Somebody else got knocked out ----
+    'react:out': {
+        _: ["And then there were {n}.", "Good game, {foe}.", "That was {foe}. Who's next?", "GG, {foe}. Rough way to go."],
+        greg: ["Aw, good game {foe}. That's Magic for you."], marcus: ["One fewer variable."], sarah: ["Nooo, {foe} had such a fun deck!"], leo: ["So falls {foe}. The tale goes on."],
+        trevor: ["That leaves {n} of us. Recalculating."], sam: ["{foe}'s out! Let's go, let's go."], arthur: ["{foe} was never going to last."], brenda: ["Good game, {foe}. I'll be careful now."], luke: ["Bye, {foe}! That was not my fault. Mostly."]
+    },
     'cool:big': {
         _: ["Okay, that's a big play, {foe}.", "Whoa. {foe} has the big one.", "That's the kind of play you remember, {foe}.", "Nicely done, {foe}. Even if it hurts."],
         greg: ["Now THAT is a big play, {foe}!"], sarah: ["Oh, that's so cool! I hate it, but it's cool!"], leo: ["A grand moment. The crowd is on its feet."],

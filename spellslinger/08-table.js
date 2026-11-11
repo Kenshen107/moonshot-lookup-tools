@@ -118,9 +118,19 @@ function podStripHTML() {
     const chips = G.players.filter(X => X !== v).map(X => {
         const on = foe() === X, turn = G.active === X.i && !G.over, hitsMe = G.active === X.i && (G.defender === v.i || G.attackers.some(u => { const a = onBf(u); return a && a.atkTo === v.i; })), tgt = m && m.type === 'target' && m.valid.some(t => t.p && t.p.i === X.i);
         const dmg = G.format === 'commander' ? (v.cmdBy[X.i] || 0) : 0;
-        return `<button type="button" class="pod-chip${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
-            title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${X.hand.length} cards in hand, ${X.bf.filter(isCreature).length} creatures${dmg ? `, you have taken ${dmg} commander damage from them` : ''}">
-            <b>${X.out ? '💀' : turn ? '▶' : styleOf(X) ? styleOf(X).emoji : '🤖'} ${esc(who(X))}</b>${typeof reliTag === 'function' ? reliTag(X) : ''}<span class="mood" title="${esc(X.name.split(',')[0])} is feeling ${esc(MOODS[botMood(X).mood].name)}: ${esc(botMood(X).why)}">${MOODS[botMood(X).mood].emoji}</span>${G.arch === X.i ? '<span title="The table is focusing on this player">🎯</span>' : ''}${styleOf(X) ? `<span class="note" title="${esc(styleOf(X).desc)}">${esc(styleOf(X).name)}</span>` : ''}<span>❤️ ${X.life}</span>${(X.salt || 0) >= 3 ? `<span title="Salt level: how annoyed they are with the table">🧂${Math.round(X.salt)}</span>` : ''}${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}<span>✋ ${X.hand.length}</span><span>🛡 ${X.bf.filter(isCreature).length}</span>${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}</button>`;
+        const mood = botMood(X), crs = X.bf.filter(isCreature), power = crs.reduce((n, o) => n + Math.max(0, pow(o)), 0);
+        const start = (FORMATS[G.format] && FORMATS[G.format].life) || 40, pct = Math.max(0, Math.min(100, Math.round(100 * X.life / start)));
+        const cmdr = [...X.command, ...X.bf, ...X.gy, ...X.exile, ...X.hand, ...X.library].find(o => o.isCommander);
+        const ci = (cmdr && cmdr.card.ci) || [], col = ci.length === 1 ? `var(--mana-${ci[0]})` : ci.length ? 'var(--gold)' : 'var(--mana-C)';
+        const sub = X.char ? X.name.split(',')[0] : styleOf(X) ? styleOf(X).name : '';
+        return `<button type="button" data-seat="${X.i}" style="--sc:${col}" class="pod-chip seat${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}${X.life <= 10 && !X.out ? ' low' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
+            title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${X.hand.length} cards in hand, ${crs.length} creatures (power ${power})${styleOf(X) ? `, plays ${esc(styleOf(X).name)}` : ''}. Feeling ${esc(MOODS[mood.mood].name)}: ${esc(mood.why)}${dmg ? `. You have taken ${dmg} commander damage from them` : ''}">
+            <span class="seat-av" aria-hidden="true">${X.out ? '💀' : MOODS[mood.mood].emoji}</span>
+            <span class="seat-main"><b>${esc(who(X))}${typeof reliTag === 'function' ? reliTag(X) : ''}${G.arch === X.i ? ' <span title="The table is focusing on this player">🎯</span>' : ''}</b><small>${turn ? '<span class="seat-think" aria-label="taking their turn"><i></i><i></i><i></i></span>' : ''}${esc(sub)}</small></span>
+            <span class="seat-life">${X.out ? 'out' : `❤️ ${X.life}`}</span>
+            <span class="seat-stats"><span title="Cards in hand">✋ ${X.hand.length}</span><span title="Creatures and their total power">🛡 ${crs.length}${power ? `·${power}` : ''}</span>${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}${(X.salt || 0) >= 3 ? `<span title="Salt level: how annoyed they are with the table">🧂${Math.round(X.salt)}</span>` : ''}</span>
+            ${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}
+            <span class="seat-bar" aria-hidden="true"><i style="width:${X.out ? 0 : pct}%"></i></span></button>`;
     }).join('');
     const mine = dealsOf(v.i).length;
     return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<button type="button" class="pod-chip" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝 Deals</b>${mine ? `<span>${mine} active</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}<span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div>`;
@@ -303,16 +313,18 @@ function midHTML() {
     return `<div class="mid-main">${phaseStripHTML()}${stackHTML()}<div class="mid-controls">${midControlsHTML()}</div></div>${turnButtonHTML()}`;
 }
 const PHASE_STEPS = [['Upkeep', ['beginning', 'upkeep']], ['Main 1', ['main1']], ['Combat', ['declareAttackers', 'declareBlocks', 'afterBlocks', 'combatDamage']], ['Main 2', ['main2']], ['End', ['end']]];
+// Whose turn it is, by the name the table uses (a bot's character name in a pod, else the player's name)
+function turnName() { const A = G.players[G.active]; return A ? (A.char ? `${who(A)} (${A.name.split(',')[0]})` : A.name) : ''; }
 function phaseStripHTML() {
     if (G.over || G.phase === 'setup') return '';
-    return `<ol class="phase-strip ${G.active === G.view ? 'mine' : 'theirs'}" aria-label="Turn ${G.turn}: ${G.active === G.view ? 'your turn' : `${esc(foe().name)}'s turn`}">
-        <li class="whose">${G.active === G.view ? 'Your turn' : `${esc(foe().name)}'s turn`}</li>${PHASE_STEPS.map(([label, ids], pi) => `<li${ids.includes(G.phase) ? ' class="now" aria-current="step"' : ''}>${typeof ascIco === 'function' ? ascIco(['phase-upkeep', 'phase-main', 'phase-combat', 'phase-main', 'phase-end'][pi], '', 16) : ''}${label}</li>`).join('')}</ol>`;
+    return `<ol class="phase-strip ${G.active === G.view ? 'mine' : 'theirs'}" aria-label="Turn ${G.turn}: ${G.active === G.view ? 'your turn' : `${esc(turnName())}'s turn`}">
+        <li class="whose">${G.active === G.view ? 'Your turn' : `${esc(turnName())}'s turn`}</li>${PHASE_STEPS.map(([label, ids], pi) => `<li${ids.includes(G.phase) ? ' class="now" aria-current="step"' : ''}>${typeof ascIco === 'function' ? ascIco(['phase-upkeep', 'phase-main', 'phase-combat', 'phase-main', 'phase-end'][pi], '', 16) : ''}${label}</li>`).join('')}</ol>`;
 }
 function turnButtonHTML() {
     if (G.over) return '';
     const m = G.mode;
     let label = 'End turn', sub = '', dis = false, title = 'End your turn';
-    if (G.active !== G.view) { label = 'Their turn'; sub = m && m.type === 'block' ? 'Block, then Done' : m && m.type === 'respond' ? 'Respond or let it resolve' : 'Opponent is playing'; dis = true; title = `${foe().name} is taking their turn`; }
+    if (G.active !== G.view) { label = 'Their turn'; sub = m && m.type === 'block' ? 'Block, then Done' : m && m.type === 'respond' ? 'Respond or let it resolve' : 'Opponent is playing'; dis = true; title = `${turnName()} is taking their turn`; }
     else if (m && ['target', 'pay', 'block', 'respond'].includes(m.type)) { dis = true; sub = m.type === 'pay' ? 'Finish paying first' : 'Finish choosing first'; title = 'Finish or cancel what you are choosing first'; }
     else if (G.busy) { dis = true; sub = 'Resolving…'; }
     else if (m && m.type === 'attack') sub = 'Skips combat';
@@ -363,7 +375,7 @@ function midControlsHTML() {
         if (G.phase === 'afterBlocks') return `<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary act-atk" onclick="dealDamage()">💥 Deal damage</button>`;
         if (G.phase === 'main2') return hintHTML || '<span class="hint">Second main phase: cast anything else, then end your turn.</span>';
     }
-    return `<span class="note">${G.active === 1 ? `${esc(foe().name)} is thinking…` : ''}</span>`;
+    return `<span class="note">${G.players[G.active] && G.players[G.active].isAI && G.active !== G.view ? `${esc(turnName())} is thinking…` : ''}</span>`;
 }
 
 function handHTML() {
@@ -435,6 +447,8 @@ function fitSide(side) {
         const perRow = Math.max(1, Math.floor((W + 8) / (w + 8)));
         if (Math.ceil(n / perRow) * (w * 88 / 63 + 12) <= Hf) { fits = true; break; }
     }
+    // A short row with only a few creatures (a pod on a laptop screen): one row of smaller cards reads better than tiles
+    if (!fits) { const wFit = Math.floor((Hf - 12) * 63 / 88); if (wFit >= 52 && n * (wFit + 8) <= W + 8) { w = wFit; fits = true; } }
     if (!fits) {
         w = minW;
         front.classList.add('compact');

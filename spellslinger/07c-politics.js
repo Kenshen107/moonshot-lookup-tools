@@ -77,14 +77,29 @@ function showBubble(P, mood, text) {
     const host = $('talkLayer');
     if (!host) return;
     const m = MOODS[mood] || MOODS.calm;
+    [...host.children].filter(c => c.dataset.seat === String(P.i)).forEach(c => c.remove()); // one bubble per speaker
     const el = document.createElement('div');
-    el.className = 'talk-bubble';
-    el.innerHTML = `<span class="tb-emoji" aria-hidden="true">${m.emoji}</span><span class="tb-body"><strong>${esc(who(P))}</strong> <em>is feeling ${esc(m.name)}</em><br>${esc(text)}</span>`;
+    el.className = 'talk-bubble typing';
+    el.dataset.seat = String(P.i);
+    el.innerHTML = `<span class="tb-emoji" aria-hidden="true">${m.emoji}</span><span class="tb-body"><strong>${esc(who(P))}</strong> <em>is feeling ${esc(m.name)}</em><br><span class="tb-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tb-text">${esc(text)}</span></span>`;
     el.onclick = () => el.remove();
     host.appendChild(el);
     while (host.children.length > 3) host.firstChild.remove();
-    setTimeout(() => { el.classList.add('fade'); setTimeout(() => el.remove(), 600); }, 5200);
     renderGame();
+    placeBubble(el, P);
+    // "typing" for a moment, then the line (longer lines take a little longer); reading time grows with the line too
+    const typeMs = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : Math.min(1100, 350 + text.length * 9);
+    setTimeout(() => { el.classList.remove('typing'); placeBubble(el, P); }, typeMs);
+    setTimeout(() => { el.classList.add('fade'); setTimeout(() => el.remove(), 600); }, typeMs + Math.max(3800, 2200 + text.length * 55));
+}
+// Put a bubble under the speaker's seat (pod strip chip, or the opponent bar in a duel); with no seat on screen it stacks top right as before
+function placeBubble(el, P) {
+    const seat = document.querySelector(`.pod-chip[data-seat="${P.i}"]`) || (G && foe() === P ? document.querySelector('#oppBar .who') : null);
+    if (!seat || !seat.getBoundingClientRect().width) { el.classList.remove('anchored'); el.style.cssText = ''; return; }
+    const r = seat.getBoundingClientRect(), w = Math.min(320, innerWidth - 16);
+    const left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+    el.classList.add('anchored');
+    el.style.cssText = `left:${Math.round(left)}px; top:${Math.round(r.bottom + 10)}px; width:${w}px; --tail:${Math.round(Math.max(18, Math.min(w - 18, r.left + r.width / 2 - left)))}px;`;
 }
 // The mood on a bot's chip changes with the game; show a bubble when it changes to something worth saying
 function moodCheck(P) {

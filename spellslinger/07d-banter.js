@@ -193,6 +193,10 @@ function banterOut(P, reason) {
     const culprit = G.players.filter(X => !X.out && X !== P).sort((a, b) => ((P.grudge && P.grudge[b.i]) || 0) - ((P.grudge && P.grudge[a.i]) || 0))[0];
     const foe = culprit ? (you(culprit) ? 'you' : who(culprit)) : 'everyone';
     say(P, (P.salt || 0) >= SALT_TIERS[2] ? 'outSalty' : 'outGracious', (P.salt || 0) >= SALT_TIERS[2] ? 'salty' : 'cheerful', { foe }, null);
+    // Somebody still at the table says something about it (the next bot in turn order), like a real pod would
+    const left = G.players.filter(X => X.isAI && !X.out && X !== P);
+    const watcher = left.find(X => X.i > P.i) || left[0];
+    if (watcher && left.length + G.players.filter(X => !X.isAI && !X.out).length >= 2) say(watcher, 'react:out', 'nervous', { foe: who(P), n: G.players.filter(X => !X.out && X !== P).length }, null);
 }
 
 // ---- End of the game ----

@@ -192,6 +192,13 @@ function log(msg) {
     }
 }
 const pause = ms => sleep(AUTOPLAY ? 0 : ms);
+// A bot takes a moment before it acts, longer for a bigger decision (2026-11-11, owner: bots should feel human). No random numbers: the length comes
+// from the turn and the card, so seeded games replay. Nothing waits in autoplay or the lab.
+function botThink(P, o) {
+    if (AUTOPLAY || (typeof window !== 'undefined' && window.__LAB) || !G || G.hotseat) return Promise.resolve();
+    const cmc = o && o.card ? (o.card.cmc || 0) : 3, h = ((G.turn * 37 + P.i * 101 + (o ? o.uid * 13 : 7)) >>> 0) % 350;
+    return sleep(420 + Math.min(900, cmc * 110) + h);
+}
 
 // ---- Setup ----
 function makePlayer(i, name, deck, isAI) {
