@@ -1568,7 +1568,24 @@ let podSize = Number(store.get('podSize', 2)) || 2;
 function setPodSize(n) { podSize = n; store.set('podSize', n); renderOpponents(); }
 function podChipsHTML(deck) {
     if (deck.format !== 'commander') return '';
-    return `<div class="chips" style="margin:0 0 10px;" role="group" aria-label="Players at the table"><span class="note" style="align-self:center;">Table:</span>${[[2, '⚔️ 1 vs 1'], [3, '👥 3 players'], [4, '👥 4 players']].map(([n, t]) => `<button type="button" class="chip${podSize === n ? ' on' : ''}" onclick="setPodSize(${n})">${t}</button>`).join('')}</div>${podSize > 2 ? `<p class="note" style="margin-bottom:10px;">Free-for-all: the opponent you pick sits next to you, and ${podSize === 3 ? 'one more seat is' : 'two more seats are'} filled with random playable Commander decks. Last player standing wins; 21 damage from one commander knocks a player out.</p>` : ''}`;
+    return `<div class="chips" style="margin:0 0 10px;" role="group" aria-label="Players at the table"><span class="note" style="align-self:center;">Table:</span>${[[2, '⚔️ 1 vs 1'], [3, '👥 3 players'], [4, '👥 4 players']].map(([n, t]) => `<button type="button" class="chip${podSize === n ? ' on' : ''}" onclick="setPodSize(${n})">${t}</button>`).join('')}</div>${podSize > 2 ? `<p class="note" style="margin-bottom:10px;">Free-for-all: the opponent you pick sits next to you, and ${podSize === 3 ? 'one more seat is' : 'two more seats are'} a random playable Commander deck unless you pick one below. Last player standing wins; 21 damage from one commander knocks a player out.</p>${podSeatPickersHTML(deck)}` : ''}`;
+}
+// Choose the deck for each extra seat of a pod (2026-11-11, owner: "choose every one of my opponents decks, or randomize them so I always have a choice"). Default is a new random deck every game.
+let podSeatPick = store.get('podSeatPick', []) || [];
+function setPodSeat(k, v) { podSeatPick[k] = v; store.set('podSeatPick', podSeatPick); }
+function podSeatOptions(deck) {
+    const groups = savedOpponentGroups(deck);
+    return `<option value="random">🎲 Random deck (new every game)</option>
+        <optgroup label="✅ Fully working decks">${VERIFIED_DECKS.map(v => `<option value="v|${esc(v.key)}">${esc(v.name || v.key)}</option>`).join('')}</optgroup>
+        ${groups.map(g => `<optgroup label="${esc(g.label)}">${g.decks.map(({ d, i }) => `<option value="s|${esc(g.who)}|${i}">${esc(d.name)}</option>`).join('')}</optgroup>`).join('')}`;
+}
+function podSeatPickersHTML(deck) {
+    const opts = podSeatOptions(deck), rows = [];
+    for (let k = 0; k < podSize - 2; k++) {
+        const cur = podSeatPick[k] || 'random';
+        rows.push(`<label class="pod-seat"><span class="note">Seat ${k + 3}</span><select aria-label="Deck for seat ${k + 3}" onchange="setPodSeat(${k}, this.value)">${opts.replace(`value="${cur.replace(/"/g, '&quot;')}"`, `value="${cur.replace(/"/g, '&quot;')}" selected`)}</select></label>`);
+    }
+    return `<div class="pod-seats" style="display:grid; gap:8px; margin-bottom:10px; max-width:460px;">${rows.join('')}<button type="button" class="btn small" onclick="podSeatPick = []; store.set('podSeatPick', []); renderOpponents()">🎲 All random</button></div>`;
 }
 const OPPSEL = { kind: 'all', q: '', tab: '' };
 function oppSel(k, v) { OPPSEL[k] = v; renderOpponents(); }

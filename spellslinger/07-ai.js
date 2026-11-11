@@ -490,7 +490,7 @@ async function aiMain(P) {
     for (let guard = 0; guard < 15 && !G.over; guard++) {
         const play = aiBestPlay(P);
         if (!play) break;
-        await pause(500);
+        await botThink(P, play.o);
         const ok = await castSpell(P, play.o, play.target);
         await actDrain();
         if (!ok) break;
@@ -671,6 +671,7 @@ async function aiTurn(P) {
     if (P.mustAttackTurn === G.turn && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...P.bf.filter(canAttackWith)])];
     if (typeof cmdForcedAttackers === 'function' && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...cmdForcedAttackers(P)])]; // Graaz: Juggernauts must attack
     for (let round = 0; round < 4 && attackers.length && !G.over; round++) {
+        if (G.players.length > 2) await botThink(P, null); // a beat before it turns creatures sideways
         G.phase = 'declareAttackers';
         aiAssignTargets(P, attackers);
         declareAttackers(P, attackers);

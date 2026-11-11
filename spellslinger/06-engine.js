@@ -192,6 +192,13 @@ function log(msg) {
     }
 }
 const pause = ms => sleep(AUTOPLAY ? 0 : ms);
+// A bot takes a moment before it acts, longer for a bigger decision (2026-11-11, owner: bots should feel human). No random numbers: the length comes
+// from the turn and the card, so seeded games replay. Nothing waits in autoplay or the lab.
+function botThink(P, o) {
+    if (AUTOPLAY || (typeof window !== 'undefined' && window.__LAB) || !G || G.hotseat) return Promise.resolve();
+    const cmc = o && o.card ? (o.card.cmc || 0) : 3, h = ((G.turn * 37 + P.i * 101 + (o ? o.uid * 13 : 7)) >>> 0) % 350;
+    return sleep(420 + Math.min(900, cmc * 110) + h);
+}
 
 // ---- Setup ----
 function makePlayer(i, name, deck, isAI) {
@@ -265,7 +272,17 @@ async function startMatch(again) {
         // A pod (3 or 4 players, Commander only): the other seats are random playable Commander decks
         const more = [];
         const seatStyles = shuffled(PLAYSTYLE_KEYS.filter(k => k !== oppDeck.aiStyle));
-        for (let k = 2; k < (deck.format === 'commander' ? podSize : 2); k++) { more.push(await buildRandomCommanderDeck(null, seatStyles[k - 2])); }
+        for (let k = 2; k < (deck.format === 'commander' ? podSize : 2); k++) {
+            const pick = (typeof podSeatPick !== 'undefined' && podSeatPick[k - 2]) || 'random', [kind, a, b] = pick.split('|');
+            let d = null;
+            try {
+                if (kind === 'v') { const v = VERIFIED_DECKS.find(x => x.key === a); if (v) { d = await listToOppDeck(v.text, 'commander'); d.source = `fully working deck (checked ${v.checked})`; if (v.style && PLAYSTYLES[v.style]) d.aiStyle = v.style; } }
+                else if (kind === 's') d = await savedToOppDeck(a, Number(b));
+            } catch (e) { console.warn('Seat deck failed, using a random one', e); d = null; }
+            if (!d) d = await buildRandomCommanderDeck(null, seatStyles[k - 2]);
+            if (!PLAYSTYLES[d.aiStyle]) d.aiStyle = inferStyle(d.entries);
+            more.push(d);
+        }
         // Every opponent has a way of playing: the style of a built-for-it random deck, or the one a finished deck looks most like
         if (!PLAYSTYLES[oppDeck.aiStyle]) oppDeck.aiStyle = inferStyle(oppDeck.entries);
         closeModal();
