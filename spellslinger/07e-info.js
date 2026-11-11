@@ -106,7 +106,7 @@ const QUESTIONS = [
     ['attack', 'Will you attack me next turn?'],
     ['deal', 'Would you make peace with me?']
 ];
-function askButtonHTML() { return `<button type="button" class="pod-chip" onclick="askDialog()" title="Ask a bot a question. They may lie, and the log tells you later whether they did."><b>🗣️ Ask</b></button>`; }
+function askButtonHTML() { return `<button type="button" class="pod-chip" onclick="askDialog()" title="Ask a bot a question. They may lie, and the log tells you later whether they did."><b>🗣️<span class="lbl"> Ask</span></b></button>`; }
 function askDialog() {
     if (!G || G.players.length < 3 || G.over) return;
     const v = me(), used = G.askUsed && G.askUsed.turn === G.turn ? G.askUsed.n : 0;

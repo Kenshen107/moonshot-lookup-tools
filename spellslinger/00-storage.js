@@ -126,7 +126,7 @@ function loadGame(files) {
         (function next() {
             if (i >= files.length) return;
             const s = document.createElement('script');
-            s.src = 'spellslinger/' + files[i++];
+            s.src = 'spellslinger/' + files[i++] + (typeof SPV === 'string' ? SPV : '');
             s.onload = next;
             s.onerror = () => { document.body.insertAdjacentHTML('afterbegin', `<p style="color:#f66; padding:16px;">Could not load ${s.src}. Reload the page.</p>`); };
             document.body.appendChild(s);
