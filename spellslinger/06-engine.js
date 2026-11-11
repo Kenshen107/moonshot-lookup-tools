@@ -1597,7 +1597,12 @@ async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
     // Identical triggers from permanents with the same name (Scute Swarm, two Starship Enterprises) share one stack line, so a crowd of them doesn't bury the table (2026-10-31). Each source still resolves in turn.
     if (!target && !multi && source && source.card && !G.hotseat && (!AUTOPLAY || window.__GROUP_TRIGGERS)) {
         const key = trigKey(effects);
-        const same = G.stack.find(it => it.kind === 'trigger' && it.P === P && !it.target && (it.ctxObj || null) === (ctxObj || null) && it.o && it.o.card.name === source.card.name && (it.ctxCount || 0) === (ctxCount || 0) && key !== null && it.key === key);
+        // The same triggering object (the same land entering), or effects that never read what triggered them (Teferi's Tutelage: every drawn card mills two,
+        // whichever card it was; 2026-11-11, owner's phone screenshot of six identical Tutelage triggers) merge into one line.
+        // (plain effects only: a custom `cmd` effect or anything that reads the triggering event keeps its own line)
+        const blind = key !== null && !/ctx|nFrom|nCount|"t":"cmd"/i.test(key);
+        const same = G.stack.find(it => it.kind === 'trigger' && it.P === P && !it.target && it.o && it.o.card.name === source.card.name && key !== null && it.key === key
+            && (((it.ctxObj || null) === (ctxObj || null) && (it.ctxCount || 0) === (ctxCount || 0)) || blind));
         if (same) {
             (same.also = same.also || []).push(source);
             same.name = `${source.card.name}'s ability ×${1 + same.also.length}`;
