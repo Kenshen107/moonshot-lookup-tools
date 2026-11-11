@@ -15,7 +15,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             const ok = (label, cond, detail) => out.push([label, !!cond, detail]);
             const raw = await (await fetch('/__cards.json')).json();
             const C = {};
-            raw.forEach(c => { if (['Tyrox, Saurid Tyrant', 'Mountain', 'Scute Swarm', 'Starship Enterprise', 'Forest'].includes(c.name) && !C[c.name]) { const sc = slimCard(c); CARDS.set(sc.id, sc); C[c.name] = sc; } });
+            raw.forEach(c => { if (['Tyrox, Saurid Tyrant', 'Mountain', 'Scute Swarm', 'Starship Enterprise', 'Forest', "Teferi's Tutelage"].includes(c.name) && !C[c.name]) { const sc = slimCard(c); CARDS.set(sc.id, sc); C[c.name] = sc; } });
             const mk = () => ({ name: 'T', format: 'commander', commander: C['Tyrox, Saurid Tyrant'], entries: [{ card: C['Mountain'], n: 99 }], source: 'test' });
             await newGame(mk(), mk());
             const [A, B] = G.players;
@@ -51,6 +51,15 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             await settle(); await settle();
             ok('twelve Scute Swarm triggers are one stack line', lines <= 1, lines);
             ok('they all resolve (twelve new tokens) with one summary line', A.bf.filter(o => o.token).length === 12 && G.log.filter(l => /triggers resolved/.test(l)).length === 1, [A.bf.filter(o => o.token).length, G.log.filter(l => /Scute Swarm/.test(l)).length]);
+            // Teferi's Tutelage: six cards drawn make six triggers (one per drawn card) that merge into one line and still mill twelve (2026-11-11)
+            T.clear(); G.stack.length = 0; G.log.length = 0; A.library.length = 0; A.gy.length = 0; B.library.length = 0; B.gy.length = 0;
+            for (let i = 0; i < 40; i++) { A.library.push(makeObj(C['Mountain'], A.i)); B.library.push(makeObj(C['Mountain'], B.i)); }
+            T.put(A, C["Teferi's Tutelage"]); await settle(); G.stack.length = 0; const lib0 = B.library.length;
+            drawCards(A, 6); await flushTriggers();
+            const tl = G.stack.filter(it => it.kind === 'trigger').length;
+            ok("six cards drawn with Teferi's Tutelage: one stack line, not six", tl <= 1, [tl, G.stack.map(it => it.name)]);
+            await settle(); await settle();
+            ok('...and the six triggers still mill 12 cards from the opponent', B.library.length === lib0 - 12, [lib0, B.library.length]);
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;
     });
