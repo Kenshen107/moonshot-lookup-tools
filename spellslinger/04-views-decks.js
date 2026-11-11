@@ -1572,7 +1572,7 @@ function podChipsHTML(deck) {
 }
 // Choose the deck for each extra seat of a pod (2026-11-11, owner: "choose every one of my opponents decks, or randomize them so I always have a choice"). Default is a new random deck every game.
 let podSeatPick = store.get('podSeatPick', []) || [];
-function setPodSeat(k, v) { podSeatPick[k] = v; store.set('podSeatPick', podSeatPick); }
+function setPodSeat(k, v) { podSeatPick[k] = v; store.set('podSeatPick', podSeatPick); renderVs(); }
 function podSeatOptions(deck) {
     const groups = savedOpponentGroups(deck);
     return `<option value="random">🎲 Random deck (new every game)</option>
@@ -1598,12 +1598,12 @@ function setSeat2(v) {
 function podSeatPickersHTML(deck) {
     const opts = podSeatOptions(deck), rows = [];
     const cur2 = seat2Value(), custom = cur2 === 'custom' ? `<option value="custom" selected>✔ Chosen below: ${esc(oppName())}</option>` : '';
-    rows.push(`<label class="pod-seat"><span class="note">Seat 2 (next to you)</span><select aria-label="Deck for seat 2" onchange="setSeat2(this.value)">${custom}${cur2 === 'custom' ? opts : opts.replace(`value="${cur2.replace(/"/g, '&quot;')}"`, `value="${cur2.replace(/"/g, '&quot;')}" selected`)}</select></label>`);
+    rows.push(`<label class="pod-seat"><span class="note"><b class="seat-no">2</b>Seat 2 (next to you)</span><select aria-label="Deck for seat 2" onchange="setSeat2(this.value)">${custom}${cur2 === 'custom' ? opts : opts.replace(`value="${cur2.replace(/"/g, '&quot;')}"`, `value="${cur2.replace(/"/g, '&quot;')}" selected`)}</select></label>`);
     for (let k = 0; k < podSize - 2; k++) {
         const cur = podSeatPick[k] || 'random';
-        rows.push(`<label class="pod-seat"><span class="note">Seat ${k + 3}</span><select aria-label="Deck for seat ${k + 3}" onchange="setPodSeat(${k}, this.value)">${opts.replace(`value="${cur.replace(/"/g, '&quot;')}"`, `value="${cur.replace(/"/g, '&quot;')}" selected`)}</select></label>`);
+        rows.push(`<label class="pod-seat"><span class="note"><b class="seat-no">${k + 3}</b>Seat ${k + 3}</span><select aria-label="Deck for seat ${k + 3}" onchange="setPodSeat(${k}, this.value)">${opts.replace(`value="${cur.replace(/"/g, '&quot;')}"`, `value="${cur.replace(/"/g, '&quot;')}" selected`)}</select></label>`);
     }
-    return `<div class="pod-seats" style="display:grid; gap:8px; margin-bottom:10px; max-width:460px;">${rows.join('')}<button type="button" class="btn small" onclick="podSeatPick = []; store.set('podSeatPick', []); renderOpponents()">🎲 All random</button></div><p class="note" style="margin:-2px 0 8px;">More ways to choose seat 2 (type a commander, paste a list, saved decks):</p>`;
+    return `<div class="pod-seats">${rows.join('')}</div><div class="row" style="margin:0 0 10px;"><button type="button" class="btn small" onclick="podSeatPick = []; store.set('podSeatPick', []); chosenOpponent = { type: 'random', fmt: 'commander', name: 'Random playable deck' }; renderOpponents()">🎲 All random</button></div><p class="note" style="margin:-2px 0 8px;">More ways to choose seat 2 (type a commander, paste a list, saved decks):</p>`;
 }
 const OPPSEL = { kind: 'all', q: '', tab: '' };
 function oppSel(k, v) { OPPSEL[k] = v; renderOpponents(); }
@@ -1671,7 +1671,7 @@ function renderPlayView() {
         const chosen = Number(sel.value);
         box.innerHTML = `<div class="chips" style="margin:0 0 8px;" role="group" aria-label="Deck type">${types.map(k => `<button type="button" class="chip${PLAYSEL.type === k ? ' on' : ''}" aria-pressed="${PLAYSEL.type === k}" onclick="playPickType('${k}')">${DECK_TYPE_ICONS[k] || ''} ${esc(FORMATS[k].name)} (${counts[k]})</button>`).join('')}</div>
             ${counts[PLAYSEL.type] > 6 ? `<input type="search" id="playDeckQ" value="${esc(PLAYSEL.q)}" placeholder="Find one of your ${esc(FORMATS[PLAYSEL.type].name)} decks" aria-label="Find a deck" oninput="playDeckSearch(this.value)" style="width:100%; margin-bottom:8px;">` : ''}
-            <div class="opp-grid deck-pick">${mine.map(([d, i]) => { const pr = deckProblems(d); return `<button type="button" class="opp" aria-pressed="${i === chosen}" onclick="playPickDeck(${i})"><strong>${esc(d.name)}</strong><small>${deckCount(d)} cards${pr.length ? ` · ⚠ ${pr.length} to fix` : ' · ✓ ready'}</small></button>`; }).join('') || '<p class="note">No deck matches.</p>'}</div>${randomBuild}`;
+            <div class="opp-grid deck-pick">${mine.map(([d, i]) => { const pr = deckProblems(d); const ci = deckTileColors(d); return `<button type="button" class="opp dk${pr.length ? ' fix' : ''}" style="--dk:${ci.length ? (ci.length === 1 ? `var(--mana-${ci[0]})` : `linear-gradient(to bottom, ${ci.map(c => `var(--mana-${c})`).join(', ')})`) : 'var(--mana-C)'}" aria-pressed="${i === chosen}" onclick="playPickDeck(${i})"><strong>${esc(d.name)}</strong><span class="dk-meta"><span class="dk-pips" aria-label="Colors: ${ci.join('') || 'colorless'}">${(ci.length ? ci : ['C']).map(c => `<i style="background:var(--mana-${c})"></i>`).join('')}</span><small>${deckCount(d)} cards${pr.length ? ` · ⚠ ${pr.length} to fix` : ' · ✓ ready'}</small></span></button>`; }).join('') || '<p class="note">No deck matches.</p>'}</div>${randomBuild}`;
     }
     $('oppHead').innerHTML = `<span class="step-n">2</span> Your opponent${cur ? ` <small>${esc(FORMATS[PLAYSEL.type].name)} decks, so it's a fair match</small>` : ''}`;
     renderOpponents();
@@ -1740,10 +1740,32 @@ function oppChosenLine() {
     return `<div class="note" style="margin-bottom:8px;">Opponent: <strong>${esc(oppName())}</strong></div>`;
 }
 // The "you vs them" strip above the Start button (2026-11-10, game-style Play tab)
+// A deck's colors for its tile on the Play tab: the commanders' identity, else the colors of the cards the game already knows
+function deckTileColors(d) {
+    try {
+        const cmds = [d.commander, d.commander2].map(id => id && CARDS.get(id)).filter(Boolean);
+        const from = cmds.length ? cmds : Object.keys(d.cards || {}).map(id => CARDS.get(id)).filter(Boolean);
+        const set = new Set(from.flatMap(c => c.ci || []));
+        return ['W', 'U', 'B', 'R', 'G'].filter(c => set.has(c));
+    } catch (e) { return []; }
+}
+// What a seat's pick is called on the "who is playing" strip
+function seatPickLabel(v) {
+    const [kind, a, b] = String(v || 'random').split('|');
+    if (kind === 'v') { const x = VERIFIED_DECKS.find(y => y.key === a); return x ? x.name : 'Deck'; }
+    if (kind === 's') { const prof = a === accounts.current ? profile : store.get(`profile:${a}`, null), d = prof && prof.decks[Number(b)]; return d ? d.name : 'Saved deck'; }
+    return '🎲 Random deck';
+}
 function renderVs() {
     const el = $('vsStrip'); if (!el) return;
     const deck = profile.decks[$('playDeck').value], opp = chosenOpponent ? oppName() : '';
-    setHTML(el, `<div class="vs-side"><small>You</small><strong>${deck ? esc(deck.name) : 'No deck yet'}</strong></div><div class="vs-x">VS</div><div class="vs-side${opp ? '' : ' empty'}"><small>Opponent</small><strong>${opp ? esc(opp) : 'Pick one above'}</strong></div>`);
+    const pod = deck && deck.format === 'commander' && podSize > 2;
+    const side = (label, name, empty, cls) => `<div class="vs-side${empty ? ' empty' : ''}${cls || ''}"><small>${label}</small><strong>${name}</strong></div>`;
+    const seat2 = opp ? (chosenOpponent.type === 'random' ? '🎲 Random deck' : esc(opp)) : 'Pick one above';
+    el.classList.toggle('pod', !!pod);
+    setHTML(el, pod
+        ? `${side('You', esc(deck.name), false, ' me')}<div class="vs-x">VS</div><div class="vs-foes">${side('Seat 2', seat2, !opp)}${Array.from({ length: podSize - 2 }, (x, k) => side(`Seat ${k + 3}`, esc(seatPickLabel(podSeatPick[k])))).join('')}</div>`
+        : `${side('You', deck ? esc(deck.name) : 'No deck yet', false, ' me')}<div class="vs-x">VS</div>${side('Opponent', opp ? esc(opp) : 'Pick one above', !opp)}`);
     $('startBtn').classList.toggle('ready', !!(deck && chosenOpponent));
 }
 async function renderOpponents() {
