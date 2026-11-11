@@ -78,6 +78,7 @@ function showBubble(P, mood, text) {
     if (!host) return;
     const m = MOODS[mood] || MOODS.calm;
     [...host.children].filter(c => c.dataset.seat === String(P.i)).forEach(c => c.remove()); // one bubble per speaker
+    if (innerWidth <= 600) [...host.children].forEach(c => c.remove()); // phones: one bubble at a time, the newest
     const el = document.createElement('div');
     el.className = 'talk-bubble typing';
     el.dataset.seat = String(P.i);
@@ -96,6 +97,12 @@ function showBubble(P, mood, text) {
 function placeBubble(el, P) {
     const seat = document.querySelector(`.pod-chip[data-seat="${P.i}"]`) || (G && foe() === P ? document.querySelector('#oppBar .who') : null);
     if (!seat || !seat.getBoundingClientRect().width) { el.classList.remove('anchored'); el.style.cssText = ''; return; }
+    if (innerWidth <= 600) { // phones: a full-width bubble just under the seat strip, tail still pointing at the speaker
+        const bar = $('oppBar') || document.querySelector('.pod-strip'), sr = seat.getBoundingClientRect(), top = (bar ? bar.getBoundingClientRect().bottom : sr.bottom) + 4; // under the whole opponent bar, over the top of the board
+        el.classList.add('anchored');
+        el.style.cssText = `left:8px; top:${Math.round(top)}px; width:${innerWidth - 16}px; --tail:${Math.round(Math.max(18, Math.min(innerWidth - 34, sr.left + sr.width / 2 - 8)))}px;`;
+        return;
+    }
     const r = seat.getBoundingClientRect(), w = Math.min(320, innerWidth - 16);
     const left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2));
     el.classList.add('anchored');

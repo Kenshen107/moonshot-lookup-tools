@@ -1344,3 +1344,38 @@ details.get-deck > summary { color: var(--brand-light); }
             .pod-strip > .pod-chip:not(.seat) { flex: 0 0 auto; }
         }
         @media (prefers-reduced-motion: reduce) { .seat-think i, .tb-dots i { animation: none; opacity: .7; } .talk-bubble.anchored { animation: none; } .pod-chip.seat, .seat-bar i { transition: none; } }
+
+        /* ---- Phones, 4-player pods (2026-11-11, owner: the board got small and a chain of notifications made the screen hard to read) ---- */
+        @media (max-width: 600px) {
+            /* slim seat cards: one line of name and life, one line of numbers; Deals and Ask shrink to icons */
+            .pod-chip.seat { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "av main life" "stats stats stats"; column-gap: 4px; row-gap: 0; padding: 3px 6px 6px; }
+            .seat-av { width: 20px; height: 20px; font-size: 0.8rem; }
+            .pod-chip.seat .seat-main b { font-size: 0.74rem; }
+            .seat-main small { display: none; }
+            .seat-life { font-size: 0.85rem; }
+            .seat-stats { font-size: 0.64rem; gap: 5px; }
+            .pod-chip.seat .atk { position: absolute; right: 4px; bottom: 6px; grid-column: auto; font-size: 0.52rem; letter-spacing: 0; }
+            .pod-chip.seat:has(.atk) .seat-stats > span:nth-child(n+3) { display: none; }
+            .pod-strip > .pod-chip:not(.seat) .lbl { display: none; }
+            .pod-strip > .pod-chip:not(.seat) { padding: 2px 6px; }
+            .pod-strip > .pod-chip.meters { display: none; }
+            /* the focused opponent's bar: one row (their name is already on the seat card) */
+            #oppBar.pbar:has(.pod-strip) .who { display: none; }
+            #oppBar.pbar:has(.pod-strip) { flex-wrap: wrap; row-gap: 2px; }
+            #oppBar.pbar:has(.pod-strip) .pod-strip { flex: 1 1 100%; }
+            #oppBar.pbar:has(.pod-strip) .btn.small { padding: 2px 8px; }
+            #oppBar.pbar:has(.pod-strip) .opp-hand { display: none; }
+            /* the play-by-play: a slim strip at the top of the board instead of a big card in the middle */
+            .act-banner { top: 112px; left: 8px; right: 8px; transform: none; width: auto; max-width: none; flex-direction: row; text-align: left; align-items: center; gap: 8px; padding: 6px 10px; }
+            .act-banner.show { transform: none; }
+            .act-cards.one img, .act-cards.one .noimg, .act-cards img, .act-cards .noimg { width: 38px; }
+            .act-cards { gap: 3px; }
+            .act-text { gap: 1px; }
+            .act-text strong { font-size: 0.85rem; line-height: 1.2; }
+            .act-text div { font-size: 0.74rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .act-text div:nth-of-type(n+3) { display: none; }
+            .act-text small { display: none; }
+            .talk-bubble { padding: 7px 10px; font-size: 0.82em; }
+            .talk-bubble .tb-emoji { font-size: 1.3em; }
+        }
+        @media (max-width: 600px) { .pod-chip.seat { flex: 1 1 0; } .pod-strip { flex-wrap: nowrap; } }

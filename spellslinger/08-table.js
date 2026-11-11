@@ -133,7 +133,7 @@ function podStripHTML() {
             <span class="seat-bar" aria-hidden="true"><i style="width:${X.out ? 0 : pct}%"></i></span></button>`;
     }).join('');
     const mine = dealsOf(v.i).length;
-    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<button type="button" class="pod-chip" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝 Deals</b>${mine ? `<span>${mine} active</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}<span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div>`;
+    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<button type="button" class="pod-chip" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝<span class="lbl"> Deals</span></b>${mine ? `<span>${mine} active</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}<span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div>`;
 }
 function podFocus(i) { G.focusPick = i; renderGame(); }
 
@@ -258,6 +258,8 @@ function actNext() {
         actWaiters.splice(0).forEach(r => r());
         return;
     }
+    // A long chain plays faster the more is waiting (2026-11-11): a pile of steps shouldn't hold the table for half a minute
+    if (actQ.length >= 4) actCur.ms = Math.min(actCur.ms, 600); else if (actQ.length >= 2) actCur.ms = Math.min(actCur.ms, 1000);
     actCur.end = Date.now() + actCur.ms;
     renderAct();
     if (el) { el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
