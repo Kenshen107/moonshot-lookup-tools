@@ -1,76 +1,185 @@
 #!/usr/bin/env python3
-"""Run the Spellslinger Duels tests. Run this before every commit; nothing that passed may start failing.
+"""Run the Spellslinger Duels tests. Suites run in parallel; each result prints as it finishes.
 
-    python3 tests/run_all.py             the usual run (about 10 minutes)
-    python3 tests/run_all.py --quick     a smoke test (about 3 minutes)
-    python3 tests/run_all.py --full      everything, including the Welcome Decks, Starter Kits and ~100 games (about 40 minutes)
-    python3 tests/run_all.py engine cards     only the named suites (engine, storage, redraw, layout, modes, precons, cards, coverage, rules, games)
+    python3 tests/run_all.py                the fast run (about 4 minutes): gameplay, screens, Ascent and the 300-game lab
+    python3 tests/run_all.py --changed      only the suites that match the files you changed (plus the fast set if the core changed)
+    python3 tests/run_all.py --cards        fast + card-reader work: coverage, rules snapshot, every deck and commander-round suite
+    python3 tests/run_all.py --games        fast + whole AI games (about 40) and the card-by-card test of the verified decks
+    python3 tests/run_all.py --full         everything, including the Welcome Decks, Starter Kits and ~100 games (about 40 minutes)
+    python3 tests/run_all.py engine pod     only the named suites (any part of a suite's name)
+    --jobs N      how many suites run at once (default 3; the machine's browser is the limit)
+    --list        print the groups and exit
 
+Run `--cards` after changing the card reader or any rules pack, and `--games` after changing the AI or the engine in a big way.
 Needs: node, Playwright for Node, the Chromium at /opt/pw-browsers (see tests/README.md).
 GAME_ROOT=/path/to/another/checkout runs the same tests against an older copy of the game.
+A suite that fails is run once more on its own, because a few fail only when several browsers share the machine; a retry that passes is
+reported as "flaky" so it isn't forgotten.
 """
+import concurrent.futures
 import os
+import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
 SUITES = os.path.join(HERE, 'suites')
 
+# Groups of suites (file names in tests/suites). Every suite is in exactly one group.
+PLAY = ['engine', 'blocking', 'priority', 'aiblock', 'aireserve', 'pod', 'multiattack', 'tablesense', 'sequencing', 'attacklist', 'commander',
+        'politics2', 'politics3', 'characters', 'votes', 'banter', 'tension', 'selftarget', 'stackgroup', 'lands', 'manafixes', 'replicate',
+        'explore', 'partners', 'records']
+SCREENS = ['storage', 'redraw', 'layout', 'modes', 'precons', 'playpicker', 'about', 'home', 'podseats', 'looks', 'packlooks', 'owner1023']
+ASCENT = ['ascent', 'ascentdecks', 'ascentupg', 'ascentpower', 'ascentui', 'ascentart', 'ascentart2']
+LIVE = ['randomdeck', 'themes']  # need live Scryfall: they fail when it is slow or blocked, so they run with --cards and --full
+DECKS = ['cmdr', 'soc', 'gishath', 'jenova', 'bertha', 'othelm', 'hugh', 'hughfood', 'grizzlegom', 'spiderman', 'fivedecks', 'samutdf', 'uldaros',
+         'trek', 'trekdecks', 'odric', 'cmdr300', 'cmdr300b', 'cmdr300c', 'cmdr300d', 'cmdr300e', 'cmdr300f', 'cmdr300g', 'cmdr300h', 'cmdr300i', 'cmdr300j']
+NEEDS_CARDS = set(PLAY) - {'engine', 'blocking', 'priority', 'aiblock', 'aireserve'} | set(DECKS)  # read tests/data/cards_all.json or live cards
 
-def plan(mode, only):
+
+
+def suite(n, group):
+    lim = 900 if n.startswith('cmdr300') or n in ('fivedecks', 'themes') else 600
+    return {'name': n, 'cmd': [n + '.js'], 'limit': lim, 'group': group}
+
+
+def plan(mode, only, changed):
     have_cards = os.path.exists(os.path.join(HERE, 'data', 'cards_all.json'))
-    steps = [('engine', ['engine.js'], 300), ('storage', ['storage.js'], 300), ('redraw', ['redraw.js'], 300), ('layout', ['layout.js'], 300), ('modes', ['modes.js'], 300), ('precons', ['precons.js'], 600), ('playpicker', ['playpicker.js'], 300), ('aiblock', ['aiblock.js'], 300), ('randomdeck', ['randomdeck.js'], 600), ('about', ['about.js'], 300), ('home', ['home.js'], 300), ('podseats', ['podseats.js'], 300), ('looks', ['looks.js'], 300), ('owner1023', ['owner1023.js'], 300), ('ascent', ['ascent.js'], 300), ('ascentdecks', ['ascentdecks.js'], 300), ('ascentupg', ['ascentupg.js'], 300), ('ascentpower', ['ascentpower.js'], 300), ('ascentui', ['ascentui.js'], 300), ('ascentart', ['ascentart.js'], 300), ('packlooks', ['packlooks.js'], 300), ('uldaros', ['uldaros.js'], 300), ('priority', ['priority.js'], 300), ('blocking', ['blocking.js'], 300), ('banter', ['banter.js'], 300), ('politics2', ['politics2.js'], 300), ('characters', ['characters.js'], 300), ('votes', ['votes.js'], 300), ('politics3', ['politics3.js'], 300), ('themes', ['themes.js'], 900), ('pod', ['pod.js'], 300), ('tablesense', ['tablesense.js'], 300), ('sequencing', ['sequencing.js'], 300), ('attacklist', ['attacklist.js'], 300), ('commander', ['commander.js'], 300), ('lab', ['lab.js'], 1200)]
-    if have_cards:
-        steps[-1:-1] = [('cmdr (Commander precons FDC/FRC)', ['cmdr.js'], 600), ('soc (Strixhaven Commander precons)', ['soc.js'], 600), ('gishath (Gishath deck)', ['gishath.js'], 600), ('jenova (Jenova deck)', ['jenova.js'], 600), ('bertha (Big Bertha deck)', ['bertha.js'], 600), ('othelm (Othelm and Wernog deck)', ['othelm.js'], 600), ('partners (second commanders)', ['partners.js'], 300), ('manafixes (Howling Mine, Yavimaya, Signets)', ['manafixes.js'], 300), ('lands (enters-tapped conditions, pod first draw)', ['lands.js'], 300), ('explore (explore wordings and triggers)', ['explore.js'], 300), ('hugh (Hugh artifacts deck)', ['hugh.js'], 600), ('hughfood (Hugh food and rocks deck)', ['hughfood.js'], 600), ('grizzlegom (Grizzlegom domain lands deck)', ['grizzlegom.js'], 600), ('spiderman (Astonishing Spider-Man discard deck)', ['spiderman.js'], 600), ('replicate (replicate as a real additional cost)', ['replicate.js'], 600), ('fivedecks (five owner decks)', ['fivedecks.js'], 900), ('stackgroup (grouped triggers, Spacecraft)', ['stackgroup.js'], 300), ('samutdf (Samut, the Driving Force deck)', ['samutdf.js'], 600), ('trek (Star Trek cards)', ['trek.js'], 600), ('cmdr300 (300 more commanders)', ['cmdr300.js'], 900), ('cmdr300b (round 2 b)', ['cmdr300b.js'], 900), ('cmdr300c (round 2 c)', ['cmdr300c.js'], 900), ('cmdr300d (round 2 d)', ['cmdr300d.js'], 900), ('cmdr300e (round 3 e)', ['cmdr300e.js'], 900), ('cmdr300f (round 3 f)', ['cmdr300f.js'], 900), ('cmdr300g (round 3 g)', ['cmdr300g.js'], 900), ('cmdr300h (round 4 h)', ['cmdr300h.js'], 900), ('cmdr300i (round 4 i)', ['cmdr300i.js'], 900), ('cmdr300j (round 4 j)', ['cmdr300j.js'], 900), ('odric (Odric deck)', ['odric.js'], 600), ('multiattack (attack several opponents, board overview)', ['multiattack.js'], 300), ('records (pod game records)', ['records.js'], 300), ('selftarget (target player incl. yourself)', ['selftarget.js'], 300), ('tension (deal tension)', ['tension.js'], 300), ('ascentart2 (extra Ascent art)', ['ascentart2.js'], 300)]
-    if mode == 'quick':
-        steps.append(('cards (verified decks)', ['cards.js', '--quick'], 600))
-        steps.append(('games (quick)', ['games.js', '--quick'], 900))
-    elif mode == 'full':
-        steps.append(('cards (all groups)', ['cards.js', 'all'], 3600))
-        if have_cards:
-            steps.append(('coverage', ['coverage.js'], 900))
-            steps.append(('rules snapshot', ['rules-snapshot.js'], 900))
-        steps.append(('games (full)', ['games.js', '--full'], 3600))
-    else:
-        steps.append(('cards (verified, Mirrodin, Magic 2010)', ['cards.js'], 900))
-        if have_cards:
-            steps.append(('coverage', ['coverage.js'], 900))
-            steps.append(('rules snapshot', ['rules-snapshot.js'], 900))
-        steps.append(('games', ['games.js'], 1800))
+    groups = [(PLAY, 'play'), (SCREENS, 'screens'), (ASCENT, 'ascent')]
+    steps = []
+    # the lab goes first: it is the longest of the fast set
+    steps.append({'name': 'lab (300 seeded games)', 'cmd': ['lab.js'], 'limit': 1200, 'group': 'lab'})
+    for names, g in groups:
+        steps += [suite(n, g) for n in names]
+    if mode in ('cards', 'full'):
+        steps += [suite(n, 'live') for n in LIVE]
+        steps += [suite(n, 'decks') for n in DECKS]
+        steps.append({'name': 'coverage', 'cmd': ['coverage.js'], 'limit': 900, 'group': 'heavy'})
+        steps.append({'name': 'rules snapshot', 'cmd': ['rules-snapshot.js'], 'limit': 900, 'group': 'heavy'})
+    if mode == 'full':
+        steps.append({'name': 'cards (all groups)', 'cmd': ['cards.js', 'all'], 'limit': 3600, 'group': 'heavy'})
+        steps.append({'name': 'games (full)', 'cmd': ['games.js', '--full'], 'limit': 3600, 'group': 'heavy'})
+    elif mode == 'games':
+        steps.append({'name': 'cards (verified decks)', 'cmd': ['cards.js', '--quick'], 'limit': 900, 'group': 'heavy'})
+        steps.append({'name': 'games', 'cmd': ['games.js'], 'limit': 1800, 'group': 'heavy'})
+    elif mode == 'cards':
+        steps.append({'name': 'cards (Mirrodin, Magic 2010)', 'cmd': ['cards.js', 'mirrodin', 'm10'], 'limit': 600, 'group': 'heavy'})
+    if mode == 'changed':
+        steps = pick_changed(steps, changed)
+    if not have_cards:
+        steps = [s for s in steps if s['cmd'][0][:-3] not in NEEDS_CARDS and s['cmd'][0] not in ('coverage.js', 'rules-snapshot.js')] if mode != 'quick' else steps
     if only:
-        steps = [s for s in steps if any(o in s[0] for o in only)]
+        every = steps + [suite(n, 'x') for n in PLAY + SCREENS + ASCENT + LIVE + DECKS if not any(s['cmd'][0] == n + '.js' for s in steps)]
+        steps = [s for s in every if any(o in s['name'] or o in s['cmd'][0] for o in only)]
     return steps, have_cards
+
+
+def changed_files():
+    out = []
+    for cmd in (['git', 'diff', '--name-only', 'origin/main...HEAD'], ['git', 'diff', '--name-only', 'HEAD'], ['git', 'ls-files', '--others', '--exclude-standard']):
+        try:
+            out += subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=30).stdout.split()
+        except Exception:
+            pass
+    return sorted(set(out))
+
+
+def pick_changed(steps, changed):
+    """Suites named after a changed file (spellslinger/rules/samutdf.js, 15n-samutdf.js, tests/suites/samutdf.js -> samutdf), plus the
+    fast set when anything else in the game changed."""
+    names = {s['cmd'][0][:-3]: s for s in steps}
+    every = {n: suite(n, 'x') for n in PLAY + SCREENS + ASCENT + LIVE + DECKS}
+    chosen, rest = {}, False
+    for f in changed:
+        base = os.path.basename(f)
+        stem = re.sub(r'\.\w+$', '', base)
+        stem = re.sub(r'^\d+[a-z]?-', '', stem)
+        hit = None
+        for cand in (stem, stem.replace('-', ''), re.sub(r'^cmdr300', 'cmdr300', stem)):
+            if cand in every:
+                hit = cand
+                break
+        if f.startswith('tests/suites/') and stem in every:
+            hit = stem
+        if hit:
+            chosen[hit] = every[hit]
+        elif f.startswith(('spellslinger/', 'Spellslinger_Duels.html')) or f.startswith('tests/lib/'):
+            rest = True
+    if rest or not chosen:
+        for n, s in names.items():
+            chosen.setdefault(n, s)
+    return list(chosen.values())
+
+
+def run_step(step, lock, profile):
+    env = dict(os.environ, TEST_PROFILE=profile)
+    t0 = time.time()
+    try:
+        p = subprocess.run(['node', os.path.join(SUITES, step['cmd'][0])] + step['cmd'][1:], timeout=step['limit'], capture_output=True, text=True, env=env)
+        ok, out = p.returncode == 0, p.stdout + p.stderr
+    except subprocess.TimeoutExpired as e:
+        ok, out = False, f"TIMED OUT after {step['limit']}s\n" + ((e.stdout or b'').decode('utf8', 'ignore') if isinstance(e.stdout, bytes) else (e.stdout or ''))
+    return ok, out, time.time() - t0
 
 
 def main():
     args = sys.argv[1:]
-    mode = 'full' if '--full' in args else 'quick' if '--quick' in args else 'normal'
+    jobs = 3
+    if '--jobs' in args:
+        i = args.index('--jobs')
+        jobs = int(args[i + 1])
+        del args[i:i + 2]
+    if '--list' in args:
+        for label, names in (('play', PLAY), ('screens', SCREENS), ('ascent', ASCENT), ('live (Scryfall)', LIVE), ('decks and commander rounds', DECKS)):
+            print(f'{label}: {", ".join(names)}')
+        return 0
+    mode = 'full' if '--full' in args else 'changed' if '--changed' in args else 'cards' if '--cards' in args else 'games' if '--games' in args else 'fast'
     only = [a for a in args if not a.startswith('--')]
     if not shutil.which('node'):
         print('node is not installed.')
         return 2
-    steps, have_cards = plan(mode, only)
-    if not have_cards and mode != 'quick':
-        print('(coverage skipped: run `python3 tests/fetch_cards.py` first to make tests/data/cards_all.json)\n')
+    changed = changed_files() if mode == 'changed' else []
+    steps, have_cards = plan(mode, only, changed)
+    if not have_cards:
+        print('(card-file suites skipped: run `python3 tests/fetch_cards.py` first to make tests/data/cards_all.json)\n')
+    if mode == 'changed':
+        print(f'Changed files: {len(changed)}. Suites chosen: {", ".join(s["name"] for s in steps)}\n', flush=True)
+    lock = threading.Lock()
     results = []
-    for name, cmd, limit in steps:
-        print(f'=== {name}', flush=True)
-        t0 = time.time()
-        try:
-            p = subprocess.run(['node', os.path.join(SUITES, cmd[0])] + cmd[1:], timeout=limit)
-            ok = p.returncode == 0
-        except subprocess.TimeoutExpired:
-            ok = False
-            print(f'TIMED OUT after {limit}s')
-        results.append((name, ok, time.time() - t0))
-        print(flush=True)
-    print('=== Summary')
-    for name, ok, secs in results:
-        print(f'{"PASS" if ok else "FAIL"}  {name}  ({secs:.0f}s)')
+    t_all = time.time()
+
+    def work(item):
+        i, step = item
+        ok, out, secs = run_step(step, lock, f'ra{i}')
+        flaky = False
+        if not ok:
+            ok2, out2, secs2 = run_step(step, lock, f'ra{i}r')
+            if ok2:
+                ok, out, flaky, secs = True, out2, True, secs + secs2
+            else:
+                out, secs = out2, secs + secs2
+        with lock:
+            tag = 'PASS ' if ok and not flaky else 'FLAKY' if flaky else 'FAIL '
+            last = [l for l in out.strip().splitlines() if l.strip()][-1:] or ['']
+            print(f'{tag} {step["name"]:34s} {secs:5.0f}s  {last[0][:90]}', flush=True)
+            if not ok:
+                bad = [l for l in out.splitlines() if l.startswith('FAIL') or 'TIMED OUT' in l or 'Error' in l][:8]
+                for l in bad:
+                    print('      ' + l[:200], flush=True)
+        results.append((step['name'], ok, flaky, secs))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, jobs)) as ex:
+        list(ex.map(work, list(enumerate(steps))))
     bad = [r for r in results if not r[1]]
-    print('\nAll tests passed.' if not bad else f'\n{len(bad)} suite(s) failed.')
+    flaky = [r for r in results if r[2]]
+    print(f'\n{len(results)} suites in {time.time() - t_all:.0f}s.', end=' ')
+    if flaky:
+        print('Flaky (failed once, passed on retry): ' + ', '.join(r[0] for r in flaky) + '.', end=' ')
+    print('All tests passed.' if not bad else f'{len(bad)} suite(s) failed: ' + ', '.join(r[0] for r in bad))
     return 1 if bad else 0
 
 
