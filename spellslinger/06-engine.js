@@ -1763,7 +1763,7 @@ async function resolveTop() {
                 log(`${o.card.name} goes on an adventure (exiled; you can cast the creature later).`);
             } else if (r.paradigm && !o.ceases && !o.flashedBack) {
                 // Paradigm (Secrets of Strixhaven): exile it; each of your first main phases you may cast a copy for free (see 15n-samutdf.js)
-                resetObj(o); o.paradigmP = item.P.i; item.P.exile.push(o); log(`${o.card.name} is exiled (paradigm).`);
+                resetObj(o); o.freeCast = false; o.playUntil = 0; o.paradigmP = item.P.i; item.P.exile.push(o); log(`${o.card.name} is exiled (paradigm).`);
             } else if (r.cipher && item.P.bf.some(isCreature) && !o.flashedBack) {
                 // Cipher (702.99): exile it encoded on a creature you control
                 const host = item.P.isAI ? item.P.bf.filter(isCreature).sort((a, b) => (has(b, 'flying') || has(b, 'unblockable') ? 5 : 0) + pow(b) - ((has(a, 'flying') || has(a, 'unblockable') ? 5 : 0) + pow(a)))[0]
@@ -4763,9 +4763,12 @@ async function startExtraCombat() {
 async function endMyTurn() {
     if (!G || G.active !== G.view || G.over) return;
     if (!['main1', 'main2', 'declareAttackers', 'afterBlocks'].includes(G.phase)) return; // the turn hasn't reached its main phase yet
-    if (G.mode && G.mode.type === 'attack') { G.mode = null; G.phase = 'main1'; }
+    if (G.mode && G.mode.type === 'attack') { G.mode = null; G.phase = G.extraCombatOn ? 'main2' : 'main1'; }
     if (G.busy || G.mode) { toast(G.mode ? 'Finish what you\'re choosing first.' : 'Wait for the current action to finish.'); return; }
-    if (G.phase === 'afterBlocks') { await dealDamage(); if (G.over || G.active !== G.view) return; }
+    if (G.phase === 'afterBlocks') { await dealDamage(); if (G.over || G.active !== G.view) return; if (G.phase === 'declareAttackers') return; /* an additional combat began */ }
+    // An additional combat phase is waiting (Relentless Assault, Waves of Aggression, Seize the Day...): it comes before the turn can end,
+    // even when it was made in the second main phase or the first combat was skipped
+    if (G.extraCombat > 0 && !G.over && ['main1', 'main2'].includes(G.phase)) { G.busy = true; await startExtraCombat(); return; }
     endTurn(me());
 }
 function concede() {

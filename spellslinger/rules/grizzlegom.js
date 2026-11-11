@@ -31,3 +31,5 @@ clx('When ~ enters, reveal cards from the top of your library until you reveal t
 // Full Throttle (printed as Charge of Eternia in the Secret Lair): two more combats, creatures that attacked untap at each combat
 cl(/^After this main phase, there are two additional combat phases\.$/, R => { (R.spell = R.spell || []).push(cmd('gz_throttle')); });
 cl(/^At the beginning of each combat this turn, untap all creatures that attacked this turn\.$/, R => { });
+// Aggravated Assault (2026-11-11, extra combat fix): {3}{R}{R}: untap all creatures you control, then an additional combat phase and main phase (sorcery speed)
+clx('{3}{R}{R}: Untap all creatures you control. After this main phase, there is an additional combat phase followed by an additional main phase. Activate only as a sorcery.', (R, m, ctx) => { const a = parseActivated('{3}{R}{R}: Draw a card. Activate only as a sorcery.', R); a.effects = [cmd('extraCombatUntap')]; a.text = ctx.line; R.acts.push(a); });

@@ -3,10 +3,13 @@
 Run these before every commit that touches `Spellslinger_Duels.html`. **Nothing that passed may start failing**, and the number of cards that read as Automated may never go down.
 
 ```
-python3 tests/run_all.py            # the usual run, about 10 minutes
-python3 tests/run_all.py --quick    # a smoke test, about 3 minutes
+python3 tests/run_all.py            # the fast run, about 2.5 minutes (gameplay, screens, Ascent, the 300-game lab; suites run 3 at a time)
+python3 tests/run_all.py --changed  # only the suites named after the files you changed
+python3 tests/run_all.py --cards    # fast + coverage, rules snapshot, every deck and commander-round suite
+python3 tests/run_all.py --games    # fast + about 40 whole AI games and the card-by-card test of the verified decks
 python3 tests/run_all.py --full     # everything (Welcome Decks, Starter Kits, ~100 games), about 40 minutes
-python3 tests/run_all.py engine     # only one suite (engine, storage, redraw, cards, coverage, rules, games)
+node tests/check.js tests/decks/x.txt   # the standard check for one deck (or --cards "A|B" for single cards); see the top of check.js
+python3 tests/run_all.py engine pod # only suites whose name contains these words (--list shows the groups, --jobs N sets the parallelism)
 ```
 
 Results are also written to `tests/.out/*.json` (not committed).

@@ -7,6 +7,7 @@ const REC_KEEP = 15, REC_MAX_LINES = 4000;
 const recOn = () => !!G && !!G.players && G.players.length >= 3 && !G.hotseat && (window.__REC_FORCE || (!AUTOPLAY && G.players.some(P => !P.isAI)));
 function recInit() {
     const cmdr = P => { const c = [...P.command, ...P.bf, ...P.hand, ...P.library].find(o => o.isCommander); return c ? c.card.name : ''; };
+    if (window.__recBusyReset) window.__recBusyReset();
     G.rec = { v: 1, date: new Date().toISOString(), seats: G.players.length, players: G.players.map(P => ({ seat: P.i, name: P.name, human: !P.isAI, commander: cmdr(P), deck: P.deckName || '', style: P.aiStyle || '', level: P.aiLevel || '' })), log: [], n: 0 };
 }
 function recAdd(line) {
@@ -24,13 +25,19 @@ function recAdd(line) {
     const wrap = (name, who, prompt) => {
         const f = window[name]; if (typeof f !== 'function') return;
         window[name] = function () {
-            const P = arguments[who], r = f.apply(this, arguments);
+            // A question that asks itself again (waiting for the play-by-play, handing the device over) is one choice, not two
+            if (wrap.busy[name]) return f.apply(this, arguments);
+            const P = arguments[who];
+            wrap.busy[name] = true;
+            let r; try { r = f.apply(this, arguments); } finally { wrap.busy[name] = false; }
             if (!P || P.isAI || !G || !G.players || !recOn()) return r;
+            if (r && typeof r.then === 'function') wrap.busy[name] = true;
             const note = a => { try { recAdd(`» ${P.name} chose [${prompt.apply(null, arguments)}]: ${show(a)}`); } catch (e) { } };
             const args = arguments;
-            return r && typeof r.then === 'function' ? r.then(a => { note.apply(null, [a]); return a; }) : (note(r), r);
+            return r && typeof r.then === 'function' ? r.then(a => { wrap.busy[name] = false; note.apply(null, [a]); return a; }, er => { wrap.busy[name] = false; throw er; }) : (note(r), r);
         };
     };
+    wrap.busy = {}; window.__recBusyReset = () => { wrap.busy = {}; };
     const clean = s => String(s || '').replace(/\s+/g, ' ').slice(0, 140);
     wrap('askYes', 0, (P, msg) => clean(msg));
     wrap('askNumber', 0, (P, msg) => clean(msg));

@@ -15,7 +15,10 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, ROOT }
             ensureProfile(); profile.ascent = null;
             await loadAscentRoster();
             const ids = new Set(ASCENT.roster.map(c => c.id));
+            const byName = new Map(); raw.forEach(c => { if (c.name && !byName.has(c.name)) byName.set(c.name, c); });
+            // the offline card file may hold another printing of a roster card: match by id, else by name (stored under the roster's id)
             raw.filter(c => ids.has(c.id)).forEach(c => CARDS.set(c.id, slimCard(c)));
+            ASCENT.roster.forEach(rc => { if (!CARDS.has(rc.id) && byName.has(rc.name)) CARDS.set(rc.id, slimCard({ ...byName.get(rc.name), id: rc.id })); });
             ok('three tiers of five opponents and a boss each', [1, 2, 3].every(t => ASCENT_OPPONENTS.filter(o => o.tier === t).length === 6 && ASCENT_OPPONENTS.filter(o => o.tier === t && o.boss).length === 1));
             const sigs = ascentSignatures(), all = Object.values(sigs).flat();
             ok('every opponent has signature cards (3, or 4 for a boss), none shared', ASCENT_OPPONENTS.every(o => sigs[o.id].length === (o.boss ? 4 : 3)) && new Set(all).size === all.length, all.length);
