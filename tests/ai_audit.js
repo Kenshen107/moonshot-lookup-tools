@@ -29,12 +29,15 @@ const INIT = async function () {
     const [A, B] = G.players; A.isAI = true; B.isAI = true;
     const put = (P, c) => { const o = makeObj(c, P.i); putOntoBattlefield(P, o); o.sick = false; return o; };
     T.clear(); G.turn = 8; G.firstTurn = false; G.active = 0; G.phase = 'main1'; G.busy = false; G.stack.length = 0; G.attackers = []; G.blocks = {};
-    A.life = B.life = 40; A.hand.length = 0; A.library.length = 0;
+    A.life = B.life = 40; A.hand.length = 0; A.library.length = 0; B.hand.length = 0; B.library.length = 0;
     for (let i = 0; i < 9; i++) put(A, mountain);
     for (let i = 0; i < 4; i++) put(B, island);
     put(A, bears); put(A, giant); put(B, bears); put(B, giant); put(B, angel); put(B, solRing); put(B, pacifism);
     A.gy.push(makeObj(angel, 0)); B.gy.push(makeObj(giant, 1));
-    for (let i = 0; i < 5; i++) { A.hand.push(makeObj(bears, 0)); A.library.push(makeObj(mountain, 0)); B.library.push(makeObj(island, 1)); }
+    const basics = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest'].map(n => pick(n));
+    for (let i = 0; i < 5; i++) { A.hand.push(makeObj(bears, 0)); B.hand.push(makeObj(giant, 1)); }
+    for (let i = 0; i < 3; i++) basics.forEach(b => { A.library.push(makeObj(b, 0)); B.library.push(makeObj(b, 1)); }); // a library with every basic land type, for the land fetchers
+    A.library.push(makeObj(solRing, 0)); A.gy.push(makeObj(bears, 0)); B.gy.push(makeObj(angel, 1));
     window.__AUD = { raw, A, B, rows: [], threw: 0 };
     return raw.length;
 };
