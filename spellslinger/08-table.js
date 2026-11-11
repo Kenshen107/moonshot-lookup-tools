@@ -331,6 +331,7 @@ function turnButtonHTML() {
     else if (G.busy) { dis = true; sub = 'Resolving…'; }
     else if (m && m.type === 'attack') sub = 'Skips combat';
     else if (G.phase === 'afterBlocks') sub = 'Deals damage first';
+    else if (G.extraCombat > 0 && (G.phase === 'main1' || G.phase === 'main2')) { sub = 'Additional combat first'; label = 'Extra combat'; title = 'You have an additional combat phase coming'; }
     else if (G.phase === 'main1') sub = 'Skips combat';
     const nudge = !dis && typeof MAIN !== 'undefined' && MAIN.includes(G.phase) && !m && !G.busy && !nextStepHint();
     return `<button type="button" id="turnBtn" class="turn-btn${dis ? '' : ' ready'}${nudge ? ' nudge' : ''}" ${dis ? 'disabled' : ''} onclick="endMyTurn()" title="${esc(title)}"><span class="tb-label">${label}${G.active === G.view ? ' ⏭' : ''}</span>${sub ? `<span class="tb-sub">${esc(sub)}</span>` : ''}</button>`;

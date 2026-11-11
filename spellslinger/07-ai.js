@@ -670,19 +670,46 @@ async function aiTurn(P) {
     let attackers = (P.skip && P.skip.turn === G.turn && P.skip.what === 'combat') || peaceStay ? [] : aiChooseAttackers(P);
     if (P.mustAttackTurn === G.turn && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...P.bf.filter(canAttackWith)])];
     if (typeof cmdForcedAttackers === 'function' && !(P.skip && P.skip.turn === G.turn && P.skip.what === 'combat')) attackers = [...new Set([...attackers, ...cmdForcedAttackers(P)])]; // Graaz: Juggernauts must attack
-    for (let round = 0; round < 4 && attackers.length && !G.over; round++) {
+    if (!(await aiCombatRounds(P, attackers))) return;
+    G.phase = 'main2';
+    fireMain2(); await settle(); if (G.over) return;
+    await aiMain(P);
+    if (G.over) return;
+    // An additional combat phase made in the second main phase comes after it, then an additional main phase
+    for (let k = 0; k < 6 && G.extraCombat > 0 && !G.over; k++) {
+        if (!(await aiCombatRounds(P, []))) return;
+        G.phase = 'main2';
+        fireMain2(); await settle(); if (G.over) return;
+        await aiMain(P);
+        if (G.over) return;
+    }
+    await pause(300);
+    await actDrain();
+    endTurn(P);
+}
+async function aiCombatRounds(P, attackers) {
+    for (let round = 0; round < 8 && (attackers.length || G.extraCombat > 0) && !G.over; round++) {
+        if (!attackers.length) { // an additional combat phase was made while nothing was attacking (or in the second main phase)
+            G.extraCombat--; G.extraCombatOn = true;
+            log(`${P.name} gets an additional combat phase.`);
+            emptyPools(); fire('combat'); await settle();
+            if (G.over) return false;
+            if (G.players.length > 2) { const pd = aiPickDefender(P); if (pd) G.defender = pd.i; }
+            attackers = aiChooseAttackers(P);
+            if (!attackers.length) continue;
+        }
         if (G.players.length > 2) await botThink(P, null); // a beat before it turns creatures sideways
         G.phase = 'declareAttackers';
         aiAssignTargets(P, attackers);
         declareAttackers(P, attackers);
         await exertChoices(P, attackers);
         await settle();
-        if (G.over) return;
+        if (G.over) return false;
         renderGame();
         await actDrain();
         G.phase = 'declareBlocks';
         renderGame();
-        if (!(await chooseBlocksAll(P, { aiPause: 400, idlePause: 700 })) || G.over) return;
+        if (!(await chooseBlocksAll(P, { aiPause: 400, idlePause: 700 })) || G.over) return false;
         fixMenace(); fireBlocked();
         logBlocks();
         await aiNinjutsu(P);
@@ -694,23 +721,14 @@ async function aiTurn(P) {
         combatDamage(P);
         await settle();
         renderGame();
-        if (G.over) return;
+        if (G.over) return false;
         await pause(400);
         await actDrain();
         if (G.extraCombat > 0) { // Combat Celebrant: an additional combat phase
-            G.extraCombat--;
-            log(`${P.name} gets an additional combat phase.`);
-            fire('combat'); await settle();
-            if (G.over) return;
-            attackers = aiChooseAttackers(P);
+            attackers = []; // the loop starts the additional combat at its top
         } else attackers = [];
     }
-    G.phase = 'main2';
-    fireMain2(); await settle(); if (G.over) return;
-    await aiMain(P);
-    if (G.over) return;
-    await pause(300);
-    await actDrain();
-    endTurn(P);
+    return !G.over;
 }
+
 
