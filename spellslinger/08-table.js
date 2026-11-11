@@ -143,7 +143,7 @@ function barHTML(P) {
     const cmd = P.command.map(o => `<button type="button" class="btn small" onclick="showGameCard(${o.uid})">👑 ${esc(o.card.name.split(',')[0])}${(() => { const t = P.commanderUid2 ? (P.cmdCastN[o.cmdSlot || 0] || 0) : P.tax; return t ? ` (+${t * 2})` : ""; })()}</button>`).join('');
     return `
         <span class="who">${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? '🧙 You' : `🤖 ${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
-        <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}">❤️ ${P.life}</button>
+        <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}"><span class="lh">❤️ </span>${P.life}</button>
         ${G.format === 'commander' ? `<span class="zone-count" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
         ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
  ${P === me() && P.bf.some(o => Rx(o).peekTop) && P.library.length ? `<span class="pc" title="You may look at the top card of your library any time">👁 ${esc(P.library[P.library.length - 1].card.name)}</span>` : ''}
@@ -431,10 +431,11 @@ function fitSide(side) {
     const back = side.querySelector('.row-back');
     const H = side.clientHeight - 14;
     const phone = innerWidth < 700;
+    const AR = typeof openBoard === 'function' && openBoard() ? 0.82 : 88 / 63; // height per width: the open board shows the name bar and art only
     // Back row: lands and other permanents, about a quarter of the side
     // While you're paying, your lands grow so they're easy to tap
     const paying = G && G.mode && G.mode.type === 'pay' && side.id === 'meSide';
-    side.style.setProperty('--land-w', `${Math.max(paying ? 44 : 32, Math.min(paying ? 84 : 70, Math.round(H * (paying ? 0.4 : 0.27) * 63 / 88)))}px`);
+    side.style.setProperty('--land-w', `${Math.max(paying ? 44 : 32, Math.min(paying ? 84 : 70, Math.round(H * (paying ? 0.4 : 0.27) / AR)))}px`);
     if (!front) return;
     front.classList.remove('crowded', 'compact');
     front.style.maxHeight = '';
@@ -448,10 +449,10 @@ function fitSide(side) {
     let w = 132, fits = false;
     for (; w >= minW; w -= 4) {
         const perRow = Math.max(1, Math.floor((W + 8) / (w + 8)));
-        if (Math.ceil(n / perRow) * (w * 88 / 63 + 12) <= Hf) { fits = true; break; }
+        if (Math.ceil(n / perRow) * (w * AR + 12) <= Hf) { fits = true; break; }
     }
     // A short row with only a few creatures (a pod on a laptop screen): one row of smaller cards reads better than tiles
-    if (!fits) { const wFit = Math.floor((Hf - 12) * 63 / 88); if (wFit >= 52 && n * (wFit + 8) <= W + 8) { w = wFit; fits = true; } }
+    if (!fits) { const wFit = Math.floor((Hf - 12) / AR); if (wFit >= 52 && n * (wFit + 8) <= W + 8) { w = wFit; fits = true; } }
     if (!fits) {
         w = minW;
         front.classList.add('compact');

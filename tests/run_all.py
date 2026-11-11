@@ -33,7 +33,7 @@ SUITES = os.path.join(HERE, 'suites')
 PLAY = ['engine', 'blocking', 'priority', 'aiblock', 'aireserve', 'pod', 'multiattack', 'tablesense', 'sequencing', 'attacklist', 'commander',
         'politics2', 'politics3', 'characters', 'votes', 'banter', 'tension', 'selftarget', 'stackgroup', 'lands', 'manafixes', 'replicate',
         'explore', 'partners', 'records', 'extracombat', 'aifog', 'spellscores']
-SCREENS = ['storage', 'redraw', 'layout', 'modes', 'precons', 'playpicker', 'about', 'home', 'podseats', 'looks', 'packlooks', 'owner1023']
+SCREENS = ['openboard', 'storage', 'redraw', 'layout', 'modes', 'precons', 'playpicker', 'about', 'home', 'podseats', 'looks', 'packlooks', 'owner1023']
 ASCENT = ['ascent', 'ascentdecks', 'ascentupg', 'ascentpower', 'ascentui', 'ascentart', 'ascentart2']
 LIVE = ['randomdeck', 'themes']  # need live Scryfall: they fail when it is slow or blocked, so they run with --cards and --full
 DECKS = ['cmdr', 'soc', 'gishath', 'jenova', 'bertha', 'othelm', 'hugh', 'hughfood', 'grizzlegom', 'spiderman', 'fivedecks', 'samutdf', 'uldaros',
