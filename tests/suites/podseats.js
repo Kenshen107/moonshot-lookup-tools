@@ -15,15 +15,21 @@ const BODY = async function () {
     podSize = 2; renderPlayView(); await new Promise(r => setTimeout(r, 400));
     ok('no seat pickers in a duel', document.querySelectorAll('.pod-seat').length === 0);
     setPodSize(3); await new Promise(r => setTimeout(r, 400));
-    ok('3 players: one seat picker, defaulting to random', document.querySelectorAll('.pod-seat select').length === 1 && document.querySelector('.pod-seat select').value === 'random');
+    ok('3 players: pickers for seat 2 and seat 3, both random', document.querySelectorAll('.pod-seat select').length === 2 && [...document.querySelectorAll('.pod-seat select')].every(x => x.value === 'random') && /Seat 2/.test(document.querySelector('.pod-seat').textContent) && chosenOpponent && chosenOpponent.type === 'random', chosenOpponent);
     setPodSize(4); await new Promise(r => setTimeout(r, 400));
-    ok('4 players: two seat pickers', document.querySelectorAll('.pod-seat select').length === 2);
-    const sel = document.querySelector('.pod-seat select');
-    ok('a picker lists random, the fully working decks and your saved decks', sel.options.length >= 1 + VERIFIED_DECKS.length + 2 && [...sel.options].some(o => o.value === 'v|' + VERIFIED_DECKS[0].key) && [...sel.options].some(o => /^s\|/.test(o.value)), sel.options.length);
+    ok('4 players: pickers for seats 2, 3 and 4', document.querySelectorAll('.pod-seat select').length === 3);
+    const sel = document.querySelectorAll('.pod-seat select')[1]; // seat 3
+    ok('a seat 3 picker lists random, the fully working decks and your saved decks', sel.options.length >= 1 + VERIFIED_DECKS.length + 2 && [...sel.options].some(o => o.value === 'v|' + VERIFIED_DECKS[0].key) && [...sel.options].some(o => /^s\|/.test(o.value)), sel.options.length);
     sel.value = 'v|' + VERIFIED_DECKS[0].key; sel.dispatchEvent(new Event('change'));
     ok('choosing a deck is remembered', podSeatPick[0] === 'v|' + VERIFIED_DECKS[0].key && store.get('podSeatPick', [])[0] === podSeatPick[0], podSeatPick);
     setPodSize(4); await new Promise(r => setTimeout(r, 400));
-    ok('the choice shows again after a redraw', document.querySelector('.pod-seat select').value === podSeatPick[0], document.querySelector('.pod-seat select').value);
+    ok('the choice shows again after a redraw', document.querySelectorAll('.pod-seat select')[1].value === podSeatPick[0], document.querySelectorAll('.pod-seat select')[1].value);
+    // Seat 2 works the same way: the drop-down sets the opponent, and a choice made in the tabs shows as "Chosen below"
+    const s2 = document.querySelector('.pod-seat select');
+    s2.value = 'v|' + VERIFIED_DECKS[1].key; s2.dispatchEvent(new Event('change')); await new Promise(r => setTimeout(r, 300));
+    ok('choosing a deck for seat 2 sets the opponent', chosenOpponent && chosenOpponent.type === 'verified' && chosenOpponent.key === VERIFIED_DECKS[1].key && document.querySelector('.pod-seat select').value === 'v|' + VERIFIED_DECKS[1].key, chosenOpponent);
+    chooseOpponent({ type: 'commander', key: 'atraxa-praetors-voice', name: 'Atraxa, Praetors\' Voice' }); await new Promise(r => setTimeout(r, 300));
+    ok('an opponent chosen in the tabs shows in seat 2 as "Chosen below"', /Chosen below/.test(document.querySelector('.pod-seat select').textContent), document.querySelector('.pod-seat select').value);
     ok('no sideways scroll at this width', document.documentElement.scrollWidth - document.documentElement.clientWidth <= 0);
     return out;
 };

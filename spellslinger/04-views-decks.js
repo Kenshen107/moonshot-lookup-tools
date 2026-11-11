@@ -1565,10 +1565,10 @@ function closeModal() { $('modalHost').innerHTML = ''; }
 let chosenOpponent = null;
 // How many players at the table (Commander decks only): 2 = a duel, 3 or 4 = a free-for-all pod against random playable decks
 let podSize = Number(store.get('podSize', 2)) || 2;
-function setPodSize(n) { podSize = n; store.set('podSize', n); renderOpponents(); }
+function setPodSize(n) { podSize = n; store.set('podSize', n); if (n > 2 && !chosenOpponent) chosenOpponent = { type: 'random', fmt: 'commander', name: 'Random playable deck' }; renderOpponents(); }
 function podChipsHTML(deck) {
     if (deck.format !== 'commander') return '';
-    return `<div class="chips" style="margin:0 0 10px;" role="group" aria-label="Players at the table"><span class="note" style="align-self:center;">Table:</span>${[[2, '⚔️ 1 vs 1'], [3, '👥 3 players'], [4, '👥 4 players']].map(([n, t]) => `<button type="button" class="chip${podSize === n ? ' on' : ''}" onclick="setPodSize(${n})">${t}</button>`).join('')}</div>${podSize > 2 ? `<p class="note" style="margin-bottom:10px;">Free-for-all: the opponent you pick sits next to you, and ${podSize === 3 ? 'one more seat is' : 'two more seats are'} a random playable Commander deck unless you pick one below. Last player standing wins; 21 damage from one commander knocks a player out.</p>${podSeatPickersHTML(deck)}` : ''}`;
+    return `<div class="chips" style="margin:0 0 10px;" role="group" aria-label="Players at the table"><span class="note" style="align-self:center;">Table:</span>${[[2, '⚔️ 1 vs 1'], [3, '👥 3 players'], [4, '👥 4 players']].map(([n, t]) => `<button type="button" class="chip${podSize === n ? ' on' : ''}" onclick="setPodSize(${n})">${t}</button>`).join('')}</div>${podSize > 2 ? `<p class="note" style="margin-bottom:10px;">Free-for-all: pick a deck for every seat below; each one is a random playable Commander deck unless you choose. Last player standing wins; 21 damage from one commander knocks a player out.</p>${podSeatPickersHTML(deck)}` : ''}`;
 }
 // Choose the deck for each extra seat of a pod (2026-11-11, owner: "choose every one of my opponents decks, or randomize them so I always have a choice"). Default is a new random deck every game.
 let podSeatPick = store.get('podSeatPick', []) || [];
@@ -1579,13 +1579,31 @@ function podSeatOptions(deck) {
         <optgroup label="✅ Fully working decks">${VERIFIED_DECKS.map(v => `<option value="v|${esc(v.key)}">${esc(v.name || v.key)}</option>`).join('')}</optgroup>
         ${groups.map(g => `<optgroup label="${esc(g.label)}">${g.decks.map(({ d, i }) => `<option value="s|${esc(g.who)}|${i}">${esc(d.name)}</option>`).join('')}</optgroup>`).join('')}`;
 }
+// Seat 2 (the opponent next to you) works like the other seats (2026-11-11, owner: "make seat 2 work just like seat 3 and 4"): the same drop-down. It sets the same
+// chosenOpponent the tabs below set, so "Pick a commander" and "Paste a list" still work and show up here as "Chosen below".
+function seat2Value() {
+    const o = chosenOpponent;
+    if (!o) return 'random';
+    if (o.type === 'random') return 'random';
+    if (o.type === 'verified') return 'v|' + o.key;
+    if (o.type === 'saved') return 's|' + o.who + '|' + o.idx;
+    return 'custom';
+}
+function setSeat2(v) {
+    const [kind, a, b] = v.split('|');
+    if (kind === 'v') chooseVerifiedOpp(a);
+    else if (kind === 's') chooseSavedOpponent(a, Number(b));
+    else if (kind === 'random') chooseOpponent({ type: 'random', fmt: 'commander', name: 'Random playable deck' });
+}
 function podSeatPickersHTML(deck) {
     const opts = podSeatOptions(deck), rows = [];
+    const cur2 = seat2Value(), custom = cur2 === 'custom' ? `<option value="custom" selected>✔ Chosen below: ${esc(oppName())}</option>` : '';
+    rows.push(`<label class="pod-seat"><span class="note">Seat 2 (next to you)</span><select aria-label="Deck for seat 2" onchange="setSeat2(this.value)">${custom}${cur2 === 'custom' ? opts : opts.replace(`value="${cur2.replace(/"/g, '&quot;')}"`, `value="${cur2.replace(/"/g, '&quot;')}" selected`)}</select></label>`);
     for (let k = 0; k < podSize - 2; k++) {
         const cur = podSeatPick[k] || 'random';
         rows.push(`<label class="pod-seat"><span class="note">Seat ${k + 3}</span><select aria-label="Deck for seat ${k + 3}" onchange="setPodSeat(${k}, this.value)">${opts.replace(`value="${cur.replace(/"/g, '&quot;')}"`, `value="${cur.replace(/"/g, '&quot;')}" selected`)}</select></label>`);
     }
-    return `<div class="pod-seats" style="display:grid; gap:8px; margin-bottom:10px; max-width:460px;">${rows.join('')}<button type="button" class="btn small" onclick="podSeatPick = []; store.set('podSeatPick', []); renderOpponents()">🎲 All random</button></div>`;
+    return `<div class="pod-seats" style="display:grid; gap:8px; margin-bottom:10px; max-width:460px;">${rows.join('')}<button type="button" class="btn small" onclick="podSeatPick = []; store.set('podSeatPick', []); renderOpponents()">🎲 All random</button></div><p class="note" style="margin:-2px 0 8px;">More ways to choose seat 2 (type a commander, paste a list, saved decks):</p>`;
 }
 const OPPSEL = { kind: 'all', q: '', tab: '' };
 function oppSel(k, v) { OPPSEL[k] = v; renderOpponents(); }
