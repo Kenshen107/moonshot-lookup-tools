@@ -6,7 +6,7 @@
 const creatureValueCard = o => (Number(o.card.power) || 0) + (Number(o.card.toughness) || 0) + (o.card.cmc || 0);
 function creatureValue(o) {
     const reachBlocks = has(o, 'reach') && !has(o, 'flying') && G && G.players && G.players.some(X => X.i !== o.owner && X.bf.some(c => isCreature(c) && has(c, 'flying'))); // reach is the answer to their fliers
-    return (reachBlocks ? 1.5 : 0) + pow(o) * 1.5 + tou(o) + (has(o, 'flying') ? 2 : 0) + (has(o, 'deathtouch') ? 2 : 0) + (has(o, 'lifelink') ? 1 : 0)
+    return (reachBlocks ? 1.5 : 0) + adm(o) * 1.5 + tou(o) + (has(o, 'flying') ? 2 : 0) + (has(o, 'deathtouch') ? 2 : 0) + (has(o, 'lifelink') ? 1 : 0)
         + (has(o, 'first strike') || has(o, 'double strike') ? 1.5 : 0) + (has(o, 'trample') ? 1 : 0) + (o.card.cmc || 0) * 0.3 + (o.isCommander ? 3 : 0);
 }
 
@@ -466,9 +466,9 @@ async function aiCastFog(D) {
     const atks = G.attackers.map(onBf).filter(x => x && x.owner !== D.i);
     if (!atks.length) return false;
     const blockers = D.bf.filter(x => isCreature(x) && !x.tapped).length;
-    const powers = atks.map(x => Math.max(0, pow(x))).sort((a, b) => b - a);
+    const powers = atks.map(x => Math.max(0, adm(x))).sort((a, b) => b - a);
     const total = powers.reduce((a, b) => a + b, 0), residual = powers.slice(blockers).reduce((a, b) => a + b, 0);
-    const cmdrHit = atks.some(x => x.isCommander && (D.cmdBy && (D.cmdBy[x.owner] || 0)) + Math.max(0, pow(x)) >= 21);
+    const cmdrHit = atks.some(x => x.isCommander && (D.cmdBy && (D.cmdBy[x.owner] || 0)) + Math.max(0, adm(x)) >= 21);
     const worth = total >= D.life || residual >= D.life - 4 || residual >= D.life * 0.4 || cmdrHit;
     if (!worth) return false;
     await pause(400);
@@ -535,18 +535,18 @@ function aiPickDefender(P) {
     if (fs.length === 1) return G.players.length > 2 && !P.aiRand && (P.aiStyle || P.aiLevel !== 'easy') ? podPickDefender(P) : fs[0]; // may be null: at peace with the last opponent
     if (P.aiRand && P.aiRand.def) return fs[rand(fs.length)];
     if (P.aiStyle || P.aiLevel !== 'easy') return podPickDefender(P);
-    const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, pow(o)), 0);
+    const power = P.bf.filter(canAttackWith).reduce((a, o) => a + Math.max(0, adm(o)), 0);
     const blockers = F => F.bf.filter(o => isCreature(o) && !o.tapped).length;
     const lethal = fs.filter(F => F.life <= power && !blockers(F)).sort((a, b) => a.life - b.life)[0];
     if (lethal) return lethal;
-    const threat = F => F.bf.filter(isCreature).reduce((a, o) => a + Math.max(0, pow(o)), 0) + F.bf.length * 0.25 + (F.bf.some(o => o.isCommander) ? 2 : 0);
+    const threat = F => F.bf.filter(isCreature).reduce((a, o) => a + Math.max(0, adm(o)), 0) + F.bf.length * 0.25 + (F.bf.some(o => o.isCommander) ? 2 : 0);
     return fs.slice().sort((a, b) => threat(b) - threat(a) || a.life - b.life || a.i - b.i)[0];
 }
 function aiChooseAttackers(P) {
     const must = P.bf.filter(o => canAttackWith(o) && forcedAttack(o));
-    if (P.aiRand && P.aiRand.atk) return [...new Set([...P.bf.filter(o => canAttackWith(o) && pow(o) > 0 && Math.random() < 0.5), ...must])]; // the lab's random baseline (level 'random')
+    if (P.aiRand && P.aiRand.atk) return [...new Set([...P.bf.filter(o => canAttackWith(o) && adm(o) > 0 && Math.random() < 0.5), ...must])]; // the lab's random baseline (level 'random')
     let chosen = [...new Set([...aiChooseAttackersFree(P), ...must])];
-    const D = opp(P), cands = P.bf.filter(o => canAttackWith(o) && pow(o) > 0);
+    const D = opp(P), cands = P.bf.filter(o => canAttackWith(o) && adm(o) > 0);
     if (P.aiStyle) chosen = [...new Set([...styleAttackers(P, chosen, cands, D), ...must])];
     if (G.players.length > 2) chosen = [...new Set([...aiHoldBack(P, chosen, D), ...must])];
     aiAimAtPlaneswalkers(P, chosen);
@@ -556,37 +556,37 @@ function aiAimAtPlaneswalkers(P, list) {
     const D = opp(P);
     list.forEach(o => { delete o.attackPW; });
     const pws = D.bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, P)).sort((a, b) => (a.ctr.loyalty || 0) - (b.ctr.loyalty || 0));
-    if (list.reduce((s, a) => s + pow(a), 0) >= D.life) return;
+    if (list.reduce((s, a) => s + adm(a), 0) >= D.life) return;
     // Its own battles (Sieges it attacks to flip): spare attackers that can finish one
     for (const b of P.bf.filter(isBattle)) {
         let need = b.ctr.defense || 0;
         const team = [];
-        for (const a of list.slice().sort((x, y) => pow(y) - pow(x))) { if (need <= 0) break; if (a.attackPW) continue; team.push(a); need -= pow(a); }
+        for (const a of list.slice().sort((x, y) => adm(y) - adm(x))) { if (need <= 0) break; if (a.attackPW) continue; team.push(a); need -= adm(a); }
         if (need <= 0 && team.length < list.length) team.forEach(a => { a.attackPW = b.uid; });
     }
     if (!pws.length) return;
-    const free = list.slice().sort((a, b) => pow(a) - pow(b));
+    const free = list.slice().sort((a, b) => adm(a) - adm(b));
     for (const w of pws) {
         let need = w.ctr.loyalty || 0;
         const team = [];
-        for (const a of free) { if (need <= 0) break; if (a.attackPW) continue; team.push(a); need -= pow(a); }
+        for (const a of free) { if (need <= 0) break; if (a.attackPW) continue; team.push(a); need -= adm(a); }
         if (need > 0) break;
         team.forEach(a => { a.attackPW = w.uid; pull(free, a); });
     }
 }
 function aiChooseAttackersFree(P) {
     const D = opp(P);
-    const cands = P.bf.filter(o => canAttackWith(o) && pow(o) > 0);
+    const cands = P.bf.filter(o => canAttackWith(o) && adm(o) > 0);
     if (!cands.length) return [];
     const blockers = D.bf.filter(o => isCreature(o) && !o.tapped);
     // Identical creatures (a hundred tokens) answer every block question the same way: ask once per kind (2026-10-20, a 250-permanent board took 85 seconds)
-    const sigOf = o => `${o.card.id}|${pow(o)}|${tou(o)}|${o.dmg}|${o.tkw.join(',')}|${Object.keys(o.ctr || {}).length}|${o.attachedTo || ''}|${allPerms().some(x => x.attachedTo === o.uid) ? o.uid : ''}`;
+    const sigOf = o => `${o.card.id}|${adm(o)}|${tou(o)}|${o.dmg}|${o.tkw.join(',')}|${Object.keys(o.ctr || {}).length}|${o.attachedTo || ''}|${allPerms().some(x => x.attachedTo === o.uid) ? o.uid : ''}`;
     const seen = new Set(), blockReps = blockers.length > 12 ? blockers.filter(b => { const k = sigOf(b); if (seen.has(k)) return false; seen.add(k); return true; }) : blockers;
     const canBeCache = new Map(), blockedBy = a => { const k = blockers.length > 12 ? sigOf(a) : a.uid; if (!canBeCache.has(k)) canBeCache.set(k, blockReps.filter(b => canBlock(b, a))); return canBeCache.get(k); };
     const canBeBlocked = a => blockedBy(a).length > 0;
     // Lethal on board? Assume they block our biggest blockable attackers.
     const unblockable = cands.filter(a => !canBeBlocked(a));
-    const blockable = cands.filter(a => canBeBlocked(a)).sort((a, b) => pow(b) - pow(a));
+    const blockable = cands.filter(a => canBeBlocked(a)).sort((a, b) => adm(b) - adm(a));
     const through = unblockable.reduce((s, a) => s + dmgVs(a, D), 0) + blockable.slice(blockers.length).reduce((s, a) => s + dmgVs(a, D), 0);
     if (through >= D.life && !(P.aiLevel === 'easy' && Math.random() < 0.3)) return cands;
     if (P.aiLevel === 'easy') return cands.filter(a => !canBeBlocked(a) || Math.random() < 0.5);
@@ -599,8 +599,8 @@ function aiChooseAttackersFree(P) {
         // Push when they're low and we have more creatures, or when the
         // board has stalled and our side is clearly bigger
         if (D.life <= 6 && cands.length > blockers.length) return true;
-        const ourPow = P.bf.filter(isCreature).reduce((s, o) => s + pow(o), 0);
-        const theirPow = D.bf.filter(isCreature).reduce((s, o) => s + pow(o), 0);
+        const ourPow = P.bf.filter(isCreature).reduce((s, o) => s + adm(o), 0);
+        const theirPow = D.bf.filter(isCreature).reduce((s, o) => s + adm(o), 0);
         return G.turn >= tn(P, 'stallTurn') && ourPow >= theirPow * tn(P, 'stallRatio') && cands.length >= blockers.length;
     });
 }
@@ -610,8 +610,8 @@ function aiChooseAttackersFree(P) {
 // deathtouch, indestructible and protection (audit, 2026-10-06).
 const firstStriker = o => has(o, 'first strike') || has(o, 'double strike');
 function rawKills(a, b) {
-    if (pow(a) <= 0 || protFrom(b, a) || has(b, 'indestructible')) return false;
-    const dmg = has(a, 'double strike') && !firstStriker(b) ? pow(a) * 2 : pow(a);
+    if (adm(a) <= 0 || protFrom(b, a) || has(b, 'indestructible')) return false;
+    const dmg = has(a, 'double strike') && !firstStriker(b) ? adm(a) * 2 : adm(a);
     return has(a, 'deathtouch') || dmg >= tou(b) - b.dmg;
 }
 function combatKills(a, b) {
@@ -645,11 +645,11 @@ function aiChooseBlocks(D, A) {
         let pick = safeKill[0] || safe.sort((a, b) => creatureValue(a) - creatureValue(b))[0] || trade.sort((a, b) => creatureValue(a) - creatureValue(b))[0];
         // A double block: two creatures that kill it together, when it can only kill one of them
         if (!pick && D.aiLevel !== 'easy' && options.length >= 2 && !has(atk, 'indestructible') && !firstStriker(atk) && creatureValue(atk) >= 3) {
-            const pool = options.filter(b => !protFrom(atk, b)).sort((a, b) => pow(b) - pow(a));
+            const pool = options.filter(b => !protFrom(atk, b)).sort((a, b) => adm(b) - adm(a));
             for (let i = 0; i < pool.length && !blocks[atk.uid]; i++) for (let j = i + 1; j < pool.length; j++) {
                 const [b1, b2] = [pool[i], pool[j]];
-                const together = has(b1, 'deathtouch') || has(b2, 'deathtouch') || pow(b1) + pow(b2) >= tou(atk) - atk.dmg;
-                const killsBoth = !has(atk, 'deathtouch') ? pow(atk) >= (tou(b1) - b1.dmg) + (tou(b2) - b2.dmg) : pow(atk) >= 2;
+                const together = has(b1, 'deathtouch') || has(b2, 'deathtouch') || adm(b1) + adm(b2) >= tou(atk) - atk.dmg;
+                const killsBoth = !has(atk, 'deathtouch') ? adm(atk) >= (tou(b1) - b1.dmg) + (tou(b2) - b2.dmg) : adm(atk) >= 2;
                 if (together && !killsBoth && !has(atk, 'trample') && Math.max(creatureValue(b1), creatureValue(b2)) <= creatureValue(atk)) {
                     take(b1); take(b2); blocks[atk.uid] = [b1.uid, b2.uid]; incoming -= dmgOf(atk); break;
                 }

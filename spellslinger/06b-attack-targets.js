@@ -39,14 +39,14 @@ async function chooseBlocksAll(P, { hardRemoval = false, aiPause = 0, idlePause 
 function aiAssignTargets(P, attackers) {
     if (G.players.length < 3 || !attackers.length) return;
     attackers.forEach(o => { o.atkTo = G.defender; });
-    const rest = attackers.slice().sort((a, b) => pow(b) - pow(a));
+    const rest = attackers.slice().sort((a, b) => adm(b) - adm(a));
     const others = foes(P).filter(F => F.i !== G.defender && !(typeof hasPeace === 'function' && hasPeace(P.i, F.i))).sort((a, b) => a.life - b.life);
     for (const F of others) {
         if (rest.length < 2) break;
         const blockers = F.bf.filter(o => isCreature(o) && !o.tapped).length;
         // the biggest attackers get blocked; count what is left over
         for (let k = blockers + 1; k < rest.length; k++) { // always leave at least one attacker for the main target
-            const through = rest.slice(blockers, k).reduce((a, o) => a + Math.max(0, pow(o)), 0);
+            const through = rest.slice(blockers, k).reduce((a, o) => a + Math.max(0, adm(o)), 0);
             if (through >= F.life) { rest.slice(0, k).forEach(o => { o.atkTo = F.i; }); rest.splice(0, k); log(`${P.name} sends ${k} creature${k === 1 ? '' : 's'} at ${F.name}, who is low enough to finish.`); break; }
         }
     }

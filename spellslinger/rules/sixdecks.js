@@ -18,11 +18,11 @@ clx('{T}: The next time target creature adapts this turn, it adapts as though it
 clx('{2}{B}, {T}: Each opponent loses X life, where X is the number of creatures with defender you control.', (R, m, ctx) => { act(R, ctx.line, '{2}{B}, {T}', [cmd('sx_blightPile')]); });
 // Doran, Besieged by Time
 clx('Each creature spell you cast with toughness greater than its power costs {1} less to cast.', R => { R.reducer = { what: 'sx_toughGtPow', n: 1 }; });
-clx('Whenever a creature you control attacks or blocks, it gets +X/+X until end of turn, where X is the difference between its power and toughness.', R => { R.trig.push({ ev: 'attacks', fn: 'youAttack', effects: [cmd('sx_doran')] }); R.trig.push({ ev: 'blocks', fn: 'sx_myBlock', effects: [cmd('sx_doran')] }); });
+clx('Whenever a creature you control attacks or blocks, it gets +X/+X until end of turn, where X is the difference between its power and toughness.', R => { R.sx_doran = true; R.trig.push({ ev: 'attacks', fn: 'youAttack', effects: [cmd('sx_doran')] }); R.trig.push({ ev: 'blocks', fn: 'sx_myBlock', effects: [cmd('sx_doran')] }); });
 // High Alert, The Kingpin of Crime: toughness assigns combat damage
 clx('Each creature you control assigns combat damage equal to its toughness rather than its power.', R => { R.sx_toughDmg = true; });
 clx('Creatures you control can attack as though they didn\'t have defender.', R => { R.sx_defAttack = true; });
-clx('Whenever you attack, you may pay 2 life. If you do, until end of turn, creatures you control with toughness greater than their power assign combat damage equal to their toughness rather than their power.', R => { R.trig.push({ ev: 'attacks', fn: 'youAttack', effects: [cmd('sx_kingpin')] }); });
+clx('Whenever you attack, you may pay 2 life. If you do, until end of turn, creatures you control with toughness greater than their power assign combat damage equal to their toughness rather than their power.', R => { R.sx_kingpin = true; R.trig.push({ ev: 'attacks', fn: 'youAttack', effects: [cmd('sx_kingpin')] }); });
 // Noxious Revival
 clx('Put target card from a graveyard on top of its owner\'s library.', R => { R.spell = [cmd('sx_noxious', { multi: 'sx_gy1' })]; });
 // Reap the Past

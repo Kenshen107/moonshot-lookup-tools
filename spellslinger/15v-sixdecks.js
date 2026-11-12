@@ -59,11 +59,23 @@ COND_EXTRA.push(
     };
 }
 // ---------- High Alert / The Kingpin of Crime: toughness as combat damage; defenders attack ----------
+const sxToughSrc = () => permsBy('sxTough', a => !!(Rx(a).sx_toughDmg || Rx(a).sx_kingpin || Rx(a).sx_doran));
 function sxToughDmg(o) {
-    if (!G || !isCreature(o)) return false;
+    if (!G) return false;
+    const X0 = o && G.players[o.owner];
+    if (!sxToughSrc().length && !(X0 && X0.sx_toughTurn === G.turn)) return false;
+    if (!isCreature(o)) return false;
     const X = ctrl(o); if (!X) return false;
-    if (X.bf.some(s => Rx(s).sx_toughDmg && !lostAbilities(s))) return true;
+    if (sxToughSrc().some(s => Rx(s).sx_toughDmg && ctrl(s) === X && !lostAbilities(s))) return true;
     return X.sx_toughTurn === G.turn && tou(o) > pow(o);
+}
+// The computer's forecast: also counts The Kingpin of Crime's toughness turn, which it pays for when it attacks on its own turn with life to spare
+function sxToughDmgAI(o) {
+    if (!G || !sxToughSrc().length) return sxToughDmg(o);
+    if (sxToughDmg(o)) return true;
+    if (!isCreature(o)) return false;
+    const X = ctrl(o); if (!X) return false;
+    return G.active === X.i && X.life > 8 && tou(o) > pow(o) && sxToughSrc().some(s => Rx(s).sx_kingpin && ctrl(s) === X && !lostAbilities(s));
 }
 function sxDefAttack(o) {
     if (!G) return false;
@@ -1125,4 +1137,44 @@ async function sxOpeningHand() {
         if (ok === false) { s.counters = before.counters; s.ctr = before.ctr; o.sx_mox = null; }
         return ok;
     };
+}
+
+// =====================================================================
+// The computer plays a toughness deck (2026-11-12, owner: "Make the AI play Super-Skrull better")
+// Combat math in the AI uses adm(o) (06-engine.js): the damage a creature would really deal, its toughness under High Alert or The Kingpin of Crime.
+// Here: what High Alert / Assault Formation-style cards are worth on the board you have, so the computer casts them early.
+// =====================================================================
+function sxToughBoardGain(P) {
+    const mine = P.bf.filter(isCreature);
+    const extra = mine.reduce((a, c) => a + Math.max(0, tou(c) - Math.max(0, pow(c))), 0); // damage the switch adds
+    const walls = mine.filter(c => has(c, 'defender')).length;                            // creatures that can start attacking
+    const inHand = P.hand.filter(c => /\bCreature\b/.test(c.card.type) && (Number(c.card.toughness) || 0) > (Number(c.card.power) || 0)).length;
+    return { extra, walls, inHand };
+}
+{
+    const base = aiScore;
+    aiScore = function (P, o, target) {
+        let s = base.apply(this, arguments);
+        if (!G || !o || !P) return s;
+        const r = Rx(o);
+        if ((r.sx_toughDmg || r.sx_kingpin) && !P.bf.some(x => Rx(x).sx_toughDmg && !lostAbilities(x))) {
+            const g = sxToughBoardGain(P);
+            const bonus = Math.min(28, 4 + g.extra * 1.6 + g.walls * 3 + g.inHand * 1.5);
+            s += r.sx_kingpin ? bonus * 0.4 : bonus; // Kingpin's switch costs 2 life and only works on your own attacks
+        }
+        if (r.sx_defAttack && !r.sx_toughDmg) s += P.bf.filter(c => isCreature(c) && has(c, 'defender')).length * 2.5;
+        // Creatures whose toughness is bigger than their power are better while a toughness card is out (or coming)
+        if (r.kind === 'creature' && sxToughSrc().some(x => ctrl(x) === P)) { const gap = (Number(o.card.toughness) || 0) - (Number(o.card.power) || 0); if (gap > 0) s += gap * 1.2; }
+        return s;
+    };
+}
+
+// The computer's combat damage estimate (adm in 06-engine.js): toughness under High Alert or a Kingpin turn, and Doran's +X/+X when it attacks or blocks
+function sxAdm(o) {
+    if (!G || !sxToughSrc().length) return pow(o);
+    const p0 = pow(o), t0 = tou(o), useT = sxToughDmgAI(o);
+    const X = ctrl(o);
+    const doran = !!X && isCreature(o) && sxToughSrc().some(s => Rx(s).sx_doran && ctrl(s) === X && !lostAbilities(s));
+    const gap = doran ? Math.abs(t0 - p0) : 0;
+    return (useT ? t0 : p0) + gap;
 }

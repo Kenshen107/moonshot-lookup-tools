@@ -117,21 +117,21 @@ function styleAttackers(P, base, cands, D) {
         const extra = cands.filter(a => !base.includes(a) && (killers(a).length === 0 || killers(a).every(b => creatureValue(b) >= creatureValue(a) - 1.5 * st.atk) || cands.length > blockers.length + 1));
         return [...base, ...extra];
     }
-    const total = base.reduce((s, a) => s + Math.max(0, pow(a)), 0);
+    const total = base.reduce((s, a) => s + Math.max(0, adm(a)), 0);
     if (total >= D.life) return base; // lethal: everyone goes
     return base.filter(a => killers(a).length === 0 || !blockers.some(b => canBlock(b, a)));
 }
 // Threat on the table: what a player could do to the rest of us next turn, and how close they are to winning
 // Poison (2026-10-20): infect and toxic creatures threaten a player's poison total, not their life. `dmgVs` counts a poison counter as the share of the
 // target's life it takes away (1 poison = life / poison left), so every "is it lethal" check in the AI sees poison attackers as the threat they are.
-const poisonOf = a => (has(a, 'infect') ? Math.max(0, pow(a)) * (has(a, 'double strike') ? 2 : 1) : 0) + (Rx(a).toxic || 0);
+const poisonOf = a => (has(a, 'infect') ? Math.max(0, adm(a)) * (has(a, 'double strike') ? 2 : 1) : 0) + (Rx(a).toxic || 0);
 function dmgVs(a, D) {
-    const life = has(a, 'infect') ? 0 : Math.max(0, pow(a)) * (has(a, 'double strike') ? 2 : 1), ps = poisonOf(a);
+    const life = has(a, 'infect') ? 0 : Math.max(0, adm(a)) * (has(a, 'double strike') ? 2 : 1), ps = poisonOf(a);
     return life + (ps ? ps * (D.life / Math.max(1, 10 - (D.poison || 0))) : 0);
 }
 function podThreat(F) {
     const creatures = F.bf.filter(isCreature);
-    return creatures.reduce((a, o) => a + Math.max(0, pow(o)), 0) + creatures.length * 0.5 + F.bf.filter(o => !isCreature(o)).length * 0.25
+    return creatures.reduce((a, o) => a + Math.max(0, adm(o)), 0) + creatures.length * 0.5 + F.bf.filter(o => !isCreature(o)).length * 0.25
         + (F.bf.some(o => o.isCommander) ? 2 : 0) + F.hand.length * 0.3 + Math.max(0, F.life - 40) * 0.1 + drainThreat(F) + creatures.reduce((a, o) => a + poisonOf(o), 0) * 0.5;
 }
 // Permanents that drain every opponent bypass the board and any peace deals, so the table should see them as a threat sooner
@@ -151,7 +151,7 @@ function podPickDefender(P) {
     let fs = foes(P);
     const st = styleOf(P);
     const attackers = P.bf.filter(canAttackWith);
-    const power = attackers.reduce((a, o) => a + Math.max(0, pow(o)), 0);
+    const power = attackers.reduce((a, o) => a + Math.max(0, adm(o)), 0);
     const open = F => !F.bf.some(o => isCreature(o) && !o.tapped);
     const dmgTo = F => attackers.reduce((a, o) => a + dmgVs(o, F), 0); // poison counts as the life it takes away
     // Lethal first - but a deal is a deal, unless this bot plays Aggro
@@ -194,9 +194,9 @@ const tn = (P, k) => (P && P.tune && P.tune[k] !== undefined ? P.tune[k] : AI_TU
 function aiHoldBack(P, chosen, D) {
     if (G.players.length <= 2 || !chosen.length || P.aiLevel === 'easy') return chosen;
     if (typeof isDoomed === 'function' && isDoomed(P)) return chosen; // nothing left to protect: all in
-    if (chosen.reduce((s, a) => s + Math.max(0, pow(a)), 0) >= D.life && !D.bf.some(o => isCreature(o) && !o.tapped)) return chosen; // lethal
+    if (chosen.reduce((s, a) => s + Math.max(0, adm(a)), 0) >= D.life && !D.bf.some(o => isCreature(o) && !o.tapped)) return chosen; // lethal
     const st = styleOf(P), factor = (st ? st.hold : 0.75) * (G.arch === P.i ? 0.8 : 1); // the archenemy keeps more at home
-    const theirs = foes(P).flatMap(F => F.bf.filter(isCreature)).map(o => Math.max(0, pow(o))).sort((a, b) => b - a);
+    const theirs = foes(P).flatMap(F => F.bf.filter(isCreature)).map(o => Math.max(0, adm(o))).sort((a, b) => b - a);
     let home = P.bf.filter(o => isCreature(o) && !o.tapped && !chosen.includes(o)).length;
     const through = () => theirs.slice(home).reduce((a, b) => a + b, 0) * tn(P, 'holdShare'); // holdShare: how much of the other players' combined power is expected to come at me
     const keep = chosen.slice().sort((a, b) => creatureValue(b) - creatureValue(a));

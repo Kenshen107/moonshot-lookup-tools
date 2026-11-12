@@ -147,6 +147,18 @@ const NAMES = [...new Set(['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'G
               ok('Hideous Taskmaster: its cast trigger chooses targets as it goes on the stack', (G.trigQ || []).some(q => q.effects.some(x => x.multi === 'sx_eachOpp'))); G.trigQ = []; }
             { const [A] = await fresh(); const sh = put(A, 'Shadow of the Second Sun'); await CMD.sx_enchantChoose(A, {}, null, sh); ok('Shadow of the Second Sun: a player is chosen (the computer picks itself)', sh.hostPlayer === 0); }
             { const [A, B] = await fresh(); const cu = put(A, 'Curse of Obsession'); await CMD.sx_enchantChoose(A, { curse: true }, null, cu); ok('Curse of Obsession: a Curse goes on an opponent', cu.hostPlayer === 1, cu.hostPlayer); }
+
+            // ----- The computer plays the toughness deck -----
+            { const [A, B] = await fresh(); const g = put(A, 'Grizzly Bears'); ok('Without toughness cards the computer\'s damage estimate is just power', adm(g) === pow(g), [adm(g), pow(g)]); }
+            { const [A, B] = await fresh(); put(A, 'High Alert'); const w1 = put(A, 'Wall of Stone'), w2 = put(A, 'Wall of Stone'); put(B, 'Grizzly Bears'); B.life = 16;
+              ok('High Alert: the computer counts a 0/8 wall as 8 combat damage', adm(w1) === 8, adm(w1));
+              const atk = aiChooseAttackers(A); ok('High Alert: the computer attacks with its walls for lethal', atk.includes(w1) && atk.includes(w2), atk.map(x => x.card.name)); }
+            { const [A, B] = await fresh(); put(A, 'High Alert'); const w = put(A, 'Wall of Stone'); B.isAI = true; const hg = put(B, 'Hill Giant'); G.active = 0; G.attackers = [w.uid]; G.defender = 1; B.life = 40;
+              const bl = aiChooseBlocks(B, A); ok('High Alert: the defender sees the wall would kill its Hill Giant and doesn\'t block at 40 life', !(bl[w.uid] || []).includes(hg.uid), bl); }
+            { const [A] = await fresh(); put(A, 'Doran, Besieged by Time'); const w = put(A, 'Wall of Stone'); ok('Doran: the computer counts a 0/8 wall as 8 damage when it fights (+8/+8)', adm(w) === 8, adm(w)); }
+            { const [A] = await fresh(); put(A, 'Wall of Stone'); put(A, 'Wall of Stone'); for (let i = 0; i < 4; i++) put(A, 'Plains');
+              const ha = makeObj(have('High Alert'), 0), gb = makeObj(have('Grizzly Bears'), 0); A.hand.push(ha, gb);
+              ok('High Alert: with walls out the computer rates it above a creature', aiScore(A, ha, null) > aiScore(A, gb, null), [aiScore(A, ha, null), aiScore(A, gb, null)]); A.hand.length = 0; }
             ok('No broken invariants', T.invariants().length === 0, T.invariants());
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;
