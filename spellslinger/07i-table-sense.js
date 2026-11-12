@@ -52,7 +52,7 @@ function threatIsMineNow(P, F) {
     if (P.life <= 12) return true;
     if (P.grudge && (P.grudge[F.i] || 0) >= 6) return true;
     if (P.cmdBy && (P.cmdBy[F.i] || 0) >= 10) return true;
-    const pw = F.bf.filter(isCreature).reduce((a, o) => a + Math.max(0, pow(o)), 0);
+    const pw = F.bf.filter(isCreature).reduce((a, o) => a + Math.max(0, adm(o)), 0);
     if (pw <= 0) return false;
     const ex = X => pw / Math.max(1, X.life); // how much of its life F's board represents to X
     const others = foes(F).filter(X => X !== P && !X.out);
@@ -119,7 +119,7 @@ const showsMana = D => !!D && tsOpenMana(D) >= 2 && D.hand.length >= 1;
 // =====================================================================
 // What happens when attacker `a` is blocked by `bs`; `mod` = { uid, p, q, kw } pumps one creature. { aDies, killed: blockers that die }.
 function simCombat(a, bs, mod) {
-    const P_ = o => pow(o) + (mod && mod.uid === o.uid ? mod.p : 0);
+    const P_ = o => adm(o) + (mod && mod.uid === o.uid ? mod.p : 0);
     const T_ = o => tou(o) + (mod && mod.uid === o.uid ? mod.q : 0);
     const K_ = (o, k) => has(o, k) || !!(mod && mod.uid === o.uid && (mod.kw || []).includes(k));
     const fs = o => K_(o, 'first strike') || K_(o, 'double strike');
@@ -228,7 +228,7 @@ const _aiChooseAttackersFree = aiChooseAttackersFree;
 aiChooseAttackersFree = function (P) {
     let list = _aiChooseAttackersFree(P);
     if (!tsOn(P)) return list;
-    const D = opp(P), cands = P.bf.filter(o => canAttackWith(o) && pow(o) > 0);
+    const D = opp(P), cands = P.bf.filter(o => canAttackWith(o) && adm(o) > 0);
     const blockers = D.bf.filter(o => isCreature(o) && !o.tapped);
     // B: a trick backs one more attacker
     if (tn(P, 'trickAtk') && blockers.length) {
