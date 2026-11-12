@@ -175,11 +175,13 @@ function basePT(o, which) {
     return v;
 }
 const pow = o => basePT(o, 'p') + o.counters + o.tp + buffsOn(o).p + ptTimed(o, 'p');
+// Combat damage a creature assigns: its power, or its toughness under High Alert / The Kingpin of Crime (15v-sixdecks.js)
+const cdmgOf = o => (typeof sxToughDmg === 'function' && sxToughDmg(o)) ? tou(o) : pow(o);
 const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q + ptTimed(o, 'q');
 const hasBase = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (k === 'indestructible' && !!o.ctr && o.ctr.indestructible > 0) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
 const has = (o, k) => (k === 'hexproof' && typeof tkHexproof === 'function' && tkHexproof(o)) ? true : (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
-const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackCond && !condOk(Rx(o).attackCond, ctrl(o), o)) && !(typeof cmdCantAttack === 'function' && cmdCantAttack(o)) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !has(o, 'defender') && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
+const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackCond && !condOk(Rx(o).attackCond, ctrl(o), o)) && !(typeof cmdCantAttack === 'function' && cmdCantAttack(o)) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !(has(o, 'defender') && !(typeof sxDefAttack === 'function' && sxDefAttack(o))) && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
 function log(msg) {
     G.log.push(msg);
@@ -4272,7 +4274,7 @@ function combatDamage(A) {
             const blocked = (G.blocks[atk.uid] || []).length > 0;
             const blks = blockersOf(atk);
             if (deals(atk)) {
-                let dmg = pow(atk);
+                let dmg = cdmgOf(atk);
                 if (dmg > 0) {
                     const pw = atk.attackPW && onBf(atk.attackPW);
                     if (!blocked || (Rx(atk).assignUnblocked && !lostAbilities(atk) && assignAsUnblocked(atk, blks, dmg, defOf(atk)))) events.push([atk, pw && (isPlaneswalker(pw) || isBattle(pw)) ? pw : defOf(atk), dmg]);
@@ -4289,11 +4291,11 @@ function combatDamage(A) {
                 }
             }
             blks.forEach(b => {
-                if (!deals(b) || pow(b) <= 0) return;
+                if (!deals(b) || cdmgOf(b) <= 0) return;
                 const many = Object.values(G.blocks).filter(bs => bs.includes(b.uid)).length;
-                if (many < 2) { events.push([b, atk, pow(b)]); return; }
+                if (many < 2) { events.push([b, atk, cdmgOf(b)]); return; }
                 // A blocker on two attackers splits its damage: lethal to the first, the rest to the next (510.1c)
-                left[b.uid] = left[b.uid] ?? pow(b);
+                left[b.uid] = left[b.uid] ?? cdmgOf(b);
                 const give = Math.min(left[b.uid], Math.max(1, tou(atk) - atk.dmg));
                 if (give > 0) { events.push([b, atk, give]); left[b.uid] -= give; }
             });
