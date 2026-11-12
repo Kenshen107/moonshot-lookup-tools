@@ -24,22 +24,22 @@ clx('Each creature you control assigns combat damage equal to its toughness rath
 clx('Creatures you control can attack as though they didn\'t have defender.', R => { R.sx_defAttack = true; });
 clx('Whenever you attack, you may pay 2 life. If you do, until end of turn, creatures you control with toughness greater than their power assign combat damage equal to their toughness rather than their power.', R => { R.trig.push({ ev: 'attacks', fn: 'youAttack', effects: [cmd('sx_kingpin')] }); });
 // Noxious Revival
-clx('Put target card from a graveyard on top of its owner\'s library.', R => { R.spell = [cmd('sx_noxious')]; });
+clx('Put target card from a graveyard on top of its owner\'s library.', R => { R.spell = [cmd('sx_noxious', { multi: 'sx_gy1' })]; });
 // Reap the Past
 clx('Return 97 cards at random from your graveyard to your hand. Exile ~.', R => { R.spell = [cmd('sx_reap', { x: 97 }), { t: 'exileSelf' }]; });
-// Relic of Sauron (two mana of one of the three colors: an approximation of "any combination")
-clx('{T}: Add two mana in any combination of {U}, {B}, and/or {R}.', R => { R.mana = { colors: ['U', 'B', 'R'], n: 2 }; });
+// Relic of Sauron: two mana, each one blue, black or red (`combo`: a mix of colors; 15v-sixdecks.js)
+clx('{T}: Add two mana in any combination of {U}, {B}, and/or {R}.', R => { R.mana = { colors: ['U', 'B', 'R'], n: 2, combo: true }; });
 // Sarinth Greatwurm
 clx('Whenever a land enters, create a tapped Powerstone token.', R => { R.trig.push({ ev: 'landfall', fn: 'sx_any', effects: [cmd('hh_tappedStone')] }); });
 // Shadow of the Second Sun (enchants its caster: an extra untap, upkeep and draw after each of their second main phases)
-clx('At the beginning of each of enchanted player\'s postcombat main phases, there is an additional beginning phase after this phase.', R => { R.etb.push(cmd('sx_enchantSelf')); R.trig.push({ ev: 'main2', fn: 'sx_hostActive', effects: [cmd('sx_secondSun')] }); });
-// Victory Chimes (taps for {C} for you: an approximation of "a player of your choice")
+clx('At the beginning of each of enchanted player\'s postcombat main phases, there is an additional beginning phase after this phase.', R => { R.etb.push(cmd('sx_enchantChoose', { mine: true })); R.trig.push({ ev: 'main2', fn: 'sx_hostActive', effects: [cmd('sx_secondSun')] }); });
+// Victory Chimes (taps for {C}; giving it to another player is never useful to them, so it is yours)
 clx('{T}: A player of your choice adds {C}.', R => { R.mana = { colors: ['C'], n: 1 }; });
 // Wreck Hunter
 clx('When ~ enters, choose target player. You create a tapped Powerstone token for each nonland card in that player\'s graveyard that was put there from the battlefield this turn.', R => { R.etb.push(cmd('sx_wreckHunter', { target: 'player' })); });
-// Gemstone Caverns (printed as Glittering Caves of Aglarond): never starts on the battlefield; taps for {C}
-clx('If ~ is in your opening hand and you\'re not the starting player, you may begin the game with ~ on the battlefield with a luck counter on it. If you do, exile a card from your hand.', sxNop);
-clx('{T}: Add {C}. If ~ has a luck counter on it, instead add one mana of any color.', R => { R.mana = { colors: ['C'], n: 1 }; });
+// Gemstone Caverns (printed as Glittering Caves of Aglarond): may start on the battlefield with a luck counter (sxOpeningHand); with one it taps for any color
+clx('If ~ is in your opening hand and you\'re not the starting player, you may begin the game with ~ on the battlefield with a luck counter on it. If you do, exile a card from your hand.', R => { R.sx_gemstone = true; });
+clx('{T}: Add {C}. If ~ has a luck counter on it, instead add one mana of any color.', R => { R.mana = { colors: ['C'], n: 1 }; R.sx_luckAny = true; });
 
 // ===================== Aurelia, the Law Above =====================
 clx('Whenever a player attacks with three or more creatures, you draw a card.', R => { R.trig.push({ ev: 'attacks', fn: 'sx_atkN', n: 3, effects: [cmd('sx_draw1')] }); });
@@ -53,23 +53,23 @@ clx('{R}: Target creature attacks this turn if able.', (R, m, ctx) => { act(R, c
 // Cartographer's Hawk
 clx('When ~ deals combat damage to a player who controls more lands than you, return it to its owner\'s hand. If you do, you may search your library for a Plains card, put it onto the battlefield tapped, then shuffle.', R => { R.trig.push({ ev: 'hitPlayer', effects: [cmd('sx_cartHawk')] }); });
 // Continue?
-clx('Choose up to four target creature cards in your graveyard that were put there from the battlefield this turn. Return them to the battlefield.', R => { R.spell = [cmd('sx_continue')]; });
+clx('Choose up to four target creature cards in your graveyard that were put there from the battlefield this turn. Return them to the battlefield.', R => { R.spell = [cmd('sx_continue', { multi: 'sx_continue' })]; });
 // Enter the Avatar State
 clx('Until end of turn, target creature you control becomes an Avatar in addition to its other types and gains flying, first strike, lifelink, and hexproof.', R => { R.spell = [cmd('sx_avatarState', { target: 'creature', mine: true, good: true })]; });
 // Gisela, Blade of Goldnight
 clx('If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead.', R => { R.sx_gisela = true; });
 clx('If a source would deal damage to you or a permanent you control, prevent half that damage, rounded up.', R => { R.sx_gisela = true; });
-// Molten Disaster (split second isn't modeled)
-clx('If ~ was kicked, it has split second.', sxNop);
+// Molten Disaster: kicked, it has split second (no spells or non-mana abilities while it is on the stack)
+clx('If ~ was kicked, it has split second.', R => { R.sx_splitKicked = true; });
 // Phoenix Chick, Warcry Phoenix: come back attacking from the graveyard
 clx('Whenever you attack with three or more creatures, you may pay {R}{R}. If you do, return ~ from your graveyard to the battlefield tapped and attacking with a +1/+1 counter on it.', R => { (R.gyTrig = R.gyTrig || []).push({ ev: 'attacks', fn: 'sx_mine3', effects: [cmd('sx_phoenixBack', { cost: '{R}{R}', counter: 1 })] }); });
 clx('Whenever you attack with three or more creatures, you may pay {2}{R}. If you do, return ~ from your graveyard to the battlefield tapped and attacking.', R => { (R.gyTrig = R.gyTrig || []).push({ ev: 'attacks', fn: 'sx_mine3', effects: [cmd('sx_phoenixBack', { cost: '{2}{R}', counter: 0 })] }); });
 // Rescue Skiff
-clx('When ~ enters, return target creature or enchantment card from your graveyard to the battlefield.', R => { R.etb.push(cmd('sx_skiff')); });
+clx('When ~ enters, return target creature or enchantment card from your graveyard to the battlefield.', R => { R.etb.push(cmd('sx_skiff', { multi: 'sx_skiff' })); });
 // RMS Titanic
 clx('When ~ deals combat damage to a player, sacrifice it and create that many Treasure tokens.', R => { R.trig.push({ ev: 'hitPlayer', effects: [cmd('sx_titanic')] }); });
 // The Night of the Doctor, chapter II
-cl(/^II — Return target legendary creature card from your graveyard to the battlefield\. Put your choice of a first strike, vigilance, or lifelink counter on it\.$/, R => { R.saga = R.saga || {}; (R.saga[2] = R.saga[2] || []).push(cmd('sx_nightDoctor')); });
+cl(/^II — Return target legendary creature card from your graveyard to the battlefield\. Put your choice of a first strike, vigilance, or lifelink counter on it\.$/, R => { R.saga = R.saga || {}; (R.saga[2] = R.saga[2] || []).push(cmd('sx_nightDoctor', { multi: 'sx_legendGy' })); });
 // Wingnut, Bat on the Belfry
 clx('Whenever ~ attacks, each other attacking creature gets +1/+0 until end of turn.', R => { R.trig.push({ ev: 'attacks', effects: [cmd('sx_wingnut')] }); });
 
@@ -91,9 +91,9 @@ clx('{T}, Remove any number of storage counters from ~: Add {C} for each storage
 // Magistrate's Scepter
 clx('{T}, Remove three charge counters from ~: Take an extra turn after this one.', (R, m, ctx) => { act(R, ctx.line, '{T}', [{ t: 'extraTurn' }], a => { a.cost.removeNamedN = { kind: 'charge', n: 3 }; }); });
 // Mindless Automaton (the two counters come off as it resolves)
-clx('Remove two +1/+1 counters from ~: Draw a card.', (R, m, ctx) => { act(R, ctx.line, '{0}', [cmd('sx_automaton')], a => { a.onlyIf = 'sx: ~ has two +1/+1 counters'; }); });
+clx('Remove two +1/+1 counters from ~: Draw a card.', (R, m, ctx) => { act(R, ctx.line, '{0}', [{ t: 'draw', n: 1 }], a => { a.cost.removeP1 = 2; }); });
 // Moxite Refinery (sorcery speed; the counters to move are chosen as it resolves)
-clx('{2}, {T}, Remove X counters from an artifact or creature you control: Choose one. Activate only as a sorcery.', (R, m, ctx) => { act(R, ctx.line, '{2}, {T}', [cmd('sx_moxite')], a => { a.sorcery = true; }); const k = ctx.li; if (/^• Put X charge counters on target artifact\.$/.test(ctx.lines[k + 1] || '')) ctx.li = k + 2; });
+clx('{2}, {T}, Remove X counters from an artifact or creature you control: Choose one. Activate only as a sorcery.', (R, m, ctx) => { act(R, ctx.line, '{2}, {T}', [cmd('sx_moxite')], a => { a.sorcery = true; a.sx_moxite = true; }); const k = ctx.li; if (/^• Put X charge counters on target artifact\.$/.test(ctx.lines[k + 1] || '')) ctx.li = k + 2; });
 // Nature's Chosen
 clx('{0}: Untap enchanted creature. Activate only during your turn and only once each turn.', (R, m, ctx) => { act(R, ctx.line, '{0}', [cmd('sx_untapHost')], a => { a.onlyIf = 'sx: your turn, host tapped, once'; }); });
 clx('Tap enchanted creature: Untap target artifact, creature, or land. Activate only if enchanted creature is white and untapped and only once each turn.', (R, m, ctx) => { act(R, ctx.line, '{0}', [cmd('sx_chosenUntap', { target: 'perm', filter: 'artifact, creature, or land', mine: true, good: true })], a => { a.onlyIf = 'sx: host white and untapped, once'; }); });
@@ -125,8 +125,8 @@ clx('Equipped creature has "{3}, {Q}: ~ gets +2/+2 until end of turn."', (R, m, 
 // Annihilator N (Artisan of Kozilek, Pathrazer of Ulamog, Hideous Taskmaster): handled when attackers are declared (15v-sixdecks.js)
 cl(/^Annihilator (\d+)$/, (R, m) => { R.sx_annih = Number(m[1]); });
 clx('Trample, haste, annihilator 1', R => { R.kw.add('trample'); R.kw.add('haste'); R.sx_annih = 1; });
-// Alexios, Deimos of Kosmos ("can't be sacrificed" and "can't attack its owner" aren't modeled)
-clx('~ attacks each combat if able, can\'t be sacrificed, and can\'t attack its owner.', R => { R.mustAttack = true; });
+// Alexios, Deimos of Kosmos
+clx('~ attacks each combat if able, can\'t be sacrificed, and can\'t attack its owner.', R => { R.mustAttack = true; R.sx_noSac = true; R.sx_noAttackOwner = true; });
 clx('At the beginning of each player\'s upkeep, that player gains control of ~, untaps it, and puts a +1/+1 counter on it. It gains haste until end of turn.', R => { R.trig.push({ ev: 'upkeep', who: 'each', effects: [cmd('sx_alexios')] }); });
 // Avatar of Slaughter
 clx('All creatures have double strike and attack each combat if able.', R => { R.h_thantis = true; R.sx_allDouble = true; });
@@ -137,7 +137,7 @@ clx('−X: ~ deals X damage to target creature or planeswalker. If a permanent d
 // Colossus of Akros
 clx('As long as ~ is monstrous, it has trample and can attack as though it didn\'t have defender.', R => { R.sx_monsterAttack = true; });
 // Curse of Obsession (enchants its caster)
-clx('At the beginning of enchanted player\'s draw step, that player draws two additional cards.', R => { R.etb.push(cmd('sx_enchantSelf')); R.trig.push({ ev: 'upkeep', who: 'each', fn: 'sx_hostActive', effects: [cmd('sx_hostDraws', { n: 2 })] }); });
+clx('At the beginning of enchanted player\'s draw step, that player draws two additional cards.', R => { R.etb.push(cmd('sx_enchantChoose', { mine: true })); R.trig.push({ ev: 'upkeep', who: 'each', fn: 'sx_hostActive', effects: [cmd('sx_hostDraws', { n: 2 })] }); });
 clx('At the beginning of enchanted player\'s end step, that player discards their hand.', R => { R.trig.push({ ev: 'end', who: 'each', fn: 'sx_hostActive', effects: [cmd('sx_hostDiscards')] }); });
 // Deflecting Swat
 clx('You may choose new targets for target spell or ability.', R => { R.spell = [cmd('sx_retarget', { target: 'sx_spellOrAbility' })]; });
@@ -147,11 +147,11 @@ clx('When ~ enters, it deals damage to each opponent equal to your devotion to r
 clx('Whenever a source you control deals noncombat damage to an opponent, if there are four or more card types among cards in your graveyard, ~ deals that amount of damage to target creature that player controls.', R => { R.sx_fearBurn = true; });
 // Grenzo, Havoc Raiser
 // Havoc Eater
-clx('When ~ enters, for each opponent, goad up to one target creature that opponent controls. Put X +1/+1 counters on ~, where X is the total power of creatures goaded this way.', R => { R.etb.push(cmd('sx_havocEater')); });
+clx('When ~ enters, for each opponent, goad up to one target creature that opponent controls. Put X +1/+1 counters on ~, where X is the total power of creatures goaded this way.', R => { R.etb.push(cmd('sx_havocEater', { multi: 'sx_eachOpp' })); });
 // Hideous Taskmaster
-clx('When you cast ~, for each opponent, gain control of up to one target creature that player controls until end of turn. Untap those creatures. They gain trample, haste, and annihilator 1 until end of turn.', R => { R.castTrig = [cmd('sx_taskmaster')]; });
-// Interdimensional Web Watch (two mana of one color; "only to cast spells from exile" isn't modeled)
-clx('{T}: Add two mana in any combination of colors. Spend this mana only to cast spells from exile.', R => { R.mana = { colors: [...COLORS], n: 2 }; });
+clx('When you cast ~, for each opponent, gain control of up to one target creature that player controls until end of turn. Untap those creatures. They gain trample, haste, and annihilator 1 until end of turn.', R => { R.sx_taskmaster = true; });
+// Interdimensional Web Watch: two mana in any mix of colors, spent only on spells cast from exile (`onlyType: 'FromExile'`, payOpts)
+clx('{T}: Add two mana in any combination of colors. Spend this mana only to cast spells from exile.', R => { R.mana = { colors: [...COLORS], n: 2, combo: true, onlyType: 'FromExile' }; });
 // Koth, Fire of Resistance
 clx('−7: You get an emblem with "Whenever a Mountain you control enters, this emblem deals 4 damage to any target."', (R, m, ctx) => { R.acts.push({ loyalty: -7, effects: [cmd('sx_kothEmblem')], text: ctx.line, sorcery: true }); });
 // Lithoform Engine, Peter Parker's Camera
@@ -159,17 +159,17 @@ clx('{2}, {T}: Copy target activated or triggered ability you control. You may c
 clx('{4}, {T}: Copy target permanent spell you control.', (R, m, ctx) => { act(R, ctx.line, '{4}, {T}', [cmd('sx_copyPermSpell', { target: 'sx_myPermSpell' })]); });
 clx('~ enters with three film counters on it.', R => { R.etbNamedN = { kind: 'film', n: 3 }; });
 clx('{2}, {T}, Remove a film counter from ~: Copy target activated or triggered ability you control. You may choose new targets for the copy.', (R, m, ctx) => { act(R, ctx.line, '{2}, {T}', [cmd('fr_echo', { target: 'sx_myAbility' })], a => { a.cost.removeNamedN = { kind: 'film', n: 1 }; }); });
-// Maximum Carnage, chapter I ("attacks a player other than you if able" isn't modeled: they attack as the attacker picks)
+// Maximum Carnage, chapter I (the defender pickers avoid its controller when they can: 15v-sixdecks.js)
 cl(/^I — Until your next turn, each creature attacks each combat if able and attacks a player other than you if able\.$/, R => { R.saga = R.saga || {}; (R.saga[1] = R.saga[1] || []).push(cmd('sx_carnage')); });
 // Nalfeshnee, Spider-Verse: copies of spells cast from exile / from anywhere but your hand
 clx('Whenever you cast a spell from exile, copy it. You may choose new targets for the copy. If it\'s a permanent spell, the copy gains haste and "At the beginning of the end step, sacrifice ~."', R => { R.sx_copyExile = 'nalfeshnee'; });
-clx('The "legend rule" doesn\'t apply to Spiders you control.', sxNop);
+clx('The "legend rule" doesn\'t apply to Spiders you control.', R => { R.sx_spiderLegend = true; });
 clx('Whenever you cast a spell from anywhere other than your hand, you may copy it. If you do, you may choose new targets for the copy. If the copy is a permanent spell, it gains haste. Do this only once each turn.', R => { R.sx_copyExile = 'spiderverse'; });
 // Planetary Annihilation
 clx('Each player chooses six lands they control, then sacrifices the rest. ~ deals 6 damage to each creature.', R => { R.spell = [cmd('sx_planetary')]; });
 // Rampaging War Mammoth
 clx('When you cycle ~, destroy up to X target artifacts.', R => { R.cycleTrig = [cmd('sx_mammoth')]; });
-// Stolen Strategy ("spend mana as though any color" isn't modeled)
+// Stolen Strategy (mana spent as though it were any color: costOf, 15v-sixdecks.js)
 clx('At the beginning of your upkeep, exile the top card of each opponent\'s library. Until end of turn, you may cast spells from among those exiled cards, and you may spend mana as though it were mana of any color to cast those spells.', R => { R.trig.push({ ev: 'upkeep', effects: [cmd('sx_stolen')] }); });
 // The Fire Crystal
 clx('{4}{R}{R}, {T}: Create a token that\'s a copy of target creature you control. Sacrifice it at the beginning of the next end step.', (R, m, ctx) => { act(R, ctx.line, '{4}{R}{R}, {T}', [cmd('sx_fireCrystal', { target: 'creature', mine: true, good: true })]); });
@@ -207,7 +207,7 @@ clx('You may have ~ enter as a copy of a permanent you control, except it\'s leg
 clx('When ~ enters, create a tapped Mutavault token.', R => { R.etb.push(cmd('sx_mutavault')); });
 clx('You may have ~ enter as a copy of any creature on the battlefield, except it has changeling.', R => { R.clone = { what: 'creature', addText: () => 'Changeling' }; });
 clx('Whenever ~ or another Elemental you control enters, look at the top card of your library. If it\'s a land card, you may put it onto the battlefield tapped. If you don\'t put the card onto the battlefield, put it into your hand.', R => { R.trig.push({ ev: 'enters', typeEnter: { type: 'Elemental', creature: true, self: true }, effects: [cmd('sx_risenReef')] }); });
-clx('When ~ enters, exile up to two target cards from graveyards. You gain 3 life.', R => { R.etb.push(cmd('sx_percher')); });
+clx('When ~ enters, exile up to two target cards from graveyards. You gain 3 life.', R => { R.etb.push(cmd('sx_percher', { multi: 'sx_gy2' })); });
 clx('Creature tokens you control have "{T}: Add one mana of any color."', R => { R.sx_tokenMana = true; });
 clx('Affinity for Slivers', R => { R.affinityOf = 'Sliver'; });
 clx('Whenever you cast a Myr spell, create a 1/1 colorless Myr artifact creature token.', R => { R.trig.push({ ev: 'cast', fn: 'sx_castMyr', who: 'any', effects: [cmd('sx_myrToken')] }); });

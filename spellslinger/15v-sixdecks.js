@@ -155,14 +155,11 @@ Object.assign(CMD, {
         log(`${P.name} ${sxSays(P, 'pay', 'pays')} 2 life: creatures with toughness greater than power assign combat damage equal to their toughness this turn.`);
     },
     async sx_noxious(P, e, t, src) {
-        const pool = G.players.flatMap(X => X.gy.map(c => ({ c, X })));
-        if (!pool.length) return;
-        let pick;
-        if (sxAI(P)) { const own = pool.filter(p => p.X === P).sort((a, b) => (b.c.card.cmc || 0) - (a.c.card.cmc || 0)); pick = own[0] || pool[0]; }
-        else { const c = await pickCard(P, pool.map(p => p.c), `${src.card.name}: put a card from a graveyard on top of its owner's library`, { required: true }); pick = pool.find(p => p.c === c); }
+        const pick = (await sxMulti(P, src, 'sx_gy1')).list.find(c => G.players.some(X => X.gy.includes(c)));
         if (!pick) return;
-        pull(pick.X.gy, pick.c); pick.X.library.push(pick.c);
-        log(`${pick.c.card.name} is put on top of ${pick.X.name}'s library.`);
+        const X = G.players.find(y => y.gy.includes(pick));
+        pull(X.gy, pick); X.library.push(pick);
+        log(`${pick.card.name} is put on top of ${X.name}'s library.`);
     },
     sx_reap(P, e, t, src) {
         const x = Math.min(typeof e.x === 'number' ? e.x : typeof src.xVal === 'number' ? src.xVal : 0, P.gy.length);
@@ -206,9 +203,8 @@ Object.assign(CMD, {
         P.library = shuffle(P.library);
     },
     async sx_continue(P, e, t, src) {
-        const pool = P.gy.filter(c => /\bCreature\b/.test(c.card.type) && sxFromBfThisTurn(c));
-        if (!pool.length) { log(`${src.card.name}: no creature cards went to the graveyard from the battlefield this turn.`); return; }
-        const picks = sxAI(P) ? pool.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)).slice(0, 4) : await jvPickSeveral(P, pool, `${src.card.name}: return a creature card`, 4, () => true);
+        const picks = (await sxMulti(P, src, 'sx_continue')).list.filter(c => P.gy.includes(c));
+        if (!picks.length) { log(`${src.card.name}: no creature cards to return.`); return; }
         picks.forEach(c => reanimateFrom(P, P, c));
     },
     sx_avatarState(P, e, t, src) {
@@ -233,9 +229,7 @@ Object.assign(CMD, {
         log(`${src.card.name} returns to the battlefield tapped and attacking.`);
     },
     async sx_skiff(P, e, t, src) {
-        const pool = P.gy.filter(c => /\b(Creature|Enchantment)\b/.test(c.card.type));
-        if (!pool.length) return;
-        const c = sxAI(P) ? pool.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0] : await pickCard(P, pool, `${src.card.name}: return a creature or enchantment card to the battlefield`, { required: true });
+        const c = (await sxMulti(P, src, 'sx_skiff')).list.find(x => P.gy.includes(x));
         if (c) reanimateFrom(P, P, c);
     },
     sx_titanic(P, e, t, src) {
@@ -245,9 +239,7 @@ Object.assign(CMD, {
         log(`${P.name} ${sxSays(P, 'create', 'creates')} ${n} Treasure token${n === 1 ? '' : 's'}.`);
     },
     async sx_nightDoctor(P, e, t, src) {
-        const pool = P.gy.filter(c => /\bLegendary\b/.test(c.card.type) && /\bCreature\b/.test(c.card.type));
-        if (!pool.length) return;
-        const c = sxAI(P) ? pool.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0] : await pickCard(P, pool, `${src.card.name}: return a legendary creature card to the battlefield`, { required: true });
+        const c = (await sxMulti(P, src, 'sx_legendGy')).list.find(x => P.gy.includes(x));
         if (!c) return;
         reanimateFrom(P, P, c);
         const kinds = ['first strike', 'vigilance', 'lifelink'];
@@ -294,27 +286,11 @@ Object.assign(CMD, {
         src.ctr.storage -= n;
         sxPool(P, Array(n).fill('C'));
     },
-    sx_automaton(P, e, t, src) { if (src.counters < 2) return; src.counters -= 2; log(`Two +1/+1 counters are removed from ${src.card.name}.`); drawCards(P, 1); },
-    async sx_moxite(P, e, t, src) {
-        const total = c => Math.max(0, c.counters) + Object.values(c.ctr || {}).reduce((a, v) => a + (v > 0 ? v : 0), 0);
-        const from = P.bf.filter(c => (isCreature(c) || /\bArtifact\b/.test(c.card.type)) && total(c) > 0);
-        if (!from.length) { log(`${src.card.name}: nothing has counters to remove.`); return; }
-        const dest = P.bf.filter(c => isCreature(c) || /\bArtifact\b/.test(c.card.type));
-        let s, x, d;
-        if (sxAI(P)) {
-            s = from.slice().sort((a, b) => total(b) - total(a))[0];
-            x = total(s);
-            d = dest.filter(c => c !== s && isCreature(c)).sort((a, b) => pow(b) - pow(a))[0] || dest.find(c => c !== s) || s;
-        } else {
-            s = await pickCard(P, from, `${src.card.name}: remove counters from`, { required: true }); if (!s) return;
-            x = await askNumber(P, `${src.card.name}: remove how many counters from ${s.card.name}?`, 1, total(s), total(s), { card: src.card }); if (x === null) return;
-            d = await pickCard(P, dest, `${src.card.name}: put ${x} counters on (a creature gets +1/+1 counters, an artifact charge counters)`, { required: true }); if (!d) return;
-        }
-        let left = x;
-        const takeP = Math.min(left, Math.max(0, s.counters)); s.counters -= takeP; left -= takeP;
-        for (const k of Object.keys(s.ctr || {})) { if (left <= 0) break; const tk = Math.min(left, s.ctr[k] || 0); s.ctr[k] -= tk; left -= tk; }
-        if (isCreature(d)) putCounters(d, x, P); else { d.ctr = d.ctr || {}; d.ctr.charge = (d.ctr.charge || 0) + x; }
-        log(`${src.card.name}: ${x} counters move from ${s.card.name} to ${d.card.name} (${isCreature(d) ? '+1/+1' : 'charge'}).`);
+    sx_moxite(P, e, t, src) {
+        const m = src.sx_mox; src.sx_mox = null; if (!m) return;
+        const d = m.dest; if (!d || !onBf(d.uid)) return;
+        if (isCreature(d)) { putCounters(d, m.x, P); log(`${d.card.name} gets ${m.x} +1/+1 counters (${src.card.name}).`); }
+        else { d.ctr = d.ctr || {}; d.ctr.charge = (d.ctr.charge || 0) + m.x; log(`${d.card.name} gets ${m.x} charge counters (${src.card.name}).`); }
     },
     sx_untapHost(P, e, t, src) { const h = sxHost(src); src.sx_onceA = G.turn; if (h) { h.tapped = false; log(`${h.card.name} untaps.`); } },
     sx_chosenUntap(P, e, t, src) {
@@ -387,7 +363,7 @@ Object.assign(CMD_SCORE, {
     sx_noxious: () => 2, sx_reap: P => (P.gy.length >= 3 ? 6 : 1), sx_enchantSelf: () => 6, sx_wreckHunter: () => 1,
     sx_continue: P => P.gy.filter(c => /\bCreature\b/.test(c.card.type) && sxFromBfThisTurn(c)).length * 4,
     sx_avatarState: () => 3, sx_skiff: P => (P.gy.some(c => /\b(Creature|Enchantment)\b/.test(c.card.type)) ? 6 : 0),
-    sx_boonBoseiju: () => 3, sx_blastZone: () => 1, sx_moxite: () => 2, sx_sabertooth: () => 0, sx_storage: () => 0, sx_automaton: () => 3
+    sx_boonBoseiju: () => 3, sx_blastZone: () => 1, sx_moxite: () => 2, sx_sabertooth: () => 0, sx_storage: () => 0
 });
 
 // =====================================================================
@@ -534,7 +510,7 @@ async function sxCopyStackSpell(P, it, haste, sac) {
             const X = ctrl(src) || G.players[src.owner];
             if (X && X !== target && foes(X).includes(target)) {
                 const types = new Set(); X.gy.forEach(c => ['Artifact', 'Creature', 'Enchantment', 'Instant', 'Land', 'Planeswalker', 'Sorcery', 'Battle', 'Kindred'].forEach(w => { if (new RegExp(`\\b${w}\\b`).test(c.card.type)) types.add(w); }));
-                if (types.size >= 4) X.bf.filter(s => Rx(s).sx_fearBurn && !lostAbilities(s)).forEach(s => (G.trigQ = G.trigQ || []).push({ P: X, o: s, effects: [cmd('sx_fearHit', { n, victim: target.i })] }));
+                if (types.size >= 4) X.bf.filter(s => Rx(s).sx_fearBurn && !lostAbilities(s)).forEach(s => (G.trigQ = G.trigQ || []).push({ P: X, o: s, effects: [cmd('sx_fearHit', { n, victim: target.i, multi: `sx_fear:${target.i}` })] }));
             }
         }
         return r;
@@ -598,28 +574,20 @@ Object.assign(CMD, {
     sx_fanatic(P, e, t, src) { const n = devotion(P, ['R']); if (!n) return; foes(P).forEach(F => damage(F, n, src)); log(`${src.card.name} deals ${n} damage to each opponent (devotion to red).`); },
     async sx_fearHit(P, e, t, src) {
         const X = G.players[e.victim]; if (!X) return;
-        const pool = X.bf.filter(c => isCreature(c) && !has(c, 'shroud') && !has(c, 'hexproof'));
-        if (!pool.length) return;
-        const c = sxAI(P) ? pool.slice().sort((a, b) => (tou(a) - a.dmg <= e.n ? -100 : 0) - (tou(b) - b.dmg <= e.n ? -100 : 0) || creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: deal ${e.n} damage to a creature ${X.name} controls`, { required: true });
+        const c = (await sxMulti(P, src, `sx_fear:${e.victim}`)).list.find(x => onBf(x.uid) && ctrl(x) === X);
         if (c) { damage(c, e.n, src); log(`${src.card.name} deals ${e.n} damage to ${c.card.name}.`); }
     },
     async sx_havocEater(P, e, t, src) {
         let total = 0;
-        for (const F of foes(P)) {
-            const pool = F.bf.filter(c => isCreature(c) && !has(c, 'shroud') && !has(c, 'hexproof'));
-            if (!pool.length) continue;
-            const c = sxAI(P) ? pool.slice().sort((a, b) => pow(b) - pow(a))[0] : await pickCard(P, pool, `${src.card.name}: goad up to one creature ${F.name} controls`);
-            if (!c) continue;
+        for (const c of (await sxMulti(P, src, 'sx_eachOpp')).list) {
+            if (!onBf(c.uid) || ctrl(c) === P || has(c, 'shroud') || has(c, 'hexproof')) continue;
             goad(c, P.i, G.turn + G.players.filter(y => !y.out).length); total += Math.max(0, pow(c));
         }
         if (total && onBf(src.uid)) { putCounters(src, total, P); log(`${src.card.name} gets ${total} +1/+1 counters.`); }
     },
     async sx_taskmaster(P, e, t, src) {
-        for (const F of foes(P)) {
-            const pool = F.bf.filter(c => isCreature(c) && !has(c, 'shroud') && !has(c, 'hexproof'));
-            if (!pool.length) continue;
-            const c = sxAI(P) ? pool.slice().sort((a, b) => pow(b) - pow(a))[0] : await pickCard(P, pool, `${src.card.name}: gain control of up to one creature ${F.name} controls`);
-            if (!c) continue;
+        for (const c of (await sxMulti(P, src, 'sx_eachOpp')).list) {
+            if (!onBf(c.uid) || ctrl(c) === P || has(c, 'shroud') || has(c, 'hexproof')) continue;
             await applyEffect(P, { t: 'steal' }, { o: c }, src);
             if (onBf(c.uid)) { c.tapped = false; c.tkw.push('trample', 'haste'); c.sx_annihTurn = G.turn; }
         }
@@ -668,7 +636,7 @@ Object.assign(CMD, {
         const picks = sxAI(P) ? pool.filter(c => c.owner !== P.i).sort((a, b) => permValue(b) - permValue(a)).slice(0, x) : await jvPickSeveral(P, pool, `${src.card.name}: destroy an artifact`, x, () => true);
         picks.forEach(c => destroy(c, src.card.name));
     },
-    sx_stolen(P, e, t, src) { foes(P).forEach(F => { const c = F.library.pop(); if (c) exilePlayFrom(P, F, c, G.turn); }); },
+    sx_stolen(P, e, t, src) { foes(P).forEach(F => { const c = F.library.pop(); if (c) { exilePlayFrom(P, F, c, G.turn); c.sx_anyColor = G.turn; } }); },
     sx_fireCrystal(P, e, t, src) { const c = t && t.o; if (!c || !onBf(c.uid)) return; const tok = tokenCopyOf(P, c.card); if (tok) tok.sacAtEnd = G.turn; },
     sx_urabrask() { const X = G.players[G.active]; if (X && !X.out) X.sx_urabrask = G.turn; },
     async sx_forge(P, e, t, src) {
@@ -780,11 +748,10 @@ Object.assign(CMD, {
         P.library.pop(); P.hand.push(c); log(`${P.name} ${sxSays(P, 'put', 'puts')} the top card of ${sxSays(P, 'your', 'their')} library into ${sxSays(P, 'your', 'their')} hand.`);
     },
     async sx_percher(P, e, t, src) {
-        const pool = G.players.flatMap(X => X.gy.map(c => ({ c, X })));
-        let picks;
-        if (sxAI(P)) picks = pool.filter(p => p.X !== P).sort((a, b) => (b.c.card.cmc || 0) - (a.c.card.cmc || 0)).slice(0, 2);
-        else { const got = await jvPickSeveral(P, pool.map(p => p.c), `${src.card.name}: exile a card from a graveyard`, 2, () => true); picks = got.map(c => pool.find(p => p.c === c)).filter(Boolean); }
-        picks.forEach(p => { pull(p.X.gy, p.c); p.X.exile.push(p.c); log(`${p.c.card.name} is exiled from ${p.X.name}'s graveyard.`); });
+        for (const c of (await sxMulti(P, src, 'sx_gy2')).list) {
+            const X = G.players.find(y => y.gy.includes(c)); if (!X) continue;
+            pull(X.gy, c); X.exile.push(c); log(`${c.card.name} is exiled from ${X.name}'s graveyard.`);
+        }
         gainLifeFor(P, 3);
     },
     async sx_myrToken(P, e, t, src) { await applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'colorless Myr', artifact: true, kw: [] }, null, src); },
@@ -798,15 +765,11 @@ Object.assign(CMD, {
         leaveBattlefield(c, 'exile');
         if (c.token) return;
         const H = G.players.find(y => y.exile.includes(c)) || X;
-        if (H) { pull(H.exile, c); exilePlayFrom(P, H, c, Infinity); }
+        if (H) { pull(H.exile, c); exilePlayFrom(P, H, c, Infinity); c.sx_colorlessAny = true; }
     },
     async sx_bloodTribute(P, e, t, src) {
         const F = (t && t.p) || opp(P); if (!F || F === P) return;
-        const n = Math.ceil(Math.max(0, F.life) / 2);
-        let kicked = false;
-        const vamp = P.bf.find(c => isCreature(c) && hasType(c, 'Vampire') && !c.tapped);
-        if (vamp && Rx(src).sx_vampKicker) kicked = sxAI(P) ? true : await askYes(P, `${src.card.name}: tap ${vamp.card.name} to kick it (you gain the life lost)?`, { card: src.card });
-        if (kicked) { vamp.tapped = true; fire('tapped', { o: vamp }); }
+        const n = Math.ceil(Math.max(0, F.life) / 2), kicked = !!src.kicked;
         F.life -= n; F.lostTurn = G.turn; fire('loseLife', { P: F, n });
         log(`${F.name} ${sxSays(F, 'lose', 'loses')} ${n} life (${src.card.name}${kicked ? ', kicked' : ''}).`);
         if (kicked && n) gainLifeFor(P, n);
@@ -878,7 +841,7 @@ Object.assign(CMD, {
         const c = sxAI(P) ? crs.slice().sort((a, b) => pow(b) - pow(a))[0] : await pickCard(P, crs, `${src.card.name}: goad a creature ${X.name} controls`, { required: true });
         if (c) goad(c, P.i, G.turn + G.players.filter(y => !y.out).length);
     },
-    sx_grenzoExile(P, e, t, src) { const X = sxHitPlayer(); if (!X || X.out) return; const c = X.library.pop(); if (c) exilePlayFrom(P, X, c, G.turn); },
+    sx_grenzoExile(P, e, t, src) { const X = sxHitPlayer(); if (!X || X.out) return; const c = X.library.pop(); if (c) { exilePlayFrom(P, X, c, G.turn); c.sx_anyColor = G.turn; } },
     async sx_glissaInc(P, e, t, src) { for (let k = 0; k < 2; k++) { G.lastWipeN = 2; await CMD.incubate(P, {}, null, src); } },
     async sx_glissaTr(P) { for (const c of P.bf.filter(x => x.incubatorN > 0)) await CMD.incubatorTransform(P, {}, null, c); },
     sx_glissaKw(P) { P.bf.filter(c => isCreature(c) && hasType(c, 'Phyrexian')).forEach(c => c.tkw.push('first strike', 'deathtouch')); log(`Phyrexians ${sxSays(P, 'you control', `${P.name} controls`)} gain first strike and deathtouch until end of turn.`); },
@@ -894,3 +857,267 @@ Object.assign(CMD_SCORE, {
     sx_glissaInc: () => 5, sx_glissaTr: P => P.bf.filter(x => x.incubatorN > 0).length * 3, sx_glissaKw: P => P.bf.filter(c => isCreature(c) && hasType(c, 'Phyrexian')).length * 1.5,
     sx_astarionLose: P => Math.max(0, ...foes(P).map(sxLostThisTurn)), sx_astarionGain: P => (P.gainedTurn === G.turn ? P.gainedAmt || 0 : 0)
 });
+
+// =====================================================================
+// The simplifications fixed (2026-11-12, owner: "The simplified stuff fix it so it is right")
+// =====================================================================
+// ---- Targets chosen as the spell is cast / the ability goes on the stack (the FR_MULTI system of 15r-fivedecks.js) ----
+const sxGyAll = () => G.players.filter(X => !X.out).flatMap(X => X.gy);
+const SX_MULTI = {
+    sx_gy1: { title: 'choose a card in a graveyard', min: 1, max: 1, pool: () => sxGyAll(), ai: P => P.gy.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)).concat(sxGyAll().filter(c => !P.gy.includes(c))) },
+    sx_gy2: { title: 'exile a card from a graveyard', min: 0, max: 2, pool: () => sxGyAll(), ai: P => sxGyAll().filter(c => !P.gy.includes(c)).sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)) },
+    sx_skiff: { title: 'return a creature or enchantment card', min: 1, max: 1, pool: P => P.gy.filter(c => /\b(Creature|Enchantment)\b/.test(c.card.type)), ai: (P, pool) => pool.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)) },
+    sx_legendGy: { title: 'return a legendary creature card', min: 1, max: 1, pool: P => P.gy.filter(c => /\bLegendary\b/.test(c.card.type) && /\bCreature\b/.test(c.card.type)), ai: (P, pool) => pool.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)) },
+    sx_continue: { title: 'return a creature card that died this turn', min: 0, max: 4, pool: P => P.gy.filter(c => /\bCreature\b/.test(c.card.type) && sxFromBfThisTurn(c)), ai: (P, pool) => pool.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)) }
+};
+const sxTargetable = (P, c) => isCreature(c) && !has(c, 'shroud') && !(has(c, 'hexproof') && ctrl(c) !== P);
+async function sxMultiChoose(P, src, kind) {
+    const name = src && src.card ? src.card.name : 'Choose', human = !(P.isAI || AUTOPLAY);
+    if (kind === 'sx_eachOpp') { // for each opponent, up to one target creature that player controls
+        const list = [];
+        for (const F of foes(P)) {
+            const pool = F.bf.filter(c => sxTargetable(P, c)); if (!pool.length) continue;
+            const c = human ? await pickCard(P, pool, `${name}: up to one creature ${F.name} controls`) : pool.slice().sort((a, b) => pow(b) - pow(a))[0];
+            if (c) list.push(c);
+        }
+        return { list };
+    }
+    if (/^sx_fear:/.test(kind)) { // a target creature the damaged opponent controls
+        const X = G.players[Number(kind.split(':')[1])]; const pool = X ? X.bf.filter(c => sxTargetable(P, c)) : [];
+        if (!pool.length) return { list: [] };
+        const c = human ? await pickCard(P, pool, `${name}: deal damage to a creature ${X.name} controls`, { required: true }) : pool.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0];
+        return { list: c ? [c] : [] };
+    }
+    const cfg = SX_MULTI[kind]; if (!cfg) return { list: [] };
+    const pool = cfg.pool(P, src).slice();
+    if (!human) return { list: cfg.ai(P, pool).filter(c => pool.includes(c)).slice(0, cfg.max) };
+    const out = [];
+    for (let k = 0; k < cfg.max && pool.length; k++) {
+        const c = await pickCard(P, pool, `${name}: ${cfg.title}${cfg.max > 1 ? ` (${k + 1} of up to ${cfg.max})` : ''}`, k < cfg.min ? { required: true } : {});
+        if (!c) break; out.push(c); pool.splice(pool.indexOf(c), 1);
+    }
+    return { list: out };
+}
+{
+    const baseC = frMultiChoose, baseA = frMultiAI;
+    frMultiChoose = async function (P, src, kind, x) { return /^sx_/.test(String(kind)) ? sxMultiChoose(P, src, kind) : baseC.apply(this, arguments); };
+    frMultiAI = function (P, src, kind, x) { return /^sx_/.test(String(kind)) ? { list: [] } : baseA.apply(this, arguments); };
+}
+// The choice made on the stack, else (a copy, or a test calling the effect directly) choose now
+const sxMulti = async (P, src, kind) => (G.curMulti && Array.isArray(G.curMulti.list) ? G.curMulti : await sxMultiChoose(P, src, kind));
+
+// ---- Shadow of the Second Sun, Curse of Obsession: enchant a player of your choice ----
+CMD.sx_enchantChoose = async function (P, e, t, src) {
+    const all = G.players.filter(X => !X.out);
+    let X = P; // the computer enchants itself: both cards help their player
+    if (!(P.isAI || AUTOPLAY) && all.length > 1) X = (await pickPlayer(P, [P, ...all.filter(y => y !== P)], `${src.card.name}: enchant`)) || P;
+    src.hostPlayer = X.i;
+    log(`${src.card.name} enchants ${sxSays(X, 'you', X.name)}.`);
+};
+
+// ---- Hideous Taskmaster: "when you cast" trigger with its targets chosen as it goes on the stack ----
+{
+    const base = fire;
+    fire = function (ev, ctx = {}) {
+        const r = base.apply(this, arguments);
+        if (G && !G.over && ev === 'cast' && ctx.o && ctx.P && Rx(ctx.o).sx_taskmaster) (G.trigQ = G.trigQ || []).push({ P: ctx.P, o: ctx.o, effects: [cmd('sx_taskmaster', { multi: 'sx_eachOpp' })] });
+        // Alexios can't attack its owner: an attacker sent at its owner goes at another opponent
+        if (G && !G.over && ev === 'attacks' && ctx.list) ctx.list.filter(a => Rx(a).sx_noAttackOwner && !lostAbilities(a)).forEach(a => {
+            const ownerI = a.realOwner ?? a.owner, X = ctrl(a); if (!X || X.i === ownerI) return;
+            const at = a.atkTo !== undefined ? a.atkTo : G.defender;
+            if (at !== ownerI) return;
+            const other = foes(X).filter(F => F.i !== ownerI).sort((p, q) => p.life - q.life)[0];
+            if (other) { a.atkTo = other.i; log(`${a.card.name} can't attack its owner: it attacks ${other.name} instead.`); }
+        });
+        return r;
+    };
+}
+// ---- Alexios: can't be sacrificed; with its owner the only opponent it can't attack ----
+{
+    const bC = sacCandidates, bF = sacFodder, bN = chooseSacN;
+    const ok = x => !(Rx(x).sx_noSac && !lostAbilities(x));
+    sacCandidates = function () { return bC.apply(this, arguments).filter(ok); };
+    sacFodder = function (P, src, kind) { const f = bF.apply(this, arguments); if (!f || ok(f)) return f; return sacCandidates(P, src, kind).sort((a, b) => permValue(a) - permValue(b))[0] || null; };
+    chooseSacN = function (P, pool, n, label) { return bN.call(this, P, pool.filter(ok), n, label); };
+    const bA = typeof cmdCantAttack === 'function' ? cmdCantAttack : () => false;
+    cmdCantAttack = function (o) {
+        if (bA.apply(this, arguments)) return true;
+        if (!G || !Rx(o).sx_noAttackOwner || lostAbilities(o)) return false;
+        const ownerI = o.realOwner ?? o.owner, X = ctrl(o);
+        return !!X && X.i !== ownerI && foes(X).every(F => F.i === ownerI);
+    };
+}
+// ---- Molten Disaster: kicked, it has split second ----
+const sxSplitSecond = () => !!G && G.stack.some(it => it.kind === 'spell' && Rx(it.o).sx_splitKicked && (it.kicked || it.o.kicked));
+{
+    const bC = canCastNow, bAct = canActivate;
+    canCastNow = function () { return sxSplitSecond() ? false : bC.apply(this, arguments); };
+    canActivate = function (P, o, a) { return sxSplitSecond() && !a.mana ? false : bAct.apply(this, arguments); };
+}
+// ---- Grenzo, Stolen Strategy: mana spent as though it were any color (colored symbols become generic); ----
+// ---- Abstruse Appropriation: colorless mana as though it were any color (colored symbols may be paid with {C}) ----
+{
+    const base = costOf;
+    costOf = function (P, o) {
+        const c = base.apply(this, arguments);
+        if (!G || !o || o.sx_anyColor !== G.turn || !P.exile.includes(o) || !c) return c;
+        const col = ['W', 'U', 'B', 'R', 'G'].reduce((a, k) => a + (c[k] || 0), 0);
+        return col ? { ...c, W: 0, U: 0, B: 0, R: 0, G: 0, generic: (c.generic || 0) + col } : c;
+    };
+    const bPlan = planPayment;
+    planPayment = function (P, cost, extra = 0, exclude = null, opts = {}) {
+        const r = bPlan.apply(this, arguments);
+        if (r || !opts.sxCAny || !cost) return r;
+        const syms = ['W', 'U', 'B', 'R', 'G'].flatMap(k => Array(cost[k] || 0).fill(k));
+        for (let k = 1; k <= Math.min(syms.length, 4); k++) {
+            const pick = syms.slice(0, k), c2 = { ...cost, C: (cost.C || 0) + k };
+            pick.forEach(s2 => { c2[s2]--; });
+            const p2 = bPlan.call(this, P, c2, extra, exclude, opts); if (p2) return p2;
+            // A source that makes {C}{C} (Sol Ring) can pay two of those symbols: count its mana one by one
+            const multiC = P.bf.filter(o => o !== exclude && !o.tapped && manaOf(o) && manaOf(o).n > 1 && manaOf(o).colors.every(x => x === 'C') && !(isCreature(o) && o.sick && !has(o, 'haste')));
+            for (let j = 1; j <= multiC.length; j++) {
+                const use = multiC.slice(0, j), virt = use.flatMap(o => Array(manaOf(o).n).fill('C'));
+                use.forEach(o => { o.tapped = true; });
+                let p3 = null;
+                try { p3 = bPlan.call(this, P, c2, extra, exclude, { ...opts, virt }); } finally { use.forEach(o => { o.tapped = false; }); }
+                if (p3) return p3.filter(x => !x.virtual).concat(use);
+            }
+        }
+        return r;
+    };
+}
+// ---- Relic of Sauron, Interdimensional Web Watch: two mana in any combination of their colors ----
+{
+    const bPlan = planPayment;
+    const pairs = cols => cols.flatMap((a, i) => cols.slice(i).map(b => [a, b]));
+    planPayment = function (P, cost, extra = 0, exclude = null, opts = {}) {
+        const r = bPlan.apply(this, arguments);
+        if (r || !P || opts.poolOnly || opts.virt) return r;
+        const combos = P.bf.filter(o => o !== exclude && !o.tapped && manaOf(o) && manaOf(o).combo && !(isCreature(o) && o.sick && !has(o, 'haste'))
+            && (!manaOf(o).onlyType || (opts.forType && new RegExp(`\\b${manaOf(o).onlyType}\\b`).test(opts.forType))));
+        if (!combos.length) return r;
+        const tryWith = list => {
+            const choices = list.map(o => pairs(manaOf(o).colors));
+            const walk = (k, acc) => {
+                if (k === list.length) {
+                    list.forEach(o => { o.tapped = true; });
+                    let plan = null;
+                    try { plan = bPlan.call(this, P, cost, extra, exclude, { ...opts, virt: acc }); } finally { list.forEach(o => { o.tapped = false; }); }
+                    return plan ? plan.filter(x => !x.virtual).concat(list) : null;
+                }
+                for (const pr of choices[k]) { const got = walk(k + 1, acc.concat(pr)); if (got) return got; }
+                return null;
+            };
+            return walk(0, []);
+        };
+        for (const o of combos) { const got = tryWith([o]); if (got) return got; }
+        return combos.length >= 2 ? tryWith(combos.slice(0, 2)) : r;
+    };
+    // By hand: pick the two colors
+    const bPick = pickManaColor, bTap = tapForMana;
+    pickManaColor = function (o, cols) {
+        const m = manaOf(o); if (!m || !m.combo) return bPick.apply(this, arguments);
+        const pay = G.mode && G.mode.type === 'pay' ? G.mode : null, need = pay ? stillNeeded(me(), pay.cost, pay.extra, pay.opts) : null;
+        showModal(`<h2>Tap ${esc(o.card.name)} for…</h2><div class="row" style="justify-content:center; gap:8px; flex-wrap:wrap;">${pairs(m.colors).map(([a, b]) => `<button class="btn${need && (need[a] || need[b]) ? ' primary' : ''}" onclick="closeModal(); tapForMana(${o.uid}, '${a}${b}')">{${a}}{${b}}</button>`).join('')}</div>
+            ${m.onlyType === 'FromExile' ? '<p class="note" style="text-align:center;">Only for spells cast from exile.</p>' : ''}<div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+    };
+    tapForMana = function (uid, color) {
+        const o = onBf(uid), m = o && manaOf(o);
+        if (!m || !m.combo) return bTap.apply(this, arguments);
+        const P = me();
+        closeSheet();
+        if (!G || G.over || o.owner !== G.view || !manaSources(P).includes(o)) return;
+        if (!color || color.length !== 2) { pickManaColor(o, m.colors); return; }
+        const tag = m.onlyType ? `:${m.onlyType}` : '';
+        tapSource(P, o);
+        const pool = [color[0] + tag, color[1] + tag];
+        P.pool = (P.pool || []).concat(pool);
+        const pay = G.mode && G.mode.type === 'pay' ? G.mode : null;
+        if (pay) pay.taps.push({ o, pool, life: 0, sac: false, fee: [] });
+        else log(`You tap ${o.card.name} for {${color[0]}}{${color[1]}} (it stays in your mana pool until the step ends).`);
+        if (pay && poolCovers(P, pay.cost, pay.extra, pay.opts)) { pay.done(true); return; }
+        renderGame();
+    };
+}
+// ---- Gemstone Caverns: begin the game on the battlefield with a luck counter (not the starting player), exiling a card from hand ----
+async function sxOpeningHand() {
+    for (const P of G.players) {
+        if (P.i === G.active) continue;
+        for (const o of P.hand.filter(x => Rx(x).sx_gemstone)) {
+            if (P.hand.length < 2) continue;
+            const yes = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${o.card.name} is in your opening hand and you're not the starting player: begin the game with it on the battlefield (with a luck counter), exiling a card from your hand?`, { card: o.card });
+            if (!yes) continue;
+            const others = P.hand.filter(x => x !== o);
+            const ex = (P.isAI || AUTOPLAY) ? others.slice().sort((a, b) => (Rx(a).kind === 'land' ? 1 : 0) - (Rx(b).kind === 'land' ? 1 : 0) || (b.card.cmc || 0) - (a.card.cmc || 0))[0] : await pickCard(P, others, `${o.card.name}: exile a card from your hand`, { required: true });
+            if (!ex) continue;
+            pull(P.hand, o); putOntoBattlefield(P, o, false); o.ctr.luck = 1;
+            pull(P.hand, ex); P.exile.push(ex);
+            log(`${P.name} ${sxSays(P, 'begin', 'begins')} the game with ${o.card.name} on the battlefield (a luck counter) and ${sxSays(P, 'exile', 'exiles')} ${ex.card.name}.`);
+        }
+    }
+}
+{
+    const base = manaOf;
+    manaOf = function (o) {
+        const m = base.apply(this, arguments);
+        if (m && o && Rx(o).sx_luckAny && o.ctr && o.ctr.luck > 0) return { ...m, colors: [...COLORS] };
+        return m;
+    };
+}
+// ---- Maximum Carnage: creatures attack a player other than the Saga's controller if able ----
+{
+    const carnage = () => (G ? G.players.filter(X => X.sx_carnageUntil > G.turn).map(X => X.i) : []);
+    const avoid = (P, d) => { const cs = carnage(); if (!d || !cs.includes(d.i) || cs.includes(P.i)) return d; const alt = foes(P).filter(F => !cs.includes(F.i)).sort((a, b) => a.life - b.life)[0]; return alt || d; };
+    if (typeof podPickDefender === 'function') { const f = podPickDefender; podPickDefender = function (P) { return avoid(P, f.apply(this, arguments)); }; }
+    if (typeof aiPickDefender === 'function') { const f = aiPickDefender; aiPickDefender = function (P) { return avoid(P, f.apply(this, arguments)); }; }
+    if (typeof choosePodTargets === 'function') { const f = choosePodTargets; choosePodTargets = function (sel, foesList, pws) { const cs = carnage(), keep = foesList.filter(F => !cs.includes(F.i)); return f.call(this, sel, cs.includes(G.active) || !keep.length ? foesList : keep, pws); }; }
+}
+// ---- Blood Tribute: kicker paid as it is cast by tapping an untapped Vampire you control ----
+{
+    const base = payAddCost;
+    payAddCost = async function (P, o) {
+        const r = await base.apply(this, arguments);
+        if (r === false) return r;
+        if (Rx(o).sx_vampKicker) {
+            o.kicked = false;
+            const vamps = P.bf.filter(c => isCreature(c) && !c.tapped && hasType(c, 'Vampire'));
+            if (vamps.length) {
+                const yes = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${o.card.name}: kick it by tapping an untapped Vampire (you gain the life lost)?`, { card: o.card, yes: 'Kick', no: 'No kicker' });
+                const v = !yes ? null : (P.isAI || AUTOPLAY || vamps.length === 1) ? vamps.slice().sort((a, b) => creatureValue(a) - creatureValue(b))[0] : await pickCard(P, vamps, `${o.card.name}: tap a Vampire to kick it`, { required: true });
+                if (v) { v.tapped = true; fire('tapped', { o: v }); o.kicked = true; log(`${P.name} ${sxSays(P, 'tap', 'taps')} ${v.card.name} to kick ${o.card.name}.`); }
+            }
+        }
+        return r;
+    };
+}
+// ---- Moxite Refinery: the counters are removed (and the mode and target chosen) as the ability is activated ----
+{
+    const base = activate;
+    activate = async function (P, o, a) {
+        if (!a || !a.sx_moxite) return base.apply(this, arguments);
+        const total = c => Math.max(0, c.counters) + Object.values(c.ctr || {}).reduce((s2, v) => s2 + (v > 0 ? v : 0), 0);
+        const from = P.bf.filter(c => (isCreature(c) || /\bArtifact\b/.test(c.card.type)) && total(c) > 0);
+        if (!from.length) { if (!(P.isAI || AUTOPLAY)) toast('Nothing you control has counters to remove.'); return false; }
+        const dest = allPerms().filter(c => (isCreature(c) || /\bArtifact\b/.test(c.card.type)) && !has(c, 'shroud') && !(has(c, 'hexproof') && ctrl(c) !== P));
+        let s, x, d;
+        if (P.isAI || AUTOPLAY) {
+            s = from.slice().sort((p, q) => total(q) - total(p))[0]; x = total(s);
+            d = dest.filter(c => c !== s && ctrl(c) === P && isCreature(c)).sort((p, q) => pow(q) - pow(p))[0] || dest.find(c => c !== s && ctrl(c) === P) || s;
+        } else {
+            s = await pickCard(P, from, `${o.card.name}: remove counters from`, { required: true }); if (!s) return false;
+            x = await askNumber(P, `${o.card.name}: remove how many counters (X) from ${s.card.name}?`, 1, total(s), total(s), { card: o.card }); if (x === null) return false;
+            const mode = await askMode(P, `${o.card.name}: choose one`, [`Put ${x} charge counters on target artifact`, `Put ${x} +1/+1 counters on target creature`]);
+            const pool = dest.filter(c => mode === 0 ? /\bArtifact\b/.test(c.card.type) : isCreature(c));
+            if (!pool.length) { toast('No legal target for that mode.'); return false; }
+            d = await pickCard(P, pool, `${o.card.name}: choose the target`, { required: true }); if (!d) return false;
+        }
+        const before = { counters: s.counters, ctr: { ...(s.ctr || {}) } };
+        let left = x; const tp = Math.min(left, Math.max(0, s.counters)); s.counters -= tp; left -= tp;
+        for (const k of Object.keys(s.ctr || {})) { if (left <= 0) break; const tk = Math.min(left, s.ctr[k] > 0 ? s.ctr[k] : 0); s.ctr[k] -= tk; left -= tk; }
+        log(`${x} counters are removed from ${s.card.name} (${o.card.name}).`);
+        o.sx_mox = { x, dest: d };
+        const ok = await base.apply(this, arguments);
+        if (ok === false) { s.counters = before.counters; s.ctr = before.ctr; o.sx_mox = null; }
+        return ok;
+    };
+}

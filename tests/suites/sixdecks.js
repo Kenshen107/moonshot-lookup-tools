@@ -10,7 +10,9 @@ const NAMES = [...new Set(['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'G
     'Training Grounds', 'High Alert', 'Doran, Besieged by Time', 'Blight Pile', 'Sarinth Greatwurm', 'Gisela, Blade of Goldnight', 'Anya, Merciless Angel', 'Basandra, Battle Seraph',
     'Wingnut, Bat on the Belfry', 'Warcry Phoenix', 'Blast Zone', 'Mage-Ring Network', 'Sword of the Paruns', 'Hydra Broodmaster', 'Llanowar Reborn', 'Artisan of Kozilek', 'Avatar of Slaughter',
     'Chandra, Awakened Inferno', 'Fanatic of Mogis', 'Urabrask, Heretic Praetor', 'Planetary Annihilation', 'Wild Magic Surge', 'Rukarumel, Biologist', 'Maskwood Nexus', 'Crystalline Sliver',
-    'Virulent Sliver', 'Springleaf Parade', 'Formless Genesis', 'Astarion, the Decadent', 'Blood Tribute', 'Essence Pulse', 'Elenda, Saint of Dusk', 'Smoke Bomb', 'Rush of Dread', 'Cloud Key'])];
+    'Virulent Sliver', 'Springleaf Parade', 'Formless Genesis', 'Astarion, the Decadent', 'Blood Tribute', 'Essence Pulse', 'Elenda, Saint of Dusk', 'Smoke Bomb', 'Rush of Dread', 'Cloud Key',
+    'Relic of Sauron', 'Interdimensional Web Watch', 'Counterspell', 'Alexios, Deimos of Kosmos', 'Molten Disaster', 'Abstruse Appropriation', 'Gemstone Caverns', 'Spider-Verse', 'Mindless Automaton', 'Moxite Refinery',
+    'Noxious Revival', 'Hideous Taskmaster', 'Rooftop Percher', 'Shadow of the Second Sun', 'Maximum Carnage'])];
 
 (async () => {
     const h = await launch({ profileDir: undefined });
@@ -103,7 +105,7 @@ const NAMES = [...new Set(['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'G
             // ----- Astarion -----
             { const [A, B] = await fresh(); const as = put(A, 'Astarion, the Decadent'); damage(B, 5, null); B.lostTurn = G.turn; await CMD.sx_astarionLose(A, {}, { p: B }, as);
               ok('Astarion (Feed): the opponent loses as much again as they lost this turn', B.life === 30, B.life); }
-            { const [A, B] = await fresh(); const g = put(A, 'Grizzly Bears'); g.card = { ...g.card, type: 'Creature — Vampire' }; g._r = null; const bt = makeObj(have('Blood Tribute'), 0); await CMD.sx_bloodTribute(A, {}, { p: B }, bt);
+            { const [A, B] = await fresh(); const g = put(A, 'Grizzly Bears'); g.card = { ...g.card, type: 'Creature — Vampire' }; g._r = null; const bt = makeObj(have('Blood Tribute'), 0); A.hand.push(bt); await payAddCost(A, bt); ok('Blood Tribute: the kicker is paid as it is cast', bt.kicked === true && g.tapped, [bt.kicked, g.tapped]); await CMD.sx_bloodTribute(A, {}, { p: B }, bt);
               ok('Blood Tribute: the opponent loses half their life, rounded up', B.life === 20, B.life); ok('...kicked by tapping a Vampire: you gain that much', A.life === 60 && g.tapped, [A.life, g.tapped]); }
             { const [A, B] = await fresh(); const g = put(B, 'Grizzly Bears'); const ep = makeObj(have('Essence Pulse'), 0); await CMD.sx_essencePulse(A, {}, null, ep); await settle2(); sba(); await settle2();
               ok('Essence Pulse: gain 2, then each creature gets -2/-2', A.life === 42 && !onBf(g.uid), [A.life, !!onBf(g.uid)]); }
@@ -111,6 +113,39 @@ const NAMES = [...new Set(['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'G
               ok('Elenda: +1/+1 and menace above your starting life, another +5/+5 at 10 more', p1 === p0 + 1 && p2 === p0 + 6, [p0, p1, p2]); }
             { const [A, B] = await fresh(); put(A, 'Smoke Bomb'); const g = put(B, 'Grizzly Bears'); ok('Smoke Bomb: all creatures have shroud', has(g, 'shroud')); }
             { const rd = rulesFor(have('Rush of Dread')); ok('Rush of Dread: three Spree modes are read', rd.support === 'full' && rd.modes && rd.modes.length === 3, rd.unhandled); }
+
+            // ----- The simplifications fixed -----
+            { const [A] = await fresh(); put(A, 'Relic of Sauron'); const cs = makeObj(have('Counterspell'), 0); A.hand.push(cs);
+              ok('Relic of Sauron: pays {U}{U} alone (two mana in any combination)', !!planPayment(A, parseCost('{U}{U}'), 0, null, payOpts(cs)));
+              ok('...and {U}{B}', !!planPayment(A, parseCost('{U}{B}'), 0, null, {})); }
+            { const [A, B] = await fresh(); put(A, 'Interdimensional Web Watch'); const g = makeObj(have('Grizzly Bears'), 0); A.hand.push(g);
+              ok('Interdimensional Web Watch: its mana can\'t cast a spell from hand', !planPayment(A, costOf(A, g), 0, null, payOpts(g)));
+              pull(A.hand, g); A.exile.push(g); ok('...but can cast one from exile', !!planPayment(A, costOf(A, g), 0, null, payOpts(g))); }
+            { const [A, B] = await fresh(); const al = put(B, 'Alexios, Deimos of Kosmos'); al.realOwner = 0; giveControl(al, B) || (al.owner = 1);
+              ok('Alexios: never offered as a sacrifice', !sacCandidates(B, null, 'creature').includes(al));
+              ok('Alexios: can\'t attack its owner (the only opponent)', !canAttackWith(al)); }
+            { const [A, B] = await fresh(); const md = makeObj(have('Molten Disaster'), 1); md.kicked = true; G.stack.push({ id: 999, kind: 'spell', o: md, P: B, kicked: true, name: 'Molten Disaster' }); put(A, 'Mountain'); const bolt = makeObj(have('Lightning Bolt'), 0); A.hand.push(bolt);
+              ok('Molten Disaster kicked: split second stops spells', !canCastNow(A, bolt)); G.stack.length = 0; ok('...and only while it is on the stack', canCastNow(A, bolt)); }
+            { const [A, B] = await fresh(); put(A, 'Mountain'); put(A, 'Mountain'); const cs = makeObj(have('Counterspell'), 1); exilePlayFrom(A, B, cs, G.turn); cs.sx_anyColor = G.turn;
+              ok('Grenzo / Stolen Strategy: mana spent as though any color pays {U}{U} with Mountains', !!planPayment(A, costOf(A, cs), 0, null, payOpts(cs))); }
+            { const [A, B] = await fresh(); put(A, 'Sol Ring'); const cs = makeObj(have('Counterspell'), 1); exilePlayFrom(A, B, cs, Infinity); cs.sx_colorlessAny = true;
+              ok('Abstruse Appropriation: colorless mana pays the exiled card\'s colored cost', !!planPayment(A, costOf(A, cs), 0, null, payOpts(cs)));
+              const cs2 = makeObj(have('Counterspell'), 0); A.hand.push(cs2); ok('...but not a card in hand', !planPayment(A, costOf(A, cs2), 0, null, payOpts(cs2))); }
+            { const [A, B] = await fresh(); G.active = 0; B.hand.push(makeObj(have('Gemstone Caverns'), 1)); B.hand.push(makeObj(have('Grizzly Bears'), 1)); await sxOpeningHand(); const gc = B.bf.find(x => x.card.name === 'Gemstone Caverns');
+              ok('Gemstone Caverns: the second player begins with it on the battlefield and a luck counter, exiling a card', !!gc && gc.ctr.luck === 1 && B.exile.length === 1, [!!gc, B.exile.length]);
+              ok('...and with the luck counter it taps for any color', !!gc && manaOf(gc).colors.length === 5); }
+            { const [A] = await fresh(); put(A, 'Spider-Verse'); const s1 = put(A, 'Gisela, Blade of Goldnight'), s2 = put(A, 'Gisela, Blade of Goldnight'); [s1, s2].forEach(x => { x.card = { ...x.card, type: 'Legendary Creature — Angel Spider' }; x._r = null; }); sba(); await settle2();
+              ok('Spider-Verse: the legend rule doesn\'t apply to Spiders you control', !!onBf(s1.uid) && !!onBf(s2.uid)); }
+            { const [A] = await fresh(); const ma = put(A, 'Mindless Automaton'); const a = Rx(ma).acts.find(x => /Remove two/.test(x.text)); ma.counters = 1;
+              ok('Mindless Automaton: removing two +1/+1 counters is a cost (one is not enough)', !actPlan(A, ma, a)); ma.counters = 2; ok('...two is', !!actPlan(A, ma, a)); }
+            { const [A] = await fresh(); put(A, 'Mountain'); put(A, 'Mountain'); const mx = put(A, 'Moxite Refinery'); const g = put(A, 'Grizzly Bears'); g.counters = 3; const h = put(A, 'Hill Giant'); const a = Rx(mx).acts.find(x => x.sx_moxite);
+              await activate(A, mx, a); await settle2();
+              ok('Moxite Refinery: the counters come off as it is activated and land on the target', g.counters === 0 && h.counters === 3, [g.counters, h.counters]); }
+            { const [A, B] = await fresh(); A.gy.push(makeObj(have('Hill Giant'), 0)); B.gy.push(makeObj(have('Grizzly Bears'), 1)); const m = await sxMultiChoose(A, makeObj(have('Noxious Revival'), 0), 'sx_gy1');
+              ok('Noxious Revival: the card is chosen as it is cast (any graveyard)', m.list.length === 1 && m.list[0].card.name === 'Hill Giant', m.list.map(c => c.card.name)); }
+            { const [A, B] = await fresh(); const tm = makeObj(have('Hideous Taskmaster'), 0); G.trigQ = []; fire('cast', { P: A, o: tm });
+              ok('Hideous Taskmaster: its cast trigger chooses targets as it goes on the stack', (G.trigQ || []).some(q => q.effects.some(x => x.multi === 'sx_eachOpp'))); G.trigQ = []; }
+            { const [A] = await fresh(); const sh = put(A, 'Shadow of the Second Sun'); await CMD.sx_enchantChoose(A, {}, null, sh); ok('Shadow of the Second Sun: a player is chosen (the computer picks itself)', sh.hostPlayer === 0); }
             ok('No broken invariants', T.invariants().length === 0, T.invariants());
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;

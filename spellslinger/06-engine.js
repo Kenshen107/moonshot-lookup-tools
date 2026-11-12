@@ -314,6 +314,7 @@ async function newGame(myDeck, oppDeck, friend, more = []) {
     for (const X of G.players) await leylineStart(X);
     G.active = rand(G.players.length);
     log(`${G.players[G.active].name} ${you(G.players[G.active]) ? 'go' : 'goes'} first (coin flip).`);
+    if (typeof sxOpeningHand === 'function') await sxOpeningHand(); // Gemstone Caverns (15v-sixdecks.js)
     G.firstTurn = true;
     await banterStart();
     beginTurn();
@@ -665,7 +666,7 @@ function sba() {
         // player - one goes to the graveyard. The game keeps the newest (your commander first).
         for (const P of G.players) {
             const byName = new Map();
-            P.bf.filter(o => Rx(o).legendary && !(isCreature(o) && P.bf.some(a => Rx(a).noLegendRule && !lostAbilities(a)))).forEach(o => { const k = o.card.name; if (!byName.has(k)) byName.set(k, []); byName.get(k).push(o); });
+            P.bf.filter(o => Rx(o).legendary && !(isCreature(o) && P.bf.some(a => Rx(a).noLegendRule && !lostAbilities(a))) && !(hasType(o, 'Spider') && P.bf.some(a => Rx(a).sx_spiderLegend && !lostAbilities(a)))).forEach(o => { const k = o.card.name; if (!byName.has(k)) byName.set(k, []); byName.get(k).push(o); });
             for (const [name, list] of byName) {
                 if (list.length < 2) continue;
                 const keep = list.find(o => o.isCommander) || list[list.length - 1];
@@ -942,7 +943,7 @@ function spellFits(o, rd, from) {
     if (rd.what === 'Artifact' || rd.what === 'Enchantment') return new RegExp(rd.what).test(t);
     return new RegExp(`\\b${rd.what}\\b`).test(t);
 }
-const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.test(o.card.type) && !!G && G.players[o.owner].bf.some(a => Rx(a).improviseAll)), convoke: hasConvoke(o), spellKind: Rx(o).kind, forType: o.card.type + (Rx(o).cost.x ? ' XCOST' : '') + ((o.card.cmc || 0) >= 5 ? ' MV5PLUS' : '') });
+const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.test(o.card.type) && !!G && G.players[o.owner].bf.some(a => Rx(a).improviseAll)), convoke: hasConvoke(o), spellKind: Rx(o).kind, forType: o.card.type + (Rx(o).cost.x ? ' XCOST' : '') + ((o.card.cmc || 0) >= 5 ? ' MV5PLUS' : '') + (G && G.players[o.owner] && G.players[o.owner].exile.includes(o) ? ' FromExile' : ''), sxCAny: !!o.sx_colorlessAny });
 function altExileCard(P, o) { const a = Rx(o).alt; return a && a.exile ? P.hand.filter(x => x !== o && (x.card.colors || []).includes(a.exile)).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0] || null : null; }
 function altOk(P, o) {
     const a = Rx(o).alt;
