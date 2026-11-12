@@ -12,7 +12,7 @@ const NAMES = [...new Set(['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'G
     'Chandra, Awakened Inferno', 'Fanatic of Mogis', 'Urabrask, Heretic Praetor', 'Planetary Annihilation', 'Wild Magic Surge', 'Rukarumel, Biologist', 'Maskwood Nexus', 'Crystalline Sliver',
     'Virulent Sliver', 'Springleaf Parade', 'Formless Genesis', 'Astarion, the Decadent', 'Blood Tribute', 'Essence Pulse', 'Elenda, Saint of Dusk', 'Smoke Bomb', 'Rush of Dread', 'Cloud Key',
     'Relic of Sauron', 'Interdimensional Web Watch', 'Counterspell', 'Alexios, Deimos of Kosmos', 'Molten Disaster', 'Abstruse Appropriation', 'Gemstone Caverns', 'Spider-Verse', 'Mindless Automaton', 'Moxite Refinery',
-    'Noxious Revival', 'Hideous Taskmaster', 'Rooftop Percher', 'Shadow of the Second Sun', 'Maximum Carnage'])];
+    'Noxious Revival', 'Hideous Taskmaster', 'Rooftop Percher', 'Shadow of the Second Sun', 'Maximum Carnage', 'Curse of Obsession'])];
 
 (async () => {
     const h = await launch({ profileDir: undefined });
@@ -146,6 +146,7 @@ const NAMES = [...new Set(['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'G
             { const [A, B] = await fresh(); const tm = makeObj(have('Hideous Taskmaster'), 0); G.trigQ = []; fire('cast', { P: A, o: tm });
               ok('Hideous Taskmaster: its cast trigger chooses targets as it goes on the stack', (G.trigQ || []).some(q => q.effects.some(x => x.multi === 'sx_eachOpp'))); G.trigQ = []; }
             { const [A] = await fresh(); const sh = put(A, 'Shadow of the Second Sun'); await CMD.sx_enchantChoose(A, {}, null, sh); ok('Shadow of the Second Sun: a player is chosen (the computer picks itself)', sh.hostPlayer === 0); }
+            { const [A, B] = await fresh(); const cu = put(A, 'Curse of Obsession'); await CMD.sx_enchantChoose(A, { curse: true }, null, cu); ok('Curse of Obsession: a Curse goes on an opponent', cu.hostPlayer === 1, cu.hostPlayer); }
             ok('No broken invariants', T.invariants().length === 0, T.invariants());
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;

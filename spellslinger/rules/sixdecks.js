@@ -136,8 +136,8 @@ clx('−3: ~ deals 3 damage to each non-Elemental creature.', (R, m, ctx) => { R
 clx('−X: ~ deals X damage to target creature or planeswalker. If a permanent dealt damage this way would die this turn, exile it instead.', (R, m, ctx) => { R.acts.push({ loyalty: 0, loyaltyX: true, effects: xMarkDeep([cmd('sx_chandraX', { x: 97, target: 'perm', filter: 'creature or planeswalker' })]), text: ctx.line, sorcery: true }); });
 // Colossus of Akros
 clx('As long as ~ is monstrous, it has trample and can attack as though it didn\'t have defender.', R => { R.sx_monsterAttack = true; });
-// Curse of Obsession (enchants its caster)
-clx('At the beginning of enchanted player\'s draw step, that player draws two additional cards.', R => { R.etb.push(cmd('sx_enchantChoose', { mine: true })); R.trig.push({ ev: 'upkeep', who: 'each', fn: 'sx_hostActive', effects: [cmd('sx_hostDraws', { n: 2 })] }); });
+// Curse of Obsession: a Curse, so it goes on an opponent (you may still pick yourself)
+clx('At the beginning of enchanted player\'s draw step, that player draws two additional cards.', R => { R.etb.push(cmd('sx_enchantChoose', { curse: true })); R.trig.push({ ev: 'upkeep', who: 'each', fn: 'sx_hostActive', effects: [cmd('sx_hostDraws', { n: 2 })] }); });
 clx('At the beginning of enchanted player\'s end step, that player discards their hand.', R => { R.trig.push({ ev: 'end', who: 'each', fn: 'sx_hostActive', effects: [cmd('sx_hostDiscards')] }); });
 // Deflecting Swat
 clx('You may choose new targets for target spell or ability.', R => { R.spell = [cmd('sx_retarget', { target: 'sx_spellOrAbility' })]; });

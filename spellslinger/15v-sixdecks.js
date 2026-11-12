@@ -907,10 +907,15 @@ async function sxMultiChoose(P, src, kind) {
 const sxMulti = async (P, src, kind) => (G.curMulti && Array.isArray(G.curMulti.list) ? G.curMulti : await sxMultiChoose(P, src, kind));
 
 // ---- Shadow of the Second Sun, Curse of Obsession: enchant a player of your choice ----
+// Shadow helps its player, so it goes on you by default; a Curse goes on an opponent (the computer picks the biggest threat)
 CMD.sx_enchantChoose = async function (P, e, t, src) {
-    const all = G.players.filter(X => !X.out);
-    let X = P; // the computer enchants itself: both cards help their player
-    if (!(P.isAI || AUTOPLAY) && all.length > 1) X = (await pickPlayer(P, [P, ...all.filter(y => y !== P)], `${src.card.name}: enchant`)) || P;
+    const all = G.players.filter(X => !X.out), fs = foes(P);
+    const threat = F => (typeof podThreat === 'function' ? podThreat(F) : 0) + F.life / 10;
+    let X = e.curse && fs.length ? fs.slice().sort((a, b) => threat(b) - threat(a))[0] : P;
+    if (!(P.isAI || AUTOPLAY) && all.length > 1) {
+        const order = e.curse ? [...fs, P] : [P, ...fs];
+        X = (await pickPlayer(P, order, `${src.card.name}: enchant`)) || X;
+    }
     src.hostPlayer = X.i;
     log(`${src.card.name} enchants ${sxSays(X, 'you', X.name)}.`);
 };
