@@ -672,6 +672,7 @@ function actPlan(P, o, a, xExtra = 0) {
     if (a.cost.mill && P.library.length < a.cost.mill) return null;
     if (a.cost.removeNamed && !((o.ctr[a.cost.removeNamed] || 0) > 0)) return null;
     if (a.cost.removeNamedN && (o.ctr[a.cost.removeNamedN.kind] || 0) < a.cost.removeNamedN.n) return null; // Weather Maker
+    if (a.cost.removeP1 && o.counters < a.cost.removeP1) return null; // Mindless Automaton: remove +1/+1 counters as a cost
     if (a.cost.removeAny && !P.bf.some(x => x.counters > 0 || Object.values(x.ctr || {}).some(v => v > 0))) return null;
     if (a.cost.removeCounter && o.counters < a.cost.removeCounter) return null;
     if (a.cost.energy && (P.energy || 0) < a.cost.energy) return null;
@@ -861,6 +862,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         if (a.cost.removeCounter) { o.counters -= a.cost.removeCounter; log(`${o.card.name}: a +1/+1 counter is removed.`); }
         if (a.cost.minusSelf) { o.counters -= a.cost.minusSelf; log(`${o.card.name} gets a -1/-1 counter.`); }
         if (a.cost.exileTop) { const ex = P.library.splice(-a.cost.exileTop).reverse(); P.exile.push(...ex); log(`${P.name} ${you(P) ? 'exile' : 'exiles'} the top ${ex.length} cards of the library.`); }
+        if (a.cost.removeP1) { o.counters -= a.cost.removeP1; log(`${a.cost.removeP1} +1/+1 counters are removed from ${o.card.name}.`); }
         if (a.cost.removeNamedN) { o.ctr[a.cost.removeNamedN.kind] -= a.cost.removeNamedN.n; log(`${a.cost.removeNamedN.n} ${a.cost.removeNamedN.kind} counters are removed from ${o.card.name}.`); }
         if (a.cost.removeNamed) { o.ctr[a.cost.removeNamed]--; log(`A ${a.cost.removeNamed} counter is removed from ${o.card.name}.`); }
         if (a.cost.removeAny) await removeAnyCounter(P, o);
