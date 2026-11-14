@@ -217,6 +217,21 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
   ok(rnd.a.cash === 0.44 && rnd.a.value === 0.87, `rounding: 3 x $0.29 at 50% = $0.435, rounded once to $0.44 (not 3 x $0.15) (${rnd.a.cash})`);
   ok(rnd.a.credit === 0.52, `rounding: credit 3 x $0.174 = $0.522, rounded once to $0.52 (${rnd.a.credit})`);
   ok(rnd.b.cash === 1.01 && rnd.b.credit === 1.21 && Math.abs(rnd.line.cash - 1.005) < 1e-9, `rounding: $2.01 x 50% stays $1.005 on the line, the sum rounds to $1.01, credit $1.206 to $1.21 (${rnd.b.cash}, ${rnd.b.credit})`);
+  // The amount to be paid is whole dollars (50 cents and up rounds up); the totals stay to the cent
+  const paid = await p.evaluate(() => {
+    const row = v => ({ num: 1, qty: 1, name: 'X', set: 'S', cond: 'NM', printing: 'Normal', lang: 'EN', market: v, low: v, pct: null });
+    const box = () => { const d = document.createElement('div'); d.innerHTML = qlbSlipHTML(qlbTotals(), qlbPay()); return [...d.querySelectorAll('.qbp-payline')].map(e => e.textContent.replace(/\s+/g, '')); };
+    QLB.cashPct = 50; QLB.bumpPct = 25; QLB.cashOk = false;
+    QLB.rows = [row(106.76)]; QLB.pay = 'cash'; const a = box(), at = qlbTotals();
+    QLB.pay = 'credit'; const b = box();
+    QLB.rows = [row(101)]; QLB.pay = 'cash'; const c = box();
+    QLB.rows = [row(106.76)]; QLB.pay = 'split'; QLB.splitCash = 20.4; QLB.splitHow = 'cash'; const d = box();
+    return { a, at: at.cash, b, c, d };
+  });
+  ok(paid.a[0] === 'Cash$53.00' && paid.at === 53.38, `paid: cash offer $53.38 is paid as $53 (${paid.a})`);
+  ok(paid.b[0] === 'Storecredit$67.00', `paid: credit $66.73 is paid as $67 (${paid.b})`);
+  ok(paid.c[0] === 'Cash$51.00', `paid: $50.50 rounds up to $51 (${paid.c})`);
+  ok(paid.d.join('|') === 'Cash$20.00|Storecredit$41.00', `paid: split $20.40 cash + $41.22 credit pays $20 + $41 (${paid.d})`);
   // A Pokémon Quicklist: multi-word printings (Reverse Holofoil) and the DG condition
   await p.evaluate(() => { QLB.rows = []; qlbSave(); });
   await p.setInputFiles('#qlbFile', path.resolve(__dirname, 'data', 'quicklist_pokemon.pdf')); await p.waitForFunction(() => QLB.rows.length >= 14, null, { timeout: 15000 });

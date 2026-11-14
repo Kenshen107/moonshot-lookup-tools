@@ -24670,6 +24670,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (pay === 'split') { const sp = qlbSplit(t); return { credit: true, cash: sp.how === 'cash', digital: sp.how === 'digital' }; }
         return { credit: pay === 'credit', cash: pay === 'cash', digital: pay === 'digital' };
     }
+    // The amount actually handed over is rounded to whole dollars, 50 cents and up rounds up (owner, 2026-11-14).
+    const qlbDollars = n => { const c = Math.round(qlbCents(n) * 100); return Math.floor((c + 50) / 100); };
     function qlbDue(t, pay) { return pay === 'credit' ? t.credit : pay === 'split' ? (() => { const sp = qlbSplit(t); return qlbCents(sp.cash + sp.credit); })() : t.cash; }
 
     // ---- Screen ----
@@ -24754,7 +24756,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (over && pay === 'cash') html += `<div class="qlb-warn">Paying over ${qlbMoney(QLB_DIGITAL_OVER)} in cash (confirmed by staff).</div>`;
         if (sp && sp.cash > QLB_DIGITAL_OVER && sp.how === 'digital' && QLB.splitHow !== 'digital') html += `<div class="qlb-warn">The cash part is over ${qlbMoney(QLB_DIGITAL_OVER)}, so it defaults to a <b>digital payment</b>.</div>`;
         if (sp && sp.cash > QLB_DIGITAL_OVER && sp.how === 'cash') html += `<div class="qlb-warn">Paying over ${qlbMoney(QLB_DIGITAL_OVER)} of the cash part in cash (confirmed by staff).</div>`;
-        html += `<div class="qlb-due">${sp ? `Amount due: <b>${qlbMoney(sp.cash)}</b> by ${sp.how === 'digital' ? '📲 digital payment' : '💵 cash'} + <b>${qlbMoney(sp.credit)}</b> in 🏷️ store credit` : pay ? `Amount due: <b>${qlbMoney(qlbDue(t, pay))}</b> by ${qlbEsc((QLB_PAY_OPTS.find(p => p[0] === pay) || [])[1] || '')}` : 'Tick the seller\'s preferred payment.'}
+        html += `<div class="qlb-due">${sp ? `Amount due: <b>${qlbMoney(qlbDollars(sp.cash))}</b> by ${sp.how === 'digital' ? '📲 digital payment' : '💵 cash'} + <b>${qlbMoney(qlbDollars(sp.credit))}</b> in 🏷️ store credit` : pay ? `Amount due: <b>${qlbMoney(qlbDollars(qlbDue(t, pay)))}</b> by ${qlbEsc((QLB_PAY_OPTS.find(p => p[0] === pay) || [])[1] || '')}` : 'Tick the seller\'s preferred payment.'}
             <span class="qlb-chip">Cash <b>${qlbMoney(t.cash)}</b></span><span class="qlb-chip">Store credit <b>${qlbMoney(t.credit)}</b></span></div>`;
         qlbSetHTML(info, html);
     }
@@ -24886,8 +24888,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const bump = Number(QLB.bumpPct) ? ' (+' + qlbEsc(QLB.bumpPct) + '%)' : '';
         const method = k => k === 'digital' ? 'Digital payment' : k === 'cash' ? 'Cash' : 'Store credit';
         const lines = sp
-            ? [[method(sp.how), sp.cash], ['Store credit', sp.credit]]
-            : pay ? [[method(pay), qlbDue(t, pay)]] : [];
+            ? [[method(sp.how), qlbDollars(sp.cash)], ['Store credit', qlbDollars(sp.credit)]]
+            : pay ? [[method(pay), qlbDollars(qlbDue(t, pay))]] : [];
         const overCash = sp ? sp.cash > QLB_DIGITAL_OVER : (t.cash > QLB_DIGITAL_OVER && pay !== 'credit');
         const overHow = sp ? sp.how : pay;
         const digitalNote = (pay === 'digital' || (sp && sp.how === 'digital'))
