@@ -4094,6 +4094,11 @@
         .qlb .buylist-table input.qlb-mini-price { font-weight: 700; color: var(--color-success); }
         .qlb-tag { display: inline-block; font-size: 0.72em; color: var(--text-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0 4px; vertical-align: middle; white-space: nowrap; }
         .qlb-tag-slab { color: var(--color-warning); border-color: var(--color-warning); }
+        .qlb-tag-case { color: var(--color-warning); border-color: var(--color-warning); font-weight: 600; }
+        .qlb-case-note { background: color-mix(in srgb, var(--color-warning) 12%, var(--bg-inset)); border: 1px solid var(--color-warning); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 0.9em; color: var(--text-primary); margin: 10px 0 0; }
+        .qlb-case-note.ok { background: color-mix(in srgb, var(--color-success) 10%, var(--bg-inset)); border-color: var(--color-success); }
+        .qlb-case-note ul { margin: 4px 0 0; padding-left: 20px; }
+        .qlb-quote-note { font-size: 0.85em; color: var(--text-soft); margin: 6px 0 0; }
         .qlb-slab-sub { font-size: 0.8em; color: var(--text-soft); margin-top: 2px; }
         .qlb-cond.slab { border-color: var(--color-warning); color: var(--color-warning); white-space: nowrap; }
         .qlb-add-grid label[hidden] { display: none; }
@@ -4102,6 +4107,7 @@
         .qlb-due b { font-size: 1.3em; }
         .qlb-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
         .qlb-actions button { width: auto; margin: 0; }
+        .qlb-actions .qlb-chk { align-self: center; margin: 0; }
         .qlb-undo { margin: 8px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
         .qlb-undo:empty { display: none; }
         .qlb .qlb-undo-btn { width: auto; margin: 0; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--brand-light); color: var(--text-heading); font-size: 0.9em; }
@@ -4210,7 +4216,20 @@
             .qbp-step { display: flex; align-items: baseline; gap: 6pt; margin: 12pt 0 5pt; font-size: 10.5pt; font-weight: 800; color: #16323f; letter-spacing: -0.01em; }
             .qbp-step i { display: inline-flex; align-items: center; justify-content: center; width: 14pt; height: 14pt; border-radius: 50%; background: #16323f; color: #fff; font-style: normal; font-size: 8pt; align-self: center; }
             .qbp-step span { font-size: 7.5pt; font-weight: 400; color: #5d6b73; letter-spacing: 0; }
-            .qbp-block { break-inside: avoid; }
+            /* Sections may run onto the next page (2026-11-14: a whole Maybe or cart section that didn't fit jumped
+               to the next page and left a big empty gap); a heading stays with what follows, and the small boxes stay whole. */
+            .qbp-block { break-inside: auto; }
+            .qbp-block.keep, .qbp-offer, .qbp-ifadd, .qbp-cart-total, .qbp-progress, .qbp-close, .qbp-legal { break-inside: avoid; }
+            .qbp-step { break-after: avoid; page-break-after: avoid; }
+            /* A table that runs onto the next page keeps its first rows with its heading, and its totals row prints once, at the end. */
+            .qbp-items tfoot { display: table-row-group; }
+            .qbp-items tbody tr:nth-child(-n+2) { break-after: avoid; page-break-after: avoid; }
+            .qbp-items tbody tr:nth-last-child(-n+2) { break-before: avoid; page-break-before: avoid; }
+            .qbp-legal { margin-top: 12pt; border: 1pt solid #16323f; border-radius: 4pt; padding: 7pt 10pt; font-size: 7.6pt; color: #333f45; line-height: 1.4; }
+            .qbp-legal h3 { margin: 0 0 3pt; font-size: 8.5pt; letter-spacing: 0.08em; text-transform: uppercase; color: #16323f; }
+            .qbp-legal p { margin: 0 0 3pt; }
+            .qbp-legal p:last-child { margin-bottom: 0; }
+            .qbp-quote-mark { display: inline-block; margin-left: 6pt; padding: 1pt 5pt; border: 1pt solid #b7791f; color: #6b4a12; border-radius: 3pt; font-size: 7pt; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; vertical-align: middle; }
             .qbp-offer { display: grid; grid-template-columns: 1fr 1fr 1fr 2.3in; gap: 7pt; align-items: stretch; }
             .qbp-tile { border: 0.75pt solid #cfd8dc; border-radius: 4pt; padding: 6pt 8pt; display: flex; flex-direction: column; gap: 1pt; }
             .qbp-tile span { font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #5d6b73; }
@@ -4220,9 +4239,9 @@
             .qbp-offer .qbp-payout { width: auto; }
             .qbp-slim td.nm { min-width: 2.4in; }
             .qbp-slim td:nth-child(4) { min-width: 0; }
-            .qbp-ifadd { margin-top: 6pt; border: 0.75pt solid #cfd8dc; border-radius: 4pt; overflow: hidden; max-width: 4.6in; }
+            .qbp-ifadd { margin-top: 6pt; border: 0.75pt solid #cfd8dc; border-radius: 4pt; overflow: hidden; max-width: 5.2in; }
             .qbp-ifadd-head { background: #f5f8f9; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #45545c; padding: 3pt 8pt; }
-            .qbp-ifadd-row { display: grid; grid-template-columns: 1.7in 0.8in 0.8in 1fr; align-items: baseline; padding: 3pt 8pt; border-top: 0.5pt solid #e1e7ea; font-size: 8.5pt; }
+            .qbp-ifadd-row { display: grid; grid-template-columns: 2.1in 0.85in 0.85in 1fr; align-items: baseline; padding: 3pt 8pt; border-top: 0.5pt solid #e1e7ea; font-size: 8.5pt; }
             .qbp-ifadd-row span { color: #45545c; }
             .qbp-ifadd-row s { color: #8a969c; text-align: right; padding-right: 8pt; }
             .qbp-ifadd-row b { color: #16323f; text-align: right; }
@@ -24559,7 +24578,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     const qlbCents = n => { n = Number(n) || 0; return Math.sign(n) * Math.round(Number((Math.abs(n) * 100).toPrecision(12))) / 100; };
 
     let QLB = qlbDefaults();
-    function qlbDefaults() { return { rows: [], cart: [], printMaybe: true, meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false, splitCash: null, splitHow: 'cash', splitOk: false }; }
+    function qlbDefaults() { return { rows: [], cart: [], printMaybe: true, meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false, splitCash: null, splitHow: 'cash', splitOk: false, quote: false, caseChecked: '' }; }
     try { const s = JSON.parse(localStorage.getItem(QLB_KEY) || 'null'); if (s && Array.isArray(s.rows)) QLB = Object.assign(qlbDefaults(), s); } catch (e) {}
     function qlbSave() { try { localStorage.setItem(QLB_KEY, JSON.stringify(QLB)); } catch (e) {} }
     // Undo (2026-11-14, owner): a snapshot is taken before anything is deleted or replaced; ↶ Undo puts it back.
@@ -24791,7 +24810,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 : `<td class="num">${pc(r.market, 'market')}</td><td class="num">${pc(r.low, 'low')}</td>`;
             return `<tr id="qlbRow-${i}" class="${r.pct != null ? 'buylist-own-rate' : ''}${r.custom ? ' qlb-custom' : ''}">
                 <td class="num">${qlbEsc(r.num)}</td><td class="num">${qtyCell}</td>
-                <td class="qlb-name">${qlbEsc(r.name)}${r.slab ? ' <span class="qlb-tag qlb-tag-slab">🔖 graded slab</span>' : r.custom ? ' <span class="qlb-tag">added by hand</span>' : ''}${r.slab && qlbSlabSub(r) ? `<div class="qlb-slab-sub">${qlbEsc(qlbSlabSub(r))}</div>` : ''}</td><td>${qlbEsc(r.set)}</td>
+                <td class="qlb-name">${qlbEsc(r.name)}${qlbCaseTag(r)}${r.slab ? ' <span class="qlb-tag qlb-tag-slab">🔖 graded slab</span>' : r.custom ? ' <span class="qlb-tag">added by hand</span>' : ''}${r.slab && qlbSlabSub(r) ? `<div class="qlb-slab-sub">${qlbEsc(qlbSlabSub(r))}</div>` : ''}</td><td>${qlbEsc(r.set)}</td>
                 <td>${r.cond ? `<span class="qlb-cond${r.slab ? ' slab' : r.cond !== 'NM' && r.cond !== 'Sealed' ? ' worn' : ''}" title="${qlbEsc(QLB_CONDS[r.cond] || r.cond)}">${qlbEsc(r.cond)}</span>` : ''}</td>
                 <td class="${/foil|etched/i.test(r.printing) ? 'qlb-foil' : ''}">${qlbEsc(r.printing)}</td><td>${qlbEsc(r.lang)}</td>
                 ${priceCells}
@@ -24836,18 +24855,25 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 <tfoot><tr id="qlbFoot">${qlbFootCells(t)}</tr></tfoot>
             </table></div>${maybeHTML}
             <div class="qlb-form">
-                <div class="req"><label for="qlbSeller">Seller's name</label><input type="text" id="qlbSeller" value="${qlbEsc(QLB.seller)}" placeholder="Full name of the person selling" autocomplete="off" oninput="qlbSet('seller', this.value)"></div>
-                <div><label for="qlbEmployee">Employee</label><input type="text" id="qlbEmployee" value="${qlbEsc(QLB.employee)}" placeholder="Staff member handling the buy" autocomplete="off" oninput="qlbSet('employee', this.value)"></div>
+                <div class="${QLB.quote ? '' : 'req'}"><label for="qlbSeller">${QLB.quote ? 'Quote for (optional)' : 'Seller\'s name'}</label><input type="text" id="qlbSeller" value="${qlbEsc(QLB.seller)}" placeholder="Full name of the person selling" autocomplete="off" oninput="qlbSet('seller', this.value)"></div>
+                <div class="${QLB.quote ? '' : 'req'}"><label for="qlbEmployee">Employee</label><input type="text" id="qlbEmployee" value="${qlbEsc(QLB.employee)}" placeholder="Staff member handling the buy" autocomplete="off" oninput="qlbSet('employee', this.value)"></div>
                 <div style="grid-column: 1 / -1;"><label>Preferred payment</label><div class="qlb-pay" id="qlbPay"></div></div>
                 <div id="qlbSplit" class="qlb-split" style="display:none;"></div>
                 <div id="qlbDetailWrap"><label for="qlbPayDetail">Digital payment details</label><input type="text" id="qlbPayDetail" value="${qlbEsc(QLB.payDetail)}" placeholder="e.g. PayPal, Venmo, Zelle, check + handle" autocomplete="off" oninput="qlbSet('payDetail', this.value)"></div>
             </div>
             <div id="qlbPayInfo"></div>
+            ${qlbCaseNoteHTML()}
             <div class="qlb-actions">
-                <button type="button" onclick="qlbPrint()">🖨️ Print buy slip</button>
+                <label class="qlb-chk"><input type="checkbox" id="qlbQuote" ${QLB.quote ? 'checked' : ''} onchange="qlbSetQuote(this.checked)"> 📝 Make a quote (no signatures)</label>
+                <button type="button" id="qlbPrintBtn" onclick="qlbPrint()">🖨️ ${QLB.quote ? 'Print quote' : 'Print buy slip'}</button>
                 <button type="button" class="clear-history" onclick="qlbClear()">Start over</button>
-            </div>`;
+            </div>${QLB.quote ? '<p class="qlb-quote-note">A quote prints the same prices and offer for the customer to take home, with no signature lines and a note that it is for reference only and prices can change on a later visit. Nothing is bought.</p>' : ''}`;
         qlbRenderPay(t);
+    }
+    function qlbCaseTag(r) {
+        if (r.slab || r.cond !== 'NM') return '';
+        const spots = qlbCaseSpots(r.name);
+        return spots ? ` <span class="qlb-tag qlb-tag-case" title="In the hotlist case: ${qlbEsc(spots.map(qlbSpotLong).join('; '))}">🔥 Hotlist case · ${qlbEsc(spots.map(qlbSpotShort).join(', '))}</span>` : '';
     }
     function qlbFootCells(t, label) {
         return `<td></td><td class="num">${t.cards}</td><td colspan="5">${label || 'Total'} (${t.lines} line${t.lines === 1 ? '' : 's'})${t.noPrice ? ` · ${t.noPrice} with no price` : ''}</td>
@@ -25073,12 +25099,59 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function qlbCartClear() { if (!QLB.cart.length) return; qlbSnap('cleared the cart'); QLB.cart = []; qlbSave(); qlbRenderCart(); qlbRenderUndo(); }
 
     // ---- The printed buy slip ----
+    // Hotlist case check (2026-11-14, owner): cards that sit in the case map only matter when the copy is NM.
+    // Names are matched loosely: lowercase, letters and digits only, "(...)" dropped, either face of "A // B".
+    function qlbCaseKey(n) { return String(n || '').toLowerCase().replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9]+/g, ''); }
+    let qlbCaseIdx = null;
+    function qlbCaseIndex() {
+        if (qlbCaseIdx) return qlbCaseIdx;
+        qlbCaseIdx = new Map();
+        const data = typeof CASE_MAP_DATA !== 'undefined' ? CASE_MAP_DATA : [];
+        data.forEach(d => {
+            if (!d || !d.name || /^n\/?a$/i.test(String(d.name).trim())) return;
+            const k = qlbCaseKey(d.name); if (!k) return;
+            if (!qlbCaseIdx.has(k)) qlbCaseIdx.set(k, []);
+            qlbCaseIdx.get(k).push(d);
+        });
+        return qlbCaseIdx;
+    }
+    function qlbCaseSpots(name) {
+        const idx = qlbCaseIndex(), keys = [qlbCaseKey(name)];
+        String(name || '').split(/\s*\/\/?\s*/).forEach(part => keys.push(qlbCaseKey(part)));
+        for (const k of keys) if (k && idx.has(k)) return idx.get(k);
+        return null;
+    }
+    function qlbSpotShort(d) { return 'S' + String(d.shelf || '').replace(/\D/g, '') + (d.side ? d.side[0].toUpperCase() : '') + ' · ' + d.spot; }
+    function qlbSpotLong(d) { return (d.shelf || 'Case') + (d.side ? ', ' + d.side.toLowerCase() + ' side' : '') + ', spot ' + d.spot + (d.category ? ' (' + d.category + ')' : ''); }
+    // NM rows (not slabs) whose card is in the case map; firm rows only unless asked.
+    function qlbCaseHits(all) {
+        const hits = [];
+        QLB.rows.forEach((r, i) => {
+            if ((!all && r.maybe) || r.slab || r.cond !== 'NM') return;
+            const spots = qlbCaseSpots(r.name);
+            if (spots) hits.push({ r, i, spots });
+        });
+        return hits;
+    }
+    function qlbCaseSig(hits) { return hits.map(h => qlbCaseKey(h.r.name) + 'x' + h.r.qty).sort().join('|'); }
+    function qlbCaseNoteHTML() {
+        if (QLB.quote) return '';
+        const hits = qlbCaseHits();
+        if (!hits.length) return '';
+        const ok = QLB.caseChecked === qlbCaseSig(hits);
+        return `<div class="qlb-case-note${ok ? ' ok' : ''}" id="qlbCaseNote">${ok ? '✅ Case checked. ' : '🔥 Check the hotlist case first. '}${hits.length === 1 ? 'This NM card is' : 'These ' + hits.length + ' NM cards are'} in the case map:
+            <ul>${hits.map(h => `<li><b>${qlbEsc(h.r.name)}</b>${h.r.qty > 1 ? ' ×' + qlbEsc(h.r.qty) : ''}: ${h.spots.map(d => qlbEsc(qlbSpotLong(d))).join('; ')}</li>`).join('')}</ul>
+            ${ok ? '' : '<div>The first press of Print shows this reminder; press Print again once the case is checked.</div>'}</div>`;
+    }
+    function qlbSetQuote(on) { QLB.quote = !!on; qlbSave(); qlbRender(); }
+
     function qlbSlipHTML(t, pay) {
         // Laid out as numbered steps (2026-11-14, owner: "easier and clearer to read"): ① what we're buying,
         // ② the offer and the amount paid, ③ maybe items and ④ the Working toward cart (only when they have something).
         const m = QLB.meta || {}, now = new Date();
         const pad = n => String(n).padStart(2, '0');
-        const slipNo = 'B' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '-' + pad(now.getHours()) + pad(now.getMinutes());
+        const quote = !!QLB.quote;
+        const slipNo = (quote ? 'Q' : 'B') + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '-' + pad(now.getHours()) + pad(now.getMinutes());
         const sp = pay === 'split' ? qlbSplit(t) : null;
         const method = k => k === 'digital' ? 'Digital payment' : k === 'cash' ? 'Cash' : 'Store credit';
         const set = pay === 'split' ? { credit: true, cash: sp.how === 'cash', digital: sp.how === 'digital' } : { credit: pay === 'credit', cash: pay === 'cash', digital: pay === 'digital' };
@@ -25099,7 +25172,9 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const itemsHead = `<thead><tr><th class="c">#</th><th class="c">Qty</th><th>Item</th><th>Set / type</th><th class="c">Cond.</th><th>Printing</th><th class="c">Lang.</th><th class="r">Market</th><th class="r">Low</th><th class="r">Value</th><th class="r">Rate</th><th class="r">Cash</th><th class="r">Credit</th></tr></thead>`;
         const payLines = tt => {
             const s2 = pay === 'split' ? qlbSplit(tt) : null;
-            return s2 ? [[method(s2.how), qlbDollars(s2.cash)], ['Store credit', qlbDollars(s2.credit)]] : pay ? [[method(pay), qlbDollars(qlbDue(tt, pay))]] : [];
+            // A quote with no payment picked shows both choices.
+            return s2 ? [[method(s2.how), qlbDollars(s2.cash)], ['Store credit', qlbDollars(s2.credit)]] : pay ? [[method(pay), qlbDollars(qlbDue(tt, pay))]]
+                : quote ? [['Cash', qlbDollars(tt.cash)], ['or Store credit', qlbDollars(tt.credit)]] : [];
         };
         const lines = payLines(t);
         const bump = Number(QLB.bumpPct) ? 'cash + ' + qlbEsc(QLB.bumpPct) + '%' : 'same as cash';
@@ -25125,7 +25200,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                     <div class="qbp-ifadd-head">If the seller adds these</div>
                     <div class="qbp-ifadd-row"><span>Cash offer</span><s>${qlbMoney(t.cash)}</s><b>${qlbMoney(at.cash)}</b>${diff(t.cash, at.cash)}</div>
                     <div class="qbp-ifadd-row"><span>Store credit offer</span><s>${qlbMoney(t.credit)}</s><b>${qlbMoney(at.credit)}</b>${diff(t.credit, at.credit)}</div>
-                    ${lines.length ? lines.map(([lab, amt], i) => `<div class="qbp-ifadd-row strong"><span>To be paid: ${qlbEsc(lab)}</span><s>${qlbMoney(amt)}</s><b>${qlbMoney(withLines[i] ? withLines[i][1] : amt)}</b>${diff(amt, withLines[i] ? withLines[i][1] : amt)}</div>`).join('') : ''}
+                    ${lines.length ? lines.map(([lab, amt], i) => `<div class="qbp-ifadd-row strong"><span>${quote ? 'Quoted' : 'To be paid'}: ${qlbEsc(lab)}</span><s>${qlbMoney(amt)}</s><b>${qlbMoney(withLines[i] ? withLines[i][1] : amt)}</b>${diff(amt, withLines[i] ? withLines[i][1] : amt)}</div>`).join('') : ''}
                 </div>
             </section>`;
         }
@@ -25157,12 +25232,12 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         return `<div class="qbp">
             <header class="qbp-top">
                 <div class="qbp-brand">
-                    <div class="qbp-kicker">Purchase record</div>
-                    <h1>Buy Slip</h1>
-                    <p>Trading cards and products bought from the seller named below.</p>
+                    <div class="qbp-kicker">${quote ? 'For reference only' : 'Purchase record'}</div>
+                    <h1>${quote ? 'Price Quote<span class="qbp-quote-mark">Not a purchase</span>' : 'Buy Slip'}</h1>
+                    <p>${quote ? 'What the items below would be worth at the time shown. Nothing has been bought.' : 'Trading cards and products bought from the seller named below.'}</p>
                 </div>
                 <table class="qbp-meta">
-                    <tr><th>Slip no.</th><td class="mono">${slipNo}</td></tr>
+                    <tr><th>${quote ? 'Quote no.' : 'Slip no.'}</th><td class="mono">${slipNo}</td></tr>
                     <tr><th>Date</th><td>${qlbEsc(now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }))}</td></tr>
                     <tr><th>Time</th><td>${qlbEsc(now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }))}</td></tr>
                     ${m.printed ? `<tr><th>Price list</th><td>TCGplayer, ${qlbEsc(m.printed)}</td></tr>` : ''}
@@ -25170,25 +25245,25 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 </table>
             </header>
             <section class="qbp-info">
-                <div class="qbp-field"><span>Seller</span><b>${qlbEsc(QLB.seller)}</b></div>
-                <div class="qbp-field"><span>Employee</span>${QLB.employee ? `<b>${qlbEsc(QLB.employee)}</b>` : '<em class="qbp-fill"></em>'}</div>
-                <div class="qbp-field qbp-payfield"><span>Payment</span><div>${tick(set.credit, 'Store credit')}${tick(set.cash, 'Cash')}${tick(set.digital, 'Digital')}</div></div>
+                <div class="qbp-field"><span>${quote ? 'Quote for' : 'Seller'}</span>${QLB.seller ? `<b>${qlbEsc(QLB.seller)}</b>` : '<em class="qbp-fill"></em>'}</div>
+                <div class="qbp-field"><span>${quote ? 'Quoted by' : 'Employee'}</span>${QLB.employee ? `<b>${qlbEsc(QLB.employee)}</b>` : '<em class="qbp-fill"></em>'}</div>
+                <div class="qbp-field qbp-payfield"><span>${quote ? 'Preferred payment' : 'Payment'}</span><div>${tick(set.credit, 'Store credit')}${tick(set.cash, 'Cash')}${tick(set.digital, 'Digital')}</div></div>
             </section>
-            ${step(1, 'What we\'re buying', plural(t.cards, 'item') + ' on ' + plural(t.lines, 'line'))}
+            ${step(1, quote ? 'Items quoted' : 'What we\'re buying', plural(t.cards, 'item') + ' on ' + plural(t.lines, 'line'))}
             <table class="qbp-items">
                 ${itemsHead}
                 <tbody>${QLB.rows.filter(r => !r.maybe).map(slipRow).join('')}</tbody>
                 <tfoot><tr><td></td><td class="c">${t.cards}</td><td colspan="5">Totals</td><td></td><td></td>
                     <td class="r">${qlbMoney(t.value)}</td><td></td><td class="r">${qlbMoney(t.cash)}</td><td class="r">${qlbMoney(t.credit)}</td></tr></tfoot>
             </table>
-            <section class="qbp-block">
-                ${step(2, 'The offer', 'The seller picks one way to be paid')}
+            <section class="qbp-block keep">
+                ${step(2, quote ? 'The quote' : 'The offer', quote ? 'Good only at the date and time above' : 'The seller picks one way to be paid')}
                 <div class="qbp-offer">
                     <div class="qbp-tile"><span>Total value</span><b>${qlbMoney(t.value)}</b><small>${plural(t.cards, 'item')}</small></div>
                     <div class="qbp-tile${set.cash || set.digital ? ' pick' : ''}"><span>Cash offer</span><b>${qlbMoney(t.cash)}</b><small>at the rates shown</small></div>
                     <div class="qbp-tile${set.credit ? ' pick' : ''}"><span>Store credit offer</span><b>${qlbMoney(t.credit)}</b><small>${bump}</small></div>
                     <div class="qbp-payout">
-                        <div class="qbp-payout-head">Amount to be paid</div>
+                        <div class="qbp-payout-head">${quote ? 'Quoted amount' : 'Amount to be paid'}</div>
                         ${lines.map(([lab, amt]) => `<div class="qbp-payline"><span>${qlbEsc(lab)}</span><b>${qlbMoney(amt)}</b></div>`).join('') || '<div class="qbp-payline"><span>Not chosen</span><b>—</b></div>'}
                         ${digitalNote}
                         ${overCash ? `<div class="qbp-flag">${overHow === 'cash' ? 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ' paid in cash, confirmed by staff.' : 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ': paid by digital payment.'}</div>` : ''}
@@ -25196,7 +25271,12 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 </div>
             </section>
             ${maybeSec}${cartSec}
-            <section class="qbp-close">
+            ${quote ? `<section class="qbp-legal">
+                <h3>Quote only: not an offer to buy</h3>
+                <p>This quote is for reference only. It is not a contract, an offer to purchase or a promise of payment, and no items have been bought, received or held. It creates no obligation for either party.</p>
+                <p>The amounts are based on TCGplayer market prices${m.printed ? ' as of ' + qlbEsc(m.printed) : ''} and are good only at the date and time printed above. A later visit may be subject to price changes, a new inspection of each item's condition, authenticity and printing, and the buyer's buying needs, stock levels and available funds at that time. Any item may be declined.</p>
+                <p>Payout amounts are rounded to whole dollars. Store credit, if chosen, follows the terms in effect when it is issued.</p>
+            </section>` : `<section class="qbp-close">
                 <p class="qbp-agree">The seller confirms they own the items listed in step 1, that they are as described, and accepts the amount and payment shown in step 2.</p>
                 <div class="qbp-sign">
                     <div><div class="qbp-line"></div><div class="qbp-cap">Seller signature</div></div>
@@ -25204,15 +25284,16 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                     <div><div class="qbp-line"></div><div class="qbp-cap">Employee signature</div></div>
                     <div><div class="qbp-line">${qlbEsc(QLB.employee)}</div><div class="qbp-cap">Employee name (print)</div></div>
                 </div>
-            </section>
-            <footer class="qbp-foot"><span>Slip ${slipNo}</span><span>Keep with the items bought</span></footer>
+            </section>`}
+            <footer class="qbp-foot"><span>${quote ? 'Quote' : 'Slip'} ${slipNo}</span><span>${quote ? 'For reference only · prices may change' : 'Keep with the items bought'}</span></footer>
         </div>`;
     }
 
     function qlbPrint() {
         if (!QLB.rows.length) return;
-        // The seller's name must be on the slip: ask until it's given (Cancel stops the print).
-        while (!String(QLB.seller || '').trim()) {
+        const quote = !!QLB.quote;
+        // The seller's name must be on the slip: ask until it's given (Cancel stops the print). A quote doesn't need it.
+        while (!quote && !String(QLB.seller || '').trim()) {
             const v = prompt("Seller's full name (it must be on the buy slip):", '');
             if (v === null) { const f = document.getElementById('qlbSeller'); if (f) f.focus(); return; }
             QLB.seller = v.trim();
@@ -25220,8 +25301,27 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const sf = document.getElementById('qlbSeller'); if (sf) sf.value = QLB.seller;
         qlbSave();
         const t = qlbTotals(), pay = qlbPay(t);
-        if (!pay) { qlbStatus('Pick the seller\'s preferred payment before printing.', true); const b = document.getElementById('qlbPay'); if (b) b.scrollIntoView({ block: 'center' }); return; }
-        if (!QLB.employee.trim()) { const v = prompt('Employee name (leave blank to write it in by hand):', ''); if (v) { QLB.employee = v.trim(); qlbSave(); const e = document.getElementById('qlbEmployee'); if (e) e.value = QLB.employee; } }
+        if (!pay && !quote) { qlbStatus('Pick the seller\'s preferred payment before printing.', true); const b = document.getElementById('qlbPay'); if (b) b.scrollIntoView({ block: 'center' }); return; }
+        // The employee's name is required on a buy slip too (2026-11-14, owner): ask until it's given.
+        while (!quote && !String(QLB.employee || '').trim()) {
+            const v = prompt('Employee name (required on the buy slip):', '');
+            if (v === null) { const f = document.getElementById('qlbEmployee'); if (f) f.focus(); return; }
+            QLB.employee = v.trim();
+        }
+        const ef = document.getElementById('qlbEmployee'); if (ef) ef.value = QLB.employee;
+        qlbSave();
+        // NM cards that are in the hotlist case: the first press only reminds staff to check the case; the next press prints.
+        if (!quote) {
+            const hits = qlbCaseHits(), sig = qlbCaseSig(hits);
+            if (hits.length && QLB.caseChecked !== sig) {
+                QLB.caseChecked = sig; qlbSave(); qlbRender();
+                alert('🔥 Check the hotlist case before buying.\n\n' + (hits.length === 1 ? 'This NM card is' : 'These NM cards are') + ' in the case map:\n'
+                    + hits.map(h => '• ' + h.r.name + (h.r.qty > 1 ? ' ×' + h.r.qty : '') + ': ' + h.spots.map(qlbSpotLong).join('; ')).join('\n')
+                    + '\n\nLook in the case and confirm, then press Print again to go ahead.');
+                const n = document.getElementById('qlbCaseNote'); if (n) n.scrollIntoView({ block: 'center' });
+                return;
+            }
+        }
         let area = document.getElementById('qlbPrintArea'); if (area) area.remove();
         area = document.createElement('div'); area.id = 'qlbPrintArea'; area.innerHTML = qlbSlipHTML(t, pay);
         document.body.appendChild(area);
