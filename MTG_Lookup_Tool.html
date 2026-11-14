@@ -4092,6 +4092,10 @@
         .qlb .buylist-table input.qlb-mini-price { width: 80px; min-width: 80px; }
         .qlb-each { color: var(--text-secondary); font-size: 0.9em; }
         .qlb-tag { display: inline-block; font-size: 0.72em; color: var(--text-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0 4px; vertical-align: middle; white-space: nowrap; }
+        .qlb-tag-slab { color: var(--color-warning); border-color: var(--color-warning); }
+        .qlb-slab-sub { font-size: 0.8em; color: var(--text-soft); margin-top: 2px; }
+        .qlb-cond.slab { border-color: var(--color-warning); color: var(--color-warning); white-space: nowrap; }
+        .qlb-add-grid label[hidden] { display: none; }
         .qlb-pay-hint { flex-basis: 100%; font-size: 0.85em; color: var(--text-soft); }
         .qlb-due { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; margin: 10px 0; font-size: 1.1em; color: var(--text-heading); }
         .qlb-due b { font-size: 1.3em; }
@@ -4139,6 +4143,7 @@
             .qbp-items td:nth-child(6) { white-space: nowrap; width: 1%; }
             .qbp-items .n { color: #8a969c; }
             .qbp-items .b { font-weight: 700; }
+            .qbp-items td.nm .sub { display: block; font-weight: 400; font-size: 6.8pt; color: #5d6b73; margin-top: 0.5pt; }
             .qbp-items .used { font-weight: 700; color: #1d2731; }
             .qbp-items .muted { color: #9aa7ad; }
             .qbp-items tfoot td { border-top: 1.2pt solid #16323f; border-bottom: none; font-weight: 700; padding-top: 3.5pt; background: #fff; }
@@ -8766,15 +8771,20 @@
                     <summary>➕ Add an item by hand: sealed product, accessories, or a card that isn't on the list</summary>
                     <div class="qlb-add-grid">
                         <label class="wide">Item<input type="text" id="qlbcName" placeholder="e.g. Bloomburrow Play Booster Box" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('qlbcPrice').focus();}"></label>
-                        <label>Kind<select id="qlbcKind"><option>Sealed product</option><option>Single card</option><option>Accessory</option><option>Other</option></select></label>
-                        <label>Condition<select id="qlbcCond"><option>Sealed</option><option>NM</option><option>LP</option><option>MP</option><option>HP</option><option>DMG</option><option value="">None</option></select></label>
+                        <label>Kind<select id="qlbcKind" onchange="qlbKindChange()"><option>Sealed product</option><option>Single card</option><option>Graded slab</option><option>Accessory</option><option>Other</option></select></label>
+                        <label id="qlbcCondWrap">Condition<select id="qlbcCond"><option>Sealed</option><option>NM</option><option>LP</option><option>MP</option><option>HP</option><option>DMG</option><option value="">None</option></select></label>
+                        <label class="qlb-slab-f" hidden>Grading company<select id="qlbcGrader"><option>PSA</option><option>BGS</option><option>CGC</option><option>SGC</option><option>TAG</option><option>ACE</option><option>Other</option></select></label>
+                        <label class="qlb-slab-f" hidden>Grade<input type="text" id="qlbcGrade" placeholder="e.g. 10, 9.5, Gem Mint 10" autocomplete="off"></label>
+                        <label class="qlb-slab-f" hidden>Cert number<input type="text" id="qlbcCert" placeholder="from the slab label" autocomplete="off"></label>
+                        <label class="qlb-slab-f" hidden>Set / year<input type="text" id="qlbcSet" placeholder="e.g. Alpha 1993, MH3 #261" autocomplete="off"></label>
+                        <label class="qlb-slab-f" hidden>Subgrades<input type="text" id="qlbcSub" placeholder="optional, e.g. C9.5 E9 S10 Ce9.5" autocomplete="off"></label>
                         <label>Details<input type="text" id="qlbcPrinting" placeholder="e.g. Collector, Foil, Japanese" autocomplete="off"></label>
                         <label>Qty<input type="number" id="qlbcQty" min="1" step="1" value="1"></label>
                         <label>Value each ($)<input type="number" id="qlbcPrice" min="0" step="0.01" placeholder="0.00" onkeydown="if(event.key==='Enter'){event.preventDefault();qlbAddCustom();}"></label>
                         <label>Own %<input type="number" id="qlbcPct" min="0" max="200" step="1" placeholder="top rate"></label>
                         <button type="button" onclick="qlbAddCustom()">Add to the buy</button>
                     </div>
-                    <p class="qlb-note">Value each is what one item is worth before the % (for sealed product, the going price you'd use). It's paid at the same rates as the cards, or its own %. Quantity and value can be changed in the list afterwards. A buy can also be all hand-added items, with no printout.</p>
+                    <p class="qlb-note"><b>Graded slab:</b> pick it as the kind to fill in the grading company, grade, cert number, set and subgrades; they print on the slip with the card. Value each is what one item is worth before the % (for sealed product, the going price you'd use). It's paid at the same rates as the cards, or its own %. Quantity and value can be changed in the list afterwards. A buy can also be all hand-added items, with no printout.</p>
                 </details>
                 <div class="qlb-status" id="qlbStatus" role="status"></div>
                 <div id="qlbBody"></div>
@@ -23975,8 +23985,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 : `<td class="num">${pc(r.market, 'market')}</td><td class="num">${pc(r.low, 'low')}</td>`;
             return `<tr id="qlbRow-${i}" class="${r.pct != null ? 'buylist-own-rate' : ''}${r.custom ? ' qlb-custom' : ''}">
                 <td class="num">${qlbEsc(r.num)}</td><td class="num">${qtyCell}</td>
-                <td class="qlb-name">${qlbEsc(r.name)}${r.custom ? ' <span class="qlb-tag">added by hand</span>' : ''}</td><td>${qlbEsc(r.set)}</td>
-                <td>${r.cond ? `<span class="qlb-cond${r.cond !== 'NM' && r.cond !== 'Sealed' ? ' worn' : ''}" title="${qlbEsc(QLB_CONDS[r.cond] || r.cond)}">${qlbEsc(r.cond)}</span>` : ''}</td>
+                <td class="qlb-name">${qlbEsc(r.name)}${r.slab ? ' <span class="qlb-tag qlb-tag-slab">🔖 graded slab</span>' : r.custom ? ' <span class="qlb-tag">added by hand</span>' : ''}${r.slab && qlbSlabSub(r) ? `<div class="qlb-slab-sub">${qlbEsc(qlbSlabSub(r))}</div>` : ''}</td><td>${qlbEsc(r.set)}</td>
+                <td>${r.cond ? `<span class="qlb-cond${r.slab ? ' slab' : r.cond !== 'NM' && r.cond !== 'Sealed' ? ' worn' : ''}" title="${qlbEsc(QLB_CONDS[r.cond] || r.cond)}">${qlbEsc(r.cond)}</span>` : ''}</td>
                 <td class="${/foil|etched/i.test(r.printing) ? 'qlb-foil' : ''}">${qlbEsc(r.printing)}</td><td>${qlbEsc(r.lang)}</td>
                 ${priceCells}
                 <td class="num" id="qlbVal-${i}">${l.unit == null ? '<span class="qlb-other">no price</span>' : qlbMoney(l.value)}</td>
@@ -24114,13 +24124,30 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (!name) { qlbStatus('Type a name for the item.', true); g('qlbcName').focus(); return; }
         if (isNaN(price) || price < 0) { qlbStatus('Type the value of one item (what it\'s worth, before the %).', true); g('qlbcPrice').focus(); return; }
         const n = QLB.rows.filter(r => r.custom).length + 1;
-        QLB.rows.push({ custom: true, num: 'C' + n, qty, name, set: g('qlbcKind').value, cond: g('qlbcCond').value, printing: g('qlbcPrinting').value.trim(), lang: '', market: null, low: null, price: qlbCents(price), pct: isNaN(pct) ? null : pct });
+        const kind = g('qlbcKind').value, isSlab = kind === 'Graded slab';
+        const row = { custom: true, num: 'C' + n, qty, name, kind, set: kind, cond: g('qlbcCond').value, printing: g('qlbcPrinting').value.trim(), lang: '', market: null, low: null, price: qlbCents(price), pct: isNaN(pct) ? null : pct };
+        if (isSlab) {
+            const grade = g('qlbcGrade').value.trim();
+            if (!grade) { qlbStatus('Type the grade on the slab (e.g. 10 or 9.5).', true); g('qlbcGrade').focus(); return; }
+            row.slab = { grader: g('qlbcGrader').value, grade, cert: g('qlbcCert').value.trim(), sub: g('qlbcSub').value.trim() };
+            row.cond = row.slab.grader + ' ' + grade;
+            row.set = g('qlbcSet').value.trim() || 'Graded slab';
+        }
+        QLB.rows.push(row);
         qlbSave();
-        ['qlbcName', 'qlbcPrice', 'qlbcPct', 'qlbcPrinting'].forEach(id => { g(id).value = ''; }); g('qlbcQty').value = 1;
+        ['qlbcName', 'qlbcPrice', 'qlbcPct', 'qlbcPrinting', 'qlbcGrade', 'qlbcCert', 'qlbcSet', 'qlbcSub'].forEach(id => { g(id).value = ''; }); g('qlbcQty').value = 1;
         qlbStatus('Added "' + name + '".');
         qlbRender();
         g('qlbcName').focus();
     }
+    // Show the slab fields only for a graded slab (its condition is the grade).
+    function qlbKindChange() {
+        const slab = document.getElementById('qlbcKind').value === 'Graded slab';
+        document.querySelectorAll('#qlbAddBox .qlb-slab-f').forEach(el => { el.hidden = !slab; });
+        const cw = document.getElementById('qlbcCondWrap'); if (cw) cw.hidden = slab;
+    }
+    // Slab line under the name: cert number and subgrades.
+    function qlbSlabSub(r) { if (!r.slab) return ''; return [r.slab.cert ? 'Cert #' + r.slab.cert : '', r.slab.sub ? 'Subgrades ' + r.slab.sub : ''].filter(Boolean).join(' · '); }
     function qlbSetCustom(i, k, v) {
         const r = QLB.rows[i]; if (!r || !r.custom) return;
         const n = parseFloat(v);
@@ -24148,7 +24175,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             const prices = r.custom
                 ? `<td class="r muted" colspan="2">${r.price != null ? qlbMoney(r.price) + ' each' : '—'}</td>`
                 : `<td class="r">${pc(r.market, 'market')}</td><td class="r">${pc(r.low, 'low')}</td>`;
-            return `<tr><td class="c n">${qlbEsc(r.num)}</td><td class="c">${qlbEsc(r.qty)}</td><td class="nm">${qlbEsc(r.name)}</td><td>${qlbEsc(r.set)}</td>
+            return `<tr><td class="c n">${qlbEsc(r.num)}</td><td class="c">${qlbEsc(r.qty)}</td><td class="nm">${qlbEsc(r.name)}${r.slab ? `<span class="sub">Graded slab${qlbSlabSub(r) ? ' · ' + qlbEsc(qlbSlabSub(r)) : ''}</span>` : ''}</td><td>${qlbEsc(r.set)}</td>
                 <td class="c">${qlbEsc(r.cond || '')}</td><td>${qlbEsc(r.printing || '')}</td><td class="c">${qlbEsc(r.lang || '')}</td>
                 ${prices}<td class="r">${l.unit == null ? '—' : qlbMoney(l.value)}</td>
                 <td class="r">${qlbPct(r)}%</td><td class="r b">${qlbMoney(l.cash)}</td><td class="r">${qlbMoney(l.credit)}</td></tr>`;
@@ -24248,7 +24275,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         setTimeout(() => { window.addEventListener('pointerdown', onAfter, true); window.addEventListener('keydown', onAfter, true); window.print(); }, 50);
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', qlbRender); else qlbRender();
+    function qlbBoot() { qlbRender(); qlbKindChange(); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', qlbBoot); else qlbBoot();
     </script>
     <script id="podcastScript">
     function podEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
