@@ -23777,7 +23777,9 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     const QLB_KINDS = ['Sealed product', 'Single card', 'Accessory', 'Other'];
     const qlbEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const qlbMoney = n => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const qlbCents = n => Math.round((Number(n) || 0) * 100) / 100;
+    // Round to the cent, half a cent and up rounds up. The toPrecision step removes the float error first
+    // (2.01 x 50% is 1.00499999... in JavaScript and used to round down to $1.00 instead of $1.01).
+    const qlbCents = n => { n = Number(n) || 0; return Math.sign(n) * Math.round(Number((Math.abs(n) * 100).toPrecision(12))) / 100; };
 
     let QLB = qlbDefaults();
     function qlbDefaults() { return { rows: [], meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false, splitCash: null, splitHow: 'cash', splitOk: false }; }
