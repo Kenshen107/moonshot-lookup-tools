@@ -205,5 +205,15 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
     await p.evaluate(code => { eval(code); const a = document.getElementById('qlbPrintArea'); a.innerHTML = qlbSlipHTML(qlbTotals(), qlbPay()); }, set);
     await p.pdf({ path: path.join(__dirname, '.out', name), format: 'Letter', preferCSSPageSize: true, printBackground: true });
   }
+  // A Pokémon Quicklist: multi-word printings (Reverse Holofoil) and the DG condition
+  await p.evaluate(() => { QLB.rows = []; qlbSave(); });
+  await p.setInputFiles('#qlbFile', path.resolve(__dirname, 'data', 'quicklist_pokemon.pdf')); await p.waitForFunction(() => QLB.rows.length >= 14, null, { timeout: 15000 });
+  const pk = await p.evaluate(() => QLB.rows.map(r => ({ num: r.num, name: r.name, set: r.set, cond: r.cond, printing: r.printing, market: r.market, low: r.low })));
+  ok(pk.length === 14 && pk.every((r, i) => r.num === i + 1), `pokemon: 14 rows numbered 1-14 (${pk.length})`);
+  ok(pk[0].name === 'Rattata' && pk[0].printing === 'Reverse Holofoil' && pk[0].cond === 'MP' && pk[0].set === 'EX FireRed & LeafGreen', `pokemon: Reverse Holofoil row read (${JSON.stringify(pk[0])})`);
+  ok(pk[8].name === 'Dragonite EX' && pk[8].cond === 'DG' && pk[8].set === 'XY - Evolutions' && pk[8].low === 2.69, `pokemon: DG condition row read (${JSON.stringify(pk[8])})`);
+  ok(pk[9].name === 'Plusle' && pk[3].name === 'Squirtle - 082/112', `pokemon: neighbours not merged`);
+  await p.evaluate(() => { QLB.rows = []; qlbLoadText('Rattata  EX FireRed & LeafGreen  MP  Reverse Holofoil  EN  1  1  $19.98  $19.98\nDragonite EX  XY - Evolutions  DG  Holofoil  EN  1  9  $2.80  $2.69', 'pasted'); });
+  ok(await p.evaluate(() => QLB.rows.length === 2 && QLB.rows[0].printing === 'Reverse Holofoil' && QLB.rows[1].cond === 'DG'), 'pokemon: pasted text with Reverse Holofoil and DG');
   await b.close(); console.log(`${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);
 })();

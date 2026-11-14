@@ -23770,7 +23770,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     const QLB_KEY = 'qlBuyV1';
     const QLB_DIGITAL_OVER = 1000;   // cash payouts over this default to a digital payment
     const QLB_PDFJS = ['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/', 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/'];
-    const QLB_CONDS = { NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played', DMG: 'Damaged', D: 'Damaged', S: 'Sealed', U: 'Unopened' };
+    const QLB_CONDS = { NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played', DMG: 'Damaged', DG: 'Damaged', D: 'Damaged', S: 'Sealed', U: 'Unopened' };
     // Payment methods are checkboxes (2026-11-14): store credit can be paired with cash or digital; cash and digital never go together.
     const QLB_PAY_OPTS = [['credit', '🏷️ Store credit'], ['cash', '💵 Cash'], ['digital', '📲 Digital payment']];
     const QLB_PAY_LABEL = { credit: 'Store credit', cash: 'Cash', digital: 'Digital payment', split: 'Cash + store credit' };
@@ -23790,7 +23790,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     // ---- Reading the printout ----
     const QLB_PRICE = '(\\$[\\d,]+(?:\\.\\d+)?|[—–-]|N\\/A)';
     // The right-hand columns, each one token: condition, printing, language, qty, #, Market, Low Price.
-    const QLB_TAIL = new RegExp('^(.*\\S)[\\t ]+(NM|LP|MP|HP|DMG|D|S|U|SP|EX|GD|PL|PO)[\\t ]+(\\S+)[\\t ]+([A-Za-z]{2,4})[\\t ]+(\\d+)[\\t ]+(\\d+)[\\t ]+' + QLB_PRICE + '[\\t ]+' + QLB_PRICE + '$');
+    const QLB_TAIL = new RegExp('^(.*\\S)[\\t ]+(NM|LP|MP|HP|DMG|DG|D|S|U|SP|EX|GD|PL|PO)[\\t ]+(\\S+(?:[\\t ]+\\S+){0,3}?)[\\t ]+([A-Za-z]{2,4})[\\t ]+(\\d+)[\\t ]+(\\d+)[\\t ]+' + QLB_PRICE + '[\\t ]+' + QLB_PRICE + '$');
     const QLB_HEADER_CELL = /^(?:(?:Product Name|Set|Condition|Printing|Lang\.?|Qty\.?|#|Market|Low Price)\s*)+$/i;
     function qlbPrice(s) { if (!s || !/\$/.test(s)) return null; const n = parseFloat(s.replace(/[$,]/g, '')); return isNaN(n) ? null : n; }
 
@@ -23834,7 +23834,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             const name = front.length > 1 ? front.slice(0, -1).join(' ') : front[0];
             const set = front.length > 1 ? front[front.length - 1] : '';
             rows.push({
-                num: +m[6], qty: +m[5], name, set, cond: m[2].toUpperCase(), printing: m[3], lang: m[4].toUpperCase(),
+                num: +m[6], qty: +m[5], name, set, cond: m[2].toUpperCase(), printing: m[3].replace(/\s+/g, ' '), lang: m[4].toUpperCase(),
                 market: qlbPrice(m[7]), low: qlbPrice(m[8]), pct: null,
                 _nameX: frontCells[0] && frontCells[0].x, _setX: front.length > 1 && frontCells[front.length - 1] ? frontCells[front.length - 1].x : null
             });
