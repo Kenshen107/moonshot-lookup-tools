@@ -142,6 +142,8 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
     await p.evaluate(() => { window.print = () => { window.__printed = (window.__printed || 0) + 1; }; QLB.pay = 'cash'; qlbSave(); });
     await p.locator('#qlbBody button', { hasText: 'Print buy slip' }).click(); await p.waitForTimeout(400);
     const slipC = await p.evaluate(() => { const a = document.getElementById('qlbPrintArea'); return a ? a.innerText : ''; });
+    ok(await p.evaluate(() => [...document.querySelectorAll('#qlbPrintArea .qbp-items .used')].some(e => e.textContent === '$120.00')), `${w}: custom item's value is bold on the slip`);
+    ok(await p.evaluate(i => getComputedStyle(document.querySelector(`#qlbRow-${i} input.qlb-mini-price`)).fontWeight >= 700, ci), `${w}: custom item's value is bold on screen`);
     ok(/Bloomburrow Play Booster Box/.test(slipC) && /Sealed product/.test(slipC) && /\$120\.00 each/.test(slipC), `${w}: custom item on the slip`);
     await p.evaluate(() => { document.body.classList.remove('qlb-printing'); const a = document.getElementById('qlbPrintArea'); if (a) a.remove(); });
     // A buy with only hand-added items (no printout)

@@ -4091,6 +4091,7 @@
         .qlb .buylist-table input.qlb-mini { width: 58px; min-width: 58px; padding: 4px 6px; }
         .qlb .buylist-table input.qlb-mini-price { width: 80px; min-width: 80px; }
         .qlb-each { color: var(--text-secondary); font-size: 0.9em; }
+        .qlb .buylist-table input.qlb-mini-price { font-weight: 700; color: var(--color-success); }
         .qlb-tag { display: inline-block; font-size: 0.72em; color: var(--text-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0 4px; vertical-align: middle; white-space: nowrap; }
         .qlb-tag-slab { color: var(--color-warning); border-color: var(--color-warning); }
         .qlb-slab-sub { font-size: 0.8em; color: var(--text-soft); margin-top: 2px; }
@@ -24173,7 +24174,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             const l = qlbLine(r), used = qlbUsed(r);
             const pc = (v, k) => v == null ? '<span class="muted">—</span>' : `<span class="${used === k ? 'used' : 'muted'}">${qlbMoney(v)}</span>`;
             const prices = r.custom
-                ? `<td class="r muted" colspan="2">${r.price != null ? qlbMoney(r.price) + ' each' : '—'}</td>`
+                ? `<td class="r" colspan="2">${r.price != null ? `<span class="used">${qlbMoney(r.price)}</span> each` : '<span class="muted">—</span>'}</td>`
                 : `<td class="r">${pc(r.market, 'market')}</td><td class="r">${pc(r.low, 'low')}</td>`;
             return `<tr><td class="c n">${qlbEsc(r.num)}</td><td class="c">${qlbEsc(r.qty)}</td><td class="nm">${qlbEsc(r.name)}${r.slab ? `<span class="sub">Graded slab${qlbSlabSub(r) ? ' · ' + qlbEsc(qlbSlabSub(r)) : ''}</span>` : ''}</td><td>${qlbEsc(r.set)}</td>
                 <td class="c">${qlbEsc(r.cond || '')}</td><td>${qlbEsc(r.printing || '')}</td><td class="c">${qlbEsc(r.lang || '')}</td>
