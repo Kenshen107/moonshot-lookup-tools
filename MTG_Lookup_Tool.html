@@ -24475,8 +24475,10 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     const QLB_PAY_LABEL = { credit: 'Store credit', cash: 'Cash', digital: 'Digital payment', split: 'Cash + store credit' };
     const QLB_KINDS = ['Sealed product', 'Single card', 'Accessory', 'Other'];
     const qlbEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const qlbMoney = n => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const qlbCents = n => Math.round((Number(n) || 0) * 100) / 100;
+    const qlbMoney = n => '$' + qlbCents(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Round to the cent, half a cent and up rounds up. The toPrecision step removes the float error first
+    // (2.01 x 50% is 1.00499999... in JavaScript and used to round down to $1.00 instead of $1.01).
+    const qlbCents = n => { n = Number(n) || 0; return Math.sign(n) * Math.round(Number((Math.abs(n) * 100).toPrecision(12))) / 100; };
 
     let QLB = qlbDefaults();
     function qlbDefaults() { return { rows: [], meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false, splitCash: null, splitHow: 'cash', splitOk: false }; }
@@ -24633,8 +24635,9 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function qlbUsed(r) { if (r.custom) return 'custom'; const u = qlbUnit(r); if (u == null) return null; return r.market != null && r.low != null ? (r.low < r.market ? 'low' : 'market') : (r.market != null ? 'market' : 'low'); }
     function qlbPct(r) { return r.pct != null && r.pct !== '' && !isNaN(r.pct) ? Number(r.pct) : QLB.cashPct; }
     function qlbLine(r) {
-        const unit = qlbUnit(r), value = unit == null ? 0 : qlbCents(unit * (r.qty || 1));
-        const cash = qlbCents(value * qlbPct(r) / 100), credit = qlbCents(cash * (1 + (Number(QLB.bumpPct) || 0) / 100));
+        // Lines keep their exact amounts; only the sums are rounded (owner, 2026-11-14). A line is shown to the cent.
+        const unit = qlbUnit(r), value = unit == null ? 0 : unit * (r.qty || 1);
+        const cash = value * qlbPct(r) / 100, credit = cash * (1 + (Number(QLB.bumpPct) || 0) / 100);
         return { unit, value, cash, credit };
     }
     function qlbTotals() {
