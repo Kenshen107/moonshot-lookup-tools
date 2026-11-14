@@ -232,6 +232,67 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
   ok(paid.b[0] === 'Storecredit$67.00', `paid: credit $66.73 is paid as $67 (${paid.b})`);
   ok(paid.c[0] === 'Cash$51.00', `paid: $50.50 rounds up to $51 (${paid.c})`);
   ok(paid.d.join('|') === 'Cash$20.00|Storecredit$41.00', `paid: split $20.40 cash + $41.22 credit pays $20 + $41 (${paid.d})`);
+  // ---- Maybe items, the Working toward cart and Undo (2026-11-14) ----
+  await p.emulateMedia({ media: 'screen' }); await p.evaluate(() => { document.body.classList.remove('qlb-printing'); const a = document.getElementById('qlbPrintArea'); if (a) a.remove(); });
+  await p.evaluate(() => {
+    const row = (n, name, v) => ({ num: n, qty: 1, name, set: 'S', cond: 'NM', printing: 'Normal', lang: 'EN', market: v, low: v, pct: null });
+    QLB.rows = [row(1, 'Alpha Card', 10), row(2, 'Beta Card', 4), row(3, 'Gamma Card', 6)]; QLB.cart = []; QLB.cashPct = 50; QLB.bumpPct = 20;
+    QLB.pay = 'credit'; QLB.seller = 'Jane Seller'; QLB_UNDO.length = 0; qlbSaveUndo(); qlbSave(); qlbRender();
+  });
+  const slipText = () => p.evaluate(() => { const d = document.createElement('div'); d.innerHTML = qlbSlipHTML(qlbTotals(), qlbPay()); return d.textContent.replace(/\s+/g, ' '); });
+  let st = await slipText();
+  ok(!/Maybe items/.test(st) && !/Working toward/.test(st), 'slip: no Maybe or Working toward section when they are empty');
+  ok(!(await p.locator('#qlbUndo button').count()), 'undo: no button before anything is deleted');
+  // Undo a removal
+  await p.locator('#qlbRow-1 .buylist-remove-btn').click(); await p.waitForTimeout(150);
+  ok(await p.evaluate(() => QLB.rows.length === 2 && !QLB.rows.some(r => r.name === 'Beta Card')), 'remove: the row is gone (no confirm needed)');
+  ok(/Undo: removed "Beta Card"/.test(await p.textContent('#qlbUndo')), 'undo: the button names what it brings back');
+  await p.locator('#qlbUndo button').click(); await p.waitForTimeout(150);
+  ok(await p.evaluate(() => QLB.rows.length === 3 && QLB.rows[1].name === 'Beta Card'), 'undo: the removed row is back in its place');
+  // Maybe
+  await p.locator('#qlbRow-2 .qlb-maybe-btn').click(); await p.waitForTimeout(150);
+  const mb = await p.evaluate(() => ({ firm: qlbTotals(), all: qlbTotals('all'), maybe: qlbTotals('maybe'), tbl: !!document.querySelector('.qlb-maybe'), cmp: document.getElementById('qlbCompare').textContent.replace(/\s+/g, ' ') }));
+  ok(mb.firm.value === 14 && mb.maybe.value === 6 && mb.all.value === 20 && mb.tbl, `maybe: Gamma moves out of the totals (${mb.firm.value} + ${mb.maybe.value})`);
+  ok(/Without the maybe items Cash \$7\.00 · Store credit \$8\.40/.test(mb.cmp) && /With the maybe items Cash \$10\.00 · Store credit \$12\.00/.test(mb.cmp), `maybe: with and without shown (${mb.cmp})`);
+  st = await slipText();
+  ok(/Maybe items/.test(st) && /Gamma Card/.test(st) && /With the maybe items/.test(st) && /Store credit \$12\.00/.test(st), 'slip: Maybe section prints with the with/without amounts');
+  ok(/Storecredit\$8\.00/.test(st.replace(/ /g, '')), 'slip: the amount to be paid leaves the maybe item out ($8)');
+  await p.evaluate(() => { document.getElementById('qlbAddBox').open = true; });
+  await p.fill('#qlbcName', 'Maybe Box'); await p.selectOption('#qlbcKind', 'Sealed product'); await p.fill('#qlbcPrice', '40'); await p.check('#qlbcMaybe');
+  await p.locator('#qlbAddBox button', { hasText: 'Add to the buy' }).click(); await p.waitForTimeout(150);
+  ok(await p.evaluate(() => { const r = QLB.rows.find(x => x.name === 'Maybe Box'); return r && r.maybe && qlbTotals().value === 14; }), 'maybe: an item added by hand with Maybe ticked stays out of the totals');
+  // Cart
+  await p.fill('#qlbkName', 'Sol Ring'); await p.selectOption('#qlbkKind', 'Single card'); await p.fill('#qlbkQty', '2'); await p.fill('#qlbkPrice', '10');
+  ok(/\/search\?q=Sol%20Ring/.test(await p.getAttribute('#qlbkLook', 'href')), 'cart: the look-up link searches the store for the typed item');
+  await p.locator('#qlbCart button', { hasText: 'Add to the cart' }).click(); await p.waitForTimeout(150);
+  await p.fill('#qlbkName', 'Deck box'); await p.selectOption('#qlbkKind', 'Accessory'); await p.fill('#qlbkPrice', '5.50'); await p.press('#qlbkPrice', 'Enter'); await p.waitForTimeout(150);
+  const ct = await p.evaluate(() => ({ t: qlbCartTotals(), sum: document.getElementById('qlbCartSum').textContent.replace(/\s+/g, ' ') }));
+  ok(ct.t.sub === 25.5 && ct.t.tax === 1.79 && ct.t.total === 27.29, `cart: subtotal $25.50 + Indiana 7% $1.79 = $27.29 (${JSON.stringify(ct.t)})`);
+  ok(/Indiana sales tax \(7%\)/.test(ct.sum) && /Still needed \$18\.89/.test(ct.sum) && /With the maybe items/.test(ct.sum), `cart: shows tax and what is still needed ($27.29 - $8.40 credit) (${ct.sum.slice(0, 200)})`);
+  await p.locator('#qlbCart tbody tr').nth(0).locator('input.qlb-mini:not(.qlb-mini-price)').fill('1'); await p.dispatchEvent('#qlbCart tbody tr:nth-child(1) input.qlb-mini:not(.qlb-mini-price)', 'change'); await p.waitForTimeout(100);
+  ok(await p.evaluate(() => qlbCartTotals().sub === 15.5), 'cart: editing a quantity updates the totals');
+  st = await slipText();
+  ok(/Working toward/.test(st) && /Sol Ring/.test(st) && /Indiana sales tax \(7%\)/.test(st) && /Still needed/.test(st), 'slip: the cart prints when it has items');
+  await p.locator('#qlbCart tbody tr').nth(0).locator('.buylist-remove-btn').click(); await p.waitForTimeout(150);
+  ok(await p.evaluate(() => QLB.cart.length === 1), 'cart: an item can be removed');
+  await p.locator('#qlbUndo button').click(); await p.waitForTimeout(150);
+  ok(await p.evaluate(() => QLB.cart.length === 2 && QLB.cart[0].name === 'Sol Ring'), 'undo: a removed cart item comes back');
+  // Start over can be undone
+  p.once('dialog', d => d.accept());
+  await p.locator('#qlbBody button', { hasText: 'Start over' }).click(); await p.waitForTimeout(200);
+  ok(await p.evaluate(() => !QLB.rows.length && !QLB.cart.length) && await p.locator('#qlbCart .qlb-cart').count() === 1, 'start over: buy and cart cleared, the cart section stays');
+  await p.locator('#qlbUndo button').click(); await p.waitForTimeout(200);
+  ok(await p.evaluate(() => QLB.rows.length === 4 && QLB.cart.length === 2), 'undo: Start over can be undone');
+  ok(await p.evaluate(() => QLB_UNDO.length >= 1), 'undo: earlier steps are still there');
+  await p.reload(); await p.waitForTimeout(800);
+  ok(await p.evaluate(() => QLB.cart.length === 2 && QLB_UNDO.length >= 1) && await p.locator('#qlbUndo button').count() === 1, 'reload: cart and undo history are kept');
+  await p.setViewportSize({ width: 360, height: 800 }); await p.waitForTimeout(200);
+  ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), '360: no sideways scroll with maybe and cart');
+  await p.screenshot({ path: path.join(__dirname, '.out', 'quicklist-cart-360.png'), fullPage: false });
+  await p.setViewportSize({ width: 1280, height: 900 });
+  await p.evaluate(() => { const d = document.getElementById('qlbPrintArea') || document.createElement('div'); d.id = 'qlbPrintArea'; d.innerHTML = qlbSlipHTML(qlbTotals(), qlbPay()); document.body.appendChild(d); document.body.classList.add('qlb-printing'); });
+  await p.emulateMedia({ media: 'print' }); await p.pdf({ path: path.join(__dirname, '.out', 'buy-slip-cart.pdf'), format: 'Letter', preferCSSPageSize: true, printBackground: true }); await p.emulateMedia({ media: 'screen' });
+  await p.evaluate(() => { document.body.classList.remove('qlb-printing'); const a = document.getElementById('qlbPrintArea'); if (a) a.remove(); });
   // A Pokémon Quicklist: multi-word printings (Reverse Holofoil) and the DG condition
   await p.evaluate(() => { QLB.rows = []; qlbSave(); });
   await p.setInputFiles('#qlbFile', path.resolve(__dirname, 'data', 'quicklist_pokemon.pdf')); await p.waitForFunction(() => QLB.rows.length >= 14, null, { timeout: 15000 });
