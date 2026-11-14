@@ -87,6 +87,30 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
     ok(await p.evaluate(() => qlbPay()) === 'credit', `${w}: store credit is still allowed over $1,000`);
     await p.check('input[name="qlbPayType"][value="cash"]'); await p.waitForTimeout(100);
     ok(dialogs.some(d => /Pay it in cash anyway/.test(d)) && await p.evaluate(() => qlbPay()) === 'cash', `${w}: cash over $1,000 only after staff confirm`);
+    // Split: part cash, rest store credit (with the bump)
+    await p.fill('#qlbCashPct', '50'); await p.dispatchEvent('#qlbCashPct', 'change');
+    await p.check('input[name="qlbPayType"][value="split"]');
+    ok(await p.locator('#qlbSplitCash').isVisible(), `${w}: split shows a cash-part box`);
+    const tS = await p.evaluate(() => qlbTotals());
+    await p.locator('#qlbSplitCash').fill('50');
+    const sp = await p.evaluate(() => qlbSplit());
+    ok(sp.cash === 50 && Math.abs(sp.credit - (tS.cash - 50) * 1.1) < 0.02, `${w}: split: $50 cash, the rest as credit with the bump (${sp.credit})`);
+    ok(await p.evaluate(() => document.activeElement && document.activeElement.id === 'qlbSplitCash'), `${w}: typing the cash part keeps focus`);
+    ok((await p.textContent('#qlbSplitCredit')) === '$' + sp.credit.toFixed(2), `${w}: credit part updates as you type`);
+    ok(/\$50\.00.*cash.*store credit/.test(await p.textContent('#qlbPayInfo')), `${w}: amount due shows both parts`);
+    await p.locator('#qlbSplitCash').fill('99999');
+    ok(await p.evaluate(() => qlbSplit().cash) === tS.cash, `${w}: cash part is capped at the whole cash offer`);
+    await p.fill('#qlbCashPct', '1000'); await p.dispatchEvent('#qlbCashPct', 'change');
+    await p.locator('#qlbSplitCash').fill('1500');
+    ok(await p.evaluate(() => qlbSplit().how) === 'digital', `${w}: split cash part over $1,000 defaults to digital`);
+    await p.fill('#qlbCashPct', '50'); await p.dispatchEvent('#qlbCashPct', 'change');
+    await p.locator('#qlbSplitCash').fill('40');
+    await p.evaluate(() => { window.__printed = 0; });
+    await p.locator('#qlbBody button', { hasText: 'Print buy slip' }).click(); await p.waitForTimeout(400);
+    const slipS = await p.evaluate(() => { const a = document.getElementById('qlbPrintArea'); return a ? a.innerText : ''; });
+    ok(/\$40\.00/.test(slipS) && /Store credit/.test(slipS) && /Cash \+ credit/.test(slipS), `${w}: split slip shows cash part and credit part`);
+    await p.evaluate(() => { document.body.classList.remove('qlb-printing'); const a = document.getElementById('qlbPrintArea'); if (a) a.remove(); });
+    await p.check('input[name="qlbPayType"][value="cash"]');
     // Reload keeps it
     await p.reload(); await p.waitForTimeout(1000);
     ok(await p.locator('#qlbBody tbody tr').count() === 17 && await p.inputValue('#qlbSeller') === 'Jane Seller', `${w}: saved across reload`);
@@ -114,5 +138,9 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
   await p.emulateMedia({ media: 'print' });
   await p.pdf({ path: path.join(__dirname, '.out', 'buy-slip.pdf'), format: 'Letter', preferCSSPageSize: true, printBackground: true });
   ok(fs.statSync(path.join(__dirname, '.out', 'buy-slip.pdf')).size > 5000, 'slip prints to a PDF');
+  for (const [name, set] of [['buy-slip-split.pdf', "QLB.pay = 'split'; QLB.splitCash = 60; QLB.splitHow = 'cash';"], ['buy-slip-cash.pdf', "QLB.pay = 'cash';"]]) {
+    await p.evaluate(code => { eval(code); const a = document.getElementById('qlbPrintArea'); a.innerHTML = qlbSlipHTML(qlbTotals(), qlbPay()); }, set);
+    await p.pdf({ path: path.join(__dirname, '.out', name), format: 'Letter', preferCSSPageSize: true, printBackground: true });
+  }
   await b.close(); console.log(`${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);
 })();

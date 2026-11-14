@@ -4076,6 +4076,10 @@
         .qlb-pay label { display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-size: 0.95em; color: var(--text-primary); background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; margin: 0; cursor: pointer; }
         .qlb-pay label.on { border-color: var(--brand-light); background: color-mix(in srgb, var(--brand) 25%, var(--bg-inset)); }
         .qlb-warn { background: color-mix(in srgb, var(--color-warning) 14%, var(--bg-inset)); border: 1px solid var(--color-warning); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 0.9em; color: var(--text-primary); margin: 8px 0; }
+.qlb-split { grid-column: 1 / -1; background: var(--bg-inset); border: 1px solid var(--brand-light); border-radius: var(--radius-sm); padding: 10px 12px; }
+        .qlb-split-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0; color: var(--text-primary); }
+        .qlb-split-row input { width: 110px; padding: 6px 8px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 1em; }
+        .qlb-split-note { color: var(--text-soft); font-size: 0.85em; }
         .qlb-due { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; margin: 10px 0; font-size: 1.1em; color: var(--text-heading); }
         .qlb-due b { font-size: 1.3em; }
         .qlb-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
@@ -4120,6 +4124,9 @@
             .qbp-due span { display: block; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: #5a6770; }
             .qbp-due b { display: block; font-size: 20pt; color: #10242e; line-height: 1.2; }
             .qbp-due em { font-style: normal; font-size: 9pt; color: #1b3a4b; font-weight: 600; }
+            .qbp-split { display: inline-block; vertical-align: middle; }
+            .qbp-split b { font-size: 16pt; }
+            .qbp-plus { display: inline-block; vertical-align: middle; font-size: 14pt; font-weight: 700; color: #1b3a4b; margin: 0 6px; }
             .qbp-flag { margin-top: 8px; padding: 5px 9px; border: 1px solid #b7791f; background: #fdf6e7; border-radius: 4px; font-size: 8.5pt; }
             .qbp-sign { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 30px; margin-top: 10px; break-inside: avoid; }
             .qbp-line { border-bottom: 1px solid #1b1f23; height: 22pt; display: flex; align-items: flex-end; padding-bottom: 2px; font-size: 10pt; font-weight: 600; }
@@ -23709,15 +23716,17 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     const QLB_DIGITAL_OVER = 1000;   // cash payouts over this default to a digital payment
     const QLB_PDFJS = ['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/', 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/'];
     const QLB_CONDS = { NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played', DMG: 'Damaged', D: 'Damaged', S: 'Sealed', U: 'Unopened' };
-    const QLB_PAYS = [['credit', '🏷️ Store credit'], ['cash', '💵 Cash'], ['digital', '📲 Digital payment']];
+    const QLB_PAYS = [['credit', '🏷️ Store credit'], ['cash', '💵 Cash'], ['digital', '📲 Digital payment'], ['split', '🔀 Cash + store credit']];
     const qlbEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const qlbMoney = n => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const qlbCents = n => Math.round((Number(n) || 0) * 100) / 100;
 
     let QLB = qlbDefaults();
-    function qlbDefaults() { return { rows: [], meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false }; }
+    function qlbDefaults() { return { rows: [], meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false, splitCash: null, splitHow: 'cash', splitOk: false }; }
     try { const s = JSON.parse(localStorage.getItem(QLB_KEY) || 'null'); if (s && Array.isArray(s.rows)) QLB = Object.assign(qlbDefaults(), s); } catch (e) {}
     function qlbSave() { try { localStorage.setItem(QLB_KEY, JSON.stringify(QLB)); } catch (e) {} }
+    // Sets innerHTML only when it changed, so a redraw (a change event fired as focus leaves a box) never moves the button under the mouse.
+    function qlbSetHTML(el, html) { if (el && el._qlbH !== html) { el.innerHTML = html; el._qlbH = html; } }
     function qlbStatus(msg, err) { const el = document.getElementById('qlbStatus'); if (el) { el.textContent = msg || ''; el.classList.toggle('err', !!err); } }
 
     // ---- Reading the printout ----
@@ -23876,10 +23885,21 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     // Over $1,000 in cash, the payment defaults to digital unless they take store credit (or staff confirmed cash).
     function qlbPay(t) {
         t = t || qlbTotals();
+        if (QLB.pay === 'split') return 'split';
         if (t.cash > QLB_DIGITAL_OVER && QLB.pay !== 'credit' && !(QLB.pay === 'cash' && QLB.cashOk)) return 'digital';
         return QLB.pay;
     }
-    function qlbDue(t, pay) { return pay === 'credit' ? t.credit : t.cash; }
+    // Split: the employee types how much of the cash offer is paid out (cash or digital); the rest of the
+    // cash offer becomes store credit with the bump on top. Over $1,000 the cash part defaults to digital.
+    function qlbSplit(t) {
+        t = t || qlbTotals();
+        const want = QLB.splitCash == null || isNaN(QLB.splitCash) ? qlbCents(t.cash / 2) : Number(QLB.splitCash);
+        const cash = qlbCents(Math.max(0, Math.min(want, t.cash)));
+        const credit = qlbCents((t.cash - cash) * (1 + (Number(QLB.bumpPct) || 0) / 100));
+        const how = cash > QLB_DIGITAL_OVER && !(QLB.splitHow === 'cash' && QLB.splitOk) ? 'digital' : (QLB.splitHow || 'cash');
+        return { cash, credit, how, capped: want > t.cash + 0.004 };
+    }
+    function qlbDue(t, pay) { return pay === 'credit' ? t.credit : pay === 'split' ? (() => { const sp = qlbSplit(t); return qlbCents(sp.cash + sp.credit); })() : t.cash; }
 
     // ---- Screen ----
     function qlbRender() {
@@ -23927,6 +23947,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 <div class="req"><label for="qlbSeller">Seller's name</label><input type="text" id="qlbSeller" value="${qlbEsc(QLB.seller)}" placeholder="Full name of the person selling" autocomplete="off" oninput="qlbSet('seller', this.value)"></div>
                 <div><label for="qlbEmployee">Employee</label><input type="text" id="qlbEmployee" value="${qlbEsc(QLB.employee)}" placeholder="Staff member handling the buy" autocomplete="off" oninput="qlbSet('employee', this.value)"></div>
                 <div style="grid-column: 1 / -1;"><label>Preferred payment</label><div class="qlb-pay" id="qlbPay"></div></div>
+                <div id="qlbSplit" class="qlb-split" style="display:none;"></div>
                 <div id="qlbDetailWrap"><label for="qlbPayDetail">Digital payment details</label><input type="text" id="qlbPayDetail" value="${qlbEsc(QLB.payDetail)}" placeholder="e.g. PayPal, Venmo, Zelle, check + handle" autocomplete="off" oninput="qlbSet('payDetail', this.value)"></div>
             </div>
             <div id="qlbPayInfo"></div>
@@ -23945,15 +23966,50 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         t = t || qlbTotals();
         const pay = qlbPay(t), box = document.getElementById('qlbPay'), info = document.getElementById('qlbPayInfo');
         if (!box || !info) return;
-        box.innerHTML = QLB_PAYS.map(([k, lab]) => `<label class="${pay === k ? 'on' : ''}"><input type="radio" name="qlbPayType" value="${k}" ${pay === k ? 'checked' : ''} onchange="qlbSetPay('${k}')"> ${lab}</label>`).join('');
-        const dw = document.getElementById('qlbDetailWrap'); if (dw) dw.style.display = pay === 'digital' ? '' : 'none';
-        const over = t.cash > QLB_DIGITAL_OVER;
+        qlbSetHTML(box, QLB_PAYS.map(([k, lab]) => `<label class="${pay === k ? 'on' : ''}"><input type="radio" name="qlbPayType" value="${k}" ${pay === k ? 'checked' : ''} onchange="qlbSetPay('${k}')"> ${lab}</label>`).join(''));
+        const sp = pay === 'split' ? qlbSplit(t) : null;
+        const dw = document.getElementById('qlbDetailWrap'); if (dw) dw.style.display = pay === 'digital' || (sp && sp.how === 'digital') ? '' : 'none';
+        qlbRenderSplit(t, sp);
+        const over = t.cash > QLB_DIGITAL_OVER && pay !== 'split';
         let html = '';
         if (over && pay === 'digital' && QLB.pay !== 'digital') html += `<div class="qlb-warn">The cash amount is over ${qlbMoney(QLB_DIGITAL_OVER)}, so it defaults to a <b>digital payment</b>. Store credit is still an option.</div>`;
         if (over && pay === 'cash') html += `<div class="qlb-warn">Paying over ${qlbMoney(QLB_DIGITAL_OVER)} in cash (confirmed by staff).</div>`;
-        html += `<div class="qlb-due">${pay ? `Amount due: <b>${qlbMoney(qlbDue(t, pay))}</b> by ${qlbEsc((QLB_PAYS.find(p => p[0] === pay) || [])[1] || '')}` : 'Pick the seller\'s preferred payment.'}
+        if (sp && sp.cash > QLB_DIGITAL_OVER && sp.how === 'digital' && QLB.splitHow !== 'digital') html += `<div class="qlb-warn">The cash part is over ${qlbMoney(QLB_DIGITAL_OVER)}, so it defaults to a <b>digital payment</b>.</div>`;
+        if (sp && sp.cash > QLB_DIGITAL_OVER && sp.how === 'cash') html += `<div class="qlb-warn">Paying over ${qlbMoney(QLB_DIGITAL_OVER)} of the cash part in cash (confirmed by staff).</div>`;
+        html += `<div class="qlb-due">${sp ? `Amount due: <b>${qlbMoney(sp.cash)}</b> by ${sp.how === 'digital' ? '📲 digital payment' : '💵 cash'} + <b>${qlbMoney(sp.credit)}</b> in 🏷️ store credit` : pay ? `Amount due: <b>${qlbMoney(qlbDue(t, pay))}</b> by ${qlbEsc((QLB_PAYS.find(p => p[0] === pay) || [])[1] || '')}` : 'Pick the seller\'s preferred payment.'}
             <span class="qlb-chip">Cash <b>${qlbMoney(t.cash)}</b></span><span class="qlb-chip">Store credit <b>${qlbMoney(t.credit)}</b></span></div>`;
-        info.innerHTML = html;
+        qlbSetHTML(info, html);
+    }
+    // The split box: rebuilt when the payment changes, but only its numbers are updated while the employee types in it.
+    function qlbRenderSplit(t, sp) {
+        const el = document.getElementById('qlbSplit');
+        if (!el) return;
+        if (!sp) { qlbSetHTML(el, ''); el.style.display = 'none'; return; }
+        el.style.display = '';
+        const note = `of ${qlbMoney(t.cash)} cash offer${sp.capped ? ' (capped at the full cash offer)' : ''}`;
+        const inp = document.getElementById('qlbSplitCash');
+        // Once the box is built, only its numbers change, so typing and clicking nearby are never disturbed.
+        if (inp && el.contains(inp)) {
+            const c = document.getElementById('qlbSplitCredit'), n = document.getElementById('qlbSplitNote');
+            if (c) c.textContent = qlbMoney(sp.credit); if (n) n.textContent = note;
+            const bm = document.getElementById('qlbSplitBump'); if (bm) bm.textContent = qlbSplitBumpText();
+            if (inp !== document.activeElement && Math.abs((parseFloat(inp.value) || 0) - sp.cash) > 0.004) inp.value = sp.cash.toFixed(2);
+            el.querySelectorAll('input[name="qlbSplitHow"]').forEach(r => { r.checked = r.value === sp.how; r.parentNode.classList.toggle('on', r.checked); });
+            return;
+        }
+        const how = k => `<label class="${sp.how === k ? 'on' : ''}"><input type="radio" name="qlbSplitHow" value="${k}" ${sp.how === k ? 'checked' : ''} onchange="qlbSetSplitHow('${k}')"> ${k === 'cash' ? '💵 Cash' : '📲 Digital'}</label>`;
+        qlbSetHTML(el, `<label for="qlbSplitCash">Cash part</label>
+            <div class="qlb-split-row">$<input type="number" id="qlbSplitCash" min="0" step="0.01" value="${sp.cash.toFixed(2)}" oninput="qlbSetSplitCash(this.value)"> <span class="qlb-split-note" id="qlbSplitNote">${note}</span></div>
+            <div class="qlb-split-row">Rest as store credit: <b id="qlbSplitCredit">${qlbMoney(sp.credit)}</b> <span class="qlb-split-note" id="qlbSplitBump">${qlbSplitBumpText()}</span></div>
+            <label style="margin-top:8px;">Pay the cash part as</label><div class="qlb-pay">${how('cash')}${how('digital')}</div>`);
+    }
+    function qlbSplitBumpText() { return Number(QLB.bumpPct) ? '(with the +' + QLB.bumpPct + '% bump)' : ''; }
+    function qlbSetSplitCash(v) { const n = parseFloat(v); QLB.splitCash = v === '' || isNaN(n) ? null : n; QLB.splitOk = false; qlbSave(); qlbRenderPay(); }
+    function qlbSetSplitHow(k) {
+        const t = qlbTotals(), sp = qlbSplit(t);
+        if (k === 'cash' && sp.cash > QLB_DIGITAL_OVER && !confirm('The cash part is ' + qlbMoney(sp.cash) + '. Payments over ' + qlbMoney(QLB_DIGITAL_OVER) + ' default to a digital payment. Pay it in cash anyway?')) { const el = document.getElementById('qlbSplit'); if (el) qlbSetHTML(el, ''); qlbRenderPay(t); return; }
+        QLB.splitHow = k; QLB.splitOk = k === 'cash' && sp.cash > QLB_DIGITAL_OVER; qlbSave();
+        const el = document.getElementById('qlbSplit'); if (el) qlbSetHTML(el, ''); qlbRenderPay(t);
     }
     function qlbRefreshNumbers() {
         const t = qlbTotals();
@@ -23983,7 +24039,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const m = QLB.meta || {}, now = new Date();
         const pad = n => String(n).padStart(2, '0');
         const slipNo = 'B' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '-' + pad(now.getHours()) + pad(now.getMinutes());
-        const payLabel = k => ({ credit: 'Store credit', cash: 'Cash', digital: 'Digital payment' }[k] || '');
+        const payLabel = k => ({ credit: 'Store credit', cash: 'Cash', digital: 'Digital payment', split: 'Cash + store credit' }[k] || '');
+        const sp = pay === 'split' ? qlbSplit(t) : null;
         const box = (k, lab) => `<span><i>${pay === k ? '✓' : ''}</i>${lab}</span>`;
         const rows = QLB.rows.map(r => {
             const l = qlbLine(r), used = qlbUsed(r);
@@ -24001,8 +24058,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             <div class="qbp-parties">
                 <div class="qbp-box"><span>Seller</span><b>${qlbEsc(QLB.seller)}</b></div>
                 <div class="qbp-box"><span>Employee</span>${QLB.employee ? `<b>${qlbEsc(QLB.employee)}</b>` : '<em class="qbp-blank"></em>'}</div>
-                <div class="qbp-box"><span>Preferred payment</span><div class="qbp-checks">${box('credit', 'Store credit')}${box('cash', 'Cash')}${box('digital', 'Digital')}</div>
-                    ${pay === 'digital' ? `<div style="margin-top:3px;font-size:8.5pt;">${QLB.payDetail ? qlbEsc(QLB.payDetail) : 'Method / handle: ____________________'}</div>` : ''}</div>
+                <div class="qbp-box"><span>Preferred payment</span><div class="qbp-checks">${box('credit', 'Store credit')}${box('cash', 'Cash')}${box('digital', 'Digital')}${box('split', 'Cash + credit')}</div>
+                    ${pay === 'digital' || (sp && sp.how === 'digital') ? `<div style="margin-top:3px;font-size:8.5pt;">${QLB.payDetail ? qlbEsc(QLB.payDetail) : 'Method / handle: ____________________'}</div>` : ''}</div>
             </div>
             <table class="qbp-table"><thead><tr><th class="c">#</th><th class="c">Qty</th><th>Card</th><th>Set</th><th class="c">Cond.</th><th>Printing</th><th class="c">Lang.</th><th class="r">Market</th><th class="r">Low Price</th><th class="r">Value</th><th class="r">%</th><th class="r">Cash</th><th class="r">Credit</th></tr></thead>
                 <tbody>${rows}</tbody></table>
@@ -24013,8 +24070,13 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                     <tr><td>Cash amount</td><td>${qlbMoney(t.cash)}</td></tr>
                     <tr><td>Store credit amount${Number(QLB.bumpPct) ? ' (+' + qlbEsc(QLB.bumpPct) + '%)' : ''}</td><td>${qlbMoney(t.credit)}</td></tr>
                 </table>
-                <div class="qbp-due"><span>Amount to be paid</span><b>${qlbMoney(due)}</b><em>${qlbEsc(payLabel(pay))}</em>
-                    ${t.cash > QLB_DIGITAL_OVER && pay !== 'credit' ? `<div class="qbp-flag">${pay === 'cash' ? 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ' paid in cash, confirmed by staff.' : 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ': paid by digital payment.'}</div>` : ''}</div>
+                ${sp ? `<div class="qbp-due"><span>Amount to be paid</span>
+                    <div class="qbp-split"><b>${qlbMoney(sp.cash)}</b><em>${sp.how === 'digital' ? 'Digital payment' : 'Cash'}</em></div>
+                    <div class="qbp-plus">+</div>
+                    <div class="qbp-split"><b>${qlbMoney(sp.credit)}</b><em>Store credit</em></div>
+                    ${sp.cash > QLB_DIGITAL_OVER ? `<div class="qbp-flag">${sp.how === 'cash' ? 'Cash part over ' + qlbMoney(QLB_DIGITAL_OVER) + ' paid in cash, confirmed by staff.' : 'Cash part over ' + qlbMoney(QLB_DIGITAL_OVER) + ': paid by digital payment.'}</div>` : ''}</div>` :
+                `<div class="qbp-due"><span>Amount to be paid</span><b>${qlbMoney(due)}</b><em>${qlbEsc(payLabel(pay))}</em>
+                    ${t.cash > QLB_DIGITAL_OVER && pay !== 'credit' ? `<div class="qbp-flag">${pay === 'cash' ? 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ' paid in cash, confirmed by staff.' : 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ': paid by digital payment.'}</div>` : ''}</div>`}
             </div>
             <p class="qbp-agree">By signing, the seller confirms they own these cards and accepts the amount and payment type above.</p>
             <div class="qbp-sign">
