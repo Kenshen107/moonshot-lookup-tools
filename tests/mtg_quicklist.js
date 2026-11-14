@@ -205,17 +205,18 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
     await p.evaluate(code => { eval(code); const a = document.getElementById('qlbPrintArea'); a.innerHTML = qlbSlipHTML(qlbTotals(), qlbPay()); }, set);
     await p.pdf({ path: path.join(__dirname, '.out', name), format: 'Letter', preferCSSPageSize: true, printBackground: true });
   }
-  // Rounding: half a cent rounds up, and the totals are the rows added up
+  // Rounding: lines keep exact amounts, only the sums are rounded (half a cent rounds up)
   const rnd = await p.evaluate(() => {
     QLB.rows = []; QLB.cashPct = 50; QLB.bumpPct = 20;
-    [[2.01, 2.10], [0.29, 0.35], [1.13, 1.20], [1.45, 1.50], [8.81, 8.80], [3.33, 3.40]].forEach(([m, l], i) => QLB.rows.push({ num: i + 1, qty: i === 5 ? 3 : 1, name: 'R' + i, set: 'S', cond: 'NM', printing: 'Normal', lang: 'EN', market: m, low: l, pct: i === 3 ? 70 : null }));
-    const lines = QLB.rows.map(qlbLine), t = qlbTotals();
-    const sum = k => Math.round(lines.reduce((a, l) => a + l[k] * 100, 0));
-    return { first: lines[0], second: lines[1], fourth: lines[3], t, sv: sum('value'), sc: sum('cash'), scr: sum('credit') };
+    for (let i = 0; i < 3; i++) QLB.rows.push({ num: i + 1, qty: 1, name: 'R' + i, set: 'S', cond: 'NM', printing: 'Normal', lang: 'EN', market: 0.29, low: 0.35, pct: null });
+    const a = qlbTotals();
+    QLB.rows = [{ num: 1, qty: 1, name: 'B', set: 'S', cond: 'NM', printing: 'Normal', lang: 'EN', market: 2.01, low: 2.10, pct: null }];
+    const b = qlbTotals();
+    return { a, b, line: qlbLine(QLB.rows[0]) };
   });
-  ok(rnd.first.cash === 1.01 && rnd.second.cash === 0.15 && rnd.fourth.cash === 1.02, `rounding: $2.01 x 50% = $1.01, $0.29 x 50% = $0.15, $1.45 x 70% = $1.02 (${rnd.first.cash}, ${rnd.second.cash}, ${rnd.fourth.cash})`);
-  ok(rnd.first.credit === 1.21, `rounding: $1.01 + 20% = $1.21 (${rnd.first.credit})`);
-  ok(Math.round(rnd.t.value * 100) === rnd.sv && Math.round(rnd.t.cash * 100) === rnd.sc && Math.round(rnd.t.credit * 100) === rnd.scr, `rounding: totals equal the rows added up (${rnd.t.value}/${rnd.t.cash}/${rnd.t.credit})`);
+  ok(rnd.a.cash === 0.44 && rnd.a.value === 0.87, `rounding: 3 x $0.29 at 50% = $0.435, rounded once to $0.44 (not 3 x $0.15) (${rnd.a.cash})`);
+  ok(rnd.a.credit === 0.52, `rounding: credit 3 x $0.174 = $0.522, rounded once to $0.52 (${rnd.a.credit})`);
+  ok(rnd.b.cash === 1.01 && rnd.b.credit === 1.21 && Math.abs(rnd.line.cash - 1.005) < 1e-9, `rounding: $2.01 x 50% stays $1.005 on the line, the sum rounds to $1.01, credit $1.206 to $1.21 (${rnd.b.cash}, ${rnd.b.credit})`);
   // A Pokémon Quicklist: multi-word printings (Reverse Holofoil) and the DG condition
   await p.evaluate(() => { QLB.rows = []; qlbSave(); });
   await p.setInputFiles('#qlbFile', path.resolve(__dirname, 'data', 'quicklist_pokemon.pdf')); await p.waitForFunction(() => QLB.rows.length >= 14, null, { timeout: 15000 });
