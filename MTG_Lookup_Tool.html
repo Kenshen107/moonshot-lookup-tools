@@ -23910,8 +23910,6 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 ${m.project ? `<span class="qlb-chip">Project <b>${qlbEsc(m.project)}</b></span>` : ''}
                 <span class="qlb-chip">Lines <b>${t.lines}</b></span>
                 <span class="qlb-chip">Cards <b>${t.cards}</b></span>
-                <span class="qlb-chip">Market total <b>${qlbMoney(t.market)}</b></span>
-                <span class="qlb-chip">Low Price total <b>${qlbMoney(t.low)}</b></span>
             </div>
             <div class="buylist-rates">
                 <div class="buylist-rate-field"><label>Cash payout</label>
@@ -23940,7 +23938,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     }
     function qlbFootCells(t) {
         return `<td></td><td class="num">${t.cards}</td><td colspan="5">Total (${t.lines} line${t.lines === 1 ? '' : 's'})${t.noPrice ? ` · ${t.noPrice} with no price` : ''}</td>
-            <td class="num">${qlbMoney(t.market)}</td><td class="num">${qlbMoney(t.low)}</td><td class="num">${qlbMoney(t.value)}</td><td></td>
+            <td></td><td></td><td class="num">${qlbMoney(t.value)}</td><td></td>
             <td class="num buylist-cash-val">${qlbMoney(t.cash)}</td><td class="num buylist-credit-val">${qlbMoney(t.credit)}</td><td></td>`;
     }
     function qlbRenderPay(t) {
@@ -24011,8 +24009,6 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             <div class="qbp-sum">
                 <table class="qbp-totals">
                     <tr><td>Lines / cards</td><td>${t.lines} / ${t.cards}</td></tr>
-                    <tr><td>TCGplayer Market total</td><td>${qlbMoney(t.market)}</td></tr>
-                    <tr><td>TCGplayer Low Price total</td><td>${qlbMoney(t.low)}</td></tr>
                     <tr><td>Value (lower of the two)</td><td>${qlbMoney(t.value)}</td></tr>
                     <tr><td>Cash amount</td><td>${qlbMoney(t.cash)}</td></tr>
                     <tr><td>Store credit amount${Number(QLB.bumpPct) ? ' (+' + qlbEsc(QLB.bumpPct) + '%)' : ''}</td><td>${qlbMoney(t.credit)}</td></tr>
