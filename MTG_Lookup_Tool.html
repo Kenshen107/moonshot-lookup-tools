@@ -4206,6 +4206,41 @@
             .qbp-cart > .qbp-items { flex: 1; }
             .qbp-cart-sum { width: 2.9in; max-width: none; }
             .qbp-gap { text-align: right; font-weight: 700; color: #16323f; font-size: 8pt; }
+            .qbp-step { display: flex; align-items: baseline; gap: 6pt; margin: 12pt 0 5pt; font-size: 10.5pt; font-weight: 800; color: #16323f; letter-spacing: -0.01em; }
+            .qbp-step i { display: inline-flex; align-items: center; justify-content: center; width: 14pt; height: 14pt; border-radius: 50%; background: #16323f; color: #fff; font-style: normal; font-size: 8pt; align-self: center; }
+            .qbp-step span { font-size: 7.5pt; font-weight: 400; color: #5d6b73; letter-spacing: 0; }
+            .qbp-block { break-inside: avoid; }
+            .qbp-offer { display: grid; grid-template-columns: 1fr 1fr 1fr 2.3in; gap: 7pt; align-items: stretch; }
+            .qbp-tile { border: 0.75pt solid #cfd8dc; border-radius: 4pt; padding: 6pt 8pt; display: flex; flex-direction: column; gap: 1pt; }
+            .qbp-tile span { font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #5d6b73; }
+            .qbp-tile b { font-size: 15pt; color: #16323f; letter-spacing: -0.01em; }
+            .qbp-tile small { font-size: 7pt; color: #8a969c; }
+            .qbp-tile.pick { border: 1.2pt solid #3d7f98; background: #eef6f9; }
+            .qbp-offer .qbp-payout { width: auto; }
+            .qbp-slim td.nm { min-width: 2.4in; }
+            .qbp-slim td:nth-child(4) { min-width: 0; }
+            .qbp-ifadd { margin-top: 6pt; border: 0.75pt solid #cfd8dc; border-radius: 4pt; overflow: hidden; max-width: 4.6in; }
+            .qbp-ifadd-head { background: #f5f8f9; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #45545c; padding: 3pt 8pt; }
+            .qbp-ifadd-row { display: grid; grid-template-columns: 1.7in 0.8in 0.8in 1fr; align-items: baseline; padding: 3pt 8pt; border-top: 0.5pt solid #e1e7ea; font-size: 8.5pt; }
+            .qbp-ifadd-row span { color: #45545c; }
+            .qbp-ifadd-row s { color: #8a969c; text-align: right; padding-right: 8pt; }
+            .qbp-ifadd-row b { color: #16323f; text-align: right; }
+            .qbp-ifadd-row em { font-style: normal; color: #2f855a; font-weight: 700; padding-left: 8pt; font-size: 8pt; }
+            .qbp-ifadd-row.strong b { font-size: 10.5pt; }
+            .qbp-cart { display: grid; grid-template-columns: 1fr 2.3in; gap: 10pt; align-items: start; }
+            .qbp-cart-total > div { display: flex; justify-content: space-between; padding: 2.5pt 0; border-bottom: 0.5pt solid #e1e7ea; font-size: 8.5pt; color: #45545c; }
+            .qbp-cart-total b { color: #16323f; }
+            .qbp-cart-total .grand { border-bottom: none; border-top: 1.2pt solid #16323f; font-size: 10pt; font-weight: 700; color: #16323f; padding-top: 3pt; }
+            .qbp-progress { margin-top: 7pt; }
+            .qbp-progress-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8.5pt; color: #45545c; margin-bottom: 2pt; }
+            .qbp-progress-top b { color: #16323f; }
+            .qbp-progress-top strong { color: #b7791f; }
+            .qbp-progress.done .qbp-progress-top strong { color: #2f855a; }
+            .qbp-track { height: 7pt; background: #e1e7ea; border-radius: 4pt; overflow: hidden; }
+            .qbp-track > div { height: 100%; background: #3d7f98; border-radius: 4pt; }
+            .qbp-progress.done .qbp-track > div { background: #2f855a; }
+            .qbp-close { break-inside: avoid; margin-top: 12pt; }
+            .qbp-close .qbp-sign { margin-top: 10pt; }
             .qbp-foot { display: flex; justify-content: space-between; margin-top: 12pt; padding-top: 4pt; border-top: 0.5pt solid #cfd8dc; font-size: 7pt; color: #8a969c; }
         }
 
@@ -24338,13 +24373,17 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
 
     // ---- The printed buy slip ----
     function qlbSlipHTML(t, pay) {
+        // Laid out as numbered steps (2026-11-14, owner: "easier and clearer to read"): ① what we're buying,
+        // ② the offer and the amount paid, ③ maybe items and ④ the Working toward cart (only when they have something).
         const m = QLB.meta || {}, now = new Date();
         const pad = n => String(n).padStart(2, '0');
         const slipNo = 'B' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '-' + pad(now.getHours()) + pad(now.getMinutes());
         const sp = pay === 'split' ? qlbSplit(t) : null;
-        const set = pay === 'split' ? { credit: true, cash: sp.how === 'cash', digital: sp.how === 'digital' } : { credit: pay === 'credit', cash: pay === 'cash', digital: pay === 'digital' };
         const method = k => k === 'digital' ? 'Digital payment' : k === 'cash' ? 'Cash' : 'Store credit';
+        const set = pay === 'split' ? { credit: true, cash: sp.how === 'cash', digital: sp.how === 'digital' } : { credit: pay === 'credit', cash: pay === 'cash', digital: pay === 'digital' };
         const tick = (on, lab) => `<span class="qbp-check${on ? ' on' : ''}"><i>${on ? '✓' : ''}</i>${lab}</span>`;
+        const step = (n, title, sub) => `<h2 class="qbp-step"><i>${n}</i>${title}${sub ? `<span>${sub}</span>` : ''}</h2>`;
+        const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
         const slipRow = r => {
             const l = qlbLine(r), used = qlbUsed(r);
             const pc = (v, k) => v == null ? '<span class="muted">—</span>' : `<span class="${used === k ? 'used' : 'muted'}">${qlbMoney(v)}</span>`;
@@ -24356,56 +24395,63 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 ${prices}<td class="r">${l.unit == null ? '—' : qlbMoney(l.value)}</td>
                 <td class="r">${qlbPct(r)}%</td><td class="r b">${qlbMoney(l.cash)}</td><td class="r">${qlbMoney(l.credit)}</td></tr>`;
         };
-        const rows = QLB.rows.filter(r => !r.maybe).map(slipRow).join('');
-        const maybeRows = QLB.rows.filter(r => r.maybe);
         const itemsHead = `<thead><tr><th class="c">#</th><th class="c">Qty</th><th>Item</th><th>Set / type</th><th class="c">Cond.</th><th>Printing</th><th class="c">Lang.</th><th class="r">Market</th><th class="r">Low</th><th class="r">Value</th><th class="r">Rate</th><th class="r">Cash</th><th class="r">Credit</th></tr></thead>`;
         const payLines = tt => {
             const s2 = pay === 'split' ? qlbSplit(tt) : null;
             return s2 ? [[method(s2.how), qlbDollars(s2.cash)], ['Store credit', qlbDollars(s2.credit)]] : pay ? [[method(pay), qlbDollars(qlbDue(tt, pay))]] : [];
         };
-        // Maybe items print only when there are some (owner, 2026-11-14).
-        let maybeSec = '';
-        if (maybeRows.length) {
-            const mt = qlbTotals('maybe'), at = qlbTotals('all');
-            maybeSec = `<section class="qbp-extra">
-                <h2>Maybe items <span>not included in the amounts above</span></h2>
-                <table class="qbp-items">${itemsHead}<tbody>${maybeRows.map(slipRow).join('')}</tbody>
-                    <tfoot><tr><td></td><td class="c">${mt.cards}</td><td colspan="5">${mt.lines} line${mt.lines === 1 ? '' : 's'}</td><td></td><td></td>
-                    <td class="r">${qlbMoney(mt.value)}</td><td></td><td class="r">${qlbMoney(mt.cash)}</td><td class="r">${qlbMoney(mt.credit)}</td></tr></tfoot></table>
-                <table class="qbp-cmp"><tr><th></th><th>Value</th><th>Cash offer</th><th>Store credit offer</th>${pay ? '<th>Amount to be paid</th>' : ''}</tr>
-                    <tr><td>Without the maybe items</td><td>${qlbMoney(t.value)}</td><td>${qlbMoney(t.cash)}</td><td>${qlbMoney(t.credit)}</td>${pay ? `<td>${payLines(t).map(([lab, amt]) => qlbEsc(lab) + ' ' + qlbMoney(amt)).join(' + ')}</td>` : ''}</tr>
-                    <tr><td>With the maybe items</td><td>${qlbMoney(at.value)}</td><td>${qlbMoney(at.cash)}</td><td>${qlbMoney(at.credit)}</td>${pay ? `<td>${payLines(at).map(([lab, amt]) => qlbEsc(lab) + ' ' + qlbMoney(amt)).join(' + ')}</td>` : ''}</tr></table>
-            </section>`;
-        }
-        // The Working toward cart prints only when it has items.
-        let cartSec = '';
-        if (QLB.cart.length) {
-            const ct = qlbCartTotals(), at = maybeRows.length ? qlbTotals('all') : null;
-            const gap = (have) => { const d = qlbCents(ct.total - have); return d > 0 ? 'Still needed ' + qlbMoney(d) : 'Covered, ' + qlbMoney(-d) + ' left over'; };
-            cartSec = `<section class="qbp-extra">
-                <h2>Working toward <span>items the seller wants from the store</span></h2>
-                <div class="qbp-cart">
-                    <table class="qbp-items"><thead><tr><th class="c">Qty</th><th>Item</th><th>Kind</th><th class="r">Each</th><th class="r">Total</th></tr></thead>
-                        <tbody>${QLB.cart.map(c => `<tr><td class="c">${qlbEsc(c.qty)}</td><td class="nm">${qlbEsc(c.name)}</td><td>${qlbEsc(c.kind)}</td><td class="r">${qlbMoney(c.price)}</td><td class="r">${qlbMoney((Number(c.price) || 0) * (c.qty || 1))}</td></tr>`).join('')}</tbody></table>
-                    <table class="qbp-sum qbp-cart-sum">
-                        <tr><td>Subtotal</td><td>${qlbMoney(ct.sub)}</td></tr>
-                        <tr><td>Indiana sales tax (${QLB_TAX_PCT}%)</td><td>${qlbMoney(ct.tax)}</td></tr>
-                        <tr><td><b>Total with tax</b></td><td>${qlbMoney(ct.total)}</td></tr>
-                        <tr><td>Store credit from this buy</td><td>${qlbMoney(t.credit)}</td></tr>
-                        <tr><td colspan="2" class="qbp-gap">${gap(t.credit)}</td></tr>
-                        ${at ? `<tr><td>With the maybe items</td><td>${qlbMoney(at.credit)}</td></tr><tr><td colspan="2" class="qbp-gap">${gap(at.credit)}</td></tr>` : ''}
-                    </table>
-                </div>
-            </section>`;
-        }
-        const bump = Number(QLB.bumpPct) ? ' (+' + qlbEsc(QLB.bumpPct) + '%)' : '';
-        const lines = sp
-            ? [[method(sp.how), qlbDollars(sp.cash)], ['Store credit', qlbDollars(sp.credit)]]
-            : pay ? [[method(pay), qlbDollars(qlbDue(t, pay))]] : [];
+        const lines = payLines(t);
+        const bump = Number(QLB.bumpPct) ? 'cash + ' + qlbEsc(QLB.bumpPct) + '%' : 'same as cash';
         const overCash = sp ? sp.cash > QLB_DIGITAL_OVER : (t.cash > QLB_DIGITAL_OVER && pay !== 'credit');
         const overHow = sp ? sp.how : pay;
         const digitalNote = (pay === 'digital' || (sp && sp.how === 'digital'))
             ? `<div class="qbp-pay-detail"><span>Send to</span>${QLB.payDetail ? qlbEsc(QLB.payDetail) : '<em class="qbp-fill"></em>'}</div>` : '';
+        const maybeRows = QLB.rows.filter(r => r.maybe);
+        const at = maybeRows.length ? qlbTotals('all') : null;
+        const diff = (a, b) => { const d = qlbCents(b - a); return d ? `<em>${d > 0 ? '+' : '−'}${qlbMoney(Math.abs(d))}</em>` : ''; };
+        let n = 2;
+        // ③ Maybe items: a short list, then what changes if they're added.
+        let maybeSec = '';
+        if (at) {
+            const mt = qlbTotals('maybe'), withLines = payLines(at);
+            maybeSec = `<section class="qbp-block">
+                ${step(++n, 'Maybe items', 'Not part of this buy unless the seller adds them')}
+                <table class="qbp-items qbp-slim"><thead><tr><th class="c">Qty</th><th>Item</th><th>Set / type</th><th class="c">Cond.</th><th class="r">Value</th><th class="r">Cash</th><th class="r">Credit</th></tr></thead>
+                    <tbody>${maybeRows.map(r => { const l = qlbLine(r); return `<tr><td class="c">${qlbEsc(r.qty)}</td><td class="nm">${qlbEsc(r.name)}</td><td>${qlbEsc(r.set)}</td><td class="c">${qlbEsc(r.cond || '')}</td><td class="r">${l.unit == null ? '—' : qlbMoney(l.value)}</td><td class="r b">${qlbMoney(l.cash)}</td><td class="r">${qlbMoney(l.credit)}</td></tr>`; }).join('')}</tbody>
+                    <tfoot><tr><td class="c">${mt.cards}</td><td colspan="3">${plural(mt.lines, 'maybe line')}</td><td class="r">${qlbMoney(mt.value)}</td><td class="r">${qlbMoney(mt.cash)}</td><td class="r">${qlbMoney(mt.credit)}</td></tr></tfoot></table>
+                <div class="qbp-ifadd">
+                    <div class="qbp-ifadd-head">If the seller adds these</div>
+                    <div class="qbp-ifadd-row"><span>Cash offer</span><s>${qlbMoney(t.cash)}</s><b>${qlbMoney(at.cash)}</b>${diff(t.cash, at.cash)}</div>
+                    <div class="qbp-ifadd-row"><span>Store credit offer</span><s>${qlbMoney(t.credit)}</s><b>${qlbMoney(at.credit)}</b>${diff(t.credit, at.credit)}</div>
+                    ${lines.length ? lines.map(([lab, amt], i) => `<div class="qbp-ifadd-row strong"><span>To be paid: ${qlbEsc(lab)}</span><s>${qlbMoney(amt)}</s><b>${qlbMoney(withLines[i] ? withLines[i][1] : amt)}</b>${diff(amt, withLines[i] ? withLines[i][1] : amt)}</div>`).join('') : ''}
+                </div>
+            </section>`;
+        }
+        // ④ Working toward: the cart, its total with tax, and a bar for how far the store credit gets.
+        let cartSec = '';
+        if (QLB.cart.length) {
+            const ct = qlbCartTotals();
+            const bar = (label, have) => {
+                const pct = ct.total > 0 ? Math.min(100, Math.round(have / ct.total * 100)) : 100, d = qlbCents(ct.total - have);
+                return `<div class="qbp-progress${d <= 0 ? ' done' : ''}">
+                    <div class="qbp-progress-top"><span>${label} <b>${qlbMoney(have)}</b></span><strong>${d > 0 ? 'Still needed ' + qlbMoney(d) : 'Covered · ' + qlbMoney(-d) + ' left over'}</strong></div>
+                    <div class="qbp-track"><div style="width:${pct}%"></div></div></div>`;
+            };
+            cartSec = `<section class="qbp-block">
+                ${step(++n, 'Working toward', 'What the seller wants from the store')}
+                <div class="qbp-cart">
+                    <table class="qbp-items qbp-slim"><thead><tr><th class="c">Qty</th><th>Item</th><th>Kind</th><th class="r">Each</th><th class="r">Total</th></tr></thead>
+                        <tbody>${QLB.cart.map(c => `<tr><td class="c">${qlbEsc(c.qty)}</td><td class="nm">${qlbEsc(c.name)}</td><td>${qlbEsc(c.kind)}</td><td class="r">${qlbMoney(c.price)}</td><td class="r">${qlbMoney((Number(c.price) || 0) * (c.qty || 1))}</td></tr>`).join('')}</tbody></table>
+                    <div class="qbp-cart-total">
+                        <div><span>Subtotal</span><b>${qlbMoney(ct.sub)}</b></div>
+                        <div><span>Indiana sales tax (${QLB_TAX_PCT}%)</span><b>${qlbMoney(ct.tax)}</b></div>
+                        <div class="grand"><span>Total with tax</span><b>${qlbMoney(ct.total)}</b></div>
+                    </div>
+                </div>
+                ${bar('Store credit from this buy', t.credit)}
+                ${at ? bar('With the maybe items', at.credit) : ''}
+            </section>`;
+        }
         return `<div class="qbp">
             <header class="qbp-top">
                 <div class="qbp-brand">
@@ -24426,35 +24472,36 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 <div class="qbp-field"><span>Employee</span>${QLB.employee ? `<b>${qlbEsc(QLB.employee)}</b>` : '<em class="qbp-fill"></em>'}</div>
                 <div class="qbp-field qbp-payfield"><span>Payment</span><div>${tick(set.credit, 'Store credit')}${tick(set.cash, 'Cash')}${tick(set.digital, 'Digital')}</div></div>
             </section>
+            ${step(1, 'What we\'re buying', plural(t.cards, 'item') + ' on ' + plural(t.lines, 'line'))}
             <table class="qbp-items">
                 ${itemsHead}
-                <tbody>${rows}</tbody>
-                <tfoot><tr><td></td><td class="c">${t.cards}</td><td colspan="5">${t.lines} line${t.lines === 1 ? '' : 's'}</td><td></td><td></td>
+                <tbody>${QLB.rows.filter(r => !r.maybe).map(slipRow).join('')}</tbody>
+                <tfoot><tr><td></td><td class="c">${t.cards}</td><td colspan="5">Totals</td><td></td><td></td>
                     <td class="r">${qlbMoney(t.value)}</td><td></td><td class="r">${qlbMoney(t.cash)}</td><td class="r">${qlbMoney(t.credit)}</td></tr></tfoot>
             </table>
-            <section class="qbp-bottom">
-                <div class="qbp-left">
-                    <table class="qbp-sum">
-                        <tr><td>Items</td><td>${t.cards}</td></tr>
-                        <tr><td>Value</td><td>${qlbMoney(t.value)}</td></tr>
-                        <tr><td>Cash offer</td><td>${qlbMoney(t.cash)}</td></tr>
-                        <tr><td>Store credit offer${bump}</td><td>${qlbMoney(t.credit)}</td></tr>
-                    </table>
-                    <p class="qbp-agree">The seller confirms they own the items listed, that they are as described, and accepts the amount and payment shown.</p>
-                </div>
-                <div class="qbp-payout">
-                    <div class="qbp-payout-head">Amount to be paid</div>
-                    ${lines.map(([lab, amt]) => `<div class="qbp-payline"><span>${qlbEsc(lab)}</span><b>${qlbMoney(amt)}</b></div>`).join('') || '<div class="qbp-payline"><span>Not chosen</span><b>—</b></div>'}
-                    ${digitalNote}
-                    ${overCash ? `<div class="qbp-flag">${overHow === 'cash' ? 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ' paid in cash, confirmed by staff.' : 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ': paid by digital payment.'}</div>` : ''}
+            <section class="qbp-block">
+                ${step(2, 'The offer', 'The seller picks one way to be paid')}
+                <div class="qbp-offer">
+                    <div class="qbp-tile"><span>Total value</span><b>${qlbMoney(t.value)}</b><small>${plural(t.cards, 'item')}</small></div>
+                    <div class="qbp-tile${set.cash || set.digital ? ' pick' : ''}"><span>Cash offer</span><b>${qlbMoney(t.cash)}</b><small>at the rates shown</small></div>
+                    <div class="qbp-tile${set.credit ? ' pick' : ''}"><span>Store credit offer</span><b>${qlbMoney(t.credit)}</b><small>${bump}</small></div>
+                    <div class="qbp-payout">
+                        <div class="qbp-payout-head">Amount to be paid</div>
+                        ${lines.map(([lab, amt]) => `<div class="qbp-payline"><span>${qlbEsc(lab)}</span><b>${qlbMoney(amt)}</b></div>`).join('') || '<div class="qbp-payline"><span>Not chosen</span><b>—</b></div>'}
+                        ${digitalNote}
+                        ${overCash ? `<div class="qbp-flag">${overHow === 'cash' ? 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ' paid in cash, confirmed by staff.' : 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ': paid by digital payment.'}</div>` : ''}
+                    </div>
                 </div>
             </section>
             ${maybeSec}${cartSec}
-            <section class="qbp-sign">
-                <div><div class="qbp-line"></div><div class="qbp-cap">Seller signature</div></div>
-                <div><div class="qbp-line"></div><div class="qbp-cap">Date</div></div>
-                <div><div class="qbp-line"></div><div class="qbp-cap">Employee signature</div></div>
-                <div><div class="qbp-line">${qlbEsc(QLB.employee)}</div><div class="qbp-cap">Employee name (print)</div></div>
+            <section class="qbp-close">
+                <p class="qbp-agree">The seller confirms they own the items listed in step 1, that they are as described, and accepts the amount and payment shown in step 2.</p>
+                <div class="qbp-sign">
+                    <div><div class="qbp-line"></div><div class="qbp-cap">Seller signature</div></div>
+                    <div><div class="qbp-line"></div><div class="qbp-cap">Date</div></div>
+                    <div><div class="qbp-line"></div><div class="qbp-cap">Employee signature</div></div>
+                    <div><div class="qbp-line">${qlbEsc(QLB.employee)}</div><div class="qbp-cap">Employee name (print)</div></div>
+                </div>
             </section>
             <footer class="qbp-foot"><span>Slip ${slipNo}</span><span>Keep with the items bought</span></footer>
         </div>`;
