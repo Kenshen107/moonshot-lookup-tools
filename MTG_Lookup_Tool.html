@@ -24009,7 +24009,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             <div class="qbp-sum">
                 <table class="qbp-totals">
                     <tr><td>Lines / cards</td><td>${t.lines} / ${t.cards}</td></tr>
-                    <tr><td>Value (lower of the two)</td><td>${qlbMoney(t.value)}</td></tr>
+                    <tr><td>Value</td><td>${qlbMoney(t.value)}</td></tr>
                     <tr><td>Cash amount</td><td>${qlbMoney(t.cash)}</td></tr>
                     <tr><td>Store credit amount${Number(QLB.bumpPct) ? ' (+' + qlbEsc(QLB.bumpPct) + '%)' : ''}</td><td>${qlbMoney(t.credit)}</td></tr>
                 </table>
@@ -24023,7 +24023,6 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 <div><div class="qbp-line">${qlbEsc(QLB.employee)}</div><div class="qbp-cap">Employee name</div></div>
                 <div><div class="qbp-line"></div><div class="qbp-cap">Employee signature</div></div>
             </div>
-            <p class="qbp-src">Each card's value is the lower of TCGplayer's Market and Low Price from the Quicklist (bold), times the quantity, at the % shown. ${qlbEsc(m.file ? 'Source: ' + m.file + '.' : '')}</p>
         </div>`;
     }
 

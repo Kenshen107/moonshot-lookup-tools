@@ -76,6 +76,7 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
     ok(await p.evaluate(() => document.querySelectorAll('#qlbPrintArea img').length) === 0, `${w}: no card pictures on the slip`);
     ok(/Amount to be paid/.test(slip), `${w}: slip shows the amount due`);
     ok(!/Market total|Low Price total/.test(slip) && !/Market total|Low Price total/.test(await p.innerText('#qlBuy')), `${w}: no Market or Low Price totals on the slip or screen`);
+    ok(!/lower of/i.test(slip), `${w}: slip doesn't explain the lower-of-two rule`);
     ok(!slip.includes('$251.54') && !slip.includes('$237.61'), `${w}: slip doesn't show the summed Market / Low amounts`);
     await p.evaluate(() => { document.body.classList.remove('qlb-printing'); const a = document.getElementById('qlbPrintArea'); if (a) a.remove(); });
     // Over $1,000: cash defaults to digital; credit stays
