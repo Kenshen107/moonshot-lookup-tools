@@ -77,25 +77,33 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
     await p.click('text=🖨️ Print buy slip'); await p.waitForTimeout(400);
     ok(await p.evaluate(() => window.__printed) === 1, `${w}: prints once payment is picked`);
     const slip = await p.evaluate(() => { const a = document.getElementById('qlbPrintArea'); return a ? a.innerText : ''; });
-    ok(/Card Buy Slip/.test(slip) && /Jane Seller/.test(slip) && /Sam Staff/.test(slip) && /Seller signature/.test(slip) && /Employee signature/.test(slip), `${w}: slip has seller, employee and signature lines`);
-    ok(/Consecrated Sphinx/.test(slip) && /MagicFest Cards/.test(slip) && /11\/13\/2026 18:56/.test(slip) && /Low Price/.test(slip), `${w}: slip lists every column and the printout date`);
+    ok(/Buy Slip/.test(slip) && /Jane Seller/.test(slip) && /Sam Staff/.test(slip) && /Seller signature/.test(slip) && /Employee signature/.test(slip), `${w}: slip has seller, employee and signature lines`);
+    ok(/Consecrated Sphinx/.test(slip) && /MagicFest Cards/.test(slip) && /11\/13\/2026 18:56/.test(slip) && /Market/.test(slip) && /Low/.test(slip), `${w}: slip lists every column and the printout date`);
     ok(await p.evaluate(() => document.querySelectorAll('#qlbPrintArea img').length) === 0, `${w}: no card pictures on the slip`);
     ok(/Amount to be paid/.test(slip), `${w}: slip shows the amount due`);
     ok(!/Market total|Low Price total/.test(slip) && !/Market total|Low Price total/.test(await p.innerText('#qlBuy')), `${w}: no Market or Low Price totals on the slip or screen`);
     ok(!/lower of/i.test(slip), `${w}: slip doesn't explain the lower-of-two rule`);
     ok(!slip.includes('$251.54') && !slip.includes('$237.61'), `${w}: slip doesn't show the summed Market / Low amounts`);
     await p.evaluate(() => { document.body.classList.remove('qlb-printing'); const a = document.getElementById('qlbPrintArea'); if (a) a.remove(); });
-    // Over $1,000: cash defaults to digital; credit stays
+    // Over $1,000: cash defaults to digital; store credit can be added
+    const box = k => `input[name="qlbPayType"][value="${k}"]`;
+    const ticked = () => p.evaluate(() => [...document.querySelectorAll('input[name="qlbPayType"]')].filter(x => x.checked).map(x => x.value).join('+'));
+    ok(await p.evaluate(() => [...document.querySelectorAll('input[name="qlbPayType"]')].every(x => x.type === 'checkbox')), `${w}: payment methods are checkboxes`);
     await p.fill('#qlbCashPct', '600'); await p.dispatchEvent('#qlbCashPct', 'change');
-    ok(await p.evaluate(() => qlbPay()) === 'digital', `${w}: cash over $1,000 defaults to digital payment`);
+    ok(await p.evaluate(() => qlbPay()) === 'digital' && await ticked() === 'digital', `${w}: cash over $1,000 defaults to digital payment (${await ticked()})`);
     ok(/defaults to a digital payment/.test(await p.textContent('#qlbPayInfo')), `${w}: note says so`);
-    await p.check('input[name="qlbPayType"][value="credit"]');
-    ok(await p.evaluate(() => qlbPay()) === 'credit', `${w}: store credit is still allowed over $1,000`);
-    await p.check('input[name="qlbPayType"][value="cash"]'); await p.waitForTimeout(100);
+    await p.check(box('credit')); await p.waitForTimeout(100);
+    ok(await p.evaluate(() => qlbPay()) === 'split' && await ticked() === 'credit+digital', `${w}: store credit + digital can be ticked together (${await ticked()})`);
+    await p.uncheck(box('digital')); await p.waitForTimeout(100);
+    ok(await p.evaluate(() => qlbPay()) === 'credit' && await ticked() === 'credit', `${w}: store credit alone`);
+    await p.uncheck(box('credit')); await p.check(box('cash')); await p.waitForTimeout(100);
     ok(dialogs.some(d => /Pay it in cash anyway/.test(d)) && await p.evaluate(() => qlbPay()) === 'cash', `${w}: cash over $1,000 only after staff confirm`);
-    // Split: part cash, rest store credit (with the bump)
+    await p.check(box('digital')); await p.waitForTimeout(100);
+    ok(await ticked() === 'digital', `${w}: ticking digital unticks cash (they can't be combined)`);
+    // Split: store credit + cash, the employee types the cash part
     await p.fill('#qlbCashPct', '50'); await p.dispatchEvent('#qlbCashPct', 'change');
-    await p.check('input[name="qlbPayType"][value="split"]');
+    await p.uncheck(box('digital')); await p.check(box('credit')); await p.check(box('cash')); await p.waitForTimeout(100);
+    ok(await ticked() === 'credit+cash' && await p.evaluate(() => qlbPay()) === 'split', `${w}: store credit + cash makes a split (${await ticked()})`);
     ok(await p.locator('#qlbSplitCash').isVisible(), `${w}: split shows a cash-part box`);
     const tS = await p.evaluate(() => qlbTotals());
     await p.locator('#qlbSplitCash').fill('50');
@@ -108,18 +116,39 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
     ok(await p.evaluate(() => qlbSplit().cash) === tS.cash, `${w}: cash part is capped at the whole cash offer`);
     await p.fill('#qlbCashPct', '1000'); await p.dispatchEvent('#qlbCashPct', 'change');
     await p.locator('#qlbSplitCash').fill('1500');
-    ok(await p.evaluate(() => qlbSplit().how) === 'digital', `${w}: split cash part over $1,000 defaults to digital`);
+    ok(await p.evaluate(() => qlbSplit().how) === 'digital' && await ticked() === 'credit+digital', `${w}: split cash part over $1,000 defaults to digital`);
     await p.fill('#qlbCashPct', '50'); await p.dispatchEvent('#qlbCashPct', 'change');
     await p.locator('#qlbSplitCash').fill('40');
     await p.evaluate(() => { window.__printed = 0; });
     await p.locator('#qlbBody button', { hasText: 'Print buy slip' }).click(); await p.waitForTimeout(400);
     const slipS = await p.evaluate(() => { const a = document.getElementById('qlbPrintArea'); return a ? a.innerText : ''; });
-    ok(/\$40\.00/.test(slipS) && /Store credit/.test(slipS) && /Cash \+ credit/.test(slipS), `${w}: split slip shows cash part and credit part`);
+    ok(/\$40\.00/.test(slipS) && /Store credit/.test(slipS) && /Cash/.test(slipS) && await p.evaluate(() => document.querySelectorAll('#qlbPrintArea .qbp-check.on').length) === 2, `${w}: split slip shows the cash part, the credit part and two ticks`);
     await p.evaluate(() => { document.body.classList.remove('qlb-printing'); const a = document.getElementById('qlbPrintArea'); if (a) a.remove(); });
-    await p.check('input[name="qlbPayType"][value="cash"]');
+    await p.uncheck(box('credit')); await p.waitForTimeout(100);
     // Reload keeps it
     await p.reload(); await p.waitForTimeout(1000);
     ok(await p.locator('#qlbBody tbody tr').count() === 17 && await p.inputValue('#qlbSeller') === 'Jane Seller', `${w}: saved across reload`);
+    // Items added by hand (sealed product)
+    await p.evaluate(() => { document.getElementById('qlbAddBox').open = true; });
+    await p.fill('#qlbcName', 'Bloomburrow Play Booster Box'); await p.fill('#qlbcQty', '2'); await p.fill('#qlbcPrice', '100');
+    await p.locator('#qlbAddBox button', { hasText: 'Add to the buy' }).click(); await p.waitForTimeout(200);
+    let cr = await p.evaluate(() => QLB.rows.filter(r => r.custom));
+    ok(cr.length === 1 && cr[0].qty === 2 && cr[0].price === 100 && cr[0].set === 'Sealed product' && cr[0].cond === 'Sealed', `${w}: custom sealed item added (${JSON.stringify(cr[0])})`);
+    const ci = await p.evaluate(() => QLB.rows.findIndex(r => r.custom));
+    ok(await p.locator(`#qlbRow-${ci}.qlb-custom`).count() === 1 && /added by hand/.test(await p.innerText(`#qlbRow-${ci}`)), `${w}: custom row shows in the list`);
+    ok((await p.textContent(`#qlbCash-${ci}`)) === '$100.00', `${w}: 2 x $100 at 50% = $100 cash (${await p.textContent(`#qlbCash-${ci}`)})`);
+    await p.locator(`#qlbRow-${ci} input.qlb-mini-price`).fill('120'); await p.dispatchEvent(`#qlbRow-${ci} input.qlb-mini-price`, 'change');
+    ok((await p.textContent(`#qlbCash-${ci}`)) === '$120.00', `${w}: editing the value updates the row`);
+    await p.evaluate(() => { window.print = () => { window.__printed = (window.__printed || 0) + 1; }; QLB.pay = 'cash'; qlbSave(); });
+    await p.locator('#qlbBody button', { hasText: 'Print buy slip' }).click(); await p.waitForTimeout(400);
+    const slipC = await p.evaluate(() => { const a = document.getElementById('qlbPrintArea'); return a ? a.innerText : ''; });
+    ok(/Bloomburrow Play Booster Box/.test(slipC) && /Sealed product/.test(slipC) && /\$120\.00 each/.test(slipC), `${w}: custom item on the slip`);
+    await p.evaluate(() => { document.body.classList.remove('qlb-printing'); const a = document.getElementById('qlbPrintArea'); if (a) a.remove(); });
+    // A buy with only hand-added items (no printout)
+    await p.evaluate(() => { QLB.rows = []; QLB.meta = {}; qlbSave(); qlbRender(); });
+    await p.fill('#qlbcName', 'Deck box'); await p.selectOption('#qlbcKind', 'Accessory'); await p.selectOption('#qlbcCond', ''); await p.fill('#qlbcPrice', '10');
+    await p.locator('#qlbAddBox button', { hasText: 'Add to the buy' }).click(); await p.waitForTimeout(200);
+    ok(await p.locator('#qlbBody tbody tr').count() === 1 && await p.locator('#qlbSeller').isVisible(), `${w}: a buy can be only hand-added items`);
     // Pasted text (layout and one cell per line)
     for (const k of Object.keys(texts)) {
       await p.evaluate(() => { QLB.rows = []; });
@@ -139,6 +168,7 @@ const VALUE = Math.round(LOWER.reduce((a, b) => a + b, 0) * 100) / 100;
   const p = await ctx.newPage(); await p.goto(URL + '#buylist'); await p.waitForTimeout(800);
   await p.setInputFiles('#qlbFile', PDF); await p.waitForFunction(() => QLB.rows.length === 17, null, { timeout: 15000 });
   await p.evaluate(() => { QLB.rows[6].pct = 70; });
+  await p.evaluate(() => { QLB.rows.push({ custom: true, num: 'C1', qty: 1, name: 'Bloomburrow Play Booster Box', set: 'Sealed product', cond: 'Sealed', printing: '', lang: '', market: null, low: null, price: 105, pct: 60 }); });
   await p.evaluate(() => { QLB.seller = 'Jane Seller'; QLB.employee = 'Sam Staff'; QLB.pay = 'digital'; QLB.payDetail = 'PayPal @jane'; QLB.cashPct = 50; QLB.bumpPct = 20; const a = document.createElement('div'); a.id = 'qlbPrintArea'; a.innerHTML = qlbSlipHTML(qlbTotals(), 'digital'); document.body.appendChild(a); document.body.classList.add('qlb-printing'); });
   fs.mkdirSync(path.join(__dirname, '.out'), { recursive: true });
   await p.emulateMedia({ media: 'print' });
