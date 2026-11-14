@@ -4110,6 +4110,7 @@
         .qlb-chk input { width: auto; }
         .qlb .qlb-row-btns { display: flex; gap: 4px; }
         .qlb .qlb-maybe-btn { width: auto; margin: 0; padding: 3px 7px; font-size: 0.85em; background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-primary); white-space: nowrap; }
+        .qlb-maybe-print { margin: 0 0 8px; display: inline-flex; }
         .qlb-empty-row { text-align: center; color: var(--text-soft); font-style: italic; }
         .qlb-maybe, .qlb-cart { margin: 16px 0 6px; padding: 12px 14px; border: 1px dashed var(--brand-light); border-radius: var(--radius-md); background: var(--bg-inset); }
         .qlb-maybe h3, .qlb-cart h3 { margin: 0 0 8px; color: var(--text-heading); font-size: 1.05em; }
@@ -23859,7 +23860,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     const qlbCents = n => { n = Number(n) || 0; return Math.sign(n) * Math.round(Number((Math.abs(n) * 100).toPrecision(12))) / 100; };
 
     let QLB = qlbDefaults();
-    function qlbDefaults() { return { rows: [], cart: [], meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false, splitCash: null, splitHow: 'cash', splitOk: false }; }
+    function qlbDefaults() { return { rows: [], cart: [], printMaybe: true, meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false, splitCash: null, splitHow: 'cash', splitOk: false }; }
     try { const s = JSON.parse(localStorage.getItem(QLB_KEY) || 'null'); if (s && Array.isArray(s.rows)) QLB = Object.assign(qlbDefaults(), s); } catch (e) {}
     function qlbSave() { try { localStorage.setItem(QLB_KEY, JSON.stringify(QLB)); } catch (e) {} }
     // Undo (2026-11-14, owner): a snapshot is taken before anything is deleted or replaced; ↶ Undo puts it back.
@@ -24108,6 +24109,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const maybeHTML = maybe.length ? `
             <div class="qlb-maybe">
                 <h3>🤔 Maybe <span class="qlb-maybe-sub">not in the totals above; tap ↩ Buy to add one</span></h3>
+                <label class="qlb-chk qlb-maybe-print"><input type="checkbox" id="qlbPrintMaybe" ${QLB.printMaybe !== false ? 'checked' : ''} onchange="qlbSet('printMaybe', this.checked)"> 🖨️ Print the Maybe items on the buy slip</label>
                 <div class="buylist-table-wrap"><table class="buylist-table">${head}
                     <tbody>${maybe.join('')}</tbody>
                     <tfoot><tr id="qlbMaybeFoot">${qlbFootCells(qlbTotals('maybe'), 'Maybe items')}</tr></tfoot>
@@ -24406,7 +24408,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const overHow = sp ? sp.how : pay;
         const digitalNote = (pay === 'digital' || (sp && sp.how === 'digital'))
             ? `<div class="qbp-pay-detail"><span>Send to</span>${QLB.payDetail ? qlbEsc(QLB.payDetail) : '<em class="qbp-fill"></em>'}</div>` : '';
-        const maybeRows = QLB.rows.filter(r => r.maybe);
+        // The Maybe section can be left off the slip (2026-11-14, owner); the Working toward bars then leave it out too.
+        const maybeRows = QLB.printMaybe === false ? [] : QLB.rows.filter(r => r.maybe);
         const at = maybeRows.length ? qlbTotals('all') : null;
         const diff = (a, b) => { const d = qlbCents(b - a); return d ? `<em>${d > 0 ? '+' : '−'}${qlbMoney(Math.abs(d))}</em>` : ''; };
         let n = 2;
