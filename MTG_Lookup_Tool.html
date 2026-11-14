@@ -4102,6 +4102,35 @@
         .qlb-due b { font-size: 1.3em; }
         .qlb-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
         .qlb-actions button { width: auto; margin: 0; }
+        .qlb-undo { margin: 8px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        .qlb-undo:empty { display: none; }
+        .qlb .qlb-undo-btn { width: auto; margin: 0; padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--brand-light); color: var(--text-heading); font-size: 0.9em; }
+        .qlb-undo-more { color: var(--text-soft); font-size: 0.85em; }
+        .qlb-chk { flex-direction: row !important; align-items: center; gap: 6px !important; text-transform: none !important; font-size: 0.9em !important; color: var(--text-primary) !important; }
+        .qlb-chk input { width: auto; }
+        .qlb .qlb-row-btns { display: flex; gap: 4px; }
+        .qlb .qlb-maybe-btn { width: auto; margin: 0; padding: 3px 7px; font-size: 0.85em; background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-primary); white-space: nowrap; }
+        .qlb-maybe-print { margin: 0 0 8px; display: inline-flex; }
+        .qlb-empty-row { text-align: center; color: var(--text-soft); font-style: italic; }
+        .qlb-maybe, .qlb-cart { margin: 16px 0 6px; padding: 12px 14px; border: 1px dashed var(--brand-light); border-radius: var(--radius-md); background: var(--bg-inset); }
+        .qlb-maybe h3, .qlb-cart h3 { margin: 0 0 8px; color: var(--text-heading); font-size: 1.05em; }
+        .qlb-maybe-sub { font-weight: 400; color: var(--text-soft); font-size: 0.8em; margin-left: 6px; }
+        .qlb-compare { display: grid; gap: 4px; margin-top: 10px; font-size: 0.95em; color: var(--text-primary); }
+        .qlb-compare span { display: inline-block; min-width: 13em; color: var(--text-secondary); }
+        .qlb-compare b, .qlb-cart-cmp b, .qlb-gap b { color: var(--text-heading); }
+        .qlb-cart .qlb-add-grid { margin: 0 0 10px; }
+        .qlb-look { text-decoration: none; font-size: 0.9em; }
+        .qlb-look-link { align-self: center; font-size: 0.85em; color: var(--color-link); }
+        .qlb-cart-totals, .qlb-cart-cmp { border-collapse: collapse; margin-top: 10px; font-size: 0.95em; }
+        .qlb-cart-totals td { padding: 3px 18px 3px 0; color: var(--text-primary); }
+        .qlb-cart-totals td + td { text-align: right; padding-right: 0; }
+        .qlb-cart-totals tr.tot td { border-top: 1px solid var(--border); font-weight: 700; color: var(--text-heading); }
+        .qlb-cart-cmp td { padding: 4px 16px 4px 0; vertical-align: top; color: var(--text-primary); }
+        .qlb-cart-cmp td:first-child { color: var(--text-secondary); }
+        .qlb-gap { display: inline-block; margin-left: 6px; font-size: 0.85em; padding: 1px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+        .qlb-gap.need { border-color: var(--color-warning); color: var(--color-warning); }
+        .qlb-gap.left { border-color: var(--color-success); color: var(--color-success); }
+        @media (max-width: 600px) { .qlb-cart-cmp td { display: block; padding: 2px 0; } .qlb-compare span { min-width: 0; display: block; } }
         #qlbPrintArea { display: none; }
         @page qlbsheet { size: letter; margin: 0.45in 0.5in 0.55in; @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7.5pt sans-serif; color: #8a969c; } }
         /* Printed buy slip (redesigned 2026-11-14): its own fixed colors and sizes, like the other print sheets. */
@@ -4167,6 +4196,52 @@
             .qbp-sign { display: grid; grid-template-columns: 1.6fr 1fr; gap: 4pt 24pt; margin-top: 16pt; break-inside: avoid; }
             .qbp-line { border-bottom: 0.9pt solid #1d2731; height: 22pt; display: flex; align-items: flex-end; padding-bottom: 2pt; font-size: 9.5pt; font-weight: 600; color: #16323f; }
             .qbp-cap { font-size: 6.5pt; color: #5d6b73; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2pt; }
+            .qbp-extra { margin-top: 11pt; break-inside: avoid; }
+            .qbp-extra h2 { margin: 0 0 4pt; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.1em; color: #16323f; border-bottom: 1pt solid #16323f; padding-bottom: 2pt; }
+            .qbp-extra h2 span { text-transform: none; letter-spacing: 0; font-weight: 400; color: #5d6b73; font-size: 7.5pt; margin-left: 4pt; }
+            .qbp-cmp { border-collapse: collapse; margin-top: 5pt; font-size: 8pt; width: 100%; }
+            .qbp-cmp th { text-align: left; font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.08em; color: #5d6b73; padding: 2pt 6pt 2pt 0; }
+            .qbp-cmp td { padding: 2pt 6pt 2pt 0; border-top: 0.5pt solid #e1e7ea; font-weight: 600; color: #16323f; }
+            .qbp-cmp td:first-child { font-weight: 400; color: #45545c; }
+            .qbp-cart { display: flex; gap: 14pt; align-items: flex-start; }
+            .qbp-cart > .qbp-items { flex: 1; }
+            .qbp-cart-sum { width: 2.9in; max-width: none; }
+            .qbp-gap { text-align: right; font-weight: 700; color: #16323f; font-size: 8pt; }
+            .qbp-step { display: flex; align-items: baseline; gap: 6pt; margin: 12pt 0 5pt; font-size: 10.5pt; font-weight: 800; color: #16323f; letter-spacing: -0.01em; }
+            .qbp-step i { display: inline-flex; align-items: center; justify-content: center; width: 14pt; height: 14pt; border-radius: 50%; background: #16323f; color: #fff; font-style: normal; font-size: 8pt; align-self: center; }
+            .qbp-step span { font-size: 7.5pt; font-weight: 400; color: #5d6b73; letter-spacing: 0; }
+            .qbp-block { break-inside: avoid; }
+            .qbp-offer { display: grid; grid-template-columns: 1fr 1fr 1fr 2.3in; gap: 7pt; align-items: stretch; }
+            .qbp-tile { border: 0.75pt solid #cfd8dc; border-radius: 4pt; padding: 6pt 8pt; display: flex; flex-direction: column; gap: 1pt; }
+            .qbp-tile span { font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #5d6b73; }
+            .qbp-tile b { font-size: 15pt; color: #16323f; letter-spacing: -0.01em; }
+            .qbp-tile small { font-size: 7pt; color: #8a969c; }
+            .qbp-tile.pick { border: 1.2pt solid #3d7f98; background: #eef6f9; }
+            .qbp-offer .qbp-payout { width: auto; }
+            .qbp-slim td.nm { min-width: 2.4in; }
+            .qbp-slim td:nth-child(4) { min-width: 0; }
+            .qbp-ifadd { margin-top: 6pt; border: 0.75pt solid #cfd8dc; border-radius: 4pt; overflow: hidden; max-width: 4.6in; }
+            .qbp-ifadd-head { background: #f5f8f9; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #45545c; padding: 3pt 8pt; }
+            .qbp-ifadd-row { display: grid; grid-template-columns: 1.7in 0.8in 0.8in 1fr; align-items: baseline; padding: 3pt 8pt; border-top: 0.5pt solid #e1e7ea; font-size: 8.5pt; }
+            .qbp-ifadd-row span { color: #45545c; }
+            .qbp-ifadd-row s { color: #8a969c; text-align: right; padding-right: 8pt; }
+            .qbp-ifadd-row b { color: #16323f; text-align: right; }
+            .qbp-ifadd-row em { font-style: normal; color: #2f855a; font-weight: 700; padding-left: 8pt; font-size: 8pt; }
+            .qbp-ifadd-row.strong b { font-size: 10.5pt; }
+            .qbp-cart { display: grid; grid-template-columns: 1fr 2.3in; gap: 10pt; align-items: start; }
+            .qbp-cart-total > div { display: flex; justify-content: space-between; padding: 2.5pt 0; border-bottom: 0.5pt solid #e1e7ea; font-size: 8.5pt; color: #45545c; }
+            .qbp-cart-total b { color: #16323f; }
+            .qbp-cart-total .grand { border-bottom: none; border-top: 1.2pt solid #16323f; font-size: 10pt; font-weight: 700; color: #16323f; padding-top: 3pt; }
+            .qbp-progress { margin-top: 7pt; }
+            .qbp-progress-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 8.5pt; color: #45545c; margin-bottom: 2pt; }
+            .qbp-progress-top b { color: #16323f; }
+            .qbp-progress-top strong { color: #b7791f; }
+            .qbp-progress.done .qbp-progress-top strong { color: #2f855a; }
+            .qbp-track { height: 7pt; background: #e1e7ea; border-radius: 4pt; overflow: hidden; }
+            .qbp-track > div { height: 100%; background: #3d7f98; border-radius: 4pt; }
+            .qbp-progress.done .qbp-track > div { background: #2f855a; }
+            .qbp-close { break-inside: avoid; margin-top: 12pt; }
+            .qbp-close .qbp-sign { margin-top: 10pt; }
             .qbp-foot { display: flex; justify-content: space-between; margin-top: 12pt; padding-top: 4pt; border-top: 0.5pt solid #cfd8dc; font-size: 7pt; color: #8a969c; }
         }
 
@@ -8861,12 +8936,15 @@
                         <label>Qty<input type="number" id="qlbcQty" min="1" step="1" value="1"></label>
                         <label>Value each ($)<input type="number" id="qlbcPrice" min="0" step="0.01" placeholder="0.00" onkeydown="if(event.key==='Enter'){event.preventDefault();qlbAddCustom();}"></label>
                         <label>Own %<input type="number" id="qlbcPct" min="0" max="200" step="1" placeholder="top rate"></label>
+                        <label class="qlb-chk"><input type="checkbox" id="qlbcMaybe"> 🤔 Maybe</label>
                         <button type="button" onclick="qlbAddCustom()">Add to the buy</button>
                     </div>
                     <p class="qlb-note"><b>Graded slab:</b> pick it as the kind to fill in the grading company, grade, cert number, set and subgrades; they print on the slip with the card. Value each is what one item is worth before the % (for sealed product, the going price you'd use). It's paid at the same rates as the cards, or its own %. Quantity and value can be changed in the list afterwards. A buy can also be all hand-added items, with no printout.</p>
                 </details>
+                <div class="qlb-undo" id="qlbUndo"></div>
                 <div class="qlb-status" id="qlbStatus" role="status"></div>
                 <div id="qlbBody"></div>
+                <div id="qlbCart"></div>
             </section>
 
             <div class="formats-intro">
@@ -24481,9 +24559,28 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     const qlbCents = n => { n = Number(n) || 0; return Math.sign(n) * Math.round(Number((Math.abs(n) * 100).toPrecision(12))) / 100; };
 
     let QLB = qlbDefaults();
-    function qlbDefaults() { return { rows: [], meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false, splitCash: null, splitHow: 'cash', splitOk: false }; }
+    function qlbDefaults() { return { rows: [], cart: [], printMaybe: true, meta: {}, cashPct: 50, bumpPct: 0, seller: '', employee: '', pay: '', payDetail: '', cashOk: false, splitCash: null, splitHow: 'cash', splitOk: false }; }
     try { const s = JSON.parse(localStorage.getItem(QLB_KEY) || 'null'); if (s && Array.isArray(s.rows)) QLB = Object.assign(qlbDefaults(), s); } catch (e) {}
     function qlbSave() { try { localStorage.setItem(QLB_KEY, JSON.stringify(QLB)); } catch (e) {} }
+    // Undo (2026-11-14, owner): a snapshot is taken before anything is deleted or replaced; ↶ Undo puts it back.
+    const QLB_UNDO_KEY = 'qlBuyUndoV1', QLB_UNDO_MAX = 20;
+    let QLB_UNDO = [];
+    try { const u = JSON.parse(localStorage.getItem(QLB_UNDO_KEY) || '[]'); if (Array.isArray(u)) QLB_UNDO = u; } catch (e) {}
+    function qlbSaveUndo() { try { localStorage.setItem(QLB_UNDO_KEY, JSON.stringify(QLB_UNDO)); } catch (e) {} }
+    function qlbSnap(label) { QLB_UNDO.push({ label, s: JSON.stringify(QLB) }); while (QLB_UNDO.length > QLB_UNDO_MAX) QLB_UNDO.shift(); qlbSaveUndo(); }
+    function qlbUndo() {
+        const u = QLB_UNDO.pop(); if (!u) return;
+        try { QLB = Object.assign(qlbDefaults(), JSON.parse(u.s)); } catch (e) { return; }
+        qlbSave(); qlbSaveUndo(); qlbStatus('Undone: ' + u.label + '.'); qlbRender();
+    }
+    function qlbRenderUndo() {
+        const el = document.getElementById('qlbUndo'); if (!el) return;
+        const u = QLB_UNDO[QLB_UNDO.length - 1];
+        qlbSetHTML(el, u ? `<button type="button" class="qlb-undo-btn" onclick="qlbUndo()">↶ Undo: ${qlbEsc(u.label)}</button>${QLB_UNDO.length > 1 ? `<span class="qlb-undo-more">${QLB_UNDO.length - 1} more step${QLB_UNDO.length > 2 ? 's' : ''} can be undone</span>` : ''}` : '');
+    }
+    // Indiana's sales tax is one statewide rate (no county or city sales tax), 7% since 2008.
+    const QLB_TAX_PCT = 7;
+    const QLB_CART_KINDS = ['Single card', 'Sealed product', 'Accessory', 'Graded slab', 'Other'];
     // Sets innerHTML only when it changed, so a redraw (a change event fired as focus leaves a box) never moves the button under the mouse.
     function qlbSetHTML(el, html) { if (el && el._qlbH !== html) { el.innerHTML = html; el._qlbH = html; } }
     function qlbStatus(msg, err) { const el = document.getElementById('qlbStatus'); if (el) { el.textContent = msg || ''; el.classList.toggle('err', !!err); } }
@@ -24618,9 +24715,10 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const oldQl = QLB.rows.filter(r => !r.custom), customs = QLB.rows.filter(r => r.custom);
         if (oldQl.length && !confirm('Replace the ' + oldQl.length + ' Quicklist lines already loaded with this printout?' + (customs.length ? ' Items added by hand stay.' : ''))) { qlbStatus(''); return; }
         // A buy started by hand keeps its seller and payment; a fresh printout over an old one starts clean.
+        if (oldQl.length) qlbSnap('replaced the loaded printout');
         const keep = oldQl.length
-            ? { cashPct: QLB.cashPct, bumpPct: QLB.bumpPct, employee: QLB.employee }
-            : { cashPct: QLB.cashPct, bumpPct: QLB.bumpPct, employee: QLB.employee, seller: QLB.seller, pay: QLB.pay, payDetail: QLB.payDetail, splitCash: QLB.splitCash, splitHow: QLB.splitHow };
+            ? { cashPct: QLB.cashPct, bumpPct: QLB.bumpPct, employee: QLB.employee, cart: QLB.cart }
+            : { cashPct: QLB.cashPct, bumpPct: QLB.bumpPct, employee: QLB.employee, cart: QLB.cart, seller: QLB.seller, pay: QLB.pay, payDetail: QLB.payDetail, splitCash: QLB.splitCash, splitHow: QLB.splitHow };
         QLB = Object.assign(qlbDefaults(), keep, { rows: res.rows.concat(customs), meta: Object.assign({ file: label, loaded: new Date().toISOString() }, res.meta) });
         qlbSave();
         const skipped = res.leftover && res.leftover.length > 3 ? ' Some text at the end could not be read as a line: "' + res.leftover.slice(0, 80) + '".' : '';
@@ -24640,9 +24738,11 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         const cash = value * qlbPct(r) / 100, credit = cash * (1 + (Number(QLB.bumpPct) || 0) / 100);
         return { unit, value, cash, credit };
     }
-    function qlbTotals() {
-        const t = { lines: QLB.rows.length, cards: 0, market: 0, low: 0, value: 0, cash: 0, credit: 0, noPrice: 0 };
-        QLB.rows.forEach(r => { const l = qlbLine(r); t.cards += r.qty || 1; t.market += (r.market || 0) * (r.qty || 1); t.low += (r.low || 0) * (r.qty || 1); t.value += l.value; t.cash += l.cash; t.credit += l.credit; if (l.unit == null) t.noPrice++; });
+    // which: undefined = the buy (maybe items left out), 'maybe' = only the maybe items, 'all' = both.
+    function qlbTotals(which) {
+        const list = QLB.rows.filter(r => which === 'all' ? true : which === 'maybe' ? !!r.maybe : !r.maybe);
+        const t = { lines: list.length, cards: 0, market: 0, low: 0, value: 0, cash: 0, credit: 0, noPrice: 0 };
+        list.forEach(r => { const l = qlbLine(r); t.cards += r.qty || 1; t.market += (r.market || 0) * (r.qty || 1); t.low += (r.low || 0) * (r.qty || 1); t.value += l.value; t.cash += l.cash; t.credit += l.credit; if (l.unit == null) t.noPrice++; });
         ['market', 'low', 'value', 'cash', 'credit'].forEach(k => t[k] = qlbCents(t[k]));
         return t;
     }
@@ -24678,10 +24778,11 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function qlbRender() {
         const body = document.getElementById('qlbBody');
         if (!body) return;
+        qlbRenderUndo(); qlbRenderCart();
         if (!QLB.rows.length) { body.innerHTML = ''; return; }
         const m = QLB.meta || {};
         const t = qlbTotals();
-        const rowsHTML = QLB.rows.map((r, i) => {
+        const rowHTML = (r, i) => {
             const l = qlbLine(r), used = qlbUsed(r);
             const pc = (v, k) => v == null ? '<span class="qlb-other">—</span>' : `<span class="${used === k ? 'qlb-used' : 'qlb-other'}">${qlbMoney(v)}</span>`;
             const qtyCell = r.custom ? `<input type="number" class="qlb-mini" min="1" step="1" value="${qlbEsc(r.qty)}" aria-label="Quantity of ${qlbEsc(r.name)}" onchange="qlbSetCustom(${i}, 'qty', this.value)">` : qlbEsc(r.qty);
@@ -24698,8 +24799,22 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 <td><input type="number" class="buylist-pct" min="0" max="200" step="1" value="${r.pct != null ? qlbEsc(r.pct) : ''}" placeholder="${qlbEsc(QLB.cashPct)}" aria-label="Percentage for ${qlbEsc(r.name)} (blank uses ${qlbEsc(QLB.cashPct)}%)" oninput="qlbSetPct(${i}, this.value)"></td>
                 <td class="num buylist-cash-val" id="qlbCash-${i}">${qlbMoney(l.cash)}</td>
                 <td class="num buylist-credit-val" id="qlbCredit-${i}">${qlbMoney(l.credit)}</td>
-                <td><button type="button" class="buylist-remove-btn" title="Leave this item out" onclick="qlbRemove(${i})">✕</button></td></tr>`;
-        }).join('');
+                <td class="qlb-row-btns"><button type="button" class="qlb-maybe-btn" title="${r.maybe ? 'Move back into the buy' : 'Move to Maybe: left out of the totals, shown as an extra'}" onclick="qlbToggleMaybe(${i})">${r.maybe ? '↩ Buy' : '🤔'}</button><button type="button" class="buylist-remove-btn" title="Remove this item (Undo can bring it back)" onclick="qlbRemove(${i})">✕</button></td></tr>`;
+        };
+        const firm = [], maybe = [];
+        QLB.rows.forEach((r, i) => (r.maybe ? maybe : firm).push(rowHTML(r, i)));
+        const rowsHTML = firm.join('') || `<tr><td colspan="14" class="qlb-empty-row">Every item is in Maybe below.</td></tr>`;
+        const head = `<thead><tr><th class="num">#</th><th class="num">Qty</th><th>Item</th><th>Set / type</th><th>Cond.</th><th>Printing</th><th>Lang.</th><th class="num">Market</th><th class="num">Low Price</th><th class="num">Value</th><th>%</th><th class="num">Cash</th><th class="num">Store credit</th><th></th></tr></thead>`;
+        const maybeHTML = maybe.length ? `
+            <div class="qlb-maybe">
+                <h3>🤔 Maybe <span class="qlb-maybe-sub">not in the totals above; tap ↩ Buy to add one</span></h3>
+                <label class="qlb-chk qlb-maybe-print"><input type="checkbox" id="qlbPrintMaybe" ${QLB.printMaybe !== false ? 'checked' : ''} onchange="qlbSet('printMaybe', this.checked)"> 🖨️ Print the Maybe items on the buy slip</label>
+                <div class="buylist-table-wrap"><table class="buylist-table">${head}
+                    <tbody>${maybe.join('')}</tbody>
+                    <tfoot><tr id="qlbMaybeFoot">${qlbFootCells(qlbTotals('maybe'), 'Maybe items')}</tr></tfoot>
+                </table></div>
+                <div class="qlb-compare" id="qlbCompare">${qlbCompareHTML()}</div>
+            </div>` : '';
         body.innerHTML = `
             <div class="qlb-meta">
                 ${m.file ? `<span class="qlb-chip">File <b>${qlbEsc(m.file)}</b></span>` : ''}
@@ -24716,11 +24831,10 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                     <div>+<input type="number" id="qlbBumpPct" value="${qlbEsc(QLB.bumpPct)}" min="0" max="500" step="1" onchange="qlbSetRate('bumpPct', this.value)"> % on top of the cash amount</div></div>
             </div>
             <p class="qlb-note">Value = the lower of Market and Low Price (shown in green) × quantity. Type a % in a card's row to pay a different rate on that card (blank uses ${qlbEsc(QLB.cashPct)}%); rows with their own % are highlighted. Prices are TCGplayer's${m.printed ? ' as of ' + qlbEsc(m.printed) : ''}, for the condition printed on each line.</p>
-            <div class="buylist-table-wrap"><table class="buylist-table">
-                <thead><tr><th class="num">#</th><th class="num">Qty</th><th>Item</th><th>Set / type</th><th>Cond.</th><th>Printing</th><th>Lang.</th><th class="num">Market</th><th class="num">Low Price</th><th class="num">Value</th><th>%</th><th class="num">Cash</th><th class="num">Store credit</th><th></th></tr></thead>
+            <div class="buylist-table-wrap"><table class="buylist-table">${head}
                 <tbody>${rowsHTML}</tbody>
                 <tfoot><tr id="qlbFoot">${qlbFootCells(t)}</tr></tfoot>
-            </table></div>
+            </table></div>${maybeHTML}
             <div class="qlb-form">
                 <div class="req"><label for="qlbSeller">Seller's name</label><input type="text" id="qlbSeller" value="${qlbEsc(QLB.seller)}" placeholder="Full name of the person selling" autocomplete="off" oninput="qlbSet('seller', this.value)"></div>
                 <div><label for="qlbEmployee">Employee</label><input type="text" id="qlbEmployee" value="${qlbEsc(QLB.employee)}" placeholder="Staff member handling the buy" autocomplete="off" oninput="qlbSet('employee', this.value)"></div>
@@ -24735,8 +24849,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             </div>`;
         qlbRenderPay(t);
     }
-    function qlbFootCells(t) {
-        return `<td></td><td class="num">${t.cards}</td><td colspan="5">Total (${t.lines} line${t.lines === 1 ? '' : 's'})${t.noPrice ? ` · ${t.noPrice} with no price` : ''}</td>
+    function qlbFootCells(t, label) {
+        return `<td></td><td class="num">${t.cards}</td><td colspan="5">${label || 'Total'} (${t.lines} line${t.lines === 1 ? '' : 's'})${t.noPrice ? ` · ${t.noPrice} with no price` : ''}</td>
             <td></td><td></td><td class="num">${qlbMoney(t.value)}</td><td></td>
             <td class="num buylist-cash-val">${qlbMoney(t.cash)}</td><td class="num buylist-credit-val">${qlbMoney(t.credit)}</td><td></td>`;
     }
@@ -24782,6 +24896,17 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     }
     function qlbSplitBumpText() { return Number(QLB.bumpPct) ? '(with the +' + QLB.bumpPct + '% bump)' : ''; }
     function qlbSetSplitCash(v) { const n = parseFloat(v); QLB.splitCash = v === '' || isNaN(n) ? null : n; QLB.splitOk = false; qlbSave(); qlbRenderPay(); }
+    // With and without the maybe items (each sum rounded once).
+    function qlbCompareHTML() {
+        const a = qlbTotals(), b = qlbTotals('all');
+        return `<div><span>Without the maybe items</span> Cash <b>${qlbMoney(a.cash)}</b> · Store credit <b>${qlbMoney(a.credit)}</b></div>
+            <div><span>With the maybe items</span> Cash <b>${qlbMoney(b.cash)}</b> · Store credit <b>${qlbMoney(b.credit)}</b></div>`;
+    }
+    function qlbToggleMaybe(i) {
+        const r = QLB.rows[i]; if (!r) return;
+        qlbSnap((r.maybe ? 'moved back into the buy: "' : 'moved to Maybe: "') + r.name + '"');
+        r.maybe = !r.maybe; qlbSave(); qlbRender();
+    }
     function qlbRefreshNumbers() {
         const t = qlbTotals();
         QLB.rows.forEach((r, i) => {
@@ -24792,7 +24917,9 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             const inp = row && row.querySelector('input.buylist-pct'); if (inp) inp.placeholder = QLB.cashPct;
         });
         const f = document.getElementById('qlbFoot'); if (f) f.innerHTML = qlbFootCells(t);
-        qlbRenderPay(t);
+        const mf = document.getElementById('qlbMaybeFoot'); if (mf) mf.innerHTML = qlbFootCells(qlbTotals('maybe'), 'Maybe items');
+        const cp = document.getElementById('qlbCompare'); if (cp) cp.innerHTML = qlbCompareHTML();
+        qlbRenderPay(t); qlbRenderCartSum();
     }
     function qlbSetPct(i, v) { const r = QLB.rows[i]; if (!r) return; const n = parseFloat(v); r.pct = v === '' || isNaN(n) ? null : n; qlbSave(); qlbRefreshNumbers(); }
     function qlbSetRate(k, v) { const n = parseFloat(v); QLB[k] = isNaN(n) ? (k === 'cashPct' ? 50 : 0) : n; qlbSave(); qlbRefreshNumbers(); }
@@ -24830,7 +24957,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (isNaN(price) || price < 0) { qlbStatus('Type the value of one item (what it\'s worth, before the %).', true); g('qlbcPrice').focus(); return; }
         const n = QLB.rows.filter(r => r.custom).length + 1;
         const kind = g('qlbcKind').value, isSlab = kind === 'Graded slab';
-        const row = { custom: true, num: 'C' + n, qty, name, kind, set: kind, cond: g('qlbcCond').value, printing: g('qlbcPrinting').value.trim(), lang: '', market: null, low: null, price: qlbCents(price), pct: isNaN(pct) ? null : pct };
+        const row = { custom: true, maybe: !!(g('qlbcMaybe') && g('qlbcMaybe').checked), num: 'C' + n, qty, name, kind, set: kind, cond: g('qlbcCond').value, printing: g('qlbcPrinting').value.trim(), lang: '', market: null, low: null, price: qlbCents(price), pct: isNaN(pct) ? null : pct };
         if (isSlab) {
             const grade = g('qlbcGrade').value.trim();
             if (!grade) { qlbStatus('Type the grade on the slab (e.g. 10 or 9.5).', true); g('qlbcGrade').focus(); return; }
@@ -24841,7 +24968,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         QLB.rows.push(row);
         qlbSave();
         ['qlbcName', 'qlbcPrice', 'qlbcPct', 'qlbcPrinting', 'qlbcGrade', 'qlbcCert', 'qlbcSet', 'qlbcSub'].forEach(id => { g(id).value = ''; }); g('qlbcQty').value = 1;
-        qlbStatus('Added "' + name + '".');
+        if (g('qlbcMaybe')) g('qlbcMaybe').checked = false;
+        qlbStatus('Added "' + name + '"' + (row.maybe ? ' to Maybe.' : '.'));
         qlbRender();
         g('qlbcName').focus();
     }
@@ -24863,18 +24991,101 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (v2) v2.textContent = l.unit == null ? 'no price' : qlbMoney(l.value);
         qlbRefreshNumbers();
     }
-    function qlbRemove(i) { const r = QLB.rows[i]; if (!r || !confirm('Leave "' + r.name + '" out of this buy?')) return; QLB.rows.splice(i, 1); let n = 0; QLB.rows.forEach(x => { if (x.custom) x.num = 'C' + (++n); }); qlbSave(); qlbRender(); }
-    function qlbClear() { if (QLB.rows.length && !confirm('Clear this Quicklist buy and start over?')) return; const keep = { cashPct: QLB.cashPct, bumpPct: QLB.bumpPct, employee: QLB.employee }; QLB = Object.assign(qlbDefaults(), keep); qlbSave(); qlbStatus(''); qlbRender(); }
+    function qlbRemove(i) { const r = QLB.rows[i]; if (!r) return; qlbSnap('removed "' + r.name + '"'); QLB.rows.splice(i, 1); let n = 0; QLB.rows.forEach(x => { if (x.custom) x.num = 'C' + (++n); }); qlbSave(); qlbRender(); }
+    function qlbClear() { if ((QLB.rows.length || QLB.cart.length) && !confirm('Clear this buy (and its Working toward list) and start over? Undo can bring it back.')) return; if (QLB.rows.length || QLB.cart.length) qlbSnap('started over'); const keep = { cashPct: QLB.cashPct, bumpPct: QLB.bumpPct, employee: QLB.employee }; QLB = Object.assign(qlbDefaults(), keep); qlbSave(); qlbStatus(''); qlbRender(); }
+
+    // ---- Working toward: a cart of things the seller wants, typed in one by one (2026-11-14, owner) ----
+    function qlbCartTotals() {
+        const sub = qlbCents(QLB.cart.reduce((a, c) => a + (Number(c.price) || 0) * (c.qty || 1), 0));
+        const tax = qlbCents(sub * QLB_TAX_PCT / 100);
+        return { items: QLB.cart.reduce((a, c) => a + (c.qty || 1), 0), sub, tax, total: qlbCents(sub + tax) };
+    }
+    // How the buy compares with the cart: what's still needed, or what's left over.
+    function qlbGapHTML(have, need) {
+        const d = qlbCents(need - have);
+        return d > 0 ? `<span class="qlb-gap need">Still needed <b>${qlbMoney(d)}</b></span>` : `<span class="qlb-gap left">Covers it, <b>${qlbMoney(-d)}</b> left over</span>`;
+    }
+    function qlbRenderCartSum() {
+        const el = document.getElementById('qlbCartSum'); if (!el) return;
+        const ct = qlbCartTotals();
+        QLB.cart.forEach((c, i) => { const v = document.getElementById('qlbCartLine-' + i); if (v) v.textContent = qlbMoney((Number(c.price) || 0) * (c.qty || 1)); });
+        if (!QLB.cart.length) { qlbSetHTML(el, ''); return; }
+        const t = qlbTotals(), hasMaybe = QLB.rows.some(r => r.maybe), all = hasMaybe ? qlbTotals('all') : null;
+        const cmp = (lab, tt) => `<tr><td>${lab}</td><td>Store credit <b>${qlbMoney(tt.credit)}</b> ${qlbGapHTML(tt.credit, ct.total)}</td><td>Cash <b>${qlbMoney(tt.cash)}</b> ${qlbGapHTML(tt.cash, ct.total)}</td></tr>`;
+        qlbSetHTML(el, `<table class="qlb-cart-totals">
+                <tr><td>Subtotal (${ct.items} item${ct.items === 1 ? '' : 's'})</td><td>${qlbMoney(ct.sub)}</td></tr>
+                <tr><td>Indiana sales tax (${QLB_TAX_PCT}%)</td><td>${qlbMoney(ct.tax)}</td></tr>
+                <tr class="tot"><td>Total with tax</td><td>${qlbMoney(ct.total)}</td></tr>
+            </table>
+            ${QLB.rows.length ? `<table class="qlb-cart-cmp">${cmp('This buy', t)}${hasMaybe ? cmp('With the maybe items', all) : ''}</table>` : '<p class="qlb-note">Load a printout or add items above to see how far this buy gets toward the cart.</p>'}`);
+    }
+    function qlbRenderCart() {
+        const el = document.getElementById('qlbCart'); if (!el) return;
+        const look = typeof moonshotSearchUrl === 'function';
+        const list = QLB.cart.map((c, i) => `<tr>
+                <td class="num"><input type="number" class="qlb-mini" min="1" step="1" value="${qlbEsc(c.qty)}" aria-label="Quantity of ${qlbEsc(c.name)}" onchange="qlbSetCart(${i}, 'qty', this.value)"></td>
+                <td class="qlb-name">${qlbEsc(c.name)}${look ? ` <a class="qlb-look" href="${moonshotSearchUrl(c.name)}" target="_blank" rel="noopener" title="Look it up on the store's site">🔎</a>` : ''}</td><td>${qlbEsc(c.kind)}</td>
+                <td class="num">$<input type="number" class="qlb-mini qlb-mini-price" min="0" step="0.01" value="${qlbEsc(c.price)}" aria-label="Price of one ${qlbEsc(c.name)}" onchange="qlbSetCart(${i}, 'price', this.value)"></td>
+                <td class="num" id="qlbCartLine-${i}">${qlbMoney((Number(c.price) || 0) * (c.qty || 1))}</td>
+                <td><button type="button" class="buylist-remove-btn" title="Remove (Undo can bring it back)" onclick="qlbCartRemove(${i})">✕</button></td></tr>`).join('');
+        const html = `<section class="qlb-cart">
+                <h3>🛒 Working toward <span class="qlb-maybe-sub">what the seller wants from the store, with Indiana sales tax</span></h3>
+                <div class="qlb-add-grid">
+                    <label class="wide">Item<input type="text" id="qlbkName" placeholder="Any card, product or accessory" autocomplete="off" oninput="qlbCartLookLink()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('qlbkPrice').focus();}"></label>
+                    <label>Kind<select id="qlbkKind">${QLB_CART_KINDS.map(k => `<option>${k}</option>`).join('')}</select></label>
+                    <label>Qty<input type="number" id="qlbkQty" min="1" step="1" value="1"></label>
+                    <label>Price each ($)<input type="number" id="qlbkPrice" min="0" step="0.01" placeholder="0.00" onkeydown="if(event.key==='Enter'){event.preventDefault();qlbCartAdd();}"></label>
+                    <button type="button" onclick="qlbCartAdd()">Add to the cart</button>
+                    ${look ? `<a class="qlb-look-link" id="qlbkLook" href="#" target="_blank" rel="noopener" onclick="if(!document.getElementById('qlbkName').value.trim()){event.preventDefault();}">🔎 Look it up on the store's site</a>` : ''}
+                </div>
+                ${QLB.cart.length ? `<div class="buylist-table-wrap"><table class="buylist-table">
+                    <thead><tr><th class="num">Qty</th><th>Item</th><th>Kind</th><th class="num">Each</th><th class="num">Total</th><th></th></tr></thead>
+                    <tbody>${list}</tbody></table></div>
+                    <div class="qlb-actions"><button type="button" class="clear-history" onclick="qlbCartClear()">Clear the cart</button></div>` : ''}
+                <div id="qlbCartSum"></div>
+                <p class="qlb-note">Prices are typed in by hand (look each one up). Tax is Indiana's ${QLB_TAX_PCT}% sales tax on the subtotal. The cart prints on the buy slip only when it has something in it.</p>
+            </section>`;
+        el.innerHTML = html;
+        qlbRenderCartSum(); qlbCartLookLink();
+    }
+    function qlbCartLookLink() {
+        const a = document.getElementById('qlbkLook'), n = document.getElementById('qlbkName');
+        if (a && n && typeof moonshotSearchUrl === 'function') a.href = moonshotSearchUrl(n.value.trim() || '');
+    }
+    function qlbCartAdd() {
+        const g = id => document.getElementById(id);
+        const name = (g('qlbkName').value || '').trim(), price = parseFloat(g('qlbkPrice').value), qty = Math.max(1, parseInt(g('qlbkQty').value, 10) || 1);
+        if (!name) { qlbStatus('Type the item for the cart.', true); g('qlbkName').focus(); return; }
+        if (isNaN(price) || price < 0) { qlbStatus('Type the price of one "' + name + '".', true); g('qlbkPrice').focus(); return; }
+        QLB.cart.push({ name, kind: g('qlbkKind').value, qty, price: qlbCents(price) });
+        qlbSave(); qlbStatus('Added "' + name + '" to the cart.');
+        qlbRenderCart(); qlbRenderUndo();
+        const n = document.getElementById('qlbkName'); if (n) n.focus();
+    }
+    function qlbSetCart(i, k, v) {
+        const c = QLB.cart[i]; if (!c) return;
+        const n = parseFloat(v);
+        if (k === 'qty') c.qty = Math.max(1, Math.round(n) || 1);
+        if (k === 'price') c.price = isNaN(n) || n < 0 ? 0 : qlbCents(n);
+        qlbSave(); qlbRenderCartSum();
+    }
+    function qlbCartRemove(i) { const c = QLB.cart[i]; if (!c) return; qlbSnap('removed "' + c.name + '" from the cart'); QLB.cart.splice(i, 1); qlbSave(); qlbRenderCart(); qlbRenderUndo(); }
+    function qlbCartClear() { if (!QLB.cart.length) return; qlbSnap('cleared the cart'); QLB.cart = []; qlbSave(); qlbRenderCart(); qlbRenderUndo(); }
 
     // ---- The printed buy slip ----
     function qlbSlipHTML(t, pay) {
+        // Laid out as numbered steps (2026-11-14, owner: "easier and clearer to read"): ① what we're buying,
+        // ② the offer and the amount paid, ③ maybe items and ④ the Working toward cart (only when they have something).
         const m = QLB.meta || {}, now = new Date();
         const pad = n => String(n).padStart(2, '0');
         const slipNo = 'B' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + '-' + pad(now.getHours()) + pad(now.getMinutes());
         const sp = pay === 'split' ? qlbSplit(t) : null;
+        const method = k => k === 'digital' ? 'Digital payment' : k === 'cash' ? 'Cash' : 'Store credit';
         const set = pay === 'split' ? { credit: true, cash: sp.how === 'cash', digital: sp.how === 'digital' } : { credit: pay === 'credit', cash: pay === 'cash', digital: pay === 'digital' };
         const tick = (on, lab) => `<span class="qbp-check${on ? ' on' : ''}"><i>${on ? '✓' : ''}</i>${lab}</span>`;
-        const rows = QLB.rows.map(r => {
+        const step = (n, title, sub) => `<h2 class="qbp-step"><i>${n}</i>${title}${sub ? `<span>${sub}</span>` : ''}</h2>`;
+        const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+        const slipRow = r => {
             const l = qlbLine(r), used = qlbUsed(r);
             const pc = (v, k) => v == null ? '<span class="muted">—</span>' : `<span class="${used === k ? 'used' : 'muted'}">${qlbMoney(v)}</span>`;
             const prices = r.custom
@@ -24884,16 +25095,65 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 <td class="c">${qlbEsc(r.cond || '')}</td><td>${qlbEsc(r.printing || '')}</td><td class="c">${qlbEsc(r.lang || '')}</td>
                 ${prices}<td class="r">${l.unit == null ? '—' : qlbMoney(l.value)}</td>
                 <td class="r">${qlbPct(r)}%</td><td class="r b">${qlbMoney(l.cash)}</td><td class="r">${qlbMoney(l.credit)}</td></tr>`;
-        }).join('');
-        const bump = Number(QLB.bumpPct) ? ' (+' + qlbEsc(QLB.bumpPct) + '%)' : '';
-        const method = k => k === 'digital' ? 'Digital payment' : k === 'cash' ? 'Cash' : 'Store credit';
-        const lines = sp
-            ? [[method(sp.how), qlbDollars(sp.cash)], ['Store credit', qlbDollars(sp.credit)]]
-            : pay ? [[method(pay), qlbDollars(qlbDue(t, pay))]] : [];
+        };
+        const itemsHead = `<thead><tr><th class="c">#</th><th class="c">Qty</th><th>Item</th><th>Set / type</th><th class="c">Cond.</th><th>Printing</th><th class="c">Lang.</th><th class="r">Market</th><th class="r">Low</th><th class="r">Value</th><th class="r">Rate</th><th class="r">Cash</th><th class="r">Credit</th></tr></thead>`;
+        const payLines = tt => {
+            const s2 = pay === 'split' ? qlbSplit(tt) : null;
+            return s2 ? [[method(s2.how), qlbDollars(s2.cash)], ['Store credit', qlbDollars(s2.credit)]] : pay ? [[method(pay), qlbDollars(qlbDue(tt, pay))]] : [];
+        };
+        const lines = payLines(t);
+        const bump = Number(QLB.bumpPct) ? 'cash + ' + qlbEsc(QLB.bumpPct) + '%' : 'same as cash';
         const overCash = sp ? sp.cash > QLB_DIGITAL_OVER : (t.cash > QLB_DIGITAL_OVER && pay !== 'credit');
         const overHow = sp ? sp.how : pay;
         const digitalNote = (pay === 'digital' || (sp && sp.how === 'digital'))
             ? `<div class="qbp-pay-detail"><span>Send to</span>${QLB.payDetail ? qlbEsc(QLB.payDetail) : '<em class="qbp-fill"></em>'}</div>` : '';
+        // The Maybe section can be left off the slip (2026-11-14, owner); the Working toward bars then leave it out too.
+        const maybeRows = QLB.printMaybe === false ? [] : QLB.rows.filter(r => r.maybe);
+        const at = maybeRows.length ? qlbTotals('all') : null;
+        const diff = (a, b) => { const d = qlbCents(b - a); return d ? `<em>${d > 0 ? '+' : '−'}${qlbMoney(Math.abs(d))}</em>` : ''; };
+        let n = 2;
+        // ③ Maybe items: a short list, then what changes if they're added.
+        let maybeSec = '';
+        if (at) {
+            const mt = qlbTotals('maybe'), withLines = payLines(at);
+            maybeSec = `<section class="qbp-block">
+                ${step(++n, 'Maybe items', 'Not part of this buy unless the seller adds them')}
+                <table class="qbp-items qbp-slim"><thead><tr><th class="c">Qty</th><th>Item</th><th>Set / type</th><th class="c">Cond.</th><th class="r">Value</th><th class="r">Cash</th><th class="r">Credit</th></tr></thead>
+                    <tbody>${maybeRows.map(r => { const l = qlbLine(r); return `<tr><td class="c">${qlbEsc(r.qty)}</td><td class="nm">${qlbEsc(r.name)}</td><td>${qlbEsc(r.set)}</td><td class="c">${qlbEsc(r.cond || '')}</td><td class="r">${l.unit == null ? '—' : qlbMoney(l.value)}</td><td class="r b">${qlbMoney(l.cash)}</td><td class="r">${qlbMoney(l.credit)}</td></tr>`; }).join('')}</tbody>
+                    <tfoot><tr><td class="c">${mt.cards}</td><td colspan="3">${plural(mt.lines, 'maybe line')}</td><td class="r">${qlbMoney(mt.value)}</td><td class="r">${qlbMoney(mt.cash)}</td><td class="r">${qlbMoney(mt.credit)}</td></tr></tfoot></table>
+                <div class="qbp-ifadd">
+                    <div class="qbp-ifadd-head">If the seller adds these</div>
+                    <div class="qbp-ifadd-row"><span>Cash offer</span><s>${qlbMoney(t.cash)}</s><b>${qlbMoney(at.cash)}</b>${diff(t.cash, at.cash)}</div>
+                    <div class="qbp-ifadd-row"><span>Store credit offer</span><s>${qlbMoney(t.credit)}</s><b>${qlbMoney(at.credit)}</b>${diff(t.credit, at.credit)}</div>
+                    ${lines.length ? lines.map(([lab, amt], i) => `<div class="qbp-ifadd-row strong"><span>To be paid: ${qlbEsc(lab)}</span><s>${qlbMoney(amt)}</s><b>${qlbMoney(withLines[i] ? withLines[i][1] : amt)}</b>${diff(amt, withLines[i] ? withLines[i][1] : amt)}</div>`).join('') : ''}
+                </div>
+            </section>`;
+        }
+        // ④ Working toward: the cart, its total with tax, and a bar for how far the store credit gets.
+        let cartSec = '';
+        if (QLB.cart.length) {
+            const ct = qlbCartTotals();
+            const bar = (label, have) => {
+                const pct = ct.total > 0 ? Math.min(100, Math.round(have / ct.total * 100)) : 100, d = qlbCents(ct.total - have);
+                return `<div class="qbp-progress${d <= 0 ? ' done' : ''}">
+                    <div class="qbp-progress-top"><span>${label} <b>${qlbMoney(have)}</b></span><strong>${d > 0 ? 'Still needed ' + qlbMoney(d) : 'Covered · ' + qlbMoney(-d) + ' left over'}</strong></div>
+                    <div class="qbp-track"><div style="width:${pct}%"></div></div></div>`;
+            };
+            cartSec = `<section class="qbp-block">
+                ${step(++n, 'Working toward', 'What the seller wants from the store')}
+                <div class="qbp-cart">
+                    <table class="qbp-items qbp-slim"><thead><tr><th class="c">Qty</th><th>Item</th><th>Kind</th><th class="r">Each</th><th class="r">Total</th></tr></thead>
+                        <tbody>${QLB.cart.map(c => `<tr><td class="c">${qlbEsc(c.qty)}</td><td class="nm">${qlbEsc(c.name)}</td><td>${qlbEsc(c.kind)}</td><td class="r">${qlbMoney(c.price)}</td><td class="r">${qlbMoney((Number(c.price) || 0) * (c.qty || 1))}</td></tr>`).join('')}</tbody></table>
+                    <div class="qbp-cart-total">
+                        <div><span>Subtotal</span><b>${qlbMoney(ct.sub)}</b></div>
+                        <div><span>Indiana sales tax (${QLB_TAX_PCT}%)</span><b>${qlbMoney(ct.tax)}</b></div>
+                        <div class="grand"><span>Total with tax</span><b>${qlbMoney(ct.total)}</b></div>
+                    </div>
+                </div>
+                ${bar('Store credit from this buy', t.credit)}
+                ${at ? bar('With the maybe items', at.credit) : ''}
+            </section>`;
+        }
         return `<div class="qbp">
             <header class="qbp-top">
                 <div class="qbp-brand">
@@ -24914,34 +25174,36 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 <div class="qbp-field"><span>Employee</span>${QLB.employee ? `<b>${qlbEsc(QLB.employee)}</b>` : '<em class="qbp-fill"></em>'}</div>
                 <div class="qbp-field qbp-payfield"><span>Payment</span><div>${tick(set.credit, 'Store credit')}${tick(set.cash, 'Cash')}${tick(set.digital, 'Digital')}</div></div>
             </section>
+            ${step(1, 'What we\'re buying', plural(t.cards, 'item') + ' on ' + plural(t.lines, 'line'))}
             <table class="qbp-items">
-                <thead><tr><th class="c">#</th><th class="c">Qty</th><th>Item</th><th>Set / type</th><th class="c">Cond.</th><th>Printing</th><th class="c">Lang.</th><th class="r">Market</th><th class="r">Low</th><th class="r">Value</th><th class="r">Rate</th><th class="r">Cash</th><th class="r">Credit</th></tr></thead>
-                <tbody>${rows}</tbody>
-                <tfoot><tr><td></td><td class="c">${t.cards}</td><td colspan="5">${t.lines} line${t.lines === 1 ? '' : 's'}</td><td></td><td></td>
+                ${itemsHead}
+                <tbody>${QLB.rows.filter(r => !r.maybe).map(slipRow).join('')}</tbody>
+                <tfoot><tr><td></td><td class="c">${t.cards}</td><td colspan="5">Totals</td><td></td><td></td>
                     <td class="r">${qlbMoney(t.value)}</td><td></td><td class="r">${qlbMoney(t.cash)}</td><td class="r">${qlbMoney(t.credit)}</td></tr></tfoot>
             </table>
-            <section class="qbp-bottom">
-                <div class="qbp-left">
-                    <table class="qbp-sum">
-                        <tr><td>Items</td><td>${t.cards}</td></tr>
-                        <tr><td>Value</td><td>${qlbMoney(t.value)}</td></tr>
-                        <tr><td>Cash offer</td><td>${qlbMoney(t.cash)}</td></tr>
-                        <tr><td>Store credit offer${bump}</td><td>${qlbMoney(t.credit)}</td></tr>
-                    </table>
-                    <p class="qbp-agree">The seller confirms they own the items listed, that they are as described, and accepts the amount and payment shown.</p>
-                </div>
-                <div class="qbp-payout">
-                    <div class="qbp-payout-head">Amount to be paid</div>
-                    ${lines.map(([lab, amt]) => `<div class="qbp-payline"><span>${qlbEsc(lab)}</span><b>${qlbMoney(amt)}</b></div>`).join('') || '<div class="qbp-payline"><span>Not chosen</span><b>—</b></div>'}
-                    ${digitalNote}
-                    ${overCash ? `<div class="qbp-flag">${overHow === 'cash' ? 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ' paid in cash, confirmed by staff.' : 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ': paid by digital payment.'}</div>` : ''}
+            <section class="qbp-block">
+                ${step(2, 'The offer', 'The seller picks one way to be paid')}
+                <div class="qbp-offer">
+                    <div class="qbp-tile"><span>Total value</span><b>${qlbMoney(t.value)}</b><small>${plural(t.cards, 'item')}</small></div>
+                    <div class="qbp-tile${set.cash || set.digital ? ' pick' : ''}"><span>Cash offer</span><b>${qlbMoney(t.cash)}</b><small>at the rates shown</small></div>
+                    <div class="qbp-tile${set.credit ? ' pick' : ''}"><span>Store credit offer</span><b>${qlbMoney(t.credit)}</b><small>${bump}</small></div>
+                    <div class="qbp-payout">
+                        <div class="qbp-payout-head">Amount to be paid</div>
+                        ${lines.map(([lab, amt]) => `<div class="qbp-payline"><span>${qlbEsc(lab)}</span><b>${qlbMoney(amt)}</b></div>`).join('') || '<div class="qbp-payline"><span>Not chosen</span><b>—</b></div>'}
+                        ${digitalNote}
+                        ${overCash ? `<div class="qbp-flag">${overHow === 'cash' ? 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ' paid in cash, confirmed by staff.' : 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ': paid by digital payment.'}</div>` : ''}
+                    </div>
                 </div>
             </section>
-            <section class="qbp-sign">
-                <div><div class="qbp-line"></div><div class="qbp-cap">Seller signature</div></div>
-                <div><div class="qbp-line"></div><div class="qbp-cap">Date</div></div>
-                <div><div class="qbp-line"></div><div class="qbp-cap">Employee signature</div></div>
-                <div><div class="qbp-line">${qlbEsc(QLB.employee)}</div><div class="qbp-cap">Employee name (print)</div></div>
+            ${maybeSec}${cartSec}
+            <section class="qbp-close">
+                <p class="qbp-agree">The seller confirms they own the items listed in step 1, that they are as described, and accepts the amount and payment shown in step 2.</p>
+                <div class="qbp-sign">
+                    <div><div class="qbp-line"></div><div class="qbp-cap">Seller signature</div></div>
+                    <div><div class="qbp-line"></div><div class="qbp-cap">Date</div></div>
+                    <div><div class="qbp-line"></div><div class="qbp-cap">Employee signature</div></div>
+                    <div><div class="qbp-line">${qlbEsc(QLB.employee)}</div><div class="qbp-cap">Employee name (print)</div></div>
+                </div>
             </section>
             <footer class="qbp-foot"><span>Slip ${slipNo}</span><span>Keep with the items bought</span></footer>
         </div>`;
