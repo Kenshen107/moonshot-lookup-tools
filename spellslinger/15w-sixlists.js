@@ -114,7 +114,7 @@ Object.assign(CMD, {
     },
 
     // Fatestitcher: tap or untap another target permanent (yours untap, others tap)
-    sl_tapOrUntap(P, e, t, src) { const x = t && t.o; if (!x || !onBf(x.uid)) return; if (x.owner === P.i) { x.tapped = false; log(`${x.card.name} untaps.`); } else { x.tapped = true; log(`${x.card.name} is tapped.`); } },
+    async sl_tapOrUntap(P, e, t, src) { const x = t && t.o; if (!x || !onBf(x.uid)) return; const untap = (P.isAI || AUTOPLAY) ? x.owner === P.i : await askYes(P, `${src.card.name}: tap or untap ${x.card.name}?`, { card: x.card, yes: 'Untap it', no: 'Tap it' }); x.tapped = !untap; log(`${x.card.name} ${untap ? 'untaps' : 'is tapped'}.`); },
     // Freed from the Real, Pemmin's Aura
     sl_untapHost(P, e, t, src) { const h = G.players.flatMap(X => X.bf).find(x => x.uid === src.attachedTo); if (h) { h.tapped = false; log(`${h.card.name} untaps.`); } },
     async sl_pemmin(P, e, t, src) {
@@ -190,7 +190,7 @@ TRIG_FN.sl_myNontokenDies = (o, ctx) => { const d = ctx.o; if (!d || d.owner !==
             if (ev === 'gainLife' && ctx && ctx.P) { const X = ctx.P; if (X.slGain && X.slGain.turn === G.turn) X.slGain.n += ctx.n || 0; else X.slGain = { turn: G.turn, n: ctx.n || 0 }; }
             if (ev === 'cast' && ctx && ctx.P && ctx.o && /\bCreature\b/.test(ctx.o.card.type)) ctx.P.slCreatureCastTurn = G.turn;
             if (ev === 'attacks' && ctx && ctx.list) G.players.forEach(X => { if (X.slLevi === G.turn) { const n = ctx.list.filter(x => x.owner === X.i && SL_LEVI.some(ty => hasType(x, ty))).length; if (n) { log(`${X.name} draw${you(X) ? '' : 's'} ${n} card${n === 1 ? '' : 's'} (Summon: Leviathan).`); drawCards(X, n); } } });
-            if (ev === 'hitPlayer' && ctx && ctx.src && ctx.src.slOdin && ctx.hit) ctx.hit.filter(X => X && X.life !== undefined && !X.out).forEach(X => eliminate(X, `${ctx.src.card.name}: dealt combat damage to ${X.name}.`));
+            if (ev === 'hitPlayer' && ctx && ctx.src && ctx.src.slOdin && ctx.hit) ctx.hit.filter(X => X && X.life !== undefined && !X.out).forEach(X => { eliminate(X, `${ctx.src.card.name}: dealt combat damage to ${X.name}.`); const left = G.players.filter(p => !p.out); if (left.length <= 1 && !G.over) endGame(left.length ? left[0].i : null, `${X.name} lost the game to ${ctx.src.card.name}.`); });
         } catch (err) { /* never break a game for a log line */ }
         return r;
     };
@@ -344,17 +344,6 @@ Object.assign(CMD, {
     sl_maduin1(P, e, t, src) { const c = P.library[P.library.length - 1]; if (!c) return; log(`${P.name} reveal${you(P) ? '' : 's'} ${c.card.name}.`); if (slIsPerm(c)) { P.library.pop(); P.hand.push(c); log(`${c.card.name} is put into ${you(P) ? 'your' : 'their'} hand.`); } },
     sl_maduin3(P, e, t, src) { P.bf.filter(x => isCreature(x) && x !== src).forEach(x => { x.tp += 2; x.tq += 2; x.tkw.push('trample'); }); log('Other creatures you control get +2/+2 and gain trample until end of turn.'); },
     sl_stampede(P, e, t, src) { P.bf.filter(x => isCreature(x) && x !== src).forEach(x => { x.tp += 1; }); log('Other creatures you control get +1/+0 until end of turn.'); },
-    // Sylvan Library (the two extra cards are the ones that can be put back; the normal draw isn't tracked)
-    async sl_sylvanLibrary(P, e, t, src) {
-        const yes = (P.isAI || AUTOPLAY) ? P.library.length > 10 : await askYes(P, `${src.card.name}: draw two additional cards?`, { card: src.card });
-        if (!yes) return;
-        const before = P.hand.length; drawCards(P, 2); const got = P.hand.slice(before);
-        for (const c of got) {
-            if (!P.hand.includes(c)) continue;
-            const keep = P.life > 4 && ((P.isAI || AUTOPLAY) ? (P.life >= 16 && (got.indexOf(c) === 0 || P.life >= 26)) : await askYes(P, `${src.card.name}: pay 4 life to keep ${c.card.name}? (Otherwise it goes on top of your library.)`, { card: c.card, yes: 'Pay 4 life', no: 'Put it back' }));
-            if (keep) { P.life -= 4; log(`${P.name} pay${you(P) ? '' : 's'} 4 life for ${c.card.name}.`); } else { pull(P.hand, c); P.library.push(c); log(`${P.name} put${you(P) ? '' : 's'} a card on top of ${you(P) ? 'your' : 'their'} library.`); }
-        }
-    },
     // Yuna, Grand Summoner: +1/+1 counters equal to the counters the permanent had
     async sl_yunaCounters(P, e, t, src) {
         const pool = P.bf.filter(isCreature).filter(c => !has(c, 'shroud')); if (!pool.length || !e.n) return;
@@ -428,7 +417,7 @@ Object.assign(CMD, {
     },
     // Stuck in Summoner's Sanctum / Honest Work / Observed Stasis
     sl_tapHost(P, e, t, src) { const h = G.players.flatMap(X => X.bf).find(x => x.uid === src.attachedTo); if (h) { h.tapped = true; log(`${h.card.name} is tapped.`); } },
-    sl_tapRemoveCounters(P, e, t, src) { const h = G.players.flatMap(X => X.bf).find(x => x.uid === src.attachedTo); if (!h) return; h.tapped = true; h.counters = 0; h.ctr = {}; log(`${h.card.name} is tapped and loses all counters.`); },
+    sl_tapRemoveCounters(P, e, t, src) { G.slHumbleOn = true; const h = G.players.flatMap(X => X.bf).find(x => x.uid === src.attachedTo); if (!h) return; h.tapped = true; h.counters = 0; h.ctr = {}; log(`${h.card.name} is tapped and loses all counters.`); },
     sl_observedStasis(P, e, t, src) {
         const h = G.players.flatMap(X => X.bf).find(x => x.uid === src.attachedTo); if (!h) return;
         G.attackers = (G.attackers || []).filter(u => u !== h.uid); if (G.blocks) delete G.blocks[h.uid];
@@ -458,7 +447,8 @@ TRIG_FN.sl_level3 = (o, ctx) => ctx.o === o && ctx.lvl === 3;
                 P.bf.filter(x => Rx(x).slConduit && !lostAbilities(x)).forEach(() => { const n = o.manaSpent !== undefined ? o.manaSpent : (o.card.cmc || 0); if (n > 0) { P.energy = (P.energy || 0) + n; log(`${P.name} get${you(P) ? '' : 's'} ${n} {E} (Aetherflux Conduit).`); } });
                 if (o.sx_castZone === 'exile' && P.bf.some(x => Rx(x).slUrianger && !lostAbilities(x))) { log('Urianger Augurelt: a spell was cast from exile.'); gainLifeFor(P, 2); }
                 if (k === 'creature' && P.slHasteNext === G.turn) { P.slHasteNext = 0; o.hasteOnEnter = G.turn; log(`${o.card.name} will have haste (Summon: Brynhildr).`); }
-                if ((k === 'instant' || k === 'sorcery') && P.slCerb && P.slCerb.turn === G.turn) { const c = P.slCerb; P.slCerb = null; for (let i = 0; i < c.n; i++) (G.trigQ = G.trigQ || []).push({ P, o: c.o, effects: [{ t: 'copyLastCast' }] }); }
+                if ((k === 'instant' || k === 'sorcery') && P.slCerb && P.slCerb.turn === G.turn) { const c = P.slCerb; P.slCerb = null; for (let i = 0; i < c.n; i++) (G.trigQ = G.trigQ || []).push({ P, o: c.o, effects: [cmd('sl_cerberusCopy')] }); }
+                if (k === 'creature' && P.slYunaNext === G.turn) { P.slYunaNext = 0; o.bt_extraCtr = (o.bt_extraCtr || 0) + 2; log(`${o.card.name} enters with two additional +1/+1 counters (Yuna).`); }
                 if (k !== 'creature' && P.slMog && P.slMog.turn === G.turn) { const tok = P.bf.filter(x => x.token && !/\bSaga\b/.test(x.card.type)).sort((a, b) => permValue(b) - permValue(a))[0]; if (tok) (G.trigQ = G.trigQ || []).push({ P, o: P.slMog.o, effects: [{ t: 'tokenCopyCard', card: tok.card }] }); }
             }
             // Initiative: a creature that deals combat damage to the player with the initiative steals it
@@ -466,7 +456,7 @@ TRIG_FN.sl_level3 = (o, ctx) => ctx.o === o && ctx.lvl === 3;
             // The Ring: level 2 loots when the ring-bearer attacks; level 4 drains
             if (ev === 'attacks' && ctx && ctx.list) ctx.list.forEach(x => { const R0 = G.players[x.owner].slRing; if (R0 && R0.bearer === x.uid && R0.level >= 2) { const X = G.players[x.owner]; drawCards(X, 1); if (X.hand.length) { const d = X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0]; pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} draw${you(X) ? '' : 's'} a card and discard${you(X) ? '' : 's'} ${d.card.name} (the Ring).`); } } });
             if (ev === 'hitPlayer' && ctx && ctx.src) { const R0 = G.players[ctx.src.owner].slRing; if (R0 && R0.bearer === ctx.src.uid && R0.level >= 4) { const X = G.players[ctx.src.owner]; foes(X).forEach(F => { F.life -= 3; log(`${F.name} loses 3 life (the Ring).`); }); } }
-            if (ev === 'blocked' && ctx && ctx.o) { const R0 = G.players[ctx.o.owner].slRing; if (R0 && R0.bearer === ctx.o.uid && R0.level >= 3) (G.blocks[ctx.o.uid] || []).map(onBf).filter(Boolean).forEach(b => atEndStep(async () => { if (onBf(b.uid)) { leaveBattlefield(b, 'gy'); log(`${b.card.name} is sacrificed (the Ring).`); } }, '')); }
+            if (ev === 'blocked' && ctx && ctx.o) { const R0 = G.players[ctx.o.owner].slRing; if (R0 && R0.bearer === ctx.o.uid && R0.level >= 3) (G.blocks[ctx.o.uid] || []).map(onBf).filter(Boolean).forEach(b => { b.sacEndCombat = true; }); }
         } catch (err) { /* never break a game for a side effect */ }
         return r;
     };
@@ -516,10 +506,10 @@ async function slVenture(P) {
     const mine = P.bf.filter(isCreature).sort((a, b) => creatureValue(b) - creatureValue(a));
     switch (room) {
         case 'Secret Entrance': { const b = P.library.filter(c => /\bBasic\b/.test(c.card.type) && /\bLand\b/.test(c.card.type))[0]; if (b) { pull(P.library, b); P.hand.push(b); shuffle(P.library); log(`${P.name} put${you(P) ? '' : 's'} ${b.card.name} into ${you(P) ? 'your' : 'their'} hand.`); } break; }
-        case 'Forge': if (mine[0]) putCounters(mine[0], 2, P); break;
+        case 'Forge': { const c = mine.length > 1 && !(P.isAI || AUTOPLAY) ? await pickCard(P, mine, 'Forge: put two +1/+1 counters on a creature you control', { required: true }) : mine[0]; if (c) putCounters(c, 2, P); break; }
         case 'Lost Well': await applyEffect(P, { t: 'scry', n: 2 }, null, G.initSrc || mine[0] || P.bf[0]); break;
-        case 'Trap!': { const F = foes(P).slice().sort((a, b) => a.life - b.life)[0]; if (F) { F.life -= 5; F.lostTurn = G.turn; log(`${F.name} loses 5 life.`); } break; }
-        case 'Arena': { const c = foes(P).flatMap(F => F.bf.filter(isCreature)).sort((a, b) => creatureValue(b) - creatureValue(a))[0]; if (c) goad(c, P.i, nextTurnOf(P)); break; }
+        case 'Trap!': { const fs = foes(P).slice().sort((a, b) => a.life - b.life); const F = fs.length > 1 && !(P.isAI || AUTOPLAY) ? (await askYes(P, `Trap!: ${fs[0].name} loses 5 life? (Otherwise ${fs[1].name}.)`, { yes: fs[0].name, no: fs[1].name }) ? fs[0] : fs[1]) : fs[0]; if (F) { F.life -= 5; F.lostTurn = G.turn; log(`${F.name} loses 5 life.`); } break; }
+        case 'Arena': { const cs = foes(P).flatMap(F => F.bf.filter(isCreature)).sort((a, b) => creatureValue(b) - creatureValue(a)); const c = cs.length > 1 && !(P.isAI || AUTOPLAY) ? await pickCard(P, cs, 'Arena: goad a creature', { required: true }) : cs[0]; if (c) goad(c, P.i, nextTurnOf(P)); break; }
         case 'Stash': await applyEffect(P, { t: 'artToken', kind: 'treasure', n: 1 }, null, mine[0] || P.bf[0]); break;
         case 'Archives': drawCards(P, 1); break;
         case 'Catacombs': await applyEffect(P, { t: 'token', n: 1, p: 4, q: 1, name: 'black Skeleton', kw: ['menace'] }, null, mine[0] || P.bf[0]); break;
@@ -569,13 +559,7 @@ Object.assign(CMD, {
         const full = parseCost(c.card.cost || ''); const cut = { ...full, generic: Math.max(0, (full.generic || 0) - 2) }; if ((full.generic || 0) < 2) { let rest = 2 - (full.generic || 0); cut.generic = 0; for (const k of ['W', 'U', 'B', 'R', 'G', 'C']) { while (rest > 0 && cut[k] > 0) { cut[k]--; rest--; } } }
         c.slForeCost = cut; log(`${P.name} exile${you(P) ? '' : 's'} a card face down; it becomes foretold.`);
     },
-    sl_collectTap(P, e, t, src) {
-        const x = t && t.o; if (!x || !onBf(x.uid)) return;
-        const gy = P.gy.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)); let sum = 0; const take = [];
-        for (const c of gy) { if (sum >= 3) break; take.push(c); sum += c.card.cmc || 0; }
-        if (sum < 3) { log(`${src.card.name}: not enough in the graveyard to collect evidence 3.`); return; }
-        take.forEach(c => { pull(P.gy, c); P.exile.push(c); }); log(`${P.name} collect${you(P) ? '' : 's'} evidence 3.`); x.tapped = true; log(`${x.card.name} is tapped.`);
-    },
+    sl_collectTap(P, e, t, src) { const x = t && t.o; if (x && onBf(x.uid)) { x.tapped = true; log(`${x.card.name} is tapped.`); } },
     async sl_teferiPlus(P, e, t, src) {
         const kinds = [o => /\bArtifact\b/.test(o.card.type), o => isCreature(o), o => /\bLand\b/.test(o.card.type)];
         for (const k of kinds) {
@@ -612,10 +596,10 @@ Object.assign(CMD, {
         const c = (P.isAI || AUTOPLAY) ? pool.filter(x => x.owner === P.i).sort((a, b) => slCtrs(b) - slCtrs(a))[0] || null : await pickCard(P, pool, `${src.card.name}: double the counters on a permanent`, { required: false });
         if (!c) return; if (c.counters > 0) c.counters *= 2; Object.keys(c.ctr || {}).forEach(k => { if (c.ctr[k] > 0) c.ctr[k] *= 2; }); log(`The counters on ${c.card.name} are doubled.`);
     },
-    sl_benthic(P, e, t, src) {
-        const picks = foes(P).map(F => F.bf.filter(isCreature).sort((a, b) => creatureValue(b) - creatureValue(a))[0]).filter(Boolean); if (!picks.length) return;
+    async sl_benthic(P, e, t, src) {
+        const picks = []; for (const F of foes(P)) { const cs = F.bf.filter(isCreature).sort((a, b) => creatureValue(b) - creatureValue(a)); if (!cs.length) continue; picks.push(cs.length > 1 && !(P.isAI || AUTOPLAY) ? await pickCard(P, cs, `${src.card.name}: choose a creature ${F.name} controls`, { required: true }) : cs[0]); } if (!picks.length) return;
         const tp = picks.reduce((a, c) => a + Math.max(0, pow(c)), 0), tq = picks.reduce((a, c) => a + Math.max(0, tou(c)), 0);
-        const best = picks.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0];
+        const best = (P.isAI || AUTOPLAY || picks.length === 1) ? picks.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, picks, `${src.card.name}: choose which one to copy`, { required: true });
         const tok = tokenCopyOf(P, { ...best.card, colors: [], ci: [], type: 'Creature — Eldrazi' }, { p: tp, q: tq }); if (tok) log(`${tok.card.name} is a colorless Eldrazi ${tp}/${tq}.`);
     },
     async sl_fishing(P, e, t, src) {
@@ -694,3 +678,55 @@ const slBroodOn = P => P.bf.some(x => Rx(x).slBroodship && (x.ctr.charge || 0) >
     };
 }
 Object.assign(CMD, { sl_caseSolve(P, e, t, src) { if (src.slSolved || !onBf(src.uid)) return; if (P.bf.filter(x => /\bLand\b/.test(x.card.type)).length >= 7) { src.slSolved = true; log(`${src.card.name} is solved.`); } } });
+
+
+// ===== simplified things built out (2026-11-15, owner: "build them out and fix them") =====
+// Cards drawn this turn are remembered (Sylvan Library may put back any two of them, the normal draw included)
+{ const base = drawCards; drawCards = function (P, n, quiet) { const before = P.hand.length; const r = base.apply(this, arguments); if (G) P.hand.slice(before).forEach(c => { c.slDrawnTurn = G.turn; }); return r; }; }
+// Sylvan Library, called right after the normal draw of your draw step (06-engine.js beginTurn)
+async function slLibraryDrawStep(P) {
+    for (const lib of P.bf.filter(x => Rx(x).slLibrary && !lostAbilities(x))) {
+        const yes = (P.isAI || AUTOPLAY) ? P.library.length > 12 : await askYes(P, `${lib.card.name}: draw two additional cards?`, { card: lib.card });
+        if (!yes) continue;
+        drawCards(P, 2);
+        const pool = () => P.hand.filter(c => c.slDrawnTurn === G.turn && !c.slLibDone);
+        for (let k = 0; k < 2; k++) {
+            const choices = pool(); if (!choices.length) break;
+            const c = (P.isAI || AUTOPLAY) ? choices.slice().sort((a, b) => aiKeepValue(P, a) - aiKeepValue(P, b))[0] : await pickCard(P, choices, `${lib.card.name}: choose a card drawn this turn (${k + 1} of 2); pay 4 life or put it on top of your library`, { required: true });
+            if (!c) break; c.slLibDone = true;
+            const canPay = P.life > 4;
+            const pay = canPay && ((P.isAI || AUTOPLAY) ? (P.life >= 16 && aiKeepValue(P, c) >= 5) : await askYes(P, `${lib.card.name}: pay 4 life to keep ${c.card.name}? (Otherwise it goes on top of your library.)`, { card: c.card, yes: 'Pay 4 life', no: 'Put it back' }));
+            if (pay) { P.life -= 4; log(`${P.name} pay${you(P) ? '' : 's'} 4 life to keep ${c.card.name}.`); } else { pull(P.hand, c); P.library.push(c); log(`${P.name} put${you(P) ? '' : 's'} ${you(P) ? 'a card' : 'a card'} on top of ${you(P) ? 'your' : 'their'} library.`); }
+        }
+        P.hand.forEach(c => { delete c.slLibDone; });
+    }
+}
+// Yuna, Grand Summoner: tapping her for mana sets up "when you next cast a creature spell this turn" (by hand or in a payment plan)
+{ const ts = tapSource; tapSource = function (P, s) { const r = ts.apply(this, arguments); if (s && !s.pool && s.card && Rx(s).slYunaTap) P.slYunaNext = G.turn; return r; }; }
+{ const tf = tapForMana; tapForMana = function (uid, color) { const o = onBf(uid), was = o && o.tapped; const r = tf.apply(this, arguments); if (o && !was && o.tapped && Rx(o).slYunaTap) G.players[o.owner].slYunaNext = G.turn; return r; }; }
+// Flash Photography: flash when it targets a permanent you control (outside sorcery timing the target must be yours)
+{
+    const vt = validTargets;
+    validTargets = function (P, e, src) { const r = vt.apply(this, arguments); if (src && src.card && src.uid !== undefined && Rx(src).slFlashPhoto && e && e.target === 'perm' && !(G.active === P.i && MAIN.includes(G.phase) && !G.stack.length)) return r.filter(x => x.o && x.o.owner === P.i); return r; };
+}
+// Honest Work: the creature has "{T}: Add {C}" (for its controller) while the Aura is on it
+{
+    const base = manaOf;
+    manaOf = function (o) { if (G && G.slHumbleOn && o && o.uid !== undefined && /Creature/.test(o.card.type) && attachmentsOf(o.uid).some(a => Rx(a).slHumbleMerchant)) return { colors: ['C'], n: 1 }; return base.apply(this, arguments); };
+}
+// Forensic Researcher: collect evidence 3 is a real cost, paid when the ability is activated
+async function slCollectEvidence(P, n, src) {
+    const total = c => P.gy.reduce((a, x) => a + (x.card.cmc || 0), 0);
+    if (total() < n) return false;
+    const chosen = []; let sum = 0;
+    if (P.isAI || AUTOPLAY) { for (const c of P.gy.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))) { if (sum >= n) break; chosen.push(c); sum += c.card.cmc || 0; } }
+    else { while (sum < n) { const left = P.gy.filter(x => !chosen.includes(x)); const c = await pickCard(P, left, `${src.card.name}: collect evidence ${n} (${sum} of ${n} so far)`, { required: false }); if (!c) return false; chosen.push(c); sum += c.card.cmc || 0; } }
+    chosen.forEach(c => { pull(P.gy, c); P.exile.push(c); }); log(`${P.name} collect${you(P) ? '' : 's'} evidence ${n}: exile${you(P) ? '' : 's'} ${chosen.map(c => c.card.name).join(', ')}.`);
+    return true;
+}
+{ const base = activate; activate = async function (P, o, a) { if (a && a.slCollect && !(await slCollectEvidence(P, a.slCollect, o))) return false; return base.apply(this, arguments); }; }
+{ const base = canActivate; canActivate = function (P, o, a) { if (a && a.slCollect && P.gy.reduce((x, c) => x + (c.card.cmc || 0), 0) < a.slCollect) return false; return base.apply(this, arguments); }; }
+Object.assign(CMD, {
+    // G.F. Cerberus: copy the spell you just cast; you may choose new targets
+    async sl_cerberusCopy(P, e, t, src) { const it = G.stack.slice().reverse().find(x => x.kind === 'spell' && x.o === G.lastCast); if (it) await copySpellItem(P, it, { retarget: true }); }
+});

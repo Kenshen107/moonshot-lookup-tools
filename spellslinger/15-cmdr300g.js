@@ -194,7 +194,7 @@ Object.assign(CMD, {
         const distinct = new Set(P.hand.map(c => c.card.cmc || 0)).size;
         if (distinct < 6) { if (!gAI(P)) { const yes = await askYes(P, `${src.card.name}: reveal your hand? (${distinct} different mana values)`, {}); if (yes) log(`${P.name} reveals their hand: ${P.hand.map(c => c.card.name).join(', ')}.`); } return; }
         log(`${P.name} ${you(P) ? 'reveal' : 'reveals'} ${distinct} different mana values (${src.card.name}).`);
-        eliminate(F, `${src.card.name}: six different mana values were revealed.`);
+        eliminate(F, `${src.card.name}: six different mana values were revealed.`); { const left = G.players.filter(p => !p.out); if (left.length <= 1 && !G.over) endGame(left.length ? left[0].i : null, `${F.name} lost the game to ${src.card.name}.`); }
     },
     async g_legolas(P, e, t, src) {
         if (!onBf(src.uid)) return;

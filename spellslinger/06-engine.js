@@ -1241,7 +1241,7 @@ function canCastNow(P, o) {
     if (P.silenced && P.silenced.turn === G.turn && (!P.silenced.noncreature || r.kind !== 'creature')) return false;
     if (G.active !== P.i && G.players[G.active].bf.some(x => Rx(x).noCastOnMyTurn && !lostAbilities(x))) return false;
     if (!P.hand.includes(o) && foes(P).some(F => F.bf.some(x => Rx(x).handOnly && !lostAbilities(x)))) return false;
-    const flash = !!r.flash || P.flashTurn === G.turn || (P.flashNext && P.flashNext.turn === G.turn && !!P.flashNext.type && hasType(o, P.flashNext.type)) || P.bf.some(x => !lostAbilities(x) && ((Rx(x).flashCond && condOk(Rx(x).flashCond, P, x)) || Rx(x).flashAll || (Rx(x).flashSpec && cmdFlashOk(x, o, P)) || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type))) || (Rx(x).slRadagast && P.slCreatureCastTurn !== G.turn && /\bCreature\b/.test(o.card.type))));
+    const flash = !!r.flash || P.flashTurn === G.turn || (P.flashNext && P.flashNext.turn === G.turn && !!P.flashNext.type && hasType(o, P.flashNext.type)) || (r.slFlashPhoto && P.bf.some(x => x.owner === P.i)) || P.bf.some(x => !lostAbilities(x) && ((Rx(x).flashCond && condOk(Rx(x).flashCond, P, x)) || Rx(x).flashAll || (Rx(x).flashSpec && cmdFlashOk(x, o, P)) || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type))) || (Rx(x).slRadagast && P.slCreatureCastTurn !== G.turn && /\bCreature\b/.test(o.card.type))));
     const fromTop = ((r.kind === 'creature' || (r.kind === 'enchantment' && typeof slHothouseOn === 'function' && slHothouseOn(P))) && P.library[P.library.length - 1] === o && topCastOk(P, o)) || pitTop(P) === o;
     if (o.castAs && !castAsOk(P, o, o.castAs)) return false;
     if (o.castAs === 'madness') return true;
@@ -4404,6 +4404,7 @@ async function beginTurn() {
     if (G.over) return;
     const skipDraw = (P.skip && P.skip.turn === G.turn && P.skip.what === 'draw') || P.bf.some(x => Rx(x).skipDraw && !lostAbilities(x));
     if ((!G.firstTurn || G.players.length > 2) && !skipDraw) { G.inDrawStep = true; drawCards(P, 1, P.i !== 0); G.inDrawStep = false; }
+    if (typeof slLibraryDrawStep === 'function') await slLibraryDrawStep(P); // Sylvan Library (15w-sixlists.js)
     G.firstTurn = false;
     // Sagas get a lore counter at the start of the precombat main phase (714.3b)
     P.bf.filter(o => Rx(o).saga && !o.sagaDone).forEach(o => { o.ctr.lore = (o.ctr.lore || 0) + 1; sagaChapter(P, o); });

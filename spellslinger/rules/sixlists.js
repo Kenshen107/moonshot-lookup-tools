@@ -105,8 +105,8 @@ clx('Surveil 2. You gain 2 life. If ~ was cast from a graveyard, exile it, then 
 clx('I — Reveal the top card of your library. If it\'s a permanent card, put it into your hand.', slChap([1], [cmd('sl_maduin1')]));
 clx('III — Other creatures you control get +2/+2 and gain trample until end of turn.', slChap([3], [cmd('sl_maduin3')]));
 clx('I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn.', slChap([1, 2, 3, 4], [cmd('sl_stampede')]));
-clx('At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [cmd('sl_sylvanLibrary')] }); });
-clx('{T}: Add one mana of any color. When you next cast a creature spell this turn, that creature enters with two additional +1/+1 counters on it.', R => { R.mana = { colors: [...COLORS], n: 1, rider: 'slYuna' }; });
+clx('At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.', R => { R.slLibrary = true; });
+clx('{T}: Add one mana of any color. When you next cast a creature spell this turn, that creature enters with two additional +1/+1 counters on it.', R => { R.mana = { colors: [...COLORS], n: 1 }; R.slYunaTap = true; });
 clx('Whenever another permanent you control is put into a graveyard from the battlefield, if it had one or more counters on it, you may put that number of +1/+1 counters on target creature.', R => { R.slYunaGy = true; });
 clx('During your turn, ~ and enchantment creatures you control have trample, lifelink, and ward {2}.', R => { selfCond(R, { cond: 'it\'s your turn', p: 0, q: 0, kw: ['trample', 'lifelink', 'ward:2'] }); R.statics.push({ other: true, spec: { type: 'Enchantment', alsoCreature: true }, p: 0, q: 0, kw: ['trample', 'lifelink', 'ward:2'], cond: 'it\'s your turn' }); });
 clx('At the beginning of your end step, return up to one target enchantment card from your graveyard to the battlefield with a finality counter on it.', R => { R.trig.push({ ev: 'end', who: 'your', effects: [cmd('sl_yunaReturn')] }); });
@@ -130,7 +130,7 @@ clx('When ~ enters, tap enchanted permanent.', R => { R.etb.push(cmd('sl_tapHost
 clx('Enchanted permanent doesn\'t untap during its controller\'s untap step and its activated abilities can\'t be activated.', R => { R.buff = { p: 0, q: 0, kw: ['nountap'] }; R.buffBad = true; R.slNoActs = true; });
 clx('Enchant creature an opponent controls', R => { R.aura = true; R.auraTarget = slTarget('creature an opponent controls'); });
 clx('When ~ enters, tap enchanted creature and remove all counters from it.', R => { R.etb.push(cmd('sl_tapRemoveCounters')); });
-clx('Enchanted creature loses all abilities and is a Citizen with base power and toughness 1/1 and "{T}: Add {C}" named Humble Merchant.', R => { R.buff = { p: 0, q: 0, kw: [] }; R.buffBase = { p: 1, q: 1 }; R.buffLose = true; R.buffBad = true; });
+clx('Enchanted creature loses all abilities and is a Citizen with base power and toughness 1/1 and "{T}: Add {C}" named Humble Merchant.', R => { R.buff = { p: 0, q: 0, kw: [] }; R.buffBase = { p: 1, q: 1 }; R.buffLose = true; R.buffBad = true; R.slHumbleMerchant = true; });
 clx('When ~ enters, remove enchanted creature from combat. Then draw a card for each tapped creature its controller controls.', R => { R.etb.push(cmd('sl_observedStasis')); });
 clx('Enchanted creature loses all abilities and can\'t attack or block.', R => { R.buff = { p: 0, q: 0, kw: ['cantattack', 'cantblock'] }; R.buffLose = true; R.buffBad = true; });
 
@@ -150,7 +150,7 @@ clx('Whenever you play a land from exile or cast a spell from exile, you gain 2 
 clx('{T}: Look at the top card of your library. You may exile it face down.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('sl_urianger1')]); });
 clx('{T}: Until end of turn, you may play cards exiled with ~. Spells you cast this way cost {2} less to cast.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('sl_urianger2')]); });
 clx('Whenever ~ enters or attacks, draw a card, then exile a card from your hand face down. It becomes foretold. Its foretell cost is its mana cost reduced by {2}.', R => { R.etb.push(cmd('sl_valkyrie')); R.trig.push({ ev: 'attacks', fn: 'hg_selfAttacksHS', effects: [cmd('sl_valkyrie')] }); });
-clx('{T}, Collect evidence 3: Tap target creature you don\'t control.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('sl_collectTap', { target: 'creature', theirs: true })]); });
+clx('{T}, Collect evidence 3: Tap target creature you don\'t control.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('sl_collectTap', { target: 'creature', theirs: true })], a => { a.slCollect = 3; }); });
 clx('+1: Choose up to one target artifact, up to one target creature, and up to one target land. Untap the chosen permanents you control. Tap the chosen permanents you don\'t control. You gain 2 life.', (R, m, ctx) => { R.acts.push({ loyalty: 1, effects: [cmd('sl_teferiPlus')], text: ctx.line, sorcery: true }); });
 clx('−7: You get an emblem with "Untap all permanents you control during each opponent\'s untap step" and "You draw a card during each opponent\'s draw step."', (R, m, ctx) => { R.acts.push({ loyalty: -7, effects: [cmd('sl_teferiEmblem')], text: ctx.line, sorcery: true }); });
 clx('III — Creatures you control gain double strike until end of turn. The Ring tempts you.', slChap([3], [cmd('sl_warLast')]));
