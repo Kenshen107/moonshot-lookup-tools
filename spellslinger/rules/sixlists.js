@@ -93,8 +93,9 @@ cl(/^Tiered$/, (R, m, ctx) => {
 COUNT_EXTRA.push([/^(?:the number of )?creatures you control and creature cards in your graveyard$/, () => o => G.players[o.owner].bf.filter(isCreature).length + G.players[o.owner].gy.filter(c => /\bCreature\b/.test(c.card.type)).length]);
 
 // Vastlands Scavenger's prepared spell (Bind to Life)
+CMD_REWRITES.push([/Mill seven cards\. Then put a creature card from among them onto the battlefield\./g, '§slBindLife.']);
 const SLX = [
-    [/^mill seven cards\. then put a creature card from among them onto the battlefield$/i, () => [cmd('sl_bindLife')]]
+    [/^§slBindLife$/, () => [cmd('sl_bindLife')]]
 ];
 registerRules({ name: 'sixlists', effects: SLX });
 
@@ -132,3 +133,46 @@ clx('When ~ enters, tap enchanted creature and remove all counters from it.', R 
 clx('Enchanted creature loses all abilities and is a Citizen with base power and toughness 1/1 and "{T}: Add {C}" named Humble Merchant.', R => { R.buff = { p: 0, q: 0, kw: [] }; R.buffBase = { p: 1, q: 1 }; R.buffLose = true; R.buffBad = true; });
 clx('When ~ enters, remove enchanted creature from combat. Then draw a card for each tapped creature its controller controls.', R => { R.etb.push(cmd('sl_observedStasis')); });
 clx('Enchanted creature loses all abilities and can\'t attack or block.', R => { R.buff = { p: 0, q: 0, kw: ['cantattack', 'cantblock'] }; R.buffLose = true; R.buffBad = true; });
+
+
+// ===== batch 4 =====
+// Terra: the last four sagas
+clx('I — Exile the top card of your library. During any turn you put a lore counter on ~, you may play that card.', slChap([1], [cmd('sl_brynExile')]));
+clx('II, III — When you next cast a creature spell this turn, it gains haste until end of turn.', slChap([2, 3], [cmd('sl_brynPlay'), cmd('sl_brynHaste')]));
+clx('I — Exile an instant or sorcery card from each graveyard.', slChap([1], [cmd('sl_valiExile')]));
+clx('II, III, IV — Add {R} for each lore counter on ~. You may cast an instant or sorcery card exiled with ~, and mana of any type can be spent to cast that spell.', slChap([2, 3, 4], [cmd('sl_valiMana')]));
+clx('II — When you next cast an instant or sorcery spell this turn, copy it. You may choose new targets for the copy.', slChap([2], [cmd('sl_cerberus', { n: 1 })]));
+clx('III — When you next cast an instant or sorcery spell this turn, copy it twice. You may choose new targets for the copies.', slChap([3], [cmd('sl_cerberus', { n: 2 })]));
+clx('II, III — Whenever you cast a noncreature spell this turn, create a token that\'s a copy of a non-Saga token you control.', slChap([2, 3], [cmd('sl_mogCopies')]));
+clx('IV — Put two +1/+1 counters on each other Moogle you control.', slChap([4], [cmd('sl_mogCounters')]));
+// Urianger
+clx('Whenever you play a land from exile or cast a spell from exile, you gain 2 life.', R => { R.slUrianger = true; });
+clx('{T}: Look at the top card of your library. You may exile it face down.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('sl_urianger1')]); });
+clx('{T}: Until end of turn, you may play cards exiled with ~. Spells you cast this way cost {2} less to cast.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('sl_urianger2')]); });
+clx('Whenever ~ enters or attacks, draw a card, then exile a card from your hand face down. It becomes foretold. Its foretell cost is its mana cost reduced by {2}.', R => { R.etb.push(cmd('sl_valkyrie')); R.trig.push({ ev: 'attacks', fn: 'hg_selfAttacksHS', effects: [cmd('sl_valkyrie')] }); });
+clx('{T}, Collect evidence 3: Tap target creature you don\'t control.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('sl_collectTap', { target: 'creature', theirs: true })]); });
+clx('+1: Choose up to one target artifact, up to one target creature, and up to one target land. Untap the chosen permanents you control. Tap the chosen permanents you don\'t control. You gain 2 life.', (R, m, ctx) => { R.acts.push({ loyalty: 1, effects: [cmd('sl_teferiPlus')], text: ctx.line, sorcery: true }); });
+clx('−7: You get an emblem with "Untap all permanents you control during each opponent\'s untap step" and "You draw a card during each opponent\'s draw step."', (R, m, ctx) => { R.acts.push({ loyalty: -7, effects: [cmd('sl_teferiEmblem')], text: ctx.line, sorcery: true }); });
+clx('III — Creatures you control gain double strike until end of turn. The Ring tempts you.', slChap([3], [cmd('sl_warLast')]));
+clx('When ~ enters, you take the initiative.', R => { R.etb.push(cmd('sl_takeInitiative')); });
+clx('At the beginning of each opponent\'s upkeep, untap a creature you control. If you\'ve completed a dungeon, untap all creatures you control instead.', R => { R.trig.push({ ev: 'upkeep', who: 'any', effects: [cmd('sl_plumeUntap')] }); });
+// Gogo
+clx('Whenever you cast a spell, you get an amount of {E}  equal to the amount of mana spent to cast that spell.', R => { R.slConduit = true; });
+clx('{T}, Pay fifty {E}: Draw seven cards. You may cast any number of spells from your hand without paying their mana costs.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('sl_conduit')], a => { a.cost.energy = 50; }); });
+cl(/^\{4\}, \{T\}: Choose one\. Activate only as a sorcery\.$/, (R, m, ctx) => { const n = ctx.lines.slice(ctx.li + 1, ctx.li + 3); if (n.length !== 2 || !n.every(l => /^• /.test(l))) return false; act(R, ctx.line, '{4}, {T}', [cmd('sl_amplifier')], a => { a.sorcery = true; }); ctx.li += 2; return true; });
+clx('When you cast ~, for each opponent, choose a creature that player controls. Create a token that\'s a copy of one of those creatures, except its power is equal to the total power of those creatures, its toughness is equal to the total toughness of those creatures, and it\'s a colorless Eldrazi creature.', R => { R.castTrig = [cmd('sl_benthic')]; });
+clx('Whenever equipped creature deals combat damage to a player, exile the top card of that player\'s library. If it\'s a permanent card, you may put it onto the battlefield under your control. If you don\'t, create a 1/1 blue Fish creature token.', R => { R.trig.push({ ev: 'hitPlayer', fn: 'bt_hostHit', host: true, effects: [cmd('sl_fishing')] }); });
+cl(/^You may cast ~ as though it had flash if it targets a permanent you control\.$/, R => { R.slFlashPhoto = true; });
+clx('Create a token that\'s a copy of target permanent.', R => { R.spell = [cmd('sl_copyPerm', { target: 'perm', filter: 'permanent' })]; });
+clx('{2}, {T}: Exile the top card of your library. Until end of turn, you may play that card. Put a brick counter on ~.', (R, m, ctx) => { act(R, ctx.line, '{2}, {T}', [cmd('sl_vault1')]); });
+clx('{T}: Exile the top card of your library. Until end of turn, you may play that card without paying its mana cost. Activate only if there are three or more brick counters on ~.', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('sl_vault2')], a => { a.slNeedBricks = true; }); });
+cl(/^As ~ enters, choose Brotherhood or Enclave\.$/, (R, m, ctx) => { const n = ctx.lines.slice(ctx.li + 1, ctx.li + 3); if (n.length !== 2 || !n.every(l => /^• (Brotherhood|Enclave) — /.test(l))) return false; R.etb.push(cmd('sl_struggleChoose')); R.trig.push({ ev: 'upkeep', who: 'your', effects: [cmd('sl_brotherhood')] }); R.trig.push({ ev: 'attacks', who: 'any', fn: 'sl_attacksMe', effects: [cmd('sl_enclave')] }); ctx.li += 2; return true; });
+clx('At the beginning of each opponent\'s draw step, you draw a card.', R => { R.trig.push({ ev: 'upkeep', who: 'any', effects: [cmd('sl_theoristDraw')] }); });
+clx('−2: For each opponent, return up to one target artifact or creature that player controls to its owner\'s hand.', (R, m, ctx) => { R.acts.push({ loyalty: -2, effects: [cmd('sl_theoristBounce')], text: ctx.line, sorcery: true }); });
+clx('−6: Draw three cards. Then put X +1/+1 counters on each creature you control, where X is the number of cards in your hand.', (R, m, ctx) => { R.acts.push({ loyalty: -6, effects: [cmd('sl_theoristUlt')], text: ctx.line, sorcery: true }); });
+clx('When ~ enters, counter up to one target activated or triggered ability. If an ability of an artifact, creature, or planeswalker is countered this way, that permanent loses all abilities for as long as ~ remains on the battlefield.', R => { R.etb.push(cmd('sl_tidebinder', { target: 'spell', filter: 'slAbility', optional: true })); });
+// Nog
+clx('{1}: If ~ is a Rogue, he becomes a Ferengi Scout with base power and toughness 3/4 and gains "Whenever ~ becomes tapped, surveil 2."', (R, m, ctx) => { act(R, ctx.line, '{1}', [cmd('sl_nog1')]); R.trig.push({ ev: 'tapped', fn: 'sl_nogTapped', effects: [{ t: 'surveil', n: 2 }] }); });
+clx('{3}: If ~ is a Scout, he becomes a Ferengi Officer and gains "You may play lands from your graveyard" and "You may play an additional land on each of your turns."', (R, m, ctx) => { act(R, ctx.line, '{3}', [cmd('sl_nog2')]); });
+// Druid Class
+clx('When ~ becomes level 3, target land you control becomes a creature with haste and "~\'s power and toughness are each equal to the number of lands you control." It\'s still a land.', R => { R.trig.push({ ev: 'levelUp', fn: 'sl_level3', effects: [cmd('sl_druidClass')] }); });

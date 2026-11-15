@@ -441,3 +441,221 @@ function slMakeRing(P) {
     const o = makeObj(card, P.i, { token: true }); P.bf.push(o); fire('enters', { o }); tokenMade(P);
 }
 Object.assign(CMD_SCORE, { sl_esperOrigins: () => 4, sl_sylvanLibrary: () => 1, sl_yunaReturn: () => 2, sl_pizzaFace: () => 2, sl_worldsire: () => 4, sl_cutpurse: () => 5, sl_replicatingRing: () => 1, sl_extravRepl: () => 3, sl_grozothSearch: () => 5 });
+
+// ===== batch 4 =====
+TRIG_FN.sl_attacksMe = (o, ctx) => (ctx.list || []).some(x => x.owner !== o.owner && (x.atkTo == null || x.atkTo === o.owner));
+TRIG_FN.sl_nogTapped = (o, ctx) => ctx.o === o && (o.slNog || 0) >= 1;
+TRIG_FN.sl_level3 = (o, ctx) => ctx.o === o && ctx.lvl === 3;
+{ const sm = stackMatches; stackMatches = function (it, filter) { if (filter === 'slAbility') return it.kind === 'trigger'; return sm.apply(this, arguments); }; }
+// Casting: Aetherflux Conduit energy, Urianger's life, Brynhildr's haste, G.F. Cerberus's copies, Good King Mog's token copies
+{
+    const base = fire;
+    fire = function (ev, ctx) {
+        const r = base.apply(this, arguments);
+        try {
+            if (ev === 'cast' && ctx && ctx.P && ctx.o) {
+                const P = ctx.P, o = ctx.o, k = Rx(o).kind;
+                P.bf.filter(x => Rx(x).slConduit && !lostAbilities(x)).forEach(() => { const n = o.manaSpent !== undefined ? o.manaSpent : (o.card.cmc || 0); if (n > 0) { P.energy = (P.energy || 0) + n; log(`${P.name} get${you(P) ? '' : 's'} ${n} {E} (Aetherflux Conduit).`); } });
+                if (o.sx_castZone === 'exile' && P.bf.some(x => Rx(x).slUrianger && !lostAbilities(x))) { log('Urianger Augurelt: a spell was cast from exile.'); gainLifeFor(P, 2); }
+                if (k === 'creature' && P.slHasteNext === G.turn) { P.slHasteNext = 0; o.hasteOnEnter = G.turn; log(`${o.card.name} will have haste (Summon: Brynhildr).`); }
+                if ((k === 'instant' || k === 'sorcery') && P.slCerb && P.slCerb.turn === G.turn) { const c = P.slCerb; P.slCerb = null; for (let i = 0; i < c.n; i++) (G.trigQ = G.trigQ || []).push({ P, o: c.o, effects: [{ t: 'copyLastCast' }] }); }
+                if (k !== 'creature' && P.slMog && P.slMog.turn === G.turn) { const tok = P.bf.filter(x => x.token && !/\bSaga\b/.test(x.card.type)).sort((a, b) => permValue(b) - permValue(a))[0]; if (tok) (G.trigQ = G.trigQ || []).push({ P, o: P.slMog.o, effects: [{ t: 'tokenCopyCard', card: tok.card }] }); }
+            }
+            // Initiative: a creature that deals combat damage to the player with the initiative steals it
+            if (ev === 'hitPlayer' && ctx && ctx.src && ctx.hit && G.initiative !== undefined && G.initiative !== null) ctx.hit.forEach(X => { if (X && X.life !== undefined && X.i === G.initiative && ctx.src.owner !== X.i && !G.players[ctx.src.owner].out) { slTakeInitiative(G.players[ctx.src.owner], ctx.src); } });
+            // The Ring: level 2 loots when the ring-bearer attacks; level 4 drains
+            if (ev === 'attacks' && ctx && ctx.list) ctx.list.forEach(x => { const R0 = G.players[x.owner].slRing; if (R0 && R0.bearer === x.uid && R0.level >= 2) { const X = G.players[x.owner]; drawCards(X, 1); if (X.hand.length) { const d = X.hand.slice().sort((a, b) => aiKeepValue(X, a) - aiKeepValue(X, b))[0]; pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} draw${you(X) ? '' : 's'} a card and discard${you(X) ? '' : 's'} ${d.card.name} (the Ring).`); } } });
+            if (ev === 'hitPlayer' && ctx && ctx.src) { const R0 = G.players[ctx.src.owner].slRing; if (R0 && R0.bearer === ctx.src.uid && R0.level >= 4) { const X = G.players[ctx.src.owner]; foes(X).forEach(F => { F.life -= 3; log(`${F.name} loses 3 life (the Ring).`); }); } }
+            if (ev === 'blocked' && ctx && ctx.o) { const R0 = G.players[ctx.o.owner].slRing; if (R0 && R0.bearer === ctx.o.uid && R0.level >= 3) (G.blocks[ctx.o.uid] || []).map(onBf).filter(Boolean).forEach(b => atEndStep(async () => { if (onBf(b.uid)) { leaveBattlefield(b, 'gy'); log(`${b.card.name} is sacrificed (the Ring).`); } }, '')); }
+        } catch (err) { /* never break a game for a side effect */ }
+        return r;
+    };
+}
+// The ring-bearer can't be blocked by creatures with greater power
+{ const cb = canBlock; canBlock = function (b, atk) { if (atk && G && G.players[atk.owner] && G.players[atk.owner].slRing && G.players[atk.owner].slRing.bearer === atk.uid && pow(b) > pow(atk)) return false; return cb.apply(this, arguments); }; }
+// Urianger: cards exiled with him cost {2} less while he lets you play them; foretold cards (Ethereal Valkyrie) cost their reduced foretell cost on a later turn
+{
+    const base = costOf;
+    costOf = function (P, o) {
+        const c = base.apply(this, arguments);
+        if (!c || !G || !o) return c;
+        if (o.slUriCut === G.turn && P.exile.includes(o)) return { ...c, generic: Math.max(0, (c.generic || 0) - 2) };
+        if (o.slForeCost && o.slForeTurn < G.turn && P.exile.includes(o)) return { ...o.slForeCost };
+        return c;
+    };
+}
+{ const base = canCastNow; canCastNow = function (P, o) { if (o && G && o.slForeTurn === G.turn && P.exile.includes(o)) return false; return base.apply(this, arguments); }; }
+{ const base = canActivate; canActivate = function (P, o, a) { if (a && a.slNeedBricks && ((o.ctr && o.ctr.brick) || 0) < 3) return false; return base.apply(this, arguments); }; }
+{ const base = playLand; playLand = async function (P, o) { const fromEx = P && P.exile.includes(o); const r = await base.apply(this, arguments); if (fromEx && P.bf.some(x => Rx(x).slUrianger && !lostAbilities(x))) { log('Urianger Augurelt: a land was played from exile.'); gainLifeFor(P, 2); } return r; }; }
+// Teferi, Who Slows the Sunset's emblem (at each opponent's untap step) 
+{
+    const base = mesmeric;
+    mesmeric = function (X, n) {
+        const r = base.apply(this, arguments);
+        G.players.filter(Y => Y !== X && !Y.out && Y.slTeferi).forEach(Y => { Y.bf.forEach(o => { o.tapped = false; }); log(`${Y.name} untap${you(Y) ? '' : 's'} all permanents (Teferi's emblem) and draw${you(Y) ? '' : 's'} a card.`); drawCards(Y, 1); });
+        return r;
+    };
+}
+// Nog's Officer form: lands from your graveyard and an extra land drop
+{
+    const lz = extraLandZones; extraLandZones = function (P) { const out = lz.apply(this, arguments); if (P.bf.some(x => (x.slNog || 0) >= 2 && !lostAbilities(x))) P.gy.filter(x => Rx(x).kind === 'land').forEach(x => { if (!out.includes(x)) out.push(x); }); return out; };
+    const ll = landLimit; landLimit = function (P) { return ll.apply(this, arguments) + (P.bf.some(x => (x.slNog || 0) >= 2 && !lostAbilities(x)) ? 1 : 0); };
+}
+// Druid Class: a land that is as big as the number of lands you control
+{ const bp = basePT; basePT = function (o, which) { if (o && o.slDynPT && G) return G.players[o.owner].bf.filter(x => /\bLand\b/.test(x.card.type)).length; return bp.apply(this, arguments); }; }
+
+// ---- The Undercity (initiative) and the Ring ----
+const SL_UNDER = { 'Secret Entrance': ['Forge', 'Lost Well'], 'Forge': ['Trap!', 'Arena'], 'Lost Well': ['Arena', 'Stash'], 'Trap!': ['Archives'], 'Arena': ['Archives', 'Catacombs'], 'Stash': ['Catacombs'], 'Archives': ['Throne of the Dead Three'], 'Catacombs': ['Throne of the Dead Three'], 'Throne of the Dead Three': [] };
+async function slVenture(P) {
+    const d = P.slDungeon;
+    let room;
+    if (!d || d.done) room = 'Secret Entrance';
+    else { const nx = SL_UNDER[d.room]; room = nx.length === 1 || P.isAI || AUTOPLAY ? nx[0] : ((await askYes(P, `Venture into the Undercity: go to ${nx[0]} or ${nx[1]}?`, { yes: nx[0], no: nx[1] })) ? nx[0] : nx[1]); }
+    P.slDungeon = { room, done: room === 'Throne of the Dead Three' };
+    log(`${P.name} venture${you(P) ? '' : 's'} into the Undercity: ${room}.`);
+    const mine = P.bf.filter(isCreature).sort((a, b) => creatureValue(b) - creatureValue(a));
+    switch (room) {
+        case 'Secret Entrance': { const b = P.library.filter(c => /\bBasic\b/.test(c.card.type) && /\bLand\b/.test(c.card.type))[0]; if (b) { pull(P.library, b); P.hand.push(b); shuffle(P.library); log(`${P.name} put${you(P) ? '' : 's'} ${b.card.name} into ${you(P) ? 'your' : 'their'} hand.`); } break; }
+        case 'Forge': if (mine[0]) putCounters(mine[0], 2, P); break;
+        case 'Lost Well': await applyEffect(P, { t: 'scry', n: 2 }, null, G.initSrc || mine[0] || P.bf[0]); break;
+        case 'Trap!': { const F = foes(P).slice().sort((a, b) => a.life - b.life)[0]; if (F) { F.life -= 5; F.lostTurn = G.turn; log(`${F.name} loses 5 life.`); } break; }
+        case 'Arena': { const c = foes(P).flatMap(F => F.bf.filter(isCreature)).sort((a, b) => creatureValue(b) - creatureValue(a))[0]; if (c) goad(c, P.i, nextTurnOf(P)); break; }
+        case 'Stash': await applyEffect(P, { t: 'artToken', kind: 'treasure', n: 1 }, null, mine[0] || P.bf[0]); break;
+        case 'Archives': drawCards(P, 1); break;
+        case 'Catacombs': await applyEffect(P, { t: 'token', n: 1, p: 4, q: 1, name: 'black Skeleton', kw: ['menace'] }, null, mine[0] || P.bf[0]); break;
+        case 'Throne of the Dead Three': {
+            const top = P.library.splice(Math.max(0, P.library.length - 10), 10).reverse(); const cr = top.filter(c => /\bCreature\b/.test(c.card.type)).sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0];
+            top.filter(c => c !== cr).forEach(c => P.library.unshift(c));
+            if (cr) { P.library.push(cr); reanimateFromLib(P, P, cr); putCounters(cr, 3, P); cr.tkw.push('hexproof'); log(`${cr.card.name} enters with three +1/+1 counters and hexproof until your next turn.`); }
+            P.slCompleted = (P.slCompleted || 0) + 1; break;
+        }
+    }
+}
+function slTakeInitiative(P, src) {
+    G.initiative = P.i; G.initSrc = src || G.initSrc; log(`${P.name} take${you(P) ? '' : 's'} the initiative.`);
+    G.delayed = (G.delayed || []).filter(d => !(d.label === 'Initiative' && d.P === P));
+    (G.delayed = G.delayed || []).push({ at: 'upkeep', own: true, P, after: G.turn, effects: [cmd('sl_initiativeUpkeep')], src: src || P.bf[0], label: 'Initiative' });
+    return slVenture(P);
+}
+async function slRingTempts(P) {
+    const r = P.slRing = P.slRing || { level: 0, bearer: null };
+    r.level = Math.min(4, r.level + 1); log(`The Ring tempts ${P.name} (level ${r.level}).`);
+    const cs = P.bf.filter(isCreature); if (!cs.length) return;
+    const c = (P.isAI || AUTOPLAY || cs.length === 1) ? cs.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, cs, 'The Ring tempts you: choose your Ring-bearer', { required: true });
+    r.bearer = (c || cs[0]).uid; log(`${(c || cs[0]).card.name} is ${P.name}'s Ring-bearer.`);
+}
+Object.assign(CMD, {
+    sl_brynExile(P, e, t, src) { const c = P.library.pop(); if (!c) return; P.exile.push(c); c.slBryn = src.uid; c.playUntil = G.turn; log(`${P.name} exile${you(P) ? '' : 's'} ${c.card.name}; ${you(P) ? 'you' : 'they'} may play it this turn.`); },
+    sl_brynPlay(P, e, t, src) { P.exile.filter(c => c.slBryn === src.uid).forEach(c => { c.playUntil = G.turn; }); },
+    sl_brynHaste(P, e, t, src) { P.slHasteNext = G.turn; },
+    sl_valiExile(P, e, t, src) {
+        G.players.forEach(X => { const c = X.gy.filter(y => /\b(Instant|Sorcery)\b/.test(y.card.type)).sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0]; if (c) { pull(X.gy, c); c.realOwner = c.owner; c.owner = P.i; c.slVali = src.uid; c.playUntil = -1; c.anyMana = true; P.exile.push(c); log(`${c.card.name} is exiled with ${src.card.name}.`); } });
+    },
+    sl_valiMana(P, e, t, src) { const n = src.ctr.lore || 0; if (n > 0) { P.pool = (P.pool || []).concat(Array.from({ length: n }, () => 'R')); log(`${P.name} add${you(P) ? '' : 's'} ${n} {R}.`); } P.exile.filter(c => c.slVali === src.uid).forEach(c => { c.playUntil = G.turn; }); },
+    sl_cerberus(P, e, t, src) { P.slCerb = { turn: G.turn, n: e.n || 1, o: src }; },
+    sl_mogCopies(P, e, t, src) { P.slMog = { turn: G.turn, o: src }; },
+    sl_mogCounters(P, e, t, src) { P.bf.filter(x => x !== src && isCreature(x) && hasType(x, 'Moogle')).forEach(x => putCounters(x, 2, P)); },
+    // Urianger Augurelt
+    async sl_urianger1(P, e, t, src) {
+        const c = P.library[P.library.length - 1]; if (!c) return;
+        const yes = (P.isAI || AUTOPLAY) ? !/\bCreature\b/.test(c.card.type) || (c.card.cmc || 0) <= 4 : await askYes(P, `${src.card.name}: look at the top card of your library (${c.card.name}). Exile it face down?`, { card: c.card, yes: 'Exile it', no: 'Leave it' });
+        if (yes) { P.library.pop(); P.exile.push(c); c.slUri = src.uid; c.playUntil = -1; log(`${P.name} exile${you(P) ? '' : 's'} a card face down with ${src.card.name}.`); }
+    },
+    sl_urianger2(P, e, t, src) { P.exile.filter(c => c.slUri === src.uid).forEach(c => { c.playUntil = G.turn; c.slUriCut = G.turn; }); },
+    async sl_valkyrie(P, e, t, src) {
+        drawCards(P, 1); if (!P.hand.length) return;
+        const c = (P.isAI || AUTOPLAY) ? P.hand.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)).find(x => (x.card.cmc || 0) >= 3) || P.hand.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0] : await pickCard(P, P.hand, `${src.card.name}: exile a card from your hand face down (it becomes foretold)`, { required: true });
+        if (!c) return; pull(P.hand, c); P.exile.push(c); c.foretoldTurn = G.turn; c.slForeTurn = G.turn; c.playUntil = 1e9;
+        const full = parseCost(c.card.cost || ''); const cut = { ...full, generic: Math.max(0, (full.generic || 0) - 2) }; if ((full.generic || 0) < 2) { let rest = 2 - (full.generic || 0); cut.generic = 0; for (const k of ['W', 'U', 'B', 'R', 'G', 'C']) { while (rest > 0 && cut[k] > 0) { cut[k]--; rest--; } } }
+        c.slForeCost = cut; log(`${P.name} exile${you(P) ? '' : 's'} a card face down; it becomes foretold.`);
+    },
+    sl_collectTap(P, e, t, src) {
+        const x = t && t.o; if (!x || !onBf(x.uid)) return;
+        const gy = P.gy.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0)); let sum = 0; const take = [];
+        for (const c of gy) { if (sum >= 3) break; take.push(c); sum += c.card.cmc || 0; }
+        if (sum < 3) { log(`${src.card.name}: not enough in the graveyard to collect evidence 3.`); return; }
+        take.forEach(c => { pull(P.gy, c); P.exile.push(c); }); log(`${P.name} collect${you(P) ? '' : 's'} evidence 3.`); x.tapped = true; log(`${x.card.name} is tapped.`);
+    },
+    async sl_teferiPlus(P, e, t, src) {
+        const kinds = [o => /\bArtifact\b/.test(o.card.type), o => isCreature(o), o => /\bLand\b/.test(o.card.type)];
+        for (const k of kinds) {
+            const pool = allPerms().filter(k).filter(o => o.owner === P.i ? o.tapped : (!o.tapped && !has(o, 'shroud') && !has(o, 'hexproof')));
+            if (!pool.length) continue;
+            const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => ((b.owner === P.i) - (a.owner === P.i)) || permValue(b) - permValue(a))[0] : await pickCard(P, pool, `${src.card.name}: choose a permanent to untap (yours) or tap (an opponent's), or none`, { required: false });
+            if (c) { c.tapped = c.owner !== P.i; log(`${c.card.name} ${c.tapped ? 'is tapped' : 'untaps'}.`); }
+        }
+        gainLifeFor(P, 2);
+    },
+    sl_teferiEmblem(P, e, t, src) { P.slTeferi = true; log(`${P.name} get${you(P) ? '' : 's'} an emblem: untap all permanents during each opponent's untap step and draw a card during each opponent's draw step.`); },
+    async sl_warLast(P, e, t, src) { P.bf.filter(isCreature).forEach(x => x.tkw.push('double strike')); log('Creatures you control gain double strike until end of turn.'); await slRingTempts(P); },
+    async sl_takeInitiative(P, e, t, src) { await slTakeInitiative(P, src); },
+    async sl_initiativeUpkeep(P, e, t, src) { if (G.initiative !== P.i) return; await slVenture(P); G.delayed = (G.delayed || []).filter(d => !(d.label === 'Initiative' && d.P === P)); G.delayed.push({ at: 'upkeep', own: true, P, after: G.turn, effects: [cmd('sl_initiativeUpkeep')], src: src || P.bf[0], label: 'Initiative' }); },
+    sl_plumeUntap(P, e, t, src) {
+        if (G.active === P.i || !onBf(src.uid)) return;
+        const tapped = P.bf.filter(x => isCreature(x) && x.tapped); if (!tapped.length) return;
+        if ((P.slCompleted || 0) > 0) { tapped.forEach(x => { x.tapped = false; }); log(`${P.name} untap${you(P) ? '' : 's'} all ${you(P) ? 'their' : 'their'} creatures.`); } else { const c = tapped.sort((a, b) => creatureValue(b) - creatureValue(a))[0]; c.tapped = false; log(`${c.card.name} untaps.`); }
+    },
+    // Gogo
+    async sl_conduit(P, e, t, src) {
+        drawCards(P, 7);
+        for (const c of P.hand.filter(x => !/\bLand\b/.test(x.card.type)).slice()) {
+            if (!P.hand.includes(c)) continue;
+            const yes = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: cast ${c.card.name} without paying its mana cost?`, { card: c.card, yes: 'Cast it', no: 'Keep it' });
+            if (yes) await castFreeAuto(P, c);
+        }
+    },
+    async sl_amplifier(P, e, t, src) {
+        const cands = P.bf.filter(x => slCtrs(x) > 0);
+        const modeOwn = (P.isAI || AUTOPLAY) ? !cands.length && ((P.energy || 0) > 0 || (P.rad || 0) < 0) : await askYes(P, `${src.card.name}: double the counters you have (energy)? Otherwise double the counters on a permanent.`, { card: src.card, yes: 'Mine', no: 'A permanent' });
+        if (modeOwn) { P.energy = (P.energy || 0) * 2; log(`${P.name} now ${you(P) ? 'have' : 'has'} ${P.energy} {E}.`); return; }
+        const pool = allPerms().filter(x => slCtrs(x) > 0 && !has(x, 'shroud')); if (!pool.length) return;
+        const c = (P.isAI || AUTOPLAY) ? pool.filter(x => x.owner === P.i).sort((a, b) => slCtrs(b) - slCtrs(a))[0] || null : await pickCard(P, pool, `${src.card.name}: double the counters on a permanent`, { required: false });
+        if (!c) return; if (c.counters > 0) c.counters *= 2; Object.keys(c.ctr || {}).forEach(k => { if (c.ctr[k] > 0) c.ctr[k] *= 2; }); log(`The counters on ${c.card.name} are doubled.`);
+    },
+    sl_benthic(P, e, t, src) {
+        const picks = foes(P).map(F => F.bf.filter(isCreature).sort((a, b) => creatureValue(b) - creatureValue(a))[0]).filter(Boolean); if (!picks.length) return;
+        const tp = picks.reduce((a, c) => a + Math.max(0, pow(c)), 0), tq = picks.reduce((a, c) => a + Math.max(0, tou(c)), 0);
+        const best = picks.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0];
+        const tok = tokenCopyOf(P, { ...best.card, colors: [], ci: [], type: 'Creature — Eldrazi' }, { p: tp, q: tq }); if (tok) log(`${tok.card.name} is a colorless Eldrazi ${tp}/${tq}.`);
+    },
+    async sl_fishing(P, e, t, src) {
+        const X = (G.ctxRaw && G.ctxRaw.hit || []).find(y => y && y.life !== undefined && y !== P); if (!X || !X.library.length) return;
+        const c = X.library.pop(); X.exile.push(c); log(`${c.card.name} is exiled from the top of ${X.name}'s library.`);
+        let took = false;
+        if (slIsPerm(c)) { const yes = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: put ${c.card.name} onto the battlefield under your control?`, { card: c.card }); if (yes) { pull(X.exile, c); c.realOwner = c.owner; c.owner = P.i; putOntoBattlefield(P, c, false); took = true; } }
+        if (!took) await applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'blue Fish', kw: [] }, null, src);
+    },
+    sl_copyPerm(P, e, t, src) { const x = t && t.o; if (x && onBf(x.uid)) tokenCopyOf(P, x.card); },
+    sl_vault1(P, e, t, src) { const c = P.library.pop(); if (!onBf(src.uid)) return; src.ctr.brick = (src.ctr.brick || 0) + 1; if (!c) return; P.exile.push(c); c.playUntil = G.turn; log(`${P.name} exile${you(P) ? '' : 's'} ${c.card.name}; ${you(P) ? 'you' : 'they'} may play it this turn.`); },
+    sl_vault2(P, e, t, src) { const c = P.library.pop(); if (!c) return; P.exile.push(c); c.playUntil = G.turn; c.freeCast = true; log(`${P.name} exile${you(P) ? '' : 's'} ${c.card.name}; ${you(P) ? 'you' : 'they'} may play it this turn without paying its mana cost.`); },
+    async sl_struggleChoose(P, e, t, src) { const bro = (P.isAI || AUTOPLAY) ? foes(P).length === 1 && false : await askYes(P, `${src.card.name}: choose Brotherhood (each opponent draws, you draw for each) or Enclave (rad counters)?`, { card: src.card, yes: 'Brotherhood', no: 'Enclave' }); src.slMode = bro ? 'brotherhood' : 'enclave'; log(`${src.card.name}: ${src.slMode === 'brotherhood' ? 'Brotherhood' : 'Enclave'}.`); },
+    sl_brotherhood(P, e, t, src) { if (src.slMode !== 'brotherhood') return; let n = 0; foes(P).forEach(F => { drawCards(F, 1); n++; }); if (n) drawCards(P, n); },
+    sl_enclave(P, e, t, src) {
+        if (src.slMode !== 'enclave') return; const list = (G.ctxRaw && G.ctxRaw.list) || G.attackers.map(onBf).filter(Boolean);
+        const by = new Map(); list.filter(x => x.owner !== src.owner && (x.atkTo == null || x.atkTo === src.owner)).forEach(x => by.set(x.owner, (by.get(x.owner) || 0) + 1)); by.forEach((n, i) => addRad(G.players[i], 2 * n));
+    },
+    sl_theoristDraw(P, e, t, src) { if (G.active === P.i || !onBf(src.uid)) return; drawCards(P, 1); },
+    async sl_theoristBounce(P, e, t, src) {
+        for (const F of foes(P)) {
+            const pool = F.bf.filter(x => (isCreature(x) || /\bArtifact\b/.test(x.card.type)) && !has(x, 'hexproof') && !has(x, 'shroud'));
+            if (!pool.length) continue;
+            const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => permValue(b) - permValue(a))[0] : await pickCard(P, pool, `${src.card.name}: return up to one artifact or creature ${F.name} controls to its owner's hand`, { required: false });
+            if (c) { leaveBattlefield(c, 'hand'); log(`${c.card.name} returns to its owner's hand.`); }
+        }
+    },
+    sl_theoristUlt(P, e, t, src) { drawCards(P, 3); const x = P.hand.length; P.bf.filter(isCreature).forEach(c => putCounters(c, x, P)); log(`Each creature you control gets ${x} +1/+1 counters.`); },
+    sl_tidebinder(P, e, t, src) {
+        const it = t && t.item; if (!it) return; pull(G.stack, it); log(`${it.name || 'An ability'} is countered.`);
+        const o = it.o; if (o && onBf(o.uid) && (isCreature(o) || /\b(Artifact|Planeswalker)\b/.test(o.card.type))) { o.noAbilBy = src.uid; log(`${o.card.name} loses all abilities for as long as ${src.card.name} remains on the battlefield.`); }
+    },
+    // Nog
+    sl_nog1(P, e, t, src) { if (!onBf(src.uid) || (src.slNog || 0) !== 0 || !hasType(src, 'Rogue')) return; src.slNog = 1; src.card = { ...src.card, type: src.card.type.replace(/\bRogue\b/, 'Ferengi Scout'), power: '3', toughness: '4' }; log(`${src.card.name} becomes a Ferengi Scout 3/4.`); },
+    sl_nog2(P, e, t, src) { if (!onBf(src.uid) || src.slNog !== 1) return; src.slNog = 2; src.card = { ...src.card, type: src.card.type.replace(/\bScout\b/, 'Officer') }; log(`${src.card.name} becomes a Ferengi Officer.`); },
+    // Druid Class (level 3)
+    async sl_druidClass(P, e, t, src) {
+        const pool = P.bf.filter(x => /\bLand\b/.test(x.card.type) && !has(x, 'shroud')); if (!pool.length) return;
+        const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (a.tapped - b.tapped) || permValue(a) - permValue(b))[0] : await pickCard(P, pool, `${src.card.name}: target land you control becomes a creature`, { required: true });
+        if (!c) return; c.slDynPT = true; c.card = { ...c.card, type: /Creature/.test(c.card.type) ? c.card.type : c.card.type.replace(/^Land/, 'Land Creature'), power: '0', toughness: '0' }; c.tkw.push('haste'); c.sick = false; log(`${c.card.name} becomes a creature with haste (as big as your number of lands).`);
+    }
+});
+Object.assign(CMD_SCORE, { sl_brynExile: () => 4, sl_valiExile: () => 3, sl_conduit: () => 10, sl_amplifier: () => 3, sl_benthic: () => 6, sl_tidebinder: () => 5, sl_theoristBounce: () => 4, sl_theoristUlt: () => 6, sl_teferiPlus: () => 4, sl_urianger1: () => 2, sl_valkyrie: () => 3, sl_druidClass: () => 5, sl_vault1: () => 2, sl_vault2: () => 4, sl_nog1: () => 3, sl_nog2: () => 3 });
