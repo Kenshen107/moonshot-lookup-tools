@@ -181,7 +181,7 @@ const cdmgOf = o => (typeof sxToughDmg === 'function' && sxToughDmg(o)) ? tou(o)
 const adm = o => (typeof sxAdm === 'function' ? sxAdm(o) : pow(o));
 const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q + ptTimed(o, 'q');
 const hasBase = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (k === 'indestructible' && !!o.ctr && o.ctr.indestructible > 0) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
-const has = (o, k) => (k === 'hexproof' && typeof tkHexproof === 'function' && tkHexproof(o)) ? true : (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
+const has = (o, k) => ((k === 'hexproof' && typeof tkHexproof === 'function' && tkHexproof(o)) || (k === 'hexproof' && o.card && !o.slDealt && Rx(o).slHexNoDmg)) ? true : (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
 const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackCond && !condOk(Rx(o).attackCond, ctrl(o), o)) && !(typeof cmdCantAttack === 'function' && cmdCantAttack(o)) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !(has(o, 'defender') && !(typeof sxDefAttack === 'function' && sxDefAttack(o))) && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
@@ -539,6 +539,9 @@ const isPlaneswalker = o => !!o && !!o.card && Rx(o).kind === 'planeswalker' && 
 const isBattle = o => !!o && !!o.card && Rx(o).kind === 'battle';
 function damage(target, n, src) {
     if (n <= 0) return;
+    if (src && src.uid !== undefined && G.inCombatDamage) src.slDealt = true; // Ruric Thar: hexproof until it has dealt combat damage (15w-sixlists.js)
+    if (target.life !== undefined && src && src.owner !== undefined && src.owner !== target.i && G.players[target.i] && G.players[target.i].bf.some(x => Rx(x).slAbsVirtue && !lostAbilities(x))) { log(`${n} damage to ${target.name} is prevented (protection from each opponent).`); return; } // Absolute Virtue
+    if (target.slPreventTurn === G.turn && G.noPrevent !== G.turn) { log(`${n} damage to ${target.card ? target.card.name : target.name} is prevented.`); return; } // Mutational Advantage, Ultimate Magic: Holy (15w-sixlists.js)
     if (target.life !== undefined && target.protAll && G.turn < target.protAll) { log(`${target.name === 'You' ? 'You have' : `${target.name} has`} protection from everything: the damage is prevented.`); return; } // Teferi's Reproach
     if (target.life !== undefined && src && src.card && typeof emissaryProtects === 'function' && emissaryProtects(target.i, src)) { log(`${target.name === 'You' ? 'You have' : `${target.name} has`} protection from ${src.card.name}'s card type: the damage is prevented.`); return; } // Serra's Emissary
     if (target.life !== undefined && target.inkshield === G.turn && G.inCombatDamage && G.noPrevent !== G.turn) { (G.trigQ = G.trigQ || []).push({ P: target, o: src && src.uid !== undefined ? src : { card: { name: 'Inkshield' }, uid: -1 }, effects: [{ t: 'token', n, p: 2, q: 1, name: 'white and black Inkling', kw: ['flying'] }] }); log(`${n} combat damage to ${target.name === 'You' ? 'you' : target.name} is prevented (Inkshield): ${n} Inkling${n === 1 ? '' : 's'} follow.`); return; }
@@ -733,7 +736,8 @@ function manaOf(o) {
         const X1 = G.players[o.owner];
         if (/\bBasic\b/.test(o.card.type) && X1.bf.some(a => Rx(a).tripleBasic && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 3 };
         if (G.monarch === o.owner && X1.bf.some(a => Rx(a).monarchMana && !lostAbilities(a))) m = { ...m, n: (m.n || 1) + 1, colors: [...new Set([...(m.colors || []), ...COLORS])] };
-        if (allPerms().some(a => Rx(a).landDoubleAll && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 2 }; // Mana Flare, Heartbeat of Spring: every land adds one more of the same type
+        if (G.slHighTide === G.turn && /\bIsland\b/.test(o.card.type) && m.colors && m.colors.includes('U')) m = { ...m, n: (m.n || 1) + 1 }; // High Tide: an additional {U} (15w-sixlists.js)
+        if (allPerms().some(a => Rx(a).landDoubleAll && !lostAbilities(a)) || X1.bf.some(a => Rx(a).landDoubleMine && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 2 }; // Mana Flare, Heartbeat of Spring: every land adds one more of the same type; Mirari's Wake: your lands only
     }
     if (m && m.identity) { const X0 = G.players[o.owner]; if ([...X0.command, ...X0.bf].some(x => x.isCommander && x.owner === o.owner)) { const id = cmdrIdentity(X0).filter(c => COLORS.includes(c)); return id.length ? { ...m, colors: id } : null; } } // Command Tower, Path of Ancestry: the commander's color identity
     if (o.ctr && o.ctr.flood > 0 && /\bLand\b/.test(o.card.type)) return { colors: ['U'], n: 1 }; // an Island while it has a flood counter
@@ -934,6 +938,7 @@ function spellFits(o, rd, from) {
     if ((m = rd.what.match(/^color:([WUBRG]+)(:creature)?$/))) return (!m[2] || k === 'creature') && (o.card.colors || []).some(c => m[1].includes(c));
     if (rd.what === 'chosenType') return k === 'creature' && !!from && !!from.chosenType && hasType(o, from.chosenType);
     if (rd.what === 'chosenCardType') return !!from && !!from.chosenCardType && new RegExp(`\\b${from.chosenCardType}\\b`, 'i').test(o.card.type);
+    if (rd.what === 'firstCreature') return k === 'creature' && G.players[o.owner].slCreatureCastTurn !== G.turn; // Radagast of Rhosgobel (15w-sixlists.js)
     if (rd.what === 'firstLegendaryCreature') return k === 'creature' && /Legendary/.test(t) && G.players[o.owner].legendCastTurn !== G.turn;
     if ((m = rd.what.match(/^mv(\d+)$/))) return (o.card.cmc || 0) >= +m[1];
     if (rd.what === 'xFirst') { const Q = G.players[o.owner]; return !!Rx(o).cost.x && !(Q.xCastsTurn === G.turn && Q.xCasts > 0); }
@@ -1236,8 +1241,8 @@ function canCastNow(P, o) {
     if (P.silenced && P.silenced.turn === G.turn && (!P.silenced.noncreature || r.kind !== 'creature')) return false;
     if (G.active !== P.i && G.players[G.active].bf.some(x => Rx(x).noCastOnMyTurn && !lostAbilities(x))) return false;
     if (!P.hand.includes(o) && foes(P).some(F => F.bf.some(x => Rx(x).handOnly && !lostAbilities(x)))) return false;
-    const flash = !!r.flash || P.flashTurn === G.turn || (P.flashNext && P.flashNext.turn === G.turn && !!P.flashNext.type && hasType(o, P.flashNext.type)) || P.bf.some(x => !lostAbilities(x) && ((Rx(x).flashCond && condOk(Rx(x).flashCond, P, x)) || Rx(x).flashAll || (Rx(x).flashSpec && cmdFlashOk(x, o, P)) || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type)))));
-    const fromTop = (r.kind === 'creature' && P.library[P.library.length - 1] === o && topCastOk(P, o)) || pitTop(P) === o;
+    const flash = !!r.flash || P.flashTurn === G.turn || (P.flashNext && P.flashNext.turn === G.turn && !!P.flashNext.type && hasType(o, P.flashNext.type)) || (r.slFlashPhoto && P.bf.some(x => x.owner === P.i)) || P.bf.some(x => !lostAbilities(x) && ((Rx(x).flashCond && condOk(Rx(x).flashCond, P, x)) || Rx(x).flashAll || (Rx(x).flashSpec && cmdFlashOk(x, o, P)) || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type))) || (Rx(x).slRadagast && P.slCreatureCastTurn !== G.turn && /\bCreature\b/.test(o.card.type))));
+    const fromTop = ((r.kind === 'creature' || (r.kind === 'enchantment' && typeof slHothouseOn === 'function' && slHothouseOn(P))) && P.library[P.library.length - 1] === o && topCastOk(P, o)) || pitTop(P) === o;
     if (o.castAs && !castAsOk(P, o, o.castAs)) return false;
     if (o.castAs === 'madness') return true;
     if (o.castAs === 'sneak') return G.active === P.i && G.phase === 'afterBlocks' && !G.stack.length && G.priority === null;
@@ -1598,7 +1603,7 @@ async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
         target = await chooseTarget(P, te, source, false);
         if (!target) { log(`${source.card.name}'s ability has no legal target and is removed from the stack (rule 603.3d).`); return; }
     }
-    let multi = null; { const me = effects.find(e => e && e.multi); if (me && typeof frMultiChoose === 'function') { multi = await frMultiChoose(P, source, me.multi, 0); if (!multi) return; } }
+    let multi = null; { const me = effects.find(e => e && e.multi); if (me && typeof frMultiChoose === 'function') { multi = await frMultiChoose(P, source, me.multi, 0); if (!multi) return; } else if (typeof preChoose === 'function') { const pc = await preChoose(P, source, effects); if (pc === false) return; if (pc) multi = pc; } } // targets chosen as the trigger goes on the stack (15x-casting.js)
     // Identical triggers from permanents with the same name (Scute Swarm, two Starship Enterprises) share one stack line, so a crowd of them doesn't bury the table (2026-10-31). Each source still resolves in turn.
     if (!target && !multi && source && source.card && !G.hotseat && (!AUTOPLAY || window.__GROUP_TRIGGERS)) {
         const key = trigKey(effects);
@@ -1885,6 +1890,7 @@ function moveSpellCard(o, zone) {
     if (o.ceases) return; // a copy of a card that was cast ceases to exist (707.10a)
     if (o.suspendAfter) { const n = o.suspendAfter; o.suspendAfter = 0; if (o.front) o.card = o.front; resetObj(o); o.ctr.time = n; o.suspended = true; owner.exile.push(o); log(`${o.card.name} is exiled with ${n} time counters on it.`); return; }
     if (o.bottomIfGy && zone === 'gy') { o.bottomIfGy = false; if (o.front) o.card = o.front; resetObj(o); owner.library.unshift(o); log(`${o.card.name} is put on the bottom of its owner's library instead.`); return; }
+    if (o.slFlipBf && zone === 'gy' && o.front && o.front.back) { o.slFlipBf = false; o.front = o.front; o.card = o.front.back; putOntoBattlefield(owner, o, false); o.ctr.finality = 1; o.ctr.lore = 1; if (Rx(o).saga && Object.keys(Rx(o).saga).length) sagaChapter(owner, o); log(`${o.front.name} enters the battlefield transformed with a finality counter.`); return; } // Esper Origins (15w-sixlists.js)
     if (o.exileAfter) { o.exileAfter = false; o.exiledAfterCast = true; zone = 'exile'; }
     if (o.shuffleIn) { o.shuffleIn = false; resetObj(o); if (o.front) o.card = o.front; owner.library.splice(rand(owner.library.length + 1), 0, o); log(`${o.card.name} is shuffled into its owner's library.`); return; }
     if (o.flashedBack) { o.flashedBack = false; if (!Rx(o).flashbackKeep) { zone = 'exile'; log(`${o.card.name} is exiled (flashback).`); } }
@@ -2433,7 +2439,8 @@ async function applyChoiceEffect(P, e, src, t) {
       for (let k = 0; k < (e.count || 1); k++) {
         const gys = e.anyGy ? [P, opp(P)] : [P];
         const pool = gys.flatMap(X => X.gy).filter(x => cardFits(x, e.what) && !(e.notSelf && x === src));
-        const pick = await pickCard(P, pool, `${src.card.name}: choose a card from ${e.anyGy ? 'a' : 'your'} graveyard${e.count > 1 ? ` (${k + 1} of ${e.count}; skip to stop)` : ''}`, { required: !e.may && !(e.count > 1) });
+        const preP = G.curMulti && Array.isArray(G.curMulti.pre) && G.curMulti.pre.length ? G.curMulti.pre : null; // chosen as it was cast (15x-casting.js)
+        const pick = preP ? (pool.includes(preP[k]) ? preP[k] : null) : await pickCard(P, pool, `${src.card.name}: choose a card from ${e.anyGy ? 'a' : 'your'} graveyard${e.count > 1 ? ` (${k + 1} of ${e.count}; skip to stop)` : ''}`, { required: !e.may && !(e.count > 1) });
         if (!pick) break;
         G.lastCardPow = Number(pick.card.power) || 0;
         G.lastCardMv = pick.card.cmc || 0;
@@ -4398,6 +4405,7 @@ async function beginTurn() {
     if (G.over) return;
     const skipDraw = (P.skip && P.skip.turn === G.turn && P.skip.what === 'draw') || P.bf.some(x => Rx(x).skipDraw && !lostAbilities(x));
     if ((!G.firstTurn || G.players.length > 2) && !skipDraw) { G.inDrawStep = true; drawCards(P, 1, P.i !== 0); G.inDrawStep = false; }
+    if (typeof slLibraryDrawStep === 'function') await slLibraryDrawStep(P); // Sylvan Library (15w-sixlists.js)
     G.firstTurn = false;
     // Sagas get a lore counter at the start of the precombat main phase (714.3b)
     P.bf.filter(o => Rx(o).saga && !o.sagaDone).forEach(o => { o.ctr.lore = (o.ctr.lore || 0) + 1; sagaChapter(P, o); });
@@ -4551,6 +4559,7 @@ async function humanCast(uid) {
     // "Any number of target ...": the targets are chosen now, as the spell is cast (CR 601.2c), not when it resolves
     o.multi = null;
     if (typeof frMultiOf === 'function' && frMultiOf(o)) { o.multi = await frMultiChoose(P, o, frMultiOf(o).multi, o.xVal || 0); if (!o.multi) { renderGame(); return; } }
+    else if (typeof preChoose === 'function') { const pc = await preChoose(P, o, spellEffects(o)); if (pc === false) { renderGame(); return; } if (pc) o.multi = pc; } // targets chosen with the cast (15x-casting.js)
     let target = null;
     const te = firstTargetEffect(o);
     if (te) {
@@ -4664,9 +4673,10 @@ function forcedAttack(o) {
 async function goToCombat() {
     if (G.active !== G.view || G.phase !== 'main1' || G.busy) return;
     if (me().skip && me().skip.turn === G.turn && me().skip.what === 'combat') { toast('You skip combat this turn (Fatespinner).'); return; }
+    G.combatCk = typeof slCheckpoint === 'function' && !G.stack.length ? slCheckpoint() : null; // so cancelling the attack can walk everything back (15x-casting.js)
     emptyPools();
     if (!G.combatFired) { G.combatFired = true; fire('combat'); G.busy = true; await settle(); G.busy = false; }
-    if (!me().bf.some(canAttackWith)) { toast('None of your creatures can attack (summoning sickness, tapped or defender).'); return; }
+    if (!me().bf.some(canAttackWith)) { if (G.combatCk && typeof slRestore === 'function') { slRestore(G.combatCk); G.combatFired = false; } G.combatCk = null; toast('None of your creatures can attack (summoning sickness, tapped or defender).'); renderGame(); return; }
     G.phase = 'declareAttackers';
     G.mode = { type: 'attack', sel: new Set(me().bf.filter(o => canAttackWith(o) && (forcedAttack(o) || me().mustAttackTurn === G.turn)).map(o => o.uid)) };
     renderGame();
@@ -4683,16 +4693,21 @@ function chooseAttackTargets(sel, pws) {
             <div class="row" style="justify-content:center; margin-top:10px; gap:8px;"><button class="btn" onclick="__atkOk(false)">Cancel</button><button class="btn primary" onclick="__atkOk(true)">Attack</button></div>`);
     });
 }
-function cancelAttack() { G.mode = null; G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame(); }
+// Cancelling the attack goes back to the main phase as if combat had never started: the beginning-of-combat triggers and abilities, the mana pool, tokens, counters and draws they made are all undone
+function cancelAttack() {
+    const ck = G.combatCk; G.combatCk = null;
+    if (ck && !G.extraCombatOn && typeof slRestore === 'function' && slRestore(ck)) { G.mode = null; G.phase = 'main1'; G.combatFired = false; G.busy = false; toast('Combat cancelled: its beginning-of-combat effects were undone.'); renderGame(); return; }
+    G.mode = null; G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame();
+}
 async function confirmAttack() {
     const sel = [...G.mode.sel].map(onBf).filter(o => o && canAttackWith(o));
     me().bf.filter(o => canAttackWith(o) && forcedAttack(o) && !sel.includes(o)).forEach(o => sel.push(o)); // they must attack if able
     G.mode = null;
-    if (!sel.length) { G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame(); return; }
+    if (!sel.length) { cancelAttack(); return; }
     const pod = G.players.length > 2 && foes(me()).length > 1;
     const pws = pod ? [...foes(me()).flatMap(F => F.bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me()))), ...me().bf.filter(isBattle)] : [...foe().bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me())), ...me().bf.filter(isBattle)];
-    if (pod) { const ok = await choosePodTargets(sel, foes(me()), pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
-    else if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
+    if (pod) { const ok = await choosePodTargets(sel, foes(me()), pws); if (!ok) { cancelAttack(); return; } }
+    else if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { cancelAttack(); return; } }
     G.busy = true;
     if (pod) { // the player most of the attackers go at is the main defender; ask about each peace deal that would be broken
         const cnt = {}; sel.forEach(o => { cnt[o.atkTo] = (cnt[o.atkTo] || 0) + 1; });
@@ -4704,6 +4719,7 @@ async function confirmAttack() {
     } else if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected
     if (!pod && G.players.length > 2 && hasPeace(me().i, G.defender) && !(await askYes(me(), `You have a peace deal with ${nm(foe())}. Attack anyway? (You break your word and they will remember.)`, { card: foe().command[0] && foe().command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
     if (typeof hhAnnexAsk === 'function') await hhAnnexAsk(me(), sel); // Norn's Annex: pay {W}, pay 2 life or don't attack
+    G.combatCk = null; // the attack is declared: combat can't be walked back any more
     declareAttackers(me(), sel);
     await exertChoices(me(), sel);
     G.phase = 'declareBlocks';
