@@ -539,6 +539,7 @@ const isPlaneswalker = o => !!o && !!o.card && Rx(o).kind === 'planeswalker' && 
 const isBattle = o => !!o && !!o.card && Rx(o).kind === 'battle';
 function damage(target, n, src) {
     if (n <= 0) return;
+    if (target.slPreventTurn === G.turn && G.noPrevent !== G.turn) { log(`${n} damage to ${target.card ? target.card.name : target.name} is prevented.`); return; } // Mutational Advantage, Ultimate Magic: Holy (15w-sixlists.js)
     if (target.life !== undefined && target.protAll && G.turn < target.protAll) { log(`${target.name === 'You' ? 'You have' : `${target.name} has`} protection from everything: the damage is prevented.`); return; } // Teferi's Reproach
     if (target.life !== undefined && src && src.card && typeof emissaryProtects === 'function' && emissaryProtects(target.i, src)) { log(`${target.name === 'You' ? 'You have' : `${target.name} has`} protection from ${src.card.name}'s card type: the damage is prevented.`); return; } // Serra's Emissary
     if (target.life !== undefined && target.inkshield === G.turn && G.inCombatDamage && G.noPrevent !== G.turn) { (G.trigQ = G.trigQ || []).push({ P: target, o: src && src.uid !== undefined ? src : { card: { name: 'Inkshield' }, uid: -1 }, effects: [{ t: 'token', n, p: 2, q: 1, name: 'white and black Inkling', kw: ['flying'] }] }); log(`${n} combat damage to ${target.name === 'You' ? 'you' : target.name} is prevented (Inkshield): ${n} Inkling${n === 1 ? '' : 's'} follow.`); return; }
@@ -733,7 +734,8 @@ function manaOf(o) {
         const X1 = G.players[o.owner];
         if (/\bBasic\b/.test(o.card.type) && X1.bf.some(a => Rx(a).tripleBasic && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 3 };
         if (G.monarch === o.owner && X1.bf.some(a => Rx(a).monarchMana && !lostAbilities(a))) m = { ...m, n: (m.n || 1) + 1, colors: [...new Set([...(m.colors || []), ...COLORS])] };
-        if (allPerms().some(a => Rx(a).landDoubleAll && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 2 }; // Mana Flare, Heartbeat of Spring: every land adds one more of the same type
+        if (G.slHighTide === G.turn && /\bIsland\b/.test(o.card.type) && m.colors && m.colors.includes('U')) m = { ...m, n: (m.n || 1) + 1 }; // High Tide: an additional {U} (15w-sixlists.js)
+        if (allPerms().some(a => Rx(a).landDoubleAll && !lostAbilities(a)) || X1.bf.some(a => Rx(a).landDoubleMine && !lostAbilities(a))) m = { ...m, n: (m.n || 1) * 2 }; // Mana Flare, Heartbeat of Spring: every land adds one more of the same type; Mirari's Wake: your lands only
     }
     if (m && m.identity) { const X0 = G.players[o.owner]; if ([...X0.command, ...X0.bf].some(x => x.isCommander && x.owner === o.owner)) { const id = cmdrIdentity(X0).filter(c => COLORS.includes(c)); return id.length ? { ...m, colors: id } : null; } } // Command Tower, Path of Ancestry: the commander's color identity
     if (o.ctr && o.ctr.flood > 0 && /\bLand\b/.test(o.card.type)) return { colors: ['U'], n: 1 }; // an Island while it has a flood counter
@@ -934,6 +936,7 @@ function spellFits(o, rd, from) {
     if ((m = rd.what.match(/^color:([WUBRG]+)(:creature)?$/))) return (!m[2] || k === 'creature') && (o.card.colors || []).some(c => m[1].includes(c));
     if (rd.what === 'chosenType') return k === 'creature' && !!from && !!from.chosenType && hasType(o, from.chosenType);
     if (rd.what === 'chosenCardType') return !!from && !!from.chosenCardType && new RegExp(`\\b${from.chosenCardType}\\b`, 'i').test(o.card.type);
+    if (rd.what === 'firstCreature') return k === 'creature' && G.players[o.owner].slCreatureCastTurn !== G.turn; // Radagast of Rhosgobel (15w-sixlists.js)
     if (rd.what === 'firstLegendaryCreature') return k === 'creature' && /Legendary/.test(t) && G.players[o.owner].legendCastTurn !== G.turn;
     if ((m = rd.what.match(/^mv(\d+)$/))) return (o.card.cmc || 0) >= +m[1];
     if (rd.what === 'xFirst') { const Q = G.players[o.owner]; return !!Rx(o).cost.x && !(Q.xCastsTurn === G.turn && Q.xCasts > 0); }
@@ -1236,7 +1239,7 @@ function canCastNow(P, o) {
     if (P.silenced && P.silenced.turn === G.turn && (!P.silenced.noncreature || r.kind !== 'creature')) return false;
     if (G.active !== P.i && G.players[G.active].bf.some(x => Rx(x).noCastOnMyTurn && !lostAbilities(x))) return false;
     if (!P.hand.includes(o) && foes(P).some(F => F.bf.some(x => Rx(x).handOnly && !lostAbilities(x)))) return false;
-    const flash = !!r.flash || P.flashTurn === G.turn || (P.flashNext && P.flashNext.turn === G.turn && !!P.flashNext.type && hasType(o, P.flashNext.type)) || P.bf.some(x => !lostAbilities(x) && ((Rx(x).flashCond && condOk(Rx(x).flashCond, P, x)) || Rx(x).flashAll || (Rx(x).flashSpec && cmdFlashOk(x, o, P)) || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type)))));
+    const flash = !!r.flash || P.flashTurn === G.turn || (P.flashNext && P.flashNext.turn === G.turn && !!P.flashNext.type && hasType(o, P.flashNext.type)) || P.bf.some(x => !lostAbilities(x) && ((Rx(x).flashCond && condOk(Rx(x).flashCond, P, x)) || Rx(x).flashAll || (Rx(x).flashSpec && cmdFlashOk(x, o, P)) || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type))) || (Rx(x).slRadagast && P.slCreatureCastTurn !== G.turn && /\bCreature\b/.test(o.card.type))));
     const fromTop = (r.kind === 'creature' && P.library[P.library.length - 1] === o && topCastOk(P, o)) || pitTop(P) === o;
     if (o.castAs && !castAsOk(P, o, o.castAs)) return false;
     if (o.castAs === 'madness') return true;

@@ -1037,9 +1037,10 @@ function parseDeckText(text) {
         name = name.replace(/\s+#\S.*$/, '').replace(/\s+\^[^^]*\^/g, '').trim();
         const sm = name.match(/^(.+?)\s+\(([A-Za-z0-9]{2,6})\)(?:\s+([A-Za-z0-9★\-]+))?$/) || name.match(/^(.+?)\s+\[([A-Za-z0-9]{2,6})(?::([A-Za-z0-9★\-]+))?\]$/);
         if (sm) { name = sm[1].trim(); set = sm[2].toLowerCase(); num = sm[3] || null; }
+        const rawName = name; // a few real names have a single slash ("Summon: Choco/Mog"): kept to look up when the " // " spelling finds nothing
         name = name.replace(/\s*\/\/?\s*/g, ' // '); // "Life / Death", "Life/Death"
         if (!name) { out.unread.push(line); continue; }
-        const e = { n: Math.max(1, parseInt(m[1], 10) || 1), name, set, num, foil, line };
+        const e = { n: Math.max(1, parseInt(m[1], 10) || 1), name, set, num, foil, line, raw: rawName };
         const where = cmdr ? 'commander' : /^SB:/i.test(line) ? 'side' : section;
         out[where].push(e);
         blocks[blocks.length - 1].push({ e, where });
@@ -1065,11 +1066,11 @@ async function resolveDeckCards(entries) {
         const named = new Set(want.map(e => `${e.set}:${e.num}:${e.name.toLowerCase()}`));
         found.forEach(c => { if (named.has(`${c.set}:${c.num}:${c.fullName.toLowerCase()}`) || named.has(`${c.set}:${c.num}:${c.name.toLowerCase()}`)) bySetNum.set(`${c.set}:${c.num}`, c); });
     }
-    const byName = await cardsByNames(entries.filter(e => !bySetNum.has(`${e.set}:${e.num}`)).map(e => e.name));
+    const byName = await cardsByNames(entries.filter(e => !bySetNum.has(`${e.set}:${e.num}`)).map(e => e.name).concat(entries.filter(e => e.raw && e.raw !== e.name && /\S\/\S/.test(e.raw)).map(e => e.raw)));
     // Archidekt writes double-faced cards as "Storm the Vault // Vault of Catlacan": look those up by the front face
     const faces = entries.filter(e => / \/\/ /.test(e.name) && !bySetNum.has(`${e.set}:${e.num}`) && !byName.get(e.name.toLowerCase())).map(e => e.name.split(' // ')[0]);
     if (faces.length) (await cardsByNames(faces)).forEach((v, k) => { if (!byName.has(k)) byName.set(k, v); });
-    return entries.map(e => ({ ...e, card: bySetNum.get(`${e.set}:${e.num}`) || byName.get(e.name.toLowerCase()) || byName.get(e.name.split(' // ')[0].toLowerCase()) || null }));
+    return entries.map(e => ({ ...e, card: bySetNum.get(`${e.set}:${e.num}`) || byName.get(e.name.toLowerCase()) || (e.raw && byName.get(e.raw.toLowerCase())) || byName.get(e.name.split(' // ')[0].toLowerCase()) || null }));
 }
 const importPrice = card => parseFloat(card.usd || card.usdFoil) || IMPORT_NO_PRICE;
 // Your owned printings of a card, by name

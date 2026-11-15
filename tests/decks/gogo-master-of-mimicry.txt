@@ -44,7 +44,7 @@
 1 Promising Vein
 1 Propaganda
 1 Prototype Portal
-1 Raise Repulsor Shields
+1 Raise the Palisade
 1 Replicating Ring
 1 Replication Technique
 1 Rishadan Cutpurse
@@ -80,6 +80,5 @@
 1 Urza's Workshop
 1 Wayfarer's Bauble
 1 Wurmcoil Engine
-1 Mirage Mirror
 
 1 Gogo, Master of Mimicry

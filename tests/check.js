@@ -39,7 +39,7 @@ const BODY = async function (input) {
     raw.forEach(c => { if (!c.name || !c.type_line) return; if (!byName.has(c.name)) byName.set(c.name, c); const f = c.name.split(' // ')[0]; if (!byName.has(f)) byName.set(f, c); });
     const cache = new Map();
     const get = n => {
-        const r = byName.get(n.trim()) || byName.get(n.trim().split(' // ')[0]); if (!r) return null;
+        const r = byName.get(n.trim()) || byName.get(n.trim().replace(/ \/\/ /g, '/')) || byName.get(n.trim().split(' // ')[0]); if (!r) return null;
         if (!cache.has(r.id)) { const sc = slimCard(r); CARDS.set(sc.id, sc); cache.set(r.id, sc); }
         return cache.get(r.id);
     };

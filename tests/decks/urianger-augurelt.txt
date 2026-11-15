@@ -26,7 +26,7 @@
 1 Gilded Lotus
 1 Glacial Fortress
 1 Hallowed Fountain
-1 Heaven-Sent Marvel
+1 Archangel of Thune
 1 Ioreth of the Healing House
 12 Island
 1 Kelpie Guide
@@ -57,7 +57,7 @@
 1 Serra's Guardian
 1 Sewer-veillance Cam
 1 Shadow of the Second Sun
-1 Shadowbringers
+1 Dovin's Veto
 1 Skycloud Expanse
 1 Slip Out the Back
 1 Spell Pierce

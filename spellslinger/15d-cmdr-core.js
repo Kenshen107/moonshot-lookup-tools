@@ -35,6 +35,7 @@ function specMatch(spec, o, x, ctx) {
     if (spec.hadCounters && !((x.lastCounters || 0) > 0 || Object.values(x.ctr || {}).some(v => v > 0) || (x.counters || 0) > 0)) return false;
     if (spec.commander && !x.isCommander) return false;
     if (spec.attacking && !(G.attackers || []).includes(x.uid)) return false;
+    if (spec.tapped && !x.tapped) return false;
     if (spec.byOpp && !(ctx && ctx.by !== undefined && ctx.by !== o.owner)) return false;
     return true;
 }
