@@ -176,3 +176,9 @@ clx('{1}: If ~ is a Rogue, he becomes a Ferengi Scout with base power and toughn
 clx('{3}: If ~ is a Scout, he becomes a Ferengi Officer and gains "You may play lands from your graveyard" and "You may play an additional land on each of your turns."', (R, m, ctx) => { act(R, ctx.line, '{3}', [cmd('sl_nog2')]); });
 // Druid Class
 clx('When ~ becomes level 3, target land you control becomes a creature with haste and "~\'s power and toughness are each equal to the number of lands you control." It\'s still a land.', R => { R.trig.push({ ev: 'levelUp', fn: 'sl_level3', effects: [cmd('sl_druidClass')] }); });
+
+// Case of the Locked Hothouse and Exploration Broodship
+clx('You control seven or more lands.', R => { R.slHothouse = true; R.trig.push({ ev: 'end', who: 'your', effects: [cmd('sl_caseSolve')] }); });
+clx('You may look at the top card of your library any time, and you may play lands and cast creature and enchantment spells from the top of your library.', R => { R.slHothouseTop = true; });
+clx('3+ | You may play an additional land on each of your turns.', R => { R.slBroodship = 3; });
+clx('Once during each of your turns, you may cast a permanent spell from your graveyard by sacrificing a land in addition to paying its other costs.', R => { R.slBroodshipGy = true; });

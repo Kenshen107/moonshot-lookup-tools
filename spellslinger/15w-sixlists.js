@@ -402,7 +402,7 @@ Object.assign(CMD, {
             const pay = F.isAI || AUTOPLAY ? !!planPayment(F, parseCost('{1}'), 0, null, {}) : (!!planPayment(F, parseCost('{1}'), 0, null, {}) && await askYes(F, `${src.card.name}: pay {1}? (Otherwise sacrifice a permanent.)`, { card: src.card, yes: 'Pay {1}', no: 'Sacrifice a permanent' }));
             if (pay) { const plan = planPayment(F, parseCost('{1}'), 0, null, {}); if (plan) plan.forEach(x => tapSource(F, x)); log(`${F.name} pay${you(F) ? '' : 's'} {1}.`); continue; }
             const pool = F.bf.slice(); if (!pool.length) continue;
-            const f = await chooseSac(F, src, 'permanent', src.card.name); if (f) { leaveBattlefield(f, 'gy'); log(`${F.name} sacrifice${you(F) ? '' : 's'} ${f.card.name}.`); }
+            const f = (F.isAI || AUTOPLAY) ? pool.slice().sort((x, y) => permValue(x) - permValue(y))[0] : await pickCard(F, pool, `${src.card.name}: choose a permanent to sacrifice`, { required: true }); if (f) { leaveBattlefield(f, 'gy'); log(`${F.name} sacrifice${you(F) ? '' : 's'} ${f.card.name}.`); }
         }
     },
     // Replicating Ring
@@ -655,7 +655,42 @@ Object.assign(CMD, {
     async sl_druidClass(P, e, t, src) {
         const pool = P.bf.filter(x => /\bLand\b/.test(x.card.type) && !has(x, 'shroud')); if (!pool.length) return;
         const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (a.tapped - b.tapped) || permValue(a) - permValue(b))[0] : await pickCard(P, pool, `${src.card.name}: target land you control becomes a creature`, { required: true });
-        if (!c) return; c.slDynPT = true; c.card = { ...c.card, type: /Creature/.test(c.card.type) ? c.card.type : c.card.type.replace(/^Land/, 'Land Creature'), power: '0', toughness: '0' }; c.tkw.push('haste'); c.sick = false; log(`${c.card.name} becomes a creature with haste (as big as your number of lands).`);
+        if (!c) return; c.slDynPT = true; c.card = { ...c.card, type: /Creature/.test(c.card.type) ? c.card.type : c.card.type.replace(/\bLand\b/, 'Land Creature'), power: '0', toughness: '0' }; c.tkw.push('haste'); c.sick = false; log(`${c.card.name} becomes a creature with haste (as big as your number of lands).`);
     }
 });
 Object.assign(CMD_SCORE, { sl_brynExile: () => 4, sl_valiExile: () => 3, sl_conduit: () => 10, sl_amplifier: () => 3, sl_benthic: () => 6, sl_tidebinder: () => 5, sl_theoristBounce: () => 4, sl_theoristUlt: () => 6, sl_teferiPlus: () => 4, sl_urianger1: () => 2, sl_valkyrie: () => 3, sl_druidClass: () => 5, sl_vault1: () => 2, sl_vault2: () => 4, sl_nog1: () => 3, sl_nog2: () => 3 });
+
+// ===== Case of the Locked Hothouse (solved at your end step with seven or more lands) and Exploration Broodship (3+ charge counters) =====
+const slHothouseOn = P => P.bf.some(x => Rx(x).slHothouseTop && x.slSolved && !lostAbilities(x));
+const slBroodOn = P => P.bf.some(x => Rx(x).slBroodship && (x.ctr.charge || 0) >= Rx(x).slBroodship && !lostAbilities(x));
+{
+    const base = topCastOk;
+    topCastOk = function (P, o) { if (base.apply(this, arguments)) return true; return !!o && Rx(o).kind === 'enchantment' && P.library[P.library.length - 1] === o && slHothouseOn(P); };
+}
+{
+    const lz = extraLandZones;
+    extraLandZones = function (P) { const out = lz.apply(this, arguments); const top = P.library[P.library.length - 1]; if (top && Rx(top).kind === 'land' && slHothouseOn(P) && !out.includes(top)) out.push(top); return out; };
+    const ll = landLimit;
+    landLimit = function (P) { return ll.apply(this, arguments) + (slBroodOn(P) ? 1 : 0); };
+}
+{
+    const base = gyCastOk;
+    gyCastOk = function (P, o) {
+        if (base.apply(this, arguments)) return true;
+        return !!o && P.gy.includes(o) && P.slBroodTurn !== G.turn && P.bf.some(x => Rx(x).slBroodshipGy && (x.ctr.charge || 0) >= (Rx(x).slBroodship || 3) && !lostAbilities(x)) && P.bf.some(x => /\bLand\b/.test(x.card.type)) && ['artifact', 'creature', 'enchantment', 'planeswalker', 'battle', 'other'].includes(Rx(o).kind);
+    };
+}
+{
+    const base = fire;
+    fire = function (ev, ctx) {
+        const r = base.apply(this, arguments);
+        try {
+            if (ev === 'cast' && ctx && ctx.P && ctx.o && ctx.o.sx_castZone === 'gy' && !Rx(ctx.o).flashback && ctx.P.slBroodTurn !== G.turn && slBroodOn(ctx.P) && ctx.P.bf.some(x => Rx(x).slBroodshipGy && (x.ctr.charge || 0) >= 3)) {
+                const P = ctx.P; const lands = P.bf.filter(x => /\bLand\b/.test(x.card.type));
+                if (lands.length) { P.slBroodTurn = G.turn; const f = lands.sort((a, b) => (b.tapped - a.tapped) || permValue(a) - permValue(b))[0]; leaveBattlefield(f, 'gy'); log(`${P.name} sacrifice${you(P) ? '' : 's'} ${f.card.name} (Exploration Broodship).`); }
+            }
+        } catch (err) { /* ignore */ }
+        return r;
+    };
+}
+Object.assign(CMD, { sl_caseSolve(P, e, t, src) { if (src.slSolved || !onBf(src.uid)) return; if (P.bf.filter(x => /\bLand\b/.test(x.card.type)).length >= 7) { src.slSolved = true; log(`${src.card.name} is solved.`); } } });

@@ -540,6 +540,7 @@ const isBattle = o => !!o && !!o.card && Rx(o).kind === 'battle';
 function damage(target, n, src) {
     if (n <= 0) return;
     if (src && src.uid !== undefined && G.inCombatDamage) src.slDealt = true; // Ruric Thar: hexproof until it has dealt combat damage (15w-sixlists.js)
+    if (target.life !== undefined && src && src.owner !== undefined && src.owner !== target.i && G.players[target.i] && G.players[target.i].bf.some(x => Rx(x).slAbsVirtue && !lostAbilities(x))) { log(`${n} damage to ${target.name} is prevented (protection from each opponent).`); return; } // Absolute Virtue
     if (target.slPreventTurn === G.turn && G.noPrevent !== G.turn) { log(`${n} damage to ${target.card ? target.card.name : target.name} is prevented.`); return; } // Mutational Advantage, Ultimate Magic: Holy (15w-sixlists.js)
     if (target.life !== undefined && target.protAll && G.turn < target.protAll) { log(`${target.name === 'You' ? 'You have' : `${target.name} has`} protection from everything: the damage is prevented.`); return; } // Teferi's Reproach
     if (target.life !== undefined && src && src.card && typeof emissaryProtects === 'function' && emissaryProtects(target.i, src)) { log(`${target.name === 'You' ? 'You have' : `${target.name} has`} protection from ${src.card.name}'s card type: the damage is prevented.`); return; } // Serra's Emissary
@@ -1241,7 +1242,7 @@ function canCastNow(P, o) {
     if (G.active !== P.i && G.players[G.active].bf.some(x => Rx(x).noCastOnMyTurn && !lostAbilities(x))) return false;
     if (!P.hand.includes(o) && foes(P).some(F => F.bf.some(x => Rx(x).handOnly && !lostAbilities(x)))) return false;
     const flash = !!r.flash || P.flashTurn === G.turn || (P.flashNext && P.flashNext.turn === G.turn && !!P.flashNext.type && hasType(o, P.flashNext.type)) || P.bf.some(x => !lostAbilities(x) && ((Rx(x).flashCond && condOk(Rx(x).flashCond, P, x)) || Rx(x).flashAll || (Rx(x).flashSpec && cmdFlashOk(x, o, P)) || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type))) || (Rx(x).slRadagast && P.slCreatureCastTurn !== G.turn && /\bCreature\b/.test(o.card.type))));
-    const fromTop = (r.kind === 'creature' && P.library[P.library.length - 1] === o && topCastOk(P, o)) || pitTop(P) === o;
+    const fromTop = ((r.kind === 'creature' || (r.kind === 'enchantment' && typeof slHothouseOn === 'function' && slHothouseOn(P))) && P.library[P.library.length - 1] === o && topCastOk(P, o)) || pitTop(P) === o;
     if (o.castAs && !castAsOk(P, o, o.castAs)) return false;
     if (o.castAs === 'madness') return true;
     if (o.castAs === 'sneak') return G.active === P.i && G.phase === 'afterBlocks' && !G.stack.length && G.priority === null;
