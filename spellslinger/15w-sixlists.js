@@ -98,6 +98,8 @@ Object.assign(CMD, {
     },
     // Blood Beckoning
     async sl_beckon(P, e, t, src) {
+        const pre = slPre('sl_beckon');
+        if (pre) { for (const c of pre.v) if (c && P.gy.includes(c)) { pull(P.gy, c); P.hand.push(c); log(`${c.card.name} returns to ${you(P) ? 'your' : 'their'} hand.`); } return; }
         const n = src.kicked ? 2 : 1;
         for (let k = 0; k < n; k++) {
             const pool = P.gy.filter(c => /\bCreature\b/.test(c.card.type)); if (!pool.length) return;
@@ -148,7 +150,9 @@ Object.assign(CMD, {
     async sl_hapatra(P, e, t, src) {
         const x = Math.max(0, ...P.gy.map(c => c.card.cmc || 0));
         if (!x) return;
+        const pre = slPre('sl_hapatra');
         for (const F of foes(P)) {
+            if (pre) { const c = pre.v[F.i]; if (c && onBf(c.uid) && !has(c, 'shroud')) { c.counters -= x; log(`${c.card.name} gets ${x} -1/-1 counters.`); } continue; }
             const pool = F.bf.filter(isCreature).filter(c => !has(c, 'hexproof') && !has(c, 'shroud')); if (!pool.length) continue;
             const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: put ${x} -1/-1 counters on a creature ${F.name} controls (or none)`, { required: false });
             if (c) { c.counters -= x; log(`${c.card.name} gets ${x} -1/-1 counters.`); }
@@ -160,9 +164,11 @@ Object.assign(CMD, {
 
     // Restorative Technique
     async sl_restorative(P, e, t, src) {
-        gainLifeFor(P, 2);
-        const b = P.library.filter(c => /\bBasic\b/.test(c.card.type) && /\bLand\b/.test(c.card.type));
-        if (b.length) { const c = b[0]; pull(P.library, c); shuffle(P.library); resetObj(c); c.enteredTurn = G.turn; c.tapped = true; P.bf.push(c); fire('enters', { o: c }); fire('landfall', { o: c }); log(`${c.card.name} enters tapped.`); }
+        const pre = slPre('sl_restorative'); const W = pre && pre.v.who ? pre.v.who : P;
+        gainLifeFor(W, 2);
+        const b = W.library.filter(c => /\bBasic\b/.test(c.card.type) && /\bLand\b/.test(c.card.type));
+        if (b.length) { const c = b[0]; pull(W.library, c); shuffle(W.library); resetObj(c); c.enteredTurn = G.turn; c.tapped = true; W.bf.push(c); fire('enters', { o: c }); fire('landfall', { o: c }); log(`${c.card.name} enters tapped.`); }
+        if (pre) { const c = pre.v.creature; if (c && onBf(c.uid)) putCounters(c, 1, P); return; }
         const pool = P.bf.filter(isCreature).filter(c => !has(c, 'hexproof') || c.owner === P.i); if (!pool.length) return;
         const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: put a +1/+1 counter on up to one creature`, { required: false });
         if (c) putCounters(c, 1, P);
@@ -242,14 +248,16 @@ Object.assign(CMD, {
     sl_yojimboTax(P, e, t, src) { P.slYojimbo = { turn: G.turn }; log('Until your next turn, creatures can\'t attack you unless their controller pays {2} for each of them.'); },
     async sl_yojimboTreasure(P, e, t, src) { const n = foes(P).filter(F => F.bf.some(c => isCreature(c) && pow(c) >= 4)).length; if (n) await applyEffect(P, { t: 'artToken', kind: 'treasure', n }, null, src); },
     async sl_magus(P, e, t, src) {
-        const k = rand(3);
+        const pre = slPre('sl_magus');
+        const k = pre ? pre.v.k : rand(3);
         const mine = P.bf.filter(isCreature);
         const pickMine = async lbl => (!mine.length ? null : (P.isAI || AUTOPLAY) ? mine.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, mine, lbl, { required: true }));
-        if (k === 0) { const c = await pickMine(`${src.card.name}: put three +1/+1 counters on a creature`); if (c) { putCounters(c, 3, P); } }
-        else if (k === 1) { const c = await pickMine(`${src.card.name}: put a shield counter on a creature`); if (c) { c.ctr.shield = (c.ctr.shield || 0) + 1; log(`${c.card.name} gets a shield counter.`); } gainLifeFor(P, 3); }
+        const chosen = pre ? (pre.v.c && onBf(pre.v.c.uid) ? pre.v.c : null) : undefined;
+        if (k === 0) { const c = pre ? chosen : await pickMine(`${src.card.name}: put three +1/+1 counters on a creature`); if (c) { putCounters(c, 3, P); } }
+        else if (k === 1) { const c = pre ? chosen : await pickMine(`${src.card.name}: put a shield counter on a creature`); if (c) { c.ctr.shield = (c.ctr.shield || 0) + 1; log(`${c.card.name} gets a shield counter.`); } gainLifeFor(P, 3); }
         else {
             const foesC = foes(P).flatMap(F => F.bf.filter(isCreature)).filter(c => !has(c, 'hexproof') && !has(c, 'shroud'));
-            const c = !foesC.length || !onBf(src.uid) ? null : (P.isAI || AUTOPLAY) ? foesC.filter(x => tou(x) <= pow(src)).sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, foesC, `${src.card.name} fights up to one creature an opponent controls`, { required: false });
+            const c = pre ? chosen : !foesC.length || !onBf(src.uid) ? null : (P.isAI || AUTOPLAY) ? foesC.filter(x => tou(x) <= pow(src)).sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, foesC, `${src.card.name} fights up to one creature an opponent controls`, { required: false });
             if (c) { log(`${src.card.name} fights ${c.card.name}.`); damage(c, pow(src), src); damage(src, pow(c), c); }
         }
     },
@@ -346,8 +354,9 @@ Object.assign(CMD, {
     sl_stampede(P, e, t, src) { P.bf.filter(x => isCreature(x) && x !== src).forEach(x => { x.tp += 1; }); log('Other creatures you control get +1/+0 until end of turn.'); },
     // Yuna, Grand Summoner: +1/+1 counters equal to the counters the permanent had
     async sl_yunaCounters(P, e, t, src) {
+        const pre = slPre('sl_yunaCounters');
         const pool = P.bf.filter(isCreature).filter(c => !has(c, 'shroud')); if (!pool.length || !e.n) return;
-        const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: put ${e.n} +1/+1 counters on a creature (or none)`, { required: false });
+        const c = pre ? (pre.v && onBf(pre.v.uid) ? pre.v : null) : (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: put ${e.n} +1/+1 counters on a creature (or none)`, { required: false });
         if (c) { const got = putCounters(c, e.n, P); log(`${c.card.name} gets ${got} +1/+1 counters.`); }
     },
     // Yuna, Hope of Spira
@@ -369,9 +378,11 @@ Object.assign(CMD, {
     // Pizza Face, Gastromancer
     async sl_pizzaFace(P, e, t, src) {
         if (P.slLeftTurn !== G.turn) return;
+        const pre = slPre('sl_pizzaFace');
+        if (pre && (!pre.v || !onBf(pre.v.uid))) return;
         const pool = allPerms().filter(x => x !== src && x.owner === P.i && (isCreature(x) || /\bArtifact\b/.test(x.card.type)) && !has(x, 'shroud'));
-        if (!pool.length) return;
-        const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (isCreature(b) - isCreature(a)) || creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: put three +1/+1 counters on up to one other artifact or creature`, { required: false });
+        if (!pool.length && !pre) return;
+        const c = pre ? pre.v : (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (isCreature(b) - isCreature(a)) || creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: put three +1/+1 counters on up to one other artifact or creature`, { required: false });
         if (!c) return;
         if (!isCreature(c)) { c.card = { ...c.card, type: c.card.type.replace(/^(.*?)(—|$)/, (m0, a, b) => `${a.trim()} Creature ${b}`).replace(/\s+/g, ' ') + (/—/.test(c.card.type) ? ' Mutant' : ' — Mutant'), power: '0', toughness: '0' }; c.pizzaMutant = true; }
         putCounters(c, 3, P); log(`${c.card.name} gets three +1/+1 counters.`);
@@ -561,6 +572,8 @@ Object.assign(CMD, {
     },
     sl_collectTap(P, e, t, src) { const x = t && t.o; if (x && onBf(x.uid)) { x.tapped = true; log(`${x.card.name} is tapped.`); } },
     async sl_teferiPlus(P, e, t, src) {
+        const pre = slPre('sl_teferiPlus');
+        if (pre) { for (const c of pre.v) if (c && onBf(c.uid)) { c.tapped = c.owner !== P.i; log(`${c.card.name} ${c.tapped ? 'is tapped' : 'untaps'}.`); } gainLifeFor(P, 2); return; }
         const kinds = [o => /\bArtifact\b/.test(o.card.type), o => isCreature(o), o => /\bLand\b/.test(o.card.type)];
         for (const k of kinds) {
             const pool = allPerms().filter(k).filter(o => o.owner === P.i ? o.tapped : (!o.tapped && !has(o, 'shroud') && !has(o, 'hexproof')));
@@ -589,6 +602,8 @@ Object.assign(CMD, {
         }
     },
     async sl_amplifier(P, e, t, src) {
+        const pre = slPre('sl_amplifier');
+        if (pre) { if (pre.v.own) { P.energy = (P.energy || 0) * 2; log(`${P.name} now ${you(P) ? 'have' : 'has'} ${P.energy} {E}.`); return; } const c0 = pre.v.c; if (c0 && onBf(c0.uid)) { if (c0.counters > 0) c0.counters *= 2; Object.keys(c0.ctr || {}).forEach(k => { if (c0.ctr[k] > 0) c0.ctr[k] *= 2; }); log(`The counters on ${c0.card.name} are doubled.`); } return; }
         const cands = P.bf.filter(x => slCtrs(x) > 0);
         const modeOwn = (P.isAI || AUTOPLAY) ? !cands.length && ((P.energy || 0) > 0 || (P.rad || 0) < 0) : await askYes(P, `${src.card.name}: double the counters you have (energy)? Otherwise double the counters on a permanent.`, { card: src.card, yes: 'Mine', no: 'A permanent' });
         if (modeOwn) { P.energy = (P.energy || 0) * 2; log(`${P.name} now ${you(P) ? 'have' : 'has'} ${P.energy} {E}.`); return; }
@@ -620,7 +635,9 @@ Object.assign(CMD, {
     },
     sl_theoristDraw(P, e, t, src) { if (G.active === P.i || !onBf(src.uid)) return; drawCards(P, 1); },
     async sl_theoristBounce(P, e, t, src) {
+        const pre = slPre('sl_theoristBounce');
         for (const F of foes(P)) {
+            if (pre) { const c = pre.v[F.i]; if (c && onBf(c.uid)) { leaveBattlefield(c, 'hand'); log(`${c.card.name} returns to its owner's hand.`); } continue; }
             const pool = F.bf.filter(x => (isCreature(x) || /\bArtifact\b/.test(x.card.type)) && !has(x, 'hexproof') && !has(x, 'shroud'));
             if (!pool.length) continue;
             const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => permValue(b) - permValue(a))[0] : await pickCard(P, pool, `${src.card.name}: return up to one artifact or creature ${F.name} controls to its owner's hand`, { required: false });
@@ -637,8 +654,9 @@ Object.assign(CMD, {
     sl_nog2(P, e, t, src) { if (!onBf(src.uid) || src.slNog !== 1) return; src.slNog = 2; src.card = { ...src.card, type: src.card.type.replace(/\bScout\b/, 'Officer') }; log(`${src.card.name} becomes a Ferengi Officer.`); },
     // Druid Class (level 3)
     async sl_druidClass(P, e, t, src) {
+        const pre = slPre('sl_druidClass');
         const pool = P.bf.filter(x => /\bLand\b/.test(x.card.type) && !has(x, 'shroud')); if (!pool.length) return;
-        const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (a.tapped - b.tapped) || permValue(a) - permValue(b))[0] : await pickCard(P, pool, `${src.card.name}: target land you control becomes a creature`, { required: true });
+        const c = pre ? (pre.v && onBf(pre.v.uid) ? pre.v : null) : (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (a.tapped - b.tapped) || permValue(a) - permValue(b))[0] : await pickCard(P, pool, `${src.card.name}: target land you control becomes a creature`, { required: true });
         if (!c) return; c.slDynPT = true; c.card = { ...c.card, type: /Creature/.test(c.card.type) ? c.card.type : c.card.type.replace(/\bLand\b/, 'Land Creature'), power: '0', toughness: '0' }; c.tkw.push('haste'); c.sick = false; log(`${c.card.name} becomes a creature with haste (as big as your number of lands).`);
     }
 });

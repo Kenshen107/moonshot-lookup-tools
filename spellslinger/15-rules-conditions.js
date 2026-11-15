@@ -834,6 +834,7 @@ async function activate(P, o, a, presetTarget, presetX) {
         G.mode = saved && saved.type === 'respond' ? null : saved;
         if (!target) { renderGame(); return false; }
     }
+    let preMulti = null; if (typeof preChoose === 'function') { preMulti = await preChoose(P, o, a.effects); if (preMulti === false) { renderGame(); return false; } } // targets chosen with the activation (15x-casting.js)
     if (a.loyalty !== undefined) { o.ctr.loyalty = (o.ctr.loyalty || 0) + a.loyalty; o.loyaltyTurn = G.turn; }
     else {
         if (manual(P) && !(await humanPay(P, actCost(o, a), xExtra, { forType: o.card.type, exclude: a.cost && a.cost.tap ? o : null }, o.card.name))) { renderGame(); return false; }
@@ -879,7 +880,7 @@ async function activate(P, o, a, presetTarget, presetX) {
     }
     // Mana abilities don't use the stack (605.3)
     if (a.effects.every(e => e.t === 'addMana')) { for (const e of a.effects) await applyEffect(P, e, null, o); if (a.cost && a.cost.sacSelf) { fire('sacrificed', { o }); dieOrLeave(o, 'gy'); } renderGame(); return true; }
-    const abItem = { id: stackSeq++, kind: 'trigger', ability: true, o, P, target, effects: a.effects, name: `${o.card.name}'s ability` };
+    const abItem = { id: stackSeq++, kind: 'trigger', ability: true, o, P, target, effects: a.effects, name: `${o.card.name}'s ability`, multi: preMulti };
     G.stack.push(abItem);
     if (a.cost && a.cost.mana && a.cost.mana.x && typeof flourishCopyAbility === 'function') flourishCopyAbility(P, abItem);
     if (target && target.o) fire('targeted', { o: target.o, by: P.i });

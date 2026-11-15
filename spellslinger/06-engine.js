@@ -1603,7 +1603,7 @@ async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
         target = await chooseTarget(P, te, source, false);
         if (!target) { log(`${source.card.name}'s ability has no legal target and is removed from the stack (rule 603.3d).`); return; }
     }
-    let multi = null; { const me = effects.find(e => e && e.multi); if (me && typeof frMultiChoose === 'function') { multi = await frMultiChoose(P, source, me.multi, 0); if (!multi) return; } }
+    let multi = null; { const me = effects.find(e => e && e.multi); if (me && typeof frMultiChoose === 'function') { multi = await frMultiChoose(P, source, me.multi, 0); if (!multi) return; } else if (typeof preChoose === 'function') { const pc = await preChoose(P, source, effects); if (pc === false) return; if (pc) multi = pc; } } // targets chosen as the trigger goes on the stack (15x-casting.js)
     // Identical triggers from permanents with the same name (Scute Swarm, two Starship Enterprises) share one stack line, so a crowd of them doesn't bury the table (2026-10-31). Each source still resolves in turn.
     if (!target && !multi && source && source.card && !G.hotseat && (!AUTOPLAY || window.__GROUP_TRIGGERS)) {
         const key = trigKey(effects);
@@ -2439,7 +2439,8 @@ async function applyChoiceEffect(P, e, src, t) {
       for (let k = 0; k < (e.count || 1); k++) {
         const gys = e.anyGy ? [P, opp(P)] : [P];
         const pool = gys.flatMap(X => X.gy).filter(x => cardFits(x, e.what) && !(e.notSelf && x === src));
-        const pick = await pickCard(P, pool, `${src.card.name}: choose a card from ${e.anyGy ? 'a' : 'your'} graveyard${e.count > 1 ? ` (${k + 1} of ${e.count}; skip to stop)` : ''}`, { required: !e.may && !(e.count > 1) });
+        const preP = G.curMulti && Array.isArray(G.curMulti.pre) && G.curMulti.pre.length ? G.curMulti.pre : null; // chosen as it was cast (15x-casting.js)
+        const pick = preP ? (pool.includes(preP[k]) ? preP[k] : null) : await pickCard(P, pool, `${src.card.name}: choose a card from ${e.anyGy ? 'a' : 'your'} graveyard${e.count > 1 ? ` (${k + 1} of ${e.count}; skip to stop)` : ''}`, { required: !e.may && !(e.count > 1) });
         if (!pick) break;
         G.lastCardPow = Number(pick.card.power) || 0;
         G.lastCardMv = pick.card.cmc || 0;
@@ -4558,6 +4559,7 @@ async function humanCast(uid) {
     // "Any number of target ...": the targets are chosen now, as the spell is cast (CR 601.2c), not when it resolves
     o.multi = null;
     if (typeof frMultiOf === 'function' && frMultiOf(o)) { o.multi = await frMultiChoose(P, o, frMultiOf(o).multi, o.xVal || 0); if (!o.multi) { renderGame(); return; } }
+    else if (typeof preChoose === 'function') { const pc = await preChoose(P, o, spellEffects(o)); if (pc === false) { renderGame(); return; } if (pc) o.multi = pc; } // targets chosen with the cast (15x-casting.js)
     let target = null;
     const te = firstTargetEffect(o);
     if (te) {
@@ -4671,9 +4673,10 @@ function forcedAttack(o) {
 async function goToCombat() {
     if (G.active !== G.view || G.phase !== 'main1' || G.busy) return;
     if (me().skip && me().skip.turn === G.turn && me().skip.what === 'combat') { toast('You skip combat this turn (Fatespinner).'); return; }
+    G.combatCk = typeof slCheckpoint === 'function' && !G.stack.length ? slCheckpoint() : null; // so cancelling the attack can walk everything back (15x-casting.js)
     emptyPools();
     if (!G.combatFired) { G.combatFired = true; fire('combat'); G.busy = true; await settle(); G.busy = false; }
-    if (!me().bf.some(canAttackWith)) { toast('None of your creatures can attack (summoning sickness, tapped or defender).'); return; }
+    if (!me().bf.some(canAttackWith)) { if (G.combatCk && typeof slRestore === 'function') { slRestore(G.combatCk); G.combatFired = false; } G.combatCk = null; toast('None of your creatures can attack (summoning sickness, tapped or defender).'); renderGame(); return; }
     G.phase = 'declareAttackers';
     G.mode = { type: 'attack', sel: new Set(me().bf.filter(o => canAttackWith(o) && (forcedAttack(o) || me().mustAttackTurn === G.turn)).map(o => o.uid)) };
     renderGame();
@@ -4690,16 +4693,21 @@ function chooseAttackTargets(sel, pws) {
             <div class="row" style="justify-content:center; margin-top:10px; gap:8px;"><button class="btn" onclick="__atkOk(false)">Cancel</button><button class="btn primary" onclick="__atkOk(true)">Attack</button></div>`);
     });
 }
-function cancelAttack() { G.mode = null; G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame(); }
+// Cancelling the attack goes back to the main phase as if combat had never started: the beginning-of-combat triggers and abilities, the mana pool, tokens, counters and draws they made are all undone
+function cancelAttack() {
+    const ck = G.combatCk; G.combatCk = null;
+    if (ck && !G.extraCombatOn && typeof slRestore === 'function' && slRestore(ck)) { G.mode = null; G.phase = 'main1'; G.combatFired = false; G.busy = false; toast('Combat cancelled: its beginning-of-combat effects were undone.'); renderGame(); return; }
+    G.mode = null; G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame();
+}
 async function confirmAttack() {
     const sel = [...G.mode.sel].map(onBf).filter(o => o && canAttackWith(o));
     me().bf.filter(o => canAttackWith(o) && forcedAttack(o) && !sel.includes(o)).forEach(o => sel.push(o)); // they must attack if able
     G.mode = null;
-    if (!sel.length) { G.phase = G.extraCombatOn ? 'main2' : 'main1'; renderGame(); return; }
+    if (!sel.length) { cancelAttack(); return; }
     const pod = G.players.length > 2 && foes(me()).length > 1;
     const pws = pod ? [...foes(me()).flatMap(F => F.bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me()))), ...me().bf.filter(isBattle)] : [...foe().bf.filter(isPlaneswalker).filter(w => !jaceNoAttack(w, me())), ...me().bf.filter(isBattle)];
-    if (pod) { const ok = await choosePodTargets(sel, foes(me()), pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
-    else if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { G.phase = 'main1'; renderGame(); return; } }
+    if (pod) { const ok = await choosePodTargets(sel, foes(me()), pws); if (!ok) { cancelAttack(); return; } }
+    else if (pws.length) { const ok = await chooseAttackTargets(sel, pws); if (!ok) { cancelAttack(); return; } }
     G.busy = true;
     if (pod) { // the player most of the attackers go at is the main defender; ask about each peace deal that would be broken
         const cnt = {}; sel.forEach(o => { cnt[o.atkTo] = (cnt[o.atkTo] || 0) + 1; });
@@ -4711,6 +4719,7 @@ async function confirmAttack() {
     } else if (G.players.length > 2) G.defender = foe().i; // a pod: the opponent whose bar you have selected
     if (!pod && G.players.length > 2 && hasPeace(me().i, G.defender) && !(await askYes(me(), `You have a peace deal with ${nm(foe())}. Attack anyway? (You break your word and they will remember.)`, { card: foe().command[0] && foe().command[0].card, yes: 'Break the deal and attack', no: 'Cancel the attack' }))) { G.busy = false; G.defender = null; G.phase = 'main1'; renderGame(); return; }
     if (typeof hhAnnexAsk === 'function') await hhAnnexAsk(me(), sel); // Norn's Annex: pay {W}, pay 2 life or don't attack
+    G.combatCk = null; // the attack is declared: combat can't be walked back any more
     declareAttackers(me(), sel);
     await exertChoices(me(), sel);
     G.phase = 'declareBlocks';
