@@ -59,7 +59,7 @@ const DECK_PLANS = {
                 const mantle = P.bf.find(m => m.card.name === 'Umbral Mantle' && m.attachedTo === s.uid);
                 if (mantle && x >= 3) return { pump: 20, target: s };
                 return null;
-            }, mana: 30, color: 'G',
+            }, mana: 16, color: 'G',
         }],
     },
     'Hugh, First of Many': {
@@ -207,8 +207,12 @@ function planOf(P) {
 // Is the engine running? Enough engine pieces on the battlefield, or enough mana sources, or a loop is online
 function planReady(P, pl) {
     if (P.planLoopTurn === G.turn) return true;
+    const key = `${G.turn}:${P.bf.length}`; // scores are asked for many times a turn; the answer only changes when the battlefield does
+    if (P.planReadyKey === key) return P.planReadyVal;
     const need = pl.payoffNeed || 1;
-    return countNamed(P, pl.engine) >= need || manaSources(P).length >= (pl.mana || 8);
+    const v = countNamed(P, pl.engine) >= need || manaSources(P).length >= (pl.mana || 8);
+    P.planReadyKey = key; P.planReadyVal = v;
+    return v;
 }
 
 // Scores: engine pieces come sooner, payoffs wait for the engine, the commander is worth casting

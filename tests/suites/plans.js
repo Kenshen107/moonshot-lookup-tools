@@ -34,7 +34,7 @@ const NAMES = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'Grizzly Bears
               const lp = DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A);
               ok('Samson loop is online with Staff of Domination at power 5+', !!lp && pow(s) >= 5, [pow(s)]);
               s.tapped = true; ok('Samson loop needs Samson untapped', !DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A)); s.tapped = false; s.sick = true; ok('Samson loop needs him not summoning sick', !DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A)); s.sick = false;
-              await planGoOff(A); ok('going off puts 30 mana in the pool and logs the loop', (A.pool || []).length >= 30 && G.log.some(l => /loops/.test(l)) && A.planLoopTurn === G.turn, [(A.pool || []).length]); }
+              await planGoOff(A); ok('going off puts 16 mana in the pool and logs the loop', (A.pool || []).length >= 16 && G.log.some(l => /loops/.test(l)) && A.planLoopTurn === G.turn, [(A.pool || []).length]); }
             { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; const m = put(A, 'Umbral Mantle'); lands(A, 'Forest', 6); m.attachedTo = s.uid;
               const lp = DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A); ok('Samson loop is online with the Umbral Mantle attached at power 3+', !!lp && lp.pump === 20, [pow(s), lp && lp.pump]); }
             { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; put(A, 'Grizzly Bears'); lands(A, 'Forest', 6);
