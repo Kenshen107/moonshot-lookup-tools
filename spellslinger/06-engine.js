@@ -1971,6 +1971,7 @@ async function resolveEffects(P, effects, presetTarget, source) {
     let ei = -1;
     for (let e of effects) {
         ei++;
+        G.curPickQ = G.curMulti && G.curMulti.tq && G.curMulti.tq[ei] ? G.curMulti.tq[ei].slice() : null; // picks made as it was cast (15x-casting.js)
         if (G.over) return;
         if ((e.ifDo && !G.lastDo) || (e.ifDont && G.lastDo)) continue;
         if (e.cond && !condOk(e.cond, P, source)) continue;
