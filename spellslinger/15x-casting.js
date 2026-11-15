@@ -65,6 +65,9 @@ async function preChoose(P, src, effects) {
                 out.pre.push(pick || null); any = true;
                 if (!pick) break;
             }
+        } else if ((DRY_KINDS.has(e.t) || (e.t === 'cmd' && DRY_CMD.has(e.id) && !PRE_CMD[e.id])) && !e.target) {
+            const picks = await slDryPicks(P, src, e);
+            if (picks) { (out.tq = out.tq || {})[effects.indexOf(e)] = picks; any = true; }
         } else if (e.t === 'cmd' && PRE_CMD[e.id]) {
             const v = await PRE_CMD[e.id](P, src, e);
             if (v === false) return false;
@@ -102,3 +105,52 @@ Object.assign(PRE_CMD, {
     // Aetheric Amplifier: the mode and the permanent
     async sl_amplifier(P, src) { const yes = await askYes(P, `${src.card.name}: double the counters you have (energy)? Otherwise double the counters on a target permanent.`, { card: src.card, yes: 'Mine', no: 'A permanent' }); if (yes) return { own: true }; const pool = allPerms().filter(x => (x.counters > 0 || Object.values(x.ctr || {}).some(v => v > 0)) && slLegal(P, x)); const c = await slAsk(P, pool, `${src.card.name}: choose target permanent`, true); return { own: false, c }; }
 });
+
+
+// ---- The rest of the resolve-time picks, moved to cast time by a "dry run" (2026-11-15, owner: "move the remaining resolve-time picks to cast time too") ----
+// For the effects below, a person is asked as the spell is cast / the ability is activated / the trigger goes on the stack: the effect is run once with every prompt answered
+// by the person and then stopped at once (SlDryAbort), the game is put back from a checkpoint (so nothing the dry run did stays, and nothing it said is shown), and the
+// answers are kept in order on the stack item (`multi.tq[effect index]`). When the effect really resolves, `pickCard` hands those answers back (a card that is no longer
+// there is asked for again). The computer is never asked (it picks the same way at resolution).
+class SlDryAbort extends Error { }
+const DRY_KINDS = new Set(['emryMark', 'reaper', 'efreet', 'conscription', 'onceFuture', 'victimize', 'spry', 'druidPurify', 'zombieCopy']);
+// CMD ids whose rules text says "target" and whose body picks a card (found by tests/dry_ids.py from rules/*.js and the 15*.js CMD bodies; rerun it after adding cards)
+const DRY_CMD = new Set(['abuelo','alesha','augusta','aureliaEJ','auron','b_alesha','b_brago','b_emiel','b_eowyn','b_gonti','b_halana','b_inkeyes','b_ioreth','b_jaxis','b_lathiel','b_mina','b_phelia','b_varragoth','b_venser','b_xenagos','bounceSix','brightPalm','brinelin','bruna','bt_charge','bt_nesting','bt_oozeExile','bt_quest','bt_yaoGuai','bullAttack','burningSun','c_ardyn','c_betor','c_clav','c_gargos','c_gilraen','c_irma','c_lonis','c_lulu','c_nghathrod','c_olivia','c_raffine','c_rydia','c_sazh','c_szarel','c_xuifit','c_zur','carmen','cemeteryRecruit','clever','copyMaker','d_aerith','d_elena','d_horde','d_itzquinth','d_reyhan','d_rodolf','d_shrineGrow','d_terra','d_wrexial','destroyXTargets','dismantlingWave','doubleCountersMany','dragonlordAtarka','e_arcum','e_clique','e_colfenor','e_eowyn','e_evie','e_krile','e_layla','e_shabraz','e_silumgar','e_stiltzkin','emeria','excava','exileEachOpp','f_abigale','f_amy','f_archaic','f_barret','f_beorn','f_boone','f_brass','f_kamiz','f_lorthos','f_meneldor','f_panther','f_thancred','feralAppetite','filibuster','forceField','fr_invokeJustice','g_galina','g_ghen','g_heiko','g_legolas','g_omega','g_pharika','g_quistis','g_sierra','g_spider','g_tatyova','g_vaevictis','g_whiteMage','generalLeo','grub','guardianFaith','h_alora','h_azog','h_ignis','h_iroh','h_martha','h_mathas','h_mishraEm','h_obuun','h_quickbeam','h_rhys','h_sable','h_seifer','h_shiko','h_willowdusk','h_yosei','halana','havenReturn','heliodCounter','heliodRadiant','hg_gearhulk','hg_junker','hh_hideout','hh_sickbay','hraes','i_aziza','i_duke','i_extus','i_greasefang','i_jugan','i_kemba','i_kirri','i_nin','i_norika','i_owen','i_silas','i_sofia','i_tegan','i_tempestra','i_thor','invisibleWoman','j_ashling','j_doctor1','j_eutropia','j_orah','j_pia','j_toshiro','jenovaCombat','klothys','kudro','leinore','livaan','lockjaw','moseo','nilsCounters','oji','ojutaiSoW','orfeo','ot_eagle','ot_mystery','ot_nylaEnter','ot_othelm','ot_pursuitAttack','ot_reveillark','ot_shred','ot_soulStone','quintoriusCast','quintoriusExile','regrowCreature','reselectAttack','scalelord','scavengingOoze','scrapshooter','sd_gogo','sd_hulkling','shuffleGyBack','sidisiRegent','silkguardCounters','slobad','solomonFrogs','spiderIndia','surgeToVictory','sx_flockBounce','sx_grenzoGoad','tapTwo','td_blinkOwn','td_defiant','td_ktinga','td_martok','td_sevenLoot','td_tenor','td_tpring','td_troi','td_tuvok','td_uhura','technoReturn','theThing','theoden','timePlatform','tkAssimilateGy','tkBlastoneuron','tkChargeTarget','tkCommonGoal','tkCubeAssimilate','tkGyBottom','tkInnerI','tkKenrithReanimate','tkOldScientists2','tkOldScientists3','tkPureEnergy','tkReturnArtifactCreature','tkSaltVampire','tkWorfContractor','tkZero','totentanz','treebeard','triSentinel','twinflame','urdnan','urzaKroog','warsinger','winterSoldier','witchMoors','zemoAttack','zulAshur']);
+{ const lg = log; log = function (m) { if (window.__DRY) return; return lg.apply(this, arguments); }; }
+{ const tt = toast; toast = function () { if (window.__DRY) return; return tt.apply(this, arguments); }; }
+{ const rg = renderGame; renderGame = function () { if (window.__DRY) return; return rg.apply(this, arguments); }; }
+{ const ay = askYes; askYes = function () { if (window.__DRY) return Promise.reject(new SlDryAbort()); return ay.apply(this, arguments); }; }
+{ const an = askNumber; askNumber = function () { if (window.__DRY) return Promise.reject(new SlDryAbort()); return an.apply(this, arguments); }; }
+{
+    const base = pickCard;
+    pickCard = function (P, list, title, opts) {
+        const d = window.__DRY;
+        if (d) {
+            if (d.replay.length) return Promise.resolve(d.replay.shift());
+            return (window.__pickBase || base).apply(this, arguments).then(c => { d.picks.push(c || null); throw new SlDryAbort(); });
+        }
+        const q = G && G.curPickQ;
+        if (q && q.length) { const c = q.shift(); if (c === null || (list && list.includes(c))) return Promise.resolve(c); }
+        return (window.__pickBase || base).apply(this, arguments);
+    };
+}
+// Collect a person's picks for one effect (called from preChoose); a failure of any kind just means "ask at resolution as before"
+async function slDryPicks(P, src, e) {
+    const picks = [];
+    for (let guard = 0; guard < 6; guard++) {
+        const ck = slCheckpoint(); if (!ck) return null;
+        window.__DRY = { replay: picks.slice(), picks: [] };
+        let done = false, aborted = false;
+        try { await applyEffect(P, e, null, src); done = true; }
+        catch (err) { if (err instanceof SlDryAbort) aborted = true; else { window.__DRY = null; slRestore(ck); return picks.length ? picks : null; } }
+        const d = window.__DRY; window.__DRY = null; slRestore(ck);
+        if (d.picks.length) picks.push(...d.picks);
+        if (done || !aborted || !d.picks.length) break;
+    }
+    return picks.length ? picks : null;
+}
+// the stack item's resolution: hand each effect its own answers
+{
+    const base = resolveEffects;
+    resolveEffects = async function () { try { return await base.apply(this, arguments); } finally { G.curPickQ = null; } };
+}
