@@ -1,0 +1,85 @@
+1 Aetherflux Conduit
+1 Aetheric Amplifier
+1 Arcane Signet
+1 Arcanis the Omnipotent
+1 Artisan of Kozilek
+1 Benthic Anomaly
+1 Big Mother Mouser
+1 Brokers Hideout
+1 Counterspell
+1 Dizzy Spell
+1 Drift of Phantasms
+1 Endless Atlas
+1 Eriette's Tempting Apple
+1 Escape Tunnel
+1 Ethereal Usher
+1 Evolving Wilds
+1 Expedition Map
+1 Extravagant Replication
+1 Fabled Passage
+1 Fishing Gear
+1 Flash Photography
+1 Grixis Panorama
+1 Grozoth
+1 High Tide
+1 Honest Work
+1 Horizon of Progress
+18 Island
+1 Jill, Shiva's Dominant
+1 Kang the Conqueror
+1 Keiga, the Tide Star
+1 Lembas
+1 Maestros Theater
+1 Magic Damper
+1 Moonsilver Key
+1 Muddle the Mixture
+1 Myriad Landscape
+1 Navigation Orb
+1 Obscura Storefront
+1 Observed Stasis
+1 Octopus Form
+1 Oracle's Vault
+1 Phyrexian Triniform
+1 Planar Nexus
+1 Promising Vein
+1 Propaganda
+1 Prototype Portal
+1 Raise Repulsor Shields
+1 Replicating Ring
+1 Replication Technique
+1 Rishadan Cutpurse
+1 Scour for Scrap
+1 Scuttling Doom Engine
+1 Shadow of the Second Sun
+1 Shire Terrace
+1 Slip Out the Back
+1 Snap
+1 Sol Ring
+1 Solemn Simulacrum
+1 Struggle for Project Purity
+1 Stuck in Summoner's Sanctum
+1 Summon: Bahamut
+1 Summon: Shiva
+1 Summon: Valefor
+1 Surgical Skullbomb
+1 Talon Gates of Madara
+1 Terisian Mindbreaker
+1 The Eternity Elevator
+1 The Millennium Calendar
+1 The Theorist, Jace Beleren
+1 The Water Crystal
+1 Thran Dynamo
+1 Tishana's Tidebinder
+1 Tolaria West
+1 Training Grounds
+1 Turnabout
+1 Urza's Cave
+1 Urza's Mine
+1 Urza's Power Plant
+1 Urza's Tower
+1 Urza's Workshop
+1 Wayfarer's Bauble
+1 Wurmcoil Engine
+1 Mirage Mirror
+
+1 Gogo, Master of Mimicry

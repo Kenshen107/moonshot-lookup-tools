@@ -1,0 +1,96 @@
+1 Arcane Signet
+1 Behold the Sinister Six!
+1 Bender's Waterskin
+1 Blood Beckoning
+1 Bountiful Promenade
+1 Brilliant Restoration
+1 Colossal Majesty
+1 Command Tower
+1 Contentious Plan
+1 Crystal of Altar Cave
+1 Deathcap Glade
+1 Decorum Dissertation
+1 Desynchronization
+1 Dreamroot Cascade
+1 Eerie Ultimatum
+1 Elemental Bond
+1 Enchantress's Presence
+1 Esper Origins
+1 Exotic Orchard
+1 Expansion Algorithm
+1 Experimental Augury
+1 Fabled Passage
+2 Forest
+1 Garnet, Princess of Alexandria
+1 Gilded Lotus
+1 Hall of Heliod's Generosity
+1 Hidden Hideout
+2 Island
+1 Karn's Bastion
+1 Lotus Field
+1 Luxury Suite
+1 Mirage Mirror
+1 Mirari's Wake
+1 Morphic Pool
+2 Mountain
+1 Mutational Advantage
+1 Phyrexian Arena
+2 Plains
+1 Prismatic Undercurrents
+1 Radstorm
+1 Rejuvenating Springs
+1 Rise of the Dark Realms
+1 Rydia, Summoner of Mist
+1 Sea of Clouds
+1 Serum Snare
+1 Shattered Sanctum
+1 Skyclave Relic
+1 Smell Fear
+1 Sol Ring
+1 Spectator Seating
+1 Spire Garden
+1 Steady Progress
+1 Stormcarved Coast
+1 Summon: Anima
+1 Summon: Bahamut
+1 Summon: Brynhildr
+1 Summon: Choco/Mog
+1 Summon: Esper Ramuh
+1 Summon: Esper Valigarmanda
+1 Summon: Fat Chocobo
+1 Summon: Fenrir
+1 Summon: G.F. Cerberus
+1 Summon: G.F. Ifrit
+1 Summon: Good King Mog XII
+1 Summon: Ixion
+1 Summon: Knights of Round
+1 Summon: Kujata
+1 Summon: Leviathan
+1 Summon: Magus Sisters
+1 Summon: Primal Garuda
+1 Summon: Primal Odin
+1 Summon: Shiva
+1 Summon: Titan
+1 Summon: Valefor
+1 Summon: Yojimbo
+1 Summoner's Grimoire
+1 Sundown Pass
+2 Swamp
+1 Sylvan Library
+1 Tezzeret's Gambit
+1 Thirsting Roots
+1 Timeless Lotus
+1 Training Center
+1 Turbulent Fen
+1 Turbulent Moor
+1 Turbulent Springs
+1 Turbulent Steppe
+1 Turbulent Wilderness
+1 Undergrowth Stadium
+1 Unnatural Restoration
+1 Vat Emergence
+1 Vault of Champions
+1 Yuna, Grand Summoner
+1 Yuna, Hope of Spira
+
+1 Terra, Magical Adept
