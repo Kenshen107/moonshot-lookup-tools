@@ -294,3 +294,150 @@ Object.assign(CMD, {
     }
 });
 Object.assign(CMD_SCORE, { sl_animaEdict: () => 6, sl_ramuh: () => 4, sl_valefor: () => 4, sl_shiva: () => 3, sl_leviathanBounce: () => 2, sl_magus: () => 4, sl_scalePT: () => 3, sl_bindLife: () => 6, sl_partFriendship: () => 4, sl_navOrb: () => 2, sl_horizon: () => 2, sl_wargling: () => 2 });
+
+// ===== batch 3 =====
+const slCtrs = o => Math.max(0, o.counters || 0) + Object.values(o.ctr || {}).reduce((a, v) => a + (v > 0 ? v : 0), 0);
+TRIG_FN.sl_hostAttacks = (o, ctx) => !!o.attachedTo && (ctx.list || []).some(x => x.uid === o.attachedTo);
+MANA_RIDERS.slYuna = function (P, o, srcPerm) { if (Rx(o).kind === 'creature') o.bt_extraCtr = (o.bt_extraCtr || 0) + 2; };
+// Specs may now ask for "creature too" (Yuna, Hope of Spira: enchantment creatures)
+{ const sm = specMatch; specMatch = function (spec, o, x, ctx) { if (spec && spec.alsoCreature && x && !isCreature(x)) return false; return sm.apply(this, arguments); }; }
+// Yuna, Grand Summoner / Pizza Face: remember what left the battlefield
+{
+    const base = leaveBattlefield;
+    leaveBattlefield = function (o, zone) {
+        const owner = o && G && o.owner !== undefined ? G.players[o.owner] : null;
+        const n = o && !o.token ? slCtrs(o) : 0;
+        if (owner && o.uid !== undefined && onBf(o.uid)) owner.slLeftTurn = G.turn;
+        const r = base.apply(this, arguments);
+        if (owner && n > 0 && owner.gy.includes(o)) owner.bf.filter(y => Rx(y).slYunaGy && y !== o && !lostAbilities(y)).forEach(y => (G.trigQ = G.trigQ || []).push({ P: owner, o: y, effects: [cmd('sl_yunaCounters', { n })] }));
+        return r;
+    };
+}
+// Aura: its activated abilities can't be activated (Stuck in Summoner's Sanctum)
+{
+    const base = canActivate;
+    canActivate = function (P, o, a) { if (o && o.uid !== undefined && attachmentsOf(o.uid).some(x => Rx(x).slNoActs)) return false; return base.apply(this, arguments); };
+}
+// The Millennium Calendar: permanents untapped in your untap step add time counters (watched at the start of your first main phase)
+{
+    const base = mesmeric; // called once at the end of each untap step with the number of permanents that untapped
+    mesmeric = function (X, n) { const r = base.apply(this, arguments); if (n > 0 && X) X.bf.filter(x => Rx(x).slCalendar && !lostAbilities(x)).forEach(x => { x.ctr.time = (x.ctr.time || 0) + n; log(`${x.card.name} gets ${n} time counter${n === 1 ? '' : 's'}.`); slCalendarCheck(x); }); return r; };
+}
+function slCalendarCheck(o) { if (Rx(o).slCalendarWin && (o.ctr.time || 0) >= 1000 && onBf(o.uid)) { const P = G.players[o.owner]; leaveBattlefield(o, 'gy'); foes(P).forEach(F => { F.life -= 1000; log(`${F.name} loses 1000 life.`); }); } }
+// Famished Worldsire: devour land 3 (sacrifice any number of lands as it enters; three +1/+1 counters for each)
+{
+    const base = putOntoBattlefield;
+    putOntoBattlefield = function (P, o, tapped) { const r = base.apply(this, arguments); slDevourLand(P, o); return r; };
+}
+async function slDevourLand(P, o) {
+    if (!o || !Rx(o).slDevourLand || !onBf(o.uid)) return;
+    const lands = P.bf.filter(x => /\bLand\b/.test(x.card.type));
+    let n = 0;
+    if (P.isAI || AUTOPLAY) n = Math.min(lands.length, Math.max(0, lands.filter(x => x.tapped).length - 0, lands.length - 5)); else { n = await askNumber(P, `${o.card.name}: sacrifice how many lands? (three +1/+1 counters for each)`, 0, lands.length, 0, { card: o.card }); }
+    if (!n) return;
+    const fs = await chooseSacN(P, lands, n, o.card.name); fs.forEach(f => { leaveBattlefield(f, 'gy'); });
+    putCounters(o, 3 * fs.length, P); log(`${o.card.name} devours ${fs.length} land${fs.length === 1 ? '' : 's'} and gets ${3 * fs.length} +1/+1 counters.`);
+}
+Object.assign(CMD, {
+    // Esper Origins
+    async sl_esperOrigins(P, e, t, src) { await applyEffect(P, { t: 'surveil', n: 2 }, null, src); gainLifeFor(P, 2); if (src.sx_castZone === 'gy') src.slFlipBf = true; },
+    sl_maduin1(P, e, t, src) { const c = P.library[P.library.length - 1]; if (!c) return; log(`${P.name} reveal${you(P) ? '' : 's'} ${c.card.name}.`); if (slIsPerm(c)) { P.library.pop(); P.hand.push(c); log(`${c.card.name} is put into ${you(P) ? 'your' : 'their'} hand.`); } },
+    sl_maduin3(P, e, t, src) { P.bf.filter(x => isCreature(x) && x !== src).forEach(x => { x.tp += 2; x.tq += 2; x.tkw.push('trample'); }); log('Other creatures you control get +2/+2 and gain trample until end of turn.'); },
+    sl_stampede(P, e, t, src) { P.bf.filter(x => isCreature(x) && x !== src).forEach(x => { x.tp += 1; }); log('Other creatures you control get +1/+0 until end of turn.'); },
+    // Sylvan Library (the two extra cards are the ones that can be put back; the normal draw isn't tracked)
+    async sl_sylvanLibrary(P, e, t, src) {
+        const yes = (P.isAI || AUTOPLAY) ? P.library.length > 10 : await askYes(P, `${src.card.name}: draw two additional cards?`, { card: src.card });
+        if (!yes) return;
+        const before = P.hand.length; drawCards(P, 2); const got = P.hand.slice(before);
+        for (const c of got) {
+            if (!P.hand.includes(c)) continue;
+            const keep = P.life > 4 && ((P.isAI || AUTOPLAY) ? (P.life >= 16 && (got.indexOf(c) === 0 || P.life >= 26)) : await askYes(P, `${src.card.name}: pay 4 life to keep ${c.card.name}? (Otherwise it goes on top of your library.)`, { card: c.card, yes: 'Pay 4 life', no: 'Put it back' }));
+            if (keep) { P.life -= 4; log(`${P.name} pay${you(P) ? '' : 's'} 4 life for ${c.card.name}.`); } else { pull(P.hand, c); P.library.push(c); log(`${P.name} put${you(P) ? '' : 's'} a card on top of ${you(P) ? 'your' : 'their'} library.`); }
+        }
+    },
+    // Yuna, Grand Summoner: +1/+1 counters equal to the counters the permanent had
+    async sl_yunaCounters(P, e, t, src) {
+        const pool = P.bf.filter(isCreature).filter(c => !has(c, 'shroud')); if (!pool.length || !e.n) return;
+        const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: put ${e.n} +1/+1 counters on a creature (or none)`, { required: false });
+        if (c) { const got = putCounters(c, e.n, P); log(`${c.card.name} gets ${got} +1/+1 counters.`); }
+    },
+    // Yuna, Hope of Spira
+    async sl_yunaReturn(P, e, t, src) {
+        const pool = P.gy.filter(c => /\bEnchantment\b/.test(c.card.type)); if (!pool.length) return;
+        const c = await slPickFrom(P, pool, `${src.card.name}: return an enchantment card from your graveyard (or none)`, false); if (!c) return;
+        reanimateFrom(P, P, c); c.ctr.finality = 1; log(`${c.card.name} gets a finality counter.`);
+    },
+    // Summoner's Grimoire
+    async sl_grimoire(P, e, t, src) {
+        const host = G.players.flatMap(X => X.bf).find(x => x.uid === src.attachedTo); if (!host) return;
+        const pool = P.hand.filter(c => /\bCreature\b/.test(c.card.type)); if (!pool.length) return;
+        const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (b.card.cmc || 0) - (a.card.cmc || 0))[0] : await pickCard(P, pool, `${src.card.name}: put a creature card from your hand onto the battlefield (or none)`, { required: false });
+        if (!c) return;
+        const ench = /\bEnchantment\b/.test(c.card.type);
+        pull(P.hand, c); putOntoBattlefield(P, c, ench);
+        if (ench) { (G.attackers = G.attackers || []).push(c.uid); c.atkTo = host.atkTo; log(`${c.card.name} enters tapped and attacking.`); }
+    },
+    // Pizza Face, Gastromancer
+    async sl_pizzaFace(P, e, t, src) {
+        if (P.slLeftTurn !== G.turn) return;
+        const pool = allPerms().filter(x => x !== src && x.owner === P.i && (isCreature(x) || /\bArtifact\b/.test(x.card.type)) && !has(x, 'shroud'));
+        if (!pool.length) return;
+        const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => (isCreature(b) - isCreature(a)) || creatureValue(b) - creatureValue(a))[0] : await pickCard(P, pool, `${src.card.name}: put three +1/+1 counters on up to one other artifact or creature`, { required: false });
+        if (!c) return;
+        if (!isCreature(c)) { c.card = { ...c.card, type: c.card.type.replace(/^(.*?)(—|$)/, (m0, a, b) => `${a.trim()} Creature ${b}`).replace(/\s+/g, ' ') + (/—/.test(c.card.type) ? ' Mutant' : ' — Mutant'), power: '0', toughness: '0' }; c.pizzaMutant = true; }
+        putCounters(c, 3, P); log(`${c.card.name} gets three +1/+1 counters.`);
+    },
+    // Famished Worldsire
+    async sl_worldsire(P, e, t, src) {
+        const x = Math.max(0, pow(src)); const top = P.library.splice(Math.max(0, P.library.length - x), x).reverse(); if (!top.length) return;
+        const lands = top.filter(c => /\bLand\b/.test(c.card.type)); const rest = top.filter(c => !lands.includes(c));
+        let take = lands;
+        if (!(P.isAI || AUTOPLAY) && lands.length) { take = []; let left = lands.slice(); while (left.length) { const c = await pickCard(P, left, `${src.card.name}: put a land onto the battlefield tapped (or stop)`, { required: false }); if (!c) break; take.push(c); left = left.filter(y => y !== c); } rest.push(...lands.filter(c => !take.includes(c))); }
+        take.forEach(c => { resetObj(c); c.tapped = true; c.enteredTurn = G.turn; P.bf.push(c); fire('enters', { o: c }); fire('landfall', { o: c }); });
+        rest.forEach(c => P.library.unshift(c)); shuffle(P.library); log(`${src.card.name}: ${take.length} land${take.length === 1 ? '' : 's'} enter tapped.`);
+    },
+    // Rishadan Cutpurse
+    async sl_cutpurse(P, e, t, src) {
+        for (const F of foes(P)) {
+            const pay = F.isAI || AUTOPLAY ? !!planPayment(F, parseCost('{1}'), 0, null, {}) : (!!planPayment(F, parseCost('{1}'), 0, null, {}) && await askYes(F, `${src.card.name}: pay {1}? (Otherwise sacrifice a permanent.)`, { card: src.card, yes: 'Pay {1}', no: 'Sacrifice a permanent' }));
+            if (pay) { const plan = planPayment(F, parseCost('{1}'), 0, null, {}); if (plan) plan.forEach(x => tapSource(F, x)); log(`${F.name} pay${you(F) ? '' : 's'} {1}.`); continue; }
+            const pool = F.bf.slice(); if (!pool.length) continue;
+            const f = await chooseSac(F, src, 'permanent', src.card.name); if (f) { leaveBattlefield(f, 'gy'); log(`${F.name} sacrifice${you(F) ? '' : 's'} ${f.card.name}.`); }
+        }
+    },
+    // Replicating Ring
+    async sl_replicatingRing(P, e, t, src) {
+        if (!onBf(src.uid)) return; src.ctr.night = (src.ctr.night || 0) + 1;
+        if (src.ctr.night >= 8) {
+            src.ctr.night = 0;
+            for (let k = 0; k < 8; k++) slMakeRing(P);
+        }
+    },
+    // The Millennium Calendar
+    sl_calendarDouble(P, e, t, src) { if (!onBf(src.uid)) return; src.ctr.time = (src.ctr.time || 0) * 2; log(`${src.card.name} has ${src.ctr.time} time counters.`); slCalendarCheck(src); },
+    async sl_grozothSearch(P, e, t, src) {
+        const pool = P.library.filter(c => (c.card.cmc || 0) === 9); if (!pool.length) { shuffle(P.library); return; }
+        const yes = (P.isAI || AUTOPLAY) ? true : await askYes(P, `${src.card.name}: search your library for cards with mana value 9?`, { card: src.card }); if (!yes) return;
+        pool.forEach(c => { pull(P.library, c); P.hand.push(c); }); shuffle(P.library); log(`${P.name} put${you(P) ? '' : 's'} ${pool.map(c => c.card.name).join(', ')} into ${you(P) ? 'your' : 'their'} hand.`);
+    },
+    // Extravagant Replication
+    async sl_extravRepl(P, e, t, src) {
+        const pool = P.bf.filter(x => x !== src && !/\bLand\b/.test(x.card.type) && !has(x, 'shroud')); if (!pool.length) return;
+        const c = (P.isAI || AUTOPLAY) ? pool.slice().sort((a, b) => permValue(b) - permValue(a))[0] : await pickCard(P, pool, `${src.card.name}: create a token copy of a nonland permanent`, { required: false });
+        if (c && typeof tokenCopyOf === 'function') { tokenCopyOf(P, c.card, {}); log(`${P.name} create${you(P) ? '' : 's'} a token that's a copy of ${c.card.name}.`); }
+    },
+    // Stuck in Summoner's Sanctum / Honest Work / Observed Stasis
+    sl_tapHost(P, e, t, src) { const h = G.players.flatMap(X => X.bf).find(x => x.uid === src.attachedTo); if (h) { h.tapped = true; log(`${h.card.name} is tapped.`); } },
+    sl_tapRemoveCounters(P, e, t, src) { const h = G.players.flatMap(X => X.bf).find(x => x.uid === src.attachedTo); if (!h) return; h.tapped = true; h.counters = 0; h.ctr = {}; log(`${h.card.name} is tapped and loses all counters.`); },
+    sl_observedStasis(P, e, t, src) {
+        const h = G.players.flatMap(X => X.bf).find(x => x.uid === src.attachedTo); if (!h) return;
+        G.attackers = (G.attackers || []).filter(u => u !== h.uid); if (G.blocks) delete G.blocks[h.uid];
+        const X = G.players[h.owner]; const n = X.bf.filter(x => isCreature(x) && x.tapped).length; log(`${h.card.name} is removed from combat.`); if (n) drawCards(P, n);
+    }
+});
+// A Replicated Ring token (a snow artifact that taps for any color)
+function slMakeRing(P) {
+    const card = { id: `token-ring-${uidSeq}`, name: 'Replicated Ring', fullName: 'Replicated Ring', cost: '', cmc: 0, type: 'Snow Artifact', text: '{T}: Add one mana of any color.', colors: [], ci: [], img: null, imgS: null, legal: {} };
+    const o = makeObj(card, P.i, { token: true }); P.bf.push(o); fire('enters', { o }); tokenMade(P);
+}
+Object.assign(CMD_SCORE, { sl_esperOrigins: () => 4, sl_sylvanLibrary: () => 1, sl_yunaReturn: () => 2, sl_pizzaFace: () => 2, sl_worldsire: () => 4, sl_cutpurse: () => 5, sl_replicatingRing: () => 1, sl_extravRepl: () => 3, sl_grozothSearch: () => 5 });

@@ -97,3 +97,38 @@ const SLX = [
     [/^mill seven cards\. then put a creature card from among them onto the battlefield$/i, () => [cmd('sl_bindLife')]]
 ];
 registerRules({ name: 'sixlists', effects: SLX });
+
+// ===== batch 3 =====
+// Terra: Esper Origins (and its back face, Summon: Esper Maduin), Summon: Choco/Mog, Sylvan Library, the Yunas, Summoner's Grimoire
+clx('Surveil 2. You gain 2 life. If ~ was cast from a graveyard, exile it, then put it onto the battlefield transformed under its owner\'s control with a finality counter on it.', R => { R.spell = [cmd('sl_esperOrigins')]; });
+clx('I — Reveal the top card of your library. If it\'s a permanent card, put it into your hand.', slChap([1], [cmd('sl_maduin1')]));
+clx('III — Other creatures you control get +2/+2 and gain trample until end of turn.', slChap([3], [cmd('sl_maduin3')]));
+clx('I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn.', slChap([1, 2, 3, 4], [cmd('sl_stampede')]));
+clx('At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [cmd('sl_sylvanLibrary')] }); });
+clx('{T}: Add one mana of any color. When you next cast a creature spell this turn, that creature enters with two additional +1/+1 counters on it.', R => { R.mana = { colors: [...COLORS], n: 1, rider: 'slYuna' }; });
+clx('Whenever another permanent you control is put into a graveyard from the battlefield, if it had one or more counters on it, you may put that number of +1/+1 counters on target creature.', R => { R.slYunaGy = true; });
+clx('During your turn, ~ and enchantment creatures you control have trample, lifelink, and ward {2}.', R => { selfCond(R, { cond: 'it\'s your turn', p: 0, q: 0, kw: ['trample', 'lifelink', 'ward:2'] }); R.statics.push({ other: true, spec: { type: 'Enchantment', alsoCreature: true }, p: 0, q: 0, kw: ['trample', 'lifelink', 'ward:2'], cond: 'it\'s your turn' }); });
+clx('At the beginning of your end step, return up to one target enchantment card from your graveyard to the battlefield with a finality counter on it.', R => { R.trig.push({ ev: 'end', who: 'your', effects: [cmd('sl_yunaReturn')] }); });
+clx('Equipped creature is a Shaman in addition to its other types and has "Whenever ~ attacks, you may put a creature card from your hand onto the battlefield. If that card is an enchantment card, it enters tapped and attacking."', R => { R.addType = 'Shaman'; R.trig.push({ ev: 'attacks', host: true, fn: 'sl_hostAttacks', effects: [cmd('sl_grimoire')] }); });
+// Jenova (second list)
+clx('At the beginning of your end step, if a permanent left the battlefield under your control this turn, put three +1/+1 counters on up to one other target artifact or creature. If it isn\'t a creature, it becomes a 0/0 Mutant creature in addition to its other types.', R => { R.trig.push({ ev: 'end', who: 'your', effects: [cmd('sl_pizzaFace')] }); });
+clx('~ has hexproof as long as they haven\'t dealt combat damage yet.', R => { R.slHexNoDmg = true; });
+// Beorn
+clx('Devour land 3', R => { R.slDevourLand = 3; });
+clx('When ~ enters, look at the top X cards of your library, where X is ~\'s power. Put any number of land cards from among them onto the battlefield tapped, then shuffle.', R => { R.etb.push(cmd('sl_worldsire')); });
+// Gogo
+clx('When ~ enters, each opponent sacrifices a permanent of their choice unless they pay {1}.', R => { R.etb.push(cmd('sl_cutpurse')); });
+clx('At the beginning of your upkeep, put a night counter on ~. Then if it has eight or more night counters on it, remove all of them and create eight colorless snow artifact tokens named Replicated Ring with "{T}: Add one mana of any color."', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [cmd('sl_replicatingRing')] }); });
+clx('Whenever you untap one or more permanents during your untap step, put that many time counters on ~.', R => { R.slCalendar = true; });
+clx('{2}, {T}: Double the number of time counters on ~.', (R, m, ctx) => { act(R, ctx.line, '{2}, {T}', [cmd('sl_calendarDouble')]); });
+clx('When there are 1,000 or more time counters on ~, sacrifice it and each opponent loses 1,000 life.', R => { R.slCalendarWin = true; });
+clx('When ~ enters, you may search your library for any number of cards that have mana value 9, reveal them, put them into your hand, then shuffle.', R => { R.etb.push(cmd('sl_grozothSearch')); });
+clx('{4}: ~ loses defender until end of turn.', (R, m, ctx) => { act(R, ctx.line, '{4}', [{ t: 'pump', p: 0, q: 0, kw: ['-defender'], target: 'self', good: true }]); });
+clx('At the beginning of your upkeep, create a token that\'s a copy of another target nonland permanent you control.', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [cmd('sl_extravRepl')] }); });
+clx('When ~ enters, tap enchanted permanent.', R => { R.etb.push(cmd('sl_tapHost')); });
+clx('Enchanted permanent doesn\'t untap during its controller\'s untap step and its activated abilities can\'t be activated.', R => { R.buff = { p: 0, q: 0, kw: ['nountap'] }; R.buffBad = true; R.slNoActs = true; });
+clx('Enchant creature an opponent controls', R => { R.aura = true; R.auraTarget = slTarget('creature an opponent controls'); });
+clx('When ~ enters, tap enchanted creature and remove all counters from it.', R => { R.etb.push(cmd('sl_tapRemoveCounters')); });
+clx('Enchanted creature loses all abilities and is a Citizen with base power and toughness 1/1 and "{T}: Add {C}" named Humble Merchant.', R => { R.buff = { p: 0, q: 0, kw: [] }; R.buffBase = { p: 1, q: 1 }; R.buffLose = true; R.buffBad = true; });
+clx('When ~ enters, remove enchanted creature from combat. Then draw a card for each tapped creature its controller controls.', R => { R.etb.push(cmd('sl_observedStasis')); });
+clx('Enchanted creature loses all abilities and can\'t attack or block.', R => { R.buff = { p: 0, q: 0, kw: ['cantattack', 'cantblock'] }; R.buffLose = true; R.buffBad = true; });
