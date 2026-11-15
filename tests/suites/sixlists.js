@@ -50,6 +50,13 @@ const NAMES = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'Grizzly Bears
               const [A2] = await fresh(); const g2 = put(A2, 'The Gitrog Monster'); await CMD.sl_gitrogUpkeep(A2, {}, null, g2); ok('The Gitrog Monster: with no land it is sacrificed', !onBf(g2.uid)); }
             { const [A, B] = await fresh(); const vf = put(A, 'Volatile Fault'); const ct = put(B, 'Command Tower'); B.library.push(makeObj(have('Forest'), 1)); await CMD.sl_volatileFault(A, {}, { o: ct }, vf); await settle2();
               ok('Volatile Fault: destroys the nonbasic land, its controller fetches a basic and you get a Treasure', !onBf(ct.uid) && B.bf.some(x => /\bBasic\b/.test(x.card.type)) && A.bf.some(x => /Treasure/.test(x.card.name)), [B.bf.map(x => x.card.name), A.bf.map(x => x.card.name)]); }
+            { const [A] = await fresh(); const nog = put(A, 'Nog, Ambitious Cadet'); for (let i = 0; i < 4; i++) T.put(A, have('Swamp')); const a0 = (Rx(nog).acts || [])[0];
+              await activate(A, nog, a0); await settle2();
+              ok('Nog (real activation): {1} makes him a 3/4 Scout', nog.slNog === 1 && pow(nog) === 3 && tou(nog) === 4 && /Ferengi Scout$/.test(nog.card.type) && !/Ferengi Ferengi/.test(nog.card.type), [nog.slNog, pow(nog), tou(nog), nog.card.type]);
+              ok('Nog: the {1} ability is no longer offered once he is a Scout, the {3} one is', !canActivate(A, nog, Rx(nog).acts[0]) && canActivate(A, nog, Rx(nog).acts[1]), []); }
+            { const [A, B] = await fresh(); A.isAI = true; const nog = put(A, 'Nog, Ambitious Cadet'); for (let i = 0; i < 8; i++) T.put(A, have('Swamp')); await aiUseAbilities(A); await settle2();
+              const spent = A.bf.filter(x => /Swamp/.test(x.card.name) && x.tapped).length; ok('Nog: the computer activates each ability once (4 mana in all), not every time', spent === 4 && nog.slNog === 2, [spent, nog.slNog]); }
+
             { const [A] = await fresh(); const nog = put(A, 'Nog, Ambitious Cadet'); CMD.sl_nog1(A, {}, null, nog); ok('Nog: {1} makes him a 3/4 Ferengi Scout', nog.slNog === 1 && pow(nog) === 3 && tou(nog) === 4 && /Scout/.test(nog.card.type), [nog.slNog, pow(nog), tou(nog)]);
               CMD.sl_nog2(A, {}, null, nog); ok('Nog: {3} makes him an Officer: lands from the graveyard and an extra land drop', nog.slNog === 2 && landLimit(A) === 2, [nog.slNog, landLimit(A)]); }
             { const [A] = await fresh(); const dc = put(A, 'Druid Class'); put(A, 'Forest'); put(A, 'Forest'); put(A, 'Forest'); await CMD.sl_druidClass(A, {}, null, dc); const l = A.bf.find(x => x.slDynPT);

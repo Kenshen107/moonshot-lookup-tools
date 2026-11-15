@@ -445,6 +445,14 @@ Object.assign(CMD_SCORE, { sl_esperOrigins: () => 4, sl_sylvanLibrary: () => 1, 
 // ===== batch 4 =====
 TRIG_FN.sl_attacksMe = (o, ctx) => (ctx.list || []).some(x => x.owner !== o.owner && (x.atkTo == null || x.atkTo === o.owner));
 TRIG_FN.sl_nogTapped = (o, ctx) => ctx.o === o && (o.slNog || 0) >= 1;
+// Nog's abilities have an "If ~ is a Rogue / Scout" condition: don't offer them (or let the computer spend mana on them) when it is false
+{ const nogAct = canActivate; canActivate = function (P, o, a) {
+    if (a && a.effects && a.effects.some(e => e.t === 'cmd' && (e.id === 'sl_nog1' || e.id === 'sl_nog2'))) {
+        const want = a.effects.some(e => e.id === 'sl_nog1') ? 0 : 1;
+        if ((o.slNog || 0) !== want || (want === 0 && !hasType(o, 'Rogue'))) return false;
+    }
+    return nogAct.apply(this, arguments);
+}; }
 TRIG_FN.sl_level3 = (o, ctx) => ctx.o === o && ctx.lvl === 3;
 { const sm = stackMatches; stackMatches = function (it, filter) { if (filter === 'slAbility') return it.kind === 'trigger'; return sm.apply(this, arguments); }; }
 // Casting: Aetherflux Conduit energy, Urianger's life, Brynhildr's haste, G.F. Cerberus's copies, Good King Mog's token copies
@@ -650,8 +658,8 @@ Object.assign(CMD, {
         const o = it.o; if (o && onBf(o.uid) && (isCreature(o) || /\b(Artifact|Planeswalker)\b/.test(o.card.type))) { o.noAbilBy = src.uid; log(`${o.card.name} loses all abilities for as long as ${src.card.name} remains on the battlefield.`); }
     },
     // Nog
-    sl_nog1(P, e, t, src) { if (!onBf(src.uid) || (src.slNog || 0) !== 0 || !hasType(src, 'Rogue')) return; src.slNog = 1; src.card = { ...src.card, type: src.card.type.replace(/\bRogue\b/, 'Ferengi Scout'), power: '3', toughness: '4' }; log(`${src.card.name} becomes a Ferengi Scout 3/4.`); },
-    sl_nog2(P, e, t, src) { if (!onBf(src.uid) || src.slNog !== 1) return; src.slNog = 2; src.card = { ...src.card, type: src.card.type.replace(/\bScout\b/, 'Officer') }; log(`${src.card.name} becomes a Ferengi Officer.`); },
+    sl_nog1(P, e, t, src) { if (!onBf(src.uid) || (src.slNog || 0) !== 0 || !hasType(src, 'Rogue')) return; src.slNog = 1; src.card = { ...src.card, type: src.card.type.replace(/\bFerengi Rogue\b|\bRogue\b/, 'Ferengi Scout'), power: '3', toughness: '4' }; log(`${src.card.name} becomes a Ferengi Scout 3/4.`); },
+    sl_nog2(P, e, t, src) { if (!onBf(src.uid) || src.slNog !== 1) return; src.slNog = 2; src.card = { ...src.card, type: src.card.type.replace(/\bFerengi Scout\b|\bScout\b/, 'Ferengi Officer') }; log(`${src.card.name} becomes a Ferengi Officer.`); },
     // Druid Class (level 3)
     async sl_druidClass(P, e, t, src) {
         const pre = slPre('sl_druidClass');
