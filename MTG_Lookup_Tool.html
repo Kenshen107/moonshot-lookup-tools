@@ -792,11 +792,7 @@
         .px-letters { display: inline-block; line-height: 0; vertical-align: middle; }
         .px-letters canvas { image-rendering: pixelated; display: block; max-width: 100%; }
         .px-letters-emoji { vertical-align: middle; margin-right: 4px; }
-        /* Seasonal 9-slice frames: drawn over the panel's padding (the border itself keeps its 1px, so nothing moves) */
-        html[data-fx="full"] :is(.format-card, .guide-section, .bk-section, .history-section, .resource-section, .vv-section, .bracket-card, .lands-step, .prod-tile, .judge-card, .format-picker, .quick-ban-check),
-        html[data-fx="subtle"] :is(.format-card, .guide-section, .bk-section, .history-section, .resource-section, .vv-section, .bracket-card, .lands-step, .prod-tile, .judge-card, .format-picker, .quick-ban-check) {
-            border-image: var(--px-panel-frame) var(--px-panel-slice, 5) / var(--px-panel-bw, 10px) / 0 stretch; image-rendering: pixelated; border-radius: 2px;
-        }
+        /* Seasonal 9-slice frames: only the title banner and the card picture keep one. Ordinary panels no longer get the stretched frame (2026-11-16 audit: its mid-edge ornament showed as flecks on wide panels). */
         html[data-fx="full"] #sceneBanner { border-radius: 3px; }
         html[data-fx="full"] #sceneBanner::after { box-sizing: border-box; background-origin: border-box; border: 18px solid transparent; border-image: var(--px-banner-frame) 9 / 18px / 0 stretch; image-rendering: pixelated; }
         @media (prefers-reduced-motion: reduce) { #fxRealm { opacity: 0.9; } }
@@ -1441,8 +1437,10 @@
         #pxTrail { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; image-rendering: pixelated; }
         #cardy { position: absolute; left: 10px; bottom: 4px; z-index: 3; cursor: pointer; image-rendering: pixelated; filter: drop-shadow(0 2px 0 var(--bg-canvas)); border-radius: var(--radius-sm); }
         #cardy:focus-visible { outline: 2px solid var(--brand-light); outline-offset: 2px; }
-        #cardyBubble { position: fixed; z-index: 70; width: 280px; max-width: calc(100vw - 20px); box-sizing: border-box; padding: 10px 28px 10px 12px; background: var(--panel-base, var(--bg-panel)); color: var(--text-primary); border: 2px solid var(--brand-light); border-radius: var(--radius-md); box-shadow: 0 4px 0 var(--bg-canvas), 0 8px 24px rgba(0,0,0,0.45); font-size: 0.9em; line-height: 1.4; }
+        #cardyBubble { position: fixed; z-index: 1200; width: 360px; max-width: calc(100vw - 20px); box-sizing: border-box; padding: 10px 28px 10px 12px; background: var(--panel-base, var(--bg-panel)); color: var(--text-primary); border: 2px solid var(--brand-light); border-radius: var(--radius-md); box-shadow: 0 4px 0 var(--bg-canvas), 0 8px 24px rgba(0,0,0,0.45); font-size: 0.9em; line-height: 1.4; }
         #cardyBubble[hidden] { display: none; }
+        /* Narrow screens: dock the bubble above the bottom bar so it never covers the search box or the Search button (2026-11-16 audit) */
+        #cardyBubble.narrow { top: auto !important; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
         #cardyBubble p { margin: 0; }
         #cardyBubble .cardy-name { font-family: var(--font-display, inherit); color: var(--text-heading); font-weight: 700; }
         #cardyBubble .cardy-vis { display: inline; }
@@ -1590,10 +1588,18 @@
                 font-size: 1.6em;
             }
         }
-        @media (max-width: 380px) {
+        /* Phones (2026-11-16 audit): the utility row wraps to two centered lines instead of scrolling sideways and clipping "Pokémon" and the last buttons */
+        @media (max-width: 600px) {
             .util-bar {
                 flex-wrap: wrap;
+                justify-content: center;
+                white-space: normal;
+                gap: 6px 12px;
             }
+        }
+        /* The helper card sits at the banner's left edge: keep the title clear of him on phones */
+        @media (max-width: 519px) {
+            html[data-fx="full"] .scene-copy { padding-left: 52px; }
         }
 
         /* ---- About Moonshot Games panel (opened from the utility row) ---- */
@@ -27228,7 +27234,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (!fxIs('full', 'subtle')) { if (el.dataset.pxOn) { el.textContent = raw; delete el.dataset.pxOn; if (PXL.obs) PXL.obs.takeRecords(); } return; }
         const m = String(raw).match(/^([^A-Za-z0-9]*)(.*)$/), prefix = m[1].trim(), body = m[2];
         if (!pxlGlyphs(body).length) return;
-        const cv = pxlCanvas(body), scale = cv.dataset.cell ? (window.innerWidth < 700 ? 0.75 : 1) : (window.innerWidth < 700 ? 3 : 4) / 2, wrap = document.createElement('span');
+        const cv = pxlCanvas(body), scale = cv.dataset.cell ? (window.innerWidth < 520 ? 0.58 : window.innerWidth < 700 ? 0.75 : 1) : (window.innerWidth < 520 ? 2.4 : window.innerWidth < 700 ? 3 : 4) / 2, wrap = document.createElement('span');
         wrap.className = 'px-letters'; wrap.setAttribute('role', 'img'); wrap.setAttribute('aria-label', raw.trim());
         cv.style.width = cv.width * scale + 'px'; cv.style.height = cv.height * scale + 'px'; if (cv.dataset.cell && scale < 1) cv.style.imageRendering = 'auto'; wrap.appendChild(cv);
         el.textContent = ''; if (prefix) { const e = document.createElement('span'); e.className = 'px-letters-emoji'; e.textContent = prefix + ' '; el.appendChild(e); } el.appendChild(wrap); el.dataset.pxOn = '1';
@@ -27482,7 +27488,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     function cardyPlace() {
         const b = cardyBubbleEl(), r = CARDY.cv.getBoundingClientRect(), narrow = innerWidth < 700;
         if (narrow) { b.style.left = '10px'; b.style.right = '10px'; b.style.top = Math.min(innerHeight - 60, r.bottom + 6) + 'px'; b.classList.add('narrow'); }
-        else { b.classList.remove('narrow'); b.style.right = 'auto'; b.style.left = Math.min(innerWidth - 300, r.right + 10) + 'px'; b.style.top = Math.max(6, r.top + 4) + 'px'; }
+        else { b.classList.remove('narrow'); b.style.right = 'auto'; b.style.left = Math.min(innerWidth - 380, r.right + 10) + 'px'; b.style.top = Math.max(6, r.top - 22) + 'px'; }
     }
     function cardyAct(id) { const f = CARDY.actions[id]; if (f) f(); }
     function cardyClose() { const b = document.getElementById('cardyBubble'); if (b) b.hidden = true; clearTimeout(CARDY.bubbleT); CARDY.bubbleT = 0; CARDY.talking = false; if (!CARDY.until && ['talk', 'wave', 'think', 'cheer', 'look', 'point', 'surprised'].includes(CARDY.pose)) cardyPose(CARDY.sleeping ? 'sleep' : 'idle'); }
