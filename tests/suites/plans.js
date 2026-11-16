@@ -3,7 +3,7 @@
 'use strict';
 const { launch, openTestPage, installHelpers, formatChecks, printResults, writeOut } = require('../lib/harness');
 const NAMES = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'Grizzly Bears', 'Mutavault', 'Firdoch Core', 'Doc Samson, Super Psychiatrist', 'Staff of Domination', 'Umbral Mantle', 'Hardened Scales',
-    'Hydra Broodmaster', 'Maturation Chamber', 'Aetheric Amplifier', 'Dal R\'El, Augment Orphan', 'Sol Ring', 'Kalonian Hydra', 'Hill Giant'];
+    'Hydra Broodmaster', 'Maturation Chamber', 'Aetheric Amplifier', 'Dal R\'El, Augment Orphan', 'Sol Ring', 'Kalonian Hydra', 'Hill Giant', 'Super-Skrull', 'Urianger Augurelt', 'Serra Angel'];
 (async () => {
     const h = await launch({ profileDir: undefined });
     const { page, errors } = await openTestPage(h.ctx, h.server);
@@ -50,6 +50,19 @@ const NAMES = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'Grizzly Bears
               lands(A, 'Forest', 6); put(A, 'Hardened Scales'); const ready = aiScoreBase(A, hb); ok('payoffs are cast once the engine runs', ready > held, [ready, held]); }
             { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; put(A, 'Grizzly Bears'); put(B, 'Hill Giant'); B.life = 40; s.sick = false;
               const ch = aiChooseAttackers(A); ok('the engine creature stays home unless the attack is lethal', !ch.some(o => o.card.name === 'Doc Samson, Super Psychiatrist'), ch.map(o => o.card.name)); }
+            // Super-Skrull: mana goes into draw four first
+            { const [A, B] = await fresh(); const sk = put(A, 'Super-Skrull'); sk.isCommander = true; A.planKey = undefined; lands(A, 'Island', 3); lands(A, 'Plains', 3); lands(A, 'Mountain', 3); for (let i = 0; i < 12; i++) A.library.push(makeObj(have('Forest'), A.i)); put(B, 'Grizzly Bears');
+              const h0 = A.hand.length; await aiUseAbilities(A); await settle2();
+              ok('Super-Skrull: with mana to spare the computer draws four before small removal', A.hand.length - h0 === 4 && B.bf.length === 1, [A.hand.length - h0, B.bf.length]);
+              ok('Super-Skrull plan: ramp playstyle', A.aiStyle === 'ramp', A.aiStyle); }
+            // Urianger: Play Arcanum first when cards wait in exile, Draw Arcanum afterwards
+            { const [A, B] = await fresh(); const u = put(A, 'Urianger Augurelt'); u.isCommander = true; A.planKey = undefined; lands(A, 'Plains', 3); lands(A, 'Island', 2);
+              const sa = makeObj(have('Serra Angel'), A.i); sa.slUri = u.uid; sa.playUntil = -1; A.exile.push(sa); for (let i = 0; i < 12; i++) A.library.push(makeObj(have('Forest'), A.i));
+              await aiMain(A); await settle2();
+              ok('Urianger: Play Arcanum, then Serra Angel (5 mana) is cast from exile for 3', u.tapped && A.bf.some(x => x.card.name === 'Serra Angel'), [u.tapped, A.bf.map(x => x.card.name).join()]);
+              const [A2] = await fresh(); const u2 = put(A2, 'Urianger Augurelt'); u2.isCommander = true; A2.planKey = undefined; lands(A2, 'Plains', 3); for (let i = 0; i < 12; i++) A2.library.push(makeObj(have('Forest'), A2.i));
+              const lib0 = A2.library.length; await aiMain(A2); await settle2();
+              ok('Urianger: with nothing waiting he uses Draw Arcanum', u2.tapped && A2.exile.some(c => c.slUri === u2.uid) && A2.library.length === lib0 - 1, [u2.tapped, A2.exile.length, lib0 - A2.library.length]); }
             { const [A, B] = await fresh(); const x = put(A, 'Grizzly Bears'); A.planKey = undefined; ok('a deck with no plan is untouched', planOf(A) === null); }
         } catch (e) { out.push(['suite threw: ' + e.message, false, e.stack && e.stack.split('\n').slice(0, 3)]); }
         return out;

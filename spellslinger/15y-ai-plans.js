@@ -101,9 +101,20 @@ const DECK_PLANS = {
         payoff: ['Genesis Wave', 'Full Throttle', 'Tromp the Domains', 'The Weatherseed Treaty', 'Seize the Day'], payoffNeed: 3, cmdr: 5,
     },
     'Super-Skrull': {
-        win: 'Defenders: build walls (Super-Skrull makes 0/4 Walls), then High Alert, Doran or The Kingpin of Crime turn toughness into damage and the walls attack.',
-        engine: ['Training Grounds', 'Zirda, the Dawnwaker', 'Doran, the Siege Tower', 'Sol Ring', 'Mind Stone', 'Arcane Signet'],
-        payoff: ['High Alert', 'The Kingpin of Crime', 'Assault Formation', 'Belligerent Brontodon'], payoffNeed: 3, protect: [], cmdr: 5,
+        win: 'Ramp into the activated abilities (owner, 2026-11-16): make as much mana as possible, then spend it every turn on Super-Skrull\'s four abilities: {5}{U} draw four, {2}{W} a 0/4 Wall, {3}{G} +4/+4, {4}{R} 4 damage. Rocks, rituals and cost reducers (Training Grounds, Zirda, Biomancer\'s Familiar) come first; High Alert, Doran and The Kingpin of Crime turn the Walls into damage.',
+        style: 'ramp',
+        engine: ['Sol Ring', 'Arcane Signet', 'Thran Dynamo', 'Worn Powerstone', 'Everflowing Chalice', 'Hedron Archive', 'Lotus Petal', 'Dark Ritual', 'Astral Cornucopia', 'Relic of Sauron', 'Moonsilver Key', 'Training Grounds', 'Zirda, the Dawnwaker', 'Biomancer\'s Familiar', 'Wilderness Reclamation', 'Three Visits', 'Skyshroud Claim', 'Demonic Tutor', 'Vampiric Tutor', 'Victory Chimes'],
+        payoff: ['High Alert', 'The Kingpin of Crime', 'Doran, Besieged by Time', 'Exsanguinate', 'Atraxa, Grand Unifier'], payoffNeed: 4, mana: 8, cmdr: 8,
+        // With mana to spare, draw four before small removal: mana turns into cards
+        async abilities(P) {
+            const sk = onBfNamed(P, 'Super-Skrull'); if (!sk || lostAbilities(sk)) return;
+            for (let k = 0; k < 3 && !G.over; k++) {
+                const a = actsOf(sk).find(x => x.effects.some(e => e.t === 'draw' && e.n === 4));
+                if (!a || !canActivate(P, sk, a) || availableMana(P) < 6 || P.hand.length > 5 || P.library.length < 10) return;
+                if (!await activate(P, sk, a, { p: P })) return;
+                plPol('skrullDraw');
+            }
+        },
     },
     'Jadzi, Oracle of Arcavios': {
         win: 'Bounce-land value and copies: Jadzi, Tatyova and bounce lands draw cards; Genesis Wave, Temporal Cascade and Doppelgang convert mana into a board; Tutelages punish a big hand.',
@@ -149,9 +160,23 @@ const DECK_PLANS = {
         engine: ['Chromatic Lantern', 'Yuna, Grand Summoner', 'Sylvan Library', 'Sol Ring', 'Arcane Signet', 'Mind Stone'], payoff: ['Summon: Primal Odin', 'Summon: Anima', 'Summon: Valefor', 'Summon: Shiva'], payoffNeed: 3, cmdr: 5,
     },
     'Urianger Augurelt': {
-        win: 'Angels and the initiative: ramp into Lyra, Archangel of Thune and Absolute Virtue; Urianger plays cards from exile; untappers keep mana flowing.',
+        win: 'Abuse the commander\'s tap abilities (owner, 2026-11-16): Draw Arcanum exiles the top card face down, Play Arcanum lets you play those exiled cards for {2} less (and gain 2 life). Both need {T}, so untappers (Unbender Tine, Vizier of Tumbling Sands, Fatestitcher, Freed from the Real, Thousand-Year Elixir) let him do both in a turn. Stock up the exile with Draw Arcanum, then cast bombs (Lyra, Archangel of Thune, Absolute Virtue, Serra\'s Emissary, Teferi) two mana cheaper.',
         style: 'midrange',
-        engine: ['Sol Ring', 'Mind Stone', 'Arcane Signet', 'Thran Dynamo'], payoff: ['Lyra, Archangel of Dawn', 'Archangel of Thune', 'Absolute Virtue', 'Teferi, Who Slows the Sunset'], payoffNeed: 3, cmdr: 5,
+        engine: ['Unbender Tine', 'Vizier of Tumbling Sands', 'Fatestitcher', 'Freed from the Real', 'Thousand-Year Elixir', 'Patriar\'s Seal', 'Sol Ring', 'Arcane Signet', 'Talisman of Progress', 'Gilded Lotus', 'Chromatic Lantern', 'Commander\'s Sphere', 'Moonsilver Key'],
+        payoff: ['Lyra, Archangel of Dawn', 'Lyra Dawnbringer', 'Archangel of Thune', 'Avacyn, Angel of Hope', 'Absolute Virtue', 'Serra\'s Emissary', 'Teferi, Who Slows the Sunset', 'Ob Nixilis, the Ascended', 'Ultimate Magic: Holy', 'Seraph of the Sword'], payoffNeed: 2, cmdr: 8,
+        // Before the main phase: with cards waiting in exile and mana to cast them, Play Arcanum first (cheaper spells). After it: Draw Arcanum to fill the exile.
+        async pre(P) {
+            const u = onBfNamed(P, 'Urianger Augurelt'); if (!u || u.tapped || u.sick || lostAbilities(u)) return;
+            const a = actsOf(u).find(x => x.effects.some(e => e.id === 'sl_urianger2'));
+            const waiting = P.exile.filter(c => c.slUri === u.uid);
+            const worth = waiting.some(c => Rx(c).kind === 'land' ? P.landsPlayed < landLimit(P) : availableMana(P) >= Math.max(1, (c.card.cmc || 0) - 2));
+            if (a && worth && canActivate(P, u, a) && await activate(P, u, a)) plPol('uriPlay');
+        },
+        async post(P) {
+            const u = onBfNamed(P, 'Urianger Augurelt'); if (!u || u.tapped || u.sick || lostAbilities(u)) return;
+            const a = actsOf(u).find(x => x.effects.some(e => e.id === 'sl_urianger1'));
+            if (a && P.library.length > 6 && canActivate(P, u, a) && await activate(P, u, a)) plPol('uriDraw');
+        },
     },
     'Beorn the Fierce': {
         win: 'Mana dorks into big green creatures: Famished Worldsire, Wargling and Selvala, then attack with the biggest bears.',
@@ -244,6 +269,7 @@ function planReady(P, pl) {
     };
 }
 
+const pre_ = (P, pl) => pl.pre(P);
 // Combos: at the start of the computer's main phase (and again after it has played more), check each loop
 async function planGoOff(P) {
     const pl = planOf(P); if (!pl || !pl.loops || P.planLoopTurn === G.turn) return;
@@ -269,10 +295,21 @@ async function planGoOff(P) {
                     if (e && c && e.attachedTo !== c.uid && Rx(e).isEquipment) { try { if (await equip(P, e, c)) plPol('equips'); } catch (err) { /* keep playing */ } }
                 }
                 await planGoOff(P);
+                if (pl.pre) { try { await pre_(P, pl); } catch (err) { /* keep playing */ } }
             }
         }
         const r = await am.apply(this, arguments);
+        if (planOn(P) && G.active === P.i && !G.over) { const pl2 = planOf(P); if (pl2 && pl2.post) { try { await pl2.post(P); } catch (err) { /* keep playing */ } } }
         if (planOn(P) && G.active === P.i && !G.over && planOf(P)) { await planGoOff(P); if (P.planLoopTurn === G.turn && !G.over) { const again = await am.apply(this, arguments); return again; } }
         return r;
+    };
+}
+
+// Abilities: a plan may spend mana on its commander's abilities before the generic ability loop does (Super-Skrull: draw four before small removal)
+{
+    const ab = aiUseAbilities;
+    aiUseAbilities = async function (P) {
+        if (planOn(P) && !G.over) { const pl = planOf(P); if (pl && pl.abilities) { try { await pl.abilities(P); } catch (err) { /* keep playing */ } } }
+        return ab.apply(this, arguments);
     };
 }
