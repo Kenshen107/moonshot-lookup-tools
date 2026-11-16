@@ -66,6 +66,14 @@ const NAMES = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'Grizzly Bears
               for (let i = 0; i < 25; i++) A.library.push(makeObj(have('Forest'), A.i)); A.library.splice(A.library.length - 8, 0, makeObj(have('Surestrike Trident'), A.i)); B.life = 40; put(B, 'Grizzly Bears'); for (let i = 0; i < 20; i++) B.library.push(makeObj(have('Forest'), B.i));
               await aiMain(A); await settle2();
               ok('with the Trident buried in the library it draws with the Staff loop, casts it and wins', B.life <= 0 || G.over || B.out, [B.life, G.over, B.out, A.library.length]); }
+            // Infinite mana: every repeatable ability is used over and over (the Staff draws until the library is nearly empty, never all the way)
+            { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; putCounters(s, 4, A); const staff = put(A, 'Staff of Domination'); lands(A, 'Forest', 6);
+              A.library.length = 0; for (let i = 0; i < 30; i++) A.library.push(makeObj(have('Forest'), A.i)); for (let i = 0; i < 20; i++) B.library.push(makeObj(have('Forest'), B.i)); put(B, 'Grizzly Bears');
+              const h0 = A.hand.length; await aiMain(A); await settle2();
+              ok('infinite mana: the Staff is used over and over (many cards drawn), but the library is not emptied', 30 - A.library.length >= 8 && A.library.length >= 6, [30 - A.library.length, A.library.length]);
+              ok('the Staff untaps for the next use', !staff.tapped || (A.infUntaps || 0) > 0, [A.infUntaps]); }
+            { const [A, B] = await fresh(); A.isAI = true; A.library.length = 0; for (let i = 0; i < 8; i++) A.library.push(makeObj(have('Forest'), A.i)); lands(A, 'Forest', 6); const stf = put(A, 'Staff of Domination');
+              const h0 = A.hand.length; await aiUseAbilities(A); await settle2(); ok('with a small library the computer does not draw itself out with an ability', A.library.length >= 6 && A.hand.length - h0 <= 2, [A.library.length, A.hand.length - h0]); }
             // Super-Skrull: mana goes into draw four first
             { const [A, B] = await fresh(); const sk = put(A, 'Super-Skrull'); sk.isCommander = true; A.planKey = undefined; lands(A, 'Island', 3); lands(A, 'Plains', 3); lands(A, 'Mountain', 3); for (let i = 0; i < 12; i++) A.library.push(makeObj(have('Forest'), A.i)); put(B, 'Grizzly Bears');
               const h0 = A.hand.length; await aiUseAbilities(A); await settle2();

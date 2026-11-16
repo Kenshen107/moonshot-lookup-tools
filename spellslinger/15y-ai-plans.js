@@ -31,6 +31,7 @@ const AI_ACT_GUARDS = {
         if (P && P.isAI && o && a && a.effects) {
             // A "becomes a creature until end of turn" ability does nothing the second time in a turn
             if (a.effects.some(e => e.t === 'animate') && o.animated && o.animated.turn === G.turn) return false;
+            if (a.effects.some(e => e.t === 'draw' && (e.target === 'player' || !e.target)) && P.library.length < 12) return false; // never draw itself out with an ability
             const g = AI_ACT_GUARDS[o.card.name];
             if (g && !g(P, o, a)) return false;
         }
@@ -56,6 +57,35 @@ function giveInfiniteMana(P, why) {
     tapSource = function (P, s) { if (s && s.pool && !s.channel && !s.virtual && infiniteNow(P)) return; return ts.apply(this, arguments); };
 }
 
+// With infinite mana a tap ability repeats: Staff of Domination untaps a creature ({3}) and itself ({1}), and a creature with Umbral Mantle untaps itself. So after an
+// activation that tapped the source, the source untaps when one of those is in play. Non-creature tap abilities (Ozolith, the Ring) stay once a turn.
+{
+    const act = activate;
+    activate = async function (P, o, a) {
+        const was = o && o.tapped;
+        const r = await act.apply(this, arguments);
+        if (r && P && infiniteNow(P) && a && a.cost && a.cost.tap && o && !was && o.tapped && onBf(o.uid)) {
+            const staff = P.bf.find(x => x.card.name === 'Staff of Domination' && !lostAbilities(x));
+            const mantle = P.bf.some(x => x.card.name === 'Umbral Mantle' && x.attachedTo === o.uid);
+            if ((o.card.name === 'Staff of Domination') || (isCreature(o) && (staff || mantle))) { o.tapped = false; P.infUntaps = (P.infUntaps || 0) + 1; }
+        }
+        if (r && P && infiniteNow(P)) P.infActs = (P.infActs || 0) + 1;
+        return r;
+    };
+}
+// Use every repeatable ability, round after round, until a round does nothing (bounded)
+async function useInfiniteAbilities(P) {
+    let rounds = 0;
+    while (rounds < 8 && !G.over) {
+        const before = P.infActs || 0;
+        await aiUseAbilities(P);
+        await settle();
+        rounds++;
+        if ((P.infActs || 0) === before) break;
+    }
+    if (rounds > 1 || (P.infActs || 0) > 0) plPol('infiniteAbilityRounds');
+}
+
 // ---------- 2. Game plans ----------
 // Fields: win (words), style (playstyle if the deck names none), engine / payoff / protect (card names), payoffNeed (engine pieces or mana sources before payoffs are
 // "ready", default 1 engine piece or 8 sources), cmdr (extra score for casting the commander), equipTo { equipment: creature }, loops [{ name, online(P) -> bool, mana, color, pump }]
@@ -71,6 +101,9 @@ const DECK_PLANS = {
         async post(P) {
             if (!infiniteNow(P) || G.over) return;
             const s = onBfNamed(P, 'Doc Samson, Super Psychiatrist'); if (!s || lostAbilities(s)) return;
+            // Every other repeatable ability is worth doing over and over: counters, tokens, draw, pump, damage (owner, 2026-11-16)
+            if (!P.infBusy) { P.infBusy = true; try { P.infActs = 0; await useInfiniteAbilities(P); if (P.infActs && !G.over) { await aiMain(P); await useInfiniteAbilities(P); } } finally { P.infBusy = false; } }
+            if (G.over) return;
             const isTr = o => o.card.name === 'Surestrike Trident';
             let tr = onBfNamed(P, 'Surestrike Trident');
             if (!tr && !P.hand.some(isTr) && onBfNamed(P, 'Staff of Domination')) {
