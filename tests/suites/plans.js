@@ -3,7 +3,7 @@
 'use strict';
 const { launch, openTestPage, installHelpers, formatChecks, printResults, writeOut } = require('../lib/harness');
 const NAMES = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'Grizzly Bears', 'Mutavault', 'Firdoch Core', 'Doc Samson, Super Psychiatrist', 'Staff of Domination', 'Umbral Mantle', 'Hardened Scales',
-    'Hydra Broodmaster', 'Maturation Chamber', 'Aetheric Amplifier', 'Dal R\'El, Augment Orphan', 'Sol Ring', 'Kalonian Hydra', 'Hill Giant', 'Super-Skrull', 'Urianger Augurelt', 'Serra Angel'];
+    'Hydra Broodmaster', 'Maturation Chamber', 'Aetheric Amplifier', 'Dal R\'El, Augment Orphan', 'Sol Ring', 'Kalonian Hydra', 'Hill Giant', 'Super-Skrull', 'Urianger Augurelt', 'Serra Angel', 'Surestrike Trident'];
 (async () => {
     const h = await launch({ profileDir: undefined });
     const { page, errors } = await openTestPage(h.ctx, h.server);
@@ -34,9 +34,16 @@ const NAMES = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'Grizzly Bears
               const lp = DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A);
               ok('Samson loop is online with Staff of Domination at power 5+', !!lp && pow(s) >= 5, [pow(s)]);
               s.tapped = true; ok('Samson loop needs Samson untapped', !DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A)); s.tapped = false; s.sick = true; ok('Samson loop needs him not summoning sick', !DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A)); s.sick = false;
-              await planGoOff(A); ok('going off puts 16 mana in the pool and logs the loop', (A.pool || []).length >= 16 && G.log.some(l => /loops/.test(l)) && A.planLoopTurn === G.turn, [(A.pool || []).length]); }
+              await planGoOff(A); ok('going off gives infinite mana for the turn and logs the loop', A.infMana === G.turn && G.log.some(l => /infinite mana/.test(l)) && A.planLoopTurn === G.turn, [A.infMana, (A.pool || []).length]);
+              const n0 = A.pool.length; let paid = 0; for (let i = 0; i < 30; i++) { const plan = planPayment(A, parseCost('{3}{R}{G}{U}')); if (!plan) break; plan.forEach(x => tapSource(A, x)); paid++; }
+              ok('the mana never runs out: 30 payments of {3}{R}{G}{U}, the pool is unchanged', paid === 30 && A.pool.length === n0, [paid, n0, A.pool.length]);
+              ok('a cost far past the old 16-mana pool can be paid', !!planPayment(A, parseCost('{G}{G}{G}{G}{G}{G}{G}{G}{G}{G}{G}{G}{G}{G}{G}{20}')), []);
+              G.turn++; emptyPools(); ok('the infinite mana ends with the turn', !infiniteNow(A) && (A.pool || []).length === 0, [(A.pool || []).length]); G.turn--; }
+            { const [A, B] = await fresh(); A.isAI = false; const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; putCounters(s, 4, A); put(A, 'Staff of Domination');
+              ok('a person is offered the loop when the combo is online', !!loopOfferFor(A) && A.loopAsked !== G.turn);
+              await offerLoop(A); ok('saying yes to the offer gives a person infinite mana', A.infMana === G.turn && A.loopAsked === G.turn, [A.infMana]); }
             { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; const m = put(A, 'Umbral Mantle'); lands(A, 'Forest', 6); m.attachedTo = s.uid;
-              const lp = DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A); ok('Samson loop is online with the Umbral Mantle attached at power 3+', !!lp && lp.pump === 20, [pow(s), lp && lp.pump]); }
+              const lp = DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A); ok('Samson loop is online with the Umbral Mantle attached at power 3+', !!lp && lp.pump === 999 && lp.infinite, [pow(s), lp && lp.pump]); }
             { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; put(A, 'Grizzly Bears'); lands(A, 'Forest', 6);
               ok('no loop without an untapper', !DECK_PLANS['Doc Samson, Super Psychiatrist'].loops[0].online(A)); }
             { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; put(A, 'Staff of Domination'); lands(A, 'Forest', 4); putCounters(s, 3, A);
@@ -50,6 +57,15 @@ const NAMES = ['Mountain', 'Plains', 'Island', 'Swamp', 'Forest', 'Grizzly Bears
               lands(A, 'Forest', 6); put(A, 'Hardened Scales'); const ready = aiScoreBase(A, hb); ok('payoffs are cast once the engine runs', ready > held, [ready, held]); }
             { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; put(A, 'Grizzly Bears'); put(B, 'Hill Giant'); B.life = 40; s.sick = false;
               const ch = aiChooseAttackers(A); ok('the engine creature stays home unless the attack is lethal', !ch.some(o => o.card.name === 'Doc Samson, Super Psychiatrist'), ch.map(o => o.card.name)); }
+            // Infinite mana wins: Samson + Staff of Domination + Surestrike Trident kills every opponent in a pod
+            { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; putCounters(s, 4, A); put(A, 'Staff of Domination'); lands(A, 'Forest', 6);
+              A.hand.push(makeObj(have('Surestrike Trident'), A.i)); for (let i = 0; i < 20; i++) { A.library.push(makeObj(have('Forest'), A.i)); B.library.push(makeObj(have('Forest'), B.i)); } B.life = 40; put(B, 'Grizzly Bears');
+              await aiMain(A); await settle2();
+              ok('infinite mana with Staff, Samson and a Trident in hand kills the opponent', B.life <= 0 || G.over || B.out, [B.life, G.over, B.out]); }
+            { const [A, B] = await fresh(); const s = put(A, 'Doc Samson, Super Psychiatrist'); s.isCommander = true; A.planKey = undefined; putCounters(s, 4, A); put(A, 'Staff of Domination'); lands(A, 'Forest', 6);
+              for (let i = 0; i < 25; i++) A.library.push(makeObj(have('Forest'), A.i)); A.library.splice(A.library.length - 8, 0, makeObj(have('Surestrike Trident'), A.i)); B.life = 40; put(B, 'Grizzly Bears'); for (let i = 0; i < 20; i++) B.library.push(makeObj(have('Forest'), B.i));
+              await aiMain(A); await settle2();
+              ok('with the Trident buried in the library it draws with the Staff loop, casts it and wins', B.life <= 0 || G.over || B.out, [B.life, G.over, B.out, A.library.length]); }
             // Super-Skrull: mana goes into draw four first
             { const [A, B] = await fresh(); const sk = put(A, 'Super-Skrull'); sk.isCommander = true; A.planKey = undefined; lands(A, 'Island', 3); lands(A, 'Plains', 3); lands(A, 'Mountain', 3); for (let i = 0; i < 12; i++) A.library.push(makeObj(have('Forest'), A.i)); put(B, 'Grizzly Bears');
               const h0 = A.hand.length; await aiUseAbilities(A); await settle2();

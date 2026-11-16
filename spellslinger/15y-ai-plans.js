@@ -38,6 +38,24 @@ const AI_ACT_GUARDS = {
     };
 }
 
+// ---------- Infinite mana (2026-11-16, owner: "make the infinite mana truly infinite") ----------
+// A combo that makes more mana than it costs gives the player unlimited mana for the turn (`P.infMana = G.turn`). The pool holds INF_PER of every color and
+// paying from the pool no longer removes anything (a `tapSource` wrapper), so nothing in the engine can run out: any number of spells, abilities and X spells
+// (X is capped by the pool, 90). It lasts until the turn ends (`keepPoolTurn`), like the loop it stands for.
+const INF_PER = 15;
+const infiniteNow = P => !!P && P.infMana === G.turn;
+function giveInfiniteMana(P, why) {
+    P.infMana = G.turn; P.keepPoolTurn = G.turn;
+    P.pool = (P.pool || []).filter(c => c.includes(':'));
+    ['W', 'U', 'B', 'R', 'G', 'C'].forEach(c => { for (let i = 0; i < INF_PER; i++) P.pool.push(c); });
+    log(`🔁 ${P.name} ${you(P) ? 'loop' : 'loops'} ${why}: untap, tap for mana, repeat. That is infinite mana this turn.`);
+    plPol('loops');
+}
+{
+    const ts = tapSource;
+    tapSource = function (P, s) { if (s && s.pool && !s.channel && !s.virtual && infiniteNow(P)) return; return ts.apply(this, arguments); };
+}
+
 // ---------- 2. Game plans ----------
 // Fields: win (words), style (playstyle if the deck names none), engine / payoff / protect (card names), payoffNeed (engine pieces or mana sources before payoffs are
 // "ready", default 1 engine piece or 8 sources), cmdr (extra score for casting the commander), equipTo { equipment: creature }, loops [{ name, online(P) -> bool, mana, color, pump }]
@@ -48,6 +66,27 @@ const DECK_PLANS = {
         engine: ['Hardened Scales', 'Ozolith, the Shattered Spire', 'Incubation Druid', 'Staff of Domination', 'Umbral Mantle', 'Kalonian Hydra', 'Sol Ring', 'Fyndhorn Elves', 'Gyre Sage', 'Moxite Refinery', 'Surestrike Trident', 'Magistrate\'s Scepter'],
         payoff: ['Hydra Broodmaster', 'Fangs of Kalonia', 'The Ooze', 'Ring of Three Wishes', 'Goblin Cannon', 'Return of the Wildspeaker', 'Temur Sabertooth', 'Gamma Grotesque', 'Origin of the Hulk'],
         protect: ['Doc Samson, Super Psychiatrist'], cmdr: 6,
+        // With infinite mana the deck wins with Surestrike Trident: equip it, tap Samson to hit a player for his power, untap him (Staff {3} or Mantle), repeat.
+        // Find the Trident (draw with Staff of Domination: {5},{T} draw, {1} untap it), cast it, then every opponent takes lethal.
+        async post(P) {
+            if (!infiniteNow(P) || G.over) return;
+            const s = onBfNamed(P, 'Doc Samson, Super Psychiatrist'); if (!s || lostAbilities(s)) return;
+            const isTr = o => o.card.name === 'Surestrike Trident';
+            let tr = onBfNamed(P, 'Surestrike Trident');
+            if (!tr && !P.hand.some(isTr) && onBfNamed(P, 'Staff of Domination')) {
+                let n = 0;
+                while (n < 90 && P.library.length > 6 && !P.hand.some(isTr) && !G.over) { drawCards(P, 1, true); n++; }
+                if (n) log(`🔁 ${P.name} draws ${n} card${n === 1 ? '' : 's'} with Staff of Domination (untap it for {1} each time) looking for Surestrike Trident.`);
+                await settle();
+            }
+            if (!tr) { const h = P.hand.find(isTr); if (h && canCastNow(P, h) && canPay(P, h)) { await castSpell(P, h, null); await settle(); } tr = onBfNamed(P, 'Surestrike Trident'); }
+            if (!tr) return;
+            const power = Math.max(1, pow(s));
+            log(`🔁 ${P.name} equips Surestrike Trident to ${s.card.name}, taps him to deal ${power} to a player, untaps him and does it again, once for every opponent.`);
+            plPol('tridentKill');
+            for (const f of foes(P)) { if (G.over) break; damage(f, Math.max(power, f.life + 1), s); }
+            await settle();
+        },
         equipTo: { 'Umbral Mantle': 'Doc Samson, Super Psychiatrist', 'Sword of the Paruns': 'Doc Samson, Super Psychiatrist' },
         loops: [{
             name: 'Doc Samson, an untapper and his own mana',
@@ -55,9 +94,9 @@ const DECK_PLANS = {
                 const s = onBfNamed(P, 'Doc Samson, Super Psychiatrist'); if (!s || s.tapped || s.sick || lostAbilities(s)) return null;
                 const x = pow(s);
                 const staff = onBfNamed(P, 'Staff of Domination');
-                if (staff && !staff.tapped && x >= 5) return { pump: 0 };
+                if (staff && !staff.tapped && x >= 5) return { pump: 0, infinite: true };
                 const mantle = P.bf.find(m => m.card.name === 'Umbral Mantle' && m.attachedTo === s.uid);
-                if (mantle && x >= 3) return { pump: 20, target: s };
+                if (mantle && x >= 3) return { pump: 999, target: s, infinite: true };
                 return null;
             }, mana: 16, color: 'G',
         }],
@@ -275,11 +314,10 @@ async function planGoOff(P) {
     const pl = planOf(P); if (!pl || !pl.loops || P.planLoopTurn === G.turn) return;
     for (const lp of pl.loops) {
         const on = lp.online(P); if (!on) continue;
-        P.planLoopTurn = G.turn; P.keepPoolTurn = G.turn;
-        P.pool = (P.pool || []).concat(Array(lp.mana).fill(lp.color));
-        if (on.pump && on.target) { on.target.tp += on.pump; on.target.tq += on.pump; }
-        log(`🔁 ${P.name} loops ${lp.name}: untap, tap for mana, repeat (counted as ${lp.mana} mana${on.pump ? ` and +${on.pump}/+${on.pump}` : ''} this turn).`);
-        plPol('loops');
+        P.planLoopTurn = G.turn;
+        if (on.infinite) giveInfiniteMana(P, lp.name);
+        else { P.keepPoolTurn = G.turn; P.pool = (P.pool || []).concat(Array(lp.mana).fill(lp.color)); log(`🔁 ${P.name} loops ${lp.name} (counted as ${lp.mana} mana this turn).`); plPol('loops'); }
+        if (on.pump && on.target) { on.target.tp += on.pump; on.target.tq += on.pump; log(`${on.target.card.name} gets +${on.pump}/+${on.pump} from the loop (every pass pumps him again).`); }
         return;
     }
 }
@@ -298,9 +336,13 @@ async function planGoOff(P) {
                 if (pl.pre) { try { await pre_(P, pl); } catch (err) { /* keep playing */ } }
             }
         }
-        const r = await am.apply(this, arguments);
+        let r = await am.apply(this, arguments);
+        if (planOn(P) && G.active === P.i && !G.over && planOf(P)) {
+            const before = P.planLoopTurn;
+            await planGoOff(P);
+            if (P.planLoopTurn === G.turn && !G.over && (before !== G.turn || true)) r = await am.apply(this, arguments);
+        }
         if (planOn(P) && G.active === P.i && !G.over) { const pl2 = planOf(P); if (pl2 && pl2.post) { try { await pl2.post(P); } catch (err) { /* keep playing */ } } }
-        if (planOn(P) && G.active === P.i && !G.over && planOf(P)) { await planGoOff(P); if (P.planLoopTurn === G.turn && !G.over) { const again = await am.apply(this, arguments); return again; } }
         return r;
     };
 }
@@ -313,3 +355,27 @@ async function planGoOff(P) {
         return ab.apply(this, arguments);
     };
 }
+
+// A person at the table is offered the loop too: when the combo is online in their main phase, once a turn, they choose to loop (nothing happens by itself)
+function loopOfferFor(P) {
+    const pl = planOf(P); if (!pl || !pl.loops || P.isAI) return null;
+    for (const lp of pl.loops) { const on = lp.online(P); if (on && on.infinite) return { lp, on }; }
+    return null;
+}
+async function offerLoop(P) {
+    const f = loopOfferFor(P); if (!f) return;
+    P.loopAsked = G.turn;
+    const card = onBfNamed(P, 'Doc Samson, Super Psychiatrist');
+    const yes = await askYes(P, `${f.lp.name}: tap, pay to untap, repeat. That makes infinite mana this turn. Loop it?`, { card: card && card.card, yes: 'Loop (infinite mana)', no: 'Not now' });
+    if (!yes || G.over) return;
+    P.planLoopTurn = G.turn; giveInfiniteMana(P, f.lp.name);
+    if (f.on.pump && f.on.target) { f.on.target.tp += f.on.pump; f.on.target.tq += f.on.pump; log(`${f.on.target.card.name} gets +${f.on.pump}/+${f.on.pump} from the loop.`); }
+    renderGame();
+}
+setInterval(() => {
+    try {
+        if (typeof G === 'undefined' || !G || G.over || AUTOPLAY || window.__LAB || G.hotseat) return;
+        const P = G.players.find(x => !x.isAI && !x.out); if (!P || G.active !== P.i || !MAIN.includes(G.phase) || G.busy || G.mode || G.stack.length || window.__ask || document.querySelector('#modalHost .modal') || P.loopAsked === G.turn || P.planLoopTurn === G.turn) return;
+        if (loopOfferFor(P)) offerLoop(P);
+    } catch (e) { /* ignore */ }
+}, 800);
