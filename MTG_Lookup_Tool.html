@@ -8860,7 +8860,7 @@
             <!-- Buy from a TCGplayer Quicklist printout (2026-11-14, owner's request) -->
             <section class="qlb" id="qlBuy">
                 <h2>📄 Buy from a TCGplayer Quicklist</h2>
-                <p class="qlb-note">Load a Quicklist printout (the PDF from TCGplayer's Quicklist "Print"). Every column is read: card, set, condition, printing, language, quantity, line number, Market and Low Price. Each card is valued at the <b>lower of Market and Low Price</b> × quantity and offered at 50% unless you change it. Each card can have its own %. Then fill in the seller and payment and print a signed buy slip.</p>
+                <p class="qlb-note"><b>1.</b> Load the Quicklist printout (in TCGplayer's Quicklist, choose Print and save it as a PDF). Every column is read: card, set, condition, printing, language, quantity, line number, Market and Low Price. <b>2.</b> Each card is valued at the <b>lower of Market and Low Price</b> × quantity and offered at 50% unless you change it; any card can have its own %. A card you're not sure about can go in the <b>Maybe pile</b>, which stays out of the totals. <b>3.</b> Add the seller's and your name, tick how the seller wants to be paid, and print the buy slip to be signed.</p>
                 <div class="qlb-load">
                     <label class="qlb-file">📂 Choose the Quicklist PDF<input type="file" id="qlbFile" accept=".pdf,application/pdf" onchange="qlbLoadFile(this.files[0]); this.value='';"></label>
                     <details id="qlbPasteBox"><summary>…or paste the printout's text</summary>
@@ -24125,16 +24125,16 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 <td><input type="number" class="buylist-pct" min="0" max="200" step="1" value="${r.pct != null ? qlbEsc(r.pct) : ''}" placeholder="${qlbEsc(QLB.cashPct)}" aria-label="Percentage for ${qlbEsc(r.name)} (blank uses ${qlbEsc(QLB.cashPct)}%)" oninput="qlbSetPct(${i}, this.value)"></td>
                 <td class="num buylist-cash-val" id="qlbCash-${i}">${qlbMoney(l.cash)}</td>
                 <td class="num buylist-credit-val" id="qlbCredit-${i}">${qlbMoney(l.credit)}</td>
-                <td class="qlb-row-btns"><button type="button" class="qlb-maybe-btn" title="${r.maybe ? 'Move back into the buy' : 'Move to Maybe: left out of the totals, shown as an extra'}" onclick="qlbToggleMaybe(${i})">${r.maybe ? '↩ Buy' : '🤔'}</button><button type="button" class="buylist-remove-btn" title="Remove this item (Undo can bring it back)" onclick="qlbRemove(${i})">✕</button></td></tr>`;
+                <td class="qlb-row-btns"><button type="button" class="qlb-maybe-btn" title="${r.maybe ? 'Move this card back into the buy' : 'Not sure yet? Put it in the Maybe pile. It stays out of the totals until you move it back.'}" onclick="qlbToggleMaybe(${i})">${r.maybe ? '↩ Back to buy' : '🤔 Maybe'}</button><button type="button" class="buylist-remove-btn" title="Remove this item (Undo can bring it back)" onclick="qlbRemove(${i})">✕</button></td></tr>`;
         };
         const firm = [], maybe = [];
         QLB.rows.forEach((r, i) => (r.maybe ? maybe : firm).push(rowHTML(r, i)));
         const rowsHTML = firm.join('') || `<tr><td colspan="14" class="qlb-empty-row">Every item is in Maybe below.</td></tr>`;
-        const head = `<thead><tr><th class="num">#</th><th class="num">Qty</th><th>Item</th><th>Set / type</th><th>Cond.</th><th>Printing</th><th>Lang.</th><th class="num">Market</th><th class="num">Low Price</th><th class="num">Value</th><th>%</th><th class="num">Cash</th><th class="num">Store credit</th><th></th></tr></thead>`;
+        const head = `<thead><tr><th class="num">#</th><th class="num">Qty</th><th>Item</th><th>Set / type</th><th>Cond.</th><th>Printing</th><th>Lang.</th><th class="num">Market</th><th class="num">Low Price</th><th class="num">Value</th><th title="The % of value paid for this card. Blank uses the cash payout % above.">Rate %</th><th class="num">Cash</th><th class="num">Store credit</th><th></th></tr></thead>`;
         const maybeHTML = maybe.length ? `
             <div class="qlb-maybe">
-                <h3>🤔 Maybe <span class="qlb-maybe-sub">not in the totals above; tap ↩ Buy to add one</span></h3>
-                <label class="qlb-chk qlb-maybe-print"><input type="checkbox" id="qlbPrintMaybe" ${QLB.printMaybe !== false ? 'checked' : ''} onchange="qlbSet('printMaybe', this.checked)"> 🖨️ Print the Maybe items on the buy slip</label>
+                <h3>🤔 Maybe pile <span class="qlb-maybe-sub">Not bought, and not in the totals above. Tap ↩ Back to buy to move a card into the buy.</span></h3>
+                <label class="qlb-chk qlb-maybe-print"><input type="checkbox" id="qlbPrintMaybe" ${QLB.printMaybe !== false ? 'checked' : ''} onchange="qlbSet('printMaybe', this.checked)"> 🖨️ Also list the Maybe pile on the printed slip (marked as not bought)</label>
                 <div class="buylist-table-wrap"><table class="buylist-table">${head}
                     <tbody>${maybe.join('')}</tbody>
                     <tfoot><tr id="qlbMaybeFoot">${qlbFootCells(qlbTotals('maybe'), 'Maybe items')}</tr></tfoot>
@@ -24164,7 +24164,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             <div class="qlb-form">
                 <div class="${QLB.quote ? '' : 'req'}"><label for="qlbSeller">${QLB.quote ? 'Quote for (optional)' : 'Seller\'s name'}</label><input type="text" id="qlbSeller" value="${qlbEsc(QLB.seller)}" placeholder="Full name of the person selling" autocomplete="off" oninput="qlbSet('seller', this.value)"></div>
                 <div class="${QLB.quote ? '' : 'req'}"><label for="qlbEmployee">Employee</label><input type="text" id="qlbEmployee" value="${qlbEsc(QLB.employee)}" placeholder="Staff member handling the buy" autocomplete="off" oninput="qlbSet('employee', this.value)"></div>
-                <div style="grid-column: 1 / -1;"><label>Preferred payment</label><div class="qlb-pay" id="qlbPay"></div></div>
+                <div style="grid-column: 1 / -1;"><label>How the seller wants to be paid</label><div class="qlb-pay" id="qlbPay"></div></div>
                 <div id="qlbSplit" class="qlb-split" style="display:none;"></div>
                 <div id="qlbDetailWrap"><label for="qlbPayDetail">Digital payment details</label><input type="text" id="qlbPayDetail" value="${qlbEsc(QLB.payDetail)}" placeholder="e.g. PayPal, Venmo, Zelle, check + handle" autocomplete="off" oninput="qlbSet('payDetail', this.value)"></div>
             </div>
@@ -24193,7 +24193,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (!box || !info) return;
         const set = qlbPaySet(t);
         qlbSetHTML(box, QLB_PAY_OPTS.map(([k, lab]) => `<label class="${set[k] ? 'on' : ''}"><input type="checkbox" name="qlbPayType" value="${k}" ${set[k] ? 'checked' : ''} onchange="qlbTogglePay('${k}', this.checked)"> ${lab}</label>`).join('')
-            + `<span class="qlb-pay-hint">Store credit can be paired with cash or digital. Cash and digital can't be combined.</span>`);
+            + `<span class="qlb-pay-hint">Tick one to pay it all that way. To split the payment, tick Store credit and also Cash (or Digital). Cash and Digital can't be ticked together.</span>`);
         const sp = pay === 'split' ? qlbSplit(t) : null;
         const dw = document.getElementById('qlbDetailWrap'); if (dw) dw.style.display = pay === 'digital' || (sp && sp.how === 'digital') ? '' : 'none';
         qlbRenderSplit(t, sp);
@@ -24203,8 +24203,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (over && pay === 'cash') html += `<div class="qlb-warn">Paying over ${qlbMoney(QLB_DIGITAL_OVER)} in cash (confirmed by staff).</div>`;
         if (sp && sp.cash > QLB_DIGITAL_OVER && sp.how === 'digital' && QLB.splitHow !== 'digital') html += `<div class="qlb-warn">The cash part is over ${qlbMoney(QLB_DIGITAL_OVER)}, so it defaults to a <b>digital payment</b>.</div>`;
         if (sp && sp.cash > QLB_DIGITAL_OVER && sp.how === 'cash') html += `<div class="qlb-warn">Paying over ${qlbMoney(QLB_DIGITAL_OVER)} of the cash part in cash (confirmed by staff).</div>`;
-        html += `<div class="qlb-due">${sp ? `Amount due: <b>${qlbMoney(qlbDollars(sp.cash))}</b> by ${sp.how === 'digital' ? '📲 digital payment' : '💵 cash'} + <b>${qlbMoney(qlbDollars(sp.credit))}</b> in 🏷️ store credit` : pay ? `Amount due: <b>${qlbMoney(qlbDollars(qlbDue(t, pay)))}</b> by ${qlbEsc((QLB_PAY_OPTS.find(p => p[0] === pay) || [])[1] || '')}` : 'Tick the seller\'s preferred payment.'}
-            <span class="qlb-chip">Cash <b>${qlbMoney(t.cash)}</b></span><span class="qlb-chip">Store credit <b>${qlbMoney(t.credit)}</b></span></div>`;
+        html += `<div class="qlb-due">${sp ? `Pay the seller: <b>${qlbMoney(qlbDollars(sp.cash))}</b> by ${sp.how === 'digital' ? '📲 digital payment' : '💵 cash'} + <b>${qlbMoney(qlbDollars(sp.credit))}</b> in 🏷️ store credit <span class="qlb-split-note">(each part rounded to whole dollars)</span>` : pay ? `Pay the seller: <b>${qlbMoney(qlbDollars(qlbDue(t, pay)))}</b> by ${qlbEsc((QLB_PAY_OPTS.find(p => p[0] === pay) || [])[1] || '')} <span class="qlb-split-note">(rounded to whole dollars)</span>` : 'Tick how the seller wants to be paid.'}
+            <span class="qlb-chip" title="What the seller would get if the whole buy were paid in cash">All in cash <b>${qlbMoney(t.cash)}</b></span><span class="qlb-chip" title="What the seller would get if the whole buy were paid as store credit">All as store credit <b>${qlbMoney(t.credit)}</b></span></div>`;
         qlbSetHTML(info, html);
     }
     // The split box: rebuilt when the payment changes, but only its numbers are updated while the employee types in it.
@@ -24213,27 +24213,28 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (!el) return;
         if (!sp) { qlbSetHTML(el, ''); el.style.display = 'none'; return; }
         el.style.display = '';
-        const note = `of ${qlbMoney(t.cash)} cash offer${sp.capped ? ' (capped at the full cash offer)' : ''}`;
+        const note = `out of the ${qlbMoney(t.cash)} offer${sp.capped ? ' (capped at the whole offer)' : ''}`;
+        const lab = sp.how === 'digital' ? 'Pay how much by digital payment?' : 'Pay how much in cash?';
         const inp = document.getElementById('qlbSplitCash');
         // Once the box is built, only its numbers change, so typing and clicking nearby are never disturbed.
         if (inp && el.contains(inp)) {
-            const c = document.getElementById('qlbSplitCredit'), n = document.getElementById('qlbSplitNote');
+            const c = document.getElementById('qlbSplitCredit'), n = document.getElementById('qlbSplitNote'), lb = document.getElementById('qlbSplitLabel'); if (lb) lb.textContent = lab;
             if (c) c.textContent = qlbMoney(sp.credit); if (n) n.textContent = note;
             const bm = document.getElementById('qlbSplitBump'); if (bm) bm.textContent = qlbSplitBumpText();
             if (inp !== document.activeElement && Math.abs((parseFloat(inp.value) || 0) - sp.cash) > 0.004) inp.value = sp.cash.toFixed(2);
             return;
         }
-        qlbSetHTML(el, `<label for="qlbSplitCash">Cash / digital part</label>
+        qlbSetHTML(el, `<label for="qlbSplitCash" id="qlbSplitLabel">${lab}</label>
             <div class="qlb-split-row">$<input type="number" id="qlbSplitCash" min="0" step="0.01" value="${sp.cash.toFixed(2)}" oninput="qlbSetSplitCash(this.value)"> <span class="qlb-split-note" id="qlbSplitNote">${note}</span></div>
-            <div class="qlb-split-row">Rest as store credit: <b id="qlbSplitCredit">${qlbMoney(sp.credit)}</b> <span class="qlb-split-note" id="qlbSplitBump">${qlbSplitBumpText()}</span></div>`);
+            <div class="qlb-split-row">The rest is paid as store credit: <b id="qlbSplitCredit">${qlbMoney(sp.credit)}</b> <span class="qlb-split-note" id="qlbSplitBump">${qlbSplitBumpText()}</span></div>`);
     }
     function qlbSplitBumpText() { return Number(QLB.bumpPct) ? '(with the +' + QLB.bumpPct + '% bump)' : ''; }
     function qlbSetSplitCash(v) { const n = parseFloat(v); QLB.splitCash = v === '' || isNaN(n) ? null : n; QLB.splitOk = false; qlbSave(); qlbRenderPay(); }
     // With and without the maybe items (each sum rounded once).
     function qlbCompareHTML() {
         const a = qlbTotals(), b = qlbTotals('all');
-        return `<div><span>Without the maybe items</span> Cash <b>${qlbMoney(a.cash)}</b> · Store credit <b>${qlbMoney(a.credit)}</b></div>
-            <div><span>With the maybe items</span> Cash <b>${qlbMoney(b.cash)}</b> · Store credit <b>${qlbMoney(b.credit)}</b></div>`;
+        return `<div><span>Offer for the cards above</span> Cash <b>${qlbMoney(a.cash)}</b> · Store credit <b>${qlbMoney(a.credit)}</b></div>
+            <div><span>If the seller also sells the Maybe cards</span> Cash <b>${qlbMoney(b.cash)}</b> · Store credit <b>${qlbMoney(b.credit)}</b></div>`;
     }
     function qlbToggleMaybe(i) {
         const r = QLB.rows[i]; if (!r) return;
@@ -24336,7 +24337,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     // How the buy compares with the cart: what's still needed, or what's left over.
     function qlbGapHTML(have, need) {
         const d = qlbCents(need - have);
-        return d > 0 ? `<span class="qlb-gap need">Still needed <b>${qlbMoney(d)}</b></span>` : `<span class="qlb-gap left">Covers it, <b>${qlbMoney(-d)}</b> left over</span>`;
+        return d > 0 ? `<span class="qlb-gap need">Still to pay <b>${qlbMoney(d)}</b></span>` : `<span class="qlb-gap left">Covered, <b>${qlbMoney(-d)}</b> left over</span>`;
     }
     function qlbRenderCartSum() {
         const el = document.getElementById('qlbCartSum'); if (!el) return;
@@ -24344,13 +24345,13 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         QLB.cart.forEach((c, i) => { const v = document.getElementById('qlbCartLine-' + i); if (v) v.textContent = qlbMoney((Number(c.price) || 0) * (c.qty || 1)); });
         if (!QLB.cart.length) { qlbSetHTML(el, ''); return; }
         const t = qlbTotals(), hasMaybe = QLB.rows.some(r => r.maybe), all = hasMaybe ? qlbTotals('all') : null;
-        const cmp = (lab, tt) => `<tr><td>${lab}</td><td>Store credit <b>${qlbMoney(tt.credit)}</b> ${qlbGapHTML(tt.credit, ct.total)}</td><td>Cash <b>${qlbMoney(tt.cash)}</b> ${qlbGapHTML(tt.cash, ct.total)}</td></tr>`;
+        const cmp = (lab, tt) => `<tr><td>${lab}</td><td>All as store credit <b>${qlbMoney(tt.credit)}</b> ${qlbGapHTML(tt.credit, ct.total)}</td><td>All in cash <b>${qlbMoney(tt.cash)}</b> ${qlbGapHTML(tt.cash, ct.total)}</td></tr>`;
         qlbSetHTML(el, `<table class="qlb-cart-totals">
                 <tr><td>Subtotal (${ct.items} item${ct.items === 1 ? '' : 's'})</td><td>${qlbMoney(ct.sub)}</td></tr>
                 <tr><td>Indiana sales tax (${QLB_TAX_PCT}%)</td><td>${qlbMoney(ct.tax)}</td></tr>
                 <tr class="tot"><td>Total with tax</td><td>${qlbMoney(ct.total)}</td></tr>
             </table>
-            ${QLB.rows.length ? `<table class="qlb-cart-cmp">${cmp('This buy', t)}${hasMaybe ? cmp('With the maybe items', all) : ''}</table>` : '<p class="qlb-note">Load a printout or add items above to see how far this buy gets toward the cart.</p>'}`);
+            ${QLB.rows.length ? `<table class="qlb-cart-cmp">${cmp('This buy', t)}${hasMaybe ? cmp('If they also sell the Maybe cards', all) : ''}</table><p class="qlb-note">How much of the cart the seller's payout would cover, if it were all store credit or all cash. A split pays part of each.</p>` : '<p class="qlb-note">Load a printout or add items above to see how much of the cart this buy would cover.</p>'}`);
     }
     function qlbRenderCart() {
         const el = document.getElementById('qlbCart'); if (!el) return;
@@ -24362,7 +24363,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                 <td class="num" id="qlbCartLine-${i}">${qlbMoney((Number(c.price) || 0) * (c.qty || 1))}</td>
                 <td><button type="button" class="buylist-remove-btn" title="Remove (Undo can bring it back)" onclick="qlbCartRemove(${i})">✕</button></td></tr>`).join('');
         const html = `<section class="qlb-cart">
-                <h3>🛒 Working toward <span class="qlb-maybe-sub">what the seller wants from the store, with Indiana sales tax</span></h3>
+                <h3>🛒 Working toward <span class="qlb-maybe-sub">Things the seller wants to buy from the store today, priced with Indiana sales tax</span></h3>
                 <div class="qlb-add-grid">
                     <label class="wide">Item<input type="text" id="qlbkName" placeholder="Any card, product or accessory" autocomplete="off" oninput="qlbCartLookLink()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('qlbkPrice').focus();}"></label>
                     <label>Kind<select id="qlbkKind">${QLB_CART_KINDS.map(k => `<option>${k}</option>`).join('')}</select></label>
@@ -24499,16 +24500,17 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
         if (at) {
             const mt = qlbTotals('maybe'), withLines = payLines(at);
             maybeSec = `<section class="qbp-block">
-                ${step(++n, 'Maybe items', 'Not part of this buy unless the seller adds them')}
+                ${step(++n, 'Maybe items', 'Not bought, and not in the amounts above')}
                 <table class="qbp-items qbp-slim"><thead><tr><th class="c">Qty</th><th>Item</th><th>Set / type</th><th class="c">Cond.</th><th class="r">Value</th><th class="r">Cash</th><th class="r">Credit</th></tr></thead>
                     <tbody>${maybeRows.map(r => { const l = qlbLine(r); return `<tr><td class="c">${qlbEsc(r.qty)}</td><td class="nm">${qlbEsc(r.name)}</td><td>${qlbEsc(r.set)}</td><td class="c">${qlbEsc(r.cond || '')}</td><td class="r">${l.unit == null ? '—' : qlbMoney(l.value)}</td><td class="r b">${qlbMoney(l.cash)}</td><td class="r">${qlbMoney(l.credit)}</td></tr>`; }).join('')}</tbody>
                     <tfoot><tr><td class="c">${mt.cards}</td><td colspan="3">${plural(mt.lines, 'maybe line')}</td><td class="r">${qlbMoney(mt.value)}</td><td class="r">${qlbMoney(mt.cash)}</td><td class="r">${qlbMoney(mt.credit)}</td></tr></tfoot></table>
                 <div class="qbp-ifadd">
-                    <div class="qbp-ifadd-head">If the seller adds these</div>
+                    <div class="qbp-ifadd-head">If the seller also sells these</div>
                     <div class="qbp-ifadd-row"><span>Cash offer</span><s>${qlbMoney(t.cash)}</s><b>${qlbMoney(at.cash)}</b>${diff(t.cash, at.cash)}</div>
                     <div class="qbp-ifadd-row"><span>Store credit offer</span><s>${qlbMoney(t.credit)}</s><b>${qlbMoney(at.credit)}</b>${diff(t.credit, at.credit)}</div>
                     ${lines.length ? lines.map(([lab, amt], i) => `<div class="qbp-ifadd-row strong"><span>${quote ? 'Quoted' : 'To be paid'}: ${qlbEsc(lab)}</span><s>${qlbMoney(amt)}</s><b>${qlbMoney(withLines[i] ? withLines[i][1] : amt)}</b>${diff(amt, withLines[i] ? withLines[i][1] : amt)}</div>`).join('') : ''}
                 </div>
+                <div style="margin-top:4px;font-size:0.8em;color:#555;">To sell any of these, move them into the buy first. Then print a new slip.</div>
             </section>`;
         }
         // ④ Working toward: the cart, its total with tax, and a bar for how far the store credit gets.
@@ -24518,11 +24520,11 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             const bar = (label, have) => {
                 const pct = ct.total > 0 ? Math.min(100, Math.round(have / ct.total * 100)) : 100, d = qlbCents(ct.total - have);
                 return `<div class="qbp-progress${d <= 0 ? ' done' : ''}">
-                    <div class="qbp-progress-top"><span>${label} <b>${qlbMoney(have)}</b></span><strong>${d > 0 ? 'Still needed ' + qlbMoney(d) : 'Covered · ' + qlbMoney(-d) + ' left over'}</strong></div>
+                    <div class="qbp-progress-top"><span>${label} <b>${qlbMoney(have)}</b></span><strong>${d > 0 ? 'Still to pay ' + qlbMoney(d) : 'Covered, ' + qlbMoney(-d) + ' left over'}</strong></div>
                     <div class="qbp-track"><div style="width:${pct}%"></div></div></div>`;
             };
             cartSec = `<section class="qbp-block">
-                ${step(++n, 'Working toward', 'What the seller wants from the store')}
+                ${step(++n, 'Working toward', 'Things the seller wants to buy from the store today')}
                 <div class="qbp-cart">
                     <table class="qbp-items qbp-slim"><thead><tr><th class="c">Qty</th><th>Item</th><th>Kind</th><th class="r">Each</th><th class="r">Total</th></tr></thead>
                         <tbody>${QLB.cart.map(c => `<tr><td class="c">${qlbEsc(c.qty)}</td><td class="nm">${qlbEsc(c.name)}</td><td>${qlbEsc(c.kind)}</td><td class="r">${qlbMoney(c.price)}</td><td class="r">${qlbMoney((Number(c.price) || 0) * (c.qty || 1))}</td></tr>`).join('')}</tbody></table>
@@ -24532,8 +24534,8 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                         <div class="grand"><span>Total with tax</span><b>${qlbMoney(ct.total)}</b></div>
                     </div>
                 </div>
-                ${bar('Store credit from this buy', t.credit)}
-                ${at ? bar('With the maybe items', at.credit) : ''}
+                ${bar(pay === 'credit' ? 'Store credit from this buy' : sp ? 'Store credit from this buy (the credit part of the split)' : 'If paid as store credit instead', sp ? sp.credit : t.credit)}
+                ${at ? bar('Same, if the Maybe cards are sold too', sp ? qlbSplit(at).credit : at.credit) : ''}
             </section>`;
         }
         return `<div class="qbp">
@@ -24564,7 +24566,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                     <td class="r">${qlbMoney(t.value)}</td><td></td><td class="r">${qlbMoney(t.cash)}</td><td class="r">${qlbMoney(t.credit)}</td></tr></tfoot>
             </table>
             <section class="qbp-block keep">
-                ${step(2, quote ? 'The quote' : 'The offer', quote ? 'Good only at the date and time above' : 'The seller picks one way to be paid')}
+                ${step(2, quote ? 'The quote' : 'The offer', quote ? 'Good only at the date and time above' : sp ? 'Paid as a split: part ' + (sp.how === 'digital' ? 'by digital payment' : 'in cash') + ', part as store credit' : pay ? 'Paid in full by ' + method(pay).toLowerCase() : 'Payment not chosen yet')}
                 <div class="qbp-offer">
                     <div class="qbp-tile"><span>Total value</span><b>${qlbMoney(t.value)}</b><small>${plural(t.cards, 'item')}</small></div>
                     <div class="qbp-tile${set.cash || set.digital ? ' pick' : ''}"><span>Cash offer</span><b>${qlbMoney(t.cash)}</b><small>at the rates shown</small></div>
@@ -24573,6 +24575,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
                         <div class="qbp-payout-head">${quote ? 'Quoted amount' : 'Amount to be paid'}</div>
                         ${lines.map(([lab, amt]) => `<div class="qbp-payline"><span>${qlbEsc(lab)}</span><b>${qlbMoney(amt)}</b></div>`).join('') || '<div class="qbp-payline"><span>Not chosen</span><b>—</b></div>'}
                         ${digitalNote}
+                        ${lines.length ? '<div style="margin-top:4px;font-size:0.8em;color:#555;">Amounts are rounded to whole dollars.</div>' : ''}
                         ${overCash ? `<div class="qbp-flag">${overHow === 'cash' ? 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ' paid in cash, confirmed by staff.' : 'Over ' + qlbMoney(QLB_DIGITAL_OVER) + ': paid by digital payment.'}</div>` : ''}
                     </div>
                 </div>
