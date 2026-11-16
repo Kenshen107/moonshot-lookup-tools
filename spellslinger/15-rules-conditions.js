@@ -959,7 +959,7 @@ function permValue(o) { return isCreature(o) ? creatureValue(o) : (o.card.cmc ||
 async function aiUseAbilities(P) {
     const lands = P.bf.filter(x => /\bLand\b/.test(x.card.type)).length;
     if (lands < 5 && !P.hand.some(x => Rx(x).kind === 'land')) { const lc = P.hand.find(x => canLandcycle(P, x)); if (lc) await landcycle(P, lc); }
-    for (let guard = 0; guard < 8 && !G.over; guard++) {
+    for (let guard = 0; guard < (P.infMana === G.turn ? 40 : 8) && !G.over; guard++) { // infinite mana (15y-ai-plans.js): every repeatable ability gets used
         let best = null;
         for (const o of [...P.bf, ...P.gy.filter(x => (Rx(x).gyActs || []).length), ...P.hand.filter(x => (Rx(x).handActs || []).length)]) {
             actsOf(o).forEach(a0 => {
@@ -975,7 +975,7 @@ async function aiUseAbilities(P) {
                 if (a.cost && (a.cost.sacCreature || a.cost.sacPerm)) { const f = sacFodder(P, o, a.cost.sacCreature ? 'creature' : a.cost.sacPerm); sc -= f ? (f.token ? 1 : permValue(f)) : 99; }
                 if (a.cost && a.cost.tap && isCreature(o) && G.phase === 'main1' && canAttackWith(o)) sc -= 3; // attack first
                 if (a.loyalty !== undefined && a.loyalty > 0) sc += 2; // keep the planeswalker growing
-                if (sc > 2 && (!best || sc > best.sc)) best = { o, a, target, sc };
+                if (sc > (P.infMana === G.turn ? 1.5 : 2) && (!best || sc > best.sc)) best = { o, a, target, sc };
             });
         }
         if (!best) return;

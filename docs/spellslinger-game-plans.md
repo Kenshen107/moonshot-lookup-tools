@@ -1,8 +1,8 @@
 # Spellslinger Duels: computer game plans
 
-Written 2026-11-15 (owner: "some of the decks need a game plan to understand what is the win con"). Code: `spellslinger/15y-ai-plans.js` (`DECK_PLANS`, by commander name), tests `tests/suites/plans.js`, audit `node tests/ability_audit.js`.
+Written 2026-11-15, updated 2026-11-16 (owner: "some of the decks need a game plan to understand what is the win con"). Code: `spellslinger/15y-ai-plans.js` (`DECK_PLANS`, by commander name), tests `tests/suites/plans.js`, audit `node tests/ability_audit.js`.
 
-A plan changes how the **computer** plays the deck: engine cards are cast sooner, payoffs wait until the engine runs, the engine creature stays home, equipment goes on the right creature, and combos get a loop that gives a large pool of mana for the turn (marked 🔁 in the log). People play their own decks as they like. Only Doc Samson has a loop so far; the other plans are about order (what to cast first, what to hold).
+A plan changes how the **computer** plays the deck: engine cards are cast sooner, payoffs wait until the engine runs, the engine creature stays home, equipment goes on the right creature, and combos get a loop that gives a large pool of mana for the turn (marked 🔁 in the log). A plan can also run its own hooks: `pre` (before the main phase), `post` (after it) and `abilities` (before the generic ability loop). People play their own decks as they like. Only Doc Samson has a loop, and it is real infinite mana for the turn (unlimited pool, +999/+999 on the Mantle path, and a Surestrike Trident finish that kills every opponent); Super-Skrull spends spare mana on draw four first; Urianger plays Play Arcanum before casting and Draw Arcanum afterwards; the other plans are about order (what to cast first, what to hold).
 
 ## Doc Samson, Super Psychiatrist
 
@@ -38,7 +38,7 @@ Domain: land after land, every basic land type you control makes Grizzlegom's at
 
 ## Super-Skrull
 
-Defenders: build walls (Super-Skrull makes 0/4 Walls), then High Alert, Doran or The Kingpin of Crime turn toughness into damage and the walls attack.
+Ramp into the activated abilities (owner, 2026-11-16): make as much mana as possible, then spend it every turn on Super-Skrull's four abilities: {5}{U} draw four, {2}{W} a 0/4 Wall, {3}{G} +4/+4, {4}{R} 4 damage. Rocks, rituals and cost reducers (Training Grounds, Zirda, Biomancer's Familiar) come first; High Alert, Doran and The Kingpin of Crime turn the Walls into damage.
 
 ## Jadzi, Oracle of Arcavios
 
@@ -78,7 +78,7 @@ Summon sagas: five colors of mana (Chromatic Lantern, Yuna, Sylvan Library), the
 
 ## Urianger Augurelt
 
-Angels and the initiative: ramp into Lyra, Archangel of Thune and Absolute Virtue; Urianger plays cards from exile; untappers keep mana flowing.
+Abuse the commander's tap abilities (owner, 2026-11-16): Draw Arcanum exiles the top card face down, Play Arcanum lets you play those exiled cards for {2} less (and gain 2 life). Both need {T}, so untappers (Unbender Tine, Vizier of Tumbling Sands, Fatestitcher, Freed from the Real, Thousand-Year Elixir) let him do both in a turn. Stock up the exile with Draw Arcanum, then cast bombs (Lyra, Archangel of Thune, Absolute Virtue, Serra's Emissary, Teferi) two mana cheaper.
 
 ## Beorn the Fierce
 

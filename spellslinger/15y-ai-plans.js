@@ -31,11 +31,61 @@ const AI_ACT_GUARDS = {
         if (P && P.isAI && o && a && a.effects) {
             // A "becomes a creature until end of turn" ability does nothing the second time in a turn
             if (a.effects.some(e => e.t === 'animate') && o.animated && o.animated.turn === G.turn) return false;
+            if (a.effects.some(e => e.t === 'draw' && (e.target === 'player' || !e.target)) && P.library.length < 12) return false; // never draw itself out with an ability
+            if (P.infMana === G.turn && P.infTurn === G.turn && (P.infTurnActs || 0) >= INF_ACT_CAP) return false; // bounded: the board stays playable
             const g = AI_ACT_GUARDS[o.card.name];
             if (g && !g(P, o, a)) return false;
         }
         return base.apply(this, arguments);
     };
+}
+
+// ---------- Infinite mana (2026-11-16, owner: "make the infinite mana truly infinite") ----------
+// A combo that makes more mana than it costs gives the player unlimited mana for the turn (`P.infMana = G.turn`). The pool holds INF_PER of every color and
+// paying from the pool no longer removes anything (a `tapSource` wrapper), so nothing in the engine can run out: any number of spells, abilities and X spells
+// (X is capped by the pool, 90). It lasts until the turn ends (`keepPoolTurn`), like the loop it stands for.
+const INF_PER = 15;
+const INF_ACT_CAP = 60; // most abilities the computer uses in one infinite-mana turn
+const infiniteNow = P => !!P && P.infMana === G.turn;
+function giveInfiniteMana(P, why) {
+    P.infMana = G.turn; P.keepPoolTurn = G.turn;
+    P.pool = (P.pool || []).filter(c => c.includes(':'));
+    ['W', 'U', 'B', 'R', 'G', 'C'].forEach(c => { for (let i = 0; i < INF_PER; i++) P.pool.push(c); });
+    log(`🔁 ${P.name} ${you(P) ? 'loop' : 'loops'} ${why}: untap, tap for mana, repeat. That is infinite mana this turn.`);
+    plPol('loops');
+}
+{
+    const ts = tapSource;
+    tapSource = function (P, s) { if (s && s.pool && !s.channel && !s.virtual && infiniteNow(P)) return; return ts.apply(this, arguments); };
+}
+
+// With infinite mana a tap ability repeats: Staff of Domination untaps a creature ({3}) and itself ({1}), and a creature with Umbral Mantle untaps itself. So after an
+// activation that tapped the source, the source untaps when one of those is in play. Non-creature tap abilities (Ozolith, the Ring) stay once a turn.
+{
+    const act = activate;
+    activate = async function (P, o, a) {
+        const was = o && o.tapped;
+        const r = await act.apply(this, arguments);
+        if (r && P && infiniteNow(P) && a && a.cost && a.cost.tap && o && !was && o.tapped && onBf(o.uid)) {
+            const staff = P.bf.find(x => x.card.name === 'Staff of Domination' && !lostAbilities(x));
+            const mantle = P.bf.some(x => x.card.name === 'Umbral Mantle' && x.attachedTo === o.uid);
+            if ((o.card.name === 'Staff of Domination') || (isCreature(o) && (staff || mantle))) { o.tapped = false; P.infUntaps = (P.infUntaps || 0) + 1; }
+        }
+        if (r && P && infiniteNow(P)) { P.infActs = (P.infActs || 0) + 1; if (P.infTurn !== G.turn) { P.infTurn = G.turn; P.infTurnActs = 0; } P.infTurnActs++; }
+        return r;
+    };
+}
+// Use every repeatable ability, round after round, until a round does nothing (bounded)
+async function useInfiniteAbilities(P) {
+    let rounds = 0;
+    while (rounds < 8 && !G.over) {
+        const before = P.infActs || 0;
+        await aiUseAbilities(P);
+        await settle();
+        rounds++;
+        if ((P.infActs || 0) === before) break;
+    }
+    if (rounds > 1 || (P.infActs || 0) > 0) plPol('infiniteAbilityRounds');
 }
 
 // ---------- 2. Game plans ----------
@@ -48,6 +98,30 @@ const DECK_PLANS = {
         engine: ['Hardened Scales', 'Ozolith, the Shattered Spire', 'Incubation Druid', 'Staff of Domination', 'Umbral Mantle', 'Kalonian Hydra', 'Sol Ring', 'Fyndhorn Elves', 'Gyre Sage', 'Moxite Refinery', 'Surestrike Trident', 'Magistrate\'s Scepter'],
         payoff: ['Hydra Broodmaster', 'Fangs of Kalonia', 'The Ooze', 'Ring of Three Wishes', 'Goblin Cannon', 'Return of the Wildspeaker', 'Temur Sabertooth', 'Gamma Grotesque', 'Origin of the Hulk'],
         protect: ['Doc Samson, Super Psychiatrist'], cmdr: 6,
+        // With infinite mana the deck wins with Surestrike Trident: equip it, tap Samson to hit a player for his power, untap him (Staff {3} or Mantle), repeat.
+        // Find the Trident (draw with Staff of Domination: {5},{T} draw, {1} untap it), cast it, then every opponent takes lethal.
+        async post(P) {
+            if (!infiniteNow(P) || G.over) return;
+            const s = onBfNamed(P, 'Doc Samson, Super Psychiatrist'); if (!s || lostAbilities(s)) return;
+            // Every other repeatable ability is worth doing over and over: counters, tokens, draw, pump, damage (owner, 2026-11-16)
+            if (!P.infBusy) { P.infBusy = true; try { P.infActs = 0; await useInfiniteAbilities(P); if (P.infActs && !G.over) { await aiMain(P); await useInfiniteAbilities(P); } } finally { P.infBusy = false; } }
+            if (G.over) return;
+            const isTr = o => o.card.name === 'Surestrike Trident';
+            let tr = onBfNamed(P, 'Surestrike Trident');
+            if (!tr && !P.hand.some(isTr) && onBfNamed(P, 'Staff of Domination')) {
+                let n = 0;
+                while (n < 90 && P.library.length > 6 && !P.hand.some(isTr) && !G.over) { drawCards(P, 1, true); n++; }
+                if (n) log(`🔁 ${P.name} draws ${n} card${n === 1 ? '' : 's'} with Staff of Domination (untap it for {1} each time) looking for Surestrike Trident.`);
+                await settle();
+            }
+            if (!tr) { const h = P.hand.find(isTr); if (h && canCastNow(P, h) && canPay(P, h)) { await castSpell(P, h, null); await settle(); } tr = onBfNamed(P, 'Surestrike Trident'); }
+            if (!tr) return;
+            const power = Math.max(1, pow(s));
+            log(`🔁 ${P.name} equips Surestrike Trident to ${s.card.name}, taps him to deal ${power} to a player, untaps him and does it again, once for every opponent.`);
+            plPol('tridentKill');
+            for (const f of foes(P)) { if (G.over) break; damage(f, Math.max(power, f.life + 1), s); }
+            await settle();
+        },
         equipTo: { 'Umbral Mantle': 'Doc Samson, Super Psychiatrist', 'Sword of the Paruns': 'Doc Samson, Super Psychiatrist' },
         loops: [{
             name: 'Doc Samson, an untapper and his own mana',
@@ -55,9 +129,9 @@ const DECK_PLANS = {
                 const s = onBfNamed(P, 'Doc Samson, Super Psychiatrist'); if (!s || s.tapped || s.sick || lostAbilities(s)) return null;
                 const x = pow(s);
                 const staff = onBfNamed(P, 'Staff of Domination');
-                if (staff && !staff.tapped && x >= 5) return { pump: 0 };
+                if (staff && !staff.tapped && x >= 5) return { pump: 0, infinite: true };
                 const mantle = P.bf.find(m => m.card.name === 'Umbral Mantle' && m.attachedTo === s.uid);
-                if (mantle && x >= 3) return { pump: 20, target: s };
+                if (mantle && x >= 3) return { pump: 999, target: s, infinite: true };
                 return null;
             }, mana: 16, color: 'G',
         }],
@@ -101,9 +175,20 @@ const DECK_PLANS = {
         payoff: ['Genesis Wave', 'Full Throttle', 'Tromp the Domains', 'The Weatherseed Treaty', 'Seize the Day'], payoffNeed: 3, cmdr: 5,
     },
     'Super-Skrull': {
-        win: 'Defenders: build walls (Super-Skrull makes 0/4 Walls), then High Alert, Doran or The Kingpin of Crime turn toughness into damage and the walls attack.',
-        engine: ['Training Grounds', 'Zirda, the Dawnwaker', 'Doran, the Siege Tower', 'Sol Ring', 'Mind Stone', 'Arcane Signet'],
-        payoff: ['High Alert', 'The Kingpin of Crime', 'Assault Formation', 'Belligerent Brontodon'], payoffNeed: 3, protect: [], cmdr: 5,
+        win: 'Ramp into the activated abilities (owner, 2026-11-16): make as much mana as possible, then spend it every turn on Super-Skrull\'s four abilities: {5}{U} draw four, {2}{W} a 0/4 Wall, {3}{G} +4/+4, {4}{R} 4 damage. Rocks, rituals and cost reducers (Training Grounds, Zirda, Biomancer\'s Familiar) come first; High Alert, Doran and The Kingpin of Crime turn the Walls into damage.',
+        style: 'ramp',
+        engine: ['Sol Ring', 'Arcane Signet', 'Thran Dynamo', 'Worn Powerstone', 'Everflowing Chalice', 'Hedron Archive', 'Lotus Petal', 'Dark Ritual', 'Astral Cornucopia', 'Relic of Sauron', 'Moonsilver Key', 'Training Grounds', 'Zirda, the Dawnwaker', 'Biomancer\'s Familiar', 'Wilderness Reclamation', 'Three Visits', 'Skyshroud Claim', 'Demonic Tutor', 'Vampiric Tutor', 'Victory Chimes'],
+        payoff: ['High Alert', 'The Kingpin of Crime', 'Doran, Besieged by Time', 'Exsanguinate', 'Atraxa, Grand Unifier'], payoffNeed: 4, mana: 8, cmdr: 8,
+        // With mana to spare, draw four before small removal: mana turns into cards
+        async abilities(P) {
+            const sk = onBfNamed(P, 'Super-Skrull'); if (!sk || lostAbilities(sk)) return;
+            for (let k = 0; k < 3 && !G.over; k++) {
+                const a = actsOf(sk).find(x => x.effects.some(e => e.t === 'draw' && e.n === 4));
+                if (!a || !canActivate(P, sk, a) || availableMana(P) < 6 || P.hand.length > 5 || P.library.length < 10) return;
+                if (!await activate(P, sk, a, { p: P })) return;
+                plPol('skrullDraw');
+            }
+        },
     },
     'Jadzi, Oracle of Arcavios': {
         win: 'Bounce-land value and copies: Jadzi, Tatyova and bounce lands draw cards; Genesis Wave, Temporal Cascade and Doppelgang convert mana into a board; Tutelages punish a big hand.',
@@ -149,9 +234,23 @@ const DECK_PLANS = {
         engine: ['Chromatic Lantern', 'Yuna, Grand Summoner', 'Sylvan Library', 'Sol Ring', 'Arcane Signet', 'Mind Stone'], payoff: ['Summon: Primal Odin', 'Summon: Anima', 'Summon: Valefor', 'Summon: Shiva'], payoffNeed: 3, cmdr: 5,
     },
     'Urianger Augurelt': {
-        win: 'Angels and the initiative: ramp into Lyra, Archangel of Thune and Absolute Virtue; Urianger plays cards from exile; untappers keep mana flowing.',
+        win: 'Abuse the commander\'s tap abilities (owner, 2026-11-16): Draw Arcanum exiles the top card face down, Play Arcanum lets you play those exiled cards for {2} less (and gain 2 life). Both need {T}, so untappers (Unbender Tine, Vizier of Tumbling Sands, Fatestitcher, Freed from the Real, Thousand-Year Elixir) let him do both in a turn. Stock up the exile with Draw Arcanum, then cast bombs (Lyra, Archangel of Thune, Absolute Virtue, Serra\'s Emissary, Teferi) two mana cheaper.',
         style: 'midrange',
-        engine: ['Sol Ring', 'Mind Stone', 'Arcane Signet', 'Thran Dynamo'], payoff: ['Lyra, Archangel of Dawn', 'Archangel of Thune', 'Absolute Virtue', 'Teferi, Who Slows the Sunset'], payoffNeed: 3, cmdr: 5,
+        engine: ['Unbender Tine', 'Vizier of Tumbling Sands', 'Fatestitcher', 'Freed from the Real', 'Thousand-Year Elixir', 'Patriar\'s Seal', 'Sol Ring', 'Arcane Signet', 'Talisman of Progress', 'Gilded Lotus', 'Chromatic Lantern', 'Commander\'s Sphere', 'Moonsilver Key'],
+        payoff: ['Lyra, Archangel of Dawn', 'Lyra Dawnbringer', 'Archangel of Thune', 'Avacyn, Angel of Hope', 'Absolute Virtue', 'Serra\'s Emissary', 'Teferi, Who Slows the Sunset', 'Ob Nixilis, the Ascended', 'Ultimate Magic: Holy', 'Seraph of the Sword'], payoffNeed: 2, cmdr: 8,
+        // Before the main phase: with cards waiting in exile and mana to cast them, Play Arcanum first (cheaper spells). After it: Draw Arcanum to fill the exile.
+        async pre(P) {
+            const u = onBfNamed(P, 'Urianger Augurelt'); if (!u || u.tapped || u.sick || lostAbilities(u)) return;
+            const a = actsOf(u).find(x => x.effects.some(e => e.id === 'sl_urianger2'));
+            const waiting = P.exile.filter(c => c.slUri === u.uid);
+            const worth = waiting.some(c => Rx(c).kind === 'land' ? P.landsPlayed < landLimit(P) : availableMana(P) >= Math.max(1, (c.card.cmc || 0) - 2));
+            if (a && worth && canActivate(P, u, a) && await activate(P, u, a)) plPol('uriPlay');
+        },
+        async post(P) {
+            const u = onBfNamed(P, 'Urianger Augurelt'); if (!u || u.tapped || u.sick || lostAbilities(u)) return;
+            const a = actsOf(u).find(x => x.effects.some(e => e.id === 'sl_urianger1'));
+            if (a && P.library.length > 6 && canActivate(P, u, a) && await activate(P, u, a)) plPol('uriDraw');
+        },
     },
     'Beorn the Fierce': {
         win: 'Mana dorks into big green creatures: Famished Worldsire, Wargling and Selvala, then attack with the biggest bears.',
@@ -244,16 +343,16 @@ function planReady(P, pl) {
     };
 }
 
+const pre_ = (P, pl) => pl.pre(P);
 // Combos: at the start of the computer's main phase (and again after it has played more), check each loop
 async function planGoOff(P) {
     const pl = planOf(P); if (!pl || !pl.loops || P.planLoopTurn === G.turn) return;
     for (const lp of pl.loops) {
         const on = lp.online(P); if (!on) continue;
-        P.planLoopTurn = G.turn; P.keepPoolTurn = G.turn;
-        P.pool = (P.pool || []).concat(Array(lp.mana).fill(lp.color));
-        if (on.pump && on.target) { on.target.tp += on.pump; on.target.tq += on.pump; }
-        log(`🔁 ${P.name} loops ${lp.name}: untap, tap for mana, repeat (counted as ${lp.mana} mana${on.pump ? ` and +${on.pump}/+${on.pump}` : ''} this turn).`);
-        plPol('loops');
+        P.planLoopTurn = G.turn;
+        if (on.infinite) giveInfiniteMana(P, lp.name);
+        else { P.keepPoolTurn = G.turn; P.pool = (P.pool || []).concat(Array(lp.mana).fill(lp.color)); log(`🔁 ${P.name} loops ${lp.name} (counted as ${lp.mana} mana this turn).`); plPol('loops'); }
+        if (on.pump && on.target) { on.target.tp += on.pump; on.target.tq += on.pump; log(`${on.target.card.name} gets +${on.pump}/+${on.pump} from the loop (every pass pumps him again).`); }
         return;
     }
 }
@@ -269,10 +368,49 @@ async function planGoOff(P) {
                     if (e && c && e.attachedTo !== c.uid && Rx(e).isEquipment) { try { if (await equip(P, e, c)) plPol('equips'); } catch (err) { /* keep playing */ } }
                 }
                 await planGoOff(P);
+                if (pl.pre) { try { await pre_(P, pl); } catch (err) { /* keep playing */ } }
             }
         }
-        const r = await am.apply(this, arguments);
-        if (planOn(P) && G.active === P.i && !G.over && planOf(P)) { await planGoOff(P); if (P.planLoopTurn === G.turn && !G.over) { const again = await am.apply(this, arguments); return again; } }
+        let r = await am.apply(this, arguments);
+        if (planOn(P) && G.active === P.i && !G.over && planOf(P)) {
+            const before = P.planLoopTurn;
+            await planGoOff(P);
+            if (P.planLoopTurn === G.turn && !G.over && (before !== G.turn || true)) r = await am.apply(this, arguments);
+        }
+        if (planOn(P) && G.active === P.i && !G.over) { const pl2 = planOf(P); if (pl2 && pl2.post) { try { await pl2.post(P); } catch (err) { /* keep playing */ } } }
         return r;
     };
 }
+
+// Abilities: a plan may spend mana on its commander's abilities before the generic ability loop does (Super-Skrull: draw four before small removal)
+{
+    const ab = aiUseAbilities;
+    aiUseAbilities = async function (P) {
+        if (planOn(P) && !G.over) { const pl = planOf(P); if (pl && pl.abilities) { try { await pl.abilities(P); } catch (err) { /* keep playing */ } } }
+        return ab.apply(this, arguments);
+    };
+}
+
+// A person at the table is offered the loop too: when the combo is online in their main phase, once a turn, they choose to loop (nothing happens by itself)
+function loopOfferFor(P) {
+    const pl = planOf(P); if (!pl || !pl.loops || P.isAI) return null;
+    for (const lp of pl.loops) { const on = lp.online(P); if (on && on.infinite) return { lp, on }; }
+    return null;
+}
+async function offerLoop(P) {
+    const f = loopOfferFor(P); if (!f) return;
+    P.loopAsked = G.turn;
+    const card = onBfNamed(P, 'Doc Samson, Super Psychiatrist');
+    const yes = await askYes(P, `${f.lp.name}: tap, pay to untap, repeat. That makes infinite mana this turn. Loop it?`, { card: card && card.card, yes: 'Loop (infinite mana)', no: 'Not now' });
+    if (!yes || G.over) return;
+    P.planLoopTurn = G.turn; giveInfiniteMana(P, f.lp.name);
+    if (f.on.pump && f.on.target) { f.on.target.tp += f.on.pump; f.on.target.tq += f.on.pump; log(`${f.on.target.card.name} gets +${f.on.pump}/+${f.on.pump} from the loop.`); }
+    renderGame();
+}
+setInterval(() => {
+    try {
+        if (typeof G === 'undefined' || !G || G.over || AUTOPLAY || window.__LAB || G.hotseat) return;
+        const P = G.players.find(x => !x.isAI && !x.out); if (!P || G.active !== P.i || !MAIN.includes(G.phase) || G.busy || G.mode || G.stack.length || window.__ask || document.querySelector('#modalHost .modal') || P.loopAsked === G.turn || P.planLoopTurn === G.turn) return;
+        if (loopOfferFor(P)) offerLoop(P);
+    } catch (e) { /* ignore */ }
+}, 800);
