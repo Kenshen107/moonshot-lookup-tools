@@ -32,6 +32,7 @@ const AI_ACT_GUARDS = {
             // A "becomes a creature until end of turn" ability does nothing the second time in a turn
             if (a.effects.some(e => e.t === 'animate') && o.animated && o.animated.turn === G.turn) return false;
             if (a.effects.some(e => e.t === 'draw' && (e.target === 'player' || !e.target)) && P.library.length < 12) return false; // never draw itself out with an ability
+            if (P.infMana === G.turn && P.infTurn === G.turn && (P.infTurnActs || 0) >= INF_ACT_CAP) return false; // bounded: the board stays playable
             const g = AI_ACT_GUARDS[o.card.name];
             if (g && !g(P, o, a)) return false;
         }
@@ -44,6 +45,7 @@ const AI_ACT_GUARDS = {
 // paying from the pool no longer removes anything (a `tapSource` wrapper), so nothing in the engine can run out: any number of spells, abilities and X spells
 // (X is capped by the pool, 90). It lasts until the turn ends (`keepPoolTurn`), like the loop it stands for.
 const INF_PER = 15;
+const INF_ACT_CAP = 60; // most abilities the computer uses in one infinite-mana turn
 const infiniteNow = P => !!P && P.infMana === G.turn;
 function giveInfiniteMana(P, why) {
     P.infMana = G.turn; P.keepPoolTurn = G.turn;
@@ -69,7 +71,7 @@ function giveInfiniteMana(P, why) {
             const mantle = P.bf.some(x => x.card.name === 'Umbral Mantle' && x.attachedTo === o.uid);
             if ((o.card.name === 'Staff of Domination') || (isCreature(o) && (staff || mantle))) { o.tapped = false; P.infUntaps = (P.infUntaps || 0) + 1; }
         }
-        if (r && P && infiniteNow(P)) P.infActs = (P.infActs || 0) + 1;
+        if (r && P && infiniteNow(P)) { P.infActs = (P.infActs || 0) + 1; if (P.infTurn !== G.turn) { P.infTurn = G.turn; P.infTurnActs = 0; } P.infTurnActs++; }
         return r;
     };
 }
