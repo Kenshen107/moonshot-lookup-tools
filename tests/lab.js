@@ -162,6 +162,9 @@ function report(all, pageErrors, secs) {
     console.log('Endings:', JSON.stringify(reasons));
     { const w = all.filter(r => r.watch); if (w.length) console.log(`WATCH: ${w.length} game(s) where the watched trigger fired more often than the card entered: seeds ${w.slice(0, 12).map(r => r.seed + ' ' + JSON.stringify(r.watch)).join('; ')}`); }
     console.log(`Hung (no result in time): ${hung.length}   Threw: ${err.length}   Broken invariants: ${bad.length}   Page errors during games: ${logged.length}   Page errors total: ${pageErrors.length}`);
+    const stepRows = all.filter(r => r.steps).map(r => r.steps).sort((x, y) => x - y), limited = all.filter(r => r.stepLimit);
+    if (stepRows.length) console.log(`Engine steps per game: median ${stepRows[stepRows.length >> 1]}, max ${stepRows[stepRows.length - 1]}   Step-limit games: ${limited.length}`);
+    limited.slice(0, 5).forEach(r => console.log(`  STEP LIMIT seed ${r.seed}: ${r.stepLimit}`));
     [...hung, ...err, ...bad, ...logged].slice(0, 12).forEach(r => console.log(`  seed ${r.seed} ${r.kind}: ${r.hang ? 'HUNG turn ' + r.turn + ' ' + r.phase : r.error || JSON.stringify(r.bad || r.errors)}  (${r.a} vs ${r.b})`));
     const uniq = {}; pageErrors.forEach(e => { const k = e; uniq[k] = (uniq[k] || 0) + 1; });
     Object.entries(uniq).forEach(([k, n]) => console.log(`  page error x${n}: ${k.slice(0, 400)}`));
