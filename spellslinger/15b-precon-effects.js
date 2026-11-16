@@ -383,7 +383,8 @@ async function preconEffect(P, e, t, src, O, name) {
         case 'singeMind': { const X = (t && t.p) || O; if (!X.hand.length) break; const c = X.hand[rand(X.hand.length)]; const k = c.card.cmc || 0; log(`${X.name} ${you(X) ? 'reveal' : 'reveals'} ${c.card.name} and ${you(X) ? 'lose' : 'loses'} ${k} life.`); X.life -= k; fire('loseLife', { P: X, n: k }); break; }
         case 'copShield': P.cop = P.cop && P.cop.turn === G.turn ? P.cop : { turn: G.turn }; P.cop[e.color] = (P.cop[e.color] || 0) + 1; log(`${name}: the next ${e.color} source's damage to ${P.name} this turn is prevented.`); break;
         case 'reaverBurn': { const n = (src.ctr && src.ctr.charge) || 0; if (n > 0) { damage(O, n, src); log(`${name} deals ${n} damage to ${O.name}.`); } break; }
-        case 'bloodReckoning': { const n = (G.attackers || []).length * e.n; if (n > 0) { O.life -= n; log(`${O.name} ${you(O) ? 'lose' : 'loses'} ${n} life for attacking.`); fire('loseLife', { P: O, n }); } break; }
+        case 'bloodReckoning': { // "that creature's controller loses N life": the controller of the one attacker this trigger is about (one trigger per creature attacking you)
+            const X = G.ctxObj ? G.players[G.ctxObj.owner] : O, n = e.n; if (n > 0 && X) { X.life -= n; log(`${X.name} ${you(X) ? 'lose' : 'loses'} ${n} life for attacking${G.ctxObj ? ' with ' + G.ctxObj.card.name : ''}.`); fire('loseLife', { P: X, n }); } break; }
         default: await uldEffect(P, e, t, src, O, name); // the Uldaros Theorix deck (15c-uldaros-effects.js)
     }
 }
@@ -394,7 +395,7 @@ STATIC_FN.flying = o => has(o, 'flying');
 BLOCK_FN.notArtifact = b => !/\bArtifact\b/.test(b.card.type);
 Object.assign(TRIG_FN, {
     anotherPow: (o, ctx, tr) => !!ctx.o && ctx.o !== o && ctx.o.owner === o.owner && isCreature(ctx.o) && pow(ctx.o) >= (tr.minPow || 0),
-    oppAttacks: (o, ctx) => G.active !== o.owner && (ctx.list || []).some(x => x.owner !== o.owner),
+    oppAttacks: (o, ctx) => G.active !== o.owner && (ctx.list || []).some(x => x.owner !== o.owner && attackAimedAt(x, o.owner)),
     castRed: (o, ctx) => !!ctx.o && ctx.P.i === o.owner && (ctx.o.card.colors || []).includes('R'),
     mountainEnters: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && /\bMountain\b/.test(ctx.o.card.type),
     selfManaTap: (o, ctx) => ctx.o === o && !!ctx.mana,
@@ -669,3 +670,6 @@ Object.assign(TRIG_FN, {
     exploreMine: (o, ctx) => !!ctx.o && ctx.o.owner === o.owner && isCreature(ctx.o),
     exploreSelfOnly: (o, ctx) => !!ctx.o && ctx.o === o
 });
+
+// Is this attacking creature going at player i? A pod attacker has its own target (atkTo); otherwise it is the defending player (2026-11-16: Revenge of Ravens and the other "attacks you or a planeswalker you control" cards fired for every attack at anyone)
+function attackAimedAt(x, i) { try { return typeof atkDef === 'function' ? atkDef(x).i === i : G.defender === i; } catch (e) { return false; } }

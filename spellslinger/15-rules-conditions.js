@@ -602,6 +602,11 @@ function fire(ev, ctx = {}) {
             if (tr.cond && !condOk(tr.cond, G.players[o.owner], o)) continue; // intervening "if" (603.4)
             if (tr.once) { o.onceTurn = o.onceTurn || {}; if (o.onceTurn[tr.once] === G.turn) continue; o.onceTurn[tr.once] = G.turn; }
             if ((G.trigCount = (G.trigCount || 0) + 1) > 250) { if (G.trigCount === 251) log('Too many triggers this turn - the rest are skipped.'); continue; }
+            if (tr.perAtkMe && ev === 'attacks') { // one trigger for each creature that attacks this permanent's controller, with that creature as the subject (2026-11-16)
+                const raw0 = { P: ctx.P, o: ctx.o, by: ctx.by, n: ctx.n, src: ctx.src, list: ctx.list, hit: ctx.hit, lki: null };
+                ctx.list.filter(x => x.owner !== o.owner && attackAimedAt(x, o.owner)).forEach(x => (G.trigQ = G.trigQ || []).push({ P: G.players[o.owner], o, effects: tr.effects, ctx: x, ctxCount: 1, raw: raw0 }));
+                continue;
+            }
             const times = tr.perMatch && ev === 'attacks' ? ctx.list.filter(x => specMatch(tr.perMatch, o, x)).length : tr.anyMine && ev === 'attacks' ? ctx.list.filter(x => x.owner === o.owner).length : 1;
             // The creature the event is about ("put a +1/+1 counter on it"); for attacks, the attacker
             const ctxObj = (ev === 'cast' ? null : ctx.o) || (ctx.list && (tr.alone ? ctx.list[0] : ctx.list.find(x => x.owner === o.owner && (!tr.color || (x.card.colors || []).includes(tr.color))))) || null;
