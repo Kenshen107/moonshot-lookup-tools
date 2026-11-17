@@ -305,6 +305,7 @@ window.LAB = (() => {
             }
             if (unprobe) unprobe();
             L.t0 = 0; out.steps = L.steps; if (L.stepStack) out.stepLimit = L.stepStack;
+            if (window.__REC_FORCE && G.rec) { G.rec.seed = opts.seed; G.rec.lab = true; out.rec = G.rec; } // LAB_RECORD=1: the game record (spellslinger/04e-game-records.js) goes out with the result
             out.bad = T.invariants(); if (G.dealStats) out.deals = G.dealStats; if (G.pol) out.pol = G.pol;
             if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
         } catch (e) { out.error = String(e && e.stack || e).slice(0, 400); }
