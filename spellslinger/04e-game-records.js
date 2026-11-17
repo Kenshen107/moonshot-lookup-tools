@@ -192,7 +192,7 @@ function recCopyId(id, mode) { const r = recById(id); if (r) recCopyText(recText
 function recJsonl(list) { return list.map(r => JSON.stringify(r)).join('\n') + '\n'; }
 function recDownload(name, blob) {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
-    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 60000);
 }
 async function recGzip(text) {
     const cs = new CompressionStream('gzip'), w = cs.writable.getWriter();

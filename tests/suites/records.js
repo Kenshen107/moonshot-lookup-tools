@@ -106,16 +106,25 @@ const SETUP = async function (n) {
     check('attackers and blockers name the creatures', r.atk && r.atk.atk[0].c === 'Grizzly Bears' && r.blk && r.blk.blocks[0].by[0] === 'Hill Giant', [r.atk, r.blk]);
     check('the final state and size are saved and the short text has a summary', r.final && r.bytes && r.summary && /GAME RECORD v2/.test(r.title), r.title);
     check('export is one game per line and every line parses', r.jsonl === 1 && r.parses, r);
-    // The real download: Export all gives a .jsonl file with one game per line
-    await page.evaluate(() => { recordsPanel(); });
-    const dl = page.waitForEvent('download', { timeout: 8000 });
-    await page.evaluate(() => recExport(null));
-    const file = await dl; const txt = fs.readFileSync(await file.path(), 'utf8');
-    check('Export all downloads a .jsonl file with the games', /\.jsonl$/.test(file.suggestedFilename()) && txt.trim().split('\n').every(l => { try { return !!JSON.parse(l).players; } catch (e) { return false; } }), file.suggestedFilename());
-    const dl2 = page.waitForEvent('download', { timeout: 8000 });
-    await page.evaluate(() => recExport(null, true));
-    const f2 = await dl2; const gz = fs.readFileSync(await f2.path());
-    check('the compressed export is a real gzip file', /\.jsonl\.gz$/.test(f2.suggestedFilename()) && gz[0] === 0x1f && gz[1] === 0x8b, f2.suggestedFilename());
+    // Export all gives a .jsonl file with one game per line (the download itself is captured in the page: the test browser's own download
+    // handling is flaky for blob links, and what matters here is the file name and what is in it)
+    await page.evaluate(() => { window.__realDl = window.recDownload; window.__dl = []; window.recDownload = (name, blob) => { window.__dl.push({ name, blob }); }; recordsPanel(); });
+    r = await page.evaluate(async () => {
+        await recExport(null);
+        const a = window.__dl.pop(); const txt = await a.blob.text();
+        await recExport(null, true);
+        const b = window.__dl.pop(); const bytes = new Uint8Array(await b.blob.arrayBuffer());
+        await recExport([store.get('gameRecords')[0].id]);
+        const c = window.__dl.pop();
+        const back = new Response(b.blob.stream().pipeThrough(new DecompressionStream('gzip')));
+        return { name: a.name, lines: txt.trim().split('\n').map(l => { try { return !!JSON.parse(l).players; } catch (e) { return false; } }), gzName: b.name, magic: [bytes[0], bytes[1]], gzTxt: (await back.text()).trim().split('\n').length, oneName: c.name };
+    });
+    check('Export all makes a .jsonl file with a game on each line', /\.jsonl$/.test(r.name) && r.lines.length >= 1 && r.lines.every(Boolean), r);
+    check('the compressed export is a real gzip file with the same games', /\.jsonl\.gz$/.test(r.gzName) && r.magic[0] === 0x1f && r.magic[1] === 0x8b && r.gzTxt === r.lines.length, r);
+    check('Export on one game names the file after it', /^spellslinger-game-.*\.jsonl$/.test(r.oneName), r.oneName);
+    // the real link: recDownload makes a download link with the file name and clicks it
+    r = await page.evaluate(() => { let made = null; const orig = HTMLAnchorElement.prototype.click; HTMLAnchorElement.prototype.click = function () { made = { dl: this.download, href: this.href.slice(0, 5) }; }; try { window.__realDl('t.jsonl', new Blob(['x'])); } finally { HTMLAnchorElement.prototype.click = orig; } return made; });
+    check('the download link carries the file name', r && r.dl === 't.jsonl' && r.href === 'blob:', r);
     r = await page.evaluate(() => { recordsPanel(); const b = [...document.querySelectorAll('#modalHost button')].map(x => x.textContent); return { all: b.some(t => /Export all/.test(t)), one: b.some(t => /^⬇ Export$/.test(t)) }; });
     check('the panel has Export all and Export for each game', r.all && r.one, r);
     // phones and desktop: the panel fits
