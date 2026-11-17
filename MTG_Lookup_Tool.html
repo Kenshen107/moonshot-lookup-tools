@@ -7111,6 +7111,19 @@
             .ht-label b { display: block; font-size: 20pt; line-height: 1.05; margin: 2px 0 4px; overflow-wrap: anywhere; }
             .ht-label b.long { font-size: 15pt; }
             .ht-label span { display: block; font-size: 10pt; color: #222; line-height: 1.3; }
+            .ht-page.hlist { display: block; }
+            .hl-head { height: 0.9in; border-bottom: 2px solid #111; margin-bottom: 0.12in; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .hl-head.small { height: 0.3in; margin-bottom: 0.1in; }
+            .hl-head h1 { margin: 0; padding: 0; border: 0; color: #000; font-family: sans-serif; font-size: 24pt; line-height: 1.1; display: flex; align-items: center; gap: 0.1in; }
+            .hl-head h1 svg { width: 0.3in; height: 0.38in; flex: none; }
+            .hl-head.small h1 { font-size: 13pt; }
+            .hl-head.small h1 svg { width: 0.16in; height: 0.2in; }
+            .hl-head p { margin: 0.06in 0 0; font-size: 9.5pt; color: #333; }
+            .hl-cols { display: grid; grid-template-columns: repeat(3, 2.3in); column-gap: 0.15in; align-items: start; }
+            .hl-col { min-width: 0; }
+            .hl-cat { height: 0.3in; box-sizing: border-box; padding-top: 0.08in; font-size: 9.5pt; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #c2410c; border-bottom: 1px solid #999; margin-bottom: 0.02in; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .hl-card { height: 0.19in; display: flex; align-items: center; gap: 0.07in; font-size: 9pt; white-space: nowrap; overflow: hidden; }
+            .hl-card i { width: 0.1in; height: 0.1in; border: 1px solid #555; flex: none; }
         }
         #slPrintArea { display: none; }
         @media print {
@@ -9389,7 +9402,8 @@
                 <button type="button" class="sl-btn" onclick="printHotlistTags()">🖨️ Print hotlist tags</button>
                 <button type="button" class="sl-btn" onclick="printHotlistLabels()">🖨️ Print case labels</button>
                 <button type="button" class="sl-btn" onclick="printHotlistStrips()">🖨️ Print divider strips</button>
-                <div class="bk-note" style="margin-top:6px;">Tags: one small flame tag for every card, with its name and spot, in case order. Divider strips: a thin one-line sticker per card for the white edge of its card divider. Case labels: one bigger label for each section of the case (shelf, side, category and spot range) to mark where it starts.</div>
+                <button type="button" class="sl-btn" onclick="printHotlistList()">🖨️ Print customer list</button>
+                <div class="bk-note" style="margin-top:6px;">Tags: one small flame tag for every card, with its name and spot, in case order. Divider strips: a thin one-line sticker per card for the white edge of its card divider. Case labels: one bigger label for each section of the case (shelf, side, category and spot range) to mark where it starts. Customer list: just the card names by category, A to Z, with a tick box each, for handing out (no shelf or spot).</div>
             </div>
             <details id="hlpDetails" class="hlp-wrap" ontoggle="if (this.open) renderHlp()">
                 <summary>🗂️ Set box placeholders: one slip for each card in each set it was printed in</summary>
@@ -17322,6 +17336,38 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 const where = c.shelf.replace('Shelf ', 'S') + (c.side ? c.side[0] : '') + ' · ' + c.spot;
                 return `<div class="ht-strip">${HOTLIST_FLAME}<b class="${name.length > 24 ? 'long' : ''}">${escapeAttr(name)}</b><span>${escapeAttr(where)}</span></div>`;
             }), 'strips', 120);
+        }
+        // A list for customers (owner, 2026-11-17: "a list of our hotlist cards to give people so they know what is on the list"):
+        // card names only, grouped by category and A to Z, with a tick box each. No shelf or spot (that stays inside the store).
+        // Columns are packed here by line counts (fixed row heights), so a page never overflows; categories split with "(continued)".
+        function printHotlistList() {
+            const cats = [], seen = new Set();
+            hotlistCards().forEach(c => {
+                let g = cats.find(x => x.name === c.category); if (!g) cats.push(g = { name: c.category, cards: [] });
+                const n = c.name.trim().replace(/\s*\(\d{3,5}[a-z]?\)\s*$/i, '');
+                if (!seen.has(n.toLowerCase())) { seen.add(n.toLowerCase()); g.cards.push(n); } // a card in the case twice (other printings) is listed once
+            });
+            cats.forEach((g, i) => { if (!g.cards.length) cats.splice(i, 1); });
+            cats.forEach(g => g.cards.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })));
+            const total = cats.reduce((n, g) => n + g.cards.length, 0);
+            const CAP_FIRST = 44, CAP_NEXT = 49; // lines per column; a heading counts as 2
+            const pages = []; let cols = [[], [], []], ci = 0, used = 0, cap = CAP_FIRST;
+            const newCol = () => { ci++; used = 0; if (ci > 2) { pages.push(cols); cols = [[], [], []]; ci = 0; cap = CAP_NEXT; } };
+            cats.forEach(g => {
+                let i = 0, first = true;
+                while (i < g.cards.length) {
+                    if (cap - used < 4) newCol(); // heading plus at least two cards must fit
+                    const room = cap - used - 2, take = Math.min(room, g.cards.length - i);
+                    cols[ci].push(`<div class="hl-cat">${escapeAttr(g.name)}${first ? '' : ' (continued)'}</div>` + g.cards.slice(i, i + take).map(n => `<div class="hl-card"><i></i>${escapeAttr(n)}</div>`).join(''));
+                    used += 2 + take; i += take; first = false;
+                    if (i < g.cards.length) newCol();
+                }
+            });
+            pages.push(cols);
+            const date = new Date().toLocaleDateString('en-US');
+            printHotlistSheet(pages.map((c, n) => [
+                `<div class="hl-head${n ? ' small' : ''}"><h1>${HOTLIST_FLAME}Hotlist cards</h1>${n ? '' : `<p>The cards on the hotlist, by category and A to Z (${total} cards). Printed ${date}.</p>`}</div><div class="hl-cols">${c.map(x => `<div class="hl-col">${x.join('')}</div>`).join('')}</div>`
+            ]), 'hlist', 1);
         }
         function printHotlistLabels() {
             const groups = [];
