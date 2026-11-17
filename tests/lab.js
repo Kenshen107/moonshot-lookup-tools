@@ -16,6 +16,7 @@ const LA = arg('la', 'normal'), LB = arg('lb', 'normal'), TMO = Number(arg('time
 
 async function openLab(h) {
     await h.ctx.addInitScript(() => { window.__LAB = true; });
+    if (process.env.LAB_RECORD) await h.ctx.addInitScript(() => { window.__REC_FORCE = true; }); // LAB_RECORD=1: save each game as a game record too (tests/.out/lab-records.jsonl, the same format as the game's Export)
     if (process.env.LAB_PAIR) await h.ctx.addInitScript(p => { window.__PAIR = p; }, process.env.LAB_PAIR); // ascent: 'W,t1-mick' = the W starter deck against that opponent
     await h.ctx.route(/api\.scryfall\.com|mtgjson\.com|edhrec\.com|data\.scryfall\.io/, route => route.abort());
     const cardsFile = path.join(ROOT, 'tests', 'data', 'cards_all.json');
@@ -162,6 +163,9 @@ function report(all, pageErrors, secs) {
     console.log('Endings:', JSON.stringify(reasons));
     { const w = all.filter(r => r.watch); if (w.length) console.log(`WATCH: ${w.length} game(s) where the watched trigger fired more often than the card entered: seeds ${w.slice(0, 12).map(r => r.seed + ' ' + JSON.stringify(r.watch)).join('; ')}`); }
     console.log(`Hung (no result in time): ${hung.length}   Threw: ${err.length}   Broken invariants: ${bad.length}   Page errors during games: ${logged.length}   Page errors total: ${pageErrors.length}`);
+    const stepRows = all.filter(r => r.steps).map(r => r.steps).sort((x, y) => x - y), limited = all.filter(r => r.stepLimit);
+    if (stepRows.length) console.log(`Engine steps per game: median ${stepRows[stepRows.length >> 1]}, max ${stepRows[stepRows.length - 1]}   Step-limit games: ${limited.length}`);
+    limited.slice(0, 5).forEach(r => console.log(`  STEP LIMIT seed ${r.seed}: ${r.stepLimit}`));
     [...hung, ...err, ...bad, ...logged].slice(0, 12).forEach(r => console.log(`  seed ${r.seed} ${r.kind}: ${r.hang ? 'HUNG turn ' + r.turn + ' ' + r.phase : r.error || JSON.stringify(r.bad || r.errors)}  (${r.a} vs ${r.b})`));
     const uniq = {}; pageErrors.forEach(e => { const k = e; uniq[k] = (uniq[k] || 0) + 1; });
     Object.entries(uniq).forEach(([k, n]) => console.log(`  page error x${n}: ${k.slice(0, 400)}`));
@@ -177,6 +181,8 @@ function report(all, pageErrors, secs) {
         if (diff.length) process.exitCode = 1;
     }
     fs.mkdirSync(path.join(ROOT, 'tests', '.out'), { recursive: true });
+    const recs = all.map(r => { const x = r.rec; delete r.rec; return x; }).filter(Boolean);
+    if (recs.length) { fs.writeFileSync(path.join(ROOT, 'tests', '.out', 'lab-records.jsonl'), recs.map(r => JSON.stringify(r)).join('\n') + '\n'); console.log(`Saved ${recs.length} game records to tests/.out/lab-records.jsonl`); }
     fs.writeFileSync(path.join(ROOT, 'tests', '.out', 'lab.json'), JSON.stringify(all));
     fs.writeFileSync(OUTFILE && OUTFILE !== true ? OUTFILE : path.join(ROOT, 'tests', '.out', 'lab.jsonl'), all.map(r => JSON.stringify(r)).join('\n') + '\n'); // one game per line, with the per-seat stats (tests/lab_report.js reads it)
     process.exitCode = hung.length || err.length || bad.length || logged.length ? 1 : 0;

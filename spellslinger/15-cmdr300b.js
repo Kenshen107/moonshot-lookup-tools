@@ -88,6 +88,7 @@ Object.assign(CMD, {
         for (const x of list) {
             const C = G.players[x.owner];
             const paid = await mayPay(C, '{3}', `${src.card.name}: pay {3} so ${P.name} doesn't create a 3/3 Ogre for ${x.card.name} attacking?`, src, true);
+            if (paid) log(`${C.name} pays {3} for ${x.card.name} attacking (${src.card.name}).`);
             if (!paid) await applyEffect(P, { t: 'token', n: 1, p: 3, q: 3, name: 'red Ogre', kw: [] }, null, src);
         }
     },

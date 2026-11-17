@@ -19,6 +19,16 @@ window.LAB = (() => {
         const f = window[n]; if (typeof f !== 'function') return;
         window[n] = function (...a) { L.pending[n] = (L.pending[n] || 0) + 1; const r = f.apply(this, a); Promise.resolve(r).finally(() => { L.pending[n]--; }); return r; };
     });
+    // Step limit (2026-11-16): a runaway loop freezes the page and says nothing. Count calls of a few hot engine functions; past the limit every call throws, so the loop ends
+    // and the game record carries the stack of the first throw (out.stepLimit) instead of a silent hang. Normal games stay far below it (see out.steps).
+    L.steps = 0; L.stepLimit = 4e6; L.stepStack = null; L.t0 = 0; L.maxMs = 60000;
+    ['fire', 'sba', 'canActivate', 'scoreEffects', 'damage', 'drawCards', 'putOntoBattlefield'].forEach(n => {
+        const f = window[n]; if (typeof f !== 'function') return;
+        window[n] = function () {
+            if (++L.steps > L.stepLimit || ((L.steps & 255) === 0 && L.t0 && performance.now() - L.t0 > L.maxMs)) { const e = new Error('STEP LIMIT: ' + n + ' after ' + L.steps + ' calls and ' + Math.round((performance.now() - L.t0) / 1000) + ' s in one game'); if (!L.stepStack) L.stepStack = 'turn ' + G.turn + ' board ' + G.players.map(P => P.bf.length).join('/') + ' stack ' + (G.stack || []).length + ' | ' + String(e.stack).split('\n').slice(0, 12).join(' | '); throw e; }
+            return f.apply(this, arguments);
+        };
+    });
     L.load = (raw, autoNames) => {
         const t0 = performance.now();
         L.pool = [];
@@ -170,6 +180,7 @@ window.LAB = (() => {
         seeded(opts.seed); Math.random = rnd;
         const t0 = performance.now();
         const out = { seed: opts.seed };
+        L.steps = 0; L.stepStack = null; L.t0 = performance.now(); L.maxMs = Math.max(60000, (opts.timeout || 15000) * 4); if (opts.stepLimit) L.stepLimit = opts.stepLimit;
         const errs = [];
         const onErr = e => errs.push(String(e.message || e));
         window.addEventListener('error', onErr);
@@ -293,6 +304,8 @@ window.LAB = (() => {
                 if (trig > ent) out.watch = { name, trig, ent };
             }
             if (unprobe) unprobe();
+            L.t0 = 0; out.steps = L.steps; if (L.stepStack) out.stepLimit = L.stepStack;
+            if (window.__REC_FORCE && G.rec) { G.rec.seed = opts.seed; G.rec.lab = true; out.rec = G.rec; } // LAB_RECORD=1: the game record (spellslinger/04e-game-records.js) goes out with the result
             out.bad = T.invariants(); if (G.dealStats) out.deals = G.dealStats; if (G.pol) out.pol = G.pol;
             if (out.bad.length) out.zones = G.players.map(P => ['hand', 'bf', 'gy', 'exile', 'library', 'command'].map(z => z + ':' + (P[z] || []).filter(x => x.isCommander).length).join(' '));
         } catch (e) { out.error = String(e && e.stack || e).slice(0, 400); }

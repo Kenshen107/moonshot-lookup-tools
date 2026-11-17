@@ -49,7 +49,7 @@ const SETUP = async function (n) {
     check('a 4-player game with a person is saved when it ends', r.before === 0 && r.after === 1 && r.players === 4, r);
     check("the person's choices are recorded with the prompt and the answer", r.hasChoice && r.hasPick, r);
     check('the result is lost for the person when another seat wins', r.result === 'lost' && r.human === 0, [r.result, r.human]);
-    check('the short text has the header, the choices and the key lines but not the noise', /^SPELLSLINGER POD RECORD v1 \(short\)/.test(r.short) && /Seat 1 \(the player\)/.test(r.short) && /» /.test(r.short) && /dies/.test(r.short) && !/boring/.test(r.short), r.short);
+    check('the short text has the header, the choices and the key lines but not the noise', /^SPELLSLINGER POD RECORD v2 \(short\)/.test(r.short) && /Seat 1 \(the player\)/.test(r.short) && /» /.test(r.short) && /dies/.test(r.short) && !/boring/.test(r.short), r.short);
     check('the full text keeps every line', /boring/.test(r.full) && /\(full log\)/.test(r.full), r.full && r.full.length);
     check('the game-over screen has a Copy this game button', r.btn);
     r = await page.evaluate(async () => {
@@ -63,9 +63,70 @@ const SETUP = async function (n) {
     });
     check('the records panel lists the game and the viewer shows the text', r.listed === 1 && /SPELLSLINGER POD RECORD/.test(r.boxText || ''), r);
     check('Copy puts the text on the clipboard', /SPELLSLINGER POD RECORD/.test(r.copied || '') || r.copied === null, r);
-    // 2-player games are not recorded
-    r = await page.evaluate(async () => { await newGame(...(() => { const C = window.C; const mk = () => ({ name: 'T', format: 'commander', commander: C['Tyrox, Saurid Tyrant'], entries: [{ card: C['Mountain'], n: 98 }, { card: C['Syphon Mind'], n: 1 }], source: 'test' }); return [mk(), mk()]; })()); log('two player line'); return G.rec ? G.rec.log.length : 0; });
-    check('2-player games are not recorded', r === 0, r);
+    // 2-player games with a person are recorded too (2026-11-17); a game with no person at the table (the lab, autoplay) is not
+    r = await page.evaluate(async () => {
+        const C = window.C; const mk = () => ({ name: 'T', format: 'commander', commander: C['Tyrox, Saurid Tyrant'], entries: [{ card: C['Mountain'], n: 98 }, { card: C['Syphon Mind'], n: 1 }], source: 'test' });
+        window.__REC_FORCE = false;
+        await newGame(mk(), mk()); G.players.forEach(P => { P.isAI = true; }); log('no person line');
+        const none = G.rec ? G.rec.log.length : 0;
+        window.__REC_FORCE = true; G.players[0].isAI = false; log('two player line');
+        const some = G.rec ? G.rec.log.length : 0;
+        return { none, some };
+    });
+    check('a game with no person at the table is not recorded', r.none === 0, r);
+    check('a 2-player game with a person is recorded', r.some === 1, r);
+    // Structured records: decklists, a snapshot per turn, decisions with their state, the computer's options, an export
+    r = await page.evaluate(async () => {
+        window.__REC_FORCE = true; store.set('gameRecords', []);
+        const C = window.C; const mk = () => ({ name: 'T', format: 'commander', commander: C['Tyrox, Saurid Tyrant'], entries: [{ card: C['Mountain'], n: 98 }, { card: C['Syphon Mind'], n: 1 }], source: 'test' });
+        await newGame(mk(), mk());
+        const [A, B] = G.players; A.isAI = false; B.isAI = true;
+        G.active = 0; G.turn = 5; G.phase = 'main1'; G.busy = false; G.firstTurn = false; T.clear();
+        log('— Turn 5 —');
+        const bears = T.put(A, C['Grizzly Bears']), giant = T.put(B, C['Hill Giant']);
+        const land = makeObj(C['Mountain'], A.i); A.hand.push(land);
+        await playLand(A, land);
+        await askYes(A, 'Test question', {});
+        declareAttackers(A, [bears]);
+        G.blocks[bears.uid] = [giant.uid];
+        combatDamage(A);
+        eliminate(B, 'test reasons');
+        G.recCands = { pick: giant, list: [{ c: 'Hill Giant', s: 5, tgt: null, picked: true }] };
+        window.__recGameOver = true;
+        endGame(0, 'Test wins');
+        const rec = (store.get('gameRecords') || [])[0];
+        const evs = rec.ev || [], kinds = evs.filter(e => e.e === 'dec').map(e => e.k);
+        return { v: rec.v, decks: rec.players.map(p => p.deckList.length), kinds, landEv: evs.find(e => e.k === 'land'), prompt: evs.find(e => e.k === 'prompt'), atk: evs.find(e => e.k === 'attack'), blk: evs.find(e => e.k === 'block'), out: evs.find(e => e.e === 'out'),
+            hasSnap: !!(evs.find(e => e.k === 'land') || {}).st, final: !!rec.final, bytes: rec.bytes > 0, summary: recText(rec, 'short').includes('Summary:') || recText(rec, 'short').includes('Spells cast'), title: recText(rec, 'short').split('\n')[0], jsonl: recJsonl([rec]).split('\n').filter(Boolean).length, parses: (() => { try { return JSON.parse(recJsonl([rec]).trim()).id === rec.id; } catch (e) { return false; } })() };
+    });
+    check('v2 records hold a decklist for every seat', r.v === 2 && r.decks.every(n => n >= 2), r);
+    check('a land play, a prompt, attackers, blockers and an elimination are recorded as events', r.kinds.includes('land') && r.kinds.includes('prompt') && r.kinds.includes('attack') && r.kinds.includes('block') && !!r.out, r.kinds);
+    check('a decision keeps the state it was made in', r.hasSnap && r.landEv && r.landEv.st && r.landEv.st.life.length === 2, r.landEv);
+    check('the prompt event keeps the options and the answer', r.prompt && r.prompt.prompt === 'Test question' && r.prompt.opts.join() === 'yes,no' && !!r.prompt.choice, r.prompt);
+    check('attackers and blockers name the creatures', r.atk && r.atk.atk[0].c === 'Grizzly Bears' && r.blk && r.blk.blocks[0].by[0] === 'Hill Giant', [r.atk, r.blk]);
+    check('the final state and size are saved and the short text has a summary', r.final && r.bytes && r.summary && /GAME RECORD v2/.test(r.title), r.title);
+    check('export is one game per line and every line parses', r.jsonl === 1 && r.parses, r);
+    // Export all gives a .jsonl file with one game per line (the download itself is captured in the page: the test browser's own download
+    // handling is flaky for blob links, and what matters here is the file name and what is in it)
+    await page.evaluate(() => { window.__realDl = window.recDownload; window.__dl = []; window.recDownload = (name, blob) => { window.__dl.push({ name, blob }); }; recordsPanel(); });
+    r = await page.evaluate(async () => {
+        await recExport(null);
+        const a = window.__dl.pop(); const txt = await a.blob.text();
+        await recExport(null, true);
+        const b = window.__dl.pop(); const bytes = new Uint8Array(await b.blob.arrayBuffer());
+        await recExport([store.get('gameRecords')[0].id]);
+        const c = window.__dl.pop();
+        const back = new Response(b.blob.stream().pipeThrough(new DecompressionStream('gzip')));
+        return { name: a.name, lines: txt.trim().split('\n').map(l => { try { return !!JSON.parse(l).players; } catch (e) { return false; } }), gzName: b.name, magic: [bytes[0], bytes[1]], gzTxt: (await back.text()).trim().split('\n').length, oneName: c.name };
+    });
+    check('Export all makes a .jsonl file with a game on each line', /\.jsonl$/.test(r.name) && r.lines.length >= 1 && r.lines.every(Boolean), r);
+    check('the compressed export is a real gzip file with the same games', /\.jsonl\.gz$/.test(r.gzName) && r.magic[0] === 0x1f && r.magic[1] === 0x8b && r.gzTxt === r.lines.length, r);
+    check('Export on one game names the file after it', /^spellslinger-game-.*\.jsonl$/.test(r.oneName), r.oneName);
+    // the real link: recDownload makes a download link with the file name and clicks it
+    r = await page.evaluate(() => { let made = null; const orig = HTMLAnchorElement.prototype.click; HTMLAnchorElement.prototype.click = function () { made = { dl: this.download, href: this.href.slice(0, 5) }; }; try { window.__realDl('t.jsonl', new Blob(['x'])); } finally { HTMLAnchorElement.prototype.click = orig; } return made; });
+    check('the download link carries the file name', r && r.dl === 't.jsonl' && r.href === 'blob:', r);
+    r = await page.evaluate(() => { recordsPanel(); const b = [...document.querySelectorAll('#modalHost button')].map(x => x.textContent); return { all: b.some(t => /Export all/.test(t)), one: b.some(t => /^⬇ Export$/.test(t)) }; });
+    check('the panel has Export all and Export for each game', r.all && r.one, r);
     // phones and desktop: the panel fits
     for (const [w, hgt] of [[360, 740], [1280, 800]]) {
         await page.setViewportSize({ width: w, height: hgt });

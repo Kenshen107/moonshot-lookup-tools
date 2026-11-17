@@ -117,7 +117,7 @@ registerRules({
         [/^When ~ is put into a graveyard from anywhere, (.+)$/, () => ({ ev: 'toGy', fn: 'selfToGy' })],
         [/^Whenever ~ deals damage to a player, (.+)$/, () => ({ ev: 'dealsDamage', toOpp: true })],
         [/^Whenever another creature you control with power (\w+) or greater enters, (.+)$/, m => ({ ev: 'enters', fn: 'anotherPow', minPow: num(m[1]) })],
-        [/^Whenever a creature attacks you or a planeswalker you control, (.+)$/, () => ({ ev: 'attacks', fn: 'oppAttacks', anyOpp: true })],
+        [/^Whenever a creature attacks you or a planeswalker you control, (.+)$/, () => ({ ev: 'attacks', fn: 'oppAttacks', anyOpp: true, perAtkMe: true })],
         [/^Whenever you cast a red spell or a Mountain you control enters, (.+)$/, () => [{ ev: 'cast', fn: 'castRed', filter: 'any' }, { ev: 'landfall', fn: 'mountainEnters' }]],
         [/^At the beginning of your end step, if ~ didn't attack this turn, (.+) unless it came under your control this turn\.?$/, () => ({ ev: 'end', fn: 'ergRaiders' })],
     ],

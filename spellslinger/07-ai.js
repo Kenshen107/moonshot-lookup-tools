@@ -438,6 +438,7 @@ function aiBestPlay(P) {
     pick.o.evoked = pick.ev;
     pick.o.altCast = pick.alt;
     pick.o.castAs = pick.md || null;
+    if (typeof recCands === 'function') recCands(cands, pick); // game records (04e): the plays it was choosing between
     return pick;
 }
 // Reserved removal and interaction (2026-10-17, owner's request: "more reserved with removal and interaction").
