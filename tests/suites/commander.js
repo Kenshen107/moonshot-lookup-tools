@@ -40,13 +40,39 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         A.command.length = 0; asks.length = 0; answer(false); c = mk(); leaveBattlefield(c, 'exile'); await settle();
         out.push(['the owner can leave an exiled commander in exile', zones(c) === 'exile' && asks.length === 1, zones(c)]);
 
-        // 6. To the library -> command zone, no question
-        A.exile.length = 0; asks.length = 0; c = mk(); leaveBattlefield(c, 'library'); await settle();
-        out.push(['a commander that would go to the library returns to the command zone without asking', zones(c) === 'command' && asks.length === 0, zones(c)]);
+        // 6. To the library -> command zone, no question for the computer
+        A.exile.length = 0; A.isAI = true; asks.length = 0; c = mk(); leaveBattlefield(c, 'library'); await settle();
+        A.isAI = false;
+        out.push(['a computer commander that would go to the library returns to the command zone without asking', zones(c) === 'command' && asks.length === 0, zones(c)]);
 
         // 7. Tokens and ordinary cards are never asked about
         asks.length = 0; const plain = T.put(A, C['Grizzly Bears']); dieOrLeave(plain, 'gy'); await settle();
         out.push(['an ordinary creature stays in the graveyard and nothing is asked', zones(plain) === 'gy' && asks.length === 0, zones(plain)]);
+        // 8. Nurgle's Conscription exiles a graveyard: the commander in it asks its owner (owner's report, 2026-11-17)
+        A.command.length = 0; A.exile.length = 0; A.gy.length = 0; asks.length = 0; answer(true);
+        const B = G.players[1]; B.isAI = true;
+        c = mk(); dieOrLeave(c, 'gy'); answer(false); await settle(); asks.length = 0; answer(true);
+        const bait = T.put(A, C['Grizzly Bears']); dieOrLeave(bait, 'gy');
+        const cons = T.put(B, C['Grizzly Bears']);
+        B.isAI = false; const rp = window.pickCard; window.pickCard = async (P, list) => list.find(x => x === bait);
+        await applyEffect(B, { t: 'conscription' }, null, cons, null, 'Nurgle\'s Conscription');
+        window.pickCard = rp; B.isAI = true;
+        await settle();
+        out.push(['a commander in a graveyard exiled by Nurgle\'s Conscription asks its owner', zones(c) === 'command' && asks.length === 1, { z: zones(c), asks: asks.length }]);
+        // 10. An opponent's reanimation from a graveyard asks the commander's owner first
+        A.command.length = 0; A.exile.length = 0; A.gy.length = 0; G.players[1].bf.length = 0; asks.length = 0; answer(true);
+        c = mk(); dieOrLeave(c, 'gy'); answer(false); await settle(); asks.length = 0; answer(true);
+        const rcard = T.put(B, C['Grizzly Bears']); B.isAI = true;
+        await applyEffect(B, { t: 'conscription' }, null, rcard, null, 'Nurgle\'s Conscription');
+        out.push(['an opponent taking from your graveyard lets you move your commander to the command zone first', zones(c) === 'command' && asks.length >= 1, { z: zones(c), asks: asks.length }]);
+        // 9. A person's commander bounced to hand or tucked into the library asks too
+        A.command.length = 0; A.library.length = 0; A.hand.length = 0; asks.length = 0; answer(true);
+        c = mk(); leaveBattlefield(c, 'hand'); await settle();
+        out.push(['a commander bounced to hand can go to the command zone', zones(c) === 'command' && asks.length === 1, { z: zones(c), asks: asks.length }]);
+        asks.length = 0; answer(false); c = mk(); leaveBattlefield(c, 'hand'); await settle(); await settle();
+        out.push(['the owner can keep a bounced commander in hand (asked once)', zones(c) === 'hand' && asks.length === 1, { z: zones(c), asks: asks.length }]);
+        A.hand.length = 0; asks.length = 0; answer(true); c = mk(); leaveBattlefield(c, 'library'); await settle();
+        out.push(['a person with a tucked commander is asked and can choose the command zone', zones(c) === 'command' && asks.length === 1, { z: zones(c), asks: asks.length }]);
         window.askYes = real;
         // Hand size: a person is asked which card to discard
         T.clear(); A.hand.length = 0;

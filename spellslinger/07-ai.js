@@ -93,7 +93,9 @@ function aiPickTarget(P, e, source, valid) {
         case 'steal': case 'stealPerm': return byValue(theirs)[0] || null;
         case 'aura':
             return e.good ? (byValue(mine)[0] || null) : (byValue(theirs)[0] || null);
-        case 'cmd': if (typeof CMD_AITARGET === 'object' && CMD_AITARGET[e.id]) return CMD_AITARGET[e.id](P, e, source, valid, { theirs, mine, O, byValue }); return valid[0] || null;
+        case 'cmd': if (typeof CMD_AITARGET === 'object' && CMD_AITARGET[e.id]) return CMD_AITARGET[e.id](P, e, source, valid, { theirs, mine, O, byValue });
+            if (e.good && theirs.length) return byValue(mine.filter(v => isCreature(v.o)))[0] || mine[0] || null; // a helpful effect (Boon of Boseiju) goes on the computer's own permanent, never an opponent's (2026-11-17, pod record)
+            return valid[0] || null;
         default:
             return valid[0] || null;
     }
@@ -154,7 +156,7 @@ function scoreEffects(P, effects, target, src) {
             case 'teamCounters': score += 2 + P.bf.filter(isCreature).length * 2; break;
             case 'edict': { const theirC = O.bf.filter(isCreature), worth = P.aiLevel === 'easy' || (theirC.length <= 2 && Math.max(0, ...theirC.map(creatureValue)) >= removalThreshold(P)); score += !worth ? 0 : e.who === 'each player' ? (O.bf.some(isCreature) && !P.bf.some(isCreature) ? 6 : 0) : (O.bf.some(isCreature) ? 5 : 0); break; }
             case 'loot': score += 3; break;
-            case 'drawAll': score += 1; break;
+            case 'drawAll': case 'drawYouOpp': score += 1; break;
             case 'loseAll': score += O.life <= e.n ? 1000 : P.life > O.life ? 2 : 0; break;
             case 'discardAll': score += O.hand.length > P.hand.length ? 2 : 0; break;
             case 'fetchLand': score += P.library.some(x => landFits(x, e.what)) ? 6 : 0; break;

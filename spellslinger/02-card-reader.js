@@ -98,7 +98,7 @@ const EFFECTS = [
     [/^discard (\w+) cards?, then draw (\w+) cards?$/, m => ({ t: 'loot', n: num(m[2]), d: num(m[1]) })],
     [/^each player draws (\w+) cards?$/, m => ({ t: 'drawAll', n: num(m[1]) })],
     [/^each player (?:loses|discards) (\w+) (life|cards?)$/, m => ({ t: m[2] === 'life' ? 'loseAll' : 'discardAll', n: num(m[1]) })],
-    [/^you and target opponent each draw (\w+) cards?$/, m => ({ t: 'drawAll', n: num(m[1]) })],
+    [/^you and target opponent each draw (\w+) cards?$/, m => ({ t: 'drawYouOpp', n: num(m[1]), target: 'player', oppOnly: true })], // you and the ONE opponent you choose (Flumph); before this it read as "each player" (2026-11-17, pod record)
     // Libraries and graveyards (the card is picked from a list: you choose, the AI takes its best)
     [/^search your library for (a|an|up to \w+) (basic land|land|basic plains|basic island|basic swamp|basic mountain|basic forest|plains|island|swamp|mountain|forest|(?:plains|island|swamp|mountain|forest) or (?:plains|island|swamp|mountain|forest)) cards?(?:, reveal (?:it|them))?,? (?:and )?put (?:it|them|that card|those cards) (onto the battlefield(?: tapped)?|into your hand)(?:, then shuffle)?$/, m => ({ t: 'fetchLand', n: m[1].startsWith('up to') ? num(m[1].slice(6)) : 1, what: m[2], bf: m[3].startsWith('onto'), tapped: /tapped/.test(m[3]) })],
     [/^search your library for (?:a|an) (creature|instant|sorcery|artifact|enchantment|instant or sorcery|land|artifact or enchantment)? ?card(?: with mana value \w+ or less)?(?:, reveal it)?,? (?:and )?put (?:it|that card) into your hand(?:, then shuffle)?$/, m => ({ t: 'tutor', what: m[1] || 'card' })],

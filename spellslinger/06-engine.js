@@ -423,6 +423,7 @@ function tokenCopyOf(P, card, opts = {}) {
     return tok;
 }
 function drawCards(P, n, quiet) {
+    if (P.out) return; // a player who has left the game doesn't draw (pod record 2026-11-17: Flumph made eliminated players "draw")
     let drawnNow = null;
     if (G && G.phase !== 'setup' && n > 0 && P.bf.some(a => Rx(a).drawTwo && !lostAbilities(a))) { n *= 2; log('(Mr. Spock: draw two cards instead.)'); }
     const sf = G && G.phase !== 'setup' && allPerms().some(x => Rx(x).sharedFate && !lostAbilities(x));
@@ -496,7 +497,7 @@ function leaveBattlefield(o, zone) {
     const P = G.players[o.owner];
     if (o.token) return;
     // 903.9: a commander that would go to the library returns to the command zone; one that goes to the graveyard or exile waits there until its owner chooses (commanderChoices)
-    if (o.isCommander && zone === 'library') { P.command.push(o); log(`${o.card.name} returns to the command zone.`); return; }
+    if (o.isCommander && zone === 'library' && P.isAI) { P.command.push(o); log(`${o.card.name} returns to the command zone.`); return; }
     P[zone].push(o);
     if (wasOn && zone === 'gy') o.toGyTurn = G.turn;
     if (G && G.toGyQ && G.toGyQ.includes(o)) { G.toGyQ = G.toGyQ.filter(x => x !== o); fire('toGy', { o }); }
@@ -507,12 +508,14 @@ function leaveBattlefield(o, zone) {
 async function commanderChoices() {
     if (!G || G.over) return;
     for (const P of G.players) {
-        for (const z of ['gy', 'exile']) {
+        for (const z of ['gy', 'exile', 'hand', 'library']) {
+            if (P.isAI && (z === 'hand' || z === 'library')) continue; // the computer returns a tucked commander at once and leaves a bounced one in hand
             for (const o of P[z].filter(x => x.isCommander && x.cmdSeenZone !== z)) {
                 o.cmdSeenZone = z;
-                const yes = P.isAI ? true : await askYes(P, `${o.card.name} was put into ${z === 'gy' ? (you(P) ? 'your' : `${P.name}'s`) + ' graveyard' : 'exile'}. Put it into the command zone? (Cancel = leave it there)`, { card: o.card, yes: 'Command zone', no: z === 'gy' ? 'Leave it in the graveyard' : 'Leave it in exile' });
+                const zn = { gy: 'graveyard', exile: 'exile', hand: 'hand', library: 'library' }[z];
+                const yes = P.isAI ? true : await askYes(P, `${o.card.name} was put into ${z === 'gy' ? (you(P) ? 'your' : `${P.name}'s`) + ' graveyard' : z === 'exile' ? 'exile' : (you(P) ? 'your' : `${P.name}'s`) + ' ' + zn}. Put it into the command zone? (Cancel = leave it there)`, { card: o.card, yes: 'Command zone', no: `Leave it in ${z === 'exile' ? 'exile' : 'the ' + zn}` });
                 if (yes && P[z].includes(o)) { G.players.forEach(X => ['bf', 'hand', 'gy', 'exile', 'library', 'command'].forEach(zz => { while (X[zz].includes(o)) pull(X[zz], o); })); P.command.push(o); log(`${o.card.name} returns to the command zone (rule 903.9a).`); }
-                else if (P[z].includes(o)) log(`${P.name} ${you(P) ? 'leave' : 'leaves'} ${o.card.name} in ${z === 'gy' ? 'the graveyard' : 'exile'}.`);
+                else if (P[z].includes(o)) log(`${P.name} ${you(P) ? 'leave' : 'leaves'} ${o.card.name} in ${z === 'exile' ? 'exile' : 'the ' + zn}.`);
             }
         }
     }
@@ -702,6 +705,7 @@ function sba() {
 // 800.4: a player who has lost leaves: their cards go away, what they were using of other players' goes back, their spells leave the stack
 function eliminate(P, reason) {
     P.out = true;
+    (G.deals || []).forEach(d => { if (d.a === P.i || d.b === P.i || d.x === P.i) d.over = true; }); // deals with a player who is gone end with them (a gang-up against you outlived its maker)
     if (typeof banterOut === 'function') banterOut(P, reason);
     if (typeof pol === 'function') pol().outAt.push(G.turn);
     log(`${P.name} ${you(P) ? 'lose' : 'loses'} the game and leaves the pod: ${reason}`);
@@ -3070,7 +3074,8 @@ async function applyEffect(P, e, t, src) {
             for (let k = 0; k < e.d && P.hand.length; k++) { const d = await chooseDiscard(P, name); pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
             break;
         }
-        case 'drawAll': G.players.forEach(X => drawCards(X, e.n)); break;
+        case 'drawAll': G.players.filter(X => !X.out).forEach(X => drawCards(X, e.n)); break;
+        case 'drawYouOpp': drawCards(P, e.n); if (O && O !== P && !O.out) drawCards(O, e.n); break; // "you and target opponent each draw"
         // ---- X spells (2026-10-06) ----
         case 'shuffleSelfIn': src.shuffleIn = true; break;
         // ---- Landfall (2026-10-06) ----
@@ -3099,7 +3104,7 @@ async function applyEffect(P, e, t, src) {
         case 'discardIfNoSac': for (const X of G.players) { if ((G.edictDid || [true, true])[X.i] || !X.hand.length) continue; const d = await chooseDiscard(X, name); pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} couldn't sacrifice, so ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
         case 'lootAll': for (const X of G.players) { drawCards(X, 1); if (!X.hand.length) continue; const d = await chooseDiscard(X, name); pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
         case 'ctxPowDmg': { const from = G.ctxObj && onBf(G.ctxObj.uid) ? G.ctxObj : src; const n = Math.max(0, pow(from)); if (!n || !t) break; damage(t.p || t.o, n, from); log(`${from.card.name} deals ${n} damage to ${targetName(t)}.`); break; }
-        case 'cmdToHand': { const c = P.command.find(x => x.isCommander); if (c) { pull(P.command, c); P.hand.push(c); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${c.card.name} into ${you(P) ? 'your' : 'their'} hand from the command zone.`); } break; }
+        case 'cmdToHand': { const c = P.command.find(x => x.isCommander); if (c) { pull(P.command, c); c.cmdSeenZone = 'hand'; P.hand.push(c); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${c.card.name} into ${you(P) ? 'your' : 'their'} hand from the command zone.`); } break; }
         case 'foodOrTreasure': { const needMana = P.hand.some(h => Rx(h).kind !== 'land' && !canPay(P, h)); const kind = P.isAI || AUTOPLAY ? (needMana || P.life > 12 ? 'treasure' : 'food') : (await askYes(P, `${name}: create a Treasure token? (Cancel = a Food token.)`, { card: src && src.card }) ? 'treasure' : 'food'); applyEffect(P, { t: 'artToken', n: 1, kind }, null, src); break; }
         case 'activeDraws': drawCards(G.players[G.active], e.n); break;
         case 'enduring': { const X = G.players[src.owner]; if (!X.gy.includes(src)) break; pull(X.gy, src); resetObj(src); src.enchOnly = true; X.bf.push(src); log(`${src.card.name} returns to the battlefield as an enchantment (it's not a creature).`); fire('enters', { o: src }); break; }

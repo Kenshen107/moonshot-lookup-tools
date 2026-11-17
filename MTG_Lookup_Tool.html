@@ -7189,6 +7189,19 @@
             .ht-label b { display: block; font-size: 20pt; line-height: 1.05; margin: 2px 0 4px; overflow-wrap: anywhere; }
             .ht-label b.long { font-size: 15pt; }
             .ht-label span { display: block; font-size: 10pt; color: #222; line-height: 1.3; }
+            .ht-page.hlist { display: block; }
+            .hl-head { height: 0.9in; border-bottom: 2px solid #111; margin-bottom: 0.12in; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .hl-head.small { height: 0.3in; margin-bottom: 0.1in; }
+            .hl-head h1 { margin: 0; padding: 0; border: 0; color: #000; font-family: sans-serif; font-size: 24pt; line-height: 1.1; display: flex; align-items: center; gap: 0.1in; }
+            .hl-head h1 svg { width: 0.3in; height: 0.38in; flex: none; }
+            .hl-head.small h1 { font-size: 13pt; }
+            .hl-head.small h1 svg { width: 0.16in; height: 0.2in; }
+            .hl-head p { margin: 0.06in 0 0; font-size: 9.5pt; color: #333; }
+            .hl-cols { display: grid; grid-template-columns: repeat(3, 2.3in); column-gap: 0.15in; align-items: start; }
+            .hl-col { min-width: 0; }
+            .hl-cat { height: 0.3in; box-sizing: border-box; padding-top: 0.08in; font-size: 9.5pt; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #c2410c; border-bottom: 1px solid #999; margin-bottom: 0.02in; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .hl-card { height: 0.19in; display: flex; align-items: center; gap: 0.07in; font-size: 9pt; white-space: nowrap; overflow: hidden; }
+            .hl-card i { width: 0.1in; height: 0.1in; border: 1px solid #555; flex: none; }
         }
         #slPrintArea { display: none; }
         @media print {
@@ -9468,7 +9481,8 @@
                 <button type="button" class="sl-btn" onclick="printHotlistTags()">🖨️ Print hotlist tags</button>
                 <button type="button" class="sl-btn" onclick="printHotlistLabels()">🖨️ Print case labels</button>
                 <button type="button" class="sl-btn" onclick="printHotlistStrips()">🖨️ Print divider strips</button>
-                <div class="bk-note" style="margin-top:6px;">Tags: one small flame tag for every card, with its name and spot, in case order. Divider strips: a thin one-line sticker per card for the white edge of its card divider. Case labels: one bigger label for each section of the case (shelf, side, category and spot range) to mark where it starts.</div>
+                <button type="button" class="sl-btn" onclick="printHotlistList()">🖨️ Print customer list</button>
+                <div class="bk-note" style="margin-top:6px;">Tags: one small flame tag for every card, with its name and spot, in case order. Divider strips: a thin one-line sticker per card for the white edge of its card divider. Case labels: one bigger label for each section of the case (shelf, side, category and spot range) to mark where it starts. Customer list: just the card names by category, A to Z, with a tick box each, for handing out (no shelf or spot).</div>
             </div>
             <details id="hlpDetails" class="hlp-wrap" ontoggle="if (this.open) renderHlp()">
                 <summary>🗂️ Set box placeholders: one slip for each card in each set it was printed in</summary>
@@ -17600,6 +17614,38 @@ window.showShelfPlanner=function(){if(!started){started=true;init();}else{render
                 return `<div class="ht-strip">${HOTLIST_FLAME}<b class="${name.length > 24 ? 'long' : ''}">${escapeAttr(name)}</b><span>${escapeAttr(where)}</span></div>`;
             }), 'strips', 120);
         }
+        // A list for customers (owner, 2026-11-17: "a list of our hotlist cards to give people so they know what is on the list"):
+        // card names only, grouped by category and A to Z, with a tick box each. No shelf or spot (that stays inside the store).
+        // Columns are packed here by line counts (fixed row heights), so a page never overflows; categories split with "(continued)".
+        function printHotlistList() {
+            const cats = [], seen = new Set();
+            hotlistCards().forEach(c => {
+                let g = cats.find(x => x.name === c.category); if (!g) cats.push(g = { name: c.category, cards: [] });
+                const n = c.name.trim().replace(/\s*\(\d{3,5}[a-z]?\)\s*$/i, '');
+                if (!seen.has(n.toLowerCase())) { seen.add(n.toLowerCase()); g.cards.push(n); } // a card in the case twice (other printings) is listed once
+            });
+            cats.forEach((g, i) => { if (!g.cards.length) cats.splice(i, 1); });
+            cats.forEach(g => g.cards.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })));
+            const total = cats.reduce((n, g) => n + g.cards.length, 0);
+            const CAP_FIRST = 44, CAP_NEXT = 49; // lines per column; a heading counts as 2
+            const pages = []; let cols = [[], [], []], ci = 0, used = 0, cap = CAP_FIRST;
+            const newCol = () => { ci++; used = 0; if (ci > 2) { pages.push(cols); cols = [[], [], []]; ci = 0; cap = CAP_NEXT; } };
+            cats.forEach(g => {
+                let i = 0, first = true;
+                while (i < g.cards.length) {
+                    if (cap - used < 4) newCol(); // heading plus at least two cards must fit
+                    const room = cap - used - 2, take = Math.min(room, g.cards.length - i);
+                    cols[ci].push(`<div class="hl-cat">${escapeAttr(g.name)}${first ? '' : ' (continued)'}</div>` + g.cards.slice(i, i + take).map(n => `<div class="hl-card"><i></i>${escapeAttr(n)}</div>`).join(''));
+                    used += 2 + take; i += take; first = false;
+                    if (i < g.cards.length) newCol();
+                }
+            });
+            pages.push(cols);
+            const date = new Date().toLocaleDateString('en-US');
+            printHotlistSheet(pages.map((c, n) => [
+                `<div class="hl-head${n ? ' small' : ''}"><h1>${HOTLIST_FLAME}Hotlist cards</h1>${n ? '' : `<p>The cards on the hotlist, by category and A to Z (${total} cards). Printed ${date}.</p>`}</div><div class="hl-cols">${c.map(x => `<div class="hl-col">${x.join('')}</div>`).join('')}</div>`
+            ]), 'hlist', 1);
+        }
         function printHotlistLabels() {
             const groups = [];
             hotlistCards().forEach(c => {
@@ -24617,7 +24663,21 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     const QLB_PRICE = '(\\$[\\d,]+(?:\\.\\d+)?|[—–-]|N\\/A)';
     // The right-hand columns, each one token: condition, printing, language, qty, #, Market, Low Price.
     const QLB_TAIL = new RegExp('^(.*\\S)[\\t ]+(NM|LP|MP|HP|DMG|DG|D|S|U|SP|EX|GD|PL|PO)[\\t ]+(\\S+(?:[\\t ]+\\S+){0,3}?)[\\t ]+([A-Za-z]{2,4})[\\t ]+(\\d+)[\\t ]+(\\d+)[\\t ]+' + QLB_PRICE + '[\\t ]+' + QLB_PRICE + '$');
-    const QLB_HEADER_CELL = /^(?:(?:Product Name|Set|Condition|Printing|Lang\.?|Qty\.?|#|Market|Low Price)\s*)+$/i;
+    // The backroom printout (2026-11-17): # | Game | Set | Product Name | Condition | Printing | Qty. | Low Price | Market (no language column, Low before Market, set before name).
+    const QLB_TAIL2 = new RegExp('^(\\d+)[\\t ]+(.*\\S)[\\t ]+(NM|LP|MP|HP|DMG|DG|D|S|U|SP|EX|GD|PL|PO)[\\t ]+(\\S+(?:[\\t ]+\\S+){0,3}?)[\\t ]+(\\d+)[\\t ]+' + QLB_PRICE + '[\\t ]+' + QLB_PRICE + '$');
+    const QLB_GAMES = 'Magic: The Gathering|Magic|Pok[eé]mon|Yu-Gi-Oh!?|Disney Lorcana|Lorcana|One Piece Card Game|One Piece|Flesh and Blood|Star Wars: Unlimited|Digimon Card Game|Digimon|Dragon Ball Super Card Game|Dragon Ball|Riftbound|Gundam Card Game|Weiss Schwarz|Final Fantasy|Cardfight!! Vanguard|MetaZoo|Union Arena|Grand Archive|Sorcery: Contested Realm|Altered|Marvel Champions|Warhammer';
+    const QLB_GAME_RE = new RegExp('^(' + QLB_GAMES + ')(?:\\s+|$)', 'i');
+    // Front part of a backroom row: number, game, set, then the card name (which may have wrapped cells).
+    function qlbFront2(cells) {
+        const arr = cells.map(c => ({ t: c.t, x: c.x }));
+        if (arr[0] && /^\d+$/.test(arr[0].t)) arr.shift(); else if (arr[0]) arr[0].t = arr[0].t.replace(/^\d+\s+/, '');
+        let game = '';
+        if (arr[0]) { const g = arr[0].t.match(QLB_GAME_RE); if (g) { game = g[1]; arr[0].t = arr[0].t.slice(g[0].length).trim(); if (!arr[0].t) arr.shift(); } }
+        if (!game && arr.length >= 3) game = arr.shift().t;
+        if (arr.length >= 2) return { game, set: arr[0].t, name: arr.slice(1).map(c => c.t).join(' '), setX: arr[0].x, nameX: arr[1].x };
+        return { game, set: '', name: arr[0] ? arr[0].t : '', setX: null, nameX: arr[0] ? arr[0].x : null };
+    }
+    const QLB_HEADER_CELL = /^(?:(?:Product Name|Game|Set|Condition|Printing|Lang\.?|Qty\.?|#|Market|Low Price)\s*)+$/i;
     function qlbPrice(s) { if (!s || !/\$/.test(s)) return null; const n = parseFloat(s.replace(/[$,]/g, '')); return isNaN(n) ? null : n; }
 
     // lines: [{ cells: [{ t, x }] }] in reading order (x optional). Returns { rows, meta }.
@@ -24635,7 +24695,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             const cells = l.cells.map(c => ({ t: c.t.replace(/\s+/g, ' ').trim(), x: c.x })).filter(c => c.t && !QLB_HEADER_CELL.test(c.t));
             if (cells.length) clean.push(cells);
         });
-        const matchCells = cells => cells.length ? cells.map(c => c.t).join('\t').match(QLB_TAIL) : null;
+        const matchCells = cells => { if (!cells.length) return null; const j = cells.map(c => c.t).join('\t'); return j.match(QLB_TAIL) || j.match(QLB_TAIL2); };
         let buf = [];
         for (let i = 0; i < clean.length; i++) {
             const cells = clean[i];
@@ -24652,6 +24712,13 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             buf = buf.concat(cells);
             const m = matchCells(buf);
             if (!m) continue;
+            if (m.length === 8) { // backroom layout (QLB_TAIL2): #, front, condition, printing, qty, Low Price, Market
+                const ci = buf.map(c => c.t).lastIndexOf(m[3]);
+                const f = qlbFront2(ci > 0 ? buf.slice(0, ci) : [{ t: m[1] + '\t' + m[2].replace(/\s{2,}/g, '\t'), x: null }].flatMap(c => c.t.split('\t').map(t => ({ t, x: null }))));
+                rows.push({ num: +m[1], qty: +m[5], name: f.name, set: f.set, cond: m[3].toUpperCase(), printing: m[4].replace(/\s+/g, ' '), lang: '', game: f.game, market: qlbPrice(m[7]), low: qlbPrice(m[6]), pct: null, _nameX: f.nameX, _setX: f.set ? f.setX : null });
+                buf = [];
+                continue;
+            }
             // The front part is "name cells ... set cell": the set is the last cell, the name the rest.
             const frontText = m[1];
             let front = frontText.split('\t').map(s => s.trim()).filter(Boolean);
