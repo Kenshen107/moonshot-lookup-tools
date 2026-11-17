@@ -497,7 +497,7 @@ function leaveBattlefield(o, zone) {
     const P = G.players[o.owner];
     if (o.token) return;
     // 903.9: a commander that would go to the library returns to the command zone; one that goes to the graveyard or exile waits there until its owner chooses (commanderChoices)
-    if (o.isCommander && zone === 'library') { P.command.push(o); log(`${o.card.name} returns to the command zone.`); return; }
+    if (o.isCommander && zone === 'library' && P.isAI) { P.command.push(o); log(`${o.card.name} returns to the command zone.`); return; }
     P[zone].push(o);
     if (wasOn && zone === 'gy') o.toGyTurn = G.turn;
     if (G && G.toGyQ && G.toGyQ.includes(o)) { G.toGyQ = G.toGyQ.filter(x => x !== o); fire('toGy', { o }); }
@@ -508,12 +508,14 @@ function leaveBattlefield(o, zone) {
 async function commanderChoices() {
     if (!G || G.over) return;
     for (const P of G.players) {
-        for (const z of ['gy', 'exile']) {
+        for (const z of ['gy', 'exile', 'hand', 'library']) {
+            if (P.isAI && (z === 'hand' || z === 'library')) continue; // the computer returns a tucked commander at once and leaves a bounced one in hand
             for (const o of P[z].filter(x => x.isCommander && x.cmdSeenZone !== z)) {
                 o.cmdSeenZone = z;
-                const yes = P.isAI ? true : await askYes(P, `${o.card.name} was put into ${z === 'gy' ? (you(P) ? 'your' : `${P.name}'s`) + ' graveyard' : 'exile'}. Put it into the command zone? (Cancel = leave it there)`, { card: o.card, yes: 'Command zone', no: z === 'gy' ? 'Leave it in the graveyard' : 'Leave it in exile' });
+                const zn = { gy: 'graveyard', exile: 'exile', hand: 'hand', library: 'library' }[z];
+                const yes = P.isAI ? true : await askYes(P, `${o.card.name} was put into ${z === 'gy' ? (you(P) ? 'your' : `${P.name}'s`) + ' graveyard' : z === 'exile' ? 'exile' : (you(P) ? 'your' : `${P.name}'s`) + ' ' + zn}. Put it into the command zone? (Cancel = leave it there)`, { card: o.card, yes: 'Command zone', no: `Leave it in ${z === 'exile' ? 'exile' : 'the ' + zn}` });
                 if (yes && P[z].includes(o)) { G.players.forEach(X => ['bf', 'hand', 'gy', 'exile', 'library', 'command'].forEach(zz => { while (X[zz].includes(o)) pull(X[zz], o); })); P.command.push(o); log(`${o.card.name} returns to the command zone (rule 903.9a).`); }
-                else if (P[z].includes(o)) log(`${P.name} ${you(P) ? 'leave' : 'leaves'} ${o.card.name} in ${z === 'gy' ? 'the graveyard' : 'exile'}.`);
+                else if (P[z].includes(o)) log(`${P.name} ${you(P) ? 'leave' : 'leaves'} ${o.card.name} in ${z === 'exile' ? 'exile' : 'the ' + zn}.`);
             }
         }
     }
@@ -3102,7 +3104,7 @@ async function applyEffect(P, e, t, src) {
         case 'discardIfNoSac': for (const X of G.players) { if ((G.edictDid || [true, true])[X.i] || !X.hand.length) continue; const d = await chooseDiscard(X, name); pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} couldn't sacrifice, so ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
         case 'lootAll': for (const X of G.players) { drawCards(X, 1); if (!X.hand.length) continue; const d = await chooseDiscard(X, name); pull(X.hand, d); X.gy.push(d); d.discardTurn = G.turn; noteDiscard(X, 1); log(`${X.name} ${you(X) ? 'discard' : 'discards'} ${d.card.name}.`); } break;
         case 'ctxPowDmg': { const from = G.ctxObj && onBf(G.ctxObj.uid) ? G.ctxObj : src; const n = Math.max(0, pow(from)); if (!n || !t) break; damage(t.p || t.o, n, from); log(`${from.card.name} deals ${n} damage to ${targetName(t)}.`); break; }
-        case 'cmdToHand': { const c = P.command.find(x => x.isCommander); if (c) { pull(P.command, c); P.hand.push(c); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${c.card.name} into ${you(P) ? 'your' : 'their'} hand from the command zone.`); } break; }
+        case 'cmdToHand': { const c = P.command.find(x => x.isCommander); if (c) { pull(P.command, c); c.cmdSeenZone = 'hand'; P.hand.push(c); log(`${P.name} ${you(P) ? 'put' : 'puts'} ${c.card.name} into ${you(P) ? 'your' : 'their'} hand from the command zone.`); } break; }
         case 'foodOrTreasure': { const needMana = P.hand.some(h => Rx(h).kind !== 'land' && !canPay(P, h)); const kind = P.isAI || AUTOPLAY ? (needMana || P.life > 12 ? 'treasure' : 'food') : (await askYes(P, `${name}: create a Treasure token? (Cancel = a Food token.)`, { card: src && src.card }) ? 'treasure' : 'food'); applyEffect(P, { t: 'artToken', n: 1, kind }, null, src); break; }
         case 'activeDraws': drawCards(G.players[G.active], e.n); break;
         case 'enduring': { const X = G.players[src.owner]; if (!X.gy.includes(src)) break; pull(X.gy, src); resetObj(src); src.enchOnly = true; X.bf.push(src); log(`${src.card.name} returns to the battlefield as an enchantment (it's not a creature).`); fire('enters', { o: src }); break; }
