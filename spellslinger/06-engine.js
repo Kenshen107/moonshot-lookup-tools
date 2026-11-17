@@ -423,6 +423,7 @@ function tokenCopyOf(P, card, opts = {}) {
     return tok;
 }
 function drawCards(P, n, quiet) {
+    if (P.out) return; // a player who has left the game doesn't draw (pod record 2026-11-17: Flumph made eliminated players "draw")
     let drawnNow = null;
     if (G && G.phase !== 'setup' && n > 0 && P.bf.some(a => Rx(a).drawTwo && !lostAbilities(a))) { n *= 2; log('(Mr. Spock: draw two cards instead.)'); }
     const sf = G && G.phase !== 'setup' && allPerms().some(x => Rx(x).sharedFate && !lostAbilities(x));
@@ -702,6 +703,7 @@ function sba() {
 // 800.4: a player who has lost leaves: their cards go away, what they were using of other players' goes back, their spells leave the stack
 function eliminate(P, reason) {
     P.out = true;
+    (G.deals || []).forEach(d => { if (d.a === P.i || d.b === P.i || d.x === P.i) d.over = true; }); // deals with a player who is gone end with them (a gang-up against you outlived its maker)
     if (typeof banterOut === 'function') banterOut(P, reason);
     if (typeof pol === 'function') pol().outAt.push(G.turn);
     log(`${P.name} ${you(P) ? 'lose' : 'loses'} the game and leaves the pod: ${reason}`);
@@ -3070,7 +3072,8 @@ async function applyEffect(P, e, t, src) {
             for (let k = 0; k < e.d && P.hand.length; k++) { const d = await chooseDiscard(P, name); pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name}.`); }
             break;
         }
-        case 'drawAll': G.players.forEach(X => drawCards(X, e.n)); break;
+        case 'drawAll': G.players.filter(X => !X.out).forEach(X => drawCards(X, e.n)); break;
+        case 'drawYouOpp': drawCards(P, e.n); if (O && O !== P && !O.out) drawCards(O, e.n); break; // "you and target opponent each draw"
         // ---- X spells (2026-10-06) ----
         case 'shuffleSelfIn': src.shuffleIn = true; break;
         // ---- Landfall (2026-10-06) ----
