@@ -59,6 +59,12 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         window.pickCard = rp; B.isAI = true;
         await settle();
         out.push(['a commander in a graveyard exiled by Nurgle\'s Conscription asks its owner', zones(c) === 'command' && asks.length === 1, { z: zones(c), asks: asks.length }]);
+        // 10. An opponent's reanimation from a graveyard asks the commander's owner first
+        A.command.length = 0; A.exile.length = 0; A.gy.length = 0; G.players[1].bf.length = 0; asks.length = 0; answer(true);
+        c = mk(); dieOrLeave(c, 'gy'); answer(false); await settle(); asks.length = 0; answer(true);
+        const rcard = T.put(B, C['Grizzly Bears']); B.isAI = true;
+        await applyEffect(B, { t: 'conscription' }, null, rcard, null, 'Nurgle\'s Conscription');
+        out.push(['an opponent taking from your graveyard lets you move your commander to the command zone first', zones(c) === 'command' && asks.length >= 1, { z: zones(c), asks: asks.length }]);
         // 9. A person's commander bounced to hand or tucked into the library asks too
         A.command.length = 0; A.library.length = 0; A.hand.length = 0; asks.length = 0; answer(true);
         c = mk(); leaveBattlefield(c, 'hand'); await settle();
