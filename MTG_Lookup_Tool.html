@@ -23918,7 +23918,21 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
     const QLB_PRICE = '(\\$[\\d,]+(?:\\.\\d+)?|[—–-]|N\\/A)';
     // The right-hand columns, each one token: condition, printing, language, qty, #, Market, Low Price.
     const QLB_TAIL = new RegExp('^(.*\\S)[\\t ]+(NM|LP|MP|HP|DMG|DG|D|S|U|SP|EX|GD|PL|PO)[\\t ]+(\\S+(?:[\\t ]+\\S+){0,3}?)[\\t ]+([A-Za-z]{2,4})[\\t ]+(\\d+)[\\t ]+(\\d+)[\\t ]+' + QLB_PRICE + '[\\t ]+' + QLB_PRICE + '$');
-    const QLB_HEADER_CELL = /^(?:(?:Product Name|Set|Condition|Printing|Lang\.?|Qty\.?|#|Market|Low Price)\s*)+$/i;
+    // The backroom printout (2026-11-17): # | Game | Set | Product Name | Condition | Printing | Qty. | Low Price | Market (no language column, Low before Market, set before name).
+    const QLB_TAIL2 = new RegExp('^(\\d+)[\\t ]+(.*\\S)[\\t ]+(NM|LP|MP|HP|DMG|DG|D|S|U|SP|EX|GD|PL|PO)[\\t ]+(\\S+(?:[\\t ]+\\S+){0,3}?)[\\t ]+(\\d+)[\\t ]+' + QLB_PRICE + '[\\t ]+' + QLB_PRICE + '$');
+    const QLB_GAMES = 'Magic: The Gathering|Magic|Pok[eé]mon|Yu-Gi-Oh!?|Disney Lorcana|Lorcana|One Piece Card Game|One Piece|Flesh and Blood|Star Wars: Unlimited|Digimon Card Game|Digimon|Dragon Ball Super Card Game|Dragon Ball|Riftbound|Gundam Card Game|Weiss Schwarz|Final Fantasy|Cardfight!! Vanguard|MetaZoo|Union Arena|Grand Archive|Sorcery: Contested Realm|Altered|Marvel Champions|Warhammer';
+    const QLB_GAME_RE = new RegExp('^(' + QLB_GAMES + ')(?:\\s+|$)', 'i');
+    // Front part of a backroom row: number, game, set, then the card name (which may have wrapped cells).
+    function qlbFront2(cells) {
+        const arr = cells.map(c => ({ t: c.t, x: c.x }));
+        if (arr[0] && /^\d+$/.test(arr[0].t)) arr.shift(); else if (arr[0]) arr[0].t = arr[0].t.replace(/^\d+\s+/, '');
+        let game = '';
+        if (arr[0]) { const g = arr[0].t.match(QLB_GAME_RE); if (g) { game = g[1]; arr[0].t = arr[0].t.slice(g[0].length).trim(); if (!arr[0].t) arr.shift(); } }
+        if (!game && arr.length >= 3) game = arr.shift().t;
+        if (arr.length >= 2) return { game, set: arr[0].t, name: arr.slice(1).map(c => c.t).join(' '), setX: arr[0].x, nameX: arr[1].x };
+        return { game, set: '', name: arr[0] ? arr[0].t : '', setX: null, nameX: arr[0] ? arr[0].x : null };
+    }
+    const QLB_HEADER_CELL = /^(?:(?:Product Name|Game|Set|Condition|Printing|Lang\.?|Qty\.?|#|Market|Low Price)\s*)+$/i;
     function qlbPrice(s) { if (!s || !/\$/.test(s)) return null; const n = parseFloat(s.replace(/[$,]/g, '')); return isNaN(n) ? null : n; }
 
     // lines: [{ cells: [{ t, x }] }] in reading order (x optional). Returns { rows, meta }.
@@ -23936,7 +23950,7 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             const cells = l.cells.map(c => ({ t: c.t.replace(/\s+/g, ' ').trim(), x: c.x })).filter(c => c.t && !QLB_HEADER_CELL.test(c.t));
             if (cells.length) clean.push(cells);
         });
-        const matchCells = cells => cells.length ? cells.map(c => c.t).join('\t').match(QLB_TAIL) : null;
+        const matchCells = cells => { if (!cells.length) return null; const j = cells.map(c => c.t).join('\t'); return j.match(QLB_TAIL) || j.match(QLB_TAIL2); };
         let buf = [];
         for (let i = 0; i < clean.length; i++) {
             const cells = clean[i];
@@ -23953,6 +23967,13 @@ html:not([data-fx="off"]) :is(button, input, select, textarea):disabled { cursor
             buf = buf.concat(cells);
             const m = matchCells(buf);
             if (!m) continue;
+            if (m.length === 8) { // backroom layout (QLB_TAIL2): #, front, condition, printing, qty, Low Price, Market
+                const ci = buf.map(c => c.t).lastIndexOf(m[3]);
+                const f = qlbFront2(ci > 0 ? buf.slice(0, ci) : [{ t: m[1] + '\t' + m[2].replace(/\s{2,}/g, '\t'), x: null }].flatMap(c => c.t.split('\t').map(t => ({ t, x: null }))));
+                rows.push({ num: +m[1], qty: +m[5], name: f.name, set: f.set, cond: m[3].toUpperCase(), printing: m[4].replace(/\s+/g, ' '), lang: '', game: f.game, market: qlbPrice(m[7]), low: qlbPrice(m[6]), pct: null, _nameX: f.nameX, _setX: f.set ? f.setX : null });
+                buf = [];
+                continue;
+            }
             // The front part is "name cells ... set cell": the set is the last cell, the name the rest.
             const frontText = m[1];
             let front = frontText.split('\t').map(s => s.trim()).filter(Boolean);
