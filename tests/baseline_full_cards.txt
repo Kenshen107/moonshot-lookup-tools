@@ -415,6 +415,7 @@ Ancient Craving
 Ancient Den
 Ancient Greenwarden
 Ancient Grudge
+Ancient Hellkite
 Ancient Imperiosaur
 Ancient Silverback
 Ancient Spider
@@ -877,6 +878,7 @@ Authority of the Consuls
 Autochthon Wurm
 Automated Warfare System
 Automatic Librarian
+Autumn's Veil
 Autumnal Gloom // Ancient of the Equinox
 Avacyn's Pilgrim
 Avacyn, Angel of Hope
@@ -1514,6 +1516,7 @@ Bloodbond Vampire
 Bloodborn Scoundrels
 Bloodbraid Elf
 Bloodbraid Marauder
+Bloodcrazed Goblin
 Bloodcrazed Neonate
 Bloodcrazed Paladin
 Bloodcrusher of Khorne
@@ -2117,6 +2120,7 @@ Captain's Tutelage
 Captivating Cave
 Captivating Crew
 Captivating Gyre
+Captivating Vampire
 Captive Flame
 Captive Weird // Compleated Conjurer
 Capture Sphere
@@ -2326,6 +2330,7 @@ Chandra's Outburst
 Chandra's Outrage
 Chandra's Phoenix
 Chandra's Pyrohelix
+Chandra's Spitfire
 Chandra's Triumph
 Chandra, Awakened Inferno
 Chandra, Novice Pyromancer
@@ -2664,6 +2669,7 @@ Combat Medic
 Combat Professor
 Combat Tutorial
 Combine Chrysalis
+Combust
 Combustible Gearhulk
 Combustion Man
 Coming In Hot
@@ -2784,6 +2790,7 @@ Contract Killing
 Contradict
 Contraption Cannon
 Control Magic
+Conundrum Sphinx
 Convalescence
 Convalescent Care
 Convicted Killer // Branded Howler
@@ -3100,6 +3107,7 @@ Cyclone Summoner
 Cyclonic Rift
 Cyclopean Mummy
 Cyclopean Snare
+Cyclops Gladiator
 Cyclops of Eternal Fury
 Cyclops of One-Eyed Pass
 Cylian Elf
@@ -3172,6 +3180,7 @@ Daring Skyjek
 Daring Thunder-Thief
 Dark Banishing
 Dark Betrayal
+Dark Confidant
 Dark Deed
 Dark Endurance
 Dark Favor
@@ -3185,6 +3194,7 @@ Dark Privilege
 Dark Prophecy
 Dark Remedy
 Dark Ritual
+Dark Tutelage
 Dark Withering
 Dark-Dweller Oracle
 Darkbore Pathway // Slitherbore Pathway
@@ -3194,6 +3204,7 @@ Darkmoss Bridge
 Darkness
 Darkslick Drake
 Darkslick Shores
+Darkstar Augur
 Darksteel Angel
 Darksteel Axe
 Darksteel Brute
@@ -3441,6 +3452,7 @@ Demolition Field
 Demolition Stomper
 Demon Bolt
 Demon of Catastrophes
+Demon of Death's Gate
 Demon of Loathing
 Demon's Disciple
 Demon's Due
@@ -3512,6 +3524,7 @@ Despotic Scepter
 Destined // Lead
 Destroy Evil
 Destroy the Evidence
+Destructive Force
 Destructive Tampering
 Destructor Dragon
 Desynchronization
@@ -4746,6 +4759,7 @@ Fatigue
 Fault Line
 Fault Riders
 Faultgrinder
+Fauna Shaman
 Favorable Winds
 Fblthp, Knows the Way
 Fear
@@ -4928,6 +4942,7 @@ Fire Nation Warship
 Fire Nation's Conquest
 Fire Prophecy
 Fire Sages
+Fire Servant
 Fire Shrine Keeper
 Fire Snake
 Fire Sprites
@@ -5303,6 +5318,7 @@ Frost Giant
 Frost Lynx
 Frost Marsh
 Frost Ogre
+Frost Titan
 Frost Trickster
 Frost Walker
 Frostbite Pyromental
@@ -5371,6 +5387,7 @@ Gaea's Cradle
 Gaea's Embrace
 Gaea's Gift
 Gaea's Protector
+Gaea's Revenge
 Gaea's Skyfolk
 Gaea's Touch
 Gaelicat
@@ -5428,6 +5445,7 @@ Garenbrig Carver // Shield's Might
 Gargadon
 Gargos, Vicious Watcher
 Gargoyle Castle
+Gargoyle Sentinel
 Garna, Bloodfist of Keld
 Garna, the Bloodflame
 Garnet, Princess of Alexandria
@@ -6330,6 +6348,7 @@ Haradrim Spearmaster
 Harald, King of Skemfar
 Harbor Bandit
 Harbor Guardian
+Harbor Serpent
 Hard Cover
 Hard Evidence
 Hard-Hitting Question
@@ -6631,6 +6650,7 @@ Hive Mind Coprocessor
 Hive Stirrings
 Hoar Shade
 Hoard Robber
+Hoarding Dragon
 Hobblefiend
 Hobbling Zombie
 Hobgoblin Dragoon
@@ -6798,6 +6818,7 @@ Hunter's Axe
 Hunter's Insight
 Hunter's Mark
 Hunter's Talent
+Hunters' Feast
 Hunting
 Hunting Cheetah
 Hunting Moa
@@ -6960,6 +6981,7 @@ Incendiary Sabotage
 Incinerate
 Incinerating Blast
 Incisor Glider
+Incite
 Incite War
 Incorrigible Youths
 Increasing Savagery

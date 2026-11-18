@@ -2995,7 +2995,7 @@ async function applyEffect(P, e, t, src) {
         }
         case 'untapSelf': if (onBf(src.uid)) { src.tapped = false; log(`${src.card.name} untaps.`); } break;
         case 'exileSelf': if (onBf(src.uid)) { log(`${src.card.name} is exiled.`); leaveBattlefield(src, 'exile'); } else if (['instant', 'sorcery'].includes(Rx(src).kind)) src.exileAfter = true; break;
-        case 'namedCounter': if (onBf(src.uid)) { if (typeof tkCounterMult === 'function') e = { ...e, n: tkCounterMult(src, e.kind, e.n) }; src.ctr[e.kind] = (src.ctr[e.kind] || 0) + e.n; log(`${src.card.name} gets ${e.n} ${e.kind} counter${e.n === 1 ? '' : 's'}.`); } break;
+        case 'namedCounter': if (onBf(src.uid)) { if (typeof tkCounterMult === 'function') e = { ...e, n: tkCounterMult(src, e.kind, e.n) }; e = { ...e, n: e.n + G.players[src.owner].bf.filter(a => Rx(a).counterBonusAll && !lostAbilities(a) && !/Planeswalker/.test(src.card.type)).length }; src.ctr[e.kind] = (src.ctr[e.kind] || 0) + e.n; log(`${src.card.name} gets ${e.n} ${e.kind} counter${e.n === 1 ? '' : 's'}.`); } break;
         case 'regen': if (onBf(src.uid)) { src.regen = (src.regen || 0) + 1; log(`${src.card.name} gets a regeneration shield.`); } break;
         case 'millSelf': { const milled = P.library.splice(-e.n).reverse(); P.gy.push(...milled); log(`${P.name} ${you(P) ? 'mill' : 'mills'} ${milled.length}.`); break; }
         case 'allPump': allPerms().filter(isCreature).forEach(c => { c.tp += e.p; c.tq += e.q; }); log(`All creatures get ${e.p >= 0 ? '+' : ''}${e.p}/${e.q >= 0 ? '+' : ''}${e.q} until end of turn.`); break;
