@@ -85,7 +85,22 @@ async function buildRandomCommanderDeck(commander, style, themeArg) {
 // EDHREC lists for the commander is drawn at random, weighted by how many of its decks play it, so popular cards show up often
 // and no two builds match. Only fully automated cards are used; basics fill the rest by color symbols.
 // top = true: the most-played cards instead of a weighted draw (the "top-played" deck of a commander; the commander itself must be fully automated)
-async function buildEdhrecRandomDeck(slug, top) {
+// On-theme builds (2026-11-19, owner: "do all four" EDHREC ideas): EDHREC's synergy says how much more often THIS commander's decks play a card than other decks in its colors do.
+// Sol Ring and Command Tower are in most decks with a synergy near zero; the cards that make the commander work have synergy 0.25 and up. A card's weight is its play rate
+// times a synergy factor, and generic staples (synergy under 0.1 in more than half of the decks) are capped so they don't fill the deck.
+const SYN_STAPLE_CAP = 6;
+function synFactor(syn) { return syn >= 0 ? 1 + 3 * Math.min(syn, 1) : 0.6; }
+const isStaple = x => x.syn < 0.1 && x.rate > 0.5;
+function edhrecWeight(x, synergy) { return Math.max(0.002, x.rate * (synergy ? synFactor(x.syn) : 1)); }
+// the order a deck takes its cards in: the top-played build sorts by weight, the random build draws by weight; returns at most `n` spells with the staple cap applied
+function edhrecPick(list, n, top, synergy, cap = SYN_STAPLE_CAP, rnd = Math.random) {
+    const ordered = top ? list.slice().sort((a, b) => edhrecWeight(b, synergy) - edhrecWeight(a, synergy)) : list.map(x => ({ x, k: -Math.log(1 - rnd()) / edhrecWeight(x, synergy) })).sort((a, b) => a.k - b.k).map(o => o.x);
+    if (!synergy) return ordered.slice(0, n);
+    const out = []; let staples = 0;
+    for (const x of ordered) { if (out.length >= n) break; if (isStaple(x)) { if (staples >= cap) continue; staples++; } out.push(x); }
+    return out;
+}
+async function buildEdhrecRandomDeck(slug, top, synergy = true) {
     await loadBasics();
     const res = await fetch(`${EDH}/commanders/${slug}.json`);
     if (!res.ok) throw new Error('EDHREC has no page for that commander');
@@ -98,7 +113,7 @@ async function buildEdhrecRandomDeck(slug, top) {
         for (const v of l.cardviews || []) {
             const k = String(v.name).toLowerCase();
             if (seen.has(k) || !v.potential_decks) continue;
-            seen.add(k); pool.push({ name: v.name, rate: v.num_decks / v.potential_decks, land: /land/.test(l.tag || '') });
+            seen.add(k); pool.push({ name: v.name, rate: v.num_decks / v.potential_decks, syn: typeof v.synergy === 'number' ? v.synergy : 0, land: /land/.test(l.tag || '') });
         }
     }
     const byName = await cardsByNames([cmdName, ...pool.map(x => x.name)]);
@@ -107,10 +122,9 @@ async function buildEdhrecRandomDeck(slug, top) {
     if (top && !isFullAuto(commander)) throw new Error(`${commander.name} isn't fully automated yet, so its deck can't be built.`);
     const ci = commander.ci.filter(c => BASIC_IDS[c]);
     // weighted draw without repeats: the key -ln(u) / weight is smallest for heavy cards
-    const draw = top ? list => list.slice().sort((a, b) => b.rate - a.rate) : list => list.map(x => ({ x, k: -Math.log(1 - Math.random()) / Math.max(0.002, x.rate) })).sort((a, b) => a.k - b.k).map(o => o.x);
     const usable = pool.map(x => ({ ...x, card: byName.get(x.name.toLowerCase()) })).filter(x => x.card && x.card.id !== commander.id && isFullAuto(x.card) && !isBasic(x.card));
-    const spells = draw(usable.filter(x => !x.land && rulesFor(x.card).kind !== 'land')).slice(0, 63);
-    const lands = draw(usable.filter(x => x.land || rulesFor(x.card).kind === 'land').filter(x => rulesFor(x.card).mana)).slice(0, ci.length > 1 ? 10 : 4);
+    const spells = edhrecPick(usable.filter(x => !x.land && rulesFor(x.card).kind !== 'land'), 63, top, synergy);
+    const lands = edhrecPick(usable.filter(x => x.land || rulesFor(x.card).kind === 'land').filter(x => rulesFor(x.card).mana), ci.length > 1 ? 10 : 4, top, synergy, 99);
     const entries = [...spells, ...lands].map(x => ({ card: x.card, n: 1 }));
     // basics split by color symbols in the chosen cards (plus one each so no color of the identity is left without a land)
     const need = 99 - entries.length, split = {};
@@ -121,7 +135,7 @@ async function buildEdhrecRandomDeck(slug, top) {
     for (let i = 0; left > 0 && ci.length; i++, left--) split[ci[i % ci.length]]++;
     Object.entries(split).forEach(([col, n]) => { if (n > 0 && BASIC_IDS[col]) entries.push({ card: CARDS.get(BASIC_IDS[col]), n }); });
     if (!ci.length) entries.push({ card: CARDS.get(BASIC_IDS.W), n: 99 - entries.reduce((a, e) => a + e.n, 0) });
-    return { name: commander.name, format: 'commander', commander, entries, swapped: 0, source: `${top ? 'top-played build' : 'random build'} from EDHREC's ${commander.name} cards (${spells.length} spells and ${lands.length} nonbasic lands drawn by how often decks play them; every card is fully automated)` };
+    return { name: commander.name, format: 'commander', commander, entries, swapped: 0, source: `${top ? 'top-played build' : 'random build'}${synergy ? ' weighted by EDHREC synergy' : ''} from EDHREC's ${commander.name} cards (${spells.length} spells and ${lands.length} nonbasic lands drawn by how often decks play them; every card is fully automated)` };
 }
 
 // Modern: two random colors, 24 lands, four-ofs of the most-played Automated cards

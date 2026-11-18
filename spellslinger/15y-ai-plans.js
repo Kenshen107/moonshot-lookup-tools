@@ -300,15 +300,30 @@ const DECK_PLANS = {
     },
 };
 
+// Auto plans (2026-11-19, owner: "use EDHREC synergy"): for a commander with no hand-written plan, the cards EDHREC says its decks play far more than other decks (synergy 0.25+,
+// in 20%+ of decks) are its engine, so the computer casts them sooner. spellslinger/data/auto-plans.json is written by `node tools/build_auto_plans.js`.
+// `AI_TUNE.autoPlans` (lab: `--tune autoPlans=1`, seat A only) switches it on; 0 = off.
+AI_TUNE.autoPlans = 0;
+const AUTO_PLANS = {}; let autoPlansLoaded = false;
+async function loadAutoPlans() {
+    try { const r = await fetch('spellslinger/data/auto-plans.json'); const j = r.ok ? await r.json() : null; if (j && j.plans) Object.assign(AUTO_PLANS, j.plans); } catch (e) { /* no data: auto plans stay off */ }
+    autoPlansLoaded = true;
+}
+loadAutoPlans();
+const AUTO_PLAN_OBJ = {};
+function autoPlanFor(name, P) {
+    if (!tn(P, 'autoPlans') || !AUTO_PLANS[name]) return null;
+    return AUTO_PLAN_OBJ[name] || (AUTO_PLAN_OBJ[name] = { win: 'EDHREC synergy: play the cards its decks play far more than other decks', engine: AUTO_PLANS[name], payoff: [], payoffNeed: 2, cmdr: 0, auto: true });
+}
 // Which plan a player is playing: found by commander name, cached
 function planOf(P) {
     if (!P || P.planKey === null) return null;
     if (P.planKey === undefined) {
-        const c = [...P.command, ...P.bf, ...P.hand, ...P.gy].find(x => x.isCommander && DECK_PLANS[x.card.name]);
-        P.planKey = c ? c.card.name : null;
-        if (P.planKey) { const pl = DECK_PLANS[P.planKey]; pl.engineSet = pl.engineSet || new Set(pl.engine); pl.payoffSet = pl.payoffSet || new Set(pl.payoff); pl.protectSet = pl.protectSet || new Set(pl.protect || []); if (pl.style && !P.aiStyle && PLAYSTYLES[pl.style]) P.aiStyle = pl.style; }
+        const c = [...P.command, ...P.bf, ...P.hand, ...P.gy].find(x => x.isCommander && (DECK_PLANS[x.card.name] || autoPlanFor(x.card.name, P)));
+        P.planKey = c ? c.card.name : (autoPlansLoaded ? null : undefined);
+        if (P.planKey) { const pl = DECK_PLANS[P.planKey] || autoPlanFor(P.planKey, P); pl.engineSet = pl.engineSet || new Set(pl.engine); pl.payoffSet = pl.payoffSet || new Set(pl.payoff); pl.protectSet = pl.protectSet || new Set(pl.protect || []); if (pl.style && !P.aiStyle && PLAYSTYLES[pl.style]) P.aiStyle = pl.style; }
     }
-    return P.planKey ? DECK_PLANS[P.planKey] : null;
+    return P.planKey ? (DECK_PLANS[P.planKey] || autoPlanFor(P.planKey, P)) : null;
 }
 // Is the engine running? Enough engine pieces on the battlefield, or enough mana sources, or a loop is online
 function planReady(P, pl) {
