@@ -550,7 +550,9 @@ function destroy(o, why) {
     if (typeof tkMccoySave === 'function' && tkMccoySave(o)) return;
     if (o.regen) { o.regen--; o.tapped = true; o.dmg = 0; G.attackers = G.attackers.filter(u => u !== o.uid); log(`${o.card.name} regenerates (rule 701.19).`); return; }
     if (umbraSave(o)) return;
-    log(`${o.card.name} ${why || 'is destroyed'}.`);
+    // `why` is a phrase ("is destroyed (Stone Giant)") or, from many cards, just the source's name: then say "is destroyed by <name>" (the log used to read "X In Garruk's Wake.")
+    const wh = !why ? 'is destroyed' : (typeof why === 'string' && /^(is|are|was|dies|gets|goes)\b/.test(why) ? why : `is destroyed by ${why && why.card ? why.card.name : why}`);
+    log(`${o.card.name} ${wh}.`);
     dieOrLeave(o, 'gy');
 }
 
@@ -1372,7 +1374,12 @@ function sameTarget(a, b) {
 }
 // A target is still legal if it's still there (CR 608.2b): a permanent on
 // the battlefield, a spell or ability on the stack, a player in the game.
-function targetStillOk(t) { return t.p ? true : t.item ? G.stack.includes(t.item) : !!onBf(t.o.uid); }
+function targetStillOk(t, item) {
+    if (t.p) return true; if (t.item) return G.stack.includes(t.item); if (!onBf(t.o.uid)) return false;
+    // Rule 608.2b: a target that has become illegal (hexproof, shroud or protection gained in response, e.g. Overprotect on the target of Swords) makes the spell or ability fizzle
+    if (item && item.P && !item.noRecheck) { const o = t.o, src = item.o; if (has(o, 'shroud') || (has(o, 'hexproof') && !G.players[item.P.i].bf.includes(o)) || (src && src.card && protFrom(o, src))) return false; }
+    return true;
+}
 
 function chooseTarget(P, e, source, cancelable, exclude = []) {
     const valid = validTargets(P, e, source).filter(v => !exclude.some(x => sameTarget(x, v)));
@@ -1815,9 +1822,9 @@ async function resolveTop() {
     const item = G.stack.pop();
     if (!item) return;
     renderGame();
-    if (item.target && !targetStillOk(item.target) && item.castAs === 'bestow') { item.target = null; log(`${item.name}'s creature is gone - it enters as a creature (rule 702.103e).`); }
-    if (item.target && !targetStillOk(item.target)) {
-        log(`${item.name} doesn't resolve - its target is gone (rule 608.2b).`);
+    if (item.target && !targetStillOk(item.target, item) && item.castAs === 'bestow') { item.target = null; log(`${item.name}'s creature is gone - it enters as a creature (rule 702.103e).`); }
+    if (item.target && !targetStillOk(item.target, item)) {
+        log(`${item.name} doesn't resolve - its target is gone or no longer legal (rule 608.2b).`);
         if (item.kind === 'spell') moveSpellCard(item.o, 'gy');
         return;
     }

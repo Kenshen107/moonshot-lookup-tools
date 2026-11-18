@@ -24,6 +24,9 @@ const AI_ACT_GUARDS = {
     'Aetheric Amplifier': (P, o) => P.bf.some(x => x !== o && (x.counters >= 2 || Object.values(x.ctr || {}).some(v => v >= 2))),
     'Dal R\'El, Augment Orphan': (P, o, a) => !a.cost || !a.cost.sacPerm || (P.bf.filter(x => /\bLand\b/.test(x.card.type)).length >= 8 && P.hand.length <= 3),
     'Duskwatch Recruiter': (P, o) => P.library.some(c => /\bCreature\b/.test(c.card.type)),
+    // Peema Trailblazer drew 15 to 18 cards at a time and the computer then discarded 30 to hand size (pod record 2026-11-18): only with an almost empty hand
+    'Peema Trailblazer': (P, o) => P.hand.length <= 2,
+    'Gamma Grotesque': (P, o) => P.hand.length <= 3,
 };
 {
     const base = canActivate;
