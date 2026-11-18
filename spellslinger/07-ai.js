@@ -730,6 +730,8 @@ async function aiCombatRounds(P, attackers) {
         if (G.over) return false;
         renderGame();
         await actDrain();
+        await combatWindow('Attackers declared'); // a person may respond before blocking
+        if (G.over) return false;
         G.phase = 'declareBlocks';
         renderGame();
         if (!(await chooseBlocksAll(P, { aiPause: 400, idlePause: 700 })) || G.over) return false;
@@ -740,10 +742,13 @@ async function aiCombatRounds(P, attackers) {
         await settle();
         renderGame();
         await pause(500);
+        await combatWindow('Blockers declared'); // respond before damage
+        if (G.over) return false;
         G.phase = 'combatDamage';
         combatDamage(P);
         await settle();
         renderGame();
+        await combatWindow('Combat damage dealt');
         if (G.over) return false;
         await pause(400);
         await actDrain();

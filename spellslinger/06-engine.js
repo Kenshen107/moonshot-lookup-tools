@@ -1719,6 +1719,36 @@ async function endStepWindow(P) {
         }
     }
 }
+// A stop inside combat (declare attackers, declare blockers, combat damage, end of combat) where every person who is not taking the turn and can still do
+// something may respond with instants and abilities (owner, 2026-11-18). Skipped in tests, the lab and games on one device, or when end stops are off.
+async function combatWindow(label) {
+    if ((AUTOPLAY && !window.__FORCE_WINDOWS) || window.__LAB || G.hotseat || G.over || endStops === 'off') return;
+    const A = G.players[G.active];
+    for (let i = 1; i < G.players.length; i++) {
+        const X = G.players[(G.active + i) % G.players.length];
+        if (!X || X === A || X.isAI || X.out) continue;
+        for (let k = 0; k < 8 && !G.over; k++) {
+            if (!instantOptions(X)) break;
+            const acted = await humanWindow(X, `${label} (${A.name.split(',')[0]}'s combat)`);
+            if (!acted) break;
+            await settle();
+        }
+    }
+}
+// Go through combat without attacking (owner, 2026-11-18): beginning-of-combat abilities and triggers happen, the others get their stops, then the second main phase
+async function throughCombat() {
+    if (!G || G.over || G.active !== G.view || G.busy) return;
+    if (G.phase !== 'main1' && !(G.phase === 'declareAttackers' && G.mode && G.mode.type === 'attack')) return;
+    G.mode = null; G.combatCk = null; G.busy = true;
+    emptyPools();
+    if (!G.combatFired) { G.combatFired = true; fire('combat'); await settle(); }
+    if (!G.over) { G.phase = 'declareAttackers'; log(`${me().name} ${G.hotseat ? 'moves' : 'move'} through combat without attacking.`); renderGame(); await combatWindow('Beginning of combat'); await combatWindow('End of combat'); }
+    if (G.over) return;
+    G.phase = 'main2';
+    fireMain2(); await settle();
+    G.busy = false;
+    renderGame();
+}
 // A person who just cast an instant or sorcery is still asked when one of their permanents has an ability that targets a spell (Rootha: "{2}, return it to
 // its owner's hand: copy target instant or sorcery spell you control"), since that ability only works while the spell is on the stack (2026-10-26, owner's report).
 function ownSpellAbilityOptions(P, top) {
@@ -4701,7 +4731,7 @@ async function goToCombat() {
     G.combatCk = typeof slCheckpoint === 'function' && !G.stack.length ? slCheckpoint() : null; // so cancelling the attack can walk everything back (15x-casting.js)
     emptyPools();
     if (!G.combatFired) { G.combatFired = true; fire('combat'); G.busy = true; await settle(); G.busy = false; }
-    if (!me().bf.some(canAttackWith)) { if (G.combatCk && typeof slRestore === 'function') { slRestore(G.combatCk); G.combatFired = false; } G.combatCk = null; toast('None of your creatures can attack (summoning sickness, tapped or defender).'); renderGame(); return; }
+    if (!me().bf.some(canAttackWith)) { if (G.combatCk && typeof slRestore === 'function') { slRestore(G.combatCk); G.combatFired = false; } G.combatCk = null; toast('None of your creatures can attack - use ⏭️ Through combat to Main 2 to move on (summoning sickness, tapped or defender).'); renderGame(); return; }
     G.phase = 'declareAttackers';
     G.mode = { type: 'attack', sel: new Set(me().bf.filter(o => canAttackWith(o) && (forcedAttack(o) || me().mustAttackTurn === G.turn)).map(o => o.uid)) };
     renderGame();
@@ -4752,11 +4782,15 @@ async function confirmAttack() {
     await pause(400);
     await settle();
     if (G.over) return;
+    await combatWindow('Attackers declared');
+    if (G.over) return;
     if (!(await chooseBlocksAll(me(), { hardRemoval: true }))) return;
     fixMenace(); fireBlocked();
     logBlocks();
     fire('blocks', { list: Object.values(G.blocks).flat().map(onBf).filter(Boolean) });
     await settle();
+    await combatWindow('Blockers declared');
+    if (G.over) return;
     G.phase = 'afterBlocks';
     G.busy = false;
     renderGame();
@@ -4772,6 +4806,7 @@ async function dealDamage() {
     G.busy = true;
     combatDamage(me());
     await settle();
+    await combatWindow('Combat damage dealt');
     if (!G.over && G.extraCombat > 0) { await startExtraCombat(); return; }
     G.phase = 'main2';
     fireMain2(); await settle();
