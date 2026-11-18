@@ -90,7 +90,7 @@ Object.assign(CMD, {
         if (!t || !t.o || !onBf(t.o.uid)) return;
         const word = await pickWord(P, `${src.card.name}: choose a counter`, ['flying', 'first strike', 'lifelink', 'vigilance']);
         putCounters(t.o, 1, P);
-        t.o.ctr[word] = (t.o.ctr[word] || 0) + 1;
+        addNamedCounter(t.o, word, 1);
         log(`${t.o.card.name} gets a +1/+1 counter and a ${word} counter.`);
     },
     async resplendentMinus(P, e, t, src) {

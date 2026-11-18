@@ -56,7 +56,7 @@ cl(/^Whenever ~ or another nontoken creature you control leaves the battlefield,
 cl(/^Whenever another permanent leaves the battlefield, put a \+1\/\+1 counter on ~\.$/, R => { R.trig.push(SPEC('leaves', { another: true, ctl: 'any' }, { effects: [cmd('selfCounter')] })); });
 cl(/^Whenever a creature you control deals combat damage to a player, put a \+1\/\+1 counter on that creature\.$/, R => { R.trig.push({ ev: 'hitPlayer', anyMine: true, effects: [cmd('sphereCounter')] }); });
 cl(/^(?:Unlock Ability\s+— )?Creatures you control with \+1\/\+1 counters on them have reach and trample\.$/, R => { R.statics.push({ fn: 'hasCounters', p: 0, q: 0, kw: ['reach', 'trample'] }); });
-cl(/^If you would put one or more counters on a permanent you control, put that many plus one of each of those kinds of counters on that permanent instead\.$/, R => { R.counterBonus = ['Creature', 'Artifact', 'Enchantment', 'Land', 'Planeswalker']; });
+cl(/^If you would put one or more counters on a permanent you control, put that many plus one of each of those kinds of counters on that permanent instead\.$/, R => { R.counterBonus = ['Creature', 'Artifact', 'Enchantment', 'Land', 'Battle']; R.counterBonusAll = true; });
 cl(/^Whenever another nontoken creature you control enters, it endures X, where X is the number of counters on ~\.$/, R => { R.trig.push(SPEC('enters', { another: true, type: 'Creature', nontoken: true }, { effects: [cmd('endureEntered')] })); });
 cl(/^Increment$/, R => { R.trig.push({ ev: 'cast', fn: 'incrementCast', filter: 'any', effects: [cmd('selfCounter')] }); });
 cl(/^Affinity for creatures$/, R => { R.affinityOf = 'Creature'; });

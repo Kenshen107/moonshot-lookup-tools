@@ -257,7 +257,7 @@ Object.assign(CMD, {
         const kinds = ['first strike', 'vigilance', 'lifelink'];
         let k = 'lifelink';
         if (!sxAI(P) && typeof askMode === 'function') { const i = await askMode(P, `${src.card.name}: which counter for ${c.card.name}?`, kinds); if (typeof i === 'number' && kinds[i]) k = kinds[i]; }
-        if (onBf(c.uid)) { c.ctr = c.ctr || {}; c.ctr[k] = (c.ctr[k] || 0) + 1; log(`${c.card.name} gets a ${k} counter.`); }
+        if (onBf(c.uid)) { addNamedCounter(c, k, 1); log(`${c.card.name} gets a ${k} counter.`); }
     },
     sx_wingnut(P, e, t, src) {
         const others = (G.attackers || []).map(onBf).filter(x => x && x !== src);
@@ -283,7 +283,7 @@ Object.assign(CMD, {
         src.ctr.charge = 0;
         sxPool(P, Array(n).fill(sxBestColor(P)));
     },
-    sx_graftEnter(P, e, t, src) { if (onBf(src.uid)) { src.counters += e.n || 1; log(`${src.card.name} enters with a +1/+1 counter (graft).`); } },
+    sx_graftEnter(P, e, t, src) { if (onBf(src.uid)) { addEtbCounters(src, e.n || 1); log(`${src.card.name} enters with a +1/+1 counter (graft).`); } },
     async sx_graftMove(P, e, t, src) {
         const to = G.ctxObj; if (!to || !onBf(to.uid) || !onBf(src.uid) || src.counters <= 0) return;
         const yes = sxAI(P) ? true : await askYes(P, `${src.card.name}: move a +1/+1 counter onto ${to.card.name}?`, { card: src.card });
@@ -415,7 +415,7 @@ const sxController = o => (G && onBf(o.uid) ? ctrl(o) : G ? G.players[o.owner] :
             if (!/\bSnow\b/.test(type)) type = type.replace(/^(Legendary )?/, '$1Snow ');
             if (!/\bLegendary\b/.test(type)) type = `Legendary ${type}`;
             let text = o.card.text || '';
-            if (/\bCreature\b/.test(type)) { o.counters += 2; if (!/^Changeling$/m.test(text)) text = `${text}\nChangeling`.trim(); }
+            if (/\bCreature\b/.test(type)) { addEtbCounters(o, 2); if (!/^Changeling$/m.test(text)) text = `${text}\nChangeling`.trim(); }
             o.card = { ...o.card, type, text }; o._r = null;
             log(`${o.card.name} is legendary and snow${/\bCreature\b/.test(type) ? ', with two more +1/+1 counters and changeling' : ''} (${o.copyOf.name}).`);
         }

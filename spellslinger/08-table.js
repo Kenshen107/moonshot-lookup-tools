@@ -361,7 +361,7 @@ function midControlsHTML() {
         return `${phase}<span class="prompt">🎯 Choose a target for ${esc(m.source.card.name)}</span>${m.cancelable ? '<button class="btn" onclick="cancelTarget()">Cancel</button>' : ''}`;
     }
     if (m && m.type === 'attack') {
-        return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary act-atk" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button>${typeof attackListButton === 'function' ? attackListButton() : ''}<button class="btn" onclick="cancelAttack()">Back</button>`;
+        return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary act-atk" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button>${typeof attackListButton === 'function' ? attackListButton() : ''}<button class="btn" onclick="throughCombat()" title="Beginning-of-combat effects stay; no attack; on to your second main phase">⏭️ No attack: to Main 2</button><button class="btn" onclick="cancelAttack()">Back</button>`;
     }
     if (m && m.type === 'respond') {
         const it = m.item;
@@ -374,7 +374,7 @@ function midControlsHTML() {
     if (G.active === G.view && !G.busy) {
         const hint = nextStepHint();
         const hintHTML = hint ? `<span class="hint">${esc(hint)}</span>` : '';
-        if (G.phase === 'main1') return `${hintHTML}<button class="btn primary act-go" onclick="goToCombat()">⚔️ Go to combat</button>`;
+        if (G.phase === 'main1') return `${hintHTML}<button class="btn primary act-go" onclick="goToCombat()">⚔️ Go to combat</button><button class="btn" onclick="throughCombat()" title="Go through combat without attacking (combat abilities still happen), then your second main phase">⏭️ Through combat to Main 2</button>`;
         if (G.phase === 'afterBlocks') return `<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary act-atk" onclick="dealDamage()">💥 Deal damage</button>`;
         if (G.phase === 'main2') return hintHTML || '<span class="hint">Second main phase: cast anything else, then end your turn.</span>';
     }

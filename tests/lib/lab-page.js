@@ -25,7 +25,7 @@ window.LAB = (() => {
     ['fire', 'sba', 'canActivate', 'scoreEffects', 'damage', 'drawCards', 'putOntoBattlefield'].forEach(n => {
         const f = window[n]; if (typeof f !== 'function') return;
         window[n] = function () {
-            if (++L.steps > L.stepLimit || ((L.steps & 255) === 0 && L.t0 && performance.now() - L.t0 > L.maxMs)) { const e = new Error('STEP LIMIT: ' + n + ' after ' + L.steps + ' calls and ' + Math.round((performance.now() - L.t0) / 1000) + ' s in one game'); if (!L.stepStack) L.stepStack = 'turn ' + G.turn + ' board ' + G.players.map(P => P.bf.length).join('/') + ' stack ' + (G.stack || []).length + ' | ' + String(e.stack).split('\n').slice(0, 12).join(' | '); throw e; }
+            if (++L.steps > L.stepLimit || ((L.steps & 255) === 0 && L.t0 && performance.now() - L.t0 > L.maxMs)) { const e = new Error('STEP LIMIT: ' + n + ' after ' + L.steps + ' calls and ' + Math.round((performance.now() - L.t0) / 1000) + ' s in one game'); if (!L.stepStack) L.stepStack = 'turn ' + G.turn + ' board ' + G.players.map(P => P.bf.length).join('/') + ' stack ' + (G.stack || []).length + ' | most common permanents: ' + (() => { const h = {}; G.players.forEach(P => P.bf.forEach(o => { h[o.card.name] = (h[o.card.name] || 0) + 1; })); return Object.entries(h).sort((a, b) => b[1] - a[1]).slice(0, 4).map(x => x[0] + ' x' + x[1]).join(', '); })() + ' | ' + String(e.stack).split('\n').slice(0, 12).join(' | '); throw e; }
             return f.apply(this, arguments);
         };
     });

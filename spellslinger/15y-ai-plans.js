@@ -29,6 +29,8 @@ const AI_ACT_GUARDS = {
     const base = canActivate;
     canActivate = function (P, o, a) {
         if (P && P.isAI && o && a && a.effects) {
+            // A token ability that doubles the board (The Unbeatable Squirrel Girl: "create X tokens, where X is the number of Squirrels you control") stops at 40 tokens: past that the computer only slows the game (lab seed 115 reached 8,600 tokens)
+            if (/^\{[^}]+\}.*: Create X .*tokens?, where X is (?:the number of|equal to)/i.test(String(a.text || '')) && P.bf.filter(x => x.token).length >= 40) return false;
             // A "becomes a creature until end of turn" ability does nothing the second time in a turn
             if (a.effects.some(e => e.t === 'animate') && o.animated && o.animated.turn === G.turn) return false;
             if (a.effects.some(e => e.t === 'draw' && (e.target === 'player' || !e.target)) && P.library.length < 12) return false; // never draw itself out with an ability
@@ -105,6 +107,8 @@ const DECK_PLANS = {
             const s = onBfNamed(P, 'Doc Samson, Super Psychiatrist'); if (!s || lostAbilities(s)) return;
             // Every other repeatable ability is worth doing over and over: counters, tokens, draw, pump, damage (owner, 2026-11-16)
             if (!P.infBusy) { P.infBusy = true; try { P.infActs = 0; await useInfiniteAbilities(P); if (P.infActs && !G.over) { await aiMain(P); await useInfiniteAbilities(P); } } finally { P.infBusy = false; } }
+            // Goblin Cannon: its sacrifice happens as the ability resolves, so with infinite mana it is activated over and over (owner, 2026-11-18)
+            { const gc = onBfNamed(P, 'Goblin Cannon'); if (gc && !G.over) { const ga = actsOf(gc)[0]; if (ga) { await activate(P, gc, ga); await settle(); } } }
             if (G.over) return;
             const isTr = o => o.card.name === 'Surestrike Trident';
             let tr = onBfNamed(P, 'Surestrike Trident');

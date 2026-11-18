@@ -578,11 +578,11 @@ function fire(ev, ctx = {}) {
     if (ev === 'hitPlayer' && ctx.src && G.players[ctx.src.owner].surge && G.players[ctx.src.owner].surge.turn === G.turn) (G.trigQ = G.trigQ || []).push({ P: G.players[ctx.src.owner], o: ctx.src, effects: [{ t: 'cmd', id: 'surgeCopy' }] }); // Surge to Victory
     if (ev === 'hitPlayer') preconHitWatch(ctx); // Hunter's Insight (15b-precon-effects.js)
     // Gorma, the Gullet: nontoken creatures enter with an additional +1/+1 counter for each creature that died under your control this turn
-    if (ev === 'enters' && ctx.o && isCreature(ctx.o) && !ctx.o.token) { const X = G.players[ctx.o.owner]; if (X.bf.some(a => Rx(a).gormaEnter && !lostAbilities(a)) && X.diedTurnN && X.diedTurnN.turn === G.turn && X.diedTurnN.n > 0) { ctx.o.counters += X.diedTurnN.n; log(`${ctx.o.card.name} enters with ${X.diedTurnN.n} additional +1/+1 counter${X.diedTurnN.n === 1 ? '' : 's'} (Gorma).`); } }
+    if (ev === 'enters' && ctx.o && isCreature(ctx.o) && !ctx.o.token) { const X = G.players[ctx.o.owner]; if (X.bf.some(a => Rx(a).gormaEnter && !lostAbilities(a)) && X.diedTurnN && X.diedTurnN.turn === G.turn && X.diedTurnN.n > 0) { addEtbCounters(ctx.o, X.diedTurnN.n); log(`${ctx.o.card.name} enters with ${X.diedTurnN.n} additional +1/+1 counter${X.diedTurnN.n === 1 ? '' : 's'} (Gorma).`); } }
     if (ev === 'creatureDies' && ctx.o) { const X = G.players[ctx.o.owner]; X.diedTurnN = { turn: G.turn, n: (X.diedTurnN && X.diedTurnN.turn === G.turn ? X.diedTurnN.n : 0) + 1 }; }
     // Metallic Mimic: another creature of the chosen type enters with an extra +1/+1 counter (a replacement, not a trigger)
-    if (ev === 'enters' && ctx.o && isCreature(ctx.o)) G.players[ctx.o.owner].bf.filter(a => a !== ctx.o && Rx(a).mimic && !lostAbilities(a) && a.chosenType && hasType(ctx.o, a.chosenType)).forEach(a => { ctx.o.counters += 1; log(`${ctx.o.card.name} enters with an additional +1/+1 counter (${a.card.name}).`); });
-    if (ev === 'enters' && ctx.o && isCreature(ctx.o)) G.players[ctx.o.owner].bf.filter(a => a !== ctx.o && Rx(a).entersCounterOthers && !lostAbilities(a) && !hasType(ctx.o, Rx(a).entersCounterOthers.not)).forEach(a => { ctx.o.counters += 1; log(`${ctx.o.card.name} enters with an additional +1/+1 counter (${a.card.name}).`); });
+    if (ev === 'enters' && ctx.o && isCreature(ctx.o)) G.players[ctx.o.owner].bf.filter(a => a !== ctx.o && Rx(a).mimic && !lostAbilities(a) && a.chosenType && hasType(ctx.o, a.chosenType)).forEach(a => { addEtbCounters(ctx.o, 1); log(`${ctx.o.card.name} enters with an additional +1/+1 counter (${a.card.name}).`); });
+    if (ev === 'enters' && ctx.o && isCreature(ctx.o)) G.players[ctx.o.owner].bf.filter(a => a !== ctx.o && Rx(a).entersCounterOthers && !lostAbilities(a) && !hasType(ctx.o, Rx(a).entersCounterOthers.not)).forEach(a => { addEtbCounters(ctx.o, 1); log(`${ctx.o.card.name} enters with an additional +1/+1 counter (${a.card.name}).`); });
     if ((ev === 'enters' || ev === 'landfall') && ctx.o && typeof oppEnterTappedHook === 'function') oppEnterTappedHook(ctx.o);
     if (ev === 'enters' && ctx.o && typeof cmdEntersHooks === 'function') cmdEntersHooks(ctx.o);
     if (ev === 'enters' && ctx.o) fire('selfEnters', { o: ctx.o });
@@ -887,6 +887,7 @@ async function activate(P, o, a, presetTarget, presetX) {
     if (a.effects.every(e => e.t === 'addMana')) { for (const e of a.effects) await applyEffect(P, e, null, o); if (a.cost && a.cost.sacSelf) { fire('sacrificed', { o }); dieOrLeave(o, 'gy'); } renderGame(); return true; }
     const abItem = { id: stackSeq++, kind: 'trigger', ability: true, o, P, target, effects: a.effects, name: `${o.card.name}'s ability`, multi: preMulti };
     G.stack.push(abItem);
+    if (target && target.o) target.o.dcLastTargeter = abItem;
     if (a.cost && a.cost.mana && a.cost.mana.x && typeof flourishCopyAbility === 'function') flourishCopyAbility(P, abItem);
     if (target && target.o) fire('targeted', { o: target.o, by: P.i });
     log(`${P.name} ${you(P) ? 'activate' : 'activates'} ${o.card.name}: ${a.text.replace(/~/g, o.card.name.split(',')[0])}${target ? ` (targeting ${targetName(target)})` : ''}`);

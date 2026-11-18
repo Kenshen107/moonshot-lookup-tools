@@ -157,7 +157,7 @@ Object.assign(CMD, {
         const r = gMakeToken(P, 'Robot', 'Token Artifact Creature — Robot', '', [], [2, 2]); r.tapped = true;
     },
     // Mai, Jaded Edge: a double strike counter
-    j_mai(P, e, t, src) { if (!onBf(src.uid)) return; src.ctr = src.ctr || {}; src.ctr['double strike'] = (src.ctr['double strike'] || 0) + 1; log(`${src.card.name} gets a double strike counter.`); },
+    j_mai(P, e, t, src) { if (!onBf(src.uid)) return; addNamedCounter(src, 'double strike', 1); log(`${src.card.name} gets a double strike counter.`); },
     // Rhino, Barreling Brute: draw if you've cast a spell with mana value 4 or greater this turn
     j_rhino(P, e, t, src) { if (P.j_bigCast === G.turn) drawCards(P, 1); },
     // Karvanista: a +1/+1 counter on each Human you control

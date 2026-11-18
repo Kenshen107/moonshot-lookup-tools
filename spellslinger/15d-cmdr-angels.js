@@ -8,7 +8,7 @@ function cmdEntersHooks(x) {
         if (!ep || lostAbilities(a) || a.owner !== x.owner || (ep.other && a === x)) return;
         if (ep.sub && !hasType(x, ep.sub)) return;
         const n = ep.perCount ? G.players[a.owner].bf.filter(y => y !== x && isCreature(y) && hasType(y, ep.perCount)).length : (ep.n || 1);
-        if (n > 0) { x.counters += n; log(`${x.card.name} enters with ${n} additional +1/+1 counter${n === 1 ? '' : 's'} (${a.card.name}).`); }
+        if (n > 0) { addEtbCounters(x, n); log(`${x.card.name} enters with ${n} additional +1/+1 counter${n === 1 ? '' : 's'} (${a.card.name}).`); }
     });
 }
 Object.assign(CMD, {

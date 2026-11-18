@@ -211,7 +211,7 @@ Object.assign(CMD, {
         const cost = x => Rx(x).kw.size + Rx(x).trig.length + Rx(x).acts.length + Rx(x).statics.length;
         const x = await pickOwn(P, pool, `${src.card.name}: up to one other target creature loses all abilities`, { optional: true, rank: (a, b) => (b.owner === P.i ? 1 : 0) - (a.owner === P.i ? 1 : 0) || cost(a) - cost(b) });
         if (!x) return;
-        x.f_noAbil = true; ['flying', 'first strike', 'lifelink'].forEach(k => { x.ctr[k] = (x.ctr[k] || 0) + 1; });
+        x.f_noAbil = true; ['flying', 'first strike', 'lifelink'].forEach(k => { addNamedCounter(x, k, 1); });
         log(`${x.card.name} loses all abilities and gets a flying counter, a first strike counter and a lifelink counter.`);
     },
     // Shiko and Narset, Unified: copy the second spell if it targets a permanent or player, otherwise draw

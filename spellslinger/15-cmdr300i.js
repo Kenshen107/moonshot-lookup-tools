@@ -337,7 +337,7 @@ Object.assign(CMD, {
         const x = await pickOwn(P, pool, `${src.card.name}: put a counter on target Dinosaur`, { rank: (a, b) => (a.owner === P.i ? 0 : 1) - (b.owner === P.i ? 0 : 1) || creatureValue(b) - creatureValue(a) }); if (!x) return;
         const kinds = ['reach', 'menace', 'trample', 'haste'];
         const k = i_human(P) ? kinds[await askMode(P, `${src.card.name}: choose a counter`, kinds)] || 'trample' : 'trample';
-        x.ctr[k] = (x.ctr[k] || 0) + 1; log(`${x.card.name} gets a ${k} counter.`);
+        addNamedCounter(x, k, 1); log(`${x.card.name} gets a ${k} counter.`);
     },
     // Silas Renn, Seeker Adept: cast an artifact card from your graveyard this turn
     async i_silas(P, e, t, src) {
