@@ -181,7 +181,7 @@ const cdmgOf = o => (typeof sxToughDmg === 'function' && sxToughDmg(o)) ? tou(o)
 const adm = o => (typeof sxAdm === 'function' ? sxAdm(o) : pow(o));
 const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q + ptTimed(o, 'q');
 const hasBase = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (k === 'indestructible' && !!o.ctr && o.ctr.indestructible > 0) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
-const has = (o, k) => ((k === 'hexproof' && typeof tkHexproof === 'function' && tkHexproof(o)) || (k === 'hexproof' && o.card && !o.slDealt && Rx(o).slHexNoDmg)) ? true : (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
+const has = (o, k) => (k === 'defender' && !!G && o.dcNoDefTurn === G.turn) ? false : ((k === 'hexproof' && typeof tkHexproof === 'function' && tkHexproof(o)) || (k === 'hexproof' && o.card && !o.slDealt && Rx(o).slHexNoDmg)) ? true : (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
 const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackCond && !condOk(Rx(o).attackCond, ctrl(o), o)) && !(typeof cmdCantAttack === 'function' && cmdCantAttack(o)) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !(has(o, 'defender') && !(typeof sxDefAttack === 'function' && sxDefAttack(o))) && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
@@ -595,7 +595,7 @@ function damage(target, n, src) {
         const S = G.players[src.owner], tOwner = target.life !== undefined ? target.i : target.owner, toOpp = tOwner !== S.i;
         S.bf.forEach(a => { const dp = Rx(a).dmgPlus; if (dp && toOpp && !lostAbilities(a) && (src.card.colors || []).includes(dp.color)) n += dp.n; });
         S.bf.forEach(a => { if (Rx(a).thorPlus && a !== src && toOpp && !lostAbilities(a)) n += 1; }); // Thor, Asgard's Avenger
-        S.bf.forEach(a => { const dm = Rx(a).dmgMult; if (dm && (!dm.oppOnly || toOpp) && !lostAbilities(a)) n *= dm.n; });
+        S.bf.forEach(a => { const dm = Rx(a).dmgMult; if (dm && (!dm.oppOnly || toOpp) && (!dm.redSpell || (src.card.colors || []).includes('R') && /\b(Instant|Sorcery)\b/.test(src.card.type) && !onBf(src.uid)) && !lostAbilities(a)) n *= dm.n; });
     }
     // Calamity Bearer: damage from a Giant source you control is doubled
     if (src && src.card && src.uid !== undefined && G.players[src.owner]) { const k = G.players[src.owner].bf.filter(a => Rx(a).doubleType && hasType(src, Rx(a).doubleType) && !lostAbilities(a)).length; if (k) { n *= 2 ** k; log(`${src.card.name}'s damage is doubled.`); } }
@@ -958,7 +958,7 @@ const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.tes
 function altExileCard(P, o) { const a = Rx(o).alt; return a && a.exile ? P.hand.filter(x => x !== o && (x.card.colors || []).includes(a.exile)).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0] || null : null; }
 function altOk(P, o) {
     const a = Rx(o).alt;
-    return !!a && P.hand.includes(o) && (!a.cond || condOk(a.cond, P, o)) && (!a.life || P.life > a.life) && (!a.exile || !!altExileCard(P, o)) && (!a.tapFly || altTapFliers(P, o, a.tapFly).length >= a.tapFly) && (!a.sacKind || sacCandidates(P, o, a.sacKind).length > 0);
+    return !!a && P.hand.includes(o) && (!a.cond || condOk(a.cond, P, o)) && (!a.life || P.life > a.life) && (!a.exile || !!altExileCard(P, o)) && (!a.tapFly || altTapFliers(P, o, a.tapFly).length >= a.tapFly) && (!a.sacKind || sacCandidates(P, o, a.sacKind).filter(x => x !== o).length >= (a.sacN || 1));
 }
 function altTapFliers(P, o, n) { return P.bf.filter(x => isCreature(x) && !x.tapped && has(x, 'flying') && x !== o).slice(0, n); }
 function canPay(P, o) { return (!o.altCast || altOk(P, o)) && addCostOk(P, o) && !!planPayment(P, costOf(P, o), extraCost(P, o) + (costOf(P, o).x ? xMult(o) : 0), null, payOpts(o)); }
@@ -1038,7 +1038,8 @@ async function payAddCost(P, o) {
         const al = Rx(o).alt, x = al.exile ? altExileCard(P, o) : null;
         if (al.life) P.life -= al.life;
         if (al.tapFly) altTapFliers(P, o, al.tapFly).forEach(f => { f.tapped = true; fire('tapped', { o: f }); });
-        if (al.sacKind) { const sf = await chooseSac(P, o, al.sacKind, o.card.name); if (sf) { G.lastSacMv = sf.card.cmc || 0; G.lastSacPow = Math.max(0, pow(sf)); G.lastSacTou = Math.max(0, tou(sf)); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${sf.card.name} to cast ${o.card.name}.`); fire('sacrificed', { o: sf }); dieOrLeave(sf, 'gy'); } }
+        if (al.sacKind && al.sacN > 1) { const fs = await chooseSacN(P, sacCandidates(P, o, al.sacKind).filter(x => x !== o), al.sacN, o.card.name); fs.forEach(f => { fire('sacrificed', { o: f }); dieOrLeave(f, 'gy'); }); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${fs.map(f => f.card.name).join(', ')} to cast ${o.card.name}.`); }
+        else if (al.sacKind) { const sf = await chooseSac(P, o, al.sacKind, o.card.name); if (sf) { G.lastSacMv = sf.card.cmc || 0; G.lastSacPow = Math.max(0, pow(sf)); G.lastSacTou = Math.max(0, tou(sf)); log(`${P.name} ${you(P) ? 'sacrifice' : 'sacrifices'} ${sf.card.name} to cast ${o.card.name}.`); fire('sacrificed', { o: sf }); dieOrLeave(sf, 'gy'); } }
         if (x) { pull(P.hand, x); P.exile.push(x); }
         log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name} for its alternative cost${al.life ? `, paying ${al.life} life` : ''}${x ? ` and exiling ${x.card.name} from hand` : ''} (rule 118.9).`);
         o.altCast = false;
@@ -1544,6 +1545,7 @@ async function castSpell(P, o, presetTarget) {
     if (castAs) log(`(${o.card.name} is cast with ${castAs === 'energy' ? 'energy' : castAs}.)`);
     o.buyback = false; o.multi = null; o.assist = []; o.assistN = 0;
     G.stack.push(item);
+    if (item.target && item.target.o) item.target.o.dcLastTargeter = item;
     log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name}${item.kicked ? ' (kicked)' : ''}${o._free ? ' without paying its mana cost' : ''}${item.x !== undefined ? ` (X=${item.x})` : ''}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax > 1 ? ` (commander tax ${(P.tax - 1) * 2})` : ''}.`);
     if (!wardCheck(P, presetTarget, o.card.name)) { pull(G.stack, item); moveSpellCard(o, 'gy'); renderGame(); return true; }
     (G.castNames = (G.castNames || []).filter(c => c.turn === G.turn)).push({ turn: G.turn, p: P.i, name: o.card.name }); // Grim Reminder
@@ -1625,6 +1627,7 @@ async function putTriggers(P, source, effects, ctxObj, ctxCount, raw) {
         }
     }
     G.stack.push({ id: stackSeq++, kind: 'trigger', o: source, P, target, effects, name: `${source.card.name}'s ability`, ctxObj, ctxCount, raw, multi, key: !target && !multi ? trigKey(effects) : null });
+    if (target && target.o) target.o.dcLastTargeter = G.stack[G.stack.length - 1];
     if (target && target.o && !(te && te.ctx)) fire('targeted', { o: target.o, by: P.i }); // Magic 2010: Illusionary Servant, Ice Cage
     log(`${source.card.name}'s ability triggers${target ? ` ${te && te.ctx ? 'for' : 'targeting'} ${targetName(target)}` : ''}.`);
     renderGame();
@@ -4100,6 +4103,7 @@ async function applyEffect(P, e, t, src) {
                 const plan = planPayment(it.P, { generic: unless, W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 });
                 if (plan) { plan.forEach(x => tapSource(it.P, x)); log(`${it.P.name} ${you(it.P) ? 'pay' : 'pays'} {${unless}}, so ${it.name} isn't countered.`); break; }
             }
+            if (it.kind === 'spell' && it.P.dcVeil === G.turn && src && src.card && !onBf(src.uid) && (src.card.colors || []).some(c => c === 'U' || c === 'B')) { log(`${it.name} can't be countered by blue or black spells this turn.`); break; }
             if (it.kind === 'spell' && (Rx(it.o).uncounterable || it.o.noCounter || it.P.bf.some(x => { const u = Rx(x).spellsUncounterable; return u && !lostAbilities(x) && (u === 'all' || (u === 'creature' && Rx(it.o).kind === 'creature') || (u === 'mv5' && (it.o.card.cmc || 0) >= 5)); }))) { log(`${it.name} can't be countered.`); break; }
             if (it.kind === 'spell' && ['instant', 'sorcery'].includes(Rx(it.o).kind) && it.P.bf.some(x => Rx(x).protectSpells)) { log(`${it.name} can't be countered.`); break; }
             G.lastCountered = it; G.lastPower = { P: it.P, n: 0 }; G.lastMv = it.o.card.cmc || 0;
@@ -4503,7 +4507,7 @@ async function endTurn(P) {
         log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} (hand size).`);
     }
     if ((G.trigQ || []).length || P.gy.some(c => c.discardTurn === G.turn && c.discardSeen !== G.turn)) { discardWatch(); await settle(); if (G.over) return; } // Megrim on hand-size discards
-    allPerms().forEach(o => { o.dmg = 0; o.dt = false; o.tp = 0; o.tq = 0; o.tkw = []; o.regen = 0; });
+    allPerms().forEach(o => { o.dmg = 0; o.dt = false; o.tp = 0; o.tq = 0; o.tkw = []; o.regen = 0; if (o.dcCardBack) { o.card = o.dcCardBack; delete o.dcCardBack; } });
     // Stolen creatures go back (threaten effects end, 514.2)
     allPerms().filter(o => o.realOwner !== undefined && o.stolenTurn !== undefined).forEach(o => {
         if (o.realOwner === undefined) return; // already sent home (listed twice)

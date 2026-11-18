@@ -37,7 +37,7 @@ SCREENS = ['openboard', 'storage', 'redraw', 'layout', 'modes', 'precons', 'play
 ASCENT = ['ascent', 'ascentdecks', 'ascentupg', 'ascentpower', 'ascentui', 'ascentart', 'ascentart2']
 LIVE = ['randomdeck', 'themes']  # need live Scryfall: they fail when it is slow or blocked, so they run with --cards and --full
 DECKS = ['cmdr', 'soc', 'gishath', 'jenova', 'bertha', 'othelm', 'hugh', 'hughfood', 'grizzlegom', 'sixdecks', 'sixlists', 'spiderman', 'fivedecks', 'samutdf', 'uldaros',
-         'trek', 'trekdecks', 'odric', 'cmdr300', 'cmdr300b', 'cmdr300c', 'cmdr300d', 'cmdr300e', 'cmdr300f', 'cmdr300g', 'cmdr300h', 'cmdr300i', 'cmdr300j']
+         'trek', 'trekdecks', 'odric', 'cmdr300', 'cmdr300b', 'cmdr300c', 'cmdr300d', 'cmdr300e', 'cmdr300f', 'cmdr300g', 'cmdr300h', 'cmdr300i', 'cmdr300j', 'cores']
 NEEDS_CARDS = set(PLAY) - {'engine', 'blocking', 'priority', 'aiblock', 'aireserve'} | set(DECKS)  # read tests/data/cards_all.json or live cards
 
 

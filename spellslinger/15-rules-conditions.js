@@ -887,6 +887,7 @@ async function activate(P, o, a, presetTarget, presetX) {
     if (a.effects.every(e => e.t === 'addMana')) { for (const e of a.effects) await applyEffect(P, e, null, o); if (a.cost && a.cost.sacSelf) { fire('sacrificed', { o }); dieOrLeave(o, 'gy'); } renderGame(); return true; }
     const abItem = { id: stackSeq++, kind: 'trigger', ability: true, o, P, target, effects: a.effects, name: `${o.card.name}'s ability`, multi: preMulti };
     G.stack.push(abItem);
+    if (target && target.o) target.o.dcLastTargeter = abItem;
     if (a.cost && a.cost.mana && a.cost.mana.x && typeof flourishCopyAbility === 'function') flourishCopyAbility(P, abItem);
     if (target && target.o) fire('targeted', { o: target.o, by: P.i });
     log(`${P.name} ${you(P) ? 'activate' : 'activates'} ${o.card.name}: ${a.text.replace(/~/g, o.card.name.split(',')[0])}${target ? ` (targeting ${targetName(target)})` : ''}`);
