@@ -34,9 +34,9 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             ok('every event has shared lines', evs.every(e => (TALK[e]._ || []).length >= 1), evs.filter(e => !(TALK[e]._ || []).length));
             const allLines = evs.flatMap(e => Object.values(TALK[e]).flat());
             ok('there are lots of lines to say (over 300)', allLines.length > 300, allLines.length);
-            ok('every character line names a real character', evs.every(e => Object.keys(TALK[e]).every(k => k === '_' || CHARACTERS[k])), evs.filter(e => Object.keys(TALK[e]).some(k => k !== '_' && !CHARACTERS[k])));
-            ok('placeholders are only the known ones', allLines.every(l => (l.match(/\{(\w+)\}/g) || []).every(t => ['{foe}', '{me}', '{card}', '{n}', '{cmd}', '{tag}'].includes(t))));
-            const l1 = pickLine(B, 'hit', { foe: 'you' }); B.said = 0; const l2 = pickLine(B, 'hit', { foe: 'you' });
+            ok('every character line names a real character', evs.every(e => Object.keys(TALK[e]).every(k => { const c = k.split('@')[0]; return c === '_' || CHARACTERS[c]; })), evs.filter(e => Object.keys(TALK[e]).some(k => { const c = k.split('@')[0]; return c !== '_' && !CHARACTERS[c]; })));
+            ok('placeholders are only the known ones', allLines.every(l => (l.match(/\{(\w+)\}/g) || []).every(t => ['{foe}', '{me}', '{card}', '{n}', '{cmd}', '{tag}', '{life}', '{turn}', '{who}', '{foeIs}', '{foeWas}', '{foeHas}', '{foeDoes}', '{foePoss}'].includes(t))));
+            const l1 = pickLine(B, 'hit', { foe: 'you' }); B.said = 0; B.heard = []; const l2 = pickLine(B, 'hit', { foe: 'you' });
             ok('a line is picked without random numbers (the same state gives the same line)', l1 === l2 && !/\{/.test(l1), l1);
             const seen = new Set(); for (let i = 0; i < 12; i++) { G.turn = 6 + i; seen.add(pickLine(B, 'hit', { foe: 'you' })); }
             ok('and the lines vary as the game goes on', seen.size >= 4, seen.size);

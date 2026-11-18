@@ -9,7 +9,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
     await installHelpers(page);
     const r = await page.evaluate(async () => {
         const out = []; const ok = (l, c, d) => out.push([l, !!c, d]);
-        const WANT = ['Spike Feeder', "Magistrate's Scepter", 'Screaming Shield', 'Temur Sabertooth', 'Gamma Grotesque', 'Goliath, Mass Manipulator', 'Jugan Defends the Temple // Remnant of the Rising Star','Sword of the Paruns', "Nature's Chosen", 'Boon of Boseiju', 'Staff of Domination', 'Ring of Three Wishes', 'Surestrike Trident', 'Astral Cornucopia', 'Kami of Whispered Hopes', 'Centaur Glade', "Rishkar's Expertise", 'Doc Samson, Super Psychiatrist', 'The Aesir Escape Valhalla', 'The First Iroan Games', 'Origin of the Hulk', 'Grizzly Bears', 'Forest', 'Hill Giant', 'Sol Ring'];
+        const WANT = ['Everflowing Chalice', 'Spike Feeder', "Magistrate's Scepter", 'Screaming Shield', 'Temur Sabertooth', 'Gamma Grotesque', 'Goliath, Mass Manipulator', 'Jugan Defends the Temple // Remnant of the Rising Star','Sword of the Paruns', "Nature's Chosen", 'Boon of Boseiju', 'Staff of Domination', 'Ring of Three Wishes', 'Surestrike Trident', 'Astral Cornucopia', 'Kami of Whispered Hopes', 'Centaur Glade', "Rishkar's Expertise", 'Doc Samson, Super Psychiatrist', 'The Aesir Escape Valhalla', 'The First Iroan Games', 'Origin of the Hulk', 'Grizzly Bears', 'Forest', 'Hill Giant', 'Sol Ring'];
         const raw = await (await fetch('/__cards.json')).json(); const K = {};
         raw.forEach(c => { if (WANT.includes(c.name) && !K[c.name] && c.type_line) { const sc = slimCard(c); CARDS.set(sc.id, sc); K[c.name] = sc; } });
         window.pickCard = async (P, list) => list[0]; manaMode = 'auto';
@@ -74,6 +74,18 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         A3.library.length = 0; for (let i = 0; i < 60; i++) A3.library.push(makeObj(K['Forest'], 0));
         const lib0 = A3.library.length; sam3.counters = 1; await DECK_PLANS['Doc Samson, Super Psychiatrist'].post(A3);
         ok('Sabertooth and Gamma Grotesque draw several times in a row with infinite mana', lib0 - A3.library.length >= 3, lib0 - A3.library.length);
+
+        // counters a permanent enters with get Doc Samson's extra one too (found in the owner's game record: Ring of Three Wishes came in with 3 wish counters)
+        [A3, B3, sam3] = await setup(); A3.isAI = false; A3.hand.length = 0; const ring = makeObj(K['Ring of Three Wishes'], 0); A3.hand.push(ring); G.view = 0; manaMode = 'auto';
+        await castSpell(A3, ring, null); await settle();
+        const rg = A3.bf.find(x => x.card.name === 'Ring of Three Wishes');
+        ok('Ring of Three Wishes enters with 4 wish counters when Doc Samson is out', rg && rg.ctr.wish === 4, rg && rg.ctr.wish);
+
+        // the computer doesn't cast Everflowing Chalice with no kicker (a dead card), and does when it can pay for one
+        [A3, B3, sam3] = await setup(); A3.isAI = true; A3.hand.length = 0; T.clear(); A3.bf.length = 0; const ch = makeObj(K['Everflowing Chalice'], 0); A3.hand.push(ch); T.put(A3, K['Forest']).sick = false;
+        ok('the computer holds Everflowing Chalice while it cannot pay for a kicker', !canCastNow(A3, ch), maxKick(A3, ch));
+        for (let i = 0; i < 3; i++) T.put(A3, K['Forest']).sick = false;
+        ok('and casts it once it can', canCastNow(A3, ch) && maxKick(A3, ch) >= 1, maxKick(A3, ch));
         return out;
     });
     const results = formatChecks(r);

@@ -193,3 +193,16 @@ function samsonWants(P) {
         };
     }
 }
+
+// ---- found in the owner's game records (2026-11-18): the computer cast Everflowing Chalice with no kicker twice, a card that makes no mana ----
+// A multikicker permanent that only does anything with counters from kicks (Everflowing Chalice) isn't cast by the computer until it can pay for at least one kick.
+{
+    const ccn2 = canCastNow;
+    canCastNow = function (P, o) {
+        if (P && P.isAI && o && o.card) {
+            const R = Rx(o);
+            if (R.multikicker && R.kickPer && P.hand.includes(o) && maxKick(P, o) === 0) return false;
+        }
+        return ccn2.apply(this, arguments);
+    };
+}
