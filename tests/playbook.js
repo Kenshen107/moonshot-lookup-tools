@@ -11,6 +11,7 @@ const fs = require('fs'), path = require('path'), zlib = require('zlib');
 
 const args = process.argv.slice(2); let mdDir = null;
 const mi = args.indexOf('--md'); if (mi >= 0) { mdDir = args[mi + 1]; args.splice(mi, 2); }
+let useEdh = false; { const ei = args.indexOf('--edhrec'); if (ei >= 0) { useEdh = true; args.splice(ei, 1); } } // --edhrec: compare the cards played with EDHREC's synergy scores (needs the network)
 let botFiles = []; for (let bi = args.indexOf('--bots'); bi >= 0; bi = args.indexOf('--bots')) { botFiles.push(args[bi + 1]); args.splice(bi, 2); } // lab records (LAB_RECORD=1 node tests/lab.js ...): the computer's baseline for a deck
 function readAll(list) {
     const files = [];
@@ -103,6 +104,18 @@ const summarize = list => { // list of metrics objects
     return { n: list.length, turns: r1(pick(m => m.turns)), lands5: r1(pick(m => m.landsBy(5))), lands8: r1(pick(m => m.landsBy(8))), casts: r1(pick(m => m.castsPerTurn)), firstAttack: r1(pick(m => m.firstAttack)), attackRate: Math.round(100 * pick(m => m.attackRate)), perAttack: r1(pick(m => m.perAttack)), dmg: r1(pick(m => m.dmgPerTurn)), abilities: r1(pick(m => m.abilitiesPerTurn)) };
 };
 
+const edhrecSlug = name => String(name).split(' // ')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/['’",.!?:]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const edhCache = {};
+async function edhrecFor(deck) {
+    const slug = edhrecSlug(deck); if (edhCache[slug] !== undefined) return edhCache[slug];
+    try {
+        const r = await fetch(`https://json.edhrec.com/pages/commanders/${slug}.json`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        if (!r.ok) return (edhCache[slug] = null);
+        const j = await r.json(); const map = new Map();
+        for (const l of (j.container && j.container.json_dict && j.container.json_dict.cardlists) || []) for (const v of l.cardviews || []) { if (!v.potential_decks) continue; const cur = map.get(v.name); const e = { syn: v.synergy || 0, inc: v.num_decks / v.potential_decks, tag: l.tag, decks: v.potential_decks }; if (!cur || Math.abs(e.syn) > Math.abs(cur.syn)) map.set(v.name, e); }
+        return (edhCache[slug] = map);
+    } catch (e) { return (edhCache[slug] = null); }
+}
 const out = { generated: new Date().toISOString().slice(0, 10), games: games.length, decks: {} };
 const byDeck = {};
 parsed.forEach(pg => { const hs = pg.g.players.findIndex(p => p.human); if (hs < 0) return; const c = pg.g.players[hs].commander || pg.g.players[hs].name; (byDeck[c] = byDeck[c] || []).push({ pg, hs, won: pg.g.winner === hs }); });
@@ -110,6 +123,7 @@ parsed.forEach(pg => { const hs = pg.g.players.findIndex(p => p.human); if (hs <
 const topN = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n);
 const lines = [];
 const say = s => { console.log(s); lines.push(s); };
+(async () => {
 for (const [deck, gs] of Object.entries(byDeck).sort((a, b) => b[1].length - a[1].length)) {
     const wins = gs.filter(x => x.won), losses = gs.filter(x => !x.won);
     const hm = gs.map(x => metricsFor(x.pg, x.hs)).filter(Boolean);
@@ -142,6 +156,24 @@ for (const [deck, gs] of Object.entries(byDeck).sort((a, b) => b[1].length - a[1
     if (rec.winCards.length) say((losses.length ? 'Cast in the wins more than in the losses: ' : 'Cast in most of the wins (no losses to compare): ') + rec.winCards.map(x => `${x.n} (${x.w}/${wins.length} wins, ${x.l}/${losses.length} losses)`).join('; '));
     if (rec.abilities.length) say('Abilities used most: ' + rec.abilities.map(([n, c]) => `${n} x${c}`).join(', '));
     if (rec.finishers.length) say('Won on turn ' + rec.finishers.map(f => `${f.turn} (${f.attackers} attackers; last casts: ${f.lastCasts.join(', ') || '-'})`).join('; '));
+    if (useEdh) {
+        const map = await edhrecFor(deck);
+        if (!map) say('EDHREC: no page for this commander (or the network is off).');
+        else {
+            // the deck: the exported deck list when the record has one, else every card the person cast or played
+            const listed = new Set(); gs.forEach(x => (x.pg.g.players[x.hs].deckList || []).forEach(n => listed.add(String(n).replace(/ x\d+$/, ''))));
+            const castSet = new Set(gs.flatMap(x => x.pg.own[x.hs].turns.flatMap(t => t.casts)));
+            const have = listed.size ? listed : castSet;
+            const isBasic = n => /^(Plains|Island|Swamp|Mountain|Forest)$/.test(n);
+            const low = [...have].filter(n => !isBasic(n) && map.has(n) && map.get(n).syn < 0.05).map(n => ({ n, ...map.get(n) })).sort((a, b) => b.inc - a.inc);
+            const missing = [...map].filter(([n, e]) => e.syn >= 0.3 && e.inc >= 0.25 && !have.has(n) && !/land|basic/.test(e.tag || '')).sort((a, b) => b[1].syn - a[1].syn).slice(0, 10);
+            const high = [...have].filter(n => map.has(n) && map.get(n).syn >= 0.3).length;
+            rec.edhrec = { basis: listed.size ? 'deck list' : 'cards cast', high, low: low.map(x => x.n), missing: missing.map(([n]) => n) };
+            say(`EDHREC (${listed.size ? 'your deck list' : 'the cards you cast'}, ${have.size} cards): ${high} high-synergy cards (+0.30 or more).`);
+            if (low.length) say('  Low synergy here (generic staples or filler; fine for mana and removal, check the rest): ' + low.slice(0, 12).map(x => `${x.n} (${x.syn.toFixed(2)}, in ${Math.round(100 * x.inc)}% of decks)`).join('; '));
+            if (missing.length) say('  High synergy that is ' + (listed.size ? 'not in your deck' : 'not seen in your games') + ': ' + missing.map(([n, e]) => `${n} (+${e.syn.toFixed(2)}, ${Math.round(100 * e.inc)}% of decks)`).join('; '));
+        }
+    }
     // suggestions (only where there is a bot to compare to and the gap is real)
     const sug = [];
     if (rec.human && rec.bot) {
@@ -167,3 +199,4 @@ if (mdDir) {
     fs.writeFileSync(path.join(mdDir, 'playbooks.md'), `# Playbooks mined from game records\n\nGenerated ${out.generated} by \`node tests/playbook.js\` from ${games.length} games. Draft numbers for reviewing by hand; small samples mean low confidence.\n` + lines.join('\n') + '\n');
 }
 console.log(`\n(${games.length} games read; full data in tests/.out/playbook.json${mdDir ? '; markdown in ' + mdDir : ''})`);
+})();
