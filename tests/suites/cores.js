@@ -1,7 +1,7 @@
 // Draft-set round (2026-11-18): Magic 2011 cards read by rules/cores.js and spellslinger/15zb-cores.js.
 'use strict';
 const { launch, openTestPage, installHelpers, formatChecks, printResults, writeOut } = require('../lib/harness');
-const NAMES = ['Hardened Scales', 'Ancient Hellkite', "Autumn's Veil", 'Bloodcrazed Goblin', 'Captivating Vampire', "Chandra's Spitfire", 'Combust', 'Conundrum Sphinx', 'Cyclops Gladiator', 'Dark Tutelage', "Demon of Death's Gate", 'Destructive Force', 'Fauna Shaman', 'Fire Servant', 'Frost Titan', "Gaea's Revenge", 'Gargoyle Sentinel', 'Harbor Serpent', 'Hoarding Dragon', "Hunters' Feast", 'Incite'];
+const NAMES = ['Doubling Season', 'Mind Stone', 'Hardened Scales', 'Ancient Hellkite', "Autumn's Veil", 'Bloodcrazed Goblin', 'Captivating Vampire', "Chandra's Spitfire", 'Combust', 'Conundrum Sphinx', 'Cyclops Gladiator', 'Dark Tutelage', "Demon of Death's Gate", 'Destructive Force', 'Fauna Shaman', 'Fire Servant', 'Frost Titan', "Gaea's Revenge", 'Gargoyle Sentinel', 'Harbor Serpent', 'Hoarding Dragon', "Hunters' Feast", 'Incite'];
 (async () => {
     const h = await launch({ profileDir: undefined });
     const { page, errors } = await openTestPage(h.ctx, h.server);
@@ -32,6 +32,17 @@ const NAMES = ['Hardened Scales', 'Ancient Hellkite', "Autumn's Veil", 'Bloodcra
         T.clear(); T.put(A, C['Doc Samson, Super Psychiatrist']); const e3 = T.put(A, C['Grizzly Bears']);
         addEtbCounters(e3, 1); out.push(['Doc Samson adds one to "enters with" counters', e3.counters === 2, e3.counters]);
         addNamedCounter(e3, 'flying', 1); out.push(['Doc Samson adds one to a named counter put by other code', e3.ctr.flying === 2, e3.ctr.flying]);
+        // Counter kinds: Scales only +1/+1, Doubling Season everything, Samson one more of any kind
+        T.clear(); const hs2 = T.put(A, C['Hardened Scales']); const k1 = T.put(A, C['Grizzly Bears']); const art = T.put(A, C['Mind Stone']);
+        addNamedCounter(k1, 'flying', 1); out.push(['Hardened Scales ignores other kinds of counters', k1.ctr.flying === 1, k1.ctr.flying]);
+        T.clear(); T.put(A, C['Doubling Season']); const k2 = T.put(A, C['Grizzly Bears']);
+        addEtbCounters(k2, 2); addNamedCounter(k2, 'flying', 2);
+        out.push(['Doubling Season doubles +1/+1 counters', k2.counters === 4, k2.counters]);
+        out.push(['Doubling Season doubles other kinds of counters too', k2.ctr.flying === 4, k2.ctr.flying]);
+        T.clear(); T.put(A, C['Doc Samson, Super Psychiatrist']); T.put(A, C['Hardened Scales']); const k3 = T.put(A, C['Grizzly Bears']);
+        addEtbCounters(k3, 1); addNamedCounter(k3, 'flying', 1);
+        out.push(['Samson plus Scales: a +1/+1 counter becomes three', k3.counters === 3, k3.counters]);
+        out.push(['Samson plus Scales: another kind only gets Samson\'s one more', k3.ctr.flying === 2, k3.ctr.flying]);
         return out;
     }, NAMES.concat(['Doc Samson, Super Psychiatrist']));
     const results = formatChecks(r);

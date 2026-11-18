@@ -381,22 +381,23 @@ async function mulligan(P) {
 }
 
 // ---- Zones ----
-// +1/+1 counters put on a permanent (Mauhúr adds one more to Armies, Goblins and Orcs)
-function counterExtra(o, n) {
-    const X = G.players[o.owner];
-    let bonus = X.bf.filter(a => (Rx(a).counterBonus || []).some(ty => hasType(o, ty))).length;
-    // Hardened Scales (+1), Doubling Season / Branching Evolution (x2)
-    X.bf.forEach(a => { const cm = Rx(a).counterMod; if (!cm || lostAbilities(a)) return; if (cm.other && a === o) return; if (cm.what === 'creature' && !isCreature(o)) return; if (cm.what === 'artifact or creature' && !isCreature(o) && !/Artifact/.test(o.card.type)) return; const t = (n + bonus) * cm.times + cm.plus; bonus = t - n; });
-    if (Rx(o).counterPlusOne && !lostAbilities(o)) bonus += 1; // Mowu, Loyal Companion
-    if (typeof tkCounterMult === 'function') { const m = tkCounterMult(o, '+1/+1', n + bonus); bonus = m - n; }
+// How many extra counters a replacement effect adds when `n` counters of `kind` would be put on a permanent. Each effect looks at its own kinds:
+// Hardened Scales, Branching Evolution and Mauhúr only see +1/+1 counters; Doubling Season and Winding Constrictor (kinds: 'all') see every kind;
+// Doc Samson adds one more of whatever kind it is (counterBonusAll), but not on planeswalkers.
+function counterExtra(o, n, kind) {
+    kind = kind || '+1/+1';
+    const plus1 = kind === '+1/+1', X = G.players[o.owner], walker = /Planeswalker/.test(o.card.type);
+    let bonus = X.bf.filter(a => { const r = Rx(a); return (plus1 || r.counterBonusAll) && !(r.counterBonusAll && walker) && !(r.counterBonusAll && lostAbilities(a)) && (r.counterBonus || []).some(ty => hasType(o, ty)); }).length;
+    X.bf.forEach(a => { const cm = Rx(a).counterMod; if (!cm || lostAbilities(a)) return; if (!plus1 && cm.kinds !== 'all') return; if (cm.other && a === o) return; if (cm.what === 'creature' && !isCreature(o)) return; if (cm.what === 'artifact or creature' && !isCreature(o) && !/Artifact/.test(o.card.type)) return; const t = (n + bonus) * cm.times + cm.plus; bonus = t - n; });
+    if (plus1 && Rx(o).counterPlusOne && !lostAbilities(o)) bonus += 1; // Mowu, Loyal Companion
+    if (typeof tkCounterMult === 'function') { const m = tkCounterMult(o, kind, n + bonus); bonus = m - n; }
     return bonus;
 }
-// Named counters (charge, flying, ...) put on a permanent: Doc Samson-style extra counter, then any multiplier
+// Named counters (charge, flying, ...) put on a permanent go through the same replacement effects, by kind
 function addNamedCounter(o, kind, n) {
     if (!o || !(n > 0)) return 0;
     o.ctr = o.ctr || {};
-    let m = n + (/Planeswalker/.test(o.card.type) ? 0 : G.players[o.owner].bf.filter(a => Rx(a).counterBonusAll && !lostAbilities(a)).length);
-    if (typeof tkCounterMult === 'function') m = tkCounterMult(o, kind, m);
+    const m = n + counterExtra(o, n, kind);
     o.ctr[kind] = (o.ctr[kind] || 0) + m; return m;
 }
 // +1/+1 counters a permanent enters with go through the same replacement effects (Hardened Scales, Doubling Season...)

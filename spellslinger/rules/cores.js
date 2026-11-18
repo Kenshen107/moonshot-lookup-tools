@@ -24,3 +24,7 @@ clx("When ~ enters, you may search your library for an artifact card, exile it, 
 clx("When ~ dies, you may put the exiled card into its owner's hand.", R => { R.trig.push({ ev: 'dies', effects: [cmd('dc_hoardReturn')] }); });
 clx("Any number of target players each gain 6 life.", R => { R.spell = [cmd('dc_feast')]; });
 clx("Target creature becomes red until end of turn and attacks this turn if able.", R => { R.spell = [cmd('dc_incite', { target: 'creature', good: false })]; });
+
+// Counter replacement effects that see every kind of counter (2026-11-18, owner: Hardened Scales only +1/+1, Doubling Season doubles all, Doc Samson one more of any kind)
+clx("If an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead.", R => { R.counterMod = { what: 'permanent', times: 2, plus: 0, kinds: 'all' }; });
+clx("If one or more counters would be put on an artifact or creature you control, that many plus one of each of those kinds of counters are put on that permanent instead.", R => { R.counterMod = { what: 'artifact or creature', times: 1, plus: 1, kinds: 'all' }; });
