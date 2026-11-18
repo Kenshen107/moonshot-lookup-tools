@@ -186,3 +186,30 @@ Object.assign(CMD, {
 Object.assign(CMD_SCORE, {
     dc_veil: () => 0, dc_combust: () => 8, dc_feast: () => 1, dc_incite: () => 0, dc_destructiveForce: () => 0
 });
+
+// ---- Goblin Cannon (owner, 2026-11-18): its sacrifice happens as the ability resolves, so with priority held it can be activated again and again ----
+{
+    const prev = activate;
+    activate = async function (P, o, a, ...rest) {
+        if (!(o && o.card.name === 'Goblin Cannon' && a && a.effects && a.effects.some(e => e.t === 'sacSelf') && !a.dcHeld)) return prev.call(this, P, o, a, ...rest);
+        const a2 = { ...a, dcHeld: true, effects: a.effects.filter(e => e.t !== 'sacSelf') };
+        const first = await prev.call(this, P, o, a2, ...rest);
+        if (!first) return first;
+        let n = 1;
+        while (n < ((typeof infiniteNow === 'function' && infiniteNow(P)) ? 400 : 150) && !G.over && onBf(o.uid) && canActivate(P, o, a2)) {
+            const live = foes(P).filter(F => !F.out && F.life > 0);
+            if (!live.length) break;
+            let again;
+            if (dcAI(P)) {
+                const spare = P.bf.filter(x => !x.tapped && Rx(x).mana).length >> 1;
+                again = (typeof infiniteNow === 'function' && infiniteNow(P)) || live.some(F => F.life <= n + spare);
+            } else again = await askYes(P, `Goblin Cannon: its ability is on the stack and it isn't sacrificed until it resolves. Activate it again (${n} so far)?`, { card: o.card, yes: 'Activate again', no: 'Let it resolve' });
+            if (!again) break;
+            if (!(await prev.call(this, P, o, a2, ...rest))) break;
+            n++;
+        }
+        if (n > 1) log(`${P.name} ${you(P) ? 'activate' : 'activates'} ${o.card.name} ${n} times before the first ability resolves.`);
+        if (onBf(o.uid)) { log(`${o.card.name} is sacrificed.`); fire('sacrificed', { o }); dieOrLeave(o, 'gy'); await settle(); }
+        return true;
+    };
+}

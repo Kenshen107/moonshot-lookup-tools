@@ -105,6 +105,8 @@ const DECK_PLANS = {
             const s = onBfNamed(P, 'Doc Samson, Super Psychiatrist'); if (!s || lostAbilities(s)) return;
             // Every other repeatable ability is worth doing over and over: counters, tokens, draw, pump, damage (owner, 2026-11-16)
             if (!P.infBusy) { P.infBusy = true; try { P.infActs = 0; await useInfiniteAbilities(P); if (P.infActs && !G.over) { await aiMain(P); await useInfiniteAbilities(P); } } finally { P.infBusy = false; } }
+            // Goblin Cannon: its sacrifice happens as the ability resolves, so with infinite mana it is activated over and over (owner, 2026-11-18)
+            { const gc = onBfNamed(P, 'Goblin Cannon'); if (gc && !G.over) { const ga = actsOf(gc)[0]; if (ga) { await activate(P, gc, ga); await settle(); } } }
             if (G.over) return;
             const isTr = o => o.card.name === 'Surestrike Trident';
             let tr = onBfNamed(P, 'Surestrike Trident');
