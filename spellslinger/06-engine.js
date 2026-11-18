@@ -1895,7 +1895,7 @@ async function resolveTop() {
                 if (pick) { o.copyOf = o.card; o.card = { ...pick.card, id: `${pick.card.id}-copy${uidSeq}`, type: /\bBird\b/.test(pick.card.type) ? pick.card.type : `${pick.card.type} Bird`, text: `Flying\n${pick.card.text || ''}` }; log(`${o.copyOf.name} enters as a copy of ${pick.card.name} (a Bird with flying).`); }
             }
             if (r.clone) await enterAsCopy(item.P, o, r.clone);
-            if (r.saga) { o.ctr.lore = 1; if (r.readAhead) await readAheadPick(item.P, o); sagaChapter(item.P, o); }
+            if (r.saga) { if (r.readAhead) { o.ctr.lore = 1; await readAheadPick(item.P, o); sagaChapter(item.P, o); } else { o.ctr.lore = 0; sagaLore(item.P, o, 1); } }
             if (r.chooseType) { o.chosenType = commonType(item.P); log(`${o.card.name}: chosen creature type ${o.chosenType}.`); }
             if (r.chooseNumber && typeof tkChooseNumber === 'function') await tkChooseNumber(item.P, o);
             if (r.needle) await needleName(item.P, o);
@@ -4476,7 +4476,7 @@ async function beginTurn() {
     if (typeof slLibraryDrawStep === 'function') await slLibraryDrawStep(P); // Sylvan Library (15w-sixlists.js)
     G.firstTurn = false;
     // Sagas get a lore counter at the start of the precombat main phase (714.3b)
-    P.bf.filter(o => Rx(o).saga && !o.sagaDone).forEach(o => { o.ctr.lore = (o.ctr.lore || 0) + 1; sagaChapter(P, o); });
+    P.bf.filter(o => Rx(o).saga && !o.sagaDone).forEach(o => { sagaLore(P, o, 1); });
     await settle();
     if (G.over) return;
     sba();

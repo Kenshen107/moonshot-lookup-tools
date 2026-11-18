@@ -289,11 +289,20 @@ async function cascade(P, src, discover = 0) {
     G.stack.push({ id: stackSeq++, kind: 'spell', o: hit, P, target, name: hit.card.name, x: 0 });
     log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${hit.card.name} without paying its mana cost.`);
 }
-function sagaChapter(P, o) {
-    const R = Rx(o), n = o.ctr.lore || 0;
+function sagaChapter(P, o) { sagaChapterAt(P, o, o.ctr.lore || 0); }
+function sagaChapterAt(P, o, n) {
+    const R = Rx(o);
     const last = Math.max(...Object.keys(R.saga).map(Number));
     if (R.saga[n]) { (G.trigQ = G.trigQ || []).push({ P, o, effects: R.saga[n] }); log(`${o.card.name}: chapter ${Object.keys(ROMAN).find(k => ROMAN[k] === n)}.`); }
     if (n >= last) o.sagaDone = true;
+}
+// Lore counters are counters like any other: Doc Samson / Doubling Season put more of them, and every chapter the count reaches or passes triggers (CR 714.2b)
+function sagaLore(P, o, n) {
+    const old = o.ctr.lore || 0, added = addNamedCounter(o, 'lore', n);
+    if (added > n) log(`${o.card.name} gets ${added} lore counters instead of ${n}.`);
+    // the stack resolves the last trigger put on it first, so the highest chapter goes on first: chapter I resolves before chapter II
+    const last = Math.max(...Object.keys(Rx(o).saga).map(Number));
+    for (let k = Math.min(old + added, last); k >= old + 1; k--) sagaChapterAt(P, o, k);
 }
 // "You may pay {2}" / "pay 2 life" / "sacrifice a creature" / "discard a card": you choose, the AI does it when it can
 async function optionalCost(P, e, src) {
