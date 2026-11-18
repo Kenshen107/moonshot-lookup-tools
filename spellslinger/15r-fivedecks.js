@@ -236,7 +236,7 @@ Object.assign(CMD, {
     fr_brawler(P, e, t, src) {
         const x = t && t.o; if (!x || !onBf(x.uid)) return;
         putCounters(x, 4, P);
-        ['flying', 'vigilance', 'trample', 'lifelink'].forEach(k => { x.ctr[k] = (x.ctr[k] || 0) + 1; });
+        ['flying', 'vigilance', 'trample', 'lifelink'].forEach(k => { addNamedCounter(x, k, 1); });
         log(`${x.card.name} gets four +1/+1 counters and flying, vigilance, trample and lifelink counters.`);
     },
     async fr_vision(P, e, t, src) {

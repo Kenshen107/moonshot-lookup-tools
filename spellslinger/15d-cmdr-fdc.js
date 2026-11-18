@@ -305,7 +305,7 @@ const _cmdEntersHooksBase = cmdEntersHooks;
 cmdEntersHooks = function (x) {
     _cmdEntersHooksBase(x);
     const w = x && Rx(x).entersWithGy;
-    if (w && onBf(x.uid)) { const n = G.players[x.owner].gy.filter(c => hasType(c, w)).length; if (n > 0) { x.counters += n; log(`${x.card.name} enters with ${n} +1/+1 counter${n === 1 ? '' : 's'}.`); } }
+    if (w && onBf(x.uid)) { const n = G.players[x.owner].gy.filter(c => hasType(c, w)).length; if (n > 0) { addEtbCounters(x, n); log(`${x.card.name} enters with ${n} +1/+1 counter${n === 1 ? '' : 's'}.`); } }
 };
 Object.assign(CMD, {
     // Hit the Mother Lode: after discovering, tapped Treasures equal to 10 minus the discovered card's mana value

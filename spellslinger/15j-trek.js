@@ -44,8 +44,7 @@ function tkCounterMult(o, kind, n) {
 }
 function tkCounters(o, kind, n) {
     if (!o || !onBf(o.uid) || n <= 0) return 0;
-    n = tkCounterMult(o, kind, n);
-    o.ctr[kind] = (o.ctr[kind] || 0) + n;
+    n = addNamedCounter(o, kind, n);
     log(`${o.card.name} gets ${n} ${kind} counter${n === 1 ? '' : 's'}.`);
     if (kind === 'charge') fire('chargePut', { o, n });
     return n;

@@ -382,14 +382,29 @@ async function mulligan(P) {
 
 // ---- Zones ----
 // +1/+1 counters put on a permanent (Mauhúr adds one more to Armies, Goblins and Orcs)
-function putCounters(o, n, by) {
-    if (!o || n <= 0 || !onBf(o.uid)) return 0;
+function counterExtra(o, n) {
     const X = G.players[o.owner];
     let bonus = X.bf.filter(a => (Rx(a).counterBonus || []).some(ty => hasType(o, ty))).length;
     // Hardened Scales (+1), Doubling Season / Branching Evolution (x2)
     X.bf.forEach(a => { const cm = Rx(a).counterMod; if (!cm || lostAbilities(a)) return; if (cm.other && a === o) return; if (cm.what === 'creature' && !isCreature(o)) return; if (cm.what === 'artifact or creature' && !isCreature(o) && !/Artifact/.test(o.card.type)) return; const t = (n + bonus) * cm.times + cm.plus; bonus = t - n; });
     if (Rx(o).counterPlusOne && !lostAbilities(o)) bonus += 1; // Mowu, Loyal Companion
     if (typeof tkCounterMult === 'function') { const m = tkCounterMult(o, '+1/+1', n + bonus); bonus = m - n; }
+    return bonus;
+}
+// Named counters (charge, flying, ...) put on a permanent: Doc Samson-style extra counter, then any multiplier
+function addNamedCounter(o, kind, n) {
+    if (!o || !(n > 0)) return 0;
+    o.ctr = o.ctr || {};
+    let m = n + (/Planeswalker/.test(o.card.type) ? 0 : G.players[o.owner].bf.filter(a => Rx(a).counterBonusAll && !lostAbilities(a)).length);
+    if (typeof tkCounterMult === 'function') m = tkCounterMult(o, kind, m);
+    o.ctr[kind] = (o.ctr[kind] || 0) + m; return m;
+}
+// +1/+1 counters a permanent enters with go through the same replacement effects (Hardened Scales, Doubling Season...)
+function addEtbCounters(o, n) { if (!(n > 0)) return; o.counters += n + counterExtra(o, n); }
+function putCounters(o, n, by) {
+    if (!o || n <= 0 || !onBf(o.uid)) return 0;
+    const X = G.players[o.owner];
+    const bonus = counterExtra(o, n);
     o.counters += n + bonus; o.counterTurn = G.turn;
     X.counterTurn = G.turn;
     fire('counters', { P: by || X, o, n: n + bonus });
@@ -624,7 +639,7 @@ function damage(target, n, src) {
         // Infect and wither: damage to a creature is -1/-1 counters (702.80a, 702.90b)
         if (infect || wither) target.counters -= n; else target.dmg += n;
         if (src && src.card && has(src, 'deathtouch')) target.dt = true;
-        if (target.willTurn === G.turn && isCreature(target)) { target.counters += n; log(`${target.card.name} gets ${n} +1/+1 counter${n === 1 ? '' : 's'} (Strength of Will).`); } // Strength of Will
+        if (target.willTurn === G.turn && isCreature(target)) { addEtbCounters(target, n); log(`${target.card.name} gets ${n} +1/+1 counter${n === 1 ? '' : 's'} (Strength of Will).`); } // Strength of Will
     }
     if (src && src.card && isCreature(src) && has(src, 'lifelink') && !noLifeGainActive()) { n += lifeGainBonus(ctrl(src)); ctrl(src).life += n; fire('gainLife', { P: ctrl(src), n }); }
 }
@@ -1396,7 +1411,7 @@ async function enterAsCopy(P, o, cl) {
     o.copyOf = o.card;
     o.card = { ...(pick.copyOf ? pick.card : pick.card), id: `${pick.card.id}-copy${uidSeq}`, type, text };
     if (typeof banterCopy === 'function') banterCopy(P, pick);
-    if (cl.plusOne && isCreature(o)) o.counters += 1;
+    if (cl.plusOne && isCreature(o)) addEtbCounters(o, 1);
     if (cl.copyCounters) { o.counters += Math.max(0, pick.counters); Object.keys(pick.ctr || {}).forEach(k => { if (k !== 'loyalty' && pick.ctr[k] > 0) o.ctr[k] = (o.ctr[k] || 0) + pick.ctr[k]; }); } // Dominion Saboteur
     if (Rx(o).kind === 'planeswalker') { o.ctr.loyalty = (Number(o.card.loyalty) || 0) + (cl.plusOne ? 1 : 0); o.pwReady = true; }
     log(`${o.copyOf.name} enters as a copy of ${pick.card.name}${cl.addType ? ` (also an ${cl.addType.toLowerCase()})` : ''}${cl.notLegendary ? ', not legendary' : ''}${cl.plusOne && isCreature(o) ? ', with an extra +1/+1 counter' : ''} (rule 707.9).`);
@@ -1806,7 +1821,7 @@ async function resolveTop() {
             if (r.auraSteal && item.target && item.target.o && item.target.o.owner !== item.P.i) { const x = item.target.o; pull(G.players[x.owner].bf, x); x.realOwner = x.realOwner ?? x.owner; x.owner = item.P.i; x.stolenBy = o.uid; x.sick = true; item.P.bf.push(x); log(`${item.P.name} ${you(item.P) ? 'gain' : 'gains'} control of ${x.card.name} (${o.card.name}).`); }
             if (item.castAs === 'bestow' && item.target && item.target.o) { o.bestowed = true; o.attachedTo = item.target.o.uid; log(`${o.card.name} enters as an Aura on ${item.target.o.card.name} (bestow).`); }
             if (item.castAs === 'warp') o.warpExile = G.turn;
-            if (item.castAs === 'escape' && r.escape && r.escape.counters) { o.counters += r.escape.counters; log(`${o.card.name} escapes with ${r.escape.counters} +1/+1 counters.`); }
+            if (item.castAs === 'escape' && r.escape && r.escape.counters) { addEtbCounters(o, r.escape.counters); log(`${o.card.name} escapes with ${r.escape.counters} +1/+1 counters.`); }
             if (o.suspHaste) { o.suspHaste = false; if (r.kind === 'creature') { o.tkw.push('haste'); log(`${o.card.name} has haste (suspend).`); } }
             if (item.castAs === 'dash') { o.tkw.push('haste'); o.dashTurn = G.turn; }
             o.wasCast = true;
@@ -1816,19 +1831,19 @@ async function resolveTop() {
             if (r.kind === 'battle') { const d = Number(o.card.defense); o.ctr.defense = d >= 0 && !isNaN(d) ? d : 4; }
             if (r.alsoLand && !/\bLand\b/.test(o.card.type)) o.card = { ...o.card, type: `Land ${o.card.type}` };
             { const et = foes(item.P).flatMap(F => F.bf).find(x => Rx(x).oppEnterTapped && !lostAbilities(x)); if (et && (r.kind === 'creature' || (Rx(et).oppEnterTapped !== 'creature' && /Artifact/.test(o.card.type)))) { o.tapped = true; log(`${o.card.name} enters tapped (${et.card.name}).`); } }
-            if (r.etbCounters) o.counters += r.etbCounters === 'X' ? (item.x || 0) : r.etbCounters === 'X2' ? 2 * (item.x || 0) : r.etbCounters === 'spent' ? costTotal(r.cost) + (item.x || 0) * (r.cost.xn || 1) : r.etbCounters;
+            if (r.etbCounters) addEtbCounters(o, r.etbCounters === 'X' ? (item.x || 0) : r.etbCounters === 'X2' ? 2 * (item.x || 0) : r.etbCounters === 'spent' ? costTotal(r.cost) + (item.x || 0) * (r.cost.xn || 1) : r.etbCounters);
             if (r.etbNamedX) o.ctr[r.etbNamedX] = r.sunburst && typeof tkSunburstColors === 'function' ? Math.min(item.x || 0, tkSunburstColors(item.P)) : (item.x || 0);
             if (r.devour) await devourChoice(item.P, o, r.devour);
-            if (r.kickPer && o.kickN) { if (r.kickPer === 'plus') o.counters += o.kickN; else o.ctr[r.kickPer] = (o.ctr[r.kickPer] || 0) + o.kickN; }
-            if (r.bloodthirst && foes(item.P).some(F => F.lostTurn === G.turn)) { o.counters += r.bloodthirst; log(`${o.card.name} enters with ${r.bloodthirst} +1/+1 counters (bloodthirst).`); }
+            if (r.kickPer && o.kickN) { if (r.kickPer === 'plus') addEtbCounters(o, o.kickN); else addNamedCounter(o, r.kickPer, o.kickN); }
+            if (r.bloodthirst && foes(item.P).some(F => F.lostTurn === G.turn)) { addEtbCounters(o, r.bloodthirst); log(`${o.card.name} enters with ${r.bloodthirst} +1/+1 counters (bloodthirst).`); }
             // Ravenous: X +1/+1 counters, and a card if X is 5 or more
             if (r.ravenous && (item.x || 0) >= 5) (G.trigQ = G.trigQ || []).push({ P: item.P, o, effects: [{ t: 'draw', n: 1 }] });
-            if (r.kickCounters && o.kicked) o.counters += r.kickCounters;
-            if (r.convokeCounters && o.convokedN) o.counters += r.convokeCounters * o.convokedN;
-            if (r.etbCountersIf && condOk(r.etbCountersIf.cond, item.P, o)) o.counters += r.etbCountersIf.n;
-            if (r.etbCountersPer) o.counters += countFn(r.etbCountersPer)(o);
-            if (o.extraEnterCounter) { o.counters += o.extraEnterCounter; o.extraEnterCounter = 0; }
-            if (o.opalPalace) { o.opalPalace = false; if (o.isCommander) { o.counters += commanderCasts(item.P); log(`${o.card.name} enters with ${commanderCasts(item.P)} additional +1/+1 counter${commanderCasts(item.P) === 1 ? '' : 's'} (Opal Palace).`); } }
+            if (r.kickCounters && o.kicked) addEtbCounters(o, r.kickCounters);
+            if (r.convokeCounters && o.convokedN) addEtbCounters(o, r.convokeCounters * o.convokedN);
+            if (r.etbCountersIf && condOk(r.etbCountersIf.cond, item.P, o)) addEtbCounters(o, r.etbCountersIf.n);
+            if (r.etbCountersPer) addEtbCounters(o, countFn(r.etbCountersPer)(o));
+            if (o.extraEnterCounter) { addEtbCounters(o, o.extraEnterCounter); o.extraEnterCounter = 0; }
+            if (o.opalPalace) { o.opalPalace = false; if (o.isCommander) { addEtbCounters(o, commanderCasts(item.P)); log(`${o.card.name} enters with ${commanderCasts(item.P)} additional +1/+1 counter${commanderCasts(item.P) === 1 ? '' : 's'} (Opal Palace).`); } }
             // Mockingbird: enter as a copy of a creature with mana value up to the mana spent (X + 1), a Bird with flying
             if (r.cloneX) {
                 const spent = (item.x || 0) + costTotal({ ...r.cost, x: 0 });
@@ -1847,7 +1862,7 @@ async function resolveTop() {
             if (r.chooseColor) { o.chosenColor = pickChosenColor(item.P, r.chooseColorNot); log(`${o.card.name}: chosen color ${COLOR_NAMES[o.chosenColor]}.`); }
             if (r.etbNamedN) { o.ctr[r.etbNamedN.kind] = r.etbNamedN.n; log(`${o.card.name} enters with ${r.etbNamedN.n} ${r.etbNamedN.kind} counters.`); }
             if (r.etbNamed) { const n = countFn(r.etbNamed.what)(o); o.ctr[r.etbNamed.kind] = n; log(`${o.card.name} enters with ${n} ${r.etbNamed.kind} counter${n === 1 ? '' : 's'}.`); }
-            if (r.kw.has('unleash') && (item.P.isAI ? item.P.aiStyle !== 'control' : await askYes(item.P, `Unleash ${o.card.name}? It enters with a +1/+1 counter but can't block while it has one.`, { card: o.card }))) { o.counters += 1; log(`${o.card.name} is unleashed (+1/+1 counter; it can't block).`); }
+            if (r.kw.has('unleash') && (item.P.isAI ? item.P.aiStyle !== 'control' : await askYes(item.P, `Unleash ${o.card.name}? It enters with a +1/+1 counter but can't block while it has one.`, { card: o.card }))) { addEtbCounters(o, 1); log(`${o.card.name} is unleashed (+1/+1 counter; it can't block).`); }
             // Riot (702.136): a +1/+1 counter or haste
             if (isCreature(o) && (Rx(o).kw.has('riot') || (!o.token && item.P.bf.some(x => x !== o && Rx(x).riotAll && !lostAbilities(x))))) {
                 const haste = item.P.isAI ? (MAIN.includes(G.phase) && G.active === item.P.i && G.phase !== 'main2') : await askYes(item.P, `${o.card.name} has riot: give it haste? (Cancel = a +1/+1 counter instead)`, { card: o.card, yes: 'Haste', no: '+1/+1 counter' });
@@ -2312,7 +2327,7 @@ async function applyChoiceEffect(P, e, src, t) {
         drawCards(owner, 1);
         const d = owner.isAI ? owner.hand.slice().sort((a, b) => aiKeepValue(owner, a) - aiKeepValue(owner, b))[0] : await pickCard(owner, owner.hand, `${who ? who.card.name : src.card.name} connives: choose a card to discard`) || owner.hand[0];
         if (d) { pull(owner.hand, d); owner.gy.push(d); noteDiscard(owner, 1); d.discardTurn = G.turn; log(`${owner.name} ${you(owner) ? 'discard' : 'discards'} ${d.card.name}.`); }
-        if (who && d && Rx(d).kind !== 'land' && onBf(who.uid)) { who.counters++; log(`${who.card.name} connives and gets a +1/+1 counter.`); }
+        if (who && d && Rx(d).kind !== 'land' && onBf(who.uid)) { addEtbCounters(who, 1); log(`${who.card.name} connives and gets a +1/+1 counter.`); }
         if (who) fire('connives', { o: who, P: owner });
         return;
     }
@@ -2458,7 +2473,7 @@ async function applyChoiceEffect(P, e, src, t) {
             // From whichever graveyard holds it (an opponent's too)
             const from = gys.find(X => X.gy.includes(pick)) || P;
             pull(from.gy, pick);
-            if ((e.bf || (e.bfIf && condOk(e.bfIf, P, src))) && !['instant', 'sorcery'].includes(Rx(pick).kind)) { G.lastMv = pick.card.cmc || 0; if (from !== P) { pick.realOwner = pick.owner; pick.owner = P.i; } resetObj(pick); if (e.tapped) pick.tapped = true; P.bf.push(pick); G.lastReturned = pick; if (e.counters) pick.counters += e.counters; if (e.heroCounters && hasType(pick, 'Hero')) pick.counters += e.heroCounters; if (e.finality) pick.ctr.finality = 1; log(`${pick.card.name} returns to the battlefield${e.tapped ? ' tapped' : ''}${e.counters ? ` with ${e.counters} additional +1/+1 counters` : ''}.`); fire(Rx(pick).kind === 'land' ? 'landfall' : 'enters', { o: pick }); if (Rx(pick).etb.length) await putTriggers(P, pick, Rx(pick).etb); }
+            if ((e.bf || (e.bfIf && condOk(e.bfIf, P, src))) && !['instant', 'sorcery'].includes(Rx(pick).kind)) { G.lastMv = pick.card.cmc || 0; if (from !== P) { pick.realOwner = pick.owner; pick.owner = P.i; } resetObj(pick); if (e.tapped) pick.tapped = true; P.bf.push(pick); G.lastReturned = pick; if (e.counters) addEtbCounters(pick, e.counters); if (e.heroCounters && hasType(pick, 'Hero')) pick.counters += e.heroCounters; if (e.finality) pick.ctr.finality = 1; log(`${pick.card.name} returns to the battlefield${e.tapped ? ' tapped' : ''}${e.counters ? ` with ${e.counters} additional +1/+1 counters` : ''}.`); fire(Rx(pick).kind === 'land' ? 'landfall' : 'enters', { o: pick }); if (Rx(pick).etb.length) await putTriggers(P, pick, Rx(pick).etb); }
             else { P.hand.push(pick); log(`${pick.card.name} returns to ${you(P) ? 'your' : `${P.name}'s`} hand.`); }
         }
       }
@@ -2835,14 +2850,14 @@ async function applyEffect(P, e, t, src) {
         case 'evolve': {
             const x = G.ctxObj;
             if (!x || !onBf(src.uid) || x === src) break;
-            if (pow(x) > pow(src) || tou(x) > tou(src)) { src.counters++; log(`${name} evolves (+1/+1 counter).`); }
+            if (pow(x) > pow(src) || tou(x) > tou(src)) { addEtbCounters(src, 1); log(`${name} evolves (+1/+1 counter).`); }
             break;
         }
         case 'returnSelfGy': {
             const X = G.players[src.owner];
             if (!X.gy.includes(src)) break;
             pull(X.gy, src);
-            if (e.bf) { resetObj(src); src.tapped = !!e.tapped; if (e.counter) src.counters += e.counter; X.bf.push(src); log(`${name} returns to the battlefield${e.tapped ? ' tapped' : ''}.`); fire('enters', { o: src }); if (Rx(src).etb.length) (G.trigQ = G.trigQ || []).push({ P: X, o: src, effects: Rx(src).etb }); }
+            if (e.bf) { resetObj(src); src.tapped = !!e.tapped; X.bf.push(src); if (e.counter) addEtbCounters(src, e.counter); log(`${name} returns to the battlefield${e.tapped ? ' tapped' : ''}.`); fire('enters', { o: src }); if (Rx(src).etb.length) (G.trigQ = G.trigQ || []).push({ P: X, o: src, effects: Rx(src).etb }); }
             else { X.hand.push(src); log(`${name} returns to ${you(X) ? 'your' : `${X.name}'s`} hand.`); }
             break;
         }
@@ -2995,7 +3010,7 @@ async function applyEffect(P, e, t, src) {
         }
         case 'untapSelf': if (onBf(src.uid)) { src.tapped = false; log(`${src.card.name} untaps.`); } break;
         case 'exileSelf': if (onBf(src.uid)) { log(`${src.card.name} is exiled.`); leaveBattlefield(src, 'exile'); } else if (['instant', 'sorcery'].includes(Rx(src).kind)) src.exileAfter = true; break;
-        case 'namedCounter': if (onBf(src.uid)) { if (typeof tkCounterMult === 'function') e = { ...e, n: tkCounterMult(src, e.kind, e.n) }; e = { ...e, n: e.n + G.players[src.owner].bf.filter(a => Rx(a).counterBonusAll && !lostAbilities(a) && !/Planeswalker/.test(src.card.type)).length }; src.ctr[e.kind] = (src.ctr[e.kind] || 0) + e.n; log(`${src.card.name} gets ${e.n} ${e.kind} counter${e.n === 1 ? '' : 's'}.`); } break;
+        case 'namedCounter': if (onBf(src.uid)) { const n = addNamedCounter(src, e.kind, e.n); log(`${src.card.name} gets ${n} ${e.kind} counter${n === 1 ? '' : 's'}.`); } break;
         case 'regen': if (onBf(src.uid)) { src.regen = (src.regen || 0) + 1; log(`${src.card.name} gets a regeneration shield.`); } break;
         case 'millSelf': { const milled = P.library.splice(-e.n).reverse(); P.gy.push(...milled); log(`${P.name} ${you(P) ? 'mill' : 'mills'} ${milled.length}.`); break; }
         case 'allPump': allPerms().filter(isCreature).forEach(c => { c.tp += e.p; c.tq += e.q; }); log(`All creatures get ${e.p >= 0 ? '+' : ''}${e.p}/${e.q >= 0 ? '+' : ''}${e.q} until end of turn.`); break;
@@ -3052,7 +3067,7 @@ async function applyEffect(P, e, t, src) {
             break;
         }
         case 'proliferate':
-            allPerms().forEach(x => { if (x.counters > 0 && x.owner === P.i) x.counters++; else if (x.counters < 0 && x.owner !== P.i) x.counters--; Object.keys(x.ctr || {}).forEach(k => { if (x.owner === P.i) x.ctr[k]++; }); });
+            allPerms().forEach(x => { if (x.counters > 0 && x.owner === P.i) addEtbCounters(x, 1); else if (x.counters < 0 && x.owner !== P.i) x.counters--; Object.keys(x.ctr || {}).forEach(k => { if (x.owner === P.i) addNamedCounter(x, k, 1); }); });
             if (O.poison) O.poison++;
             log(`${P.name} ${you(P) ? 'proliferate' : 'proliferates'}.`);
             break;
@@ -3787,7 +3802,7 @@ async function applyEffect(P, e, t, src) {
         case 'dmgAttackersNoFly': { const xs = G.attackers.map(onBf).filter(x => x && !has(x, 'flying')); xs.forEach(x => damage(x, e.n, src)); log(`${name} deals ${e.n} damage to each attacking creature without flying (${xs.length}).`); break; }
         case 'exileUntilLeaves': { const x = t && t.o; if (!x || !onBf(x.uid) || !onBf(src.uid)) break; leaveBattlefield(x, 'exile'); const X = G.players[x.owner]; if (X.exile.includes(x)) x.exiledBy = src.uid; log(`${name} exiles ${x.card.name}.`); break; }
         case 'glissa': { const x = t && t.o; if (!x) break; const unspent = (P.pool || []).length; if ((x.card.cmc || 0) === unspent) destroy(x); else log(`${name}: ${x.card.name}'s mana value isn't ${unspent} (your unspent mana).`); break; }
-        case 'namedCounterTarget': if (t && t.o) { t.o.ctr[e.kind] = (t.o.ctr[e.kind] || 0) + e.n; log(`${t.o.card.name} gets a ${e.kind} counter.`); } break;
+        case 'namedCounterTarget': if (t && t.o) { addNamedCounter(t.o, e.kind, e.n); log(`${t.o.card.name} gets a ${e.kind} counter.`); } break;
         case 'loyaltyFracture': {
             const h = src.attachedTo && onBf(src.attachedTo), by = G.ctxRaw && G.ctxRaw.by;
             if (!h || by === undefined || by === h.owner) break;

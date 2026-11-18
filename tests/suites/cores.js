@@ -1,7 +1,7 @@
 // Draft-set round (2026-11-18): Magic 2011 cards read by rules/cores.js and spellslinger/15zb-cores.js.
 'use strict';
 const { launch, openTestPage, installHelpers, formatChecks, printResults, writeOut } = require('../lib/harness');
-const NAMES = ['Ancient Hellkite', "Autumn's Veil", 'Bloodcrazed Goblin', 'Captivating Vampire', "Chandra's Spitfire", 'Combust', 'Conundrum Sphinx', 'Cyclops Gladiator', 'Dark Tutelage', "Demon of Death's Gate", 'Destructive Force', 'Fauna Shaman', 'Fire Servant', 'Frost Titan', "Gaea's Revenge", 'Gargoyle Sentinel', 'Harbor Serpent', 'Hoarding Dragon', "Hunters' Feast", 'Incite'];
+const NAMES = ['Hardened Scales', 'Ancient Hellkite', "Autumn's Veil", 'Bloodcrazed Goblin', 'Captivating Vampire', "Chandra's Spitfire", 'Combust', 'Conundrum Sphinx', 'Cyclops Gladiator', 'Dark Tutelage', "Demon of Death's Gate", 'Destructive Force', 'Fauna Shaman', 'Fire Servant', 'Frost Titan', "Gaea's Revenge", 'Gargoyle Sentinel', 'Harbor Serpent', 'Hoarding Dragon', "Hunters' Feast", 'Incite'];
 (async () => {
     const h = await launch({ profileDir: undefined });
     const { page, errors } = await openTestPage(h.ctx, h.server);
@@ -24,8 +24,16 @@ const NAMES = ['Ancient Hellkite', "Autumn's Veil", 'Bloodcrazed Goblin', 'Capti
         A.library.length = 0; A.library.push(makeObj(C['Combust'], 0)); const l0 = A.life; A.hand.length = 0;
         CMD.dc_tutelage(A, {}, null, g);
         out.push(['Dark Tutelage draws the top card and loses life equal to its mana value', A.hand.length === 1 && A.life === l0 - 2, { hand: A.hand.length, life: A.life - l0 }]);
+        // Hardened Scales also applies to counters a creature enters with, and to counters put on it
+        T.clear(); const hs = T.put(A, C['Hardened Scales']); const e1 = T.put(A, C['Grizzly Bears']);
+        addEtbCounters(e1, 2); out.push(['Hardened Scales adds one to "enters with" counters', e1.counters === 3, e1.counters]);
+        const e2 = T.put(A, C['Grizzly Bears']); putCounters(e2, 1, A); out.push(['Hardened Scales adds one to counters put on a creature', e2.counters === 2, e2.counters]);
+        // Doc Samson: enters-with, evolve-style and named counters all get the extra one (planeswalkers don't)
+        T.clear(); T.put(A, C['Doc Samson, Super Psychiatrist']); const e3 = T.put(A, C['Grizzly Bears']);
+        addEtbCounters(e3, 1); out.push(['Doc Samson adds one to "enters with" counters', e3.counters === 2, e3.counters]);
+        addNamedCounter(e3, 'flying', 1); out.push(['Doc Samson adds one to a named counter put by other code', e3.ctr.flying === 2, e3.ctr.flying]);
         return out;
-    }, NAMES);
+    }, NAMES.concat(['Doc Samson, Super Psychiatrist']));
     const results = formatChecks(r);
     results.push(...formatChecks([['no page errors', errors.length === 0, errors.slice(0, 3)]]));
     const ok = printResults('cores', results, []);
