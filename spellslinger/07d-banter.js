@@ -13,22 +13,43 @@ const who = P => (P && P.char ? P.char.name : P ? P.name.split(',')[0] : '');
 const SALT_TIERS = [0, 2, 5, 9];
 const COOL_COINS = 10, COOL_COINS_MAX = 50;
 
-function fillLine(t, ctx) { return String(t).replace(/\{(\w+)\}/g, (m, k) => (ctx && ctx[k] !== undefined ? ctx[k] : m)); }
-// One line for an event, picked without random numbers: the character's own lines most of the time, then the shared ones
-function pickLine(P, event, ctx = {}) {
+// Fills {placeholders}. {foe} is the player the line is about: a name, or "you" when it is the person. Lines that use {foe} as the subject use the verb tokens
+// ({foeIs} {foeWas} {foeHas} {foeDoes} {foePoss}) so they read right both ways, and a {foe} used to address someone ("Come on, {foe}.") drops out when it is "you".
+function fillLine(t, ctx) {
+    const c = ctx || {}, me = typeof c.foe === 'string' && c.foe.toLowerCase() === 'you', f = me ? 'you' : c.foe;
+    const x = { ...c, ...(c.foe !== undefined ? { foe: f } : {}) };
+    if (f !== undefined) { x.foeIs = me ? 'you are' : `${f} is`; x.foeWas = me ? 'you were' : `${f} was`; x.foeHas = me ? 'you have' : `${f} has`; x.foeDoes = me ? 'you do' : `${f} does`; x.foePoss = me ? 'your' : `${f}'s`; }
+    let out = String(t).replace(/\{(\w+)\}/g, (m, k) => (x[k] !== undefined ? x[k] : m));
+    if (me) out = out.replace(/^you,\s+/i, '').replace(/,\s+you,/g, ',').replace(/,\s+you(?=[.!?…]|$)/g, '').replace(/\b(Come on|Hey|Well|Okay|Look|Listen|Wow|Please|Really|Seriously|Nice|Thanks|Sorry|Easy|Oh)\s+you([.!?,])/g, '$1$2');
+    // "you" as the subject takes the plural forms (a tip about the person: "you have 3 lands open", "your board")
+    if (me || (typeof c.card === 'string' && c.card.toLowerCase() === 'you')) out = out.replace(/\byou is\b/gi, 'you are').replace(/\byou was\b/gi, 'you were').replace(/\byou has\b/gi, 'you have').replace(/\byou does\b/gi, 'you do').replace(/\byou (holds|keeps|spends|worries|breaks|grows|gets|wins|counters|goes|plays|takes|makes|looks|seems|lacks|left)\b/gi, (m, v) => `you ${v === 'left' ? 'left' : v.replace(/ies$/, 'y').replace(/(?<=[^s])s$/, '')}`).replace(/\byou's\b/gi, 'your');
+    return out.charAt(0).toUpperCase() + out.slice(1);
+}
+// One line for an event, picked without random numbers (so seeded games replay the same). Lines live in TALK[event] under `_` (anyone), `<char>` (that
+// character, any mood) and `<char>@<mood>` / `_@<mood>` (only in that mood; 07d3-voices.js `addVoice`). The character's own lines come first, mood lines before
+// the plain ones, and a bot doesn't repeat a line it has said in its last 12 (2026-11-18, owner: better structured, more emotional dialogue).
+function pickLine(P, event, ctx = {}, mood) {
     const t = TALK[event];
     if (!t) return null;
-    const own = (P.char && t[P.char.key]) || [], gen = t._ || [];
+    const key = P.char && P.char.key, m = mood || P.lastMood || 'calm';
+    const own = (key && t[key]) || [], ownM = (key && t[`${key}@${m}`]) || [], gen = t._ || [], genM = t[`_@${m}`] || [];
     P.said = (P.said || 0) + 1;
     const h = ((G.turn * 31 + P.i * 17 + P.said * 7 + event.length * 13) >>> 0);
-    const pool = [...gen, ...own, ...own]; // the character's own lines count double
+    // a bot with its own lines for this event says its own about four times in five; otherwise the shared ones
+    const mine = [...ownM, ...own], shared = [...genM, ...gen];
+    let pool = mine.length && (shared.length === 0 || h % 5 !== 0) ? (ownM.length && h % 3 !== 0 ? ownM : mine) : shared;
+    if (!pool.length) pool = mine.length ? mine : shared;
     if (!pool.length) return null;
-    return fillLine(pool[h % pool.length], { me: (P.name || '').split(',')[0], ...ctx });
+    P.heard = P.heard || [];
+    let line = pool[h % pool.length];
+    for (let k = 0; k < pool.length; k++) { const c = pool[(h + k) % pool.length]; if (!P.heard.includes(c)) { line = c; break; } }
+    P.heard.push(line); if (P.heard.length > 12) P.heard.shift();
+    return fillLine(line, { me: (P.name || '').split(',')[0], turn: G.turn, life: P.life, who: P.char ? P.char.name : (P.name || '').split(',')[0], ...ctx });
 }
 // A bot says a line for an event (it also goes in the log; the bubble shows only in a real game)
 function say(P, event, mood, ctx, key) {
     if (!P || !P.isAI || P.out || !G) return false;
-    const text = pickLine(P, event, ctx);
+    const text = pickLine(P, event, ctx, mood);
     if (!text) return false;
     botSay(P, mood || 'calm', text, key === undefined ? event : key);
     return true;
