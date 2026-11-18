@@ -8,6 +8,9 @@
 
 const MA_STATIC = new WeakMap();
 const MA_COST_KEYS = ['mana', 'tap', 'sacSelf', 'life', 'discard', 'mill', 'removeNamed', 'tapOther', 'sacPerm', 'exileSelf', 'discardHand'];
+// cards whose mana is a named effect: the amount
+const MA_CMD = { cornucopiaMana: o => (o.ctr && o.ctr.charge) || 0 }; // Astral Cornucopia: one mana of a chosen color for each charge counter
+const maIsAdd = e => e.t === 'addMana' || (e.t === 'cmd' && !!MA_CMD[e.id]);
 const MA_SIDE = ['namedCounter', 'gain', 'dmgYou', 'millSelf', 'roll', 'draw', 'scry', 'delayedDraw'];
 function maStaticAct(o) {
     const R = Rx(o), acts = R.acts;
@@ -19,8 +22,8 @@ function maStaticAct(o) {
         if (!c.tap || c.discard || (c.mana && (c.mana.generic || c.mana.x || ['W', 'U', 'B', 'R', 'G', 'C'].some(k => c.mana[k])))) continue;
         if (Object.keys(c).some(k => c[k] && !MA_COST_KEYS.includes(k))) continue;
         if (a.sorcery || a.loyalty !== undefined || a.upkeepOnly || a.yourTurn || a.stationMin || a.once || a.onceEver || a.maxTurn || a.manaLike || a.lessIf) continue;
-        const adds = eff.filter(e => e.t === 'addMana');
-        if (adds.length !== 1 || eff.some(e => e.t !== 'addMana' && !(MA_SIDE.includes(e.t) && !e.target && !(e.t === 'namedCounter' && !e.kind)))) continue;
+        const adds = eff.filter(maIsAdd);
+        if (adds.length !== 1 || eff.some(e => !maIsAdd(e) && !(MA_SIDE.includes(e.t) && !e.target && !(e.t === 'namedCounter' && !e.kind)))) continue;
         const e = adds[0];
         if (e.opts || e.fromN || e.limit || e.any === 'X') continue;
         found = a; break;
@@ -33,7 +36,7 @@ function manaActOf(o) {
     try {
         if (!G || !o || !o.uid || lostAbilities(o)) return null;
         const a = maStaticAct(o); if (!a) return null;
-        const P = G.players[o.owner], c = a.cost, e = a.effects.find(x => x.t === 'addMana');
+        const P = G.players[o.owner], c = a.cost, e = a.effects.find(maIsAdd);
         if (a.onlyIf && !condOk(a.onlyIf, P, o)) return null;
         if (c.mill && P.library.length < c.mill) return null;
         if (c.removeNamed && !((o.ctr[c.removeNamed] || 0) > 0)) return null;
@@ -43,7 +46,8 @@ function manaActOf(o) {
         // counters the ability puts on itself first (Empowered Autogenerator's charge counter), with the replacement effects that change them
         const side = a.effects.filter(x => x.t === 'namedCounter').map(x => ({ kind: x.kind, n: x.n + (typeof counterExtra === 'function' ? counterExtra(o, x.n, x.kind) : 0) }));
         const removed = c.removeNamed ? 1 : 0; // a counter removed as a cost (Sphere of the Suns) is gone before "the number of counters" is counted
-        if (e.anyPow) n = Math.max(0, pow(o));
+        if (e.t === 'cmd') n = MA_CMD[e.id](o);
+        else if (e.anyPow) { const was = o.tapped; o.tapped = true; try { n = Math.max(0, pow(o)); } finally { o.tapped = was; } } // the ability resolves after {T} is paid: Sword of the Paruns' +2/+0 for a tapped creature counts
         else if (e.nCount) { n = countFn(e.nCount)(o); const m = String(e.nCount).match(/(\w+) counters?/); if (m) { side.filter(s => s.kind === m[1]).forEach(s => { n += s.n; }); if (c.removeNamed === m[1]) n -= removed; } }
         else if (e.anyN) n = Math.max(0, e.n || 0);
         else if (e.any) { n = e.any; if (e.identity) { const id = cmdrIdentity(P).filter(x => COLORS.includes(x)); if (id.length) colors = id; } }
@@ -85,7 +89,7 @@ function maOtherCosts(P, s, a, pre) {
             const a = m.maAct;
             if (a.cost.exileSelf && onBf(s.uid)) { log(`${s.card.name} is exiled for mana.`); leaveBattlefield(s, 'exile'); }
             a.effects.filter(x => x.t === 'namedCounter').forEach(x => { if (!onBf(s.uid)) return; const k = addNamedCounter(s, x.kind, x.n); log(`${s.card.name} gets ${k} ${x.kind} counter${k === 1 ? '' : 's'}.`); });
-            const rest = a.effects.filter(x => x.t !== 'addMana' && x.t !== 'namedCounter');
+            const rest = a.effects.filter(x => !maIsAdd(x) && x.t !== 'namedCounter');
             if (rest.length) Promise.resolve(resolveEffects(P, rest, null, s)).catch(() => {});
             return r;
         }

@@ -28,3 +28,6 @@ clx("Target creature becomes red until end of turn and attacks this turn if able
 // Counter replacement effects that see every kind of counter (2026-11-18, owner: Hardened Scales only +1/+1, Doubling Season doubles all, Doc Samson one more of any kind)
 clx("If an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead.", R => { R.counterMod = { what: 'permanent', times: 2, plus: 0, kinds: 'all' }; });
 clx("If one or more counters would be put on an artifact or creature you control, that many plus one of each of those kinds of counters are put on that permanent instead.", R => { R.counterMod = { what: 'artifact or creature', times: 1, plus: 1, kinds: 'all' }; });
+
+// Remnant of the Rising Star (back of Jugan Defends the Temple): another creature entering may get X counters for {X} (Doc Samson makes each one more)
+clx("Whenever another creature you control enters, you may pay {X}. When you do, put X +1/+1 counters on that creature.", R => { R.trig.push(SPEC('enters', { another: true, type: 'Creature' }, { effects: [cmd('dc_remnantX')] })); });
