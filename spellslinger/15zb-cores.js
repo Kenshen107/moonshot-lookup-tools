@@ -183,8 +183,20 @@ Object.assign(CMD, {
         log(`${o.card.name} becomes red until end of turn and attacks this turn if able.`);
     }
 });
+Object.assign(CMD, {
+    // Remnant of the Rising Star: pay {X}, put X +1/+1 counters on the creature that entered (the computer pays what it can spare, at most 6)
+    async dc_remnantX(P, e, t, src) {
+        const x = G.ctxRaw && G.ctxRaw.o; if (!x || !onBf(x.uid)) return;
+        let mx = 0; while (mx < 30 && planPayment(P, parseCost(''), mx + 1)) mx++;
+        if (mx <= 0) return;
+        const n = dcAI(P) ? Math.min(mx, 6) : await askNumber(P, `${src.card.name}: pay {X} to put X +1/+1 counters on ${x.card.name}?`, 0, mx, Math.min(mx, 3), { card: src.card });
+        if (!n || n <= 0) return;
+        planPayment(P, parseCost(''), n).forEach(y => tapSource(P, y));
+        const got = putCounters(x, n, P); log(`${x.card.name} gets ${got} +1/+1 counter${got === 1 ? '' : 's'} (${src.card.name}).`);
+    }
+});
 Object.assign(CMD_SCORE, {
-    dc_veil: () => 0, dc_combust: () => 8, dc_feast: () => 1, dc_incite: () => 0, dc_destructiveForce: () => 0
+    dc_remnantX: () => 3, dc_veil: () => 0, dc_combust: () => 8, dc_feast: () => 1, dc_incite: () => 0, dc_destructiveForce: () => 0
 });
 
 // ---- Goblin Cannon (owner, 2026-11-18): its sacrifice happens as the ability resolves, so with priority held it can be activated again and again ----

@@ -119,3 +119,77 @@ function samsonWants(P) {
         return ccn.apply(this, arguments);
     };
 }
+
+// ---- round 3 (2026-11-18, owner: "work on fixing up the rest of the logic that's not done") ----
+//  * Magistrate's Scepter: charged with spare mana ({4},{T}; Doc Samson makes each activation two counters), then the extra turn (three counters).
+//  * Screaming Shield on Doc Samson with infinite mana: {2},{T}: mill three, again and again - the computer mills every opponent's whole library (they lose at their next draw).
+//  * Ring of Three Wishes: used for its three fetches with infinite mana.
+//  * Temur Sabertooth resets the power-ups: it returns Gamma Grotesque / Goliath, recast, power up again, until the combo piece shows up or the library is down to 14.
+{
+    const isTri = c => c.card.name === 'Surestrike Trident';
+    const haveWin = P => P.bf.some(isTri) || P.hand.some(isTri) || !!onBfNamed(P, 'Goblin Cannon');
+    const orig = CMD.sx_sabertooth;
+    CMD.sx_sabertooth = async function (P, e, t, src) {
+        const c = P && P.dcSabPick; P.dcSabPick = null;
+        if (c && onBf(c.uid)) { leaveBattlefield(c, 'hand'); log(`${c.card.name} returns to ${P.name === 'You' ? 'your' : `${P.name}'s`} hand.`); if (onBf(src.uid)) { src.tkw.push('indestructible'); log(`${src.card.name} gains indestructible until end of turn.`); } return; }
+        return orig.apply(this, arguments);
+    };
+    async function samsonDrawCycle(P) {
+        const sab = onBfNamed(P, 'Temur Sabertooth'); if (!sab) return;
+        for (let i = 0; i < 8 && !G.over; i++) {
+            if (P.library.length < 14 || haveWin(P)) return;
+            let did = false;
+            for (const nm of ['Gamma Grotesque', 'Goliath, Mass Manipulator']) {
+                let c = onBfNamed(P, nm);
+                if (!c) { const h = P.hand.find(x => x.card.name === nm); if (h && canCastNow(P, h) && canPay(P, h)) { await castSpell(P, h, null); await settle(); c = onBfNamed(P, nm); } }
+                if (!c) continue;
+                const up = actsOf(c).find(a => a.powerUp);
+                if (up && canActivate(P, c, up)) { await activate(P, c, up); await settle(); did = true; continue; }
+                const sa = actsOf(sab)[0];
+                if (sa && canActivate(P, sab, sa)) { P.dcSabPick = c; await activate(P, sab, sa); await settle(); P.dcSabPick = null; did = true; }
+            }
+            if (!did) return;
+        }
+    }
+    async function samsonShieldMill(P) {
+        const sam = onBfNamed(P, SM_NAME); if (!sam) return false;
+        let sh = onBfNamed(P, 'Screaming Shield');
+        if (!sh) { const h = P.hand.find(c => c.card.name === 'Screaming Shield'); if (h && canCastNow(P, h) && canPay(P, h)) { await castSpell(P, h, null); await settle(); sh = onBfNamed(P, 'Screaming Shield'); } }
+        if (!sh) return false;
+        if (sh.attachedTo !== sam.uid) { try { await equip(P, sh, sam); } catch (err) { return false; } }
+        if (sh.attachedTo !== sam.uid) return false;
+        log(`🔁 ${P.name} gives ${sam.card.name} Screaming Shield and, with infinite mana, taps him to mill three, untaps and does it again until every opponent's library is empty.`);
+        plPol('shieldMill');
+        for (const f of foes(P)) { if (f.library.length) doMill(f, f.library.length); }
+        await settle();
+        return true;
+    }
+    async function samsonRing(P) {
+        for (let i = 0; i < 4 && !G.over; i++) {
+            const ring = onBfNamed(P, 'Ring of Three Wishes'); if (!ring || !(ring.ctr.wish > 0) || haveWin(P)) return;
+            const a = actsOf(ring)[0]; if (!a || !canActivate(P, ring, a)) return;
+            await activate(P, ring, a); await settle();
+            // the Ring is the one thing that untaps for free here: Doc Samson's loop untaps everything else
+            ring.tapped = false;
+        }
+    }
+    const pl = DECK_PLANS[SM_NAME];
+    if (pl) {
+        const oldPost = pl.post;
+        pl.post = async function (P) {
+            if (infiniteNow(P) && !G.over && !onBfNamed(P, 'Goblin Cannon')) {
+                try { await samsonRing(P); } catch (err) { /* keep playing */ }
+                try { if (await samsonShieldMill(P)) return; } catch (err) { /* keep playing */ }
+                try { await samsonDrawCycle(P); } catch (err) { /* keep playing */ }
+            }
+            return oldPost.apply(this, arguments);
+        };
+        // Magistrate's Scepter: charge it with spare mana, then take the extra turn
+        pl.abilities = async function (P) {
+            const sc = onBfNamed(P, "Magistrate's Scepter"); if (!sc || G.over) return;
+            const acts = actsOf(sc), charge = acts.find(a => a.effects && a.effects.some(e => e.t === 'namedCounter')), turn = acts.find(a => a.effects && a.effects.some(e => e.t === 'extraTurn'));
+            if (turn && canActivate(P, sc, turn)) { await activate(P, sc, turn); await settle(); plPol('extraTurns'); return; }
+            if (charge && (sc.ctr.charge || 0) < 3 && canActivate(P, sc, charge)) { await activate(P, sc, charge); await settle(); }
+        };
+    }
+}

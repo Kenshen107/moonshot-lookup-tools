@@ -473,7 +473,7 @@ function removeFromZones(o) {
         if (i >= 0) { P[z].splice(i, 1); if (z === 'gy') gyLeft(P, o); return; }
     }
 }
-function resetObj(o) { Object.assign(o, { cmdSeenZone: null, enchOnly: false, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, kicked: false, sagaDone: false, bestowed: false, blitzed: false, warpExile: 0, saddledTurn: 0, saddlers: null, prepared: false, level: 1, wasCast: false, impending: false, manifest: false }); }
+function resetObj(o) { Object.assign(o, { usedOnce: {}, actTurn: {}, actCount: {}, cmdSeenZone: null, enchOnly: false, tapped: false, sick: true, dmg: 0, counters: 0, ctr: {}, tp: 0, tq: 0, tkw: [], attachedTo: null, dt: false, kicked: false, sagaDone: false, bestowed: false, blitzed: false, warpExile: 0, saddledTurn: 0, saddlers: null, prepared: false, level: 1, wasCast: false, impending: false, manifest: false }); }
 // A commander that would go to the graveyard or exile goes back to the command zone.
 function leaveBattlefield(o, zone) {
     const wasOn = !!(G && onBf(o.uid));

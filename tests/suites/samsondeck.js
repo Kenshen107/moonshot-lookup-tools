@@ -9,7 +9,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
     await installHelpers(page);
     const r = await page.evaluate(async () => {
         const out = []; const ok = (l, c, d) => out.push([l, !!c, d]);
-        const WANT = ['Sword of the Paruns', "Nature's Chosen", 'Boon of Boseiju', 'Staff of Domination', 'Ring of Three Wishes', 'Surestrike Trident', 'Astral Cornucopia', 'Kami of Whispered Hopes', 'Centaur Glade', "Rishkar's Expertise", 'Doc Samson, Super Psychiatrist', 'The Aesir Escape Valhalla', 'The First Iroan Games', 'Origin of the Hulk', 'Grizzly Bears', 'Forest', 'Hill Giant', 'Sol Ring'];
+        const WANT = ['Spike Feeder', "Magistrate's Scepter", 'Screaming Shield', 'Temur Sabertooth', 'Gamma Grotesque', 'Goliath, Mass Manipulator', 'Jugan Defends the Temple // Remnant of the Rising Star','Sword of the Paruns', "Nature's Chosen", 'Boon of Boseiju', 'Staff of Domination', 'Ring of Three Wishes', 'Surestrike Trident', 'Astral Cornucopia', 'Kami of Whispered Hopes', 'Centaur Glade', "Rishkar's Expertise", 'Doc Samson, Super Psychiatrist', 'The Aesir Escape Valhalla', 'The First Iroan Games', 'Origin of the Hulk', 'Grizzly Bears', 'Forest', 'Hill Giant', 'Sol Ring'];
         const raw = await (await fetch('/__cards.json')).json(); const K = {};
         raw.forEach(c => { if (WANT.includes(c.name) && !K[c.name] && c.type_line) { const sc = slimCard(c); CARDS.set(sc.id, sc); K[c.name] = sc; } });
         window.pickCard = async (P, list) => list[0]; manaMode = 'auto';
@@ -52,6 +52,28 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
         A.library.length = 0; for (let i = 0; i < 10; i++) A.library.push(makeObj(K['Forest'], 0)); const big = T.put(A, K['Doc Samson, Super Psychiatrist']); big.tp = 40; big.tq = 40;
         const rk = makeObj(K["Rishkar's Expertise"], 0); A.hand.push(rk);
         ok("the computer won't cast a draw-by-power spell that would draw its library out", !canCastNow(A, rk), 0);
+
+        // ---- round 3 ----
+        const setup = async () => { const [A2, B2] = await T.newGame(); T.clear(); A2.isAI = true; G.view = 0; G.active = 0; G.phase = 'main1'; A2.planKey = undefined; const sm = T.put(A2, K['Doc Samson, Super Psychiatrist']); sm.sick = false; for (let i = 0; i < 10; i++) { const f = T.put(A2, K['Forest']); f.sick = false; } return [A2, B2, sm]; };
+        let [A3, B3, sam3] = await setup(); const sf = T.put(A3, K['Spike Feeder']); sf.counters = 3; const c0 = sam3.counters; await aiUseAbilities(A3); await settle();
+        ok('the computer moves Spike Feeder\'s counters onto Doc Samson (each one counts twice)', sam3.counters - c0 === 6 && sf.counters === 0, [sam3.counters - c0, sf.counters]);
+        [A3, B3, sam3] = await setup(); const sc = T.put(A3, K["Magistrate's Scepter"]); sc.sick = false;
+        await DECK_PLANS['Doc Samson, Super Psychiatrist'].abilities(A3); await settle();
+        ok("Magistrate's Scepter is charged with spare mana (two counters with Doc Samson)", sc.ctr.charge === 2 && sc.tapped, sc.ctr.charge);
+        sc.tapped = false; await DECK_PLANS['Doc Samson, Super Psychiatrist'].abilities(A3); await settle();
+        ok('and charged again: four counters', sc.ctr.charge === 4, sc.ctr.charge);
+        sc.tapped = false; await DECK_PLANS['Doc Samson, Super Psychiatrist'].abilities(A3); await settle();
+        ok('then the extra turn is taken (three counters removed)', sc.ctr.charge === 1, sc.ctr.charge);
+        // Screaming Shield with infinite mana: every opponent mills out
+        [A3, B3, sam3] = await setup(); A3.hand.push(makeObj(K['Screaming Shield'], 0)); giveInfiniteMana(A3, 'test'); G.players[1].library.length = 0; for (let i = 0; i < 30; i++) G.players[1].library.push(makeObj(K['Forest'], 1));
+        const sw3 = T.put(A3, K['Sword of the Paruns']); sw3.attachedTo = sam3.uid;
+        await DECK_PLANS['Doc Samson, Super Psychiatrist'].post(A3);
+        ok("Screaming Shield: with infinite mana the opponent's library is milled away", G.players[1].library.length === 0 && A3.bf.some(x => x.card.name === 'Screaming Shield' && x.attachedTo === sam3.uid), G.players[1].library.length);
+        // Temur Sabertooth resets Gamma Grotesque's power-up (and draws again)
+        [A3, B3, sam3] = await setup(); giveInfiniteMana(A3, 'test'); const sab = T.put(A3, K['Temur Sabertooth']); sab.sick = false; const gg = T.put(A3, K['Gamma Grotesque']); gg.sick = false;
+        A3.library.length = 0; for (let i = 0; i < 60; i++) A3.library.push(makeObj(K['Forest'], 0));
+        const lib0 = A3.library.length; sam3.counters = 1; await DECK_PLANS['Doc Samson, Super Psychiatrist'].post(A3);
+        ok('Sabertooth and Gamma Grotesque draw several times in a row with infinite mana', lib0 - A3.library.length >= 3, lib0 - A3.library.length);
         return out;
     });
     const results = formatChecks(r);
