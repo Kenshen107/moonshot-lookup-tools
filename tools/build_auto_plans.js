@@ -5,6 +5,7 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..');
+const ADD = process.argv.includes('--add'); // only fetch the deck commanders that are not in the file yet
 const maxArg = process.argv.indexOf('--max'); const MAX = maxArg > 0 ? +process.argv[maxArg + 1] : 400;
 const slug = name => String(name).split(' // ')[0].normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/['’",.!?:]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -34,6 +35,8 @@ function planFrom(json) {
 }
 function deckCommanders() {
     const out = [];
+    // the preset decks (VERIFIED_DECKS in 04-views-decks.js): plain text, the commander in the last block
+    { const src = fs.readFileSync(path.join(ROOT, 'spellslinger', '04-views-decks.js'), 'utf8'); const re = /\{ key: '[a-z0-9_]+',[^\n]*?text: ("(?:[^"\\\\]|\\\\.)*")/g; let m; while ((m = re.exec(src))) { try { const blocks = JSON.parse(m[1]).replace(/\r/g, '').trim().split(/\n\s*\n/); const last = blocks[blocks.length - 1].split('\n').map(l => l.replace(/^\d+\s+/, '').replace(/\s*\(.*$/, '').trim()).filter(Boolean); if (last.length <= 3) last.forEach(n => out.push(n)); } catch (e) { /* skip */ } } }
     for (const f of fs.readdirSync(path.join(ROOT, 'tests', 'decks'))) {
         const blocks = fs.readFileSync(path.join(ROOT, 'tests', 'decks', f), 'utf8').replace(/\r/g, '').trim().split(/\n\s*\n/);
         const last = blocks[blocks.length - 1].split('\n').map(l => l.replace(/^\d+\s+/, '').replace(/\s*\(.*$/, '').trim()).filter(Boolean);
@@ -46,8 +49,10 @@ function deckCommanders() {
     const add = n => { const s = slug(n); if (!s || seenSlug.has(s)) return; seenSlug.add(s); queue.push(n); };
     for (const p of ['year', 'week']) { const j = await get(`https://json.edhrec.com/pages/commanders/${p}.json`); ((j && j.container && j.container.json_dict && j.container.json_dict.cardlists) || []).forEach(l => (l.cardviews || []).forEach(v => add(v.name))); }
     deckCommanders().forEach(add);
-    const plans = {}; let done = 0, skipped = 0, missing = 0;
-    for (let qi = 0; qi < queue.length && done < MAX; qi++) {
+    let plans = {}; let done = 0, skipped = 0, missing = 0;
+    const outPath = path.join(ROOT, 'spellslinger', 'data', 'auto-plans.json');
+    if (ADD && fs.existsSync(outPath)) { const old = JSON.parse(fs.readFileSync(outPath, 'utf8')); plans = old.plans || {}; done = old.commanders || 0; queue.length = 0; seenSlug.clear(); deckCommanders().forEach(n => { if (!plans[n]) add(n); }); }
+    for (let qi = 0; qi < queue.length && (ADD || done < MAX); qi++) {
         const name = queue[qi];
         const j = await get(`https://json.edhrec.com/pages/commanders/${slug(name)}.json`); await sleep(220);
         if (!j) { missing++; continue; }
@@ -59,6 +64,6 @@ function deckCommanders() {
         if (engine.length >= 4) plans[cname] = engine;
     }
     const out = { built: new Date().toISOString().slice(0, 10), source: 'EDHREC json.edhrec.com/pages/commanders (synergy 0.25+, played by 20%+ of decks)', commanders: done, plans };
-    fs.writeFileSync(path.join(ROOT, 'spellslinger', 'data', 'auto-plans.json'), JSON.stringify(out));
+    fs.writeFileSync(outPath, JSON.stringify(out));
     console.log(`${done} commanders read (${missing} without a page, ${skipped} with a hand-written plan), ${Object.keys(plans).length} auto plans written (${(JSON.stringify(out).length / 1024).toFixed(0)} KB)`);
 })();
