@@ -424,6 +424,11 @@
         .tuck img, .tuck .noimg { width: 100%; aspect-ratio: 63 / 88; border-radius: 6px; display: block; object-fit: cover; filter: brightness(0.85); }
         .tuck .noimg { display: flex; align-items: flex-start; justify-content: center; font-size: 0.72rem; padding: 2px; background: var(--bg-inset); border: 1px solid var(--border); }
         .tuck:hover img { filter: none; }
+        /* Named chips for what is attached to a creature (2026-11-19): shown in compact rows and on phones, where the tucked pictures are hidden or too small to read */
+        .att-list { display: none; }
+        .att-chip { font: inherit; font-size: 0.72rem; line-height: 1.25; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--gold); background: color-mix(in srgb, var(--gold) 16%, var(--bg-panel)); color: var(--text-heading); cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .lane.compact .att-list { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
+        @media (max-width: 600px) { .lane:not(.compact) .perm-wrap .att-list { display: flex; flex-direction: column; gap: 2px; position: absolute; left: 2px; right: 2px; bottom: 2px; z-index: 4; align-items: stretch; } .lane:not(.compact) .att-chip { text-align: left; background: color-mix(in srgb, var(--gold) 28%, var(--bg-panel)); } }
         .lane.lands .perm + .perm, .lane.stack .perm + .perm { margin-left: calc(var(--land-w) * -0.45); }
         .lane.stack .perm { width: var(--land-w); }
         .lane { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; min-height: 30px; }
@@ -1473,3 +1478,8 @@ details.get-deck > summary { color: var(--brand-light); }
 #game.open-board .opp-side .board-sum { top: auto; bottom: -18px; left: 0; right: auto; }
 #game.open-board .row-front { margin-top: 14px; }
 #game.open-board .opp-side .row-front { margin-top: 0; margin-bottom: 14px; }
+
+/* Board overview: who an attachment is on, and what a creature carries (2026-11-19) */
+.ov-tile { position: relative; }
+.ov-tile .ov-on { display: block; position: absolute; left: 0; right: 0; bottom: 0; font-size: 0.72rem; line-height: 1.2; padding: 1px 4px; background: color-mix(in srgb, var(--bg-panel) 88%, transparent); color: var(--text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.ov-tile.row-tile .ov-on { position: static; display: inline; background: none; }

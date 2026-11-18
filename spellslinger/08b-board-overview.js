@@ -11,6 +11,9 @@ function ovStatus(o) {
     if (o.counters) out.push(`${o.counters > 0 ? '+' : '−'}${Math.abs(o.counters)} counter${Math.abs(o.counters) === 1 ? '' : 's'}`);
     Object.entries(o.ctr || {}).forEach(([k, n]) => { if (n) out.push(`${n} ${k}`); });
     if (o.dmg) out.push(`💥 ${o.dmg} damage`);
+    const att = allPerms().filter(a => a.attachedTo === o.uid).map(a => a.card.name.split(',')[0]);
+    if (att.length) out.push(`${att.map(n => `📎 ${n}`).join(', ')}`);
+    if (o.attachedTo && onBf(o.attachedTo)) out.push(`📎 on ${onBf(o.attachedTo).card.name.split(',')[0]}`);
     return out;
 }
 function ovKeywords(o) { return ['flying', 'first strike', 'double strike', 'deathtouch', 'haste', 'hexproof', 'indestructible', 'lifelink', 'menace', 'reach', 'trample', 'vigilance', 'defender', 'flash'].filter(k => has(o, k)); }
@@ -25,7 +28,7 @@ function ovTile(o) {
     if (OV.sel === o.uid) cls.push('sel');
     const pt = isCreature(o) ? `<span class="pt${o.dmg ? ' hurt' : ''}">${pow(o)}/${tou(o) - o.dmg}</span>` : '';
     if (OV.mode === 'list') return `<button type="button" class="${cls.join(' ')} row-tile" onclick="ovPick(${o.uid})"><b>${esc(o.card.name)}</b>${pt}<span class="ov-kw">${esc(ovKeywords(o).join(', '))}</span><span class="ov-st">${esc(st.join(' · '))}</span></button>`;
-    return `<button type="button" class="${cls.join(' ')}" onclick="ovPick(${o.uid})" title="${esc(o.card.name)}${st.length ? ' — ' + esc(st.join(', ')) : ''}">${cardImg(o.card)}${pt}${st.length ? `<span class="ov-badges">${o.tapped ? '↪' : ''}${G.attackers.includes(o.uid) ? '⚔️' : ''}${o.counters ? (o.counters > 0 ? '＋' : '−') : ''}${o.dmg ? '💥' : ''}</span>` : ''}</button>`;
+    return `<button type="button" class="${cls.join(' ')}" onclick="ovPick(${o.uid})" title="${esc(o.card.name)}${st.length ? ' — ' + esc(st.join(', ')) : ''}">${cardImg(o.card)}${pt}${o.attachedTo && onBf(o.attachedTo) ? `<span class="ov-on">on ${esc(onBf(o.attachedTo).card.name.split(',')[0])}</span>` : ''}${(allPerms().some(a => a.attachedTo === o.uid)) ? `<span class="ov-on">📎 ${esc(allPerms().filter(a => a.attachedTo === o.uid).map(a => a.card.name.split(',')[0]).join(', '))}</span>` : ''}${st.length ? `<span class="ov-badges">${o.tapped ? '↪' : ''}${G.attackers.includes(o.uid) ? '⚔️' : ''}${o.counters ? (o.counters > 0 ? '＋' : '−') : ''}${o.dmg ? '💥' : ''}</span>` : ''}</button>`;
 }
 function ovDetail() {
     const o = OV.sel != null ? onBf(OV.sel) : null;
@@ -43,13 +46,15 @@ function ovBody() {
     const creatures = ovSorted(P.bf.filter(o => isCreature(o) && !tucked(o)));
     const other = ovSorted(P.bf.filter(o => !isCreature(o) && Rx(o).kind !== 'land' && !tucked(o)));
     const lands = P.bf.filter(o => Rx(o).kind === 'land' && !tucked(o));
+    const attached = ovSorted(P.bf.filter(o => tucked(o)));
     const power = creatures.reduce((a, o) => a + Math.max(0, pow(o)), 0), ready = creatures.filter(o => !o.tapped && !(o.sick && !has(o, 'haste'))).length;
     const sec = (title, list) => list.length ? `<h4>${title} <span class="note">(${list.length})</span></h4><div class="ov-grid ${OV.mode}">${list.map(ovTile).join('')}</div>` : '';
     const landNames = {}; lands.forEach(l => { landNames[l.card.name] = (landNames[l.card.name] || 0) + 1; });
-    return `<div class="ov-sum"><b>${creatures.length}</b> creature${creatures.length === 1 ? '' : 's'} · power <b>${power}</b> · <b>${ready}</b> ready · ${other.length} other permanent${other.length === 1 ? '' : 's'} · ${lands.length} land${lands.length === 1 ? '' : 's'} (${lands.filter(l => !l.tapped).length} untapped)</div>
+    return `<div class="ov-sum"><b>${creatures.length}</b> creature${creatures.length === 1 ? '' : 's'} · power <b>${power}</b> · <b>${ready}</b> ready · ${other.length + attached.length} other permanent${other.length + attached.length === 1 ? '' : 's'}${attached.length ? ` (${attached.length} attached)` : ''} · ${lands.length} land${lands.length === 1 ? '' : 's'} (${lands.filter(l => !l.tapped).length} untapped)</div>
         ${OV.only !== 'other' ? sec('Creatures', creatures) : ''}${OV.only !== 'creatures' ? sec('Other permanents', other) : ''}
+        ${OV.only !== 'creatures' ? sec('Equipment and Auras (attached)', attached) : ''}
         ${OV.only === 'all' && lands.length ? `<h4>Lands <span class="note">(${lands.length})</span></h4><p class="note">${Object.entries(landNames).map(([n, k]) => `${k} ${esc(n)}`).join(', ')}</p>` : ''}
-        ${!creatures.length && !other.length ? '<p class="note">Nothing here yet.</p>' : ''}`;
+        ${!creatures.length && !other.length && !attached.length ? '<p class="note">Nothing here yet.</p>' : ''}`;
 }
 function boardOverview(i) {
     if (!G) return;

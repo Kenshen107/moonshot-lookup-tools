@@ -90,7 +90,10 @@ function sideHTML(P) {
 function permWrapHTML(o, count) {
     const att = allPerms().filter(a => a.attachedTo === o.uid);
     if (!att.length) return permHTML(o, count);
-    return `<div class="perm-wrap" style="--tucks:${att.length}">${att.map((a, i) => `<button type="button" class="tuck" style="--i:${i}" data-uid="${a.uid}" onclick="permClick(${a.uid})" title="${esc(a.card.name)} (attached)">${cardImg(a.card)}</button>`).join('')}${permHTML(o, count)}</div>`;
+    // Besides the tucked pictures, every attachment is also a named chip under (compact tiles) or over the bottom of (phones) its creature, so it can always be read
+    // and tapped: the pictures are hidden in compact rows and too small to read on a phone (2026-11-19, owner's phone screenshots: equipment on a creature was invisible)
+    const chips = `<span class="att-list">${att.map(a => `<button type="button" class="att-chip" data-uid="${a.uid}" onclick="permClick(${a.uid})" title="${esc(a.card.name)} is attached to ${esc(o.card.name)}">${/Equipment/.test(a.card.type) ? '⚔️' : /Aura/.test(a.card.type) ? '✨' : '📎'} ${esc(a.card.name.split(',')[0])}</button>`).join('')}</span>`;
+    return `<div class="perm-wrap" style="--tucks:${att.length}">${att.map((a, i) => `<button type="button" class="tuck" style="--i:${i}" data-uid="${a.uid}" onclick="permClick(${a.uid})" title="${esc(a.card.name)} (attached)">${cardImg(a.card)}</button>`).join('')}${permHTML(o, count)}${chips}</div>`;
 }
 
 // Pooled mana as counts per color (a big pool stays short): 3<pip> 2<pip>
