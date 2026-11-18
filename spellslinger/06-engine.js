@@ -1875,7 +1875,7 @@ async function resolveTop() {
             if (r.alsoLand && !/\bLand\b/.test(o.card.type)) o.card = { ...o.card, type: `Land ${o.card.type}` };
             { const et = foes(item.P).flatMap(F => F.bf).find(x => Rx(x).oppEnterTapped && !lostAbilities(x)); if (et && (r.kind === 'creature' || (Rx(et).oppEnterTapped !== 'creature' && /Artifact/.test(o.card.type)))) { o.tapped = true; log(`${o.card.name} enters tapped (${et.card.name}).`); } }
             if (r.etbCounters) addEtbCounters(o, r.etbCounters === 'X' ? (item.x || 0) : r.etbCounters === 'X2' ? 2 * (item.x || 0) : r.etbCounters === 'spent' ? costTotal(r.cost) + (item.x || 0) * (r.cost.xn || 1) : r.etbCounters);
-            if (r.etbNamedX) o.ctr[r.etbNamedX] = r.sunburst && typeof tkSunburstColors === 'function' ? Math.min(item.x || 0, tkSunburstColors(item.P)) : (item.x || 0);
+            if (r.etbNamedX) { o.ctr[r.etbNamedX] = 0; addNamedCounter(o, r.etbNamedX, r.sunburst && typeof tkSunburstColors === 'function' ? Math.min(item.x || 0, tkSunburstColors(item.P)) : (item.x || 0)); } // counters it enters with go through Doc Samson / Doubling Season too
             if (r.devour) await devourChoice(item.P, o, r.devour);
             if (r.kickPer && o.kickN) { if (r.kickPer === 'plus') addEtbCounters(o, o.kickN); else addNamedCounter(o, r.kickPer, o.kickN); }
             if (r.bloodthirst && foes(item.P).some(F => F.lostTurn === G.turn)) { addEtbCounters(o, r.bloodthirst); log(`${o.card.name} enters with ${r.bloodthirst} +1/+1 counters (bloodthirst).`); }
@@ -1903,8 +1903,8 @@ async function resolveTop() {
             o.enteredTurn = G.turn;
             if (o.hasteOnEnter === G.turn) { o.tkw.push('haste'); log(`${o.card.name} gains haste (Dragon mana).`); }
             if (r.chooseColor) { o.chosenColor = pickChosenColor(item.P, r.chooseColorNot); log(`${o.card.name}: chosen color ${COLOR_NAMES[o.chosenColor]}.`); }
-            if (r.etbNamedN) { o.ctr[r.etbNamedN.kind] = r.etbNamedN.n; log(`${o.card.name} enters with ${r.etbNamedN.n} ${r.etbNamedN.kind} counters.`); }
-            if (r.etbNamed) { const n = countFn(r.etbNamed.what)(o); o.ctr[r.etbNamed.kind] = n; log(`${o.card.name} enters with ${n} ${r.etbNamed.kind} counter${n === 1 ? '' : 's'}.`); }
+            if (r.etbNamedN) { o.ctr[r.etbNamedN.kind] = 0; const k = addNamedCounter(o, r.etbNamedN.kind, r.etbNamedN.n); log(`${o.card.name} enters with ${k} ${r.etbNamedN.kind} counters.`); }
+            if (r.etbNamed) { const n0 = countFn(r.etbNamed.what)(o); o.ctr[r.etbNamed.kind] = 0; const n = addNamedCounter(o, r.etbNamed.kind, n0); log(`${o.card.name} enters with ${n} ${r.etbNamed.kind} counter${n === 1 ? '' : 's'}.`); }
             if (r.kw.has('unleash') && (item.P.isAI ? item.P.aiStyle !== 'control' : await askYes(item.P, `Unleash ${o.card.name}? It enters with a +1/+1 counter but can't block while it has one.`, { card: o.card }))) { addEtbCounters(o, 1); log(`${o.card.name} is unleashed (+1/+1 counter; it can't block).`); }
             // Riot (702.136): a +1/+1 counter or haste
             if (isCreature(o) && (Rx(o).kw.has('riot') || (!o.token && item.P.bf.some(x => x !== o && Rx(x).riotAll && !lostAbilities(x))))) {
@@ -1943,7 +1943,7 @@ function putOntoBattlefield(P, o, tapped) {
     if (Rx(o).chooseType) o.chosenType = commonType(P);
     if (Rx(o).chooseNumber && typeof tkChooseNumber === 'function') tkChooseNumber(P, o, true);
     if (Rx(o).chooseCardType) o.chosenCardType = commonCardType(P);
-    if (Rx(o).etbNamedN) o.ctr[Rx(o).etbNamedN.kind] = Rx(o).etbNamedN.n;
+    if (Rx(o).etbNamedN) { o.ctr[Rx(o).etbNamedN.kind] = 0; addNamedCounter(o, Rx(o).etbNamedN.kind, Rx(o).etbNamedN.n); }
     if (Rx(o).needle) needleName(P, o);
     fire('enters', { o });
     if (Rx(o).etb.length) (G.trigQ = G.trigQ || []).push({ P, o, effects: Rx(o).etb });
