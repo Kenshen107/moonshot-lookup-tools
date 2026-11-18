@@ -1483,3 +1483,14 @@ details.get-deck > summary { color: var(--brand-light); }
 .ov-tile { position: relative; }
 .ov-tile .ov-on { display: block; position: absolute; left: 0; right: 0; bottom: 0; font-size: 0.72rem; line-height: 1.2; padding: 1px 4px; background: color-mix(in srgb, var(--bg-panel) 88%, transparent); color: var(--text-heading); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
 .ov-tile.row-tile .ov-on { position: static; display: inline; background: none; }
+
+/* EDHREC synergy in the deck builder (2026-11-19): a badge per card row and the "Fits the commander" panel */
+.mx-syn { display: inline-block; font-size: 0.72rem; line-height: 1.3; padding: 0 5px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-inset); color: var(--text-secondary); white-space: nowrap; }
+.mx-syn.hi { border-color: var(--color-success); color: var(--color-success); }
+.mx-syn.mid { border-color: var(--brand-light); color: var(--brand-light); }
+.mx-syn.lo { color: var(--text-muted); }
+.mx-syn-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.mx-syn-add, .mx-syn-no { font: inherit; font-size: 0.85rem; padding: 3px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-panel-raised); color: var(--text-primary); }
+.mx-syn-add { cursor: pointer; }
+.mx-syn-add:hover { border-color: var(--brand-light); }
+.mx-syn-no { color: var(--text-soft); opacity: 0.85; }

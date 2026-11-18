@@ -725,6 +725,7 @@ function bxRowHTML(c, n, isCmd) {
         <span class="n">${n}</span>
         <button type="button" class="nm" onclick="mxRowMenu('${c.id}')">${esc(c.fullName)}</button>
         ${sup !== 'full' ? `<span class="badge sup-${sup}" title="${sup === 'none' ? 'Not yet castable' : 'Partly automated'}">${sup === 'none' ? '!' : '~'}</span>` : ''}
+        ${typeof synBadge === 'function' ? synBadge(c, isCmd) : ''}
         ${costHTML(c.cost)}
         ${isCmd ? '' : `<span class="mx-q"><button type="button" onclick="removeFromDeck('${c.id}')" aria-label="Remove one ${esc(c.name)}">−</button><button type="button" onclick="addToDeck('${c.id}')" aria-label="Add one ${esc(c.name)}">+</button></span>`}
         <button type="button" class="mx-menu" onclick="mxRowMenu('${c.id}')" aria-label="More for ${esc(c.name)}">▾</button>
