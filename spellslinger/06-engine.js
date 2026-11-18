@@ -834,7 +834,7 @@ function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
     const srcs = [
         ...Array.from({ length: channelN }, () => ({ o: { pool: true, color: 'C', channel: true }, colors: ['C'], n: 1, rank: 3 })),
         ...(P.pool || []).filter(c => !c.includes(':') || (opts.forType && new RegExp(`\\b${c.split(':')[1]}\\b`).test(opts.forType))).map(c => ({ o: { pool: true, color: c }, colors: [c[0]], n: 1, rank: -2 })),
-        ...real.filter(o => (!manaOf(o).only || (opts.spellKind && manaOf(o).only.split(' or ').includes(opts.spellKind))) && (!manaOf(o).onlyType || (opts.forType && (manaOf(o).onlyType === 'noncreature' ? !/\bCreature\b/.test(opts.forType) : new RegExp(`\\b${manaOf(o).onlyType}\\b`).test(opts.forType))))).map(o => ({ o, colors: srcColors(o, opts), n: manaOf(o).n, pain: manaOf(o).pain, rank: 0 })).filter(s => s.colors.length),
+        ...real.filter(o => (!manaOf(o).only || (opts.spellKind && manaOf(o).only.split(' or ').includes(opts.spellKind))) && (!manaOf(o).onlyType || (opts.forType && (manaOf(o).onlyType === 'noncreature' ? !/\bCreature\b/.test(opts.forType) : new RegExp(`\\b${manaOf(o).onlyType}\\b`).test(opts.forType))))).map(o => ({ o, colors: srcColors(o, opts), n: manaOf(o).n, fixed: manaOf(o).fixed, pain: manaOf(o).pain, rank: 0 })).filter(s => s.colors.length),
         ...(opts.virt || []).map(c => ({ o: { pool: true, virtual: true, color: c }, colors: [c], n: 1, rank: 3 })), // the mana a Signet will make (see the planPayment wrapper)
         ...(opts.improvise && !opts.poolOnly ? P.bf.filter(a => /Artifact/.test(a.card.type) && !a.tapped && !real.includes(a)).map(a => ({ o: a, colors: [], n: 1, rank: 2 })) : []),
         ...(opts.convoke && !opts.poolOnly ? P.bf.filter(c => isCreature(c) && !c.tapped && !real.includes(c)).map(c => ({ o: c, colors: (c.card.colors || []).filter(x => COLORS.includes(x)), n: 1, rank: 2 })) : [])
@@ -844,16 +844,28 @@ function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
     need.sort((a, b) => srcs.filter(s => s.colors.includes(a)).length - srcs.filter(s => s.colors.includes(b)).length);
     const used = [];
     const painFor = (s, c) => (s.pain && s.pain.colors.includes(c) ? 1 : 0);
+    // A source that makes several mana of ONE color (Sol Ring {C}{C}, Black Lotus "three mana of any one color", {G}{G} from The Great Henge) can pay for that many
+    // symbols of that color; one that makes mana of different colors (a fixed {R}{G}) pays for one symbol and the rest goes to generic costs
+    const sameColor = s => s.n > 1 && !s.o.pool && (!s.fixed || new Set(s.colors).size === 1);
+    const take = new Map(); // source -> how many colored symbols it pays so far
     const assign = k => {
         if (k === need.length) return true;
-        const cands = srcs.filter(s => !used.includes(s) && s.colors.includes(need[k])).sort((a, b) => (a.rank - b.rank) || (painFor(a, need[k]) - painFor(b, need[k])) || (a.colors.length - b.colors.length));
-        for (const s of cands) { used.push(s); s.payColor = need[k]; if (assign(k + 1)) return true; used.pop(); }
+        const c = need[k];
+        const cands = srcs.filter(s => s.colors.includes(c) && (!used.includes(s) || (sameColor(s) && s.payColor === c && take.get(s) < s.n))).sort((a, b) => (used.includes(b) - used.includes(a)) || (a.rank - b.rank) || (painFor(a, c) - painFor(b, c)) || (a.colors.length - b.colors.length));
+        for (const s of cands) {
+            const was = used.includes(s), oldColor = s.payColor;
+            if (!was) used.push(s);
+            s.payColor = c; take.set(s, (take.get(s) || 0) + 1);
+            if (assign(k + 1)) return true;
+            take.set(s, take.get(s) - 1);
+            if (!was) { used.pop(); s.payColor = oldColor; }
+        }
         return false;
     };
     if (!assign(0)) return null;
     let generic = cost.generic + extra;
     // Colored symbols paid by a source that makes 2+ mana leave the rest for generic
-    used.forEach(s => { if (s.n > 1) generic -= (s.n - 1); });
+    used.forEach(s => { if (s.n > 1) generic -= (s.n - (take.get(s) || 1)); });
     const rest = srcs.filter(s => !used.includes(s)).sort((a, b) => (a.rank - b.rank) || (b.n - a.n) || (a.colors.length - b.colors.length));
     const chosen = [...used];
     for (const s of rest) { if (generic <= 0) break; s.payColor = null; chosen.push(s); generic -= s.n; }
