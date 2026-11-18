@@ -990,7 +990,11 @@ function altOk(P, o) {
 }
 function altTapFliers(P, o, n) { return P.bf.filter(x => isCreature(x) && !x.tapped && has(x, 'flying') && x !== o).slice(0, n); }
 function canPay(P, o) { return (!o.altCast || altOk(P, o)) && addCostOk(P, o) && !!planPayment(P, costOf(P, o), extraCost(P, o) + (costOf(P, o).x ? xMult(o) : 0), null, payOpts(o)); }
-function maxKick(P, o) { const m = Rx(o).multikicker; if (!m) return 0; const was = o.kickN; let n = 0; while (n < 20) { o.kickN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? (o.xVal || 1) * xMult(o) : 0), null, payOpts(o))) break; n++; } o.kickN = was; return n; }
+// How many times a cost can be paid (multikicker, replicate, X): binary search over the real payment plan, so the limit is the mana you have, not a fixed number.
+// With infinite mana (15y-ai-plans.js) a person's limit is 10,000 (1,000 for replicate copies); the computer keeps small caps so a game stays playable.
+function maxCount(ok, cap) { if (!ok(1)) return 0; let lo = 1, hi = 2; while (hi <= cap && ok(hi)) { lo = hi; hi *= 2; } hi = Math.min(hi, cap + 1); while (hi - lo > 1) { const m = (lo + hi) >> 1; if (ok(m)) lo = m; else hi = m; } return Math.min(lo, cap); }
+const payCapFor = (P, kind) => P.isAI ? ({ x: 30, kick: 20, rep: 10 })[kind] : ((typeof infiniteNow === 'function' && infiniteNow(P)) ? (kind === 'rep' ? 1000 : 10000) : 1000);
+function maxKick(P, o) { const m = Rx(o).multikicker; if (!m) return 0; const was = o.kickN; const r = maxCount(n => { o.kickN = n; return !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? (o.xVal || 1) * xMult(o) : 0), null, payOpts(o)); }, payCapFor(P, 'kick')); o.kickN = was; return r; }
 // Replicate (CR 702.56, 2026-11-01): an additional cost paid any number of times as you cast the spell, locked into its total cost; each payment copies the spell.
 // Granted by a permanent with R.repGrant ({ type, cost }), e.g. Hugh, First of Many: artifact spells you cast have replicate {2}{U}.
 function repCostOf(P, o) {
@@ -998,7 +1002,7 @@ function repCostOf(P, o) {
     const src = P.bf.find(x => { const g = Rx(x).repGrant; return g && !lostAbilities(x) && (!g.type || hasType(o, g.type)); });
     return src ? Rx(src).repGrant.cost : null;
 }
-function maxRep(P, o) { if (!repCostOf(P, o)) return 0; const was = o.repN; let n = 0; while (n < 60) { o.repN = n + 1; if (!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? (o.xVal || 1) * xMult(o) : 0), null, payOpts(o))) break; n++; } o.repN = was; return n; }
+function maxRep(P, o) { if (!repCostOf(P, o)) return 0; const was = o.repN; const r = maxCount(n => { o.repN = n; return !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? (o.xVal || 1) * xMult(o) : 0), null, payOpts(o)); }, payCapFor(P, 'rep')); o.repN = was; return r; }
 function canBuyback(P, o) { const b = Rx(o).buyback; if (!b || Rx(o).kind === 'creature') return false; const was = o.buyback; o.buyback = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) }); o.buyback = was; return ok; }
 function canKick(P, o) { const k = Rx(o).kicker; if (!k) return false; if (Rx(o).kickSac && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < Rx(o).kickSac.n + (P.isAI ? 2 : 0)) return false; const was = o.kicked; o.kicked = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o) + (costOf(P, o).x ? 1 : 0), null, { convoke: hasConvoke(o) }); o.kicked = was; return ok; }
 // "As an additional cost to cast ~, sacrifice a creature / discard a card / pay N life"
@@ -1109,7 +1113,7 @@ async function payAddCost(P, o) {
 }
 const xMult = o => Rx(o).cost.xn || 1;
 function maxX(P, o) {
-    let x = 0; while (x < 30 && planPayment(P, costOf(P, o), extraCost(P, o) + (x + 1) * xMult(o), null, { convoke: hasConvoke(o) })) x++;
+    let x = maxCount(n => !!planPayment(P, costOf(P, o), extraCost(P, o) + n * xMult(o), null, { convoke: hasConvoke(o) }), payCapFor(P, 'x'));
     if (Rx(o).xBlackOnly) { const b = manaSources(P).filter(s => !s.tapped && manaOf(s) && manaOf(s).colors.includes('B')).reduce((a, s) => a + (manaOf(s).n || 1), 0) + (P.pool || []).filter(c => c[0] === 'B').length; x = Math.min(x, Math.max(0, b - (Rx(o).cost.B || 0))); } // Consume Spirit
     if (Rx(o).xFromTarget && o._tgt && o._tgt.o) x = Math.min(x, o._tgt.o.card.cmc || 0);
     if (Rx(o).xMaxPlayers) x = Math.min(x, G.players.filter(y => !y.out).length); // Open the Way
