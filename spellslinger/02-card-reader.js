@@ -761,6 +761,7 @@ function rulesFor(card) {
         if (/^\{T\}, Sacrifice ~: Add one mana of any color\.$/.test(line) && !R.mana) { R.mana = { colors: [...COLORS], n: 1, sac: true }; continue; }
         const act = parseActivated(line, R);
         if (act) {
+            if (/^Exhaust — /.test(lines[li])) act.onceEver = true; // exhaust (Aetherdrift): each exhaust ability once per permanent (Peema Trailblazer was used every turn before this)
             if (/^Power-up — /.test(lines[li])) act.powerUp = true; // once only; costs less by its mana cost the turn it entered
             if (/^Boast — /.test(lines[li])) { act.once = true; act.onlyIf = '~ attacked this turn'; } // boast (702.142)
             if (act.hand) (R.handActs = R.handActs || []).push(act); else if (act.gy) (R.gyActs = R.gyActs || []).push(act); else R.acts.push(act);
