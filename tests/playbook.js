@@ -24,8 +24,16 @@ function readAll(list) {
     }
     return games;
 }
-const games = readAll(args);
+// The playbooks grow: with --md, every game ever read is kept (docs/playbooks/games.jsonl.gz, play-by-play logs without the decision events, about 4 KB a game)
+// and the playbooks are rebuilt from ALL of them, so new exports add to what is already known instead of replacing it. --no-archive turns this off.
+let useArchive = !!mdDir; { const ni = args.indexOf('--no-archive'); if (ni >= 0) { useArchive = false; args.splice(ni, 1); } }
+const archivePath = mdDir ? path.join(mdDir, 'games.jsonl.gz') : null;
+const fresh = readAll(args);
 const botGames = readAll(botFiles);
+const archived = useArchive && fs.existsSync(archivePath) ? zlib.gunzipSync(fs.readFileSync(archivePath)).toString('utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
+const have = new Set(archived.map(g => g.id || g.date));
+const added = fresh.filter(g => !have.has(g.id || g.date));
+const games = [...archived, ...added];
 if (!games.length) { console.log('No games found. Usage: node tests/playbook.js <export.jsonl> [--md docs/playbooks]'); process.exit(0); }
 
 // ---------- reading one game's log ----------
@@ -196,7 +204,10 @@ fs.mkdirSync(path.join(__dirname, '.out'), { recursive: true });
 fs.writeFileSync(path.join(__dirname, '.out', 'playbook.json'), JSON.stringify(out, null, 1));
 if (mdDir) {
     fs.mkdirSync(mdDir, { recursive: true });
-    fs.writeFileSync(path.join(mdDir, 'playbooks.md'), `# Playbooks mined from game records\n\nGenerated ${out.generated} by \`node tests/playbook.js\` from ${games.length} games. Draft numbers for reviewing by hand; small samples mean low confidence.\n` + lines.join('\n') + '\n');
+    if (useArchive) fs.writeFileSync(archivePath, zlib.gzipSync(games.map(g => { const { ev, bytes, ...r } = g; return JSON.stringify(r); }).join('\n') + '\n'));
+    const dates = games.map(g => String(g.date || '').slice(0, 10)).filter(Boolean).sort();
+    const note = useArchive ? ` ${added.length} new game${added.length === 1 ? '' : 's'} added this run, ${fresh.length - added.length} already known; ${games.length} kept in all${dates.length ? ` (${dates[0]} to ${dates[dates.length - 1]})` : ''}.` : '';
+    fs.writeFileSync(path.join(mdDir, 'playbooks.md'), `# Playbooks mined from game records\n\nGenerated ${out.generated} by \`node tests/playbook.js\` from ${games.length} games.${note} The playbooks are rebuilt from every game kept in \`games.jsonl.gz\`, so they get more reliable as games are added. Draft numbers for reviewing by hand; small samples mean low confidence.\n` + lines.join('\n') + '\n');
 }
 console.log(`\n(${games.length} games read; full data in tests/.out/playbook.json${mdDir ? '; markdown in ' + mdDir : ''})`);
 })();
