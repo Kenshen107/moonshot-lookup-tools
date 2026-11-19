@@ -608,7 +608,12 @@ async function devourChoice(P, o, n) {
     if (eaten) { const got = putCounters(o, n * eaten, P); log(`${o.card.name} devours ${eaten} creature${eaten === 1 ? '' : 's'} and gets ${got} +1/+1 counters.`); }
 }
 // ---- Suspend (702.62): exile from hand with time counters; at each of your upkeeps remove one; the last one casts it free ----
-function canSuspend(P, o) { return !!Rx(o).suspend && P.hand.includes(o) && !G.over && canCastNow(P, o); }
+// A card with no mana cost (Sol Talisman, Ancestral Vision) can only be suspended, and canCastNow says no to it, so ask as if it were being cast from suspend
+function canSuspend(P, o) {
+    if (!Rx(o).suspend || !P.hand.includes(o) || G.over) return false;
+    const had = o.suspendCast; o.suspendCast = true;
+    try { return canCastNow(P, o); } finally { if (had) o.suspendCast = had; else delete o.suspendCast; }
+}
 function canPaySuspend(P, o) { return !!planPayment(P, Rx(o).suspend.cost); }
 function suspendCard(P, o) {
     const plan = planPayment(P, Rx(o).suspend.cost);

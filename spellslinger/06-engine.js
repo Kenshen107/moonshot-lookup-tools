@@ -4945,7 +4945,7 @@ function showGameCard(uid) {
         else {
             const ok = canCastNow(P, o) && canPay(P, o);
             const extra = extraCost(P, o);
-            const why = r.support === 'none' ? r.why : !canCastNow(P, o) ? (r.kind === 'instant' || r.flash ? 'Instants: your main phases, after blocks on your attack, or while blocking.' : 'Cast this in your main phase.') : !canPay(P, o) ? 'Not enough mana.' : '';
+            const why = r.support === 'none' ? r.why : !canCastNow(P, o) ? (r.kind === 'instant' || r.flash ? 'Instants: your main phases, after blocks on your attack, or while blocking.' : r.suspend && !o.card.cost ? 'No mana cost: use Suspend instead.' : 'Cast this in your main phase.') : !canPay(P, o) ? 'Not enough mana.' : '';
             actions = `<button class="btn primary" ${ok ? '' : 'disabled'} onclick="humanCast(${uid})">${P.gy.includes(o) ? (r.flashback ? 'Cast with flashback' : 'Cast from graveyard') : `Cast ${esc(o.card.cost)}`}${extra ? ` + {${extra}} tax` : ''}</button>${why ? `<span class="note">${esc(why)}</span>` : ''}`;
         }
     } else if (P.bf.includes(o) && r.isEquipment && r.equip !== null) {
