@@ -2454,6 +2454,7 @@ Chrome Prowler
 Chrome Steed
 Chromium
 Chronic Flooding
+Chronicle of Victory
 Chronicler of Heroes
 Chronomantic Escape
 Chronomaton
@@ -4101,6 +4102,7 @@ Echo Inspector
 Echo Tracer
 Echo of Eons
 Echo, Perceptive Prodigy
+Echocasting Symposium
 Echoes of the Kin Tree
 Eclipsed Steppe
 Ecologist's Terrarium
@@ -4814,6 +4816,7 @@ Felhide Brawler
 Felhide Minotaur
 Felhide Petrifier
 Felidar Cub
+Felidar Guardian
 Felidar Retreat
 Felidar Sovereign
 Felidar Umbra
@@ -5084,6 +5087,7 @@ Fleshformer
 Fleshless Gladiator
 Fleshpulper Giant
 Flick a Coin
+Flicker
 Flickering Ward
 Flickerwisp
 Flight
@@ -7053,6 +7057,7 @@ Ingot Chewer
 Inheritance
 Initiates of the Ebon Hand
 Ink-Eyes, Servant of Oni
+Ink-Treader Nephilim
 Inkfathom Divers
 Inkfathom Infiltrator
 Inkling Summoning
@@ -8008,6 +8013,7 @@ Leering Emblem
 Leery Fogbeast
 Legacy Weapon
 Legion
+Legion Leadership // Legion Stronghold
 Legion Lieutenant
 Legion Loyalty
 Legion Vanguard
@@ -8062,6 +8068,7 @@ Leyline of Hope
 Leyline of Lightning
 Leyline of Sanctity
 Leyline of Vitality
+Leyline of the Guildpact
 Lhurgoyf
 Liar's Pendulum
 Liberated Dwarf
@@ -9451,6 +9458,7 @@ Nemesis of Reason
 Nephalia Drownyard
 Nephalia Moondrakes
 Nephalia Seakite
+Nephilim Epochal
 Nessian Asp
 Nessian Courser
 Nessian Hornbeetle
@@ -9884,6 +9892,7 @@ Orcish Mechanics
 Orcish Oriflamme
 Orcish Siegemaster
 Orcish Vandal
+Orcrist, Goblin-cleaver
 Order // Chaos
 Order of Leitbur
 Order of Midnight // Alter Fate
@@ -9922,6 +9931,7 @@ Orochi Leafcaller
 Orochi Sustainer
 Oroku Saki, Shredder Rising
 Orthodoxy Enforcer
+Orvar, the All-Form
 Orzhov Basilica
 Orzhov Cluestone
 Orzhov Enforcer
@@ -14402,6 +14412,7 @@ The Whizzer, Classic Speedster
 The Wiley Speedster
 The Wind Crystal
 The Wondrous Wasp
+The World Tree
 The Wrath of Khan
 Theft of Dreams
 Their Name Is Death
@@ -16214,6 +16225,7 @@ Witch's Clinic
 Witch's Cottage
 Witch's Familiar
 Witch's Web
+Witch-Maw Nephilim
 Witch-king, Bringer of Ruin
 Witch-king, Sky Scourge
 Witchcraft
@@ -16419,6 +16431,7 @@ Yidris, Maelstrom Wielder
 Yisan, the Wanderer Bard
 Yoked Ox
 Yoked Plowbeast
+Yore-Tiller Nephilim
 Yorvo, Lord of Garenbrig
 Yosei, the Morning Star
 Yoshimaru, Beloved Companion
