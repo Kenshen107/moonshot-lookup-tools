@@ -990,6 +990,7 @@ Badlands
 Badlands Revival
 Bag End Banquet
 Bag End Porter
+Bag of Holding
 Bagel and Schmear
 Baird, Argivian Recruiter
 Baird, Steward of Argive
@@ -1317,6 +1318,8 @@ Bile-Vial Boggart
 Bilious Skulldweller
 Billiard Room
 Billowing Shriekmass
+Bind
+Bind // Liberate
 Binding Geist // Spectral Binding
 Binding Grasp
 Binding Mummy
@@ -2736,6 +2739,7 @@ Confidence from Strength
 Confirm Suspicions
 Confiscate
 Confound
+Confounding Conundrum
 Confusion in the Ranks
 Confusticate and Bebother
 Congregate
@@ -3079,6 +3083,8 @@ Curious Pair // Treats to Share
 Currency Converter
 Curse of Chains
 Curse of Obsession
+Curse of Surveillance
+Curse of Verbosity
 Curse of the Swine
 Cursebreak
 Cursecatcher
@@ -3659,6 +3665,7 @@ Dispeller's Capsule
 Dispense Justice
 Dispersal Technician
 Disperse
+Displace
 Displacer Kitten
 Disposal Mummy
 Disrupt
@@ -6908,6 +6915,7 @@ Illusionary Armor
 Illusionary Forces
 Illusionary Servant
 Illusionary Wall
+Illusionist's Stratagem
 Illusions
 Illusions of Grandeur
 Illvoi Galeblade
@@ -7105,6 +7113,7 @@ Instruments of War
 Insurgent
 Intangible Virtue
 Integrity // Intervention
+Interdict
 Interdimensional Web Watch
 Interdisciplinary Mascot
 Interjection
@@ -7271,6 +7280,7 @@ Izzet Locket
 Izzet Signet
 Jace Beleren
 Jace's Archivist
+Jace's Erasure
 Jace's Ingenuity
 Jace's Sanctum
 Jace's Scrutiny
@@ -13292,6 +13302,7 @@ Squash
 Squawkroaster
 Squee, Goblin Nabob
 Squee, the Immortal
+Squelch
 Squelching Leeches
 Squire
 Squire's Devotion
@@ -13759,6 +13770,7 @@ Sunstrike Legionnaire
 Suntail Hawk
 Suntouched Myr
 Super Combo
+Super Intelligence
 Super Shredder
 Super Speed
 Super Strength
@@ -14767,6 +14779,7 @@ Toxic Nim
 Toxic Scorpion
 Toxin Analysis
 Tracker
+Trade the Helm
 Tradewind Rider
 Trading Post
 Tragic Arrogance
@@ -15124,6 +15137,7 @@ Unclaimed Territory
 Uncle Iroh
 Uncomfortable Chill
 Unconventional Tactics
+Uncover the Moon-Letters
 Undead
 Undead Augur
 Undead Butler
@@ -15675,6 +15689,7 @@ Void Shatter
 Void Snare
 Void Squall
 Voidmage Apprentice
+Voidmage Husher
 Voidmage Prodigy
 Voidslime
 Voidwielder
@@ -15947,6 +15962,7 @@ Waves of Aggression
 Wavesifter
 Waveskimmer Aven
 Wax // Wane
+Waxen Shapethief
 Wayfarer's Bauble
 Wayfaring Temple
 Waylaying Pirates
