@@ -1,0 +1,75 @@
+1 Aetherize
+1 Arcane Adaptation
+1 Arcane Signet
+1 Archetype of Imagination
+1 Atraxa, Praetors' Voice
+1 Avacyn, Angel of Hope
+1 Azusa, Lost but Seeking
+1 By Invitation Only
+1 Cave of Temptation
+1 Chimil, the Inner Sun
+1 Chulane, Teller of Tales
+1 Command Tower
+1 Commencement of Festivities
+1 Convolute
+1 Copperhorn Scout
+1 Crypt Incursion
+1 Cultivate
+1 Daybreak Combatants
+1 Defense of the Heart
+1 Doubling Season
+1 Drannith Magistrate
+1 Elspeth, Sun's Champion
+1 Etched Cornfield
+1 Exocrine
+1 Exotic Orchard
+1 Explore
+1 Farseek
+1 Fires of Invention
+7 Forest
+1 Frontier Bivouac
+1 Game Trail
+1 Gloomlake Verge
+1 Imperial Seal
+1 In Garruk's Wake
+6 Island
+1 Kira, Great Glass-Spinner
+1 Kodama's Reach
+1 Lightning Greaves
+1 Magma Pummeler
+1 Malanthrope
+1 Mindstatic
+1 Morophon, the Boundless
+6 Mountain
+1 Myrel, Shield of Argive
+1 Neglected Manor
+1 Nissa, Who Shakes the World
+1 Nyxbloom Ancient
+1 Omniscience
+1 Opal Palace
+1 Path of Ancestry
+6 Plains
+1 Rampant Growth
+1 Raucous Carnival
+1 Repel the Darkness
+1 Riot Control
+1 Safe Passage
+1 Screamer-Killer
+1 Shalai, Voice of Plenty
+1 Shard Convergence
+1 Shock
+1 Sol Ring
+1 Starstorm
+6 Swamp
+1 Temple of Epiphany
+1 Temple of Mystery
+1 The Wanderer
+1 Thought Vessel
+1 Three Tree Rootweaver
+1 Toxrill, the Corrosive
+1 Trygon Predator
+1 Vampiric Tutor
+1 Viashino Slaughtermaster
+1 Zimone, Quandrix Prodigy
+
+1 Progenitus

@@ -181,7 +181,7 @@ const cdmgOf = o => (typeof sxToughDmg === 'function' && sxToughDmg(o)) ? tou(o)
 const adm = o => (typeof sxAdm === 'function' ? sxAdm(o) : pow(o));
 const tou = o => basePT(o, 'q') + o.counters + o.tq + buffsOn(o).q + ptTimed(o, 'q');
 const hasBase = (o, k) => ((k === 'indestructible' && o.tkw.includes('-indestructible')) || (k === 'flying' && !!G && allPerms().some(a => a.attachedTo === o.uid && Rx(a).buff && Rx(a).buff.kw.includes('-flying')))) ? false : (!!G && o.uid !== undefined && G.players[o.owner] && G.players[o.owner].bf.some(a => a !== o && Rx(a).permKw && Rx(a).permKw.includes(k) && !lostAbilities(a))) || (k === 'indestructible' && o.aegisBy && (() => { const a = onBf(o.aegisBy); return a && a.owner === o.owner; })()) || (Rx(o).kw.has(k) && !lostAbilities(o)) || o.tkw.includes(k) || (k === 'indestructible' && !!o.ctr && o.ctr.indestructible > 0) || (!!o.animated && !!G && o.animated.turn === G.turn && o.animated.kw.includes(k)) || buffsOn(o).kw.includes(k);
-const has = (o, k) => (k === 'defender' && !!G && o.dcNoDefTurn === G.turn) ? false : ((k === 'hexproof' && typeof tkHexproof === 'function' && tkHexproof(o)) || (k === 'hexproof' && o.card && !o.slDealt && Rx(o).slHexNoDmg)) ? true : (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : hasBase(o, k); // Arcane Lighthouse
+const has = (o, k) => (k === 'defender' && !!G && o.dcNoDefTurn === G.turn) ? false : ((k === 'hexproof' && typeof tkHexproof === 'function' && tkHexproof(o)) || (k === 'hexproof' && o.card && !o.slDealt && Rx(o).slHexNoDmg)) ? true : (k === 'indestructible' && !!G && o.owner !== undefined && !!G.players[o.owner] && (G.players[o.owner].emblems || []).includes('indestructAll') && /Artifact|Creature|Enchantment|Land/.test(o.card.type)) ? true : (k === 'indestructible' && !!G && !!o.indUntil && G.turn <= o.indUntil) ? true : (!!o.ctr && o.ctr[k] > 0 && KW_COUNTERS.has(k)) ? true : (!!G && !!G.noHexproof && (k === 'hexproof' || k === 'shroud') && G.noHexproof.turn === G.turn && o.owner !== G.noHexproof.by) ? false : (!!G && typeof svHasOv === 'function' && svHasOv(o, k) !== null) ? svHasOv(o, k) : hasBase(o, k); // Arcane Lighthouse
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
 const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackCond && !condOk(Rx(o).attackCond, ctrl(o), o)) && !(typeof cmdCantAttack === 'function' && cmdCantAttack(o)) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !(has(o, 'defender') && !(typeof sxDefAttack === 'function' && sxDefAttack(o))) && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
@@ -836,7 +836,7 @@ function planPayment(P, cost, extra = 0, exclude = null, opts = {}) {
     const srcs = [
         ...Array.from({ length: channelN }, () => ({ o: { pool: true, color: 'C', channel: true }, colors: ['C'], n: 1, rank: 3 })),
         ...(P.pool || []).filter(c => !c.includes(':') || (opts.forType && new RegExp(`\\b${c.split(':')[1]}\\b`).test(opts.forType))).map(c => ({ o: { pool: true, color: c }, colors: [c[0]], n: 1, rank: -2 })),
-        ...real.filter(o => (!manaOf(o).only || (opts.spellKind && manaOf(o).only.split(' or ').includes(opts.spellKind))) && (!manaOf(o).onlyType || (opts.forType && (manaOf(o).onlyType === 'noncreature' ? !/\bCreature\b/.test(opts.forType) : new RegExp(`\\b${manaOf(o).onlyType}\\b`).test(opts.forType))))).map(o => ({ o, colors: srcColors(o, opts), n: manaOf(o).n, fixed: manaOf(o).fixed, pain: manaOf(o).pain, rank: 0 })).filter(s => s.colors.length),
+        ...real.filter(o => (!manaOf(o).only || (opts.spellKind && manaOf(o).only.split(' or ').includes(opts.spellKind))) && (!manaOf(o).onlyType || (opts.forType && (manaOf(o).onlyType === 'noncreature' ? !/\bCreature\b/.test(opts.forType) : new RegExp(`\\b${manaOf(o).onlyType}\\b`).test(opts.forType))))).map(o => ({ o, colors: srcColors(o, opts), n: manaOf(o).n + (typeof svManaBonus === 'function' ? svManaBonus(o, opts) : 0), fixed: manaOf(o).fixed, pain: manaOf(o).pain, rank: 0 })).filter(s => s.colors.length),
         ...(opts.virt || []).map(c => ({ o: { pool: true, virtual: true, color: c }, colors: [c], n: 1, rank: 3 })), // the mana a Signet will make (see the planPayment wrapper)
         ...(opts.improvise && !opts.poolOnly ? P.bf.filter(a => /Artifact/.test(a.card.type) && !a.tapped && !real.includes(a)).map(a => ({ o: a, colors: [], n: 1, rank: 2 })) : []),
         ...(opts.convoke && !opts.poolOnly ? P.bf.filter(c => isCreature(c) && !c.tapped && !real.includes(c)).map(c => ({ o: c, colors: (c.card.colors || []).filter(x => COLORS.includes(x)), n: 1, rank: 2 })) : [])
@@ -984,7 +984,7 @@ function spellFits(o, rd, from) {
     if (rd.what === 'Artifact' || rd.what === 'Enchantment') return new RegExp(rd.what).test(t);
     return new RegExp(`\\b${rd.what}\\b`).test(t);
 }
-const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.test(o.card.type) && !!G && G.players[o.owner].bf.some(a => Rx(a).improviseAll)), convoke: hasConvoke(o), spellKind: Rx(o).kind, forType: o.card.type + (Rx(o).cost.x ? ' XCOST' : '') + ((o.card.cmc || 0) >= 5 ? ' MV5PLUS' : '') + (G && G.players[o.owner] && G.players[o.owner].exile.includes(o) ? ' FromExile' : ''), sxCAny: !!o.sx_colorlessAny });
+const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.test(o.card.type) && !!G && G.players[o.owner].bf.some(a => Rx(a).improviseAll)), convoke: hasConvoke(o), spellKind: Rx(o).kind, forType: o.card.type + ((o.card.colors || []).length === 0 ? ' Colorless' + (/\bEldrazi\b/.test(o.card.type) ? ' ColorlessEldrazi' : '') : '') + (Rx(o).kw && Rx(o).kw.has('devoid') ? ' Devoid' : '') + (Rx(o).cost.x ? ' XCOST' : '') + ((o.card.cmc || 0) >= 5 ? ' MV5PLUS' : '') + (G && G.players[o.owner] && G.players[o.owner].exile.includes(o) ? ' FromExile' : ''), sxCAny: !!o.sx_colorlessAny });
 function altExileCard(P, o) { const a = Rx(o).alt; return a && a.exile ? P.hand.filter(x => x !== o && (x.card.colors || []).includes(a.exile)).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0] || null : null; }
 function altOk(P, o) {
     const a = Rx(o).alt;
@@ -1280,8 +1280,8 @@ function canCastNow(P, o) {
     if (P.silenced && P.silenced.turn === G.turn && (!P.silenced.noncreature || r.kind !== 'creature')) return false;
     if (G.active !== P.i && G.players[G.active].bf.some(x => Rx(x).noCastOnMyTurn && !lostAbilities(x))) return false;
     if (!P.hand.includes(o) && foes(P).some(F => F.bf.some(x => Rx(x).handOnly && !lostAbilities(x)))) return false;
-    const flash = !!r.flash || P.flashTurn === G.turn || (P.flashNext && P.flashNext.turn === G.turn && !!P.flashNext.type && hasType(o, P.flashNext.type)) || (r.slFlashPhoto && P.bf.some(x => x.owner === P.i)) || P.bf.some(x => !lostAbilities(x) && ((Rx(x).flashCond && condOk(Rx(x).flashCond, P, x)) || Rx(x).flashAll || (Rx(x).flashSpec && cmdFlashOk(x, o, P)) || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type))) || (Rx(x).slRadagast && P.slCreatureCastTurn !== G.turn && /\bCreature\b/.test(o.card.type))));
-    const fromTop = ((r.kind === 'creature' || (r.kind === 'enchantment' && typeof slHothouseOn === 'function' && slHothouseOn(P))) && P.library[P.library.length - 1] === o && topCastOk(P, o)) || pitTop(P) === o;
+    const flash = !!r.flash || P.flashTurn === G.turn || (P.svSorceryFlash && r.kind === 'sorcery') || P.bf.some(x => Rx(x).svFlashCreatures && !lostAbilities(x) && r.kind === 'creature') || (P.flashNext && P.flashNext.turn === G.turn && !!P.flashNext.type && hasType(o, P.flashNext.type)) || (r.slFlashPhoto && P.bf.some(x => x.owner === P.i)) || P.bf.some(x => !lostAbilities(x) && ((Rx(x).flashCond && condOk(Rx(x).flashCond, P, x)) || Rx(x).flashAll || (Rx(x).flashSpec && cmdFlashOk(x, o, P)) || (Rx(x).flashTypes && Rx(x).flashTypes.some(ty => new RegExp(`\\b${ty}\\b`).test(o.card.type))) || (Rx(x).svFlashColorless && (o.card.colors || []).length === 0 && Rx(o).kind !== 'land') || (Rx(x).slRadagast && P.slCreatureCastTurn !== G.turn && /\bCreature\b/.test(o.card.type)) || (Rx(x).svFlashNonCreature && !/\bCreature\b/.test(o.card.type) && Rx(o).kind !== 'land')));
+    const fromTop = ((r.kind === 'creature' || (r.kind === 'enchantment' && typeof slHothouseOn === 'function' && slHothouseOn(P))) && P.library[P.library.length - 1] === o && topCastOk(P, o)) || pitTop(P) === o || (typeof svForgeOk === 'function' && svForgeOk(P, o));
     if (o.castAs && !castAsOk(P, o, o.castAs)) return false;
     if (o.castAs === 'madness') return true;
     if (o.castAs === 'sneak') return G.active === P.i && G.phase === 'afterBlocks' && !G.stack.length && G.priority === null;
@@ -4194,7 +4194,7 @@ async function applyEffect(P, e, t, src) {
 // Equip: sorcery speed, pay the Equip cost, attach to your creature.
 // The Equip cost to pay: "Equip Halfling {1}", minus "Equip abilities you activate cost {1} less"
 // "Equip legendary creature {3}", "Equip commander {3}", "Equip Knight {1}"
-function equipFits(c, type) { return type === 'legendary creature' ? /\bLegendary\b/.test(c.card.type) : type === 'commander' ? !!c.isCommander : hasType(c, type); }
+function equipFits(c, type) { return type === 'worthy' ? (/\bLegendary\b/.test(c.card.type) && !hasType(c, 'Villain') && (c.card.colors || []).some(k => k === 'R' || k === 'W')) : type === 'legendary creature' ? /\bLegendary\b/.test(c.card.type) : type === 'commander' ? !!c.isCommander : hasType(c, type); }
 function equipOk(eq, c) { const only = Rx(eq).equipOnly; return !dampingOn() && (!only || equipFits(c, only)); }
 function equipCost(P, eq, creature) {
     const cheap = Rx(eq).equipCheap;
@@ -4234,7 +4234,7 @@ function canBlock(b, atk) {
     for (const f of Rx(atk).blockFns || []) if (!lostAbilities(atk) && !BLOCK_FN[f](b, atk)) return false; // Elven Riders, Bog Rats
     if (has(b, 'blockflyonly') && !has(atk, 'flying')) return false;
     if (has(atk, 'blockflyreach') && !has(b, 'flying') && !has(b, 'reach')) return false;
-    for (const k of [...Rx(atk).kw, ...atk.tkw]) {
+    for (const k of [...Rx(atk).kw, ...atk.tkw, ...((buffsOn(atk).kw || []).filter(x => /^block(?:only|powgt)/.test(x)))]) {
         let m;
         if ((m = k.match(/^blockonly:(\w+)$/)) && !hasType(b, m[1])) return false;
         if ((m = k.match(/^blockonlycolor:(\w)$/)) && !(b.card.colors || []).includes(m[1])) return false; // Dread Warlock

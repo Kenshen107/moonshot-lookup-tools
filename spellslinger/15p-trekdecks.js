@@ -179,7 +179,7 @@ Object.assign(CMD, {
         const x = t && t.o; if (!x || !onBf(x.uid)) return;
         const owner = G.players[x.owner];
         drawCards(owner, 2);
-        if (!x.token) { leaveBattlefield(x, 'library'); pull(owner.library, x); owner.library.splice(rand(owner.library.length + 1), 0, x); log(`${x.card.name} is shuffled into ${owner.name}'s library.`); }
+        if (!x.token) { leaveBattlefield(x, 'library'); if (owner.command.includes(x) || owner.hand.includes(x)) return; pull(owner.library, x); owner.library.splice(rand(owner.library.length + 1), 0, x); log(`${x.card.name} is shuffled into ${owner.name}'s library.`); }
         else leaveBattlefield(x, 'gy');
     },
     async td_unification2(P, e, t, src) {

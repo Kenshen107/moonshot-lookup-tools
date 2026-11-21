@@ -1,0 +1,89 @@
+1 Adventurer's Inn
+1 Adventurous Impulse
+1 Aettir and Priwen
+1 Aggravated Assault
+1 Arcane Signet
+1 Ardenn, Intrepid Archaeologist
+1 Blackblade Reforged
+1 Blade of Selves
+1 Bolt Bend
+1 Bonders' Enclave
+1 Boros Charm
+1 Boros Signet
+1 Bronze Guardian
+1 Bruenor Battlehammer
+1 Buster Sword
+1 Chaos Warp
+1 Chariot of Victory
+1 Clever Concealment
+1 Cloud, Ex-SOLDIER
+1 Cloud, Midgar Mercenary
+1 Cloud, Planet's Champion
+1 Cloud's Limit Break
+1 Colossus Hammer
+1 Command Tower
+1 Conqueror's Flail
+1 Cultivate
+1 Darksteel Plate
+1 Dispatch
+1 Dragonfire Blade
+1 Exotic Orchard
+1 Fire-Lit Thicket
+1 Fireshrieker
+5 Forest
+1 Gruul War Chant
+1 Hard-Won Jitte
+1 Hold at Bay
+1 Hulkbuster Armor
+1 Jungle Shrine
+1 Kaldra Compleat
+1 Land Tax
+1 Lavaspur Boots
+1 Lifestream's Blessing
+1 Lightning Greaves
+1 Marisi, Breaker of the Coil
+1 Mayael's Aria
+1 Michelangelo, Mutant BFF
+1 Mjölnir, Hammer of Thor
+1 Mjölnir, Storm Hammer
+1 Mossfire Valley
+4 Mountain
+1 Nemesis Mask
+1 Nettlecyst
+1 New Generation's Technique
+1 Phoenix Down
+6 Plains
+1 Pledge of Unity
+1 Professor Hojo
+1 Prowler's Helm
+1 Puresteel Paladin
+1 Radiant Grove
+1 Rampant Growth
+1 Reclaim the Wastes
+1 Restoration Magic
+1 Rogue's Passage
+1 Rugged Prairie
+1 Sacred Peaks
+1 Scavenger Grounds
+1 Selesnya Signet
+1 Slash of Light
+1 Sol Ring
+1 SOLDIER Military Program
+1 Steelshaper's Gift
+1 Summoning Materia
+1 Sungrass Prairie
+1 Sunscorched Divide
+1 Sword of Vengeance
+1 The Earth Crystal
+1 Thran Power Suit
+1 Trailblazer's Boots
+1 Ultima Weapon
+1 Ultimate Magic: Holy
+1 Vanquish the Horde
+1 Whispersilk Cloak
+1 Wooded Ridgeline
+1 Worn Powerstone
+1 Wrecking Ball Arm
+1 Yuffie, Materia Hunter
+
+1 Tifa, Martial Artist

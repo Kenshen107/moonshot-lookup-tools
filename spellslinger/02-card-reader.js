@@ -27,6 +27,7 @@ function parseCost(str) {
         else if (s === 'X') { c.x = true; c.xn = (c.xn || 0) + 1; }
         else if ('WUBRGC'.includes(s) && s.length === 1) c[s]++;
         else if (/^[WUBRG]\/P$/.test(s) || /^[WUBRG]\/[WUBRG]$/.test(s)) c[s[0]]++; // hybrid / Phyrexian: pay the first color
+        else if (/^C\/[WUBRG]$/.test(s)) { c.C++; (c.hyb = c.hyb || []).push(s[2]); } // {C/W}: colorless or white; paid with {C} first, the planPayment wrapper (15zj-sevendecks.js) tries the color
         else if (/^2\/[WUBRG]$/.test(s)) c.generic += 2;
         else c.odd = true;
     });
@@ -806,7 +807,7 @@ function rulesFor(card) {
         if (/^Enchanted creature doesn't untap during its controller's untap step\.$/i.test(line)) { R.buff = { p: 0, q: 0, kw: ['nountap'] }; R.buffBad = true; continue; }
         if ((m = line.match(/^(?:Enchanted|Equipped) creature gets ([+-]\d+)\/([+-]\d+)(?: and has ([a-z ,]+))?\.$/i)) && (!m[3] || allKnown(splitKw(m[3])))) { R.buff = { p: +m[1], q: +m[2], kw: m[3] ? splitKw(m[3]) : [] }; continue; }
         if ((m = line.match(/^(?:Enchanted|Equipped) creature has ([a-z ,]+)\.$/i)) && allKnown(splitKw(m[1]))) { R.buff = { p: 0, q: 0, kw: splitKw(m[1]) }; continue; }
-        if ((m = line.match(/^Equip (legendary creature|commander|[A-Z][a-z]+) ((?:\{[^}]+\})+)$/))) { R.equipCheap = { type: m[1], cost: parseCost(m[2]) }; continue; }
+        if ((m = line.match(/^Equip (legendary creature|commander|worthy|[A-Z][a-z]+) ((?:\{[^}]+\})+)$/))) { R.equipCheap = { type: m[1], cost: parseCost(m[2]) }; continue; }
         if ((m = line.match(/^Equip ((?:\{[^}]+\})+)$/))) { const c = parseCost(m[1]); if (!c.x && !c.odd) { R.equip = c; R.equipText = m[1]; continue; } }
         R.unhandled.push(line);
     }
