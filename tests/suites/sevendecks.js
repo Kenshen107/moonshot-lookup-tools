@@ -96,6 +96,9 @@ DECKS.forEach(d => fs.readFileSync(path.join(ROOT, 'tests', 'decks', d + '.txt')
             reset(); { put(A, 'Grafdigger\'s Cage'); await settle2(); const o = lib(A, 'Grizzly Bears'); pull(A.library, o); putOntoBattlefield(A, o, false); ok('Grafdigger\'s Cage: a creature card from a library can\'t enter the battlefield', !A.bf.includes(o), []); }
             reset(); { put(A, 'Containment Priest'); const o = makeObj(C['Grizzly Bears'], B.i); putOntoBattlefield(B, o, false); ok('Containment Priest: a creature entering without being cast is exiled', !B.bf.includes(o) && B.exile.includes(o), []); }
             reset(); { const th = give(A, 'Thassa\'s Oracle'); A.library.length = 0; A.hand.length = 0; await CMD.sv_oracle(A, {}, null, th); ok('Thassa\'s Oracle: wins with an empty library', G.over === true || G.winner === A.i || G.over, [G.over]); }
+            reset(); { const c = put(A, 'Grizzly Bears'); await CMD.sv_bounceGrant(A, {}, { o: c }, null); ok('Banishing Knack: the creature really gains the tap ability this turn', actsOf(c).some(a => /Return target nonland permanent/.test(a.text || '')), []); G.turn++; ok('Banishing Knack: the ability ends with the turn', !actsOf(c).some(a => /Return target nonland permanent/.test(a.text || '')), []); }
+            reset(); { A.svHalf = G.turn; A.svHalfUid = 99999; A.life = 20; damage(A, 4, put(B, 'Grizzly Bears')); ok('Dark Sphere: only damage from the chosen source is halved', A.life === 16, [A.life]); }
+            reset(); { G.svKardur = { by: A.i, until: G.turn + 3 }; ok('Kardur: opposing creatures are forced to attack', forcedAttack(put(B, 'Grizzly Bears')) === true, []); G.svKardur = null; }
             reset(); { G.attackers = []; ok('No broken invariants', T.invariants().length === 0, T.invariants()); }
         } catch (e) { out.push([`threw after ${out.length} checks: ${e.message}`, false, String(e.stack).split('\n').slice(0, 5)]); }
         return out;

@@ -1083,7 +1083,7 @@ async function sxOpeningHand() {
 }
 // ---- Maximum Carnage: creatures attack a player other than the Saga's controller if able ----
 {
-    const carnage = () => (G ? G.players.filter(X => X.sx_carnageUntil > G.turn).map(X => X.i) : []);
+    const carnage = () => (G ? [...G.players.filter(X => X.sx_carnageUntil > G.turn).map(X => X.i), ...(G.svKardur && G.turn <= G.svKardur.until ? [G.svKardur.by] : [])] : []); // Kardur, Doomscourge also uses this (opposing creatures attack a player other than its controller)
     const avoid = (P, d) => { const cs = carnage(); if (!d || !cs.includes(d.i) || cs.includes(P.i)) return d; const alt = foes(P).filter(F => !cs.includes(F.i)).sort((a, b) => a.life - b.life)[0]; return alt || d; };
     if (typeof podPickDefender === 'function') { const f = podPickDefender; podPickDefender = function (P) { return avoid(P, f.apply(this, arguments)); }; }
     if (typeof aiPickDefender === 'function') { const f = aiPickDefender; aiPickDefender = function (P) { return avoid(P, f.apply(this, arguments)); }; }

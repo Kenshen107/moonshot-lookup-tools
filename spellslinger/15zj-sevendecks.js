@@ -11,6 +11,12 @@ const svIsHuman = P => !P.isAI && !AUTOPLAY;
 const svColorless = o => !!o && (o.card.colors || []).length === 0;
 const svOpps = P => foes(P);
 const svMV = o => o.card.cmc || 0;
+const svPickSource = async (P, card) => {
+    const pool = G.players.filter(X => X !== P && !X.out).flatMap(X => X.bf.filter(o => isCreature(o) || /Planeswalker/.test(o.card.type)));
+    if (!pool.length) return null;
+    const c = await pickCard(P, pool, `${card.card.name}: choose a source (Cancel = the next damage from any source)`, { optional: true });
+    return c ? c.uid : null;
+};
 const svSacMany = async (P, pool, n, title) => {
     const out = [];
     for (let i = 0; i < n && pool.length; i++) {
@@ -654,10 +660,11 @@ function svDelayDraw(P, n) { (G.svDelay = G.svDelay || []).push({ P: P.i, n: n |
 Object.assign(CMD, {
     async sv_bounceGrant(P, e, t, src) {
         const c = t && t.o; if (!c || !onBf(c.uid)) return;
-        if (c.tapped || (c.sick && !has(c, 'haste'))) { log(`${c.card.name} gains the ability but can't use it now.`); return; }
-        const pool = allPerms().filter(x => !/\bLand\b/.test(x.card.type) && x !== c);
-        const pick = svIsHuman(P) ? await pickOwn(P, pool, `${c.card.name}: return a nonland permanent to its owner's hand`, { optional: true }) : pool.filter(x => x.owner !== P.i).sort((a, b) => permValue(b) - permValue(a))[0];
-        if (pick) { c.tapped = true; leaveBattlefield(pick, 'hand'); log(`${c.card.name} taps to return ${pick.card.name} to its owner's hand.`); }
+        const act = parseActivated("{T}: Return target nonland permanent to its owner's hand.", Rx(c));
+        if (!act) return;
+        act.effects = [{ t: 'bounce', target: 'perm', filter: 'nonland' }]; act.text = '{T}: Return target nonland permanent to its owner\'s hand.';
+        c.borrowed = { turn: G.turn, acts: [...((c.borrowed && c.borrowed.turn === G.turn && c.borrowed.acts) || []), act] };
+        log(`${c.card.name} gains "{T}: Return target nonland permanent to its owner's hand" until end of turn.`);
     },
     async sv_chainVapor(P, e, t, src) {
         let cur = t && t.o, who = P, depth = 0;
@@ -673,7 +680,7 @@ Object.assign(CMD, {
             cur = await pickOwn(ctl, pool, 'Chain of Vapor: choose a new target', { optional: true }); who = ctl;
         }
     },
-    sv_darkSphere(P, e, t, src) { P.svHalf = G.turn; },
+    async sv_darkSphere(P, e, t, src) { P.svHalf = G.turn; P.svHalfUid = svIsHuman(P) ? await svPickSource(P, src) : null; },
     async sv_cone(P, e, t, src) { const c = t && t.o; if (c && (!svIsHuman(P) || await askYes(P, `${src.card.name}: gain life instead of dealing combat damage with ${c.card.name} if it isn't blocked?`, { card: src.card }))) { c.svConeTurn = G.turn; log(`${c.card.name}: if it attacks and isn't blocked, ${P.name} gains life instead of dealing damage.`); } },
     async sv_foodChain(P, e, t, src) {
         const cr = P.bf.filter(isCreature); if (!cr.length) return;
@@ -744,7 +751,7 @@ Object.assign(CMD, {
         if (n > 0 && target) {
             if (target.life !== undefined) {
                 if (target.svProtAll) return;
-                if (target.svHalf === G.turn) { delete target.svHalf; n -= Math.floor(n / 2); log(`${target.name} prevents half of the damage.`); }
+                if (target.svHalf === G.turn && (!target.svHalfUid || (src && src.uid === target.svHalfUid))) { delete target.svHalf; n -= Math.floor(n / 2); log(`${target.name} prevents half of the damage.`); }
                 if (src && src.svConeTurn === G.turn && G.inCombatDamage) { gainLifeFor(G.players[src.owner], n); return; }
             }
         }
@@ -945,7 +952,7 @@ Object.assign(TRIG_FN, {
     svThirteen: (o, ctx) => G.players[o.owner].hand.length === 13
 });
 Object.assign(CMD, {
-    async sv_palm(P, e, t, src) { P.svPalm = G.turn; log(`${P.name} will prevent the next damage dealt to them this turn.`); },
+    async sv_palm(P, e, t, src) { P.svPalm = G.turn; P.svPalmUid = svIsHuman(P) ? await svPickSource(P, src) : null; log(`${P.name} will prevent the next damage dealt to them this turn.`); },
     sv_hinderingLight(P, e, t, src) { const it = t && t.item; if (it) { pull(G.stack, it); if (it.o) moveSpellCard(it.o, 'gy'); log(`${it.name} is countered.`); } },
     sv_renderSilent(P, e, t, src) { const it = t && t.item; if (it) { const X = it.P; pull(G.stack, it); if (it.o) moveSpellCard(it.o, 'gy'); X.svNoCast = G.turn; log(`${it.name} is countered; ${X.name} can't cast spells this turn.`); } },
     sv_incursion(P, e, t, src) { P.bf.filter(c => isCreature(c) && !c.token).forEach(c => { const card = { ...c.card, type: c.card.type.replace(/\bLegendary\s+/, '') }; tokenCopyOf(P, card, {}); }); },
@@ -1096,7 +1103,7 @@ Object.assign(CMD, {
     damage = function (target, n, src) {
         if (n > 0 && target && target.life !== undefined) {
             if (target.svProtAll || target.svLifeLock) return;
-            if (target.svPalm === G.turn) { delete target.svPalm; const ctl = src && src.owner !== undefined ? G.players[src.owner] : null; log(`${target.name} prevents the damage and deals ${n} damage to ${ctl ? ctl.name : 'its controller'} (Deflecting Palm).`); if (ctl) dm.call(this, ctl, n, null); return; }
+            if (target.svPalm === G.turn && (!target.svPalmUid || (src && src.uid === target.svPalmUid))) { delete target.svPalm; const ctl = src && src.owner !== undefined ? G.players[src.owner] : null; log(`${target.name} prevents the damage and deals ${n} damage to ${ctl ? ctl.name : 'its controller'} (Deflecting Palm).`); if (ctl) dm.call(this, ctl, n, null); return; }
         }
         if (n > 0 && src && src.uid !== undefined && onBf(src.uid)) {
             const X = G.players[src.owner];

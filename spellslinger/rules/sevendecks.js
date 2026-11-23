@@ -36,7 +36,7 @@ clx('{3}, Exile ~ from your hand: Target land gains "{T}: Add {C}{C}" until ~ is
 clx('When you cast ~, gain control of all creatures target player controls.', R => { (R.castTrig = R.castTrig || []).push(...[cmd('sv_stealAll', { target: 'player', filter: 'opp' })]); });
 clx('Flying, protection from spells and from permanents that were cast this turn', R => { R.kw.add('flying'); R.svProSpells = true; });
 clx('When ~ leaves the battlefield, sacrifice all creatures you control.', R => { R.trig.push({ ev: 'leaves', effects: [cmd('sv_sacAll')] }); });
-clx('Madness—Pay six {C}.', R => { R.svMadness = true; });
+clx('Madness—Pay six {C}.', R => { R.madness = parseCost('{C}{C}{C}{C}{C}{C}'); });
 clx('{C}, {T}: Target creature can\'t attack or block this turn.', (R, m, ctx) => { act(R, ctx.line, '{C}, {T}', [cmd('sv_lock', { target: 'creature' })]); });
 clx('Whenever another colorless creature you control enters, ~ deals 1 damage to each opponent.', R => { R.trig.push({ ev: 'enters', another: true, ctxTarget: true, fn: 'svColorlessCreature', effects: [cmd('sv_ping1')] }); });
 clx('Enchant creature, land, or planeswalker', R => { R.aura = true; R.auraTarget = 'creature, land or planeswalker'; });
