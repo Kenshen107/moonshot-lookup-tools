@@ -303,12 +303,14 @@ Object.assign(CMD, {
     const vt = validTargets;
     validTargets = function (P, e, src) {
         const r = vt.apply(this, arguments);
-        if (!src || onBf(src.uid)) return r;
+        if (!src) return r;
+        const spellish = !onBf(src.uid) || (!src.token && src.enteredTurn === G.turn && src.castThisTurn !== false);
+        if (!spellish) return r;
         return r.filter(x => !(x.o && Rx(x.o).svProSpells && !lostAbilities(x.o) && x.o.owner !== P.i));
     };
     const dm = damage;
     damage = function (target, n, src) {
-        if (target && target.o && Rx(target.o).svProSpells && src && src.uid !== undefined && !onBf(src.uid)) return;
+        if (target && target.o && Rx(target.o).svProSpells && src && src.uid !== undefined && (!onBf(src.uid) || (!src.token && src.enteredTurn === G.turn))) return;
         return dm.apply(this, arguments);
     };
 })();
@@ -672,7 +674,7 @@ Object.assign(CMD, {
         }
     },
     sv_darkSphere(P, e, t, src) { P.svHalf = G.turn; },
-    sv_cone(P, e, t, src) { const c = t && t.o; if (c) { c.svConeTurn = G.turn; log(`${c.card.name}: if it attacks and isn't blocked, ${P.name} gains life instead of dealing damage.`); } },
+    async sv_cone(P, e, t, src) { const c = t && t.o; if (c && (!svIsHuman(P) || await askYes(P, `${src.card.name}: gain life instead of dealing combat damage with ${c.card.name} if it isn't blocked?`, { card: src.card }))) { c.svConeTurn = G.turn; log(`${c.card.name}: if it attacks and isn't blocked, ${P.name} gains life instead of dealing damage.`); } },
     async sv_foodChain(P, e, t, src) {
         const cr = P.bf.filter(isCreature); if (!cr.length) return;
         const c = await pickOwn(P, cr, `${src.card.name}: exile a creature you control`, { rank: (a, b) => permValue(a) - permValue(b) }); if (!c) return;
@@ -684,7 +686,7 @@ Object.assign(CMD, {
     },
     async sv_mindbreak(P, e, t, src) {
         const mine = G.stack.filter(it => it.kind === 'spell' && it.P !== P && it.o !== src);
-        for (const it of mine) { pull(G.stack, it); it.o.exiled = true; const X = G.players[it.o.owner]; pull(X.gy, it.o); X.exile.push(it.o); log(`${it.name} is exiled.`); }
+        for (const it of mine) { if (svIsHuman(P) && !(await askYes(P, `Mindbreak Trap: exile ${it.name}?`, { card: it.o.card }))) continue; pull(G.stack, it); it.o.exiled = true; const X = G.players[it.o.owner]; pull(X.gy, it.o); X.exile.push(it.o); log(`${it.name} is exiled.`); }
     },
     async sv_bauble(P, e, t, src) {
         const V = (t && t.p) || opp(P);
@@ -1007,7 +1009,10 @@ Object.assign(CMD, {
 (function () {
     const f0 = fire;
     fire = function (ev, ctx) {
+        const hush = G && !G.over && (ev === 'dies' || ev === 'enters' || ev === 'creatureDies') && ctx && ctx.o && isCreature(ctx.o) && allPerms().some(a => Rx(a).svHush && !lostAbilities(a));
+        const q0 = hush ? (G.trigQ || []).length : 0;
         const r = f0.apply(this, arguments);
+        if (hush && G.trigQ && G.trigQ.length > q0) G.trigQ.length = q0;
         try {
             if (!G || G.over) return r;
             if (ev === 'untapped') return r;
