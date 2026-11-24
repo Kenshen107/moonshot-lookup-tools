@@ -287,7 +287,8 @@ async function dealsTick(P) {
     if (typeof dealsRelevant === 'function' && !dealsRelevant(P)) return; // nothing at the table gives it a reason to deal (07h-deal-tension.js)
     if (typeof moreOffers === 'function') await moreOffers(P);
     const m = botMood(P).mood;
-    const live = foes(P).filter(F => !hasPeace(P.i, F.i));
+    // never offer peace to a player it has promised to gang up on (pod record 2026-11-24: Progenitus and Othelm each offered the person peace on the turn they formed a gang-up deal against them)
+    const live = foes(P).filter(F => !hasPeace(P.i, F.i) && !(G.deals || []).some(d => !d.over && d.type === 'pact' && (d.a === P.i || d.b === P.i) && d.x === F.i));
     if (!live.length) return;
     const meanT = G.players.filter(X => !X.out).reduce((a, X) => a + podThreat(X), 0) / G.players.filter(X => !X.out).length;
     const behind = podThreat(P) < meanT * 0.6;

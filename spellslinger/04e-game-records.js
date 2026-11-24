@@ -23,8 +23,8 @@ function recInit() {
         log: [], ev: [], n: 0
     };
 }
-function recAdd(line) {
-    if (!G || !G.players) return;
+function recAdd(line, force) {
+    if (!G || !G.players || (window.__DRY && !force)) return; // a cast-time dry run (15x-casting.js) is put back, so it is not part of the game
     if (!G.rec) { if (!recOn()) return; recInit(); }
     if (G.rec.done || G.rec.log.length >= REC_MAX_LINES) return;
     G.rec.log.push(String(line));
@@ -44,8 +44,8 @@ function recSnap(P, light) {
     } catch (e) { return null; }
 }
 // One structured event. e = 'turn' (start of a turn), 'dec' (a decision), 'out' (a player leaves).
-function recEv(ev, P) {
-    if (!G || !G.players) return;
+function recEv(ev, P, force) {
+    if (!G || !G.players || (window.__DRY && !force)) return;
     if (!G.rec) { if (!recOn()) return; recInit(); }
     if (G.rec.done || G.rec.ev.length >= REC_MAX_EV) return;
     ev.t = G.turn; ev.ph = G.phase;
@@ -69,6 +69,8 @@ function recCands(cands, pick) {
             // A question that asks itself again (waiting for the play-by-play, handing the device over) is one choice, not two
             if (wrap.busy[name]) return f.apply(this, arguments);
             const P = arguments[who];
+            // questions asked inside a cast-time dry run (15x-casting.js) are put back; the person's answers are noted once, when the effect resolves
+            if (name === 'pickCard' && window.__DRY) return f.apply(this, arguments); // dry-run questions are noted when the effect really resolves
             wrap.busy[name] = true;
             let r; try { r = f.apply(this, arguments); } finally { wrap.busy[name] = false; }
             if (!P || P.isAI || !G || !G.players || !recOn()) return r;
@@ -76,8 +78,8 @@ function recCands(cands, pick) {
             const args = arguments;
             const note = a => {
                 try {
-                    recAdd(`» ${P.name} chose [${prompt.apply(null, args)}]: ${show(a)}`);
-                    recEv({ e: 'dec', k: 'prompt', kind: name, prompt: prompt.apply(null, args), opts: optsOf ? optsOf.apply(null, args) : null, choice: show(a) }, P);
+                    recAdd(`» ${P.name} chose [${prompt.apply(null, args)}]: ${show(a)}`, true);
+                    recEv({ e: 'dec', k: 'prompt', kind: name, prompt: prompt.apply(null, args), opts: optsOf ? optsOf.apply(null, args) : null, choice: show(a) }, P, true);
                 } catch (e) { }
             };
             return r && typeof r.then === 'function' ? r.then(a => { wrap.busy[name] = false; note(a); return a; }, er => { wrap.busy[name] = false; throw er; }) : (note(r), r);
