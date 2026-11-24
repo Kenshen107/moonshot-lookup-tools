@@ -13,7 +13,7 @@ const BODY = async function () {
     showView('play');
     PLAYSEL.type = null; $('playDeck').value = '0';
     renderPlayView(); await new Promise(r => setTimeout(r, 300));
-    const chips = () => [...document.querySelectorAll('#deckPick .chip')].map(c => c.textContent.trim());
+    const chips = () => [...document.querySelectorAll('#deckPick [aria-label="Deck type"] .chip')].map(c => c.textContent.trim());
     ok('a chip for each deck type, with counts', chips().length === 4 && /Commander \(2\)/.test(chips()[0]) && /Casual \(2\)/.test(chips().join()), chips());
     const tiles = () => [...document.querySelectorAll('#deckPick .deck-pick .opp')].map(c => c.querySelector('strong').textContent);
     ok('only decks of the chosen type are listed', tiles().join() === 'Cmd A,Cmd B', tiles());

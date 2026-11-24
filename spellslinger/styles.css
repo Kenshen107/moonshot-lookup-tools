@@ -1494,3 +1494,18 @@ details.get-deck > summary { color: var(--brand-light); }
 .mx-syn-add { cursor: pointer; }
 .mx-syn-add:hover { border-color: var(--brand-light); }
 .mx-syn-no { color: var(--text-soft); opacity: 0.85; }
+
+/* Commander decks grouped by color (2026-11-24) */
+.dg-bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 4px 0 10px; }
+.dg-bar .chips { margin: 0; }
+.dg-col i, .dg-pips i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--border-subtle); margin-right: 3px; vertical-align: middle; }
+.dg-group { border: 1px solid var(--border-subtle); border-radius: var(--radius-md, 8px); margin: 0 0 8px; padding: 0 10px; }
+.dg-group > summary { cursor: pointer; padding: 8px 0; list-style: none; }
+.dg-group > summary::-webkit-details-marker { display: none; }
+.dg-group > summary::before { content: '▸'; display: inline-block; margin-right: 6px; transition: transform .15s; }
+.dg-group[open] > summary::before { transform: rotate(90deg); }
+.dg-group > div { padding-bottom: 10px; }
+.dg-badge { display: inline-block; font-size: 0.72em; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border-subtle); color: var(--text-soft); margin: 2px 6px 2px 0; white-space: nowrap; }
+.dg-badge.k-official { border-color: var(--gold); color: var(--gold); }
+.dg-badge.k-verified { border-color: var(--ok, var(--gold)); }
+@media (prefers-reduced-motion: reduce) { .dg-group > summary::before { transition: none; } }

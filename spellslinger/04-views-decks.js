@@ -426,17 +426,24 @@ async function renderDeckPicker() {
     }
     el.innerHTML = `
         <h2>Your decks</h2>
-        ${profile.decks.length ? profile.decks.map((d, i) => {
-            const probs = deckProblems(d);
-            return `<div class="row" style="padding:6px 0; border-bottom:1px solid var(--border-subtle);">
+        ${(() => {
+            if (!profile.decks.length) return '<p class="note">No decks yet. Start one below, or grab a starter deck to play right away.</p>';
+            const rowHTML = (d, i) => {
+                const probs = deckProblems(d);
+                return `<div class="row" style="padding:6px 0; border-bottom:1px solid var(--border-subtle);">
                 <strong style="flex:1; min-width:180px;">${esc(d.name)}</strong>
-                <span class="note">${FORMATS[d.format].name} · ${deckCount(d)} cards${d.starter ? ' · starter' : ''}</span>
+                ${dgBadge(dgDeckKind(d))}
+                <span class="note">${FORMATS[d.format].name} · ${deckCount(d)} cards</span>
                 ${probs.length ? `<span class="warn" title="${esc(probs.join('\n'))}">⚠ ${probs.length} to fix</span>` : '<span class="ok">✓ Ready</span>'}
                 <button class="btn small" onclick="playtestSaved(${i})">🧪 Playtest</button>
                 <button class="btn small" onclick="editDeck(${i})">Edit</button>
                 <button class="btn small danger" onclick="deleteDeck(${i})">Delete</button>
             </div>`;
-        }).join('') : '<p class="note">No decks yet. Start one below, or grab a starter deck to play right away.</p>'}
+            };
+            const cmd = profile.decks.map((d, i) => [d, i]).filter(([d]) => d.format === 'commander'), rest = profile.decks.map((d, i) => [d, i]).filter(([d]) => d.format !== 'commander');
+            return (cmd.length ? `<h3 style="font-size:1rem; margin:8px 0 4px;">👑 Commander decks</h3>` + dgView('mine', () => cmd.map(([d, i]) => ({ colors: deckTileColors(d), kind: dgDeckKind(d), html: rowHTML(d, i) }))) : '')
+                + (rest.length ? (cmd.length ? `<h3 style="font-size:1rem; margin:12px 0 4px;">Other formats</h3>` : '') + rest.map(([d, i]) => rowHTML(d, i)).join('') : '');
+        })()}
         <div class="row" style="margin-top:12px;">
             <button class="btn primary" onclick="newDeck('modern')">➕ New Modern deck</button>
             <button class="btn primary" onclick="newDeck('commander')">➕ New Commander deck</button>
@@ -1506,9 +1513,9 @@ const VERIFIED_DECKS = [
     { key: "gogo", name: "Gogo, Master of Mimicry (mono-blue copies)", colors: ["U"], desc: "Mono-blue copies, Urza lands and artifacts: Kang, Replicating Ring, Extravagant Replication, Aetherflux Conduit and Wurmcoil Engine (the owner's list; Raise the Palisade is the printed card for \"Raise Repulsor Shields\")", checked: "2026-11-15", text: "1 Aetherflux Conduit\n1 Aetheric Amplifier\n1 Arcane Signet\n1 Arcanis the Omnipotent\n1 Artisan of Kozilek\n1 Benthic Anomaly\n1 Big Mother Mouser\n1 Brokers Hideout\n1 Counterspell\n1 Dizzy Spell\n1 Drift of Phantasms\n1 Endless Atlas\n1 Eriette's Tempting Apple\n1 Escape Tunnel\n1 Ethereal Usher\n1 Evolving Wilds\n1 Expedition Map\n1 Extravagant Replication\n1 Fabled Passage\n1 Fishing Gear\n1 Flash Photography\n1 Grixis Panorama\n1 Grozoth\n1 High Tide\n1 Honest Work\n1 Horizon of Progress\n18 Island\n1 Jill, Shiva's Dominant\n1 Kang the Conqueror\n1 Keiga, the Tide Star\n1 Lembas\n1 Maestros Theater\n1 Magic Damper\n1 Moonsilver Key\n1 Muddle the Mixture\n1 Myriad Landscape\n1 Navigation Orb\n1 Obscura Storefront\n1 Observed Stasis\n1 Octopus Form\n1 Oracle's Vault\n1 Phyrexian Triniform\n1 Planar Nexus\n1 Promising Vein\n1 Propaganda\n1 Prototype Portal\n1 Raise the Palisade\n1 Replicating Ring\n1 Replication Technique\n1 Rishadan Cutpurse\n1 Scour for Scrap\n1 Scuttling Doom Engine\n1 Shadow of the Second Sun\n1 Shire Terrace\n1 Slip Out the Back\n1 Snap\n1 Sol Ring\n1 Solemn Simulacrum\n1 Struggle for Project Purity\n1 Stuck in Summoner's Sanctum\n1 Summon: Bahamut\n1 Summon: Shiva\n1 Summon: Valefor\n1 Surgical Skullbomb\n1 Talon Gates of Madara\n1 Terisian Mindbreaker\n1 The Eternity Elevator\n1 The Millennium Calendar\n1 The Theorist, Jace Beleren\n1 The Water Crystal\n1 Thran Dynamo\n1 Tishana's Tidebinder\n1 Tolaria West\n1 Training Grounds\n1 Turnabout\n1 Urza's Cave\n1 Urza's Mine\n1 Urza's Power Plant\n1 Urza's Tower\n1 Urza's Workshop\n1 Wayfarer's Bauble\n1 Wurmcoil Engine\n\n1 Gogo, Master of Mimicry\n" },
     { key: "beorn", name: "Beorn the Fierce (mono-green bears)", colors: ["G"], desc: "Mono-green bears and big creatures: Beorn the Fierce, Famished Worldsire, Selvala, Wargling, Part in Friendship and mana dorks (the owner's list)", checked: "2026-11-15", text: "1 Beast Whisperer\n1 Beast Within\n1 Bejeweled Warg\n1 Beorn, Reluctant Host\n1 Beorn's Hospitality\n1 Bighorner Rancher\n1 Circle of Dreams Druid\n1 Claim the Kingdom\n1 Cultivate\n1 Dancing from Dark to Dawn\n1 Diamond Weapon\n1 Doc Samson, Super Psychiatrist\n1 Famished Worldsire\n36 Forest\n1 Formidable Speaker\n1 Genesis Wave\n1 Germination Practicum\n1 Ghalta, Stampede Tyrant\n1 Gigantic Big Bear\n1 Greensleeves, Maro-Sorcerer\n1 Groundchuck & Dirtbag\n1 Hit-Monkey\n1 Jubilation\n1 Jumbo Cactuar\n1 Kodama's Reach\n1 Leatherhead, Iron Gator\n1 Lifestream's Blessing\n1 Little Bear\n1 Llanowar Elves\n1 Lumra, Bellow of the Woods\n1 Michelangelo, On the Scene\n1 Mirkwood Pathmaker\n1 Mole Man, Moloid Master\n1 Mona Lisa, Science Geek\n1 Moon-Vigil Adherents\n1 Multani, Yavimaya's Avatar\n1 Nature's Lore\n1 Necklace of Girion\n1 Ordinary Bear\n1 Overwhelming Stampede\n1 Part in Friendship\n1 Radagast of Rhosgobel\n1 Rampant Growth\n1 Restorative Technique\n1 Return of the Wildspeaker\n1 Ride the Shoopuf\n1 Rocksteady, Mutant Marauder\n1 Sandman, Shifting Scoundrel\n1 Savage Land Dinosaur\n1 Seismic Sense\n1 Selvala, Heart of the Wilds\n1 Shang-Chi, Martial Mentor\n1 Shared Roots\n1 Skyshroud Claim\n1 Studious First-Year\n1 Summon: Fenrir\n1 Thickest in the Thicket\n1 Three Visits\n1 Through the Forest Gate\n1 Tifa's Limit Break\n1 Vastlands Scavenger\n1 Wargling\n1 Wilderland Scrounger\n1 Wood Elves\n\n1 Beorn the Fierce\n" },
 ];
-function verifiedDecksHTML(onclick, pressedKey) {
-    return `<div class="opp-grid">${VERIFIED_DECKS.map(v => `<button type="button" class="opp" aria-pressed="${pressedKey === v.key}" onclick="${onclick}('${v.key}')">
-        <strong>✅ ${v.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(v.name)}</strong><small>${esc(v.desc)}</small></button>`).join('')}</div>`;
+function verifiedDecksHTML(onclick, pressedKey, ctx = 'ready') {
+    return dgView(ctx, () => VERIFIED_DECKS.map(v => ({ colors: v.colors, kind: dgVerifiedKind(v), html: `<button type="button" class="opp" aria-pressed="${pressedKey === v.key}" onclick="${onclick}('${v.key}')">
+        <strong>${v.colors.map(c => `<span class="pip ${c}"></span>`).join('')} ${esc(v.name)}</strong>${dgBadge(dgVerifiedKind(v))}<small>${esc(v.desc)}</small></button>` })), { grid: true });
 }
 async function makeVerifiedStarter(key) {
     const v = VERIFIED_DECKS.find(x => x.key === key);
@@ -1516,7 +1523,7 @@ async function makeVerifiedStarter(key) {
     if (status) status.innerHTML = '<span class="loading">Building the deck from live card data...</span>';
     try {
         const gen = await listToOppDeck(v.text, 'commander');
-        const deck = generatedToDeck(gen, `${v.name} (starter)`);
+        const deck = generatedToDeck(gen, `${v.name} (starter)`); deck.srcKey = v.key;
         profile.decks.push(deck);
         saveProfile();
         closeModal();
@@ -1534,7 +1541,7 @@ async function starterPicker() {
         <p class="note">Ready-made decks to play right away. They don't use your collection.</p>
         <div style="text-align:left; margin-top:12px;"><h3 style="font-size:1rem;">✅ Fully working Commander decks</h3>
             <p class="note" style="margin-bottom:6px;">Every card in these decks is automated and was checked one by one.</p>
-            ${verifiedDecksHTML('makeVerifiedStarter', null)}</div>
+            ${verifiedDecksHTML('makeVerifiedStarter', null, 'starter')}</div>
         <div class="grid-2" style="text-align:left; margin-top:12px;">
             <div><h3 style="font-size:1rem;">Modern (60 cards)</h3>
                 <select id="starterTheme" style="width:100%; margin:6px 0;">${MODERN_THEMES.map(t => `<option value="${t.key}">${esc(t.name)} - ${esc(t.desc)}</option>`).join('')}</select>
@@ -1692,9 +1699,10 @@ function renderPlayView() {
         const q = PLAYSEL.q.trim().toLowerCase();
         const mine = profile.decks.map((d, i) => [d, i]).filter(([d]) => d.format === PLAYSEL.type && (!q || d.name.toLowerCase().includes(q)));
         const chosen = Number(sel.value);
+        const tileOf = ([d, i]) => { const pr = deckProblems(d); const ci = deckTileColors(d); return `<button type="button" class="opp dk${pr.length ? ' fix' : ''}" style="--dk:${ci.length ? (ci.length === 1 ? `var(--mana-${ci[0]})` : `linear-gradient(to bottom, ${ci.map(c => `var(--mana-${c})`).join(', ')})`) : 'var(--mana-C)'}" aria-pressed="${i === chosen}" onclick="playPickDeck(${i})"><strong>${esc(d.name)}</strong>${dgBadge(dgDeckKind(d))}<span class="dk-meta"><span class="dk-pips" aria-label="Colors: ${ci.join('') || 'colorless'}">${(ci.length ? ci : ['C']).map(c => `<i style="background:var(--mana-${c})"></i>`).join('')}</span><small>${deckCount(d)} cards${pr.length ? ` · ⚠ ${pr.length} to fix` : ' · ✓ ready'}</small></span></button>`; };
         box.innerHTML = `<div class="chips" style="margin:0 0 8px;" role="group" aria-label="Deck type">${types.map(k => `<button type="button" class="chip${PLAYSEL.type === k ? ' on' : ''}" aria-pressed="${PLAYSEL.type === k}" onclick="playPickType('${k}')">${DECK_TYPE_ICONS[k] || ''} ${esc(FORMATS[k].name)} (${counts[k]})</button>`).join('')}</div>
             ${counts[PLAYSEL.type] > 6 ? `<input type="search" id="playDeckQ" value="${esc(PLAYSEL.q)}" placeholder="Find one of your ${esc(FORMATS[PLAYSEL.type].name)} decks" aria-label="Find a deck" oninput="playDeckSearch(this.value)" style="width:100%; margin-bottom:8px;">` : ''}
-            <div class="opp-grid deck-pick">${mine.map(([d, i]) => { const pr = deckProblems(d); const ci = deckTileColors(d); return `<button type="button" class="opp dk${pr.length ? ' fix' : ''}" style="--dk:${ci.length ? (ci.length === 1 ? `var(--mana-${ci[0]})` : `linear-gradient(to bottom, ${ci.map(c => `var(--mana-${c})`).join(', ')})`) : 'var(--mana-C)'}" aria-pressed="${i === chosen}" onclick="playPickDeck(${i})"><strong>${esc(d.name)}</strong><span class="dk-meta"><span class="dk-pips" aria-label="Colors: ${ci.join('') || 'colorless'}">${(ci.length ? ci : ['C']).map(c => `<i style="background:var(--mana-${c})"></i>`).join('')}</span><small>${deckCount(d)} cards${pr.length ? ` · ⚠ ${pr.length} to fix` : ' · ✓ ready'}</small></span></button>`; }).join('') || '<p class="note">No deck matches.</p>'}</div>${randomBuild}`;
+            ${PLAYSEL.type === 'commander' && mine.length ? dgView('play', () => mine.map(([d, i]) => ({ colors: deckTileColors(d), kind: dgDeckKind(d), html: tileOf([d, i]) })), { grid: true, gridClass: 'deck-pick' }) : `<div class="opp-grid deck-pick">${mine.map(tileOf).join('') || '<p class="note">No deck matches.</p>'}</div>`}${randomBuild}`;
     }
     $('oppHead').innerHTML = `<span class="step-n">2</span> Your opponent${cur ? ` <small>${esc(FORMATS[PLAYSEL.type].name)} decks, so it's a fair match</small>` : ''}`;
     renderOpponents();
