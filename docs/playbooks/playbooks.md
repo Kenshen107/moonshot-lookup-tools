@@ -1,6 +1,6 @@
 # Playbooks mined from game records
 
-Generated 2026-11-19 by `node tests/playbook.js` from 34 games. 0 new games added this run, 17 already known; 34 kept in all (2026-10-26 to 2026-11-18). The playbooks are rebuilt from every game kept in `games.jsonl.gz`, so they get more reliable as games are added. Draft numbers for reviewing by hand; small samples mean low confidence.
+Generated 2026-11-24 by `node tests/playbook.js` from 35 games. 1 new game added this run, 0 already known; 35 kept in all (2026-10-26 to 2026-11-24). The playbooks are rebuilt from every game kept in `games.jsonl.gz`, so they get more reliable as games are added. Draft numbers for reviewing by hand; small samples mean low confidence.
 
 ## Grizzlegom, Hurloon Hero  (6 games: 3 won, 3 lost)
 Human:  lands by turn 5 4.5, by turn 8 8 · spells/turn 1 · first attack on own turn 5.2 · attacks on 64% of turns after 4 · 1.7 creatures per attack · 6.7 combat damage/turn · 0.2 abilities/turn
@@ -20,25 +20,24 @@ Suggestions for the computer (low confidence below ~5 games):
   - the human attacks on 64% of turns after turn 4, the computer on 40%: let this deck's plan attack more (a higher `atk` or lower `hold` for its playstyle)
 Plan skeleton (review before use):  'Grizzlegom, Hurloon Hero': { win: '<fill in how the wins ended>', engine: ["Summon: Fenrir","Ulvenwald Hydra","Timeless Witness","Lavaspur Boots","The Earth King","Grizzlegom, Hurloon Hero","Garruk's Uprising","Troop of Ponies"], payoff: [<the finishers above>], payoffNeed: 3, cmdr: 4 },
 
-## Doc Samson, Super Psychiatrist  (4 games: 2 won, 2 lost)
-Human:  lands by turn 5 4.8, by turn 8 7.3 · spells/turn 2.6 · first attack on own turn 6.3 · attacks on 44% of turns after 4 · 2.7 creatures per attack · 50.6 combat damage/turn · 3.6 abilities/turn
-  in wins: first attack 7.5, 3.8/attack, 3.9 spells/turn, lands by 5 5   |  in losses: first attack 5, 1.6/attack, 1.4 spells/turn, lands by 5 4.5
+## Doc Samson, Super Psychiatrist  (5 games: 3 won, 2 lost)
+Human:  lands by turn 5 4.8, by turn 8 7.2 · spells/turn 2.5 · first attack on own turn 6 · attacks on 50% of turns after 4 · 2.6 creatures per attack · 41.7 combat damage/turn · 4.9 abilities/turn
+  in wins: first attack 6.7, 3.3/attack, 3.3 spells/turn, lands by 5 5   |  in losses: first attack 5, 1.6/attack, 1.4 spells/turn, lands by 5 4.5
 Computer on the same commander (9 games): lands by 5 4.3, by 8 6.1 · spells/turn 1.3 · first attack 3.4 · attacks on 54% of turns after 4 · 1.2 per attack · 1.5 damage/turn · 0.2 abilities/turn
 First turns in the games won:
   turn 1: -
-  turn 2: -
-  turn 3: Kami of Whispered Hopes (1/2)
-  turn 4: Doc Samson, Super Psychiatrist (1/2), Empowered Autogenerator (1/2)
-  turn 5: Everflowing Chalice (1/2), Contagion Clasp (1/2), Doc Samson, Super Psychiatrist (1/2)
-  turn 6: Empowered Autogenerator (1/2), Doc Samson, Super Psychiatrist (1/2), Hardened Scales (1/2), Kalonian Hydra (1/2)
-Cast in the wins more than in the losses: Kami of Whispered Hopes (2/2 wins, 0/2 losses); Empowered Autogenerator (2/2 wins, 0/2 losses); Kalonian Hydra (2/2 wins, 0/2 losses); Goblin Cannon (2/2 wins, 0/2 losses); Temur Sabertooth (2/2 wins, 0/2 losses); The First Iroan Games (2/2 wins, 0/2 losses); Lavaspur Boots (2/2 wins, 0/2 losses); Swashbuckler's Whip (2/2 wins, 0/2 losses); Fangs of Kalonia (2/2 wins, 0/2 losses); Peema Trailblazer (2/2 wins, 0/2 losses); Lily Bowen, Raging Grandma (2/2 wins, 1/2 losses); Umbral Mantle (2/2 wins, 1/2 losses)
-Abilities used most: Spike Feeder x26, Sword of the Paruns x22, Swashbuckler's Whip x19, Umbral Mantle x19, Staff of Domination x7, Empowered Autogenerator x5, Manifold Key x3, Surestrike Trident x3
-Won on turn 31 (1 attackers; last casts: Goliath, Mass Manipulator, Umbral Mantle, Surestrike Trident); 29 (12 attackers; last casts: Gyre Sage, Fangs of Kalonia, Screaming Shield)
+  turn 2: Cankerbloom (1/3)
+  turn 3: Kami of Whispered Hopes (1/3), Gamma Grotesque (1/3)
+  turn 4: Doc Samson, Super Psychiatrist (1/3), Empowered Autogenerator (1/3), Sazh Katzroy (1/3)
+  turn 5: Doc Samson, Super Psychiatrist (2/3), Everflowing Chalice (1/3), Contagion Clasp (1/3)
+  turn 6: Empowered Autogenerator (1/3), Doc Samson, Super Psychiatrist (1/3), Hardened Scales (1/3), Kalonian Hydra (1/3)
+Cast in the wins more than in the losses: Goblin Cannon (3/3 wins, 0/2 losses); Swashbuckler's Whip (3/3 wins, 0/2 losses); Kami of Whispered Hopes (2/3 wins, 0/2 losses); Contagion Clasp (2/3 wins, 0/2 losses); Empowered Autogenerator (2/3 wins, 0/2 losses); Gamma Grotesque (2/3 wins, 0/2 losses); Kalonian Hydra (2/3 wins, 0/2 losses); Temur Sabertooth (2/3 wins, 0/2 losses); The First Iroan Games (2/3 wins, 0/2 losses); Lavaspur Boots (2/3 wins, 0/2 losses); Cankerbloom (2/3 wins, 0/2 losses); Fangs of Kalonia (2/3 wins, 0/2 losses)
+Abilities used most: Goblin Cannon x81, Spike Feeder x26, Sword of the Paruns x22, Swashbuckler's Whip x19, Umbral Mantle x19, Staff of Domination x8, Empowered Autogenerator x5, Manifold Key x3
+Won on turn 31 (1 attackers; last casts: Goliath, Mass Manipulator, Umbral Mantle, Surestrike Trident); 29 (12 attackers; last casts: Gyre Sage, Fangs of Kalonia, Screaming Shield); 30 (0 attackers; last casts: Sol Ring, Rishkar's Expertise, Goblin Cannon)
 Suggestions for the computer (low confidence below ~5 games):
-  - the human sends 2.7 creatures per attack against the computer's 1.2: all-in swings are part of the plan
-  - the human casts 1.3 more spells a turn: the computer leaves mana unused
-  - the human uses 3.4 more abilities a turn: look at which abilities the computer skips
-Plan skeleton (review before use):  'Doc Samson, Super Psychiatrist': { win: '<fill in how the wins ended>', engine: ["Kami of Whispered Hopes","Empowered Autogenerator","Kalonian Hydra","Goblin Cannon","Temur Sabertooth","The First Iroan Games","Lavaspur Boots","Swashbuckler's Whip"], payoff: [<the finishers above>], payoffNeed: 3, cmdr: 4 },
+  - the human casts 1.2 more spells a turn: the computer leaves mana unused
+  - the human uses 4.7 more abilities a turn: look at which abilities the computer skips
+Plan skeleton (review before use):  'Doc Samson, Super Psychiatrist': { win: '<fill in how the wins ended>', engine: ["Goblin Cannon","Swashbuckler's Whip","Kami of Whispered Hopes","Contagion Clasp","Empowered Autogenerator","Gamma Grotesque","Kalonian Hydra","Temur Sabertooth"], payoff: [<the finishers above>], payoffNeed: 3, cmdr: 4 },
 
 ## Nog, Ambitious Cadet  (4 games: 4 won, 0 lost)
 Human:  lands by turn 5 6.8, by turn 8 12.5 · spells/turn 0.9 · first attack on own turn 4.5 · attacks on 70% of turns after 4 · 10.1 creatures per attack · 12.5 combat damage/turn · 1 abilities/turn
@@ -141,6 +140,10 @@ Abilities used most: Koth, Fire of Resistance x3, Burnished Hart x1
 
 ## Hugh, First of Many  (1 game: 0 won, 1 lost)
 Human:  lands by turn 5 5, by turn 8 5 · spells/turn 1.5 · first attack on own turn 5 · attacks on 83% of turns after 4 · 2 creatures per attack · 3.4 combat damage/turn · 0 abilities/turn
+Computer on the same commander (1 game): lands by 5 5, by 8 5 · spells/turn 0.9 · first attack 7 · attacks on 33% of turns after 4 · 4 per attack · 4.3 damage/turn · 0 abilities/turn
+Suggestions for the computer (low confidence below ~5 games):
+  - the human attacks on 83% of turns after turn 4, the computer on 33%: let this deck's plan attack more (a higher `atk` or lower `hold` for its playstyle)
+  - the human casts 0.6 more spells a turn: the computer leaves mana unused
 
 ## Rootha, Mercurial Artist  (1 game: 0 won, 1 lost)
 Human:  lands by turn 5 5, by turn 8 8 · spells/turn 1.2 · first attack on own turn 0 · attacks on 0% of turns after 4 · 0 creatures per attack · 0 combat damage/turn · 0.2 abilities/turn
