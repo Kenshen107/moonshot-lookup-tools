@@ -7,7 +7,7 @@
 // `AI_TUNE.quiet` is 1 = those bots, 0 = nobody, 2 = everybody (the lab uses 2 to measure it); `quietRounds` (default 9) is how many rounds it hides at most.
 // Pods only (it uses the same gate as the rest of table sense, `tsOn`); no random numbers.
 // =====================================================================
-Object.assign(AI_TUNE, { quiet: 1, quietRounds: 9 });
+Object.assign(AI_TUNE, { quiet: 1, quietRounds: 9, quietStall: 1 });
 Object.assign(CHARACTER_HABITS.marcus, { quiet: 1 });
 Object.assign(CHARACTER_HABITS.trevor, { quiet: 1 });
 Object.assign(CHARACTER_HABITS.sarah, { quiet: 1 });
@@ -28,6 +28,8 @@ function quietState(P) {
     if (P.life <= 12) return { hiding: false, reason: 'it is in trouble anyway' };
     if (G.arch === P.i) return { hiding: false, reason: 'the table is already after it' };
     if (G.turn >= tn(P, 'quietRounds') * live.length) return { hiding: false, reason: 'the game has gone on long enough' };
+    // A table where nobody has attacked for three rounds is a stalled table: the quiet bots are the reason, so they come out (2026-11-24, a pod record with two Ramp seats: 8 attacks in 30 turns)
+    if (tn(P, 'quietStall') > 0 && G.turn >= 3 * live.length + 3 && G.turn - (G.lastAtkTurn || 0) >= 3 * live.length) return { hiding: false, reason: 'nobody has attacked for a while' };
     return { hiding: true, reason: '' };
 }
 // Is P near the top of the table's threat ranking? Then adding to its board would give it away.
@@ -72,4 +74,10 @@ aiScore = function (P, o, target) {
         if (r.score <= -90 || !['peace', 'spare'].includes(type) || !tsOn(bot) || !isQuiet(bot)) return r;
         return { ...r, score: r.score + 1, parts: { ...r.parts, quiet: 1 } };
     };
+}
+
+// Remember when anyone last attacked (read by quietState)
+{
+    const _da_q = declareAttackers;
+    declareAttackers = function (P, list) { try { if (G && list && list.length) G.lastAtkTurn = G.turn; } catch (e) { /* never stops play */ } return _da_q.apply(this, arguments); };
 }

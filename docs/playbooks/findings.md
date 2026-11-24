@@ -17,9 +17,10 @@ Added to `games.jsonl.gz` as a condensed copy (the 80 Goblin Cannon activations 
 
 **What the person did better than the computer (numbers in `playbooks.md`, low confidence at 5 games)**: 2.5 spells a turn against 1.3, 4.9 abilities a turn against 0.2, and a finish that turns infinite mana into a kill.
 
-## Leads, in the order I'd do them (none built; each is the owner's call)
-1. **Goblin Cannon as a second finisher for the computer's Samson plan.** `DECK_PLANS['Doc Samson, Super Psychiatrist']` ends only with Surestrike Trident (`tridentKill`). The person's wins used Goblin Cannon; with infinite mana the computer should kill every opponent the same way (one activation per life point, capped by the activation limit `INF_ACT_CAP` of 60, so it would need that cap lifted for this one finisher).
-2. **A number box for repeatable activations.** Goblin Cannon asked "Activate it again (N so far)?" and a target 80 times, about 160 taps. With infinite mana the prompt could be "How many times?" with a split of targets. (Interface change: ask first.)
-3. **Two Ramp bots make a pod passive.** When random pod seats are drawn, avoid two quiet styles at once, or let a quiet bot attack when nobody else has.
-4. **Animated artifacts and creatures-until-end-of-turn.** Check whether `aiChooseAttackers` counts permanents animated this turn (Cyberdrive Awakener, Mutavault-style) or whether stay-quiet held Hugh back; the record can't tell them apart.
-5. **Low land counts for bots**: Odric 4 lands in 7 turns, Hugh 5. Worth a look at the opening-hand and mulligan choices (`mulliganWanted`) for these two decks with a land-count probe over 100 seeded pods.
+## Leads from that pod, and what became of them (2026-11-24, owner: "Build all references")
+1. **Goblin Cannon for the computer's Samson plan:** it already finished with Cannon activations (added 2026-11-18); the real gap was the 60-activation cap for infinite-mana turns, which would have stopped it after 60. Goblin Cannon is now exempt (`15y-ai-plans.js`). The earlier note here saying the plan ended only with the Trident was wrong.
+2. **"How many times" box:** a person now gets one prompt after the first activation, how many more times (up to 400 with infinite mana), and at whom (one player or "choose each one"), instead of a yes and a target for every activation (`15zb-cores.js`).
+3. **Two quiet seats:** random pod seats now take at most one Control / Ramp / Spellslinger style between them and the first opponent (`06-engine.js`), and a quiet bot comes out when nobody at a pod has attacked for three rounds (`quietStall`, `07j-stay-quiet.js`; `G.lastAtkTurn`). Chosen decks are never changed.
+4. **Animated artifacts:** checked, nothing to fix: an animated Mind Stone is a creature with its power, is not summoning sick and is offered to the attack code; Hugh not attacking on turn 20 was the stay-quiet trait.
+5. **Bot land counts:** measured, no problem: 60 four-player pods with Hugh at seat A (seed 1..60) won 66.7%, with 5.85 mana by turn 5 for winners against 4.82 for the rest. The 4-lands-in-7-turns Odric game looks like a bad draw, not a habit; rerun with `--decka tests/decks/odric-lunarch-marshal.txt` if it keeps showing up.
+Tests: `tests/suites/podfollow.js` (12 checks, in the fast run).

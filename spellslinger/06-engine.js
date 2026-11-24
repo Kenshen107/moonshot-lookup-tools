@@ -275,7 +275,11 @@ async function startMatch(again) {
         }
         // A pod (3 or 4 players, Commander only): the other seats are random playable Commander decks
         const more = [];
-        const seatStyles = shuffled(PLAYSTYLE_KEYS.filter(k => k !== oppDeck.aiStyle));
+        // At most one quiet style (Control, Ramp, Spellslinger) at the table: two or more make a pod where nobody attacks (2026-11-24, from a pod record)
+        const quietKeys = typeof QUIET_STYLES !== 'undefined' ? QUIET_STYLES : [];
+        const loud = shuffled(PLAYSTYLE_KEYS.filter(k => k !== oppDeck.aiStyle && !quietKeys.includes(k)));
+        const quiet = shuffled(PLAYSTYLE_KEYS.filter(k => k !== oppDeck.aiStyle && quietKeys.includes(k)));
+        const seatStyles = (oppDeck.aiStyle && quietKeys.includes(oppDeck.aiStyle)) ? loud : shuffled([...loud.slice(0, 3), quiet[0]].filter(Boolean));
         for (let k = 2; k < (deck.format === 'commander' ? podSize : 2); k++) {
             const pick = (typeof podSeatPick !== 'undefined' && podSeatPick[k - 2]) || 'random', [kind, a, b] = pick.split('|');
             let d = null;

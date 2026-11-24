@@ -212,10 +212,27 @@ Object.assign(CMD_SCORE, {
             const live = foes(P).filter(F => !F.out && F.life > 0);
             if (!live.length) break;
             let again;
-            if (dcAI(P)) {
+            if (dcAI(P) && !(typeof window !== 'undefined' && window.__DC_HUMAN && !P.isAI)) {
                 const spare = P.bf.filter(x => !x.tapped && Rx(x).mana).length >> 1;
                 again = (typeof infiniteNow === 'function' && infiniteNow(P)) || live.some(F => F.life <= n + spare);
-            } else again = await askYes(P, `Goblin Cannon: its ability is on the stack and it isn't sacrificed until it resolves. Activate it again (${n} so far)?`, { card: o.card, yes: 'Activate again', no: 'Let it resolve' });
+            } else {
+                // A person says how many more times, and at whom, in one step (2026-11-24, owner's pod record: 80 activations took about 160 taps)
+                const cap = Math.min(((typeof infiniteNow === 'function' && infiniteNow(P)) ? 400 : 150) - n, 400);
+                const more = await askNumber(P, `Goblin Cannon: its ability is on the stack and it isn't sacrificed until it resolves. Activate it how many more times (${n} so far)?`, 0, cap, 0, { card: o.card, ok: 'Activate', noCancel: true });
+                if (!(more > 0)) break;
+                let aim = null;
+                if (live.length > 1) {
+                    const r = await askMode(P, `Goblin Cannon: aim all ${more} at...`, [...live.map(F => `${F.name} (${F.life} life)`), 'Choose each one']);
+                    if (typeof r === 'number' && r < live.length) aim = live[r];
+                } else aim = live[0];
+                let done = 0;
+                for (; done < more && !G.over && onBf(o.uid) && canActivate(P, o, a2); done++) {
+                    if (aim && (aim.out || aim.life <= 0)) { const alive = foes(P).filter(F => !F.out && F.life > 0); if (!alive.length) break; aim = alive[0]; }
+                    if (!(await prev.call(this, P, o, a2, aim ? { p: aim } : undefined, ...rest.slice(1)))) break;
+                }
+                n += done;
+                break;
+            }
             if (!again) break;
             if (!(await prev.call(this, P, o, a2, ...rest))) break;
             n++;

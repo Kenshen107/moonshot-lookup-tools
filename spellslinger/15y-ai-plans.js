@@ -37,7 +37,7 @@ const AI_ACT_GUARDS = {
             // A "becomes a creature until end of turn" ability does nothing the second time in a turn
             if (a.effects.some(e => e.t === 'animate') && o.animated && o.animated.turn === G.turn) return false;
             if (a.effects.some(e => e.t === 'draw' && (e.target === 'player' || !e.target)) && P.library.length < 12) return false; // never draw itself out with an ability
-            if (P.infMana === G.turn && P.infTurn === G.turn && (P.infTurnActs || 0) >= INF_ACT_CAP) return false; // bounded: the board stays playable
+            if (P.infMana === G.turn && P.infTurn === G.turn && (P.infTurnActs || 0) >= INF_ACT_CAP && o.card.name !== 'Goblin Cannon') return false; // bounded: the board stays playable
             const g = AI_ACT_GUARDS[o.card.name];
             if (g && !g(P, o, a)) return false;
         }
