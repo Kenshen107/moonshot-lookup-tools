@@ -73,8 +73,8 @@ clx('~ has annihilator X, where X is the number of +1/+1 counters on it.', R => 
 clx('Whenever ~ attacks, put a blight counter on target land. For as long as that land has a blight counter on it, it loses all land types and abilities and has "{T}: Add {C}."', R => { R.trig.push({ ev: 'attacks', fn: 'selfAttacks', effects: [cmd('sv_blight', { target: 'perm', filter: 'land' })] }); });
 clx('Whenever you tap a land for {C}, add an additional {C}.', R => { R.svLandC = true; });
 clx('Kicker {G} and/or {1}{U}', R => { R.svKickers = true; });
-clx('When you cast ~, if it was kicked with its {G} kicker, exile target artifact or enchantment an opponent controls.', R => { (R.castTrig = R.castTrig || []).push(...[cmd('sv_kickG', { target: 'perm', filter: 'artifact or enchantment' })]); });
-clx('When you cast ~, if it was kicked with its {1}{U} kicker, return target creature an opponent controls to its owner\'s hand.', R => { (R.castTrig = R.castTrig || []).push(...[cmd('sv_kickU', { target: 'creature', filter: 'opp' })]); });
+clx('When you cast ~, if it was kicked with its {G} kicker, exile target artifact or enchantment an opponent controls.', R => { (R.castTrig = R.castTrig || []).push(...[cmd('sv_kickG', { target: 'perm', filter: 'artifact or enchantment', needFlag: 'svKickG' })]); });
+clx('When you cast ~, if it was kicked with its {1}{U} kicker, return target creature an opponent controls to its owner\'s hand.', R => { (R.castTrig = R.castTrig || []).push(...[cmd('sv_kickU', { target: 'creature', filter: 'opp', needFlag: 'svKickU' })]); });
 clx('{T}, Pay 1 life: Add one mana of any color. Spend this mana only to cast a spell with devoid.', R => { R.mana = { colors: ['C', 'W', 'U', 'B', 'R', 'G'], n: 1, pain: { colors: ['W', 'U', 'B', 'R', 'G'], life: 1 }, svColoredOnly: 'Devoid' }; });
 clx('{T}: Add {C}{C}. Spend this mana only to cast colorless Eldrazi spells or activate abilities of colorless Eldrazi.', R => { R.svBonus = { n: 1, re: 'ColorlessEldrazi' }; });
 clx('{T}: Add {C}{C}. Spend this mana only to cast colorless spells. Activate only if you control seven or more lands.', R => { R.svBonus = { n: 1, re: 'Colorless', minLands: 7 }; });
@@ -149,7 +149,7 @@ clx('If an opponent cast three or more spells this turn, you may pay {0} rather 
 clx('Exile any number of target spells.', R => { R.spell = [cmd('sv_mindbreak')]; });
 clx('{T}, Sacrifice ~: Look at the top card of target player\'s library. Draw a card at the beginning of the next turn\'s upkeep.', (R, m, ctx) => { act(R, ctx.line, '{T}, Sacrifice ~', [cmd('sv_bauble', { mode: 'top' })]); });
 clx('{T}, Sacrifice ~: Look at a card at random in target player\'s hand. You draw a card at the beginning of the next turn\'s upkeep.', (R, m, ctx) => { act(R, ctx.line, '{T}, Sacrifice ~', [cmd('sv_bauble', { mode: 'hand' })]); });
-clx('If ~ would enter, you may discard a land card instead. If you do, put ~ onto the battlefield. If you don\'t, put it into its owner\'s graveyard.', R => { R.etb.push(cmd('sv_moxDiamond')); });
+clx('If ~ would enter, you may discard a land card instead. If you do, put ~ onto the battlefield. If you don\'t, put it into its owner\'s graveyard.', R => { R.svMoxRepl = true; });
 clx('Whenever an opponent casts a noncreature spell with mana value less than ~\'s power, draw a card.', R => { R.trig.push({ ev: 'cast', filter: 'any', who: 'opp', fn: 'svPollywog', effects: [{ t: 'draw', n: 1 }] }); });
 clx('Whenever you tap a nonland permanent for mana, add one mana of any type that permanent produced.', R => { R.svKinnan = true; });
 clx('{5}{G}{U}: Look at the top five cards of your library. You may put a non-Human creature card from among them onto the battlefield. Put the rest on the bottom of your library in a random order.', (R, m, ctx) => { act(R, ctx.line, '{5}{G}{U}', [cmd('sv_kinnanDig')]); });

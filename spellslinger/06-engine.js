@@ -1130,6 +1130,8 @@ function totalCost(P, o) {
     if (o.exileBlueN && Rx(o).exileBlueReduce) c.generic = Math.max(0, (c.generic || 0) - Rx(o).exileBlueReduce * o.exileBlueN); // March of Swirling Mist
     if (Rx(o).escalate && Array.isArray(o.mode) && o.mode.length > 1) Object.keys(Rx(o).escalate).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).escalate[k] * (o.mode.length - 1); }); // Collective Resistance
     if (o.kicked && Rx(o).kicker) Object.keys(Rx(o).kicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).kicker[k]; });
+    if (o.svKickG && typeof c.G === 'number') c.G += 1; // Wastescape Battlemage: kicker {G}
+    if (o.svKickU) { if (typeof c.generic === 'number') c.generic += 1; if (typeof c.U === 'number') c.U += 1; } // kicker {1}{U}
     if (o.kickN && Rx(o).multikicker) Object.keys(Rx(o).multikicker).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).multikicker[k] * o.kickN; });
     if (o.repN) { const rc = repCostOf(P, o); if (rc) Object.keys(rc).forEach(k => { if (typeof c[k] === 'number') c[k] += rc[k] * o.repN; }); }
     if (o.buyback && Rx(o).buyback) Object.keys(Rx(o).buyback).forEach(k => { if (typeof c[k] === 'number') c[k] += Rx(o).buyback[k]; });
@@ -1593,7 +1595,7 @@ async function castSpell(P, o, presetTarget) {
     G.castThisTurn = (G.castThisTurn || 0) + 1;
     (G.castBy = G.castBy || Z())[P.i]++;
     // "When you cast ~" triggers go on the stack above the spell (Hydroid Krasis)
-    if (Rx(o).castTrig) G.stack.push({ id: stackSeq++, kind: 'trigger', o, P, target: null, effects: withX(Rx(o).castTrig, item.x), name: `${o.card.name}'s cast trigger` });
+    { const ct = (Rx(o).castTrig || []).filter(ef => !ef.needFlag || o[ef.needFlag]); if (ct.length) G.stack.push({ id: stackSeq++, kind: 'trigger', o, P, target: null, effects: withX(ct, item.x), name: `${o.card.name}'s cast trigger` }); }
     G.lastCastMv = o.card.cmc || 0;
     fire('cast', { P, o, target: item.target });
     // Casualty (702.153): sacrifice a creature with enough power as you cast it, and the spell is copied
@@ -1862,6 +1864,8 @@ async function resolveTop() {
                 if (host) { host.ciphered = [...(host.ciphered || []), o.front || o.card]; o.card = o.front || o.card; resetObj(o); item.P.exile.push(o); log(`${o.card.name} is encoded on ${host.card.name} (cipher).`); }
                 else moveSpellCard(o, 'gy');
             } else { if (item.buyback) log(`${o.card.name} returns to its owner's hand (buyback).`); moveSpellCard(o, item.buyback || o.frToHand ? 'hand' : 'gy'); o.frToHand = false; }
+        } else if (r.svMoxRepl && !(await svMoxAsk(item.P, o))) {
+            moveSpellCard(o, 'gy');
         } else {
             const mode = o.mode, face = o.card, evoked = o.evoked;
             delete o.evoked;
@@ -4617,6 +4621,8 @@ async function humanCast(uid) {
     if (Rx(o).kicker && canKick(P, o)) o.kicked = await askYes(P, Rx(o).offspring ? `Pay offspring for ${o.card.name}? (A 1/1 token copy of it enters too.)` : Rx(o).entwine ? `Pay the entwine cost ${costSymbols(Rx(o).kicker)} for ${o.card.name}? (You get both modes.)` : `Pay the kicker cost for ${o.card.name}?`, { card: o.card });
     o.kickN = 0;
     if (Rx(o).multikicker) { const mk = maxKick(P, o); if (mk > 0) { const v = await askNumber(P, `How many times do you pay the multikicker cost for ${o.card.name}?`, 0, mk, 0, { card: o.card, ok: 'Continue' }); o.kickN = v > 0 ? Math.min(v, mk) : 0; o.kicked = o.kickN > 0; } }
+    o.svKickG = false; o.svKickU = false;
+    if (Rx(o).svKickers && typeof svKickAsk === 'function') await svKickAsk(P, o);
     o.repN = 0;
     if (repCostOf(P, o)) { const mr = maxRep(P, o); if (mr > 0) { const v = await askNumber(P, `How many times do you pay the replicate cost ${costSymbols(repCostOf(P, o))} for ${o.card.name}? (One copy each.)`, 0, mr, 0, { card: o.card, ok: 'Continue' }); o.repN = v > 0 ? Math.min(v, mr) : 0; } }
     o.sacN = 0; o.sacList = []; o.exileBlueN = 0; o.exileBlueList = [];

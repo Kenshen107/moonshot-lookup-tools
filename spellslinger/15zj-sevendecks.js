@@ -172,8 +172,8 @@ Object.assign(CMD, {
     sv_labReturn(P, e, t, src) { const c = src.svLab; if (c && P.exile.includes(c)) { pull(P.exile, c); P.hand.push(c); src.svLab = null; log(`${P.name} returns ${c.card.name} to hand.`); } },
     sv_halfLibrary(P, e, t, src) { const V = (t && t.p) || opp(P); const n = Math.ceil(V.library.length / 2); for (let i = 0; i < n; i++) V.exile.push(V.library.pop()); log(`${V.name} exiles ${n} cards from their library.`); },
     sv_blight(P, e, t, src) { const l = t && t.o; if (l) { l.ctr.blight = (l.ctr.blight || 0) + 1; } },
-    async sv_kickG(P, e, t, src) { if (await mayPay(P, '{G}', `${src.card.name}: pay {G} (kicker) to exile an artifact or enchantment?`, src, true) && t && t.o && onBf(t.o.uid)) leaveBattlefield(t.o, 'exile'); },
-    async sv_kickU(P, e, t, src) { if (await mayPay(P, '{1}{U}', `${src.card.name}: pay {1}{U} (kicker) to bounce a creature?`, src, true) && t && t.o && onBf(t.o.uid)) leaveBattlefield(t.o, 'hand'); }
+    async sv_kickG(P, e, t, src) { if (t && t.o && onBf(t.o.uid)) { leaveBattlefield(t.o, 'exile'); log(`${t.o.card.name} is exiled (kicker).`); } },
+    async sv_kickU(P, e, t, src) { if (t && t.o && onBf(t.o.uid)) { leaveBattlefield(t.o, 'hand'); log(`${t.o.card.name} returns to its owner's hand (kicker).`); } },
 });
 // ---- Ward - Sacrifice ----
 (function () {
@@ -222,16 +222,18 @@ function svForgeOk(P, o) {
     if (!P.bf.some(x => Rx(x).svForge && !lostAbilities(x))) return false;
     return /\bArtifact\b/.test(o.card.type) || (o.card.colors || []).length === 0;
 }
+const SV_CONF_MODES = ['Target creature gets +3/-3', 'Exile a nonland permanent, then return it tapped', 'Create an Eldrazi Scion'];
 Object.assign(CMD, {
     async sv_confluence(P, e, t, src) {
-        const modes = ['Target creature gets +3/-3', 'Exile a nonland permanent, then return it tapped', 'Create an Eldrazi Scion'];
+        const pre = slPre('sv_confluence'); const plan = pre && pre.v;
         for (let i = 0; i < 3; i++) {
-            let m = 2;
-            if (svIsHuman(P)) { const r = await askMode(P, `${src.card.name}: choose a mode (${i + 1}/3)`, modes); if (typeof r === 'number') m = r; }
-            else { const bad = foes(P).flatMap(F => F.bf.filter(c => isCreature(c) && Number(c.card.toughness) + (c.ctr.p1 || 0) <= 3)); m = bad.length ? 0 : (i === 2 ? 2 : 2); }
+            let m = 2, c = null;
+            if (plan && plan[i]) { m = plan[i].m; c = plan[i].c; }
+            else if (!svIsHuman(P)) { const bad = foes(P).flatMap(F => F.bf.filter(x => isCreature(x) && Number(x.card.toughness) + (x.ctr.p1 || 0) <= 3)); m = bad.length ? 0 : 2; c = bad.sort((a, b) => permValue(b) - permValue(a))[0] || null; }
+            else { const r = await askMode(P, `${src.card.name}: choose a mode (${i + 1}/3)`, SV_CONF_MODES); if (typeof r === 'number') m = r; }
             if (m === 2) await applyEffect(P, SV_SCION(1), null, src);
-            else if (m === 0) { const pool = allPerms().filter(isCreature); const c = foes(P).flatMap(F => F.bf.filter(isCreature)).sort((a, b) => permValue(b) - permValue(a))[0] || pool[0]; if (c) await applyEffect(P, { t: 'pump', p: 3, q: -3, kw: [] }, { o: c }, src); }
-            else { const own = P.bf.filter(x => !/\bLand\b/.test(x.card.type) && frEtbValue(x) >= 3)[0]; if (own) await CMD.sv_blinkTapped(P, e, { o: own }, src); }
+            else if (m === 0) { c = c && onBf(c.uid) ? c : null; if (!c && svIsHuman(P) && !plan) c = await pickOwn(P, allPerms().filter(isCreature), `${src.card.name}: target creature gets +3/-3`, { optional: true }); if (c) await applyEffect(P, { t: 'pump', p: 3, q: -3, kw: [] }, { o: c }, src); }
+            else { c = c && onBf(c.uid) ? c : null; if (!c && !plan) c = svIsHuman(P) ? await pickOwn(P, allPerms().filter(x => !/\bLand\b/.test(x.card.type)), `${src.card.name}: exile a nonland permanent, then return it tapped`, { optional: true }) : P.bf.filter(x => !/\bLand\b/.test(x.card.type) && frEtbValue(x) >= 3)[0]; if (c) await CMD.sv_blinkTapped(P, e, { o: c }, src); }
         }
     },
     async sv_immunityAll(P, e, t, src) {
@@ -370,14 +372,15 @@ Object.assign(CMD, {
         foes(P).forEach(F => { const k = F.bf.filter(x => isCreature(x) && x.tapped).length; if (k) damage({ p: F }, k, src); });
     },
     async sv_phoenixRaise(P, e, t, src) {
-        const gy = P.gy.filter(c => /Creature/.test(c.card.type) && svMV(c) <= 4);
-        const c = gy.length ? await pickOwn(P, gy, `${src.card.name}: return a creature card`) : null;
-        if (c) { pull(P.gy, c); putOntoBattlefield(P, c, true); log(`${c.card.name} returns tapped.`); }
+        const pre = slPre('sv_phoenixRaise'); let c = pre ? pre.v : undefined;
+        if (c === undefined || (c && !P.gy.includes(c))) { const gy = P.gy.filter(x => /Creature/.test(x.card.type) && svMV(x) <= 4); c = gy.length ? await pickOwn(P, gy, `${src.card.name}: return a creature card`) : null; }
+        if (c && P.gy.includes(c)) { pull(P.gy, c); putOntoBattlefield(P, c, true); log(`${c.card.name} returns tapped.`); }
     },
     async sv_phoenixExile(P, e, t, src) {
-        const bad = G.players.flatMap(X => X.bf.filter(c => isCreature(c) && (hasType(c, 'Skeleton') || hasType(c, 'Spirit') || hasType(c, 'Zombie'))));
-        const c = bad.sort((a, b) => (b.owner !== P.i) - (a.owner !== P.i) || permValue(b) - permValue(a))[0];
-        if (c) { leaveBattlefield(c, 'exile'); log(`${c.card.name} is exiled.`); }
+        const okT = x => isCreature(x) && (hasType(x, 'Skeleton') || hasType(x, 'Spirit') || hasType(x, 'Zombie'));
+        const pre = slPre('sv_phoenixExile'); let c = pre ? pre.v : undefined;
+        if (c === undefined || (c && !onBf(c.uid))) { const bad = G.players.flatMap(X => X.bf.filter(okT)); c = svIsHuman(P) ? await pickOwn(P, bad, `${src.card.name}: exile target Skeleton, Spirit or Zombie`, { optional: true }) : bad.sort((a, b) => (b.owner !== P.i) - (a.owner !== P.i) || permValue(b) - permValue(a))[0]; }
+        if (c && onBf(c.uid) && !has(c, 'shroud')) { leaveBattlefield(c, 'exile'); log(`${c.card.name} is exiled.`); }
     },
     async sv_reclaim(P, e, t, src) {
         const kicked = !!(G.ctxRaw && G.ctxRaw.kicked) || !!(src && src.kicked);
@@ -667,18 +670,23 @@ Object.assign(CMD, {
         log(`${c.card.name} gains "{T}: Return target nonland permanent to its owner's hand" until end of turn.`);
     },
     async sv_chainVapor(P, e, t, src) {
-        let cur = t && t.o, who = P, depth = 0;
-        while (cur && onBf(cur.uid) && depth++ < 4) {
-            const own = G.players[cur.owner]; const ctl = own;
-            leaveBattlefield(cur, 'hand');
-            const lands = ctl.bf.filter(x => /\bLand\b/.test(x.card.type));
-            if (!lands.length || (!svIsHuman(ctl) && lands.length < 5)) break;
-            const yes = svIsHuman(ctl) ? await askYes(ctl, `Chain of Vapor: sacrifice a land to copy it?`, { card: src.card }) : false;
-            if (!yes) break;
-            const l = await pickOwn(ctl, lands, 'Sacrifice a land', { rank: (a, b) => permValue(a) - permValue(b) }); if (l) sacPerm(ctl, l);
-            const pool = allPerms().filter(x => !/\bLand\b/.test(x.card.type));
-            cur = await pickOwn(ctl, pool, 'Chain of Vapor: choose a new target', { optional: true }); who = ctl;
-        }
+        const cur = t && t.o; if (!cur || !onBf(cur.uid)) return;
+        const ctl = G.players.find(X => X.bf.includes(cur)) || G.players[cur.owner];
+        leaveBattlefield(cur, 'hand');
+        const lands = ctl.bf.filter(x => /\bLand\b/.test(x.card.type));
+        if (!lands.length || ctl.out) return;
+        const pool = allPerms().filter(x => !/\bLand\b/.test(x.card.type));
+        if (!pool.length) return;
+        let yes;
+        if (svIsHuman(ctl)) yes = await askYes(ctl, `Chain of Vapor: sacrifice a land to copy it?`, { card: src.card });
+        else yes = lands.length >= 6 && foes(ctl).some(F => F.bf.some(x => !/\bLand\b/.test(x.card.type) && permValue(x) >= 5));
+        if (!yes) return;
+        const l = await pickOwn(ctl, lands, 'Sacrifice a land', { rank: (a, b) => permValue(a) - permValue(b) }); if (!l) return;
+        sacPerm(ctl, l);
+        const nt = svIsHuman(ctl) ? await pickOwn(ctl, pool, 'Chain of Vapor: choose a new target for the copy', { optional: true })
+            : foes(ctl).flatMap(F => F.bf.filter(x => !/\bLand\b/.test(x.card.type))).sort((a, b) => permValue(b) - permValue(a))[0];
+        if (!nt) return;
+        await copySpellItem(ctl, { o: src, name: src.card.name, x: 0, target: null }, { target: { o: nt } });
     },
     async sv_darkSphere(P, e, t, src) { P.svHalf = G.turn; P.svHalfUid = svIsHuman(P) ? await svPickSource(P, src) : null; },
     async sv_cone(P, e, t, src) { const c = t && t.o; if (c && (!svIsHuman(P) || await askYes(P, `${src.card.name}: gain life instead of dealing combat damage with ${c.card.name} if it isn't blocked?`, { card: src.card }))) { c.svConeTurn = G.turn; log(`${c.card.name}: if it attacks and isn't blocked, ${P.name} gains life instead of dealing damage.`); } },
@@ -699,12 +707,6 @@ Object.assign(CMD, {
         const V = (t && t.p) || opp(P);
         if (e.mode === 'top' && V.library.length) { const c = V.library[V.library.length - 1]; if (svIsHuman(P)) toast(`Top card of ${V.name}'s library: ${c.card.name}`); }
         svDelayDraw(P, 1);
-    },
-    async sv_moxDiamond(P, e, t, src) {
-        const lands = P.hand.filter(c => /\bLand\b/.test(c.card.type));
-        const c = lands.length ? (svIsHuman(P) ? await pickOwn(P, lands, `${src.card.name}: discard a land card (or it goes to the graveyard)`, { optional: true }) : lands.sort((a, b) => (a.card.cmc || 0) - (b.card.cmc || 0))[0]) : null;
-        if (c && (svIsHuman(P) || P.hand.length >= 3 || lands.length >= 2)) { pull(P.hand, c); P.gy.push(c); log(`${P.name} discards ${c.card.name}.`); }
-        else { leaveBattlefield(src, 'gy'); }
     },
     async sv_kinnanDig(P, e, t, src) {
         const top = []; for (let i = 0; i < 5 && P.library.length; i++) top.push(P.library.pop());
@@ -902,7 +904,17 @@ Object.assign(CMD, {
             });
         } catch (er) { /* ignore */ }
     }
-    const sl = shuffleLib; shuffleLib = function (P) { const r = sl.apply(this, arguments); searched(P); return r; };
+    // A search is a card taken out of a library by an effect (not drawn or milled), followed by the shuffle every search ends with
+    const pl0 = pull;
+    pull = function (list, x) {
+        let V = null;
+        try { if (G && G.players && !G.over && G.phase !== 'setup' && Array.isArray(list) && list.includes(x)) V = G.players.find(X => X.library === list) || null; } catch (er) { V = null; }
+        const r = pl0.apply(this, arguments);
+        if (V) V.svSrch = G.turn;
+        return r;
+    };
+    const sl = shuffleLib;
+    shuffleLib = function (P) { const r = sl.apply(this, arguments); if (P && P.svSrch === (G && G.turn)) { P.svSrch = null; searched(P); } return r; };
     const f0 = fire;
     fire = function (ev, ctx) {
         const r = f0.apply(this, arguments);
@@ -911,6 +923,7 @@ Object.assign(CMD, {
             if (ev === 'gyLeave' && ctx && ctx.P) { const X = ctx.P; const n = (X.gyLeftLast || []).length || (ctx.n || 1); X.svGyLeft = X.svGyLeft && X.svGyLeft.turn === G.turn ? { turn: G.turn, n: X.svGyLeft.n + n } : { turn: G.turn, n }; }
             if (ev === 'sacrificed' && ctx && ctx.o && hasType(ctx.o, 'Food')) G.players[ctx.o.owner].svFoodTurn = G.turn;
             if (ev === 'gainLife' && ctx && ctx.P) { ctx.P.gainedTurn = G.turn; }
+            if (ev === 'end') { G.players.forEach(X => { X.svSrch = null; }); }
             if (ev === 'end') {
                 (G.svBetray || []).filter(b => b.turn <= G.turn).forEach(b => {
                     const X = G.players[b.P]; if (!X || X.out) return; const own = G.players[b.card.owner];
@@ -1126,3 +1139,38 @@ Object.assign(CMD, {
     };
 })();
 Object.assign(CMD, { async sv_keyDraw(P, e, t, src) { if (await mayPay(P, '{2}', `${src.card.name}: pay {2} to draw a card?`, src, true)) drawCards(P, 1); } });
+
+// Mox Diamond: a real replacement effect as it would enter (asked as the spell resolves; see resolveTop in 06-engine.js)
+async function svMoxAsk(P, o) {
+    const lands = P.hand.filter(c => /\bLand\b/.test(c.card.type));
+    if (!lands.length) { log(`${o.card.name} has no land to discard and goes to the graveyard instead.`); return false; }
+    let c;
+    if (svIsHuman(P)) c = await pickOwn(P, lands, `${o.card.name}: discard a land card (or it goes to the graveyard instead)`, { optional: true });
+    else c = (lands.length >= 2 || P.hand.length >= 3) ? lands.slice().sort((a, b) => (a.card.cmc || 0) - (b.card.cmc || 0))[0] : null;
+    if (!c) { log(`${o.card.name} goes to the graveyard instead of entering.`); return false; }
+    pull(P.hand, c); P.gy.push(c); log(`${P.name} discards ${c.card.name} (${o.card.name}).`);
+    return true;
+}
+// Wastescape Battlemage: its two kickers are separate, optional costs paid as it is cast
+async function svKickAsk(P, o) {
+    const was = { g: o.svKickG, u: o.svKickU };
+    const pays = k => { o[k] = true; const ok = !!planPayment(P, totalCost(P, o), extraCost(P, o), null, payOpts(o)); o[k] = false; return ok; };
+    if (pays('svKickG') && await askYes(P, `${o.card.name}: pay the {G} kicker? (When you cast it, exile target artifact or enchantment an opponent controls.)`, { card: o.card })) o.svKickG = true;
+    if (pays('svKickU') && await askYes(P, `${o.card.name}: pay the {1}{U} kicker? (When you cast it, return target creature an opponent controls to its owner's hand.)`, { card: o.card })) o.svKickU = true;
+    if (o.svKickG && o.svKickU && !planPayment(P, totalCost(P, o), extraCost(P, o), null, payOpts(o))) o.svKickU = false;
+}
+Object.assign(PRE_CMD, {
+    async sv_confluence(P, src) {
+        const out = [];
+        for (let i = 0; i < 3; i++) {
+            const r = await askMode(P, `${src.card.name}: choose a mode (${i + 1}/3)`, SV_CONF_MODES); const m = typeof r === 'number' ? r : 2;
+            let c = null;
+            if (m === 0) c = await slAsk(P, allPerms().filter(x => isCreature(x) && slLegal(P, x)), `${src.card.name}: choose target creature (+3/-3)`, false);
+            else if (m === 1) c = await slAsk(P, allPerms().filter(x => !/\bLand\b/.test(x.card.type) && slLegal(P, x)), `${src.card.name}: choose a nonland permanent to exile and return tapped`, false);
+            out.push({ m, c });
+        }
+        return out;
+    },
+    async sv_phoenixRaise(P, src) { const gy = P.gy.filter(x => /Creature/.test(x.card.type) && svMV(x) <= 4); return gy.length ? await slAsk(P, gy, `${src.card.name}: choose a creature card with mana value 4 or less`, true) : null; },
+    async sv_phoenixExile(P, src) { const bad = allPerms().filter(x => isCreature(x) && (hasType(x, 'Skeleton') || hasType(x, 'Spirit') || hasType(x, 'Zombie')) && slLegal(P, x)); return bad.length ? await slAsk(P, bad, `${src.card.name}: choose target Skeleton, Spirit or Zombie`, true) : null; }
+});
