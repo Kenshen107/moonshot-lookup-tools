@@ -4146,9 +4146,12 @@ async function applyEffect(P, e, t, src) {
             // Council's dilemma, two players: each votes once
             const Q = O, bestGy = Math.max(0, ...P.gy.map(x => x.card.cmc || 0)), hasBasic = P.library.some(x => landFits(x, 'basic land'));
             const mine = P.isAI ? (hasBasic && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < 8 ? 'Redhorn Pass' : 'Mines of Moria') : (await askYes(P, `${name}: vote Redhorn Pass (a basic land onto the battlefield)? (Cancel = Mines of Moria: return a card from your graveyard)`, { card: src.card, yes: 'Redhorn Pass', no: 'Mines of Moria' })) ? 'Redhorn Pass' : 'Mines of Moria';
-            const theirs = Q.isAI ? (bestGy >= 4 ? 'Redhorn Pass' : 'Mines of Moria') : (await askYes(Q, `${name}: ${P.name} asks for votes. Vote Redhorn Pass? (Cancel = Mines of Moria)`, { card: src.card, yes: 'Redhorn Pass', no: 'Mines of Moria' })) ? 'Redhorn Pass' : 'Mines of Moria';
-            log(`Votes: ${P.name} - ${mine}; ${Q.name} - ${theirs}.`);
-            const votes = [mine, theirs];
+            // every living opponent votes, in turn order after the caster (pod record 2026-11-25: Odric's vote was missing)
+            const others = []; for (let k = 1; k < G.players.length; k++) { const X = G.players[(P.i + k) % G.players.length]; if (X !== P && !X.out) others.push(X); }
+            const theirVotes = [];
+            for (const X of (others.length ? others : [Q])) theirVotes.push(X.isAI ? (bestGy >= 4 ? 'Redhorn Pass' : 'Mines of Moria') : ((await askYes(X, `${name}: ${P.name} asks for votes. Vote Redhorn Pass? (Cancel = Mines of Moria)`, { card: src.card, yes: 'Redhorn Pass', no: 'Mines of Moria' })) ? 'Redhorn Pass' : 'Mines of Moria'));
+            log(`Votes: ${P.name} - ${mine}; ` + (others.length ? others : [Q]).map((X, k) => `${X.name} - ${theirVotes[k]}`).join('; ') + '.');
+            const votes = [mine, ...theirVotes];
             for (const v of votes.filter(x => x === 'Redhorn Pass')) { void v; await applyChoiceEffect(P, { t: 'fetchLand', n: 1, what: 'basic land', bf: true, tapped: true }, src); }
             for (const v of votes.filter(x => x === 'Mines of Moria')) { void v; await applyChoiceEffect(P, { t: 'regrow', what: 'card' }, src); }
             break;
@@ -4581,6 +4584,7 @@ async function endTurn(P) {
         // a person with two or more to throw away gets one panel (spellslinger/15zk-discard-many.js), not one question per card
         if (!P.isAI && over >= 2 && !G.hotseat && typeof pickDiscardMany === 'function' && (window.__DISCARD_UI || typeof AUTOPLAY === 'undefined' || !AUTOPLAY)) {
             const chosen = await pickDiscardMany(P, over);
+            if (typeof recAdd === 'function') recAdd(`» ${P.name} chose [Hand size panel: discard ${over}]: ${chosen.map(d => d.card.name).join(', ')}`);
             for (const d of chosen) { if (!P.hand.includes(d)) continue; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} (hand size).`); }
             if (chosen.length) continue;
         }

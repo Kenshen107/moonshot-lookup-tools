@@ -80,7 +80,8 @@ const CMD_TK = {
     }
 };
 Object.assign(CMD, CMD_TK);
-Object.assign(CMD_SCORE, { tkStation: (P, e, t, src) => (P.bf.some(x => x !== src && isCreature(x) && !x.tapped && pow(x) > 0) ? ((src.ctr.charge || 0) < Math.max(0, ...(Rx(src).stationTiers || [0])) ? 6 : 0) : 0) });
+Object.assign(CMD_SCORE, { tkStation: (P, e, t, src) => (P.bf.filter(x => x !== src && isCreature(x) && !x.tapped && pow(x) > 0).length >= (foes(P).some(F => F.bf.some(isCreature)) ? 2 : 1) ? // keep a blocker home while opponents have creatures (pod record 2026-11-25: Aurelia tapped all four creatures to station Rescue Skiff)
+ ((src.ctr.charge || 0) < Math.max(0, ...(Rx(src).stationTiers || [0])) ? 6 : 0) : 0) });
 
 // ---- Dilemmas: a player faces a dilemma whenever they choose one or more modes for a spell or ability ----
 (function () {
