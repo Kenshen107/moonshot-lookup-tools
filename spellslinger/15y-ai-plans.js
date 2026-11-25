@@ -198,9 +198,12 @@ const DECK_PLANS = {
         },
     },
     'Jadzi, Oracle of Arcavios': {
-        win: 'Bounce-land value and copies: Jadzi, Tatyova and bounce lands draw cards; Genesis Wave, Temporal Cascade and Doppelgang convert mana into a board; Tutelages punish a big hand.',
-        engine: ['Tatyova, Benthic Druid', 'Sphinx\'s Tutelage', 'Teferi\'s Tutelage', 'Cultivate', 'Sol Ring', 'Eternal Witness', 'Timeless Witness'],
-        payoff: ['Genesis Wave', 'Temporal Cascade', 'Doppelgang', 'Avenger of Zendikar', 'Windfall', 'Pull from Tomorrow'], payoffNeed: 3, cmdr: 4,
+        win: 'Ramp and draw until the library is nearly empty: Journey to the Oracle (Jadzi\'s back side) and bounce lands jump the mana forward, draw triggers (Tutelages, Tatyova, landfall creatures) turn every land into cards, token copies of lands and Rampant Frogantua / big landfall bodies put on pressure, and a storm spell (Temporal Cascade, Genesis Wave, Windfall, Pull from Tomorrow, Avenger of Zendikar) finishes.',
+        // A slow start and a huge end game, but not a hiding deck: it attacks when its big creatures are safe (owner, 2026-11-25)
+        forceStyle: 'midrange', tune: { quiet: 0, openAttack: 1 },
+        pushers: ['Rampant Frogantua', 'Beanstalk Giant', 'Multani, Yavimaya\'s Avatar', 'Cultivator Colossus', 'Ulvenwald Hydra', 'Harmonious Grovestrider', 'Sandman, Shifting Scoundrel', 'Aesi, Tyrant of Gyre Strait', 'Tangled Florahedron'],
+        engine: ['Tatyova, Benthic Druid', 'Sphinx\'s Tutelage', 'Teferi\'s Tutelage', 'Cultivate', 'Sol Ring', 'Eternal Witness', 'Timeless Witness', 'Rampant Frogantua', 'Aesi, Tyrant of Gyre Strait', 'Wonderscape Sage', 'Disciple of Freyalise', 'Journey of Discovery', 'Simic Growth Chamber', 'Frantic Search', 'Game Plan', 'Cultivator Colossus', 'Beanstalk Giant', 'Ulvenwald Hydra', 'Urza\'s Tower', 'Urza\'s Mine', 'Urza\'s Power Plant', 'Hunting Pack'],
+        payoff: ['Genesis Wave', 'Temporal Cascade', 'Doppelgang', 'Avenger of Zendikar', 'Windfall', 'Pull from Tomorrow', 'Feed the Pack', 'Hydroelectric Specimen', 'Step Between Worlds'], payoffNeed: 3, mana: 8, cmdr: 6,
     },
     'Torgaar, Famine Incarnate': {
         win: 'Sacrifice and recursion: fill the graveyard, sacrifice creatures (Torgaar halves every life total, Exsanguinate and Finale finish) and rebuy them with Midnight Reaper and Reassembling Skeleton.',
@@ -269,8 +272,33 @@ const DECK_PLANS = {
         style: 'ramp', engine: ['Incubation Druid', 'Bighorner Rancher', 'Sol Ring'], payoff: [], cmdr: 5,
     },
     'Othelm, Sigardian Outcast': {
-        win: 'Abzan Clues and recursion: sacrifice Clues and creatures for value, bring everything back and drain.',
-        engine: ['Sol Ring', 'Mind Stone', 'Arcane Signet'], payoff: [], cmdr: 5,
+        win: 'A toolbox of sacrifice and recursion: creatures with enter and leave triggers (Wernog, Karmic Guide, Reveillark, Eternal Witness, Priest of Fell Rites) die or are sacrificed, Othelm ({2},{T}) returns what died this turn, and every cycle makes Clues, draws and drains.',
+        forceStyle: 'midrange', tune: { quiet: 0, openAttack: 1 },
+        pushers: ['Troll of Khazad-dûm', 'Ulvenwald Hydra', 'Burning-Rune Demon', 'Crash of Rhino Beetles', 'Braulios of Pheres Band', 'Sandman, Shifting Scoundrel', 'Malboro', 'Angel of the Ruins', 'Reveillark'],
+        engine: ['Sol Ring', 'Mind Stone', 'Arcane Signet', 'Wernog, Rider\'s Chaplain', 'Karmic Guide', 'Reveillark', 'Eternal Witness', 'Timeless Witness', 'Priest of Fell Rites', 'Deadly Dispute', 'Cauldron of Essence', 'High Market', 'Havengul Laboratory', 'Sakura-Tribe Elder', 'Burnished Hart', 'Dimir House Guard', 'Merchant of Truth', 'Athreos, God of Passage', 'Shadowheart, Dark Justiciar', 'Obsessive Pursuit', 'Witch Enchanter', 'Nyla, Shirshu Sleuth', 'Yavimaya Elder', 'Primeval Herald'],
+        payoff: ['Momentous Fall', 'Pitiless Carnage', 'Behold the Sinister Six!', 'Bala Ged Recovery', 'Nurgle\'s Conscription', 'Rise of the Dark Realms', 'Genesis Wave', 'Magus of the Balance', 'What Must Be Done', 'Sylvan Reclamation'], payoffNeed: 2, cmdr: 6,
+        // Othelm: {2}, {T}: return a creature card that went to the graveyard from the battlefield this turn. Bring back the one with the best enter trigger (Wernog first) with spare mana.
+        async abilities(P) {
+            const o = onBfNamed(P, 'Othelm, Sigardian Outcast'); if (!o || lostAbilities(o) || o.tapped || o.sick) return;
+            // The loop: with a free or cheap sacrifice outlet (High Market, Cauldron of Essence) and 2 spare mana, sacrifice a creature with enter and leave triggers, then Othelm returns it
+            if (!P.othLoop || P.othLoop.turn !== G.turn) P.othLoop = { turn: G.turn, n: 0 };
+            const LOOP = new Set(['Wernog, Rider\'s Chaplain', 'Karmic Guide', 'Reveillark', 'Eternal Witness', 'Timeless Witness', 'Priest of Fell Rites', 'Primeval Herald', 'Sakura-Tribe Elder', 'Burnished Hart']);
+            while (P.othLoop.n < 2 && !G.over && !o.tapped) {
+                const tgt = P.bf.find(c => isCreature(c) && LOOP.has(c.card.name) && !c.token && c !== o);
+                const outlet = P.bf.find(x => !x.tapped && /^(High Market|Cauldron of Essence)$/.test(x.card.name) && actsOf(x).some(ac => ac.cost && (ac.cost.sacCreature || ac.cost.sacPerm) && canActivate(P, x, ac)));
+                if (!tgt || !outlet || availableMana(P) < (outlet.card.name === 'High Market' ? 2 : 6)) break;
+                const oa = actsOf(outlet).find(ac => ac.cost && (ac.cost.sacCreature || ac.cost.sacPerm));
+                P.sacPrefer = tgt; let did = false; try { did = await activate(P, outlet, oa, oa.effects.some(e => /target/i.test(JSON.stringify(e))) ? { o: P.gy.find(c => /Creature/.test(c.card.type)) } : undefined); } finally { P.sacPrefer = null; }
+                P.othLoop.n++; if (!did) break; await settle(); plPol('othelmLoop');
+                break;
+            }
+            const a = actsOf(o).find(x => /Return it to the battlefield/i.test(JSON.stringify(x.effects || '')) || x.cost && x.cost.tap);
+            if (!a || !canActivate(P, o, a) || availableMana(P) < 2) return;
+            const fresh = P.gy.filter(c => /Creature/.test(c.card.type) && (c.diedAtTurn === G.turn || c.sx_leftBf === G.turn));
+            if (!fresh.length) return;
+            const best = fresh.slice().sort((x, y) => (/Wernog/.test(y.card.name) - /Wernog/.test(x.card.name)) || ((DECK_PLANS['Othelm, Sigardian Outcast'].engineSet || new Set()).has(y.card.name) - (DECK_PLANS['Othelm, Sigardian Outcast'].engineSet || new Set()).has(x.card.name)) || ((y.card.cmc || 0) - (x.card.cmc || 0)))[0];
+            if (await activate(P, o, a, { o: best })) plPol('othelmBack');
+        },
     },
     'Samut, Hazoret\'s Champion': {
         win: 'Red ramp into bombs: rocks, rituals and Skullclamp / Wheel of Fortune draw, then Terror of the Peaks, Goldspan Dragon, Inferno Titan and Embercleave with 7 or 8 mana.',
@@ -321,7 +349,7 @@ function planOf(P) {
     if (P.planKey === undefined) {
         const c = [...P.command, ...P.bf, ...P.hand, ...P.gy].find(x => x.isCommander && (DECK_PLANS[x.card.name] || autoPlanFor(x.card.name, P)));
         P.planKey = c ? c.card.name : (autoPlansLoaded ? null : undefined);
-        if (P.planKey) { const pl = DECK_PLANS[P.planKey] || autoPlanFor(P.planKey, P); pl.engineSet = pl.engineSet || new Set(pl.engine); pl.payoffSet = pl.payoffSet || new Set(pl.payoff); pl.protectSet = pl.protectSet || new Set(pl.protect || []); if (pl.style && !P.aiStyle && PLAYSTYLES[pl.style]) P.aiStyle = pl.style; }
+        if (P.planKey) { const pl = DECK_PLANS[P.planKey] || autoPlanFor(P.planKey, P); pl.engineSet = pl.engineSet || new Set(pl.engine); pl.payoffSet = pl.payoffSet || new Set(pl.payoff); pl.protectSet = pl.protectSet || new Set(pl.protect || []); if (pl.forceStyle && PLAYSTYLES[pl.forceStyle]) P.aiStyle = pl.forceStyle; if (pl.tune) P.tune = Object.assign({}, pl.tune, P.tune || {}); if (pl.style && !P.aiStyle && PLAYSTYLES[pl.style]) P.aiStyle = pl.style; }
     }
     return P.planKey ? (DECK_PLANS[P.planKey] || autoPlanFor(P.planKey, P)) : null;
 }
@@ -351,11 +379,30 @@ function planReady(P, pl) {
     };
 }
 
+
+// A plan can name the creature it wants to sacrifice next (Othelm's loop: sacrifice Wernog, bring him back, get the Clues again)
+{
+    const sf = sacFodder;
+    sacFodder = function (P, src, kind) {
+        if (P && P.sacPrefer && /creature/.test(String(kind))) { const c = P.bf.find(x => x === P.sacPrefer && isCreature(x)); if (c) return c; }
+        return sf.apply(this, arguments);
+    };
+}
+
 // Keep the engine creature home unless the attack is lethal or the loop already ran this turn
 {
     const base = aiChooseAttackers;
     aiChooseAttackers = function (P) {
-        const chosen = base.apply(this, arguments);
+        let chosen = base.apply(this, arguments);
+        if (planOn(P) && chosen) {
+            // Plan "pushers" (owner, 2026-11-25: Rampant Frogantua is in the Jadzi deck to attack): a creature the deck wants to swing with attacks whenever no untapped blocker at the table kills it
+            const pp = planOf(P);
+            if (pp && pp.pushers) {
+                const names = new Set(pp.pushers), foesBf = foes(P).flatMap(F => F.bf.filter(o => isCreature(o) && !o.tapped));
+                const add = P.bf.filter(o => names.has(o.card.name) && !chosen.includes(o) && canAttackWith(o) && adm(o) > 0 && !foesBf.some(b => canBlock(b, o) && combatKills(b, o)));
+                if (add.length) { chosen = [...chosen, ...add]; plPol('pushers'); }
+            }
+        }
         if (!planOn(P) || !chosen || !chosen.length) return chosen;
         const pl = planOf(P); if (!pl || !pl.protectSet.size || P.planLoopTurn === G.turn) return chosen;
         const lowest = Math.min(...foes(P).map(x => x.life), 99);
