@@ -41,7 +41,7 @@ COND_EXTRA.push(
         if (!G || a.mana) return m;
         const X = G.players[ctrl(o) ? ctrl(o).i : o.owner]; if (!X) return m;
         let cut = 0;
-        X.bf.forEach(s => { const r = Rx(s).sx_actLess; if (r && !lostAbilities(s) && (!r.creatures || isCreature(o))) cut += r.n; });
+        X.bf.forEach(s => { const r = Rx(s).sx_actLess; if (r && !lostAbilities(s) && (!r.creatures || isCreature(o))) cut += typeof r.n === 'function' ? r.n(s) : r.n; });
         if (!cut) return m;
         const total = ['W', 'U', 'B', 'R', 'G', 'C'].reduce((n, k) => n + (m[k] || 0), 0) + (m.generic || 0);
         if (total <= 1) return m;

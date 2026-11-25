@@ -705,7 +705,7 @@ function actPlan(P, o, a, xExtra = 0) {
     if (a.cost.returnLands && P.bf.filter(x => /\bLand\b/.test(x.card.type)).length < a.cost.returnLands) return null;
     // Pay with other sources first so the permanent itself stays untapped when it can
     const mana = actCost(o, a);
-    return planPayment(P, mana, xExtra, o, { forType: o.card.type + (a.cost.mana.x ? ' XCOST' : '') }) || (a.cost.tap ? null : planPayment(P, mana, xExtra, null, { forType: o.card.type + (a.cost.mana.x ? ' XCOST' : '') }));
+    return planPayment(P, mana, xExtra, o, { forType: o.card.type + ' NotHand' + (a.cost.mana.x ? ' XCOST' : '') }) || (a.cost.tap ? null : planPayment(P, mana, xExtra, null, { forType: o.card.type + ' NotHand' + (a.cost.mana.x ? ' XCOST' : '') }));
 }
 function actTimingOk(P, a) {
     if (a.upkeepOnly) return G.active === P.i && G.phase === 'upkeep' && !G.stack.length;
@@ -800,7 +800,7 @@ async function chooseCrew(P, v, n, what) {
     return chosen;
 }
 // The most X an activated ability with {X} in its cost can be paid for
-function maxActX(P, o, a) { const xn = a.cost.mana.xn || 1; let x = 0; while (x < 30 && planPayment(P, actCost(o, a), (x + 1) * xn, a.cost.tap ? o : null, { forType: o.card.type })) x++; return x; }
+function maxActX(P, o, a) { const xn = a.cost.mana.xn || 1; let x = 0; while (x < 30 && planPayment(P, actCost(o, a), (x + 1) * xn, a.cost.tap ? o : null, { forType: o.card.type + ' NotHand' })) x++; return x; }
 async function activate(P, o, a, presetTarget, presetX) {
     if (!canActivate(P, o, a)) return false;
     let xExtra = 0;
@@ -851,7 +851,7 @@ async function activate(P, o, a, presetTarget, presetX) {
     let preMulti = null; if (typeof preChoose === 'function') { preMulti = await preChoose(P, o, a.effects); if (preMulti === false) { renderGame(); return false; } } // targets chosen with the activation (15x-casting.js)
     if (a.loyalty !== undefined) { o.ctr.loyalty = (o.ctr.loyalty || 0) + a.loyalty; o.loyaltyTurn = G.turn; }
     else {
-        if (manual(P) && !(await humanPay(P, actCost(o, a), xExtra, { forType: o.card.type, exclude: a.cost && a.cost.tap ? o : null }, o.card.name))) { renderGame(); return false; }
+        if (manual(P) && !(await humanPay(P, actCost(o, a), xExtra, { forType: o.card.type + ' NotHand', exclude: a.cost && a.cost.tap ? o : null }, o.card.name))) { renderGame(); return false; }
         // The creature tapped for "Tap an untapped creature you control" is chosen first, so mana sources can't use it up
         const tapFor = a.cost.tapOther ? tapFodder(P, o, a.cost.tapOther) : null;
         if (tapFor) tapFor.tapped = true;

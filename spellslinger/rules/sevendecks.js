@@ -232,3 +232,52 @@ clx('−2: Look at the top four cards of your library. You may reveal a noncreat
 // Aerid Konstrari
 clx('When ~ enters or dies, create a Heartwood token.', R => { R.etb.push({ t: 'artToken', kind: 'heartwood', n: 1 }); R.trig.push({ ev: 'dies', effects: [{ t: 'artToken', kind: 'heartwood', n: 1 }] }); });
 clx('{6}: Create a Heartwood token. Then ~ gets +X/+0 until end of turn, where X is the number of artifacts you control.', (R, m, ctx) => { act(R, ctx.line, '{6}', [cmd('sv_heartwoodPump')]); });
+
+// ===== Aerid Konstrari deck (2026-11-25, owner pasted a Gruul artifacts / Heartwood list) =====
+registerRules({
+    name: 'aerid',
+    effects: [
+        [/^create a Heartwood token$/i, () => ({ t: 'artToken', kind: 'heartwood', n: 1 })],
+        [/^create a token that's a copy of target non-Saga token you control$/i, () => cmd('ak_copyToken')],
+        [/^creatures you control gain trample and get \+X\/\+0 until end of turn, where X is the number of artifacts you control$/i, () => cmd('ak_crater')],
+        [/^you may sacrifice a land\. If you do, create two tapped Heartwood tokens$/i, () => cmd('ak_tethermage')],
+        [/^create Mowu, a legendary 3\/3 green Dog creature token$/i, () => ({ t: 'token', n: 1, p: 3, q: 3, name: 'green Dog', kw: [], legendary: true, named: 'Mowu' })],
+        [/^any number of target noncreature artifacts you control become 3\/3 artifact creatures\. Sacrifice them at the beginning of the next end step$/i, () => cmd('ak_depthshaker')]
+    ]
+});
+// Agatha of the Vile Cauldron
+clx('Activated abilities of creatures you control cost {X} less to activate, where X is ~\'s power. This effect can\'t reduce the mana in that cost to less than one mana.', R => { R.sx_actLess = { n: s => Math.max(0, pow(s)), creatures: true }; });
+clx('{4}{R}{G}: Other creatures you control get +1/+1 and gain trample and haste until end of turn.', (R, m, ctx) => { act(R, ctx.line, '{4}{R}{G}', [cmd('ak_agatha')]); });
+// Depthshaker Titan
+clx('Each artifact creature you control has melee, trample, and haste.', R => { R.statics.push({ other: false, type: 'Artifact', p: 0, q: 0, kw: ['melee', 'trample', 'haste'] }); });
+// Displaced Dinosaurs
+clx('As a historic permanent you control enters, it becomes a 7/7 Dinosaur creature in addition to its other types.', R => { R.trig.push(SPEC('enters', { ctl: 'you' }, { effects: [cmd('ak_dino')] })); });
+// Heartwood Crafter and Woodwork Prodigy (prepared)
+clx('{T}: Add {C}. This mana can\'t be spent to cast spells from your hand.', R => { R.mana = { colors: ['C'], n: 1, onlyType: 'NotHand' }; });
+// Herd Heirloom
+clx('{T}: Until end of turn, target creature you control with power 4 or greater gains trample and "Whenever ~ deals combat damage to a player, draw a card."', (R, m, ctx) => { act(R, ctx.line, '{T}', [cmd('ak_heirloom', { target: 'creature', mine: true, good: true, minPow: 4 })]); });
+// Hungering Puppetbeast
+clx('{1}, Sacrifice another artifact: Put a +1/+1 counter on ~. It gains your choice of trample, hexproof, or haste until end of turn.', (R, m, ctx) => { act(R, ctx.line, '{1}', [cmd('ak_puppet')], a => { a.cost.sacPerm = 'another artifact'; }); });
+// Ingenious Artillerist, Weftstalker Ardent
+clx('Whenever one or more artifacts you control enter, ~ deals that much damage to each opponent.', R => { R.trig.push(SPEC('enters', { ctl: 'you', type: 'Artifact' }, { effects: [{ t: 'dmgOpp', n: 1 }] })); });
+clx('Whenever another creature or artifact you control enters, ~ deals 1 damage to each opponent.', R => { R.trig.push(SPEC('enters', { ctl: 'you', type: 'Creature', another: true }, { effects: [{ t: 'dmgOpp', n: 1 }] })); R.trig.push(SPEC('enters', { ctl: 'you', type: 'Artifact', noncreature: true, another: true }, { effects: [{ t: 'dmgOpp', n: 1 }] })); });
+// Jiang Yanggu
+clx('At the beginning of your end step, untap all tokens you control.', R => { R.trig.push({ ev: 'end', who: 'your', effects: [cmd('ak_untapTokens')] }); });
+// Orthion
+clx('{1}{R}, {T}: Create a token that\'s a copy of another target creature you control. It gains haste. Sacrifice it at the beginning of the next end step. Activate only as a sorcery.', (R, m, ctx) => { act(R, ctx.line, '{1}{R}, {T}', [cmd('ak_orthion', { n: 1 })], a => { a.sorcery = true; }); });
+clx('{6}{R}{R}{R}, {T}: Create five tokens that are copies of another target creature you control. They gain haste. Sacrifice them at the beginning of the next end step. Activate only as a sorcery.', (R, m, ctx) => { act(R, ctx.line, '{6}{R}{R}{R}, {T}', [cmd('ak_orthion', { n: 5 })], a => { a.sorcery = true; }); });
+// Roxanne, Starfall Savant
+clx('Whenever ~ enters or attacks, create a tapped colorless artifact token named Meteorite with "When ~ enters, it deals 2 damage to any target" and "{T}: Add one mana of any color."', R => { R.etb.push(cmd('ak_meteorite')); R.trig.push({ ev: 'attacks', effects: [cmd('ak_meteorite')] }); });
+clx('Whenever you tap an artifact token for mana, add one mana of any type that artifact token produced.', R => { R.akRoxanne = true; });
+// Sarinth Steelseeker
+clx('Whenever an artifact you control enters, look at the top card of your library. If it\'s a land card, you may reveal it and put it into your hand. If you don\'t put the card into your hand, you may put it into your graveyard.', R => { R.trig.push(SPEC('enters', { ctl: 'you', type: 'Artifact' }, { effects: [cmd('ak_steelseeker')] })); });
+// Stridehangar Automaton
+clx('If one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.', R => { R.akThopter = true; });
+// Svella, Ice Shaper
+clx('{3}, {T}: Create a colorless snow artifact token named Icy Manalith with "{T}: Add one mana of any color."', (R, m, ctx) => { act(R, ctx.line, '{3}, {T}', [{ t: 'artToken', kind: 'manalith', n: 1 }]); });
+clx('{6}{R}{G}, {T}: Look at the top four cards of your library. You may cast a spell from among them without paying its mana cost. Put the rest on the bottom of your library in a random order.', (R, m, ctx) => { act(R, ctx.line, '{6}{R}{G}, {T}', [cmd('ak_svella')]); });
+// The Reaver Cleaver
+clx('Equipped creature gets +1/+1 and has trample and "Whenever ~ deals combat damage to a player or planeswalker, create that many Treasure tokens."', R => { R.buff = { p: 1, q: 1, kw: ['trample'] }; R.trig.push({ ev: 'hitPlayer', fn: 'bt_hostHit', host: true, effects: [cmd('ak_cleaver')] }); });
+clx('When ~ enters, any number of target noncreature artifacts you control become 3/3 artifact creatures. Sacrifice them at the beginning of the next end step.', R => { R.etb.push(cmd('ak_depthshaker')); });
+clx('When ~ enters, you may sacrifice a land. If you do, create two tapped Heartwood tokens.', R => { R.etb.push(cmd('ak_tethermage')); });
+clx('At the beginning of your upkeep, if ~ isn\'t prepared, it becomes prepared.', R => { R.trig.push({ ev: 'upkeep', who: 'your', effects: [cmd('prepare')] }); });

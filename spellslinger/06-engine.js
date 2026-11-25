@@ -988,7 +988,7 @@ function spellFits(o, rd, from) {
     if (rd.what === 'Artifact' || rd.what === 'Enchantment') return new RegExp(rd.what).test(t);
     return new RegExp(`\\b${rd.what}\\b`).test(t);
 }
-const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.test(o.card.type) && !!G && G.players[o.owner].bf.some(a => Rx(a).improviseAll)), convoke: hasConvoke(o), spellKind: Rx(o).kind, forType: o.card.type + ((o.card.colors || []).length === 0 ? ' Colorless' + (/\bEldrazi\b/.test(o.card.type) ? ' ColorlessEldrazi' : '') : '') + (Rx(o).kw && Rx(o).kw.has('devoid') ? ' Devoid' : '') + (Rx(o).cost.x ? ' XCOST' : '') + ((o.card.cmc || 0) >= 5 ? ' MV5PLUS' : '') + (G && G.players[o.owner] && G.players[o.owner].exile.includes(o) ? ' FromExile' : ''), sxCAny: !!o.sx_colorlessAny });
+const payOpts = o => ({ improvise: Rx(o).kw.has('improvise') || (!/Artifact/.test(o.card.type) && !!G && G.players[o.owner].bf.some(a => Rx(a).improviseAll)), convoke: hasConvoke(o), spellKind: Rx(o).kind, forType: o.card.type + ((o.card.colors || []).length === 0 ? ' Colorless' + (/\bEldrazi\b/.test(o.card.type) ? ' ColorlessEldrazi' : '') : '') + (Rx(o).kw && Rx(o).kw.has('devoid') ? ' Devoid' : '') + (Rx(o).cost.x ? ' XCOST' : '') + ((o.card.cmc || 0) >= 5 ? ' MV5PLUS' : '') + (G && G.players[o.owner] && G.players[o.owner].exile.includes(o) ? ' FromExile' : '') + (G && G.players[o.owner] && !G.players[o.owner].hand.includes(o) ? ' NotHand' : ''), sxCAny: !!o.sx_colorlessAny });
 function altExileCard(P, o) { const a = Rx(o).alt; return a && a.exile ? P.hand.filter(x => x !== o && (x.card.colors || []).includes(a.exile)).sort((x, y) => aiKeepValue(P, x) - aiKeepValue(P, y))[0] || null : null; }
 function altOk(P, o) {
     const a = Rx(o).alt;
@@ -3009,6 +3009,7 @@ async function applyEffect(P, e, t, src) {
             if (e.sacEndCombat) madeNow.forEach(tk => { tk.sacEndCombat = true; });
             if (e.sacEnd) madeNow.forEach(tk => { tk.sacAtEnd = G.turn; });
             tokenMade(P);
+            if (e.artifact && !e.akThop && typeof akThopterQueue === 'function') akThopterQueue(P); // Stridehangar Automaton
             fire('creatureTokenMade', { P });
             if (!e.plusFood && !e.plusSoldier && e.n > 0) { const fa = P.bf.filter(x => Rx(x).tokenPlusFood && !lostAbilities(x)).length; for (let i = 0; i < fa; i++) makeArtifactToken(P, 'food'); } // Tippy-Toe, Terrific Partner
             if (!e.plusSoldier && e.n > 0) { const qa = P.bf.filter(x => Rx(x).tokenPlusSoldier && !lostAbilities(x)).length; for (let i = 0; i < qa; i++) await applyEffect(P, { t: 'token', n: 1, p: 1, q: 1, name: 'white Soldier', kw: [], plusSoldier: true }, null, src); } // Queen Allenal
