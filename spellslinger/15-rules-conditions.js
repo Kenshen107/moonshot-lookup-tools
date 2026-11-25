@@ -1311,7 +1311,7 @@ const ART_TOKENS = {
 };
 function makeArtifactToken(P, kind) {
     const t = ART_TOKENS[kind];
-    const card = { id: `token-${kind}-${uidSeq}`, name: t.name, fullName: `${t.name} token`, cost: '', cmc: 0, type: `Token Artifact — ${t.name}`, text: t.text, colors: [], ci: [], img: null, imgS: null, legal: {} };
+    const card = { id: `token-${kind}-${uidSeq}`, name: t.name, fullName: `${t.name} token`, cost: '', cmc: 0, type: `Token Artifact — ${t.name}`, text: t.text, colors: t.colors || [], ci: t.colors || [], img: null, imgS: null, legal: {} };
     const o = makeObj(card, P.i, { token: true, sick: false });
     P.bf.push(o);
     if (G) fire('enters', { o });

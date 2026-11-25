@@ -228,3 +228,7 @@ clx('When ~ enters, look at the top X cards of your library, where X is your dev
 clx('At the beginning of your upkeep, if you have exactly thirteen cards in your hand, you win the game.', R => { R.trig.push({ ev: 'upkeep', who: 'your', fn: 'svThirteen', effects: [{ t: 'winGame' }] }); });
 clx('Nonland permanent cards in graveyards and libraries can\'t enter the battlefield.', R => { R.svLock = { gyNonlandPerm: true, libNonlandPerm: true }; });
 clx('−2: Look at the top four cards of your library. You may reveal a noncreature, nonland card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.', (R, m, ctx) => { R.acts.push({ loyalty: -2, effects: [cmd('sv_narsetDig')], text: ctx.line, sorcery: true }); });
+
+// Aerid Konstrari
+clx('When ~ enters or dies, create a Heartwood token.', R => { R.etb.push({ t: 'artToken', kind: 'heartwood', n: 1 }); R.trig.push({ ev: 'dies', effects: [{ t: 'artToken', kind: 'heartwood', n: 1 }] }); });
+clx('{6}: Create a Heartwood token. Then ~ gets +X/+0 until end of turn, where X is the number of artifacts you control.', (R, m, ctx) => { act(R, ctx.line, '{6}', [cmd('sv_heartwoodPump')]); });

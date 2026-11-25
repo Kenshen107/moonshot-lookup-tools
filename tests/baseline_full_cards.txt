@@ -139,6 +139,7 @@ Aerial Maneuver
 Aerial Predation
 Aerial Responder
 Aerial Surveyor
+Aerid Konstrari
 Aerie Auxiliary
 Aerie Bowmasters
 Aerie Mystics

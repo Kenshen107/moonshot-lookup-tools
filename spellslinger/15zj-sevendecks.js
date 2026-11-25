@@ -1174,3 +1174,15 @@ Object.assign(PRE_CMD, {
     async sv_phoenixRaise(P, src) { const gy = P.gy.filter(x => /Creature/.test(x.card.type) && svMV(x) <= 4); return gy.length ? await slAsk(P, gy, `${src.card.name}: choose a creature card with mana value 4 or less`, true) : null; },
     async sv_phoenixExile(P, src) { const bad = allPerms().filter(x => isCreature(x) && (hasType(x, 'Skeleton') || hasType(x, 'Spirit') || hasType(x, 'Zombie')) && slLegal(P, x)); return bad.length ? await slAsk(P, bad, `${src.card.name}: choose target Skeleton, Spirit or Zombie`, true) : null; }
 });
+
+// Aerid Konstrari (2026-11-25, owner: the enter and dies Heartwood token did nothing). Heartwood: a red and green artifact token that taps for {R} or {G}.
+ART_TOKENS.heartwood = { name: 'Heartwood', text: '{T}: Add {R} or {G}.', colors: ['R', 'G'] };
+Object.assign(CMD, {
+    sv_heartwoodPump(P, e, t, src) {
+        makeArtifactToken(P, 'heartwood');
+        log(`${P.name} ${you(P) ? 'create' : 'creates'} a Heartwood token.`);
+        if (!src || !onBf(src.uid)) return;
+        const x = P.bf.filter(o => /Artifact/.test(o.card.type)).length;
+        src.tp += x; log(`${src.card.name} gets +${x}/+0 until end of turn.`);
+    }
+});
