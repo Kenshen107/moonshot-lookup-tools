@@ -4578,6 +4578,12 @@ async function endTurn(P) {
     while (P.hand.length > (typeof maxHandSize === 'function' ? maxHandSize(P) : 7) && !P.noMaxHand && !P.bf.some(x => Rx(x).noMaxHand)) {
         // 514.1: the player chooses what to discard down to seven (the computer throws away its most expensive card)
         const over = P.hand.length - 7;
+        // a person with two or more to throw away gets one panel (spellslinger/15zk-discard-many.js), not one question per card
+        if (!P.isAI && over >= 2 && !G.hotseat && typeof pickDiscardMany === 'function' && (window.__DISCARD_UI || typeof AUTOPLAY === 'undefined' || !AUTOPLAY)) {
+            const chosen = await pickDiscardMany(P, over);
+            for (const d of chosen) { if (!P.hand.includes(d)) continue; pull(P.hand, d); P.gy.push(d); d.discardTurn = G.turn; log(`${P.name} ${you(P) ? 'discard' : 'discards'} ${d.card.name} (hand size).`); }
+            if (chosen.length) continue;
+        }
         const d = (!P.isAI ? await pickCard(P, P.hand, `Hand size: discard ${over} more card${over === 1 ? '' : 's'} (down to 7)`, { required: true }) : null) || P.hand.slice().sort((a, b) => b.card.cmc - a.card.cmc)[0];
         pull(P.hand, d);
         P.gy.push(d); d.discardTurn = G.turn;
