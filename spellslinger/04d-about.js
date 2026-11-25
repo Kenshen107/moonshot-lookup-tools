@@ -2,13 +2,13 @@
 // Opens from the header (ℹ️ About), the phone More sheet and the footer. Keep ABOUT_LOG current: add a line when a round of work ships.
 const ABOUT_FEATURES = [
     ['⚔️ Play real Magic', 'A rules engine with the stack and responses, counterspells, full combat (first strike, trample, deathtouch, lifelink and more), commander tax and commander damage. Modern, Commander, Casual and Limited formats, 1 vs 1 or a 4-player Commander pod, or two people on one device.'],
-    ['🤖 Computer opponents with personalities', 'Easy, normal and hard levels and seven playstyles (Aggro, Control, Midrange, Ramp, Tokens, Voltron, Spellslinger). "Surprise me" builds a new random playable deck every game. Face any commander, this week\'s trending commanders, a pasted decklist or any of 553 real precons.'],
-    ['🎭 Table politics', 'In a pod, the table gangs up on whoever pulls ahead (the archenemy). Bots show moods and speech bubbles, and you can make Peace, Hands off and Gang up deals. They keep their word, remember betrayal, and stop dealing with you after two broken deals.'],
+    ['🤖 Computer opponents with personalities', 'Easy, normal and hard levels, seven playstyles (Aggro, Control, Midrange, Ramp, Tokens, Voltron, Spellslinger) and game plans for decks with a combo or a finish (Samson\'s infinite mana, Jadzi\'s storm count, Othelm\'s sacrifice loop). Bots hold removal for the right threat, keep mana up for tricks and keep their word to you. \"Surprise me\" builds a new random themed deck every game. Face any commander, this week\'s trending commanders, a pasted decklist or any of 553 real precons.'],
+    ['🎭 Table politics', 'In a 3 or 4 player pod the table gangs up on whoever pulls ahead (the archenemy). Nine characters with their own voices show moods and speech bubbles; you can make Peace, Hands off, Gang up and Alliance deals, taunt, flatter, vote on council cards or offer a draw. They keep their word, remember betrayal, and remember you between games.'],
     ['🎴 Packs, boxes and drafts', 'Open packs from nearly any paper set (Alpha to today) with real booster odds, foils and serialized cards. Reveals grow with the pull, and you can open a whole box at once. Run an 8-seat booster draft (you plus 7 bots) for Mirrodin or Magic 2010 and play three rounds.'],
-    ['🗂️ Deck building', 'A Moxfield-style builder with a mana curve, color balance and sample hands, plus import from Moxfield, Arena, Archidekt or plain text. A goldfish playtester, preset fully working Commander decks, and a library of all 553 precons marked Ready or not.'],
+    ['🗂️ Deck building', 'A Moxfield-style builder with a mana curve, color balance and sample hands, plus import from Moxfield, Arena, Archidekt or plain text. A goldfish playtester, dozens of preset fully working Commander decks, and a library of all 553 precons marked Ready or not. Commander decks are grouped by color (WUBRG), collapsible and badged as official precon, verified list, starter or yours; partner and background commanders work.'],
     ['🗺️ Three game modes', 'Sandbox (free play, no shop money), Campaign (Kitchen Table, Friday Night and Regional tiers with bosses and a Precon Circuit) and Shop Simulator (run a card shop: price, haggle with nine kinds of customers, order boxes, grade cards).'],
-    ['📱 Built for the table and the phone', 'An always-visible End turn button, a phase strip, tap-your-own-lands payment, Arena-style stacked boards, every question as an on-screen panel, and a full phone layout.'],
-    ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log.']
+    ['📱 Built for the table and the phone', 'An always-visible End turn button, a phase strip, tap-your-own-lands payment, Arena-style stacked boards, every question as an on-screen panel, one-panel hand-size discards, an open board with piles and tiles for crowded tables, and a full phone layout.'],
+    ['📖 Rules built in', 'Search the official Comprehensive Rules, tap a keyword for its rules wording, and see the rule number in the game log. Every 3 or 4 player game can be copied or exported from Game records.']
 ];
 const ABOUT_LOG = [
     ['Nov 25 (Jadzi storm finish)', ['The computer playing Jadzi now plans a storm finish: it holds Weather the Storm, chains the spells that untap its lands (Frantic Search, Snap) so every one triggers Jadzi\'s Magecraft, and casts Weather the Storm last for a copy of each spell cast before it.']],
@@ -122,7 +122,7 @@ const ABOUT_LOG = [
     ['Oct 5', ['Launch: packs, decks, and Modern and Commander against the computer.', 'The stack, priority and counterspells; a Rules tab; the playtester; multiple players; the card shop, distributor and sealed packs; precons, the campaign ladder and AI levels; a flexible game table with counters.']]
 ];
 // Practice games the computer has played against itself in the test lab (owner's request 2026-10-20: "interesting and funny"). Not counted live: a lower bound added up from the runs written down in CLAUDE.md / docs. Raise it (and `asOf`) when a big lab run is done.
-const SIM_GAMES = { count: 30000, asOf: '2026-10-20' };
+const SIM_GAMES = { count: 40000, asOf: '2026-11-25' };
 function aboutPanel() {
     const c = CARD_COVERAGE, pct = n => Math.round(100 * n / c.total);
     showModal(`<div class="about">
