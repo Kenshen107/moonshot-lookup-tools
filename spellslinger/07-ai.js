@@ -491,11 +491,19 @@ async function aiRemoveAttacker(P) {
     }
 }
 
+// A Karoo (bounce land) returns a land you control when it enters. With no other land out it can only return itself, so playing it gets nothing
+// (pod record 2026-11-25: Jadzi replayed Simic Growth Chamber every turn, preferred as the best fixer, and never cast a spell in 34 turns)
+function aiLandsPlayable(P, lands) {
+    const bounce = l => (Rx(l).etb || []).some(e => e && e.t === 'bounceOwnLand');
+    const ownLands = P.bf.filter(x => /\bLand\b/.test(x.card.type)).length;
+    return ownLands > 0 ? lands : lands.filter(l => !bounce(l));
+}
 function aiPlayLand(P) {
     if (P.landsPlayed >= landLimit(P)) return;
     let lands = [...P.hand, ...P.exile.filter(x => x.playUntil >= G.turn), ...extraLandZones(P)].filter(o => Rx(o).kind === 'land');
     // No land? A modal double-faced card's land side will do
     if (!lands.length) { const md = P.hand.find(o => o.front && o.front.back && o.front.layout === 'modal_dfc' && rulesFor(o.front.back).kind === 'land'); if (md) { md.card = md.front.back; lands = [md]; } }
+    lands = aiLandsPlayable(P, lands);
     if (!lands.length) return;
     // The colors the hand still needs and the lands don't make
     const have = new Set(P.bf.filter(o => Rx(o).mana).flatMap(o => Rx(o).mana.colors));

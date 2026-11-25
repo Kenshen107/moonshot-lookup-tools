@@ -60,7 +60,7 @@ async function aiMulligan(P) {
 const _aiPlayLand_s = aiPlayLand;
 aiPlayLand = function (P) {
     if (!seqOn(P) || P.landsPlayed >= landLimit(P)) return _aiPlayLand_s(P);
-    const lands = [...P.hand, ...P.exile.filter(x => x.playUntil >= G.turn), ...extraLandZones(P)].filter(isLandCard);
+    const lands = aiLandsPlayable(P, [...P.hand, ...P.exile.filter(x => x.playUntil >= G.turn), ...extraLandZones(P)].filter(isLandCard));
     if (!lands.length) return _aiPlayLand_s(P);
     const N = manaCapacity(P);
     const costs = P.hand.filter(o => !isLandCard(o)).map(cmcOf).sort((a, b) => a - b);

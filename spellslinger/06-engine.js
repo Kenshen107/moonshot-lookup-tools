@@ -1591,7 +1591,7 @@ async function castSpell(P, o, presetTarget) {
     o.buyback = false; o.multi = null; o.assist = []; o.assistN = 0;
     G.stack.push(item);
     if (item.target && item.target.o) item.target.o.dcLastTargeter = item;
-    log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name}${item.kicked ? ' (kicked)' : ''}${o._free ? ' without paying its mana cost' : ''}${item.x !== undefined ? ` (X=${item.x})` : ''}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax > 1 ? ` (commander tax ${(P.tax - 1) * 2})` : ''}.`);
+    log(`${P.name} ${you(P) ? 'cast' : 'casts'} ${o.card.name}${item.kicked ? ' (kicked)' : ''}${o._free ? ' without paying its mana cost' : ''}${item.x !== undefined ? ` (X=${item.x})` : ''}${presetTarget ? ` targeting ${targetName(presetTarget)}` : ''}${fromCommand && P.tax > 1 ? ` (commander tax ${((P.cmdCastN[o.cmdSlot || 0] || 1) - 1) * 2})` : ''}.`);
     if (!wardCheck(P, presetTarget, o.card.name)) { pull(G.stack, item); moveSpellCard(o, 'gy'); renderGame(); return true; }
     (G.castNames = (G.castNames || []).filter(c => c.turn === G.turn)).push({ turn: G.turn, p: P.i, name: o.card.name }); // Grim Reminder
     // Chalice of the Void: counter a spell with mana value equal to its charge counters
@@ -3082,7 +3082,7 @@ async function applyEffect(P, e, t, src) {
         case 'extraLand': P.extraLandTurn = G.turn; log(`${P.name} may play an additional land this turn.`); break;
         case 'bounceOwnLand': {
             // Karoo lands: return a land (a tapped one, the cheapest kind, first)
-            const ls = P.bf.filter(x => /\bLand\b/.test(x.card.type)).sort((a, b) => (b.tapped - a.tapped) || (isBasic(b.card) - isBasic(a.card)) || ((a === src) - (b === src)));
+            const allLs = P.bf.filter(x => /\bLand\b/.test(x.card.type)), others = allLs.filter(x => x !== src), ls = (P.isAI && others.length ? others : allLs).slice().sort((a, b) => (b.tapped - a.tapped) || (isBasic(b.card) - isBasic(a.card)) || ((a === src) - (b === src)));
             let l = ls[0];
             // a person chooses which land goes back (owner, 2026-10-23); the computer keeps its rule
             if (l && !P.isAI && ls.length > 1) l = (await pickCard(P, ls, `${name}: choose a land to return to your hand`, { required: true })) || l;
