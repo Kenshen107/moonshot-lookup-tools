@@ -96,6 +96,29 @@ async function useInfiniteAbilities(P) {
 // ---------- 2. Game plans ----------
 // Fields: win (words), style (playstyle if the deck names none), engine / payoff / protect (card names), payoffNeed (engine pieces or mana sources before payoffs are
 // "ready", default 1 engine piece or 8 sources), cmdr (extra score for casting the commander), equipTo { equipment: creature }, loops [{ name, online(P) -> bool, mana, color, pump }]
+
+// Storm planner (2026-11-25, owner: "storm spells are meant as finishers ... you are working up towards"; Jadzi). Jadzi's Magecraft reveals the top card for every instant or sorcery cast OR COPIED
+// (a nonland card is cast for {1}, a land goes onto the battlefield), and Weather the Storm has storm: it makes a copy for each spell cast before it. So the finish is a chain of spells that give
+// their mana back (Frantic Search untaps three lands, Snap two), then Weather the Storm last. `stormPlan` counts what the hand can chain with the mana available and says whether it is worth it.
+const STORM_CHAIN = { 'Frantic Search': { cost: 3, back: 3 }, 'Snap': { cost: 2, back: 2, needsCreature: true } };
+function stormPlan(P) {
+    const jadzi = onBfNamed(P, 'Jadzi, Oracle of Arcavios');
+    const fin = P.hand.find(o => o.card.name === 'Weather the Storm');
+    if (!fin) return null;
+    const lands = P.bf.filter(o => /\bLand\b/.test(o.card.type)).length;
+    let avail = availableMana(P); const reserve = 2; // {1}{G} for Weather the Storm itself
+    const mine = P.bf.filter(isCreature).sort((a, b) => permValue(a) - permValue(b));
+    const chain = [];
+    const opts = P.hand.filter(o => STORM_CHAIN[o.card.name] && (!STORM_CHAIN[o.card.name].needsCreature || mine.length));
+    // cast the ones that give the most mana back first
+    opts.sort((a, b) => (STORM_CHAIN[b.card.name].back - STORM_CHAIN[b.card.name].cost) - (STORM_CHAIN[a.card.name].back - STORM_CHAIN[a.card.name].cost) || STORM_CHAIN[b.card.name].back - STORM_CHAIN[a.card.name].back);
+    for (const o of opts) { const c = STORM_CHAIN[o.card.name]; if (avail >= c.cost && avail - c.cost + c.back >= reserve) { chain.push(o); avail = Math.min(lands, avail - c.cost + c.back); } }
+    const storm = (G.castThisTurn || 0) + chain.length;
+    const triggers = jadzi ? storm + 1 + storm : 0; // each spell, Weather itself, and each copy: one Magecraft trigger apiece
+    const castable = avail >= reserve && P.hand.includes(fin);
+    return { fin, chain, storm, triggers, jadzi: !!jadzi, castable, go: castable && !!jadzi && storm >= 2 && triggers >= 5 };
+}
+
 const DECK_PLANS = {
     'Doc Samson, Super Psychiatrist': {
         win: 'Combo: Doc Samson taps for mana equal to his power. With an untapper (Staff of Domination: {3},{T} untap, {1} untap itself; or Umbral Mantle: {3},{Q} +2/+2) and power 5 (or 3 with the Mantle) every tap makes more than it costs: infinite mana. Cast and activate everything, then attack with a huge Samson or Kalonian Hydra.',
@@ -204,6 +227,21 @@ const DECK_PLANS = {
         pushers: ['Rampant Frogantua', 'Beanstalk Giant', 'Multani, Yavimaya\'s Avatar', 'Cultivator Colossus', 'Ulvenwald Hydra', 'Harmonious Grovestrider', 'Sandman, Shifting Scoundrel', 'Aesi, Tyrant of Gyre Strait', 'Tangled Florahedron'],
         engine: ['Tatyova, Benthic Druid', 'Sphinx\'s Tutelage', 'Teferi\'s Tutelage', 'Cultivate', 'Sol Ring', 'Eternal Witness', 'Timeless Witness', 'Rampant Frogantua', 'Aesi, Tyrant of Gyre Strait', 'Wonderscape Sage', 'Disciple of Freyalise', 'Journey of Discovery', 'Simic Growth Chamber', 'Frantic Search', 'Game Plan', 'Cultivator Colossus', 'Beanstalk Giant', 'Ulvenwald Hydra', 'Urza\'s Tower', 'Urza\'s Mine', 'Urza\'s Power Plant', 'Hunting Pack'],
         payoff: ['Genesis Wave', 'Temporal Cascade', 'Doppelgang', 'Avenger of Zendikar', 'Windfall', 'Pull from Tomorrow', 'Feed the Pack', 'Hydroelectric Specimen', 'Step Between Worlds'], payoffNeed: 3, mana: 8, cmdr: 6,
+        // The storm finish: Weather the Storm waits until the planner finds a chain; then the cheap spells that untap lands go first (each one a Magecraft trigger), Weather the Storm last.
+        hold: ['Weather the Storm'],
+        async pre(P) {
+            if (P.stormTried === G.turn || G.over) return; P.stormTried = G.turn;
+            const sp = stormPlan(P); if (!sp || !sp.go) return;
+            log(`🌩️ ${P.name} lines up a storm: ${sp.chain.map(o => o.card.name).join(', ') || 'no cantrips'}, then Weather the Storm for ${sp.storm} copies (about ${sp.triggers} Magecraft triggers).`);
+            for (const o of sp.chain) {
+                if (G.over || !P.hand.includes(o) || !canCastNow(P, o) || !canPay(P, o)) continue;
+                const tgt = o.card.name === 'Snap' ? { o: P.bf.filter(isCreature).sort((a, b) => permValue(a) - permValue(b))[0] } : null;
+                await castSpell(P, o, tgt); await settle();
+            }
+            if (G.over) return;
+            const fin = P.hand.find(o => o.card.name === 'Weather the Storm');
+            if (fin && canCastNow(P, fin) && canPay(P, fin)) { P.stormGoTurn = G.turn; await castSpell(P, fin, null); await settle(); plPol('stormFinish'); }
+        },
     },
     'Torgaar, Famine Incarnate': {
         win: 'Sacrifice and recursion: fill the graveyard, sacrifice creatures (Torgaar halves every life total, Exsanguinate and Finale finish) and rebuy them with Midnight Reaper and Reassembling Skeleton.',
@@ -372,6 +410,7 @@ function planReady(P, pl) {
         if (!planOn(P)) return s;
         const pl = planOf(P); if (!pl || !o || !o.card) return s;
         const n = o.card.name;
+        if (pl.hold && pl.hold.includes(n) && P.stormGoTurn !== G.turn) { plPol('stormHeld'); return 0; } // a storm finisher waits for the storm planner (Jadzi)
         if (pl.engineSet.has(n)) { if (s <= 0 && ['artifact', 'enchantment', 'creature'].includes(Rx(o).kind)) s = 4; if (s > 0) { s += 5; plPol('engineScore'); } }
         else if (pl.payoffSet.has(n) && s > 0) { if (planReady(P, pl)) s += 4; else { s = s * 0.6; plPol('payoffHeld'); } }
         if (s > 0 && pl.cmdr && o.isCommander) s += pl.cmdr;
