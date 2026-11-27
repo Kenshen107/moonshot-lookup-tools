@@ -2445,10 +2445,11 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     #game.open-board .hand-tools .mm-word { display: none; }
     #game.open-board .hand-tools #handCount { display: none; }
 
-    /* 6. Collapsible Floating Frosted Game Log Drawer (bottom-right cleanly above Arena Turn Button!) */
+    /* 6. Collapsible Floating Frosted Game Log Drawer (bottom-right with generous clearance above Turn Button & hand!) */
     #game.open-board .logwrap {
-        position: fixed; right: 18px; bottom: 92px; z-index: 16; border: 0; padding: 0;
+        position: fixed; right: 18px; bottom: 96px; z-index: 16; border: 0; padding: 0;
         background: transparent; display: flex; flex-direction: column-reverse; align-items: flex-end; }
+    #game.open-board .logwrap[open] { z-index: 25; }
     #game.open-board .logwrap > summary {
         list-style: none; padding: 5px 12px; border-radius: 999px;
         background: color-mix(in srgb, var(--bg-canvas) 78%, transparent);
@@ -2472,8 +2473,8 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     #game.open-board .act-banner { bottom: calc(var(--hand-h, 150px) + 128px); }
 }
 @media (min-width: 760px) and (max-width: 1080px) {
-    #game.open-board .hand-wrap { max-width: calc(100vw - 340px); }
-    #game.open-board .hand-tools { bottom: 6px; left: 8px; }
-    #game.open-board #midBar .turn-btn { bottom: 8px; right: 10px; min-width: 120px; min-height: 44px; padding: 6px 14px; }
-    #game.open-board .logwrap { bottom: 70px; right: 10px; }
+    #game.open-board .hand-wrap { max-width: calc(100vw - 380px); }
+    #game.open-board .hand-tools { bottom: 8px; left: 8px; max-width: 172px; padding: 4px 5px; }
+    #game.open-board #midBar .turn-btn { bottom: 10px; right: 10px; min-width: 132px; min-height: 48px; padding: 6px 14px; }
+    #game.open-board .logwrap { bottom: 78px; right: 10px; }
 }
