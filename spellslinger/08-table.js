@@ -11,11 +11,43 @@ function cardImg(card, big) {
 
 const COUNTER_KINDS = [['loyalty', '🔷'], ['charge', '🔌'], ['oil', '🛢️'], ['stun', '💫'], ['shield', '🔰'], ['lore', '📖'], ['time', '⏳'], ['ice', '🧊'], ['fade', '🌫️'], ['age', '📅'], ['quest', '🗝️'], ['level', '📶'], ['flood', '🌊'], ['other', '🔹']];
 const counterIcon = k => (COUNTER_KINDS.find(x => x[0] === k) || [k, '🔹'])[1];
+
+// Crisp MTG Arena-style inline SVG keyword medallions (compact, legible even on shrunk 2-row boards)
+const KW_ICONS = [
+    ['flying', 'Flying', '<path d="M2 11c3-5 7-7 12-8-1 4-4 7-8 8l-1 3-3-3z"/>'],
+    ['trample', 'Trample', '<path d="M3 12l3-7 3 4 3-5 2 8H3z"/>'],
+    ['deathtouch', 'Deathtouch', '<circle cx="8" cy="6.5" r="4"/><path d="M5 11.5h6l-1 2.5H6z"/>'],
+    ['lifelink', 'Lifelink', '<path d="M8 13.5S2.5 9.8 2.5 6A3 3 0 0 1 8 4.2 3 3 0 0 1 13.5 6C13.5 9.8 8 13.5 8 13.5z"/>'],
+    ['vigilance', 'Vigilance', '<path d="M1.5 8s2.6-4.5 6.5-4.5S14.5 8 14.5 8s-2.6 4.5-6.5 4.5S1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2" fill="var(--bg-canvas)"/>'],
+    ['haste', 'Haste', '<path d="M9.5 1.5L3.5 9h4l-1 5.5 6-7.5h-4z"/>'],
+    ['double strike', 'Double strike', '<path d="M3 13L11 3l2 1.5-8 10zM6.5 13.5L13 5.5l1.5 1.2-6.5 8z"/>'],
+    ['first strike', 'First strike', '<path d="M3 13L12 2.5l1.8 1.5L5 14.2zM2.5 9.5l4 4"/>'],
+    ['indestructible', 'Indestructible', '<path d="M8 1.8L13.5 4v4.2c0 3.2-2.4 5.3-5.5 6.3-3.1-1-5.5-3.1-5.5-6.3V4L8 1.8z"/>'],
+    ['hexproof', 'Hexproof', '<path d="M8 1.8l5.2 3v6.4L8 14.2l-5.2-3V4.8z"/>'],
+    ['menace', 'Menace', '<path d="M5 13c-1.5-2.5-.5-6 2-8.5 0 2 1.2 3 2 3 0-2 1-3.5 2.2-5 2 2.5 2.8 6.5 1.3 10.5H5z"/>'],
+    ['reach', 'Reach', '<path d="M3 13L13 3m0 0H7.5M13 3v5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'],
+    ['defender', 'Defender', '<rect x="3" y="3" width="10" height="10" rx="1.5"/><path d="M3 7.5h10M8 3v9.5" stroke="var(--bg-canvas)" stroke-width="1.3"/>']
+];
+function kwBadgesHTML(o) {
+    if (!isCreature(o) || typeof has !== 'function') return '';
+    const out = [];
+    for (const [k, label, path] of KW_ICONS) {
+        if (k === 'first strike' && has(o, 'double strike')) continue;
+        if (has(o, k)) {
+            out.push(`<span class="kw-ico kw-${k.replace(/\s+/g, '-')}" title="${label}"><svg viewBox="0 0 16 16" aria-hidden="true">${path}</svg></span>`);
+            if (out.length >= 4) break;
+        }
+    }
+    return out.length ? `<span class="kw-strip">${out.join('')}</span>` : '';
+}
+
 function permHTML(o, count = 1) {
     const r = Rx(o);
     const m = G.mode;
     const cls = ['perm'];
     if (r.kind === 'land') cls.push('land');
+    if (/Legendary/i.test(o.card.type || '') || o.isCommander) cls.push('is-legendary');
+    if (o.token) cls.push('is-token');
     if (o.tapped) cls.push('tapped');
     if (G.attackers.includes(o.uid)) cls.push('attacking');
     const blocking = Object.entries(G.blocks).find(([, bs]) => bs.includes(o.uid));
@@ -31,8 +63,8 @@ function permHTML(o, count = 1) {
     const isSick = isCreature(o) && o.sick && !has(o, 'haste') && o.owner === G.active;
     if (isSick) cls.push('sick-card');
     const chips = [];
-    if (o.isCommander) chips.push('<span class="chip">👑</span>');
-    if (o.counters > 0) chips.push(`<span class="chip c-plus" title="${o.counters} +1/+1 counter${o.counters === 1 ? '' : 's'}">+${o.counters}</span>`);
+    if (o.isCommander) chips.push('<span class="chip c-cmd" title="Commander">👑</span>');
+    if (o.counters > 0) chips.push(`<span class="chip c-plus" title="${o.counters} +1/+1 counter${o.counters === 1 ? '' : 's'}">${o.counters}</span>`);
     if (o.counters < 0) chips.push(`<span class="chip c-minus" title="${-o.counters} -1/-1 counter${o.counters === -1 ? '' : 's'}">−${-o.counters}</span>`);
     Object.entries(o.ctr || {}).forEach(([k, n]) => chips.push(`<span class="chip" title="${n} ${esc(k)} counter${n === 1 ? '' : 's'}">${counterIcon(k)}${n}</span>`));
     if (o.tp || o.tq || o.tkw.length) chips.push(`<span class="chip c-temp" title="Until end of turn: ${[o.tp || o.tq ? `${o.tp >= 0 ? '+' : ''}${o.tp}/${o.tq >= 0 ? '+' : ''}${o.tq}` : '', ...o.tkw].filter(Boolean).join(', ')}">⏱</span>`);
@@ -52,15 +84,23 @@ function permHTML(o, count = 1) {
     if (count > 1) cls.push('pile');
     const cols = o.card.colors || [];
     const cc = cols.length > 1 ? 'var(--gold)' : cols.length === 1 ? `var(--mana-${cols[0]})` : 'var(--mana-C)';
-    return `<button type="button" class="${cls.join(' ')}" data-uid="${o.uid}" style="--cc:${cc}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}${count > 1 ? ` ×${count}` : ''}">${cardImg(o.card)}${o.tapped ? '<span class="tap-ico" aria-hidden="true">↪</span>' : ''}<span class="pname">${esc(o.card.name.split(',')[0])}</span><span class="chips">${chips.join('')}</span>${pt}${blockLabel || atkLabel}${count > 1 ? `<span class="pile-n">×${count}</span>` : ''}</button>`;
+    return `<button type="button" class="${cls.join(' ')}" data-uid="${o.uid}" style="--cc:${cc}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}${count > 1 ? ` ×${count}` : ''}">${cardImg(o.card)}${o.tapped ? '<span class="tap-ico" aria-hidden="true">↪</span>' : ''}<span class="pname">${esc(o.card.name.split(',')[0])}</span><span class="chips">${chips.join('')}</span>${kwBadgesHTML(o)}${pt}${blockLabel || atkLabel}${count > 1 ? `<span class="pile-n">×${count}</span>` : ''}</button>`;
 }
 // Identical permanents share one pile (lands and others from 2, creatures
-// from 3, only while nothing is being chosen) so a full board fits.
+// from 3). Only un-pile permanents that are individually selectable in the
+// current choice mode so lands and non-targetable tokens stay neatly shingled
+// during combat and targeting, just like MTG Arena.
 function groupPerms(list, min) {
     const m = G.mode;
     const out = [], byKey = new Map();
     list.forEach(o => {
-        const plain = !m && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.dmg && !o.tp && !o.tq && !o.tkw.length
+        const mCanPick = m && (
+            (m.type === 'target' && (m.valid || []).some(v => v.o && v.o.uid === o.uid))
+            || (m.type === 'attack' && o.owner === G.view && canAttackWith(o))
+            || (m.type === 'block' && ((o.owner === G.view && isCreature(o) && !o.tapped) || (o.owner !== G.view && G.attackers.includes(o.uid))))
+            || (m.type === 'pay' && o.owner === G.view && helpsPay(me(), o))
+        );
+        const plain = !mCanPick && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.dmg && !o.tp && !o.tq && !o.tkw.length
             && !G.attackers.includes(o.uid) && !Object.values(G.blocks).some(bs => bs.includes(o.uid)) && !o.isCommander;
         if (!plain) { out.push([o]); return; }
         // Tokens each get their own card id, so identical ones are matched by name and stats (16 Soldier tokens are one pile)
@@ -231,10 +271,11 @@ function barHTML(P) {
     const gyArt = topGy && topGy.card && (topGy.card.imgS || topGy.card.img);
     const gyPile = `<button type="button" class="zone-count zone-btn pile-card pile-gy${gyArt ? ' has-art' : ''}" title="Graveyard (${P.gy.length}): tap to look" onclick="showGraveyard(${P.i})">${gyArt ? `<img class="pile-art" src="${gyArt}" alt="">` : '<span class="pile-ico" aria-hidden="true">🪦</span>'}<span class="pile-cnt">${P.gy.length}</span></button>`;
     const libPile = `<span class="zone-count pile-card pile-deck" title="Library: ${P.library.length} cards"><span class="pile-ico" aria-hidden="true">📚</span><span class="pile-cnt">${P.library.length}</span></span>`;
+    const crestSVG = `<svg class="av-crest" viewBox="0 0 120 76" aria-hidden="true"><path class="crest-wing" d="M8 58 L28 32 L38 42 L60 12 L82 42 L92 32 L112 58 L94 64 L60 54 L26 64 Z"/><path class="crest-trim" d="M18 55 L32 39 L43 47 L60 22 L77 47 L88 39 L102 55" fill="none"/></svg>`;
     return `
         <span class="bar-center">
             <span class="who">${isPodOpp ? '<span class="pod-viewing-tag">Viewing</span>' : ''}${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? 'You' : esc(P.name)}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
-            <span class="av-medallion">${avHTML}<button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}"><span class="lh">❤️ </span>${P.life}</button></span>
+            <span class="av-medallion">${crestSVG}${avHTML}<button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}"><span class="lh">❤️ </span>${P.life}</button></span>
         </span>
         <span class="bar-left">
             ${G.format === 'commander' ? `<span class="zone-count cmd-dmg-pill" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
@@ -565,37 +606,44 @@ const LANE_SCROLL = {}; // where each side's compact creature list was scrolled 
 function fitSide(side) {
     const front = side.querySelector('.lane.creatures');
     const back = side.querySelector('.row-back');
-    const H = side.clientHeight - 14;
+    const H = side.clientHeight - 10;
     const phone = innerWidth < 700;
-    const AR = typeof openBoard === 'function' && openBoard() ? 0.82 : 88 / 63; // height per width: the open board shows the name bar and art only
-    // Back row: lands and other permanents, about a quarter of the side
-    // While you're paying, your lands grow so they're easy to tap
+    const isOpen = typeof openBoard === 'function' && openBoard();
+    const AR = isOpen ? 0.82 : 88 / 63; // height per width: the open board shows the name bar and art only
+    const items = front ? [...front.children] : [];
+    const n = items.length;
+    // Back row: lands and other permanents. Shrink slightly when the creature army is huge so zero scrollbars are needed!
     const paying = G && G.mode && G.mode.type === 'pay' && side.id === 'meSide';
-    side.style.setProperty('--land-w', `${Math.max(paying ? 44 : 32, Math.min(paying ? 84 : 70, Math.round(H * (paying ? 0.4 : 0.27) / AR)))}px`);
+    const landShare = paying ? 0.4 : (isOpen && !phone && n >= 10) ? 0.21 : 0.26;
+    const landMax = paying ? 84 : (isOpen && !phone && n >= 10) ? 54 : 68;
+    side.style.setProperty('--land-w', `${Math.max(paying ? 44 : 34, Math.min(landMax, Math.round(H * landShare / AR)))}px`);
     if (!front) return;
-    front.classList.remove('crowded', 'compact');
+    front.classList.remove('crowded', 'compact', 'arena-dense');
     front.style.maxHeight = '';
-    const items = [...front.children];
     items.forEach(c => { c.style.marginLeft = ''; });
-    const Hf = H - (back ? back.offsetHeight : 0) - 10 - (front.querySelector('.perm-wrap') ? 30 : 0);
-    const W = Math.min(front.clientWidth, side.clientWidth - 8, innerWidth - 16), n = items.length; // never wider than the screen
-    // Cards never shrink past readable. When they would have to, the row becomes compact tiles
-    // (art thumbnail, name, power/toughness, status) that wrap and scroll, so every creature can be read and tapped.
-    const minW = phone ? 58 : 76;
+    const Hf = H - (back ? back.offsetHeight : 0) - 8 - (front.querySelector('.perm-wrap') ? 26 : 0);
+    const W = Math.min(front.clientWidth, side.clientWidth - 8, innerWidth - 16); // never wider than the screen
+    // MTG Arena zero-scrollbar scaling on desktop Open Board: smoothly shrinks cards down to 48px across 2-3 rows
+    // for up to 22 distinct creature piles before ever falling back to compact scrolling tiles (26+ unique creatures still compact for layout.js).
+    const minW = phone ? 58 : (isOpen && n <= 22) ? 48 : 76;
+    const gap = (isOpen && !phone && n >= 10) ? 6 : 8;
     let w = 132, fits = false;
-    for (; w >= minW; w -= 4) {
-        const perRow = Math.max(1, Math.floor((W + 8) / (w + 8)));
-        if (Math.ceil(n / perRow) * (w * AR + 12) <= Hf) { fits = true; break; }
+    for (; w >= minW; w -= 2) {
+        const perRow = Math.max(1, Math.floor((W + gap) / (w + gap)));
+        if (Math.ceil(n / perRow) * (w * AR + 8) <= Hf) { fits = true; break; }
     }
     // A short row with only a few creatures (a pod on a laptop screen): one row of smaller cards reads better than tiles
-    if (!fits) { const wFit = Math.floor((Hf - 12) / AR); if (wFit >= 52 && n * (wFit + 8) <= W + 8) { w = wFit; fits = true; } }
+    if (!fits) { const wFit = Math.floor((Hf - 10) / AR); if (wFit >= 48 && n * (wFit + gap) <= W + gap) { w = wFit; fits = true; } }
     if (!fits) {
-        w = minW;
+        w = phone ? 58 : 76;
         front.classList.add('compact');
         front.style.maxHeight = `${Math.max(96, Hf)}px`;
         front.onscroll = () => { LANE_SCROLL[side.id] = front.scrollTop; };
         if (LANE_SCROLL[side.id]) front.scrollTop = LANE_SCROLL[side.id];
-    } else delete LANE_SCROLL[side.id];
+    } else {
+        delete LANE_SCROLL[side.id];
+        if (isOpen && !phone && w <= 68) front.classList.add('arena-dense');
+    }
     side.style.setProperty('--card-w', `${w}px`);
 }
 function fitHand() {

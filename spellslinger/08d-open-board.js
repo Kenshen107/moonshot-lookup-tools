@@ -32,7 +32,13 @@ function boardToggleHTML(reopen) {
         if (!openBoard()) return base.apply(this, arguments);
         const m = G.mode, out = [], byKey = new Map();
         list.forEach(o => {
-            const plain = !m && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.dmg && !o.tp && !o.tq && !o.tkw.length
+            const mCanPick = m && (
+                (m.type === 'target' && (m.valid || []).some(v => v.o && v.o.uid === o.uid))
+                || (m.type === 'attack' && o.owner === G.view && canAttackWith(o))
+                || (m.type === 'block' && ((o.owner === G.view && isCreature(o) && !o.tapped) || (o.owner !== G.view && G.attackers.includes(o.uid))))
+                || (m.type === 'pay' && o.owner === G.view && helpsPay(me(), o))
+            );
+            const plain = !mCanPick && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.dmg && !o.tp && !o.tq && !o.tkw.length
                 && !G.attackers.includes(o.uid) && !Object.values(G.blocks).some(bs => bs.includes(o.uid)) && !o.isCommander;
             if (!plain) { out.push([o]); return; }
             const land = Rx(o).kind === 'land' && !isCreature(o);

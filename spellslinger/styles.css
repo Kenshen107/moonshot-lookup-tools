@@ -1436,6 +1436,7 @@ details.get-deck > summary { color: var(--brand-light); }
 #game.open-board .perm .pt { font-size: 0.85rem; padding: 0 6px; border-radius: 999px; right: 4px; bottom: 4px; background: color-mix(in srgb, var(--bg-canvas) 88%, transparent); border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); }
 #game.open-board .perm .chips { top: auto; bottom: 4px; left: 4px; flex-direction: row; flex-wrap: wrap; max-width: 62%; }
 #game.open-board .pile-n { left: auto; right: 4px; top: 4px; bottom: auto; transform: none; font-size: 0.72rem; padding: 0 6px; }
+#game.open-board .perm.pile { margin-left: 8px; }
 #game.open-board .perm.pile img { box-shadow: 3px -3px 0 -1px var(--bg-panel-raised), 6px -6px 0 -2px var(--bg-panel), 0 3px 8px color-mix(in srgb, var(--bg-canvas) 80%, transparent); }
 #game.open-board .perm.tapped { transform: rotate(10deg) translateY(3px); }
 /* 3. one mat: no panels between the sides, bars and middle */
@@ -2586,4 +2587,147 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     #game:not(.phone-hand-open) .dock .hand {
         max-height: 76px; padding: 4px 10px 0; overflow-y: hidden; align-items: flex-start; }
     #game.phone-hand-open .dock .hand { max-height: none; padding: 6px 10px; }
+}
+
+/* =====================================================================
+   MTG Arena Scenic Assets, Zero-Scrollbar Battlefield & Sculpted Cards
+   (2026-11-27, owner: "get away from scroll bars and have nice beautiful
+   assets even we need to program more complicated elements"):
+   - Bespoke high-res Arena playmat (spellslinger/art/ui/arena-mat.jpg)
+     tinted by every Look's design tokens + animated floating embers canvas
+   - Zero-scrollbar dynamic 2-3 row creature layout on desktop Open Board
+   - Sculpted metallic beveled P/T shields, sapphire blue counter orbs,
+     inline SVG keyword medallions, gilded legendary crowns, shingled stacks,
+     fiery active stack border, ornate SVG avatar crests & custom deck back
+   ===================================================================== */
+
+.arena-motes { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; display: none; }
+#game.open-board .arena-motes { display: block; }
+.av-crest { display: none; }
+
+/* Custom generated Arena playmat + light token color-grading veil so all 7 Looks harmonize while stone carvings, corner lanterns & brushed gold shine */
+#game.open-board {
+    background:
+        radial-gradient(ellipse 68% 52% at 50% 47%, color-mix(in srgb, var(--gold) 7%, transparent), transparent 68%),
+        radial-gradient(ellipse 106% 102% at 50% 50%, color-mix(in srgb, var(--felt-1) 18%, transparent) 30%, color-mix(in srgb, var(--bg-canvas) 68%, transparent) 100%),
+        linear-gradient(180deg, color-mix(in srgb, var(--felt-2) 26%, transparent), color-mix(in srgb, var(--felt-1) 16%, transparent) 50%, color-mix(in srgb, var(--bg-canvas) 40%, transparent)),
+        url('art/ui/arena-mat.jpg') center / cover no-repeat,
+        var(--bg-canvas); }
+#game.open-board::before { display: none; }
+
+/* Custom generated ornate deck card-back on 3D Library stack & opponent hand backs */
+#game.open-board .pile-deck {
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--brand) 12%, transparent), color-mix(in srgb, var(--bg-canvas) 18%, transparent)),
+        url('art/ui/arena-cardback.jpg') center / cover no-repeat,
+        repeating-linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, var(--bg-inset)) 0 4px, var(--felt-2) 4px 8px);
+    border: 1.5px solid color-mix(in srgb, var(--gold) 78%, var(--text-heading));
+    box-shadow: -2px 2px 0 color-mix(in srgb, var(--gold) 35%, var(--bg-panel-raised)),
+                -4px 4px 0 var(--bg-panel),
+                -6px 6px 0 var(--bg-inset),
+                -7px 9px 18px var(--bg-canvas); }
+
+/* ZERO SCROLLBARS on desktop Open Board battlefields! */
+@media (min-width: 760px) {
+    #game.open-board .side { overflow: hidden !important; padding: 4px 12px; gap: 4px; }
+    #game.open-board .lane.creatures:not(.compact) { gap: 8px; row-gap: 6px; }
+    #game.open-board .lane.creatures.arena-dense { gap: 5px; row-gap: 5px; }
+    #game.open-board .lane.creatures.compact { scrollbar-width: none; }
+    #game.open-board .lane.creatures.compact::-webkit-scrollbar { width: 0; height: 0; }
+    #game.open-board .row-front { margin-top: 6px; }
+    #game.open-board .opp-side .row-front { margin-bottom: 6px; }
+    #game.open-board .board-sum { top: -14px; left: 0; right: auto; font-size: 0.68rem; padding: 0 7px; opacity: 0.78; }
+    #game.open-board .opp-side .board-sum { top: auto; bottom: -14px; left: 0; right: auto; }
+
+    /* Ornate gilded Art-Deco SVG crest behind Avatar & Life Shield (like MTG Arena!) */
+    #game.open-board .av-crest { display: block; position: absolute; left: 50%; top: 50%; width: 124px; height: 78px;
+        transform: translate(-50%, -46%); pointer-events: none; z-index: 0;
+        filter: drop-shadow(0 4px 12px var(--bg-canvas)) drop-shadow(0 0 12px color-mix(in srgb, var(--gold) 35%, transparent)); }
+    #game.open-board .av-crest .crest-wing { fill: color-mix(in srgb, var(--gold) 30%, var(--bg-panel-raised));
+        stroke: color-mix(in srgb, var(--gold) 85%, var(--text-heading)); stroke-width: 1.8; }
+    #game.open-board .av-crest .crest-trim { stroke: color-mix(in srgb, var(--text-heading) 42%, var(--gold)); stroke-width: 1.2; opacity: 0.8; }
+    #game.open-board .av-medallion .arena-av { position: relative; z-index: 1; }
+    #game.open-board.pod-mode #oppBar .av-crest { display: none; }
+}
+
+/* ---- Sculpted MTG Arena Battlefield Card Assets ---- */
+/* 1. Beveled metallic P/T shield (white-silver bevel, Arena blue buffed numerals, crimson hurt numerals) */
+#game.open-board .perm .pt {
+    font-family: var(--font-display); font-weight: 800; font-size: 0.82rem; line-height: 1.15;
+    padding: 1px 7px; border-radius: 6px; right: 3px; bottom: 3px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--text-heading) 96%, var(--bg-panel)), color-mix(in srgb, var(--text-soft) 82%, var(--bg-panel)));
+    color: var(--bg-canvas);
+    border: 1.5px solid color-mix(in srgb, var(--gold) 65%, var(--bg-canvas));
+    box-shadow: inset 0 1px 0 var(--text-heading), 0 2px 6px var(--bg-canvas); }
+#game.open-board .perm .pt.up { color: var(--brand); border-color: var(--brand-light);
+    box-shadow: inset 0 1px 0 var(--text-heading), 0 0 10px -1px var(--brand-light), 0 2px 6px var(--bg-canvas); }
+#game.open-board .perm .pt.hurt { color: var(--mana-R); border-color: var(--mana-R);
+    box-shadow: inset 0 1px 0 var(--text-heading), 0 0 10px -1px var(--mana-R), 0 2px 6px var(--bg-canvas); }
+#game.open-board .lane.arena-dense .perm .pt { font-size: 0.7rem; padding: 0 5px; right: 2px; bottom: 2px; }
+
+/* 2. Sapphire-blue glowing circular +1/+1 counter orb pinned top-right (exact MTG Arena look!) */
+#game.open-board .perm .chips { top: 3px; right: 3px; left: auto; bottom: auto; flex-direction: column; align-items: flex-end; max-width: none; gap: 2px; }
+#game.open-board .perm .chip.c-plus {
+    width: 22px; height: 22px; padding: 0; border-radius: 50%; display: grid; place-items: center;
+    font-family: var(--font-display); font-size: 0.78rem; font-weight: 800;
+    background: radial-gradient(circle at 35% 28%, var(--brand-light), var(--mana-U) 55%, var(--brand) 100%);
+    color: var(--text-heading); border: 1.5px solid color-mix(in srgb, var(--text-heading) 75%, var(--brand-light));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--mana-U) 80%, transparent), 0 2px 5px var(--bg-canvas); }
+#game.open-board .lane.arena-dense .perm .chip.c-plus { width: 17px; height: 17px; font-size: 0.66rem; }
+#game.open-board .perm .chip.c-cmd { background: color-mix(in srgb, var(--gold) 26%, var(--bg-canvas)); border-color: var(--gold); border-radius: 999px; }
+
+/* 3. Crisp Inline SVG Keyword Medallions along bottom-left of creatures */
+.kw-strip { position: absolute; left: 3px; bottom: 3px; z-index: 3; display: flex; gap: 2px; pointer-events: none; }
+.kw-ico { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+    background: radial-gradient(circle at 35% 30%, var(--bg-panel-raised), var(--bg-canvas));
+    border: 1.2px solid color-mix(in srgb, var(--gold) 70%, var(--border));
+    color: var(--text-heading); box-shadow: 0 2px 5px var(--bg-canvas); }
+.kw-ico svg { width: 11px; height: 11px; fill: currentColor; display: block; }
+.kw-ico.kw-flying { border-color: var(--brand-light); color: var(--brand-light); }
+.kw-ico.kw-deathtouch { border-color: var(--color-success); color: var(--color-success); }
+.kw-ico.kw-lifelink { border-color: var(--mana-W); color: var(--mana-W); }
+.kw-ico.kw-haste, .kw-ico.kw-menace { border-color: var(--mana-R); color: var(--mana-R); }
+.kw-ico.kw-trample { border-color: var(--mana-G); color: var(--mana-G); }
+.kw-ico.kw-indestructible, .kw-ico.kw-vigilance { border-color: var(--gold); color: var(--gold); }
+.kw-ico.kw-hexproof { border-color: var(--color-link); color: var(--color-link); }
+#game.open-board .lane.arena-dense .kw-ico { width: 14px; height: 14px; }
+#game.open-board .lane.arena-dense .kw-ico svg { width: 9px; height: 9px; }
+#game .lane.compact .kw-strip { display: none; }
+
+/* 4. Ornate Legendary Crown Header + Token Arched Accent + Physical Shingled Stacks */
+#game.open-board .perm.is-legendary img, #game.open-board .perm.is-legendary .noimg {
+    border-top: 2.5px solid var(--gold);
+    box-shadow: 0 -2px 10px -2px color-mix(in srgb, var(--gold) 65%, transparent), 0 6px 16px -4px var(--bg-canvas); }
+#game.open-board .perm.is-token img { border: 1.5px solid color-mix(in srgb, var(--text-soft) 55%, var(--border)); }
+#game.open-board .perm.pile { margin-left: 8px; }
+#game.open-board .perm.pile img {
+    box-shadow: -3px -2px 0 -0.5px color-mix(in srgb, var(--text-soft) 35%, var(--bg-panel-raised)),
+                -3px -2px 0 0.5px var(--bg-canvas),
+                -6px -4px 0 -0.5px color-mix(in srgb, var(--text-soft) 25%, var(--bg-panel)),
+                -6px -4px 0 0.5px var(--bg-canvas),
+                -9px -6px 0 -0.5px var(--bg-inset),
+                0 6px 16px -4px var(--bg-canvas); }
+#game.open-board .pile-n {
+    left: -4px; top: -6px; right: auto; bottom: auto; transform: none; z-index: 4;
+    font-family: var(--font-display); font-size: 0.72rem; font-weight: 800; padding: 1px 6px; border-radius: 5px;
+    background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-canvas));
+    color: var(--text-heading); border: 1.5px solid color-mix(in srgb, var(--gold) 70%, var(--border));
+    box-shadow: 0 2px 8px var(--bg-canvas); }
+
+/* 5. Fiery Arcane Rim Glow on Active Right-Side Arena Stack Card (like The One Ring on Arena!) */
+@media (min-width: 760px) {
+    #game.open-board #midBar .stackbar .stack-item.top {
+        border: 2px solid color-mix(in srgb, var(--mythic) 75%, var(--gold));
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 65%, transparent),
+                    0 0 26px 2px color-mix(in srgb, var(--mythic) 65%, transparent),
+                    0 14px 36px -6px var(--bg-canvas);
+        animation: arenaStackIn 0.28s cubic-bezier(.16, 1.12, .3, 1), arenaStackFire 2.4s ease-in-out infinite; }
+    @keyframes arenaStackFire {
+        0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 55%, transparent), 0 0 22px 1px color-mix(in srgb, var(--mythic) 55%, transparent), 0 14px 36px -6px var(--bg-canvas); }
+        50% { box-shadow: 0 0 0 1.5px var(--gold), 0 0 34px 5px color-mix(in srgb, var(--mythic) 80%, transparent), 0 14px 36px -6px var(--bg-canvas); } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .arena-motes { display: none !important; }
+    #game.open-board #midBar .stackbar .stack-item.top { animation: none !important; }
 }
