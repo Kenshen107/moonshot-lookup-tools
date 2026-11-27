@@ -82,6 +82,7 @@
         el.classList.add(cls);
         spawnDelta(el, diff);
         setTimeout(() => el.classList.remove(cls), 600);
+        if (typeof window.arenaMatPulse === 'function') window.arenaMatPulse(diff < 0 ? 'hit' : 'heal');
     }
 
     let turnToastTimer = null;
@@ -309,63 +310,6 @@
         };
     }
 
-    // 5. Ambient Floating Embers / Arcane Motes Canvas (#arenaMotes)
-    // Gentle drifting particles tinted by the active Look's --gold & --brand-light tokens.
-    // Pauses automatically when #game is hidden, tab is hidden, reduced-motion, or autoplay/test.
-    (function initArenaMotes() {
-        const cv = $('arenaMotes');
-        if (!cv || !cv.getContext) return;
-        const ctx = cv.getContext('2d');
-        const N = 26;
-        let pts = [], raf = 0, lastT = 0;
-        function seed(w, h) {
-            pts = [];
-            for (let i = 0; i < N; i++) {
-                pts.push({
-                    x: Math.random() * w, y: Math.random() * h,
-                    r: 1.1 + Math.random() * 2.1,
-                    vx: (Math.random() - 0.5) * 9, vy: -(5 + Math.random() * 11),
-                    ph: Math.random() * Math.PI * 2, gold: i % 3 !== 0
-                });
-            }
-        }
-        function tick(t) {
-            raf = 0;
-            const g = $('game');
-            if (!g || g.classList.contains('hidden') || !g.classList.contains('open-board') || document.hidden || reduced() || isAuto()) {
-                lastT = 0; return;
-            }
-            const w = innerWidth, h = innerHeight;
-            if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; seed(w, h); }
-            const dt = lastT ? Math.min(0.06, (t - lastT) / 1000) : 0.016;
-            lastT = t;
-            const cs = getComputedStyle(document.documentElement);
-            const cGold = cs.getPropertyValue('--gold').trim() || '#e8c25a';
-            const cBrand = cs.getPropertyValue('--brand-light').trim() || '#3aa3d1';
-            ctx.clearRect(0, 0, w, h);
-            for (const p of pts) {
-                p.x += (p.vx + Math.sin(t * 0.0008 + p.ph) * 4) * dt;
-                p.y += p.vy * dt;
-                if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
-                if (p.x < -10) p.x = w + 10;
-                if (p.x > w + 10) p.x = -10;
-                const a = 0.16 + 0.24 * (0.5 + 0.5 * Math.sin(t * 0.0018 + p.ph));
-                ctx.globalAlpha = a;
-                ctx.fillStyle = p.gold ? cGold : cBrand;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalAlpha = a * 0.3;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r * 3.1, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-            raf = requestAnimationFrame(tick);
-        }
-        function wake() { if (!raf && !reduced() && !isAuto()) raf = requestAnimationFrame(tick); }
-        const origAfter = window._arenaWakeMotes = wake;
-        document.addEventListener('visibilitychange', () => { if (!document.hidden) origAfter(); });
-        wake();
-    })();
+    // 5. Living Interactive Battlefields canvas (#arenaMotes) is powered by 08g-arena-mats.js
+    // (woken automatically via window._arenaWakeMotes on renderGame).
 })();

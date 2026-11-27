@@ -481,6 +481,8 @@ window.__UI_LAB = (function () {
         bar.querySelectorAll('[data-lab-preset]').forEach(b => b.classList.toggle('on', b.dataset.labPreset === activePresetName));
         const curLook = document.documentElement.dataset.theme || '';
         bar.querySelectorAll('[data-lab-look]').forEach(b => b.classList.toggle('on', b.dataset.labLook === curLook));
+        const curMat = typeof arenaMatPref === 'string' ? arenaMatPref : 'sanctum';
+        bar.querySelectorAll('[data-lab-mat]').forEach(b => b.classList.toggle('on', b.dataset.labMat === curMat));
     }
 
     function runAuditUI() {
@@ -533,6 +535,8 @@ window.__UI_LAB = (function () {
                 <div><div class="lab-h">Looks & Board Style</div>
                 <div class="lab-row">${lookKeys.map(([k, nm]) => `<button type="button" data-lab-look="${k}">${nm}</button>`).join('')}
                 <button type="button" data-lab-board="toggle">Open / Classic</button></div></div>
+                <div><div class="lab-h">Interactive MTG Battlefields</div>
+                <div class="lab-row">${(typeof ARENA_MATS !== 'undefined' ? ARENA_MATS : []).map(m => `<button type="button" data-lab-mat="${m.key}">${m.icon} ${m.name.split(' ')[0]}</button>`).join('')}</div></div>
                 <div><div class="lab-row"><button type="button" id="uiLabAuditBtn">🩺 Run UI Audit & Hit-Tests</button></div>
                 <div class="lab-audit" id="uiLabAudit">Click Audit to verify clicks, overlaps & scrollbars.</div></div>
             </div>`;
@@ -543,6 +547,7 @@ window.__UI_LAB = (function () {
                 else if (b.dataset.labSpawn) spawnCard(($('uiLabCardIn') || {}).value, b.dataset.labSpawn);
                 else if (b.dataset.labAct) act(b.dataset.labAct);
                 else if (b.dataset.labLook !== undefined && typeof setLook === 'function') { setLook(b.dataset.labLook); syncPanelState(); }
+                else if (b.dataset.labMat && typeof setArenaMat === 'function') { setArenaMat(b.dataset.labMat); syncPanelState(); }
                 else if (b.dataset.labBoard && typeof setBoardStyle === 'function') setBoardStyle(openBoard() ? 'classic' : 'open');
                 else if (b.id === 'uiLabAuditBtn') runAuditUI();
             });
@@ -570,6 +575,7 @@ window.__UI_LAB = (function () {
             });
             if (q.has('view')) opts.view = q.get('view');
             if (q.has('mode')) opts.mode = q.get('mode');
+            if (q.has('mat') && typeof setArenaMat === 'function') setArenaMat(q.get('mat'));
             if (q.get('panel') !== '0') openPanel(q.get('panel') === 'open');
             spawn(opts);
         };
