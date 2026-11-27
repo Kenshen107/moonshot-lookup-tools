@@ -11,7 +11,7 @@ const BODY = async function () {
     const root = document.documentElement, brand = () => getComputedStyle(root).getPropertyValue('--brand').trim();
     const classic = brand();
     ok('starts Classic with frames on', !root.hasAttribute('data-theme') && root.getAttribute('data-frames') === 'on', root.getAttribute('data-frames'));
-    ok('the header has a Look button', [...document.querySelectorAll('.topbar .btn')].some(b => /Look/.test(b.textContent)));
+    ok('the header has a Locker button (looks, sleeves, companions)', [...document.querySelectorAll('.topbar .btn')].some(b => /Locker/.test(b.textContent)));
     lookPanel();
     ok('the panel lists every look', document.querySelectorAll('#modalHost .look-card').length === SP_LOOKS.length && SP_LOOKS.length === 7);
     document.querySelector('#modalHost .look-card[data-look="ember"]').click();
@@ -31,7 +31,7 @@ const BODY = async function () {
     setLook('classic', true); closeModal();
     ok('Classic restores the original', !root.hasAttribute('data-theme') && brand() === classic);
     accountSheet();
-    ok('the phone Player sheet has Look and frames', [...document.querySelectorAll('#sheetHost .btn')].some(b => /Look and frames/.test(b.textContent)));
+    ok('the phone Player sheet has the Locker', [...document.querySelectorAll('#sheetHost .btn')].some(b => /Locker/.test(b.textContent)));
     closeSheet();
     return out;
 };

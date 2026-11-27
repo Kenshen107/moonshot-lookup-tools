@@ -4,7 +4,7 @@ Owner's request (2026-11-27): "a game plan to create all new assets for all of S
 
 This file is the plan and the hand-off brief. **Antigravity makes pictures; Claude writes the code.** Antigravity reads this file, generates the files listed in each batch at the exact sizes and paths given, checks them with `node tests/asset_check.js` (Claude writes this first), and commits them. Claude wires each file into the game so nothing breaks while a file is missing: every slot keeps a drawn fallback, as the current art does.
 
-Nothing is built yet. The decisions marked **(owner)** come first.
+**Status (2026-11-27):** Batch 0 (style sheet) is in (`fb84da6`, from Antigravity). Batch 1 (Claude's code) is built: see section 8. The six decisions are settled in section 7.
 
 ---
 
@@ -196,11 +196,27 @@ About 400 images in all. Each batch ends playable: nothing waits for the last ba
 
 ---
 
-## 7. Decisions for the owner
+## 7. Decisions (settled 2026-11-27, Claude's calls at the owner's request)
 
-1. **Art style:** one style for all new art ("Gilded Arcana", like the current Sanctum mat)? Keep the pixel Ascent characters as they are?
-2. **Locker placement:** inside the 🎨 Look panel (recommended), or inside the Shop?
-3. **Which coins buy cosmetics:** main bucket only (recommended), or everything free in Sandbox?
-4. **Prices:** 300 / 1,000 / 3,000 / 8,000 coins OK?
-5. **Companions:** bottom-left corner of your side, switchable off. OK?
-6. **Start with batch 0** (the style sheet) and batch 1 (Claude's code) at the same time?
+1. **Art style:** yes, **Gilded Arcana** for all new art (Batch 0 set the bar: the Sanctum sleeve, the Ember Drake, the Caldera mat). The pixel Ascent characters stay pixel; they're their own campaign.
+2. **Locker placement:** the 🎨 button. The old Looks panel *is* the Locker now (Looks and Playmats are two of its tabs), so there's no new top-level tab.
+3. **Which coins:** the main bucket only (Campaign and Shop Simulator). In Sandbox the Locker still works but spends the main bucket's coins, never Sandbox coins (those can be added for free).
+4. **Prices:** Common 300, Rare 1,000, Epic 3,000, Legendary 8,000 (`COS_PRICES`; a Mythic sleeve is Legendary). Buying takes two taps.
+5. **Companion spot:** the first free spot beside your seat: right of your life medallion on a wide screen, just above your bar on a phone. A spot is free only when it covers no card, hand card, button or counter; with none free the companion ducks out of sight until one opens. "No companion" switches it off.
+6. **Start both at once:** yes. Batch 1 is done; Antigravity can start Batch 2 (icons).
+
+---
+
+## 8. Batch 1 (built 2026-11-27)
+
+- **Manifest:** `node tools/asset_manifest.js` writes `docs/spellslinger-asset-manifest.json`: 589 files (more than the ~400 estimated above, because every companion part, face and theme texture is listed separately), each with path, exact size, transparency, a KB budget, its batch and a ready prompt (`style` + subject + `rules`). Edit the lists in the script, never the JSON.
+- **Checker:** `node tests/asset_check.js [--batch N] [--slot sleeve] [--id x] [--missing] [--strict] [--json]`: size in pixels, PNG or JPEG, transparency (and a transparent corner on sleeves, companion parts, avatars, emotes, props, packs), size budget; lists unknown files in the new folders. Exit 1 on a bad file. **Over budget:** `python3 tools/optimize_art.py <file>` (or `--over-budget`) shrinks it (PNG to a 256-colour palette, JPEG re-saved) and keeps the original in `_old/`; the size in pixels never changes. A 1 MB sleeve went to 171 KB with no visible change.
+- **Locker** (`spellslinger/04j-cosmetics.js`): `COSMETICS` registry, `cosState()` (profile.cosmetics: owned, sleeve, companion, deckSleeves), `cosBuy` / `cosEquip` / `cosDeckSleeve`, tabs Looks / Sleeves / Playmats / Companions / Coming soon. Sleeves so far: Arena Classic (free), five code-drawn Weaves (Common, drawn from the theme tokens), Gilded Sanctum (Rare, Batch 0 art).
+- **Sleeves on the table:** `sleeveAttr(P)` puts the sleeve on the library pile (desktop open board) and the hand backs (classic board). The computer characters wear their own (`BOT_SLEEVES`). A deck can have its own sleeve.
+- **Companion rig** (`spellslinger/08i-companion.js`): `COMPANION_RIGS['ember-drake']` places each part (x, y, size, pivot, mirror) in a 440 x 430 stage; one rAF loop (about 30 fps, stops when hidden) breathes, wags, flaps, follows the pointer, and reacts: perk (you cast), cheer with embers (an opponent loses life), flinch (you lose life), happy with hearts (you gain life, or you tap it), nap (a quiet minute), celebrate (win), droop (loss). Life totals are read, not hooked, so the engine is untouched (the lab baseline is unchanged). Off in autoplay and the lab, a still pose for reduced motion.
+- **Tests:** `tests/suites/cosmetics.js` (35 checks, in the fast run; screenshots `tests/.out/cosmetics-*.png`).
+
+### Notes for Antigravity
+- **Companion parts don't need to share a canvas.** The Ember Drake's parts each filled their own 512 x 512 canvas and that's fine: the rig places them. Keep each part whole (a wing with its shoulder joint, a tail with its base) and say in the commit which way the creature faces. One wing is enough; the rig mirrors it for the far side.
+- The icon names already in `spellslinger/art/ui/` (`counter-plus`, `life`, `pack-play`, `rarity-foil`...) are in the manifest as-is.
+- **Next: Batch 2**, the icons: `node tests/asset_check.js --batch 2 --missing` lists the 54 still to make. Then Batch 3 (sleeves and four layered playmats).

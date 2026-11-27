@@ -274,7 +274,8 @@ function barHTML(P) {
     const topGy = P.gy && P.gy.length ? P.gy[P.gy.length - 1] : null;
     const gyArt = topGy && topGy.card && (topGy.card.imgS || topGy.card.img);
     const gyPile = `<button type="button" class="zone-count zone-btn pile-card pile-gy${gyArt ? ' has-art' : ''}" title="Graveyard (${P.gy.length}): tap to look" onclick="showGraveyard(${P.i})">${gyArt ? `<img class="pile-art" src="${gyArt}" alt="">` : '<span class="pile-ico" aria-hidden="true">🪦</span>'}<span class="pile-cnt">${P.gy.length}</span></button>`;
-    const libPile = `<span class="zone-count pile-card pile-deck" title="Library: ${P.library.length} cards"><span class="pile-ico" aria-hidden="true">📚</span><span class="pile-cnt">${P.library.length}</span></span>`;
+    const slv = typeof sleeveAttr === 'function' ? sleeveAttr(P) : { cls: '', style: '' };
+    const libPile = `<span class="zone-count pile-card pile-deck${slv.cls}"${slv.style} title="Library: ${P.library.length} cards"><span class="pile-ico" aria-hidden="true">📚</span><span class="pile-cnt">${P.library.length}</span></span>`;
     const crestSVG = `<svg class="av-crest" viewBox="0 0 120 76" aria-hidden="true"><path class="crest-wing" d="M8 58 L28 32 L38 42 L60 12 L82 42 L92 32 L112 58 L94 64 L60 54 L26 64 Z"/><path class="crest-trim" d="M18 55 L32 39 L43 47 L60 22 L77 47 L88 39 L102 55" fill="none"/></svg>`;
     return `
         <span class="bar-center">
@@ -286,7 +287,7 @@ function barHTML(P) {
             ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
             ${P === me() && P.bf.some(o => Rx(o).peekTop) && P.library.length ? `<span class="pc" title="You may look at the top card of your library any time">👁 ${esc(P.library[P.library.length - 1].card.name)}</span>` : ''}
             <span class="zones">${libPile}${gyPile}</span>
-            ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
+            ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand${slv.cls}"${slv.style}>${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
             <span class="cmd-zone">${cmd}</span>
         </span>
         <span class="bar-right">
