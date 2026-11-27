@@ -2856,10 +2856,10 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
         url('art/ui/arena-mat.jpg') center / cover no-repeat; }
 #game.open-board[data-mat="mountain"] {
     background:
-        radial-gradient(ellipse 74% 54% at 50% 50%, color-mix(in srgb, var(--mana-R) 24%, transparent), transparent 72%),
-        radial-gradient(ellipse 106% 100% at 50% 50%, color-mix(in srgb, var(--mythic) 18%, transparent) 22%, color-mix(in srgb, var(--bg-canvas) 84%, transparent) 100%),
-        linear-gradient(180deg, color-mix(in srgb, var(--mana-R) 24%, var(--bg-canvas)), color-mix(in srgb, var(--mythic) 16%, var(--bg-inset)) 52%, var(--bg-canvas)),
-        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+        radial-gradient(ellipse 74% 54% at 50% 50%, color-mix(in srgb, var(--mana-R) 14%, transparent), transparent 72%),
+        radial-gradient(ellipse 106% 100% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 62%, transparent) 100%),
+        url('art/mats/mountain/base.jpg') center / cover no-repeat,
+        var(--bg-canvas); }
 #game.open-board[data-mat="forest"] {
     background:
         radial-gradient(ellipse 76% 56% at 50% 46%, color-mix(in srgb, var(--mana-G) 24%, transparent), transparent 72%),
