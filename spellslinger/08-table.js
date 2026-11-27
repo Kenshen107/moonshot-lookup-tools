@@ -134,6 +134,8 @@ window._gameSpeed = gameSpeed;
 function applyGameSpeed() {
     window._gameSpeed = gameSpeed;
     document.querySelectorAll('.speed-seg [data-sp]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.sp) === gameSpeed)));
+    const cyc = $('speedCycleBtn');
+    if (cyc) cyc.textContent = gameSpeed === 4 ? '⚡' : `${gameSpeed}×`;
 }
 function setGameSpeed(v) {
     gameSpeed = [1, 2, 4].includes(Number(v)) ? Number(v) : 1;
@@ -141,6 +143,20 @@ function setGameSpeed(v) {
     store.set('gameSpeed', gameSpeed);
     applyGameSpeed();
 }
+function cycleGameSpeed() { setGameSpeed(gameSpeed === 1 ? 2 : gameSpeed === 2 ? 4 : 1); }
+
+// Phone hand peek toggle: keeps phone hand compact (~half height) for extra board room, 1-tap to expand
+let phoneHandOpen = false;
+function applyPhoneHand() {
+    const g = $('game'), btn = $('phoneHandToggle');
+    if (g) g.classList.toggle('phone-hand-open', !!phoneHandOpen);
+    if (btn) {
+        btn.setAttribute('aria-expanded', String(!!phoneHandOpen));
+        const ico = btn.querySelector('.pht-ico');
+        if (ico) ico.textContent = phoneHandOpen ? '▼' : '▲';
+    }
+}
+function togglePhoneHand() { phoneHandOpen = !phoneHandOpen; applyPhoneHand(); fitTable(); }
 function speedToggleHTML(reopen) {
     return `<div class="seg speed-seg" role="group" aria-label="Game speed" style="width:100%;">${[[1, '1× Normal'], [2, '2× Fast'], [4, '⚡ Turbo']].map(([n, lbl]) => `<button type="button" style="flex:1; padding:10px;" data-sp="${n}" aria-pressed="${gameSpeed === n}" onclick="setGameSpeed(${n}); ${reopen}">${lbl}</button>`).join('')}</div>`;
 }
@@ -176,23 +192,22 @@ function podStripHTML() {
             else if (d.type === 'spare') tags.push('<span class="seat-tag deal" title="Hands-off truce active">🛡️ Truce</span>');
             else if (d.type === 'pact') tags.push('<span class="seat-tag deal" title="Gang-up pact active">⚔️ Pact</span>');
         });
+        if (atkMe) tags.push('<span class="seat-tag atk-danger">⚔️ Attacks you</span>');
+        else if (atkOther) tags.push(`<span class="seat-tag atk">⚔️ → ${esc(atkOther)}</span>`);
+        else if (G.defender === X.i && G.active === v.i) tags.push('<span class="seat-tag atk">🎯 Target</span>');
         const avHTML = cmdr && cmdr.art
             ? `<span class="seat-av has-art" aria-hidden="true"><span class="seat-av-clip"><img src="${cmdr.art}" alt=""></span><span class="seat-mood">${X.out ? '💀' : MOODS[mood.mood].emoji}</span></span>`
             : `<span class="seat-av" aria-hidden="true">${X.out ? '💀' : MOODS[mood.mood].emoji}</span>`;
-        const atkTag = atkMe ? '<span class="atk atk-danger">⚔️ Attacks you</span>'
-            : atkOther ? `<span class="atk">⚔️ → ${esc(atkOther)}</span>`
-            : G.defender === X.i && G.active === v.i ? '<span class="atk">🎯 Your target</span>' : '';
         return `<button type="button" data-seat="${X.i}" style="--sc:${col}" class="pod-chip seat${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}${X.life <= 10 && !X.out ? ' low' : pct <= 50 && !X.out ? ' mid' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
-            title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${avail} open mana, ${X.hand.length} in hand, ${crs.length} creatures (power ${power}), ${X.gy.length} in graveyard${styleLbl ? `, ${esc(styleLbl)}` : ''}. Feeling ${esc(MOODS[mood.mood].name)}: ${esc(mood.why)}${dmg ? `. Commander damage to you: ${dmg}/21` : ''}. Press ${idx + 1} to view board.">
+            title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${avail} open mana, ${X.hand.length} in hand, ${X.library.length} in library, ${crs.length} creatures (power ${power}), ${X.gy.length} in graveyard${styleLbl ? `, ${esc(styleLbl)}` : ''}. Feeling ${esc(MOODS[mood.mood].name)}: ${esc(mood.why)}${dmg ? `. Commander damage to you: ${dmg}/21` : ''}. Press ${idx + 1} to view board.">
             ${avHTML}
-            <span class="seat-main"><b>${esc(who(X))}${typeof reliTag === 'function' ? reliTag(X) : ''}<kbd class="seat-key desk-only">${idx + 1}</kbd></b><small>${turn ? '<span class="seat-think" aria-label="taking their turn"><i></i><i></i><i></i></span>' : ''}${esc(sub)}</small>${tags.length ? `<span class="seat-tags">${tags.join('')}</span>` : ''}</span>
-            <span class="seat-life-wrap"><span class="seat-life">${X.out ? 'OUT' : X.life}</span>${!X.out ? '<span class="seat-life-lbl">LIFE</span>' : ''}</span>
-            <span class="seat-stats"><span title="Cards in hand">✋ ${X.hand.length}</span><span title="Untapped open mana">💧 ${avail}</span><span title="Creatures and total power">⚔️ ${crs.length}${power ? `·${power}` : ''}</span><span title="Graveyard">🪦 ${X.gy.length}</span>${cmdr && !X.out ? `<span class="seat-cz${cmdr.onBf ? ' live' : ''}" title="${cmdr.onBf ? 'Commander is on the battlefield' : cmdr.inCmd ? 'Commander is in the command zone' : 'Commander is in another zone'}">👑${cmdr.onBf ? '●' : ''}</span>` : ''}${dmg ? `<span class="seat-cdmg" title="Commander damage you have taken from them">🩸${dmg}</span>` : ''}${(X.salt || 0) >= 3 ? `<span title="Salt level: how annoyed they are with the table">🧂${Math.round(X.salt)}</span>` : ''}</span>
-            ${atkTag}
+            <span class="seat-main"><b>${esc(who(X))}${typeof reliTag === 'function' ? reliTag(X) : ''}<span class="seat-cmdr">${turn ? '<span class="seat-think" aria-label="taking their turn"><i></i><i></i><i></i></span>' : ''}${esc(sub)}</span><kbd class="seat-key desk-only">${idx + 1}</kbd></b>${tags.length ? `<span class="seat-tags">${tags.join('')}</span>` : ''}</span>
+            <span class="seat-life-wrap"><span class="seat-life">${X.out ? 'OUT' : X.life}</span></span>
+            <span class="seat-stats"><span title="Cards in hand">✋${X.hand.length}</span><span title="Untapped open mana">💧${avail}</span><span title="Creatures and total power">⚔️${crs.length}${power ? `·${power}` : ''}</span><span title="Graveyard">🪦${X.gy.length}</span><span class="seat-lib" title="Library">📚${X.library.length}</span>${cmdr && !X.out ? `<span class="seat-cz${cmdr.onBf ? ' live' : ''}" title="${cmdr.onBf ? 'Commander is on the battlefield' : cmdr.inCmd ? 'Commander is in the command zone' : 'Commander is in another zone'}">👑${cmdr.onBf ? '●' : ''}</span>` : ''}${dmg ? `<span class="seat-cdmg" title="Commander damage you have taken from them">🩸${dmg}</span>` : ''}${(X.salt || 0) >= 3 ? `<span title="Salt level: how annoyed they are with the table">🧂${Math.round(X.salt)}</span>` : ''}</span>
             <span class="seat-bar" aria-hidden="true"><i style="width:${X.out ? 0 : pct}%"></i></span></button>`;
     }).join('');
     const mine = dealsOf(v.i).length;
-    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<div class="pod-utils"><button type="button" class="pod-chip pod-act" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝<span class="lbl"> Deals</span></b>${mine ? `<span class="pod-badge">${mine}</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}<span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div></div>`;
+    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<div class="pod-utils"><div class="pod-util-row"><button type="button" class="pod-chip pod-act" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝<span class="lbl"> Deals</span></b>${mine ? `<span class="pod-badge">${mine}</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}</div><span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div></div>`;
 }
 function podFocus(i) { G.focusPick = i; renderGame(); }
 
@@ -526,6 +541,9 @@ function renderGame() {
     changed = setHTML($('hand'), handHTML()) || changed;
     const handLabel = `Hand · ${me().hand.length}`;
     if ($('handCount').textContent !== handLabel) $('handCount').textContent = handLabel;
+    const phl = $('phoneHandLbl');
+    if (phl) phl.textContent = `✋ Hand · ${me().hand.length}`;
+    if (typeof applyPhoneHand === 'function') applyPhoneHand();
     const fitKey = `${innerWidth}x${innerHeight}|${handSize}|${G.mode ? G.mode.type : ''}|${isPhone()}`;
     if (changed || renderGame.fitKey !== fitKey) { renderGame.fitKey = fitKey; fitTable(); }
 }
