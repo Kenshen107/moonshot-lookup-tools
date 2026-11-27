@@ -82,7 +82,14 @@ function showBubble(P, mood, text) {
     const el = document.createElement('div');
     el.className = 'talk-bubble typing';
     el.dataset.seat = String(P.i);
-    el.innerHTML = `<span class="tb-emoji" aria-hidden="true">${m.emoji}</span><span class="tb-body"><strong>${esc(who(P))}</strong> <em>is feeling ${esc(m.name)}</em><br><span class="tb-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tb-text">${esc(text)}</span></span>`;
+    const cmdr = typeof playerCmdr === 'function' ? playerCmdr(P) : null;
+    const art = cmdr && cmdr.art;
+    const col = cmdr && cmdr.col ? cmdr.col : 'var(--gold)';
+    el.style.setProperty('--tb-c', col);
+    const av = art
+        ? `<span class="tb-av has-art" aria-hidden="true"><span class="seat-av-clip"><img src="${art}" alt=""></span><span class="tb-mood-pip">${m.emoji}</span></span>`
+        : `<span class="tb-emoji" aria-hidden="true">${m.emoji}</span>`;
+    el.innerHTML = `${av}<span class="tb-body"><strong>${esc(who(P))}</strong> <em>is feeling ${esc(m.name)}</em><br><span class="tb-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tb-text">${esc(text)}</span></span>`;
     el.onclick = () => el.remove();
     host.appendChild(el);
     while (host.children.length > 3) host.firstChild.remove();

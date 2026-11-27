@@ -114,38 +114,97 @@ function manaSourcesSummary(P) {
     return `<span class="pool" title="Untapped mana">⚡ ${total}${Object.entries(counts).map(([c, n]) => c === 'any' ? ` · ${n} multi` : ` · ${n}<span class="pip ${c}"></span>`).join('')}</span>`;
 }
 
-// A pod (3 or 4 players): one chip per opponent with life, the commander damage you have taken from them, hand and creatures.
-// Tap a chip to look at that player's board (and to attack them); while choosing a target it picks that player.
+// Commander metadata for a player (art portrait, color identity glow, current zone)
+function playerCmdr(P) {
+    if (!P) return null;
+    const o = [...(P.command || []), ...(P.bf || []), ...(P.gy || []), ...(P.exile || []), ...(P.hand || []), ...(P.library || [])].find(x => x && x.isCommander);
+    if (!o || !o.card) return null;
+    const ci = o.card.ci || o.card.colors || [];
+    const col = ci.length === 1 ? `var(--mana-${ci[0]})` : ci.length ? 'var(--gold)' : 'var(--mana-C)';
+    return { o, card: o.card, art: o.card.imgS || o.card.img || '', ci, col, onBf: (P.bf || []).includes(o), inCmd: (P.command || []).includes(o) };
+}
+
+// Playback speed (1 = normal, 2 = brisk, 4 = turbo) for opponent turns and play-by-play
+let gameSpeed = Number(store.get('gameSpeed', 1)) || 1;
+if (![1, 2, 4].includes(gameSpeed)) gameSpeed = 1;
+window._gameSpeed = gameSpeed;
+function applyGameSpeed() {
+    window._gameSpeed = gameSpeed;
+    document.querySelectorAll('.speed-seg [data-sp]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.sp) === gameSpeed)));
+}
+function setGameSpeed(v) {
+    gameSpeed = [1, 2, 4].includes(Number(v)) ? Number(v) : 1;
+    window._gameSpeed = gameSpeed;
+    store.set('gameSpeed', gameSpeed);
+    applyGameSpeed();
+}
+function speedToggleHTML(reopen) {
+    return `<div class="seg speed-seg" role="group" aria-label="Game speed" style="width:100%;">${[[1, '1× Normal'], [2, '2× Fast'], [4, '⚡ Turbo']].map(([n, lbl]) => `<button type="button" style="flex:1; padding:10px;" data-sp="${n}" aria-pressed="${gameSpeed === n}" onclick="setGameSpeed(${n}); ${reopen}">${lbl}</button>`).join('')}</div>`;
+}
+
+// A pod (3 or 4 players): rich broadcast-style seat cards with Commander art, live mana/board telemetry,
+// active deals, combat direction and 1-click focus switching.
 function podStripHTML() {
     const v = me(), m = G.mode;
-    const chips = G.players.filter(X => X !== v).map(X => {
-        const on = foe() === X, turn = G.active === X.i && !G.over, hitsMe = G.active === X.i && (G.defender === v.i || G.attackers.some(u => { const a = onBf(u); return a && a.atkTo === v.i; })), tgt = m && m.type === 'target' && m.valid.some(t => t.p && t.p.i === X.i);
+    const opps = G.players.filter(X => X !== v);
+    const chips = opps.map((X, idx) => {
+        const on = foe() === X, turn = G.active === X.i && !G.over;
+        const atkMe = G.active === X.i && (G.defender === v.i || G.attackers.some(u => { const a = onBf(u); return a && a.atkTo === v.i; }));
+        let atkOther = '';
+        if (!atkMe && G.active === X.i && G.attackers.length) {
+            const defP = G.defender != null && G.players[G.defender] !== v ? G.players[G.defender] : null;
+            if (defP) atkOther = who(defP).split(',')[0];
+        }
+        const tgt = m && m.type === 'target' && m.valid.some(t => t.p && t.p.i === X.i);
         const dmg = G.format === 'commander' ? (v.cmdBy[X.i] || 0) : 0;
         const mood = botMood(X), crs = X.bf.filter(isCreature), power = crs.reduce((n, o) => n + Math.max(0, pow(o)), 0);
+        const avail = typeof availableMana === 'function' ? availableMana(X) : 0;
         const start = (FORMATS[G.format] && FORMATS[G.format].life) || 40, pct = Math.max(0, Math.min(100, Math.round(100 * X.life / start)));
-        const cmdr = [...X.command, ...X.bf, ...X.gy, ...X.exile, ...X.hand, ...X.library].find(o => o.isCommander);
-        const ci = (cmdr && cmdr.card.ci) || [], col = ci.length === 1 ? `var(--mana-${ci[0]})` : ci.length ? 'var(--gold)' : 'var(--mana-C)';
-        const sub = X.char ? X.name.split(',')[0] : styleOf(X) ? styleOf(X).name : '';
-        return `<button type="button" data-seat="${X.i}" style="--sc:${col}" class="pod-chip seat${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}${X.life <= 10 && !X.out ? ' low' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
-            title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${X.hand.length} cards in hand, ${crs.length} creatures (power ${power})${styleOf(X) ? `, plays ${esc(styleOf(X).name)}` : ''}. Feeling ${esc(MOODS[mood.mood].name)}: ${esc(mood.why)}${dmg ? `. You have taken ${dmg} commander damage from them` : ''}">
-            <span class="seat-av" aria-hidden="true">${X.out ? '💀' : MOODS[mood.mood].emoji}</span>
-            <span class="seat-main"><b>${esc(who(X))}${typeof reliTag === 'function' ? reliTag(X) : ''}${G.arch === X.i ? ' <span title="The table is focusing on this player">🎯</span>' : ''}</b><small>${turn ? '<span class="seat-think" aria-label="taking their turn"><i></i><i></i><i></i></span>' : ''}${esc(sub)}</small></span>
-            <span class="seat-life">${X.out ? 'out' : `❤️ ${X.life}`}</span>
-            <span class="seat-stats"><span title="Cards in hand">✋ ${X.hand.length}</span><span title="Creatures and their total power">🛡 ${crs.length}${power ? `·${power}` : ''}</span>${dmg ? `<span title="Commander damage you have taken from them">⚔️ ${dmg}</span>` : ''}${(X.salt || 0) >= 3 ? `<span title="Salt level: how annoyed they are with the table">🧂${Math.round(X.salt)}</span>` : ''}</span>
-            ${hitsMe ? '<span class="atk">attacks you</span>' : G.defender === X.i && G.active === v.i ? '<span class="atk">your target</span>' : ''}
+        const cmdr = playerCmdr(X);
+        const col = cmdr ? cmdr.col : 'var(--mana-C)';
+        const sub = cmdr ? cmdr.card.name.split(',')[0] : (X.char ? X.name.split(',')[0] : styleOf(X) ? styleOf(X).name : '');
+        const styleLbl = styleOf(X) ? `${styleOf(X).emoji} ${styleOf(X).name}` : '';
+        const myDeals = (G.deals || []).filter(d => !d.over && ((d.a === v.i && d.b === X.i) || (d.b === v.i && d.a === X.i)));
+        const tags = [];
+        if (G.arch === X.i && !X.out) tags.push('<span class="seat-tag arch" title="Archenemy: the table is focusing on this player">🎯 Arch</span>');
+        myDeals.slice(0, 2).forEach(d => {
+            if (d.alliance) tags.push('<span class="seat-tag deal" title="Active alliance">🤝 Ally</span>');
+            else if (d.type === 'peace') tags.push('<span class="seat-tag deal" title="Peace deal active">🕊️ Peace</span>');
+            else if (d.type === 'spare') tags.push('<span class="seat-tag deal" title="Hands-off truce active">🛡️ Truce</span>');
+            else if (d.type === 'pact') tags.push('<span class="seat-tag deal" title="Gang-up pact active">⚔️ Pact</span>');
+        });
+        const avHTML = cmdr && cmdr.art
+            ? `<span class="seat-av has-art" aria-hidden="true"><span class="seat-av-clip"><img src="${cmdr.art}" alt=""></span><span class="seat-mood">${X.out ? '💀' : MOODS[mood.mood].emoji}</span></span>`
+            : `<span class="seat-av" aria-hidden="true">${X.out ? '💀' : MOODS[mood.mood].emoji}</span>`;
+        const atkTag = atkMe ? '<span class="atk atk-danger">⚔️ Attacks you</span>'
+            : atkOther ? `<span class="atk">⚔️ → ${esc(atkOther)}</span>`
+            : G.defender === X.i && G.active === v.i ? '<span class="atk">🎯 Your target</span>' : '';
+        return `<button type="button" data-seat="${X.i}" style="--sc:${col}" class="pod-chip seat${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}${X.life <= 10 && !X.out ? ' low' : pct <= 50 && !X.out ? ' mid' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
+            title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${avail} open mana, ${X.hand.length} in hand, ${crs.length} creatures (power ${power}), ${X.gy.length} in graveyard${styleLbl ? `, ${esc(styleLbl)}` : ''}. Feeling ${esc(MOODS[mood.mood].name)}: ${esc(mood.why)}${dmg ? `. Commander damage to you: ${dmg}/21` : ''}. Press ${idx + 1} to view board.">
+            ${avHTML}
+            <span class="seat-main"><b>${esc(who(X))}${typeof reliTag === 'function' ? reliTag(X) : ''}<kbd class="seat-key desk-only">${idx + 1}</kbd></b><small>${turn ? '<span class="seat-think" aria-label="taking their turn"><i></i><i></i><i></i></span>' : ''}${esc(sub)}</small>${tags.length ? `<span class="seat-tags">${tags.join('')}</span>` : ''}</span>
+            <span class="seat-life-wrap"><span class="seat-life">${X.out ? 'OUT' : X.life}</span>${!X.out ? '<span class="seat-life-lbl">LIFE</span>' : ''}</span>
+            <span class="seat-stats"><span title="Cards in hand">✋ ${X.hand.length}</span><span title="Untapped open mana">💧 ${avail}</span><span title="Creatures and total power">⚔️ ${crs.length}${power ? `·${power}` : ''}</span><span title="Graveyard">🪦 ${X.gy.length}</span>${cmdr && !X.out ? `<span class="seat-cz${cmdr.onBf ? ' live' : ''}" title="${cmdr.onBf ? 'Commander is on the battlefield' : cmdr.inCmd ? 'Commander is in the command zone' : 'Commander is in another zone'}">👑${cmdr.onBf ? '●' : ''}</span>` : ''}${dmg ? `<span class="seat-cdmg" title="Commander damage you have taken from them">🩸${dmg}</span>` : ''}${(X.salt || 0) >= 3 ? `<span title="Salt level: how annoyed they are with the table">🧂${Math.round(X.salt)}</span>` : ''}</span>
+            ${atkTag}
             <span class="seat-bar" aria-hidden="true"><i style="width:${X.out ? 0 : pct}%"></i></span></button>`;
     }).join('');
     const mine = dealsOf(v.i).length;
-    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<button type="button" class="pod-chip" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝<span class="lbl"> Deals</span></b>${mine ? `<span>${mine} active</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}<span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div>`;
+    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<div class="pod-utils"><button type="button" class="pod-chip pod-act" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝<span class="lbl"> Deals</span></b>${mine ? `<span class="pod-badge">${mine}</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}<span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div></div>`;
 }
 function podFocus(i) { G.focusPick = i; renderGame(); }
 
 function barHTML(P) {
     const m = G.mode;
+    const isPodOpp = G.players.length > 2 && P !== me();
     const targetable = m && m.type === 'target' && m.valid.some(v => v.p && v.p.i === P.i);
-    const cmd = P.command.map(o => `<button type="button" class="btn small" onclick="showGameCard(${o.uid})">👑 ${esc(o.card.name.split(',')[0])}${(() => { const t = P.commanderUid2 ? (P.cmdCastN[o.cmdSlot || 0] || 0) : P.tax; return t ? ` (+${t * 2})` : ""; })()}</button>`).join('');
+    const cmd = P.command.map(o => {
+        const t = P.commanderUid2 ? (P.cmdCastN[o.cmdSlot || 0] || 0) : P.tax;
+        const art = o.card.imgS || o.card.img;
+        const castable = P === me() && G.active === G.view && !G.busy && canCastNow(P, o) && canPay(P, o);
+        return `<button type="button" class="btn small cmd-chip${castable ? ' playable' : ''}" onclick="showGameCard(${o.uid})" title="${esc(o.card.name)}${t ? ` (commander tax +${t * 2})` : ''} — tap to inspect or cast">${art ? `<span class="cmd-thumb-wrap"><img class="cmd-thumb" src="${art}" alt=""></span>` : '<span class="cmd-ico">👑</span>'}<span class="cmd-nm">${esc(o.card.name.split(',')[0])}</span>${t ? `<span class="cmd-tax">+${t * 2}</span>` : ''}</button>`;
+    }).join('');
     return `
-        <span class="who">${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? '🧙 You' : `🤖 ${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
+        <span class="who">${isPodOpp ? '<span class="pod-viewing-tag">Viewing</span>' : ''}${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? '🧙 You' : `${isPodOpp ? '' : '🤖 '}${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
         <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}"><span class="lh">❤️ </span>${P.life}</button>
         ${G.format === 'commander' ? `<span class="zone-count" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
         ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
@@ -176,6 +235,7 @@ function gameMenu() {
         <button class="btn" onclick="closeSheet(); playerSheet(1)">🧮 ${esc(foe().name)}'s life & counters</button>
         <div class="seg" role="group" aria-label="Paying mana" style="width:100%;"><button type="button" style="flex:1; padding:10px;" data-mm="manual" aria-pressed="${manaMode === 'manual'}" onclick="setManaMode('manual'); gameMenu()">🖐 Tap lands myself</button><button type="button" style="flex:1; padding:10px;" data-mm="auto" aria-pressed="${manaMode === 'auto'}" onclick="setManaMode('auto'); gameMenu()">⚡ Auto-pay</button></div>
         <div class="seg" role="group" aria-label="Stops at the end of their turn" style="width:100%;"><button type="button" style="flex:1; padding:10px;" aria-pressed="${endStops === 'on'}" onclick="setEndStops('on'); gameMenu()" title="Ask me at the end of an opponent's turn when I can still cast an instant or use an ability">⏸ Ask at their end step</button><button type="button" style="flex:1; padding:10px;" aria-pressed="${endStops === 'off'}" onclick="setEndStops('off'); gameMenu()">⏩ Don't ask</button></div>
+        ${speedToggleHTML('gameMenu()')}
         <p class="note">${esc(foe().deckName)}${foe().source ? ` · ${esc(foe().source)}` : ''}</p>
         <button class="btn danger" onclick="closeSheet(); concede()">🏳️ Concede</button></div>`);
 }
@@ -187,7 +247,7 @@ function showRevealedHand(i) {
     showModal(`<h2>${esc(P.name)}'s hand (revealed)</h2><div class="pick-grid">${P.hand.map(o => `<button type="button" class="pick-card" title="${esc(o.card.name)}" onclick="closeModal()">${o.card.imgS ? `<img src="${o.card.imgS}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</button>`).join('') || '<p class="note">No cards.</p>'}</div><div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
 }
 function logSheet() {
-    menuSheet('Game log', `<div class="log" id="logSheetBody" style="max-height:60vh; font-size:0.9rem;">${G.log.map(l => `<div>${esc(l)}</div>`).join('')}</div>`);
+    menuSheet('Game log', `<div class="log" id="logSheetBody" style="max-height:60vh; font-size:0.9rem;">${G.log.map(l => { const cls = typeof logLineClass === 'function' ? logLineClass(l) : ''; return `<div${cls ? ` class="${cls}"` : ''}>${esc(l)}</div>`; }).join('')}</div>`);
     const b = $('logSheetBody'); if (b) b.scrollTop = b.scrollHeight;
 }
 // ---- Play-by-play (owner's request 2026-10-07: the opponent did everything at once) ----
@@ -242,14 +302,27 @@ function actSchedule(minLeft) {
     clearTimeout(actTimer);
     actTimer = setTimeout(actNext, left);
 }
+function actMeta(msg, turn) {
+    if (turn) return ['turn', '👑 Turn'];
+    if (/\bcounters?\b/i.test(msg)) return ['counter', '↩️ Counter'];
+    if (/\b(?:attacks? with|combat|damage)\b|^Blocks:|^No blocks/i.test(msg)) return ['combat', '⚔️ Combat'];
+    if (/\bcasts?\b/i.test(msg)) return ['cast', '✨ Cast'];
+    if (/\bplays?\b/i.test(msg)) return ['land', '🌿 Land'];
+    if (/\b(?:activates?|equips?|crews?|cycles?|saddles?|foretells?)\b/i.test(msg)) return ['ability', '⚡ Ability'];
+    return ['event', '📜 Action'];
+}
+function actScale(ms) { return Math.max(220, Math.round(ms / (gameSpeed || 1))); }
 function renderAct() {
     const el = $('actBanner');
     if (!el || !actCur) return;
     const a = actCur, big = a.cards.length === 1;
+    const [kind, badge] = actMeta(a.msg, a.turn);
     el.classList.toggle('turn', a.turn);
+    el.dataset.kind = kind;
+    el.style.setProperty('--act-ms', `${Math.max(250, a.ms)}ms`);
     el.innerHTML = `${a.cards.length ? `<div class="act-cards${big ? ' one' : ''}">${a.cards.map(c => (c.img || c.imgS) ? `<img src="${big ? (c.img || c.imgS) : (c.imgS || c.img)}" alt="${esc(c.name)}">` : `<span class="noimg">${esc(c.name)}</span>`).join('')}</div>` : ''}
-        <div class="act-text"><strong>${esc(a.msg.replace(/^— | —$/g, ''))}</strong>${a.subs.map(s => `<div>${esc(s)}</div>`).join('')}
-        <small>${actQ.length ? `${actQ.length} more · tap to skip` : 'tap to close'}</small></div>`;
+        <div class="act-text"><span class="act-pill">${badge}</span><strong>${esc(a.msg.replace(/^— | —$/g, ''))}</strong>${a.subs.map(s => `<div>${esc(s)}</div>`).join('')}
+        <small>${actQ.length ? `${actQ.length} more · click or Space to skip` : 'click to close'}</small></div><span class="act-prog" aria-hidden="true"></span>`;
 }
 function actNext() {
     clearTimeout(actTimer);
@@ -257,12 +330,13 @@ function actNext() {
     actCur = actOn() ? actQ.shift() || null : null;
     if (!actCur) {
         actQ = [];
-        if (el) el.classList.remove('show', 'turn');
+        if (el) { el.classList.remove('show', 'turn'); delete el.dataset.kind; }
         actWaiters.splice(0).forEach(r => r());
         return;
     }
     // A long chain plays faster the more is waiting (2026-11-11): a pile of steps shouldn't hold the table for half a minute
     if (actQ.length >= 4) actCur.ms = Math.min(actCur.ms, 600); else if (actQ.length >= 2) actCur.ms = Math.min(actCur.ms, 1000);
+    actCur.ms = actScale(actCur.ms);
     actCur.end = Date.now() + actCur.ms;
     renderAct();
     if (el) { el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
@@ -312,10 +386,23 @@ function stackClick(id) {
     showGameCard(it.o.uid);
 }
 
+function combatBannerHTML() {
+    if (!G || G.players.length <= 2 || !G.attackers || !G.attackers.length) return '';
+    const att = G.players[G.active];
+    if (!att) return '';
+    const objs = G.attackers.map(onBf).filter(Boolean);
+    if (!objs.length) return '';
+    const tot = objs.reduce((n, o) => n + Math.max(0, pow(o)), 0);
+    const defs = [...new Set(objs.map(o => o.atkTo != null ? o.atkTo : G.defender).filter(i => i != null && G.players[i]))];
+    const defText = defs.length ? defs.map(i => G.players[i] === me() ? 'You' : who(G.players[i]).split(',')[0]).join(' & ') : '';
+    const hitsMe = defs.includes(me().i);
+    return `<div class="combat-pill${hitsMe ? ' danger' : ''}" role="status">⚔️ <strong>${att === me() ? 'You' : esc(who(att).split(',')[0])}</strong>${defText ? ` → <strong>${esc(defText)}</strong>` : ''} <span>· ${objs.length} ${objs.length === 1 ? 'attacker' : 'attackers'} · ${tot} power</span></div>`;
+}
+
 // The mid bar: the phase strip, what you can do now, and the turn button,
 // which stays in the same spot on every phase and both players' turns.
 function midHTML() {
-    return `<div class="mid-main">${phaseStripHTML()}${stackHTML()}<div class="mid-controls">${midControlsHTML()}</div></div>${turnButtonHTML()}`;
+    return `<div class="mid-main">${phaseStripHTML()}${combatBannerHTML()}${stackHTML()}<div class="mid-controls">${midControlsHTML()}</div></div>${turnButtonHTML()}`;
 }
 const PHASE_STEPS = [['Upkeep', ['beginning', 'upkeep']], ['Main 1', ['main1']], ['Combat', ['declareAttackers', 'declareBlocks', 'afterBlocks', 'combatDamage']], ['Main 2', ['main2']], ['End', ['end']]];
 // Whose turn it is, by the name the table uses (a bot's character name in a pod, else the player's name)

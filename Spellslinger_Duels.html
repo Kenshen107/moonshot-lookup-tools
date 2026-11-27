@@ -335,6 +335,7 @@
                 <span class="seg" role="group" aria-label="Hand size"><button type="button" data-hs="s" onclick="setHandSize('s')">S</button><button type="button" data-hs="m" onclick="setHandSize('m')">M</button><button type="button" data-hs="l" onclick="setHandSize('l')">L</button></span>
                 <span class="seg" role="group" aria-label="Paying mana" title="Manual: you tap the lands you want when you pay. Auto: the game picks."><button type="button" data-mm="manual" onclick="setManaMode('manual')">🖐<span class="mm-word"> Tap lands</span></button><button type="button" data-mm="auto" onclick="setManaMode('auto')">⚡<span class="mm-word"> Auto-pay</span></button></span>
                 <button type="button" class="btn small" id="tapAllBtn" onclick="tapAllLands()" title="Tap every untapped land that makes one color and float the mana (it empties at the end of the step). Lands that make a choice of colors stay untapped for you to tap yourself.">💧<span class="mm-word"> Tap all lands</span></button>
+                <span class="seg speed-seg" role="group" aria-label="Game speed" title="Playback speed for opponent turns and play-by-play"><button type="button" data-sp="1" onclick="setGameSpeed(1)">1×</button><button type="button" data-sp="2" onclick="setGameSpeed(2)">2×</button><button type="button" data-sp="4" onclick="setGameSpeed(4)">⚡</button></span>
                 <button type="button" class="btn small" id="boardBtn" onclick="setBoardStyle(openBoard() ? 'classic' : 'open')" title="Switch between the open board (piles, art-first cards, one mat) and the classic board">▦<span class="mm-word"> Classic board</span></button></div>
             <div class="hand" id="hand" aria-label="Your hand"></div>
         </div>
@@ -342,6 +343,7 @@
     </div>
     <div class="card-peek hidden" id="cardPeek" aria-hidden="true"></div>
     <div class="talk-layer" id="talkLayer" aria-live="polite"></div>
+    <div class="turn-toast" id="turnToast" aria-hidden="true"></div>
     <div class="act-banner" id="actBanner" role="status" aria-live="polite" onclick="actSkip()"></div>
     <div class="hs-cover hidden" id="hsCover" role="dialog" aria-label="Pass the device"></div>
 </section>

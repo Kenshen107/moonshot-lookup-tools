@@ -1902,3 +1902,238 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     .arena-tilting { transform: none !important; }
     .arena-tilting::after { display: none; }
 }
+
+/* =====================================================================
+   Modern 4-Player Commander HUD & Game Flow (2026-11-27):
+   - Commander-art broadcast seat cards with live mana/board/deal telemetry
+   - Streamlined focused opponent context bar in pods (more room for cards)
+   - Side-docked Arena action showcase with category pill & timer progress
+   - Cinematic non-blocking turn banner, combat matchup pill, speed toggle
+   - Color-coded combat/action log & Commander-portrait dialogue toasts
+   Strictly token-driven so all 7 Looks restyle seamlessly.
+   ===================================================================== */
+
+/* ---- Pro Broadcast Commander Seat Cards ---- */
+#game.pod-mode .pod-strip { display: flex; align-items: stretch; gap: 8px; flex-wrap: nowrap; width: 100%; min-width: 0; }
+#game.pod-mode .pod-chip.seat {
+    flex: 1 1 0; max-width: none; min-width: 0;
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "av main life" "av stats stats";
+    align-items: center; column-gap: 10px; row-gap: 3px;
+    padding: 7px 12px 10px; border-radius: var(--radius-lg);
+    background: linear-gradient(155deg, color-mix(in srgb, var(--sc) 18%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-panel) 94%, var(--bg-canvas)) 62%, var(--bg-inset));
+    border: 1px solid color-mix(in srgb, var(--sc) 42%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 12%, transparent), 0 6px 18px -10px var(--bg-canvas); }
+#game.pod-mode .pod-chip.seat::before { content: ""; position: absolute; left: 0; top: 0; bottom: 4px; width: 3px; background: var(--sc); opacity: 0.78; pointer-events: none; }
+#game.pod-mode .pod-chip.seat:hover:not(:disabled) { transform: translateY(-2px); border-color: color-mix(in srgb, var(--sc) 80%, var(--brand-light));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 18%, transparent), 0 10px 22px -10px var(--bg-canvas), 0 0 18px -8px var(--sc); }
+#game.pod-mode .pod-chip.seat.on {
+    background: linear-gradient(155deg, color-mix(in srgb, var(--brand-light) 22%, var(--bg-panel-raised)), color-mix(in srgb, var(--sc) 14%, var(--bg-panel)) 55%, var(--bg-inset));
+    border-color: var(--brand-light);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 22%, transparent), 0 0 0 1px var(--brand-light), 0 8px 22px -10px var(--brand-light); }
+#game.pod-mode .pod-chip.seat.turn {
+    background: linear-gradient(155deg, color-mix(in srgb, var(--gold) 24%, var(--bg-panel-raised)), color-mix(in srgb, var(--sc) 14%, var(--bg-panel)) 58%, var(--bg-inset));
+    border-color: var(--gold);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 35%, transparent), 0 0 0 2px var(--gold), 0 0 22px -4px color-mix(in srgb, var(--gold) 70%, transparent); }
+#game.pod-mode .pod-chip.seat.turn.on {
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 35%, transparent), 0 0 0 2px var(--gold), 0 0 0 4px var(--brand-light), 0 0 24px -4px var(--gold); }
+
+/* Commander art portrait inside seat card (zoomed into illustration so card borders stay cropped out) */
+#game.pod-mode .seat-av { position: relative; width: 46px; height: 46px; border-radius: 10px; overflow: visible;
+    border: 2px solid var(--sc); box-shadow: 0 3px 10px -2px var(--bg-canvas), 0 0 12px -4px var(--sc); }
+.seat-av-clip { display: block; width: 100%; height: 100%; border-radius: 8px; overflow: hidden; }
+.seat-av-clip img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; transform: scale(1.42); transform-origin: 50% 26%; display: block; }
+.seat-mood { position: absolute; right: -6px; bottom: -5px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 0.72rem; line-height: 1; background: var(--bg-canvas); border: 1px solid color-mix(in srgb, var(--sc) 65%, var(--border));
+    box-shadow: 0 2px 6px var(--bg-canvas); }
+
+/* Seat typography, keyboard shortcut hint, deal/archenemy tags & life badge */
+#game.pod-mode .seat-main { gap: 1px; }
+#game.pod-mode .seat-main b { display: flex; align-items: center; gap: 5px; font-size: 0.96rem; letter-spacing: 0.01em; }
+.seat-key { margin-left: auto; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; line-height: 1;
+    padding: 2px 5px; border-radius: 4px; color: var(--text-muted);
+    background: color-mix(in srgb, var(--bg-canvas) 75%, transparent); border: 1px solid var(--border-subtle); opacity: 0.7; }
+#game.pod-mode .pod-chip.seat.on .seat-key { color: var(--brand-light); border-color: color-mix(in srgb, var(--brand-light) 55%, transparent); opacity: 1; }
+.seat-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.seat-tag { display: inline-flex; align-items: center; gap: 2px; font-size: 0.66rem; font-weight: 700; line-height: 1.25;
+    padding: 0 6px; border-radius: 999px; letter-spacing: 0.02em; white-space: nowrap; }
+.seat-tag.arch { background: color-mix(in srgb, var(--color-error) 22%, var(--bg-canvas)); border: 1px solid var(--color-error); color: var(--color-error); }
+.seat-tag.deal { background: color-mix(in srgb, var(--gold) 18%, var(--bg-canvas)); border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent); color: var(--gold); }
+
+.seat-life-wrap { grid-area: life; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-width: 46px; padding: 3px 8px; border-radius: 10px;
+    background: radial-gradient(circle at 50% 20%, var(--bg-panel-raised), var(--bg-inset));
+    border: 1px solid color-mix(in srgb, var(--sc) 45%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 10%, transparent); }
+#game.pod-mode .seat-life { font-size: 1.32rem; line-height: 1; }
+.seat-life-lbl { font-size: 0.56rem; font-weight: 700; letter-spacing: 0.12em; color: var(--text-muted); margin-top: 1px; }
+#game.pod-mode .pod-chip.seat.mid .seat-bar i { background: var(--gold); }
+#game.pod-mode .pod-chip.seat.low .seat-life-wrap { border-color: var(--color-error); background: color-mix(in srgb, var(--color-error) 16%, var(--bg-inset)); }
+#game.pod-mode .pod-chip.seat.low .seat-bar i { background: var(--color-error); }
+
+#game.pod-mode .seat-stats { gap: 8px; font-size: 0.76rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.seat-cz { opacity: 0.7; }
+.seat-cz.live { color: var(--gold); opacity: 1; font-weight: 700; }
+.seat-cdmg { color: var(--color-warning); font-weight: 700; }
+#game.pod-mode .pod-chip.seat .atk { top: 4px; right: 64px; padding: 1px 7px; border-radius: 999px;
+    background: color-mix(in srgb, var(--bg-canvas) 88%, transparent); border: 1px solid var(--color-warning); }
+#game.pod-mode .pod-chip.seat .atk.atk-danger { color: var(--color-error); border-color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 22%, var(--bg-canvas)); box-shadow: 0 0 10px -2px var(--color-error); }
+#game.pod-mode .pod-chip.seat:has(.atk) .seat-life { margin-top: 0; }
+
+/* Right-side compact utility cluster (Deals, Ask, Salt/Cool) */
+.pod-utils { display: flex; flex-direction: column; gap: 4px; justify-content: center; flex: none; }
+.pod-utils .pod-chip { padding: 4px 10px; font-size: 0.78rem; justify-content: center; border-radius: var(--radius-md);
+    background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+    border-color: color-mix(in srgb, var(--brand-light) 28%, var(--border)); transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s; }
+.pod-utils .pod-chip:not(.meters):hover { border-color: var(--gold); transform: translateY(-1px); box-shadow: 0 4px 12px -6px var(--gold); }
+.pod-badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+    font-size: 0.7rem; font-weight: 700; background: var(--gold); color: var(--bg-canvas); }
+
+/* ---- Streamlined Focused Opponent Bar in 4-Player Pods (saves vertical room for cards!) ---- */
+#game.pod-mode #oppBar { row-gap: 5px; padding: 6px 12px 4px; }
+.pod-viewing-tag { display: inline-block; font-family: var(--font-display); font-size: 0.66rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em; padding: 1px 7px; margin-right: 6px; border-radius: 999px;
+    background: color-mix(in srgb, var(--brand-light) 20%, var(--bg-inset));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 65%, transparent); color: var(--brand-light); vertical-align: 1px; }
+/* Hide the redundant second life circle & mood on the focused opponent bar in pods (it's already featured on their seat card above), UNLESS targetable! */
+#game.pod-mode #oppBar > .life:not(.targetable) { display: none; }
+#game.pod-mode #oppBar > .who .mood { display: none; }
+#game.pod-mode #oppBar > .who { font-size: 0.9rem; color: var(--text-soft); }
+
+/* ---- Commander Art Chips on Player Bars ---- */
+.cmd-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 3px; border-radius: 999px;
+    border-color: color-mix(in srgb, var(--gold) 55%, var(--border));
+    background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 14%, var(--bg-panel-raised)), var(--bg-panel)); }
+.cmd-chip.playable { border-color: var(--color-success);
+    box-shadow: 0 0 12px -2px color-mix(in srgb, var(--color-success) 70%, transparent); }
+.cmd-thumb-wrap { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; border: 1px solid var(--gold); flex: none; display: block; }
+.cmd-thumb { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; transform: scale(1.48); transform-origin: 50% 26%; display: block; }
+.cmd-nm { max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 0.84rem; color: var(--text-heading); }
+.cmd-tax { font-size: 0.72rem; font-weight: 700; padding: 0 5px; border-radius: 999px;
+    background: color-mix(in srgb, var(--gold) 24%, var(--bg-canvas)); color: var(--gold); }
+
+/* Keep desktop hand tools sleek on a single row */
+.hand-tools { flex-wrap: nowrap; gap: 6px; white-space: nowrap; }
+.hand-tools .btn.small { padding: 2px 8px; font-size: 0.8rem; }
+.hand-tools .seg button { padding: 2px 7px; font-size: 0.78rem; }
+
+/* ---- Active Combat Matchup Pill in Pods ---- */
+.combat-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px;
+    font-size: 0.82rem; color: var(--text-heading);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-warning) 22%, var(--bg-panel)), color-mix(in srgb, var(--bg-panel) 92%, transparent));
+    border: 1px solid color-mix(in srgb, var(--color-warning) 75%, transparent);
+    box-shadow: 0 0 16px -6px var(--color-warning); }
+.combat-pill.danger {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-error) 30%, var(--bg-panel)), color-mix(in srgb, var(--bg-panel) 92%, transparent));
+    border-color: var(--color-error); box-shadow: 0 0 18px -4px var(--color-error); }
+.combat-pill span { color: var(--text-soft); }
+
+/* ---- Side-Docked Modern Arena Action Feed (Desktop: left rail, never covers center cards!) ---- */
+@media (min-width: 601px) {
+    .act-banner {
+        left: 14px; top: auto; bottom: calc(var(--hand-h, 160px) + 108px);
+        transform: translateX(-18px) scale(0.97);
+        width: auto; min-width: 240px; max-width: min(360px, 34vw);
+        padding: 10px 14px 12px; gap: 12px; overflow: hidden;
+        border-radius: var(--radius-lg); border: 1px solid var(--act-c, var(--gold));
+        border-left: 4px solid var(--act-c, var(--gold));
+        background: linear-gradient(160deg, color-mix(in srgb, var(--bg-panel-raised) 95%, transparent), color-mix(in srgb, var(--bg-canvas) 95%, transparent));
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 14px 36px -8px var(--bg-canvas), 0 0 24px -10px var(--act-c, var(--gold)); }
+    .act-banner.show { opacity: 1; transform: translateX(0) scale(1); }
+    .act-cards.one img, .act-cards.one .noimg { width: 84px; border-radius: 6px; box-shadow: 0 6px 16px -4px var(--bg-canvas); }
+    .act-cards img, .act-cards .noimg { width: 52px; border-radius: 5px; }
+}
+.act-banner[data-kind="cast"] { --act-c: var(--brand-light); }
+.act-banner[data-kind="combat"] { --act-c: var(--color-error); }
+.act-banner[data-kind="land"] { --act-c: var(--color-success); }
+.act-banner[data-kind="ability"] { --act-c: var(--gold); }
+.act-banner[data-kind="counter"] { --act-c: var(--color-warning); }
+.act-banner[data-kind="turn"] { --act-c: var(--gold); }
+.act-pill { display: inline-block; width: fit-content; font-family: var(--font-display); font-size: 0.66rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px;
+    background: color-mix(in srgb, var(--act-c, var(--gold)) 20%, var(--bg-inset));
+    border: 1px solid color-mix(in srgb, var(--act-c, var(--gold)) 65%, transparent);
+    color: var(--act-c, var(--gold)); margin-bottom: 2px; }
+.act-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; transform-origin: left center;
+    background: linear-gradient(90deg, var(--act-c, var(--gold)), color-mix(in srgb, var(--text-heading) 45%, var(--act-c, var(--gold))));
+    animation: actCountdown var(--act-ms, 1500ms) linear forwards; }
+@keyframes actCountdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ---- Cinematic Non-Blocking Turn Banner ---- */
+.turn-toast { position: fixed; left: 50%; top: 44%; transform: translate(-50%, -50%) scale(0.92); z-index: var(--z-banner);
+    pointer-events: none; opacity: 0; display: inline-flex; align-items: center; gap: 12px;
+    padding: 10px 22px 10px 12px; border-radius: 999px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--tt-c, var(--gold)) 24%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-canvas) 94%, transparent));
+    border: 1px solid color-mix(in srgb, var(--tt-c, var(--gold)) 80%, transparent);
+    box-shadow: 0 18px 46px -8px var(--bg-canvas), 0 0 34px -6px var(--tt-c, var(--gold));
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transition: opacity 0.24s ease, transform 0.28s cubic-bezier(.16, 1.12, .3, 1); }
+.turn-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.tt-av { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-size: 1.4rem; flex: none;
+    background: var(--bg-inset); border: 2px solid var(--tt-c, var(--gold)); box-shadow: 0 0 14px -2px var(--tt-c, var(--gold)); overflow: hidden; }
+.tt-av.has-art img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; transform: scale(1.42); transform-origin: 50% 26%; display: block; }
+.tt-copy { display: grid; line-height: 1.15; text-align: left; }
+.tt-copy small { font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--tt-c, var(--gold)); }
+.tt-copy strong { font-family: var(--font-display); font-size: 1.25rem; color: var(--text-heading); letter-spacing: 0.02em; }
+.tt-copy em { font-style: normal; font-size: 0.78rem; color: var(--text-soft); max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Commander-Portrait Speech Bubbles ---- */
+.talk-bubble {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--bg-panel-raised) 96%, transparent), color-mix(in srgb, var(--bg-panel) 96%, transparent));
+    border-color: color-mix(in srgb, var(--tb-c, var(--gold)) 70%, var(--border));
+    border-left: 3px solid var(--tb-c, var(--gold));
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.tb-av { position: relative; width: 38px; height: 38px; border-radius: 9px; flex: none;
+    border: 2px solid var(--tb-c, var(--gold)); box-shadow: 0 2px 8px var(--bg-canvas); }
+.tb-av img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; border-radius: 7px; display: block; }
+.tb-mood-pip { position: absolute; right: -5px; bottom: -5px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 0.68rem; background: var(--bg-canvas); border: 1px solid var(--tb-c, var(--gold)); }
+
+/* ---- Color-Coded Modern Game Log ---- */
+.logwrap { background: color-mix(in srgb, var(--bg-inset) 65%, transparent); }
+.log > div { padding: 2px 6px; border-radius: 4px; border-left: 2px solid transparent; margin-bottom: 1px; line-height: 1.35; }
+.log > div.log-turn { margin-top: 5px; padding: 3px 7px; font-family: var(--font-display); font-weight: 700; font-size: 0.78rem;
+    color: var(--gold); border-left-color: var(--gold);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 16%, transparent), transparent); }
+.log > div.log-combat { border-left-color: var(--color-error); color: color-mix(in srgb, var(--color-error) 75%, var(--text-heading)); }
+.log > div.log-cast { border-left-color: var(--brand-light); color: var(--text-primary); }
+.log > div.log-death { border-left-color: var(--color-warning); color: var(--text-soft); }
+.log > div.log-deal { border-left-color: var(--gold); color: var(--gold); }
+.log > div.log-talk { border-left-color: color-mix(in srgb, var(--brand-light) 55%, var(--border)); font-style: italic; color: var(--text-soft); }
+.log > div.log-life { border-left-color: var(--color-success); color: color-mix(in srgb, var(--color-success) 70%, var(--text-primary)); }
+
+/* ---- Phone Overrides for 4-Player Commander Pod ---- */
+@media (max-width: 600px) {
+    #game.pod-mode .pod-strip { flex-wrap: wrap; gap: 4px; }
+    #game.pod-mode .pod-chip.seat { flex: 1 1 calc(33.33% - 4px); padding: 4px 6px 7px; border-radius: var(--radius-md); column-gap: 4px; row-gap: 2px;
+        grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "av main life" "stats stats stats"; }
+    #game.pod-mode .seat-av { width: 24px; height: 24px; border-radius: 6px; border-width: 1.5px; }
+    #game.pod-mode .seat-av-clip { border-radius: 5px; }
+    .seat-mood { display: none; }
+    #game.pod-mode .seat-main b { font-size: 0.72rem; }
+    .seat-tags { display: none; }
+    .seat-life-wrap { min-width: 0; padding: 1px 4px; border-radius: 5px; }
+    #game.pod-mode .seat-life { font-size: 0.85rem; }
+    .seat-life-lbl { display: none; }
+    #game.pod-mode .seat-stats { gap: 5px; font-size: 0.62rem; }
+    #game.pod-mode .seat-stats > span:nth-child(4), #game.pod-mode .seat-stats .seat-cz { display: none; }
+    #game.pod-mode .pod-chip.seat .atk { right: 4px; top: auto; bottom: 6px; padding: 0 4px; font-size: 0.54rem; }
+    .pod-utils { flex-direction: row; flex: 1 1 100%; justify-content: flex-end; gap: 4px; }
+    .pod-utils .pod-chip { padding: 2px 8px; font-size: 0.72rem; color: var(--text-heading); }
+    .pod-utils .pod-chip.meters { display: none; }
+    .cmd-chip { padding: 2px 7px 2px 2px; gap: 4px; }
+    .cmd-thumb-wrap { width: 18px; height: 18px; }
+    .cmd-nm { max-width: 9ch; font-size: 0.76rem; }
+    .turn-toast { top: 36%; padding: 7px 16px 7px 9px; gap: 8px; }
+    .tt-av { width: 32px; height: 32px; font-size: 1.1rem; }
+    .tt-copy strong { font-size: 1rem; }
+    .combat-pill { font-size: 0.72rem; padding: 2px 8px; }
+    .act-pill { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .act-prog { animation: none !important; }
+    .turn-toast { transition: none !important; }
+}

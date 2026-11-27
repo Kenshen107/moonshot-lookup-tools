@@ -13,7 +13,10 @@ const START_COINS = 500;
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = ms => new Promise(r => {
+    const sp = ms > 0 && typeof window !== 'undefined' && window._gameSpeed > 1 && !(typeof AUTOPLAY !== 'undefined' && AUTOPLAY) && !window.__TEST && !window.__LAB && typeof G !== 'undefined' && G ? window._gameSpeed : 1;
+    setTimeout(r, sp > 1 ? Math.max(40, Math.round(ms / sp)) : ms);
+});
 const rand = n => Math.floor(Math.random() * n);
 // Takes x out of the list (an empty list back if it isn't there; splice(-1) would
 // remove the last item instead - audit, 2026-10-06)

@@ -84,6 +84,30 @@
         setTimeout(() => el.classList.remove(cls), 600);
     }
 
+    let turnToastTimer = null;
+    function showTurnToast() {
+        const el = $('turnToast');
+        if (!el || !G || G.over || G.phase === 'setup' || reduced()) return;
+        const A = G.players[G.active];
+        if (!A) return;
+        const mine = G.active === G.view;
+        const cmdr = typeof playerCmdr === 'function' ? playerCmdr(A) : null;
+        const col = mine ? 'var(--gold)' : (cmdr && cmdr.col ? cmdr.col : 'var(--brand-light)');
+        const title = mine ? 'Your Turn' : `${who(A)}'s Turn`;
+        const sub = cmdr ? cmdr.card.name : (A.deckName || '');
+        const av = cmdr && cmdr.art
+            ? `<span class="tt-av has-art"><img src="${cmdr.art}" alt=""></span>`
+            : `<span class="tt-av">${mine ? '🧙' : '🤖'}</span>`;
+        el.style.setProperty('--tt-c', col);
+        el.className = `turn-toast${mine ? ' mine' : ''}`;
+        el.innerHTML = `${av}<span class="tt-copy"><small>Turn ${G.turn}</small><strong>${esc(title)}</strong>${sub ? `<em>${esc(sub)}</em>` : ''}</span>`;
+        void el.offsetWidth;
+        el.classList.add('show');
+        clearTimeout(turnToastTimer);
+        const dur = Math.max(700, Math.round(1450 / (window._gameSpeed || 1)));
+        turnToastTimer = setTimeout(() => el.classList.remove('show'), dur);
+    }
+
     function flashTurn(mine) {
         const g = $('game');
         if (!g || reduced()) return;
@@ -92,10 +116,29 @@
         void g.offsetWidth;
         g.classList.add(cls);
         setTimeout(() => g.classList.remove(cls), 700);
+        showTurnToast();
     }
 
+    // Keyboard shortcuts during a live game (desktop): 1/2/3 focus pod seats, Space skips action banner
+    document.addEventListener('keydown', e => {
+        if (isAuto() || !G || !$('game') || $('game').classList.contains('hidden')) return;
+        const t = e.target;
+        if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
+        if (document.querySelector('#modalHost .modal, #sheetHost .sheet-bg')) return;
+        if (G.players.length > 2 && ['1', '2', '3'].includes(e.key)) {
+            const opps = G.players.filter(X => X !== me() && !X.out);
+            const pick = opps[Number(e.key) - 1];
+            if (pick && typeof podFocus === 'function') { podFocus(pick.i); e.preventDefault(); }
+        } else if (e.key === ' ' && typeof actCur !== 'undefined' && actCur && typeof actSkip === 'function') {
+            actSkip(); e.preventDefault();
+        }
+    });
+
     function arenaAfterRender() {
-        if (isAuto() || !G || $('game').classList.contains('hidden')) return;
+        const g = $('game');
+        if (g && G) g.classList.toggle('pod-mode', G.players.length > 2);
+        if (typeof applyGameSpeed === 'function') applyGameSpeed();
+        if (isAuto() || !G || !g || g.classList.contains('hidden')) return;
         if (FX.game !== G) {
             FX.game = G;
             FX.life = {};
