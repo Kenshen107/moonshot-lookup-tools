@@ -2322,7 +2322,9 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
         box-shadow: inset 0 0 0 28px color-mix(in srgb, var(--brand-light) 2.5%, transparent),
                     inset 0 0 0 29px color-mix(in srgb, var(--brand-light) 9%, transparent),
                     0 0 60px -20px color-mix(in srgb, var(--gold) 14%, transparent); }
-    #game.open-board > .pbar, #game.open-board > .side, #game.open-board > .midbar, #game.open-board > .dock { position: relative; z-index: 1; }
+    #game.open-board > .pbar, #game.open-board > .side { position: relative; z-index: 1; }
+    /* Keep #midBar and .dock out of trapped z-index:1 stacking contexts so fixed #turnBtn, .stackbar, .logwrap, .hand-tools, and lifted .hc cards all layer cleanly and receive clicks! */
+    #game.open-board > .midbar, #game.open-board > .dock { position: relative; z-index: auto; }
 
     /* 2. Seamless 3-column Arena Player Bars (Avatar + Life Medallion DEAD CENTER, 3D Piles bottom-left!) */
     #game.open-board .pbar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px;
@@ -2415,9 +2417,9 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
         border: 1px solid color-mix(in srgb, var(--gold) 38%, var(--border));
         backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         box-shadow: 0 6px 20px -6px var(--bg-canvas); }
-    /* Bottom-Right Arena Action Button (always crisp & clickable above hand edge) */
+    /* Bottom-Right Arena Action Button (always crisp & clickable above .dock and hand edge!) */
     #game.open-board #midBar .turn-btn {
-        position: fixed; right: 18px; bottom: 18px; z-index: 15;
+        position: fixed; right: 18px; bottom: 18px; z-index: 22; pointer-events: auto;
         min-width: 156px; min-height: 52px; border-radius: 999px; padding: 8px 22px;
         box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 24%, transparent), 0 10px 26px -6px var(--bg-canvas); }
     #game.open-board #midBar .turn-btn.ready {
@@ -2431,7 +2433,10 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     #game.open-board .dock {
         grid-template-columns: minmax(0, 1fr);
         background: linear-gradient(to top, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 0%, color-mix(in srgb, var(--bg-canvas) 30%, transparent) 55%, transparent 100%);
-        border: 0; box-shadow: none; position: relative; }
+        border: 0; box-shadow: none; position: relative; pointer-events: none; }
+    #game.open-board .dock .hand .hc,
+    #game.open-board .dock .hand-tools,
+    #game.open-board .dock .logwrap { pointer-events: auto; }
     #game.open-board .hand-wrap { max-width: calc(100vw - 420px); margin: 0 auto; width: 100%; }
     #game.open-board .dock .hand { padding: 6px 28px 10px; min-height: calc(var(--hand-h) + 12px); }
     #game.open-board .dock .hand .hc { transform: translateY(calc(var(--dip, 0px) + 10px)) rotate(var(--rot, 0deg)); }
