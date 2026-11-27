@@ -1997,9 +1997,9 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     background: color-mix(in srgb, var(--brand-light) 20%, var(--bg-inset));
     border: 1px solid color-mix(in srgb, var(--brand-light) 65%, transparent); color: var(--brand-light); vertical-align: 1px; }
 /* Hide the redundant second life circle & mood on the focused opponent bar in pods (it's already featured on their seat card above), UNLESS targetable! */
-#game.pod-mode #oppBar > .life:not(.targetable) { display: none; }
-#game.pod-mode #oppBar > .who .mood { display: none; }
-#game.pod-mode #oppBar > .who { font-size: 0.9rem; color: var(--text-soft); }
+#game.pod-mode #oppBar .life:not(.targetable) { display: none; }
+#game.pod-mode #oppBar .who .mood { display: none; }
+#game.pod-mode #oppBar .who { font-size: 0.9rem; color: var(--text-soft); }
 
 /* ---- Commander Art Chips on Player Bars ---- */
 .cmd-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 3px; border-radius: 999px;
@@ -2273,4 +2273,207 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     #game .perm.can-atk img, #game .perm.can-atk .noimg, #game .perm.can-atk::before,
     #game .perm.sick-card::after, .hand .hc.playable img, .arw-line,
     #game.open-board #midBar .stackbar .stack-item { animation: none !important; }
+}
+
+/* =====================================================================
+   Full-Bleed MTG Arena Table Overhaul (2026-11-27, owner: "make our game
+   while playing look more like arena? like overhauling the ui?").
+   Active under #game.open-board on desktop (>= 760px); Classic board and
+   phone layouts stay clean and intact. Strictly design-token driven.
+   ===================================================================== */
+
+/* Shared bar-section wrappers so Classic board & phones keep flat horizontal flow */
+.bar-left, .bar-center, .bar-right { display: contents; }
+.av-medallion { display: inline-flex; align-items: center; gap: 6px; }
+.arena-av { width: 32px; height: 32px; border-radius: 50%; display: inline-grid; place-items: center; flex: none; overflow: hidden;
+    background: var(--bg-inset); border: 2px solid var(--sc, var(--gold)); font-size: 1rem; }
+.arena-av .seat-av-clip { border-radius: 50%; }
+#game.pod-mode #oppBar .opp-av { display: none; }
+.arena-corner-actions { display: contents; }
+.pile-card { display: inline-flex; align-items: center; gap: 3px; }
+.pile-card .pile-art { display: none; }
+@media (max-width: 600px) {
+    .arena-av { width: 24px; height: 24px; font-size: 0.8rem; }
+    #game.pod-mode .pod-chip.seat { padding: 4px 4px 7px; column-gap: 3px; }
+    #game.pod-mode .seat-av { width: 20px; height: 20px; }
+    #game.pod-mode .seat-main b { font-size: 0.68rem; }
+}
+
+@media (min-width: 760px) {
+    /* 1. Full-bleed scenic Arena playmat with faint etched arcane battle-ring */
+    #game.open-board {
+        grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto auto;
+        background:
+            radial-gradient(ellipse 64% 48% at 50% 47%, color-mix(in srgb, var(--gold) 11%, color-mix(in srgb, var(--brand-light) 13%, transparent)), transparent 70%),
+            radial-gradient(ellipse 102% 96% at 50% 50%, transparent 46%, color-mix(in srgb, var(--bg-canvas) 90%, transparent) 100%),
+            repeating-linear-gradient(45deg, color-mix(in srgb, var(--brand-light) 2%, transparent) 0 2px, transparent 2px 10px),
+            radial-gradient(ellipse 84% 72% at 50% 48%, var(--felt-1), var(--felt-2) 64%, var(--bg-canvas) 100%); }
+    /* Etched concentric Arena battle-ring in the center of the mat */
+    #game.open-board::before { content: ""; position: fixed; left: 50%; top: 45%; width: min(56vw, 560px); height: min(56vw, 560px);
+        transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; z-index: 0;
+        border: 1px solid color-mix(in srgb, var(--gold) 12%, transparent);
+        box-shadow: inset 0 0 0 28px color-mix(in srgb, var(--brand-light) 2.5%, transparent),
+                    inset 0 0 0 29px color-mix(in srgb, var(--brand-light) 9%, transparent),
+                    0 0 60px -20px color-mix(in srgb, var(--gold) 14%, transparent); }
+    #game.open-board > .pbar, #game.open-board > .side, #game.open-board > .midbar, #game.open-board > .dock { position: relative; z-index: 1; }
+
+    /* 2. Seamless 3-column Arena Player Bars (Avatar + Life Medallion DEAD CENTER, 3D Piles bottom-left!) */
+    #game.open-board .pbar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px;
+        padding: 4px 18px; background: none; border: 0; }
+    #game.open-board .bar-left { grid-column: 1; grid-row: 1; display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; min-width: 0; justify-self: start; }
+    #game.open-board .bar-center { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; justify-self: center; position: relative; }
+    #game.open-board .bar-right { grid-column: 3; grid-row: 1; display: flex; align-items: center; gap: 8px; justify-self: end; }
+    #game.open-board .bar-left .zones { order: -2; }
+    #game.open-board .bar-left .cmd-zone { order: -1; }
+    #game.open-board .pbar .bar-right > .btn.small[onclick^="boardOverview"] { display: none; }
+
+    /* Centered MTG Arena Circular Avatar + Overlapping Sculpted Life Medallion */
+    #game.open-board .av-medallion { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+    #game.open-board .arena-av { width: 64px; height: 64px; border-radius: 50%; margin: 0; display: grid; place-items: center; font-size: 1.8rem;
+        background: radial-gradient(circle at 50% 30%, var(--bg-panel-raised), var(--bg-inset));
+        border: 3px solid var(--sc, var(--gold));
+        box-shadow: 0 0 0 2px var(--bg-canvas), 0 8px 24px -4px var(--bg-canvas), 0 0 26px -4px color-mix(in srgb, var(--sc, var(--gold)) 65%, transparent);
+        overflow: hidden; }
+    #game.open-board .arena-av .seat-av-clip { border-radius: 50%; }
+    #game.open-board #meBar .arena-av { width: 68px; height: 68px; border-color: var(--gold);
+        box-shadow: 0 0 0 2px var(--bg-canvas), 0 8px 28px -4px var(--bg-canvas), 0 0 32px -4px color-mix(in srgb, var(--gold) 72%, transparent); }
+    #game.open-board .av-medallion .life { position: relative; z-index: 2; margin-top: -22px; width: 48px; height: 48px; font-size: 1.32rem; font-weight: 800;
+        border: 2.5px solid color-mix(in srgb, var(--gold) 80%, var(--border));
+        background: radial-gradient(circle at 38% 24%, color-mix(in srgb, var(--text-heading) 20%, var(--bg-panel-raised)), var(--bg-panel) 50%, var(--bg-inset) 92%);
+        box-shadow: inset 0 2px 4px color-mix(in srgb, var(--text-heading) 24%, transparent), 0 0 0 2.5px var(--bg-canvas), 0 6px 16px var(--bg-canvas); }
+    #game.open-board #meBar .av-medallion .life { width: 52px; height: 52px; font-size: 1.42rem; }
+    #game.open-board #meBar .bar-center .who { display: none; }
+    #game.open-board #oppBar:not(:has(.pod-strip)) .bar-center .who { font-size: 0.78rem; letter-spacing: 0.04em; color: var(--text-soft); margin-bottom: 2px;
+        background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); padding: 1px 10px; border-radius: 999px; border: 1px solid var(--border-subtle); }
+
+    /* In 4-player Commander pods: keep top broadcast seat strip full-width & streamline focused-opponent row into a sleek translucent bar */
+    #game.open-board.pod-mode #oppBar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 6px 14px 2px; }
+    #game.open-board.pod-mode #oppBar .pod-strip { flex: 1 1 100%; }
+    #game.open-board.pod-mode #oppBar .bar-center { order: 1; flex-direction: row; gap: 6px; }
+    #game.open-board.pod-mode #oppBar .bar-center .arena-av { display: none; }
+    #game.open-board.pod-mode #oppBar .bar-center .life:not(.targetable) { display: none; }
+    #game.open-board.pod-mode #oppBar .bar-center .life.targetable { margin-top: 0; width: 34px; height: 34px; font-size: 0.95rem; }
+    #game.open-board.pod-mode #oppBar .bar-left { order: 2; gap: 8px; }
+    #game.open-board.pod-mode #oppBar .bar-right { order: 3; margin-left: auto; }
+    #game.open-board.pod-mode #oppBar .bar-right > .btn.small[onclick^="boardOverview"] { display: inline-flex; }
+
+    /* 3. 3D Angled Library Deck Stack & Graveyard Art Pile (MTG Arena bottom-left & top-left!) */
+    #game.open-board .zones { background: none; border: 0; padding: 0; gap: 10px; }
+    #game.open-board .pile-card { position: relative; width: 42px; height: 56px; border-radius: 6px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; overflow: hidden;
+        transform: perspective(260px) rotateX(12deg) rotateZ(-4deg);
+        transition: transform 0.16s ease, box-shadow 0.16s ease; }
+    #game.open-board .pile-deck {
+        background:
+            radial-gradient(circle at 50% 44%, color-mix(in srgb, var(--gold) 55%, var(--brand-light)), transparent 42%),
+            repeating-linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, var(--bg-inset)) 0 4px, var(--felt-2) 4px 8px);
+        border: 1.5px solid color-mix(in srgb, var(--gold) 55%, var(--brand-light));
+        box-shadow: -2px 2px 0 var(--bg-panel-raised), -4px 4px 0 var(--bg-inset), -5px 6px 14px var(--bg-canvas); }
+    #game.open-board .pile-gy {
+        background: linear-gradient(160deg, var(--bg-panel-raised), var(--bg-inset));
+        border: 1.5px dashed color-mix(in srgb, var(--border) 90%, var(--brand-light));
+        box-shadow: -2px 3px 10px color-mix(in srgb, var(--bg-canvas) 85%, transparent); }
+    #game.open-board .pile-gy.has-art { border-style: solid; border-color: color-mix(in srgb, var(--brand-light) 55%, var(--border)); }
+    #game.open-board .pile-gy:hover { transform: perspective(260px) rotateX(6deg) rotateZ(-1deg) translateY(-3px); border-color: var(--gold);
+        box-shadow: 0 8px 18px -4px var(--bg-canvas), 0 0 14px -4px var(--gold); }
+    #game.open-board .pile-card .pile-art { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+    #game.open-board .pile-card .pile-ico { font-size: 0.95rem; opacity: 0.72; line-height: 1; }
+    #game.open-board .pile-deck .pile-ico { display: none; }
+    #game.open-board .pile-cnt { position: relative; z-index: 2; font-family: var(--font-display); font-weight: 800; font-size: 0.88rem;
+        color: var(--text-heading); padding: 1px 6px; border-radius: 999px;
+        background: color-mix(in srgb, var(--bg-canvas) 84%, transparent);
+        border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--border)); font-variant-numeric: tabular-nums; }
+    #game.open-board.pod-mode #oppBar .pile-card { width: auto; height: auto; transform: none; padding: 2px 8px; border-radius: 999px;
+        flex-direction: row; gap: 4px; background: color-mix(in srgb, var(--bg-inset) 80%, transparent); border: 1px solid var(--border-subtle); box-shadow: none; }
+    #game.open-board.pod-mode #oppBar .pile-card .pile-art { display: none; }
+    #game.open-board.pod-mode #oppBar .pile-deck .pile-ico { display: inline; }
+    #game.open-board.pod-mode #oppBar .pile-gy.has-art::before { content: "🪦"; font-size: 0.85rem; }
+    #game.open-board.pod-mode #oppBar .pile-cnt { background: none; border: 0; padding: 0; font-size: 0.82rem; }
+
+    /* 4. Uncluttered Center Battle-Line (#midBar) + Iconic Bottom-Right MTG Arena Action Dock */
+    #game.open-board #midBar { display: flex; justify-content: center; align-items: center; min-height: 30px; padding: 2px 16px;
+        background: none !important; pointer-events: none; }
+    #game.open-board #midBar > * { pointer-events: auto; }
+    #game.open-board #midBar .mid-main { gap: 4px; }
+    #game.open-board #midBar .prompt, #game.open-board #midBar .hint {
+        font-family: var(--font-display); font-size: 0.92rem; letter-spacing: 0.04em;
+        color: color-mix(in srgb, var(--text-heading) 88%, transparent);
+        text-shadow: 0 2px 12px var(--bg-canvas), 0 0 20px var(--bg-canvas); }
+    #game.open-board #midBar .hint { font-size: 0.82rem; color: var(--text-soft); }
+
+    /* Bottom-Right Arena Action Corner: Phase Rail + Beveled Orange/Gold Turn Button */
+    #game.open-board #midBar .phase-strip.rail {
+        position: fixed; right: 18px; bottom: 78px; z-index: 8;
+        background: color-mix(in srgb, var(--bg-canvas) 82%, transparent);
+        border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--border));
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 8px 24px -6px var(--bg-canvas); }
+    #game.open-board #midBar .turn-btn {
+        position: fixed; right: 18px; bottom: 18px; z-index: 8;
+        min-width: 156px; min-height: 52px; border-radius: 999px; padding: 8px 22px;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 24%, transparent), 0 10px 26px -6px var(--bg-canvas); }
+    #game.open-board #midBar .turn-btn.ready {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 74%, var(--text-heading)), color-mix(in srgb, var(--gold) 68%, var(--mythic)) 58%, color-mix(in srgb, var(--mythic) 55%, var(--bg-panel)));
+        border: 2px solid color-mix(in srgb, var(--gold) 90%, var(--text-heading)); color: var(--bg-canvas);
+        box-shadow: inset 0 2px 0 color-mix(in srgb, var(--text-heading) 45%, transparent), 0 0 28px -4px color-mix(in srgb, var(--gold) 80%, transparent), 0 10px 28px -6px var(--bg-canvas); }
+    #game.open-board #midBar .turn-btn.ready .tb-label { color: var(--bg-canvas); text-shadow: 0 1px 0 color-mix(in srgb, var(--text-heading) 35%, transparent); }
+    #game.open-board #midBar .turn-btn.ready .tb-sub { color: color-mix(in srgb, var(--bg-canvas) 82%, transparent); font-weight: 700; }
+
+    /* 5. Full-Bleed Transparent Floating Hand Fan (NO heavy dark dock box! NO permanent 300px log wall!) */
+    #game.open-board .dock {
+        grid-template-columns: minmax(0, 1fr);
+        background: linear-gradient(to top, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 0%, color-mix(in srgb, var(--bg-canvas) 30%, transparent) 55%, transparent 100%);
+        border: 0; box-shadow: none; position: relative; }
+    #game.open-board .hand-wrap { max-width: calc(100vw - 400px); margin: 0 auto; width: 100%; }
+    #game.open-board .dock .hand { padding: 6px 28px 10px; min-height: calc(var(--hand-h) + 12px); }
+    #game.open-board .dock .hand .hc { transform: translateY(calc(var(--dip, 0px) + 10px)) rotate(var(--rot, 0deg)); }
+    #game.open-board .dock .hand .hc:hover, #game.open-board .dock .hand .hc:focus-visible {
+        transform: translateY(-34px) scale(1.22); z-index: var(--z-lift) !important; }
+    #game.open-board .dock .hand .hc:hover img {
+        box-shadow: 0 20px 44px -8px var(--bg-canvas), 0 0 28px -2px color-mix(in srgb, var(--brand-light) 75%, transparent); }
+
+    /* Unobtrusive minimal corner utility pills (tucked bottom-left, quiet until hovered!) */
+    #game.open-board .hand-tools {
+        position: fixed; left: 16px; bottom: 14px; z-index: 8; padding: 4px 8px; gap: 5px;
+        border-radius: 999px; width: auto;
+        background: color-mix(in srgb, var(--bg-canvas) 72%, transparent);
+        border: 1px solid color-mix(in srgb, var(--brand-light) 22%, var(--border-subtle));
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        opacity: 0.72; transition: opacity 0.18s ease, border-color 0.18s ease; }
+    #game.open-board .hand-tools:hover, #game.open-board .hand-tools:focus-within { opacity: 1; border-color: var(--brand-light); }
+    #game.open-board .hand-tools .mm-word { display: none; }
+    #game.open-board .hand-tools #handCount { display: none; }
+
+    /* 6. Collapsible Floating Frosted Game Log Drawer (bottom-right above Arena action buttons!) */
+    #game.open-board .logwrap {
+        position: fixed; right: 18px; bottom: 118px; z-index: 9; border: 0; padding: 0;
+        background: transparent; display: flex; flex-direction: column-reverse; align-items: flex-end; }
+    #game.open-board .logwrap > summary {
+        list-style: none; padding: 5px 12px; border-radius: 999px;
+        background: color-mix(in srgb, var(--bg-canvas) 78%, transparent);
+        border: 1px solid color-mix(in srgb, var(--brand-light) 32%, var(--border));
+        color: var(--text-soft); font-family: var(--font-display); font-size: 0.76rem; font-weight: 700;
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 6px 18px -6px var(--bg-canvas); transition: border-color 0.15s, color 0.15s; }
+    #game.open-board .logwrap > summary::-webkit-details-marker { display: none; }
+    #game.open-board .logwrap > summary::before { content: "📜 "; }
+    #game.open-board .logwrap > summary:hover { border-color: var(--gold); color: var(--text-heading); }
+    #game.open-board .logwrap[open] > summary { border-color: var(--gold); color: var(--gold); }
+    #game.open-board .logwrap[open] .log {
+        width: min(340px, 34vw); max-height: 44vh; margin-bottom: 8px; padding: 10px;
+        border-radius: var(--radius-lg);
+        background: color-mix(in srgb, var(--bg-panel) 92%, var(--bg-canvas));
+        border: 1px solid color-mix(in srgb, var(--brand-light) 40%, var(--border));
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 18px 46px -8px var(--bg-canvas); }
+
+    /* Keep side-docked Action Feed clear of bottom-left piles & utility pills */
+    #game.open-board .act-banner { bottom: calc(var(--hand-h, 150px) + 128px); }
+}
+@media (min-width: 760px) and (max-width: 1080px) {
+    #game.open-board .hand-wrap { max-width: calc(100vw - 340px); }
+    #game.open-board .hand-tools { bottom: 6px; left: 8px; }
+    #game.open-board #midBar .turn-btn { bottom: 8px; right: 10px; min-width: 120px; min-height: 44px; padding: 6px 14px; }
+    #game.open-board #midBar .phase-strip.rail { bottom: 58px; right: 10px; }
+    #game.open-board .logwrap { bottom: 96px; right: 10px; }
 }

@@ -146,6 +146,9 @@
             FX.hand = new Set();
             FX.turnKey = `${G.turn}|${G.active}`;
             FX.seeded = false;
+            // In Open Board on desktop, start the Game Log cleanly collapsed into a floating drawer button so the playmat stays full-bleed
+            const lw = $('logWrap');
+            if (lw && typeof openBoard === 'function' && openBoard() && innerWidth >= 760) lw.open = false;
         }
 
         const lowCut = G.format === 'commander' ? 10 : 5;

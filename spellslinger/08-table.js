@@ -206,21 +206,34 @@ function barHTML(P) {
         const castable = P === me() && G.active === G.view && !G.busy && canCastNow(P, o) && canPay(P, o);
         return `<button type="button" class="btn small cmd-chip${castable ? ' playable' : ''}" onclick="showGameCard(${o.uid})" title="${esc(o.card.name)}${t ? ` (commander tax +${t * 2})` : ''} — tap to inspect or cast">${art ? `<span class="cmd-thumb-wrap"><img class="cmd-thumb" src="${art}" alt=""></span>` : '<span class="cmd-ico">👑</span>'}<span class="cmd-nm">${esc(o.card.name.split(',')[0])}</span>${t ? `<span class="cmd-tax">+${t * 2}</span>` : ''}</button>`;
     }).join('');
-    const meCmdr = you(P) ? playerCmdr(P) : null;
-    const meAv = meCmdr && meCmdr.art ? `<span class="me-av" style="--sc:${meCmdr.col}" aria-hidden="true"><span class="seat-av-clip"><img src="${meCmdr.art}" alt=""></span></span>` : '';
+    const cmdrObj = playerCmdr(P);
+    const avArt = cmdrObj && cmdrObj.art;
+    const avCol = cmdrObj && cmdrObj.col ? cmdrObj.col : (you(P) ? 'var(--gold)' : 'var(--brand-light)');
+    const avHTML = avArt
+        ? `<span class="${you(P) ? 'me-av' : 'opp-av'} arena-av" style="--sc:${avCol}" aria-hidden="true"><span class="seat-av-clip"><img src="${avArt}" alt=""></span></span>`
+        : `<span class="${you(P) ? 'me-av' : 'opp-av'} arena-av no-art" style="--sc:${avCol}" aria-hidden="true">${you(P) ? '🧙' : '🤖'}</span>`;
+    const topGy = P.gy && P.gy.length ? P.gy[P.gy.length - 1] : null;
+    const gyArt = topGy && topGy.card && (topGy.card.imgS || topGy.card.img);
+    const gyPile = `<button type="button" class="zone-count zone-btn pile-card pile-gy${gyArt ? ' has-art' : ''}" title="Graveyard (${P.gy.length}): tap to look" onclick="showGraveyard(${P.i})">${gyArt ? `<img class="pile-art" src="${gyArt}" alt="">` : '<span class="pile-ico" aria-hidden="true">🪦</span>'}<span class="pile-cnt">${P.gy.length}</span></button>`;
+    const libPile = `<span class="zone-count pile-card pile-deck" title="Library: ${P.library.length} cards"><span class="pile-ico" aria-hidden="true">📚</span><span class="pile-cnt">${P.library.length}</span></span>`;
     return `
-        <span class="who">${isPodOpp ? '<span class="pod-viewing-tag">Viewing</span>' : ''}${meAv}${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? (meAv ? 'You' : '🧙 You') : `${isPodOpp ? '' : '🤖 '}${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
-        <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}"><span class="lh">❤️ </span>${P.life}</button>
-        ${G.format === 'commander' ? `<span class="zone-count" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
-        ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
- ${P === me() && P.bf.some(o => Rx(o).peekTop) && P.library.length ? `<span class="pc" title="You may look at the top card of your library any time">👁 ${esc(P.library[P.library.length - 1].card.name)}</span>` : ''}
-        <button type="button" class="btn small" onclick="boardOverview(${P.i})" title="See every permanent on this side in one place">👁 Board</button>
-        <span class="zones"><span class="zone-count" title="Library">📚 ${P.library.length}</span>
-        <button type="button" class="zone-count zone-btn" title="Graveyard: tap to look" onclick="showGraveyard(${P.i})">🪦 ${P.gy.length}</button></span>
-        ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
-        <span class="cmd-zone">${cmd}</span>
-        ${P !== me() ? `<span class="note deckname" style="margin-left:auto;">${styleOf(P) ? `${styleOf(P).emoji} ${esc(styleOf(P).name)} · ` : ''}${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</span>` : `<span style="margin-left:auto;" class="desk-only"></span><button type="button" class="btn small phone-only gm-btn" onclick="gameMenu()" aria-label="Game menu: log, life tracker, mana mode, concede">⋯</button>`}
-        <button type="button" class="btn small desk-only bar-more" onclick="barMenu(${P.i})" title="Life and counters tracker${P === me() ? ', concede' : ''}" aria-label="More for ${esc(P.name)}">⋯</button>`;
+        <span class="bar-center">
+            <span class="who">${isPodOpp ? '<span class="pod-viewing-tag">Viewing</span>' : ''}${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? 'You' : esc(P.name)}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
+            <span class="av-medallion">${avHTML}<button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}"><span class="lh">❤️ </span>${P.life}</button></span>
+        </span>
+        <span class="bar-left">
+            ${G.format === 'commander' ? `<span class="zone-count cmd-dmg-pill" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
+            ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
+            ${P === me() && P.bf.some(o => Rx(o).peekTop) && P.library.length ? `<span class="pc" title="You may look at the top card of your library any time">👁 ${esc(P.library[P.library.length - 1].card.name)}</span>` : ''}
+            <span class="zones">${libPile}${gyPile}</span>
+            ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand">${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
+            <span class="cmd-zone">${cmd}</span>
+        </span>
+        <span class="bar-right">
+            <button type="button" class="btn small" onclick="boardOverview(${P.i})" title="See every permanent on this side in one place">👁 Board</button>
+            ${P !== me() ? `<span class="note deckname">${styleOf(P) ? `${styleOf(P).emoji} ${esc(styleOf(P).name)} · ` : ''}${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</span>` : `<button type="button" class="btn small phone-only gm-btn" onclick="gameMenu()" aria-label="Game menu: log, life tracker, mana mode, concede">⋯</button>`}
+            <button type="button" class="btn small desk-only bar-more" onclick="barMenu(${P.i})" title="Life and counters tracker${P === me() ? ', concede' : ''}" aria-label="More for ${esc(P.name)}">⋯</button>
+        </span>`;
 }
 
 // Desktop: the "⋯" on each player bar holds the tracker (and Concede on your own bar), so the bar stays calm (2026-11-10)
