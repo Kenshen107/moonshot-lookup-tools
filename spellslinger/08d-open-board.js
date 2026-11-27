@@ -77,7 +77,7 @@ const PHASE_RAIL_ICONS = ['🔄', '🪄', '⚔️', '🪄', '🌙'];
         return `<ol class="phase-strip rail ${mine ? 'mine' : 'theirs'}" aria-label="Turn ${G.turn}: ${esc(whose)}">
             <li class="whose" title="${esc(whose)}"><span class="rail-dot" aria-hidden="true"></span>${mine ? 'You' : esc(String(turnName()).split(/[ ,(]/)[0])}</li>${PHASE_STEPS.map(([label, ids], pi) => {
                 const now = ids.includes(G.phase);
-                return `<li title="${esc(label)}"${now ? ' class="now" aria-current="step"' : ''}><span class="rail-ico" aria-hidden="true">${typeof ascIco === 'function' ? ascIco(['phase-upkeep', 'phase-main', 'phase-combat', 'phase-main', 'phase-end'][pi], PHASE_RAIL_ICONS[pi], 16) : PHASE_RAIL_ICONS[pi]}</span>${now ? `<span class="rail-name">${label}</span>` : `<span class="sr-only">${label}</span>`}</li>`;
+                return `<li title="${esc(label)}"${now ? ' class="now" aria-current="step"' : ''}><span class="rail-ico" aria-hidden="true">${typeof ascIco === 'function' ? ascIco(['phase-upkeep', 'phase-main', 'phase-combat', 'phase-main', 'phase-end'][pi], PHASE_RAIL_ICONS[pi], 18) : PHASE_RAIL_ICONS[pi]}</span>${now ? `<span class="rail-name">${label}</span>` : `<span class="sr-only">${label}</span>`}</li>`;
             }).join('')}</ol>`;
     };
 }

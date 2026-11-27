@@ -34,7 +34,11 @@ function kwBadgesHTML(o) {
     for (const [k, label, path] of KW_ICONS) {
         if (k === 'first strike' && has(o, 'double strike')) continue;
         if (has(o, k)) {
-            out.push(`<span class="kw-ico kw-${k.replace(/\s+/g, '-')}" title="${label}"><svg viewBox="0 0 16 16" aria-hidden="true">${path}</svg></span>`);
+            const slug = k.replace(/\s+/g, '-');
+            const art = typeof ASC_UI !== 'undefined' && ASC_UI.ok['kw-' + slug];
+            out.push(art
+                ? `<span class="kw-ico has-art kw-${slug}" title="${label}"><img class="asc-ico" src="spellslinger/art/ui/kw-${slug}.png" alt="" aria-hidden="true" width="20" height="20"></span>`
+                : `<span class="kw-ico kw-${slug}" title="${label}"><svg viewBox="0 0 16 16" aria-hidden="true">${path}</svg></span>`);
             if (out.length >= 4) break;
         }
     }

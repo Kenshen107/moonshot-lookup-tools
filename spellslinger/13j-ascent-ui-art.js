@@ -6,11 +6,13 @@
 //   spellslinger/art/poses/<id>.png     win row and lose row per opponent, 16 frames of 96 x 96
 const ASC_UI = { ok: {}, opp: {}, last: {} };
 const ASC_MOODS = ['happy', 'angry', 'worried'];
+const KW_UI_ICONS = ['kw-flying', 'kw-trample', 'kw-deathtouch', 'kw-lifelink', 'kw-vigilance', 'kw-haste', 'kw-double-strike', 'kw-first-strike', 'kw-indestructible', 'kw-hexproof', 'kw-menace', 'kw-reach', 'kw-defender'];
 
 // ---- Probing (called from ascProbeArt, 13h) ----
 function ascExtraProbeTasks() {
     return [
         ...Object.keys(ASCENT_ICONS).map(async k => { ASC_UI.ok[k] = await ascProbe(`spellslinger/art/ui/${k}.png`); }),
+        ...KW_UI_ICONS.map(async k => { ASC_UI.ok[k] = await ascProbe(`spellslinger/art/ui/${k}.png`); }),
         ...Object.keys(ASCENT_FX_IDEAS).map(async k => { ASC_FX_KINDS_ART[k] = await ascProbe(`spellslinger/art/fx/${k}.png`); })
     ];
 }
