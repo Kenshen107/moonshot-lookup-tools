@@ -26,7 +26,10 @@ function permHTML(o, count = 1) {
     if (m && m.type === 'block') selectable = (o.owner === G.view && isCreature(o) && !o.tapped) || (o.owner !== G.view && G.attackers.includes(o.uid) && !!m.picked);
     if (m && m.type === 'pay' && o.owner === G.view) selectable = helpsPay(me(), o);
     if (selectable) cls.push('selectable');
+    if (m && m.type === 'attack' && o.owner === G.view && canAttackWith(o) && !m.sel.has(o.uid)) cls.push('can-atk');
     if (m && m.type === 'block' && m.picked === o.uid) cls.push('picked');
+    const isSick = isCreature(o) && o.sick && !has(o, 'haste') && o.owner === G.active;
+    if (isSick) cls.push('sick-card');
     const chips = [];
     if (o.isCommander) chips.push('<span class="chip">👑</span>');
     if (o.counters > 0) chips.push(`<span class="chip c-plus" title="${o.counters} +1/+1 counter${o.counters === 1 ? '' : 's'}">+${o.counters}</span>`);
@@ -34,7 +37,7 @@ function permHTML(o, count = 1) {
     Object.entries(o.ctr || {}).forEach(([k, n]) => chips.push(`<span class="chip" title="${n} ${esc(k)} counter${n === 1 ? '' : 's'}">${counterIcon(k)}${n}</span>`));
     if (o.tp || o.tq || o.tkw.length) chips.push(`<span class="chip c-temp" title="Until end of turn: ${[o.tp || o.tq ? `${o.tp >= 0 ? '+' : ''}${o.tp}/${o.tq >= 0 ? '+' : ''}${o.tq}` : '', ...o.tkw].filter(Boolean).join(', ')}">⏱</span>`);
     if (o.dmg) chips.push(`<span class="chip c-dmg" title="${o.dmg} damage marked (wears off at end of turn)">💥${o.dmg}</span>`);
-    if (isCreature(o) && o.sick && !has(o, 'haste') && o.owner === G.active) chips.push('<span class="chip sick" title="Summoning sick">💤</span>');
+    if (isSick) chips.push('<span class="chip sick" title="Summoning sick">💤</span>');
     if (allPerms().some(a => a.attachedTo === o.uid)) chips.push(`<span class="chip" title="${esc(allPerms().filter(a => a.attachedTo === o.uid).map(a => a.card.name).join(', '))}">🛡️</span>`);
 
     let pt = '';
@@ -49,7 +52,7 @@ function permHTML(o, count = 1) {
     if (count > 1) cls.push('pile');
     const cols = o.card.colors || [];
     const cc = cols.length > 1 ? 'var(--gold)' : cols.length === 1 ? `var(--mana-${cols[0]})` : 'var(--mana-C)';
-    return `<button type="button" class="${cls.join(' ')}" data-uid="${o.uid}" style="--cc:${cc}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}${count > 1 ? ` ×${count}` : ''}">${cardImg(o.card)}<span class="pname">${esc(o.card.name.split(',')[0])}</span><span class="chips">${chips.join('')}</span>${pt}${blockLabel || atkLabel}${count > 1 ? `<span class="pile-n">×${count}</span>` : ''}</button>`;
+    return `<button type="button" class="${cls.join(' ')}" data-uid="${o.uid}" style="--cc:${cc}" onclick="permClick(${o.uid})" title="${esc(o.card.name)}${count > 1 ? ` ×${count}` : ''}">${cardImg(o.card)}${o.tapped ? '<span class="tap-ico" aria-hidden="true">↪</span>' : ''}<span class="pname">${esc(o.card.name.split(',')[0])}</span><span class="chips">${chips.join('')}</span>${pt}${blockLabel || atkLabel}${count > 1 ? `<span class="pile-n">×${count}</span>` : ''}</button>`;
 }
 // Identical permanents share one pile (lands and others from 2, creatures
 // from 3, only while nothing is being chosen) so a full board fits.
@@ -203,8 +206,10 @@ function barHTML(P) {
         const castable = P === me() && G.active === G.view && !G.busy && canCastNow(P, o) && canPay(P, o);
         return `<button type="button" class="btn small cmd-chip${castable ? ' playable' : ''}" onclick="showGameCard(${o.uid})" title="${esc(o.card.name)}${t ? ` (commander tax +${t * 2})` : ''} — tap to inspect or cast">${art ? `<span class="cmd-thumb-wrap"><img class="cmd-thumb" src="${art}" alt=""></span>` : '<span class="cmd-ico">👑</span>'}<span class="cmd-nm">${esc(o.card.name.split(',')[0])}</span>${t ? `<span class="cmd-tax">+${t * 2}</span>` : ''}</button>`;
     }).join('');
+    const meCmdr = you(P) ? playerCmdr(P) : null;
+    const meAv = meCmdr && meCmdr.art ? `<span class="me-av" style="--sc:${meCmdr.col}" aria-hidden="true"><span class="seat-av-clip"><img src="${meCmdr.art}" alt=""></span></span>` : '';
     return `
-        <span class="who">${isPodOpp ? '<span class="pod-viewing-tag">Viewing</span>' : ''}${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? '🧙 You' : `${isPodOpp ? '' : '🤖 '}${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
+        <span class="who">${isPodOpp ? '<span class="pod-viewing-tag">Viewing</span>' : ''}${meAv}${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? (meAv ? 'You' : '🧙 You') : `${isPodOpp ? '' : '🤖 '}${esc(P.name)}`}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
         <button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}"><span class="lh">❤️ </span>${P.life}</button>
         ${G.format === 'commander' ? `<span class="zone-count" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
         ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
@@ -376,7 +381,7 @@ function stackHTML() {
     const m = G.mode;
     return `<div class="stackbar" aria-label="The stack, top first"><span class="lane-label">Stack ↓</span>${G.stack.slice().reverse().map((it, i) => {
         const sel = m && m.type === 'target' && m.valid.some(v => v.item && v.item.id === it.id);
-        return `<button type="button" class="stack-item${i === 0 ? ' top' : ''}${sel ? ' selectable' : ''}" onclick="stackClick(${it.id})" title="${esc(it.name)}">${it.o.card.imgS ? `<img src="${it.o.card.imgS}" alt="">` : ''}<span>${esc(it.name)}${it.target ? ` → ${esc(targetName(it.target))}` : ''}</span></button>`;
+        return `<button type="button" class="stack-item${i === 0 ? ' top' : ''}${sel ? ' selectable' : ''}" data-stack-id="${it.id}" onclick="stackClick(${it.id})" title="${esc(it.name)}">${it.o.card.imgS ? `<img src="${it.o.card.imgS}" alt="">` : ''}<span>${esc(it.name)}${it.target ? ` → ${esc(targetName(it.target))}` : ''}</span></button>`;
     }).join('')}</div>`;
 }
 function stackClick(id) {
@@ -438,6 +443,12 @@ function nextStepHint() {
     return G.phase === 'main1' && P.bf.some(canAttackWith) ? 'Nothing left to cast - go to combat or end your turn.' : '';
 }
 
+function allAttack() {
+    if (!G || !G.mode || G.mode.type !== 'attack') return;
+    me().bf.filter(canAttackWith).forEach(o => G.mode.sel.add(o.uid));
+    confirmAttack();
+}
+
 function midControlsHTML() {
     if (G.over) return `<span class="phase">Game over</span><button class="btn primary" onclick="leaveGame()">Leave the table</button>`;
     const m = G.mode;
@@ -451,12 +462,16 @@ function midControlsHTML() {
         return `${phase}<span class="prompt">🎯 Choose a target for ${esc(m.source.card.name)}</span>${m.cancelable ? '<button class="btn" onclick="cancelTarget()">Cancel</button>' : ''}`;
     }
     if (m && m.type === 'attack') {
-        return `${phase}<span class="prompt">Tap creatures to attack (${m.sel.size})</span><button class="btn primary act-atk" onclick="confirmAttack()">⚔️ Attack${m.sel.size ? ` with ${m.sel.size}` : ''}</button>${typeof attackListButton === 'function' ? attackListButton() : ''}<button class="btn" onclick="throughCombat()" title="Beginning-of-combat effects stay; no attack; on to your second main phase">⏭️ No attack: to Main 2</button><button class="btn" onclick="cancelAttack()">Back</button>`;
+        const avail = me().bf.filter(canAttackWith).length;
+        const primaryAtk = m.sel.size
+            ? `<button class="btn primary act-atk" onclick="confirmAttack()">⚔️ Attack with ${m.sel.size}</button>${m.sel.size < avail ? `<button class="btn gold" onclick="allAttack()" title="Attack with all ${avail} eligible creatures">⚔️ All Attack (${avail})</button>` : ''}`
+            : `<button class="btn primary act-atk" onclick="allAttack()" title="Attack with all ${avail} eligible creatures">⚔️ All Attack${avail > 1 ? ` (${avail})` : ''}</button>`;
+        return `${phase}<span class="prompt">Choose attackers${m.sel.size ? ` (${m.sel.size}/${avail})` : ''}</span>${primaryAtk}${typeof attackListButton === 'function' ? attackListButton() : ''}<button class="btn" onclick="throughCombat()" title="Beginning-of-combat effects stay; no attack; on to your second main phase">⏭️ No attack: to Main 2</button><button class="btn" onclick="cancelAttack()">Back</button>`;
     }
     if (m && m.type === 'respond') {
         const it = m.item;
-        if (it.window) return `${phase}<span class="prompt">⏳ ${esc(it.name)}: cast an instant or activate an ability, or:</span><button class="btn primary" onclick="passPriority()">✔ Continue</button>`;
-        return `${phase}<span class="prompt">↩️ ${esc(it.name)}${it.target ? ` (targeting ${esc(targetName(it.target))})` : ''} is on the stack. Cast an instant to respond, or:</span><button class="btn primary" onclick="passPriority()">✔ Let it resolve</button>`;
+        if (it.window) return `${phase}<span class="prompt">⏳ ${esc(it.name)}: cast an instant or activate an ability, or:</span><button class="btn primary act-resolve" onclick="passPriority()">✔ Continue</button>`;
+        return `${phase}<span class="prompt">↩️ ${esc(it.name)}${it.target ? ` (targeting ${esc(targetName(it.target))})` : ''} is on the stack.</span><button class="btn primary act-resolve" onclick="passPriority()">✔ Resolve</button>`;
     }
     if (m && m.type === 'block') {
         return `${phase}<span class="prompt">🛡️ ${m.picked && onBf(m.picked) ? `Now tap the attacker ${esc(onBf(m.picked).card.name.split(',')[0])} should block` : 'Tap one of your creatures, then the attacker it blocks. You can cast instants now.'}</span><button class="btn primary" onclick="confirmBlocks()">✔ Done blocking</button>`;

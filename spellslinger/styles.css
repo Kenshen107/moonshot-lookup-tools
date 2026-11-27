@@ -2137,3 +2137,140 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     .act-prog { animation: none !important; }
     .turn-toast { transition: none !important; }
 }
+
+/* =====================================================================
+   MTG Arena Play-Style Replication (2026-11-27, analyzed from live MTG
+   Arena Brawl gameplay):
+   - Centered face-to-face creature battle-line & sunlit/vignette mat
+   - Live SVG curved targeting, attack & block arrows (#arenaArrows)
+   - Attack-ready cyan halo + top chevron (^), tapped curved arrow (↪),
+     summoning-sickness swirling mist, electric cyan castable hand glow
+   - Right-side vertical Arena stack cards on desktop Open Board
+   - Player Commander avatar beside circular life medallion & Arena pills
+   ===================================================================== */
+
+/* ---- Arena Playmat Spotlight + Atmospheric Perimeter Vignette ---- */
+#game.open-board {
+    background:
+        radial-gradient(ellipse 68% 44% at 50% 47%, color-mix(in srgb, var(--gold) 9%, color-mix(in srgb, var(--brand-light) 12%, transparent)), transparent 72%),
+        radial-gradient(ellipse 105% 95% at 50% 50%, transparent 48%, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 100%),
+        repeating-linear-gradient(45deg, color-mix(in srgb, var(--brand-light) 2.5%, transparent) 0 2px, transparent 2px 9px),
+        radial-gradient(ellipse 82% 72% at 50% 48%, var(--felt-1), var(--felt-2) 66%, var(--bg-canvas) 100%); }
+
+/* ---- Centered Face-to-Face Creature Battle-Line (like MTG Arena!) ---- */
+#game.open-board .lane.creatures:not(.compact) { justify-content: center; gap: 10px; }
+#game.open-board .row-back { padding: 0 6px; }
+
+/* ---- Signature Arena Card Signifiers ---- */
+/* 1. Attack-ready cyan halo + glowing top chevron (^) during Declare Attackers */
+#game .perm.can-atk { position: relative; }
+#game .perm.can-atk img, #game .perm.can-atk .noimg {
+    box-shadow: 0 0 0 2.5px var(--brand-light), 0 0 20px 2px color-mix(in srgb, var(--brand-light) 85%, transparent), 0 6px 16px -4px var(--bg-canvas) !important;
+    animation: arenaAtkReady 1.6s ease-in-out infinite; }
+#game .perm.can-atk::before { content: ""; position: absolute; left: 50%; top: -11px; transform: translateX(-50%);
+    width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent;
+    border-bottom: 9px solid var(--brand-light);
+    filter: drop-shadow(0 0 6px var(--brand-light)); pointer-events: none; z-index: 4;
+    animation: arenaChevronBob 1.3s ease-in-out infinite; }
+@keyframes arenaAtkReady {
+    0%, 100% { box-shadow: 0 0 0 2px var(--brand-light), 0 0 14px 1px color-mix(in srgb, var(--brand-light) 70%, transparent); }
+    50% { box-shadow: 0 0 0 3px var(--brand-light), 0 0 26px 4px var(--brand-light); } }
+@keyframes arenaChevronBob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -3px); } }
+
+/* 2. Translucent curved tap arrow badge (↪) over tapped permanents */
+.tap-ico { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-10deg);
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 1.15rem; font-weight: 800; line-height: 1; pointer-events: none; z-index: 3;
+    color: color-mix(in srgb, var(--text-heading) 88%, transparent);
+    background: color-mix(in srgb, var(--bg-canvas) 52%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--text-heading) 32%, transparent);
+    text-shadow: 0 1px 4px var(--bg-canvas); }
+#game .perm.land .tap-ico { width: 22px; height: 22px; font-size: 0.85rem; }
+#game .lane.compact .tap-ico { display: none; }
+
+/* 3. Swirling misty summoning-sickness overlay (like MTG Arena!) */
+#game .perm.sick-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2;
+    background:
+        radial-gradient(circle at 28% 35%, color-mix(in srgb, var(--text-heading) 24%, transparent), transparent 55%),
+        radial-gradient(circle at 74% 62%, color-mix(in srgb, var(--brand-light) 22%, transparent), transparent 58%);
+    animation: arenaSickMist 3.2s ease-in-out infinite alternate; }
+#game .lane.compact .perm.sick-card::after { display: none; }
+@keyframes arenaSickMist { from { opacity: 0.45; } to { opacity: 0.85; } }
+
+/* 4. MTG Arena Electric Cyan Castable Hand Glow */
+.hand .hc.playable img {
+    box-shadow: 0 0 0 2.5px var(--brand-light), 0 0 18px 2px color-mix(in srgb, var(--brand-light) 82%, transparent), 0 8px 18px -4px var(--bg-canvas);
+    animation: arenaCyanPlayable 2.2s ease-in-out infinite; }
+@keyframes arenaCyanPlayable {
+    0%, 100% { box-shadow: 0 0 0 2px var(--brand-light), 0 0 14px 1px color-mix(in srgb, var(--brand-light) 68%, transparent), 0 8px 18px -4px var(--bg-canvas); }
+    50% { box-shadow: 0 0 0 3px var(--mana-U), 0 0 24px 3px color-mix(in srgb, var(--brand-light) 95%, transparent), 0 8px 18px -4px var(--bg-canvas); } }
+
+/* ---- Player Commander Avatar beside Circular Life Medallion ---- */
+.me-av { display: inline-block; width: 38px; height: 38px; border-radius: 50%; margin-right: 6px; vertical-align: middle;
+    border: 2px solid var(--gold); box-shadow: 0 0 14px -2px color-mix(in srgb, var(--gold) 65%, transparent), 0 3px 10px var(--bg-canvas); overflow: hidden; }
+.me-av .seat-av-clip { border-radius: 50%; }
+#meBar .who { display: inline-flex; align-items: center; }
+
+/* ---- Right-Side Vertical Arena Stack Cards (Desktop Open Board; DOM remains inside #midBar for tests!) ---- */
+@media (min-width: 760px) {
+    #game.open-board #midBar .stackbar {
+        position: fixed; right: 16px; top: 44%; transform: translateY(-50%); z-index: 6;
+        flex-direction: column; align-items: flex-end; gap: 6px; max-width: 176px; pointer-events: auto; }
+    #game.open-board #midBar .stackbar .lane-label {
+        background: color-mix(in srgb, var(--bg-canvas) 82%, transparent);
+        border: 1px solid color-mix(in srgb, var(--brand-light) 45%, var(--border));
+        color: var(--brand-light); padding: 2px 10px; border-radius: 999px; font-weight: 700; }
+    #game.open-board #midBar .stackbar .stack-item {
+        flex-direction: column; align-items: stretch; gap: 4px; width: 154px; max-width: 154px; padding: 5px;
+        border-radius: 10px; text-align: left;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 96%, transparent), color-mix(in srgb, var(--bg-canvas) 96%, transparent));
+        border: 1.5px solid color-mix(in srgb, var(--brand-light) 70%, var(--border));
+        box-shadow: 0 12px 28px -6px var(--bg-canvas), 0 0 22px -6px color-mix(in srgb, var(--brand-light) 70%, transparent);
+        animation: arenaStackIn 0.28s cubic-bezier(.16, 1.12, .3, 1); }
+    #game.open-board #midBar .stackbar .stack-item.top {
+        border-color: var(--gold);
+        box-shadow: 0 14px 32px -6px var(--bg-canvas), 0 0 26px -4px color-mix(in srgb, var(--gold) 75%, transparent); }
+    #game.open-board #midBar .stackbar .stack-item img { width: 100%; aspect-ratio: 1 / 0.78; object-fit: cover; object-position: 50% 16%; border-radius: 6px; display: block; }
+    #game.open-board #midBar .stackbar .stack-item span { font-size: 0.76rem; font-weight: 600; color: var(--text-heading); white-space: normal; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    @keyframes arenaStackIn { from { opacity: 0; transform: translateX(26px) scale(0.92); } to { opacity: 1; transform: none; } }
+}
+
+/* ---- Arena Beveled Combat / Resolve Action Pills ---- */
+.btn.act-atk {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--mythic) 78%, var(--text-heading)), var(--mythic) 52%, color-mix(in srgb, var(--mana-R) 75%, var(--bg-canvas)));
+    border: 1.5px solid color-mix(in srgb, var(--gold) 65%, var(--mythic)); color: var(--text-heading);
+    border-radius: 999px; padding: 8px 22px; font-weight: 700; letter-spacing: 0.03em;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 38%, transparent), 0 4px 20px -4px var(--mythic); }
+.btn.act-atk:hover:not(:disabled) { filter: brightness(1.12);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 45%, transparent), 0 6px 26px -2px var(--mythic); }
+.btn.act-resolve {
+    min-height: 44px; font-family: var(--font-display); font-weight: 700; letter-spacing: 0.03em;
+    border-radius: 999px; padding: 8px 22px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 68%, var(--text-heading)), color-mix(in srgb, var(--gold) 82%, var(--mythic)));
+    border: 1.5px solid var(--gold); color: var(--bg-canvas);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 48%, transparent), 0 4px 20px -4px var(--gold); }
+.btn.act-go { border-radius: 999px; padding: 8px 20px; }
+
+/* ---- Live SVG Targeting & Combat Arrows Overlay ---- */
+.arena-arrows { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 56; overflow: visible; }
+.arw-glow { fill: none; stroke-width: 9; stroke-linecap: round; opacity: 0.28; filter: blur(3px); }
+.arw-line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-dasharray: 10 6; animation: arenaArrowFlow 0.7s linear infinite; }
+.arw-glow.spell, .arw-line.spell { stroke: var(--brand-light); }
+.arw-glow.attack, .arw-line.attack { stroke: var(--mythic); }
+.arw-glow.block, .arw-line.block { stroke: var(--mana-U); }
+.arw-glow.target-lock, .arw-line.target-lock { stroke: var(--gold); opacity: 0.95; }
+.arw-head.spell { fill: var(--brand-light); }
+.arw-head.attack { fill: var(--mythic); }
+.arw-head.block { fill: var(--mana-U); }
+.arw-head.target-lock { fill: var(--gold); }
+@keyframes arenaArrowFlow { from { stroke-dashoffset: 32; } to { stroke-dashoffset: 0; } }
+
+@media (max-width: 600px) {
+    .me-av { width: 28px; height: 28px; margin-right: 4px; }
+    .tap-ico { width: 20px; height: 20px; font-size: 0.78rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #game .perm.can-atk img, #game .perm.can-atk .noimg, #game .perm.can-atk::before,
+    #game .perm.sick-card::after, .hand .hc.playable img, .arw-line,
+    #game.open-board #midBar .stackbar .stack-item { animation: none !important; }
+}

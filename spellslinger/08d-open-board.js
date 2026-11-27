@@ -57,7 +57,7 @@ function stackSheet() {
         const m = G.mode;
         if (m && m.type === 'target' && G.stack.some(it => m.valid.some(v => v.item && v.item.id === it.id))) return base.apply(this, arguments); // a target on the stack: show them all
         const it = G.stack[G.stack.length - 1];
-        return `<div class="stackbar open" aria-label="The stack, top first"><span class="lane-label">Stack</span><button type="button" class="stack-item top" onclick="stackClick(${it.id})" title="${esc(it.name)}">${it.o.card.imgS ? `<img src="${it.o.card.imgS}" alt="">` : ''}<span>${esc(it.name)}${it.target ? ` → ${esc(targetName(it.target))}` : ''}</span></button><button type="button" class="stack-more" onclick="stackSheet()" title="See everything on the stack">+${G.stack.length - 1} more</button></div>`;
+        return `<div class="stackbar open" aria-label="The stack, top first"><span class="lane-label">Stack</span><button type="button" class="stack-item top" data-stack-id="${it.id}" onclick="stackClick(${it.id})" title="${esc(it.name)}">${it.o.card.imgS ? `<img src="${it.o.card.imgS}" alt="">` : ''}<span>${esc(it.name)}${it.target ? ` → ${esc(targetName(it.target))}` : ''}</span></button><button type="button" class="stack-more" onclick="stackSheet()" title="See everything on the stack">+${G.stack.length - 1} more</button></div>`;
     };
 }
 

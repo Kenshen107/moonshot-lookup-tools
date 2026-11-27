@@ -189,7 +189,114 @@
         });
         FX.hand = curHand;
         FX.seeded = true;
+        drawArenaArrows();
     }
+
+    // 4. MTG Arena Live SVG Targeting & Combat Arrows (#arenaArrows)
+    let liveCursor = null;
+    function centerOf(el) {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        if (!r.width && !r.height) return null;
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2, r };
+    }
+    function playerAnchor(P) {
+        if (!P || !G) return null;
+        if (P === me()) return centerOf(document.querySelector('#meBar .life'));
+        if (G.players.length > 2) {
+            const seat = document.querySelector(`.pod-chip[data-seat="${P.i}"]`);
+            if (seat) return centerOf(seat);
+        }
+        return centerOf(document.querySelector('#oppBar .life')) || centerOf($('oppBar'));
+    }
+    function targetAnchor(t) {
+        if (!t) return null;
+        if (t.o) return centerOf(document.querySelector(`#game [data-uid="${t.o.uid}"]`));
+        if (t.item) return centerOf(document.querySelector(`#game [data-stack-id="${t.item.id}"]`));
+        if (t.p) return playerAnchor(t.p);
+        return null;
+    }
+    function arrowPath(a, b, bend) {
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const trimEnd = Math.min(18, dist * 0.18);
+        const ex = b.x - (dx / dist) * trimEnd, ey = b.y - (dy / dist) * trimEnd;
+        const mx = (a.x + ex) / 2, my = (a.y + ey) / 2;
+        const nx = -dy / dist, ny = dx / dist;
+        const curve = Math.min(72, dist * 0.22) * (bend || 1);
+        return `M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${(mx + nx * curve).toFixed(1)} ${(my + ny * curve).toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+    }
+    function drawArenaArrows() {
+        const svg = $('arenaArrows');
+        if (!svg) return;
+        if (isAuto() || !G || G.over || !$('game') || $('game').classList.contains('hidden')) {
+            if (svg.innerHTML) svg.innerHTML = '';
+            return;
+        }
+        const lines = [];
+        // (a) Stack item -> target (electric cyan)
+        (G.stack || []).forEach(it => {
+            if (!it || !it.target) return;
+            const from = centerOf(document.querySelector(`#game [data-stack-id="${it.id}"]`)) || (it.o && centerOf(document.querySelector(`#game [data-uid="${it.o.uid}"]`)));
+            const to = targetAnchor(it.target);
+            if (from && to) lines.push({ kind: 'spell', d: arrowPath(from, to, from.x > to.x ? -1 : 1) });
+        });
+        // (b) Declared attackers -> defender / seat / planeswalker (crimson-orange)
+        const atkUids = G.attackers && G.attackers.length ? G.attackers : (G.mode && G.mode.type === 'attack' && G.mode.sel ? [...G.mode.sel] : []);
+        atkUids.forEach((uid, idx) => {
+            const o = typeof onBf === 'function' ? onBf(uid) : null;
+            if (!o) return;
+            const from = centerOf(document.querySelector(`#game [data-uid="${uid}"]`));
+            let to = null;
+            if (o.attackPW) to = centerOf(document.querySelector(`#game [data-uid="${o.attackPW}"]`));
+            if (!to) {
+                const defIdx = o.atkTo != null ? o.atkTo : (G.defender != null ? G.defender : (o.owner === me().i ? foe().i : me().i));
+                to = playerAnchor(G.players[defIdx]);
+            }
+            if (from && to) lines.push({ kind: 'attack', d: arrowPath(from, to, (idx % 2 === 0 ? 1 : -1) * 0.7) });
+        });
+        // (c) Blockers -> attackers they block (arcane blue)
+        Object.entries(G.blocks || {}).forEach(([atkUid, blockers]) => {
+            const to = centerOf(document.querySelector(`#game [data-uid="${atkUid}"]`));
+            if (!to) return;
+            (blockers || []).forEach(bUid => {
+                const from = centerOf(document.querySelector(`#game [data-uid="${bUid}"]`));
+                if (from) lines.push({ kind: 'block', d: arrowPath(from, to, 0.8) });
+            });
+        });
+        // (d) Interactive cursor targeting arrow when choosing a target
+        if (G.mode && G.mode.type === 'target' && liveCursor) {
+            const src = G.mode.source;
+            const from = (src && centerOf(document.querySelector(`#game [data-uid="${src.uid}"]`)))
+                || centerOf(document.querySelector('#midBar .stack-item.top'))
+                || centerOf(document.querySelector('#midBar .prompt'))
+                || centerOf(document.querySelector('#meBar .life'));
+            if (from) {
+                const hoveringValid = !!(liveCursor.el && liveCursor.el.closest && liveCursor.el.closest('.selectable, .targetable'));
+                lines.push({ kind: hoveringValid ? 'target-lock' : 'spell', d: arrowPath(from, liveCursor, 0.65) });
+            }
+        }
+        if (!lines.length) { if (svg.innerHTML) svg.innerHTML = ''; return; }
+        svg.setAttribute('viewBox', `0 0 ${innerWidth} ${innerHeight}`);
+        svg.innerHTML = `<defs>
+            <marker id="arw-spell" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" class="arw-head spell"/></marker>
+            <marker id="arw-attack" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" class="arw-head attack"/></marker>
+            <marker id="arw-block" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" class="arw-head block"/></marker>
+            <marker id="arw-lock" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" class="arw-head target-lock"/></marker>
+        </defs>${lines.map(l => {
+            const mk = l.kind === 'target-lock' ? 'arw-lock' : `arw-${l.kind}`;
+            return `<path class="arw-glow ${l.kind}" d="${l.d}"/><path class="arw-line ${l.kind}" d="${l.d}" marker-end="url(#${mk})"/>`;
+        }).join('')}`;
+    }
+    window.addEventListener('resize', () => drawArenaArrows(), { passive: true });
+    document.addEventListener('pointermove', e => {
+        if (!G || !G.mode || G.mode.type !== 'target') {
+            if (liveCursor) { liveCursor = null; drawArenaArrows(); }
+            return;
+        }
+        liveCursor = { x: e.clientX, y: e.clientY, el: e.target };
+        drawArenaArrows();
+    }, { passive: true });
 
     if (typeof renderGame === 'function') {
         const origRenderGame = renderGame;
