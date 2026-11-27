@@ -1174,7 +1174,7 @@
         /* talks for 3 loops (about 3 seconds, the second row), then settles into the idle row for good */
         .asc-portrait.sprite.talk { background-position-y: -96px; animation: asc-idle var(--tdur, 0.6s) steps(var(--cols, 4)) 3, asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) calc(var(--tdur, 0.6s) * 3) infinite, asc-rest 0.01s linear calc(var(--tdur, 0.6s) * 3) forwards, asc-breathe var(--breath, 3.4s) steps(1, end) var(--ph, 0s) infinite; }
         @keyframes asc-rest { to { background-position-y: 0; } }
-        @keyframes asc-idle { to { background-position-x: calc(var(--cols, 4) * -96px); } } }
+        @keyframes asc-idle { to { background-position-x: calc(var(--cols, 4) * -96px); } }
         /* sheets made before the portrait framing (256 x 192, full body, 64 x 96 frames) still display until they are remade */
         .asc-portrait.sprite.old { width: 64px; background-size: 256px 192px; }
           .asc-portrait.sprite.old, .asc-portrait.sprite.old.talk { animation: asc-idle-old 0.8s steps(4) infinite; }
@@ -1509,3 +1509,396 @@ details.get-deck > summary { color: var(--brand-light); }
 .dg-badge.k-official { border-color: var(--gold); color: var(--gold); }
 .dg-badge.k-verified { border-color: var(--ok, var(--gold)); }
 @media (prefers-reduced-motion: reduce) { .dg-group > summary::before { transition: none; } }
+
+/* =====================================================================
+   Arena UI Polish (2026-11-27): sleek dark glass, layered depth, crisp
+   glow, smooth motion, interactive card tilt & battle table feedback.
+   Strictly design-token driven so all 7 Looks restyle everything cleanly.
+   ===================================================================== */
+
+/* ---- Ambient arcane atmosphere behind the app shell ---- */
+#arenaBg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+    background:
+        radial-gradient(65% 48% at 12% 0%, color-mix(in srgb, var(--brand) 26%, transparent), transparent 68%),
+        radial-gradient(52% 45% at 88% 8%, color-mix(in srgb, var(--gold) 15%, transparent), transparent 66%),
+        radial-gradient(60% 55% at 50% 100%, color-mix(in srgb, var(--felt-1) 48%, transparent), transparent 72%),
+        var(--bg-canvas); }
+#arenaBg::after { content: ""; position: absolute; inset: 0; opacity: 0.32;
+    background-image: radial-gradient(color-mix(in srgb, var(--brand-light) 22%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(ellipse 85% 60% at 50% 18%, #000, transparent 78%);
+    mask-image: radial-gradient(ellipse 85% 60% at 50% 18%, #000, transparent 78%); }
+body { background: transparent; }
+
+/* Custom slim scrollbars */
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--brand-light) 35%, var(--border)) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--brand-light) 30%, var(--border)); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--brand-light) 65%, var(--border)); background-clip: content-box; }
+
+/* ---- Topbar, Brand & Currency Pills ---- */
+.topbar { position: relative; padding: 16px 0 12px; margin-bottom: 10px; }
+.topbar::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-light) 45%, var(--border)) 18%, color-mix(in srgb, var(--gold) 40%, var(--border)) 50%, color-mix(in srgb, var(--brand-light) 45%, var(--border)) 82%, transparent); }
+.brand h1 { font-size: 1.55rem; font-weight: 700; letter-spacing: 0.03em;
+    text-shadow: 0 2px 14px color-mix(in srgb, var(--brand) 55%, transparent); }
+.brand .tag { background: color-mix(in srgb, var(--color-warning) 12%, var(--bg-inset));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-warning) 28%, transparent); }
+.coins { background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 14%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-inset) 92%, var(--bg-panel)));
+    border-color: color-mix(in srgb, var(--gold) 65%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent), 0 3px 12px -4px color-mix(in srgb, var(--bg-canvas) 85%, transparent);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease; }
+.coins.cash { background: linear-gradient(180deg, color-mix(in srgb, var(--color-success) 14%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-inset) 92%, var(--bg-panel)));
+    border-color: color-mix(in srgb, var(--color-success) 65%, var(--border)); }
+.coins.cash:hover { transform: translateY(-1px); border-color: var(--color-success);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 18%, transparent), 0 4px 16px -4px color-mix(in srgb, var(--color-success) 45%, transparent); }
+.coins.aether { background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 18%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-inset) 92%, var(--bg-panel)));
+    border-color: color-mix(in srgb, var(--brand-light) 65%, var(--border)); color: var(--brand-light); }
+.acct select { background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-inset)); border-radius: var(--radius-md);
+    border-color: color-mix(in srgb, var(--brand-light) 28%, var(--border)); transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.acct select:hover { border-color: var(--brand-light); }
+
+/* ---- Mode Switcher & Primary Navigation Tabs ---- */
+.modebar { padding: 6px 8px; border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--bg-inset) 78%, var(--bg-panel));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 18%, var(--border-subtle));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 5%, transparent), 0 4px 14px -10px var(--bg-canvas); }
+.mode-btn { background: transparent; border-color: transparent; color: var(--text-soft); font-weight: 600;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease; }
+.mode-btn:hover { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--text-heading); }
+.mode-btn[aria-selected="true"] {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 26%, var(--brand)), var(--brand));
+    border-color: color-mix(in srgb, var(--brand-light) 75%, var(--border));
+    color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 24%, transparent), 0 4px 16px -6px var(--brand); }
+
+.tabs { gap: 6px; padding: 4px; border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--bg-panel) 52%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 65%, transparent); }
+.tab { position: relative; background: transparent; border: 1px solid transparent; padding: 8px 15px; border-radius: var(--radius-md);
+    color: var(--text-soft); font-family: var(--font-display); font-size: 0.94rem; letter-spacing: 0.02em;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease; }
+.tab:hover { background: color-mix(in srgb, var(--bg-panel-raised) 85%, transparent); border-color: color-mix(in srgb, var(--brand-light) 45%, var(--border)); color: var(--text-heading); }
+.tab[aria-selected="true"] {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 24%, var(--brand)), color-mix(in srgb, var(--brand) 88%, var(--bg-canvas)));
+    border-color: var(--brand-light); color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 26%, transparent), 0 4px 18px -6px var(--brand); }
+.tab[aria-selected="true"]::after { content: ""; position: absolute; left: 16%; right: 16%; bottom: 2px; height: 2px; border-radius: 999px;
+    background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+/* Smooth view switching without lasting stacking contexts */
+main > section:not(.hidden) { animation: arenaViewIn 0.28s cubic-bezier(.2, .85, .25, 1) backwards; }
+@keyframes arenaViewIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ---- Layered Panels (no border-image, no backdrop-filter so dropdowns & looks.js stay clean) ---- */
+.panel {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 52%, var(--bg-panel)), var(--bg-panel) 54%, color-mix(in srgb, var(--bg-inset) 38%, var(--bg-panel)));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 18%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 9%, transparent), 0 12px 30px -18px color-mix(in srgb, var(--bg-canvas) 95%, transparent);
+    transition: border-color 0.2s ease; }
+.panel h2 { letter-spacing: 0.03em; }
+
+/* ---- Tactile Arena Buttons & Inputs ---- */
+.btn {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--text-heading) 6%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-panel) 92%, var(--bg-canvas)));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 20%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 10%, transparent), 0 2px 6px -3px color-mix(in srgb, var(--bg-canvas) 85%, transparent);
+    transition: transform 0.12s ease, border-color 0.16s ease, box-shadow 0.18s ease, filter 0.16s ease, background 0.16s ease, color 0.16s ease; }
+.btn:hover:not(:disabled) { border-color: var(--brand-light); color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 18%, transparent), 0 4px 16px -6px color-mix(in srgb, var(--brand-light) 60%, transparent);
+    transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(1px); filter: brightness(0.96); }
+.btn.primary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 30%, var(--brand)), var(--brand) 60%, color-mix(in srgb, var(--brand) 82%, var(--bg-canvas)));
+    border-color: var(--brand-light); color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 28%, transparent), 0 4px 16px -6px var(--brand); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.1);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 34%, transparent), 0 6px 22px -6px var(--brand-light); }
+.btn.gold {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 28%, var(--bg-panel-raised)), color-mix(in srgb, var(--gold) 14%, var(--bg-panel)));
+    border-color: var(--gold); color: var(--gold);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 28%, transparent), 0 4px 16px -8px var(--gold); }
+.btn.gold:hover:not(:disabled) { color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 40%, transparent), 0 6px 22px -6px var(--gold); }
+.btn.danger {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-error) 16%, var(--bg-panel-raised)), var(--bg-panel));
+    border-color: color-mix(in srgb, var(--color-error) 75%, var(--border)); }
+.btn.danger:hover:not(:disabled) { border-color: var(--color-error);
+    box-shadow: 0 4px 16px -6px var(--color-error); }
+
+select, input[type="text"], input[type="search"], input[type="number"] {
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease; }
+select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="number"]:focus {
+    border-color: var(--brand-light);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-light) 22%, transparent); outline: none; }
+
+/* ---- Modals, Sheets & Toasts (frosted overlay glass + smooth pop-in) ---- */
+.modal { background: color-mix(in srgb, var(--bg-canvas) 82%, transparent);
+    backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); animation: arenaFade 0.18s ease-out; }
+.modal .box {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 58%, var(--bg-panel)), var(--bg-panel) 50%, color-mix(in srgb, var(--bg-inset) 50%, var(--bg-panel)));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent), 0 24px 60px -12px var(--bg-canvas), 0 0 38px -16px var(--brand);
+    animation: arenaPop 0.22s cubic-bezier(.2, 1.1, .3, 1); }
+.sheet-bg { background: color-mix(in srgb, var(--bg-canvas) 68%, transparent);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: arenaFade 0.16s ease-out; }
+.sheet {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 56%, var(--bg-panel)), var(--bg-panel));
+    border-color: color-mix(in srgb, var(--brand-light) 35%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent), 0 24px 56px -12px var(--bg-canvas);
+    animation: arenaPop 0.2s cubic-bezier(.2, 1.08, .3, 1); }
+@keyframes arenaFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes arenaPop { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+.toast { background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 26%, var(--brand)), var(--brand));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 75%, var(--gold));
+    border-radius: 999px; padding: 10px 22px;
+    box-shadow: 0 10px 30px -6px var(--bg-canvas), 0 0 22px -6px var(--brand-light);
+    transform: translate(-50%, 10px); transition: opacity 0.25s ease, transform 0.25s cubic-bezier(.2, .9, .3, 1); }
+.toast.show { transform: translate(-50%, 0); }
+
+/* Look picker cards */
+.look-card { transition: transform 0.14s ease, border-color 0.16s ease, box-shadow 0.16s ease; }
+.look-card:hover { transform: translateY(-2px); border-color: var(--brand-light);
+    box-shadow: 0 6px 18px -10px var(--brand-light); }
+.look-card.on { box-shadow: 0 0 0 1px var(--brand-light), 0 0 18px -6px var(--brand-light); }
+
+/* ---- Home Screen Hero, Mana Orbs & Action Tiles ---- */
+.home-hero {
+    border-color: color-mix(in srgb, var(--gold) 72%, var(--brand-light));
+    background:
+        radial-gradient(95% 130% at 50% -15%, color-mix(in srgb, var(--brand-light) 42%, transparent), transparent 62%),
+        radial-gradient(60% 90% at 85% 100%, color-mix(in srgb, var(--gold) 20%, transparent), transparent 65%),
+        radial-gradient(60% 90% at 15% 100%, color-mix(in srgb, var(--brand) 28%, transparent), transparent 65%),
+        linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel) 55%, var(--bg-inset));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 35%, transparent), 0 18px 46px -18px var(--bg-canvas), 0 0 38px -14px var(--brand); }
+.home-hero::after { content: ""; position: absolute; top: 0; bottom: 0; left: -35%; width: 28%; pointer-events: none;
+    background: linear-gradient(105deg, transparent, color-mix(in srgb, var(--gold) 14%, transparent) 48%, color-mix(in srgb, var(--text-heading) 16%, transparent) 52%, transparent);
+    transform: skewX(-20deg); animation: heroSheen 9s ease-in-out infinite; }
+@keyframes heroSheen { 0%, 62% { left: -35%; opacity: 0; } 68% { opacity: 1; } 100% { left: 125%; opacity: 0; } }
+.home-pips i { width: 18px; height: 18px;
+    box-shadow: inset 0 3px 4px color-mix(in srgb, var(--text-heading) 55%, transparent), inset 0 -3px 4px color-mix(in srgb, var(--bg-canvas) 45%, transparent), 0 0 12px currentColor; }
+.home-title { letter-spacing: 0.03em;
+    text-shadow: 0 3px 0 color-mix(in srgb, var(--bg-canvas) 85%, transparent), 0 0 28px color-mix(in srgb, var(--brand-light) 75%, transparent); }
+.hstat { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 72%, transparent), color-mix(in srgb, var(--bg-canvas) 82%, transparent));
+    border-color: color-mix(in srgb, var(--brand-light) 22%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 10%, transparent), 0 4px 12px -6px var(--bg-canvas); }
+
+.home-tile { position: relative; overflow: hidden;
+    background: linear-gradient(155deg, color-mix(in srgb, var(--tc, var(--brand)) 34%, var(--bg-panel-raised)), color-mix(in srgb, var(--tc, var(--brand)) 10%, var(--bg-panel)) 55%, var(--bg-panel));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 18%, transparent), 0 4px 0 color-mix(in srgb, var(--tc, var(--brand)) 55%, var(--bg-canvas)), 0 12px 24px -14px var(--bg-canvas); }
+.home-tile::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 42%; pointer-events: none;
+    background: linear-gradient(105deg, transparent, color-mix(in srgb, var(--text-heading) 20%, transparent), transparent);
+    transform: skewX(-20deg); transition: left 0.55s ease; }
+.home-tile:hover::after { left: 130%; }
+.home-tile:hover { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 24%, transparent), 0 6px 0 color-mix(in srgb, var(--tc, var(--brand)) 60%, var(--bg-canvas)), 0 0 24px -4px var(--tc, var(--brand)); }
+.home-tile .ht-ico { filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--tc, var(--brand)) 65%, transparent)); transition: transform 0.18s ease; }
+.home-tile:hover .ht-ico { transform: scale(1.1) rotate(-3deg); }
+
+.hs-n { background: linear-gradient(160deg, color-mix(in srgb, var(--text-heading) 25%, var(--gold)), var(--gold));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 45%, transparent), 0 0 12px -2px var(--gold); }
+.cov-bar { box-shadow: inset 0 1px 3px color-mix(in srgb, var(--bg-canvas) 75%, transparent); }
+
+/* ---- Interactive 3D Holographic Card Tilt & Specular Sheen ---- */
+@media (hover: hover) and (pointer: fine) {
+    .ctile, .mx-preview, .asc-tile, .vault-slot:not(.empty) { position: relative; transition: transform 0.22s cubic-bezier(.2, .8, .2, 1), box-shadow 0.22s ease; }
+    .ctile img, .mx-preview img, .asc-tile img, .vault-slot img { transition: box-shadow 0.22s ease, filter 0.22s ease; }
+    .arena-tilting { transform: perspective(760px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg)) translateY(-4px) scale(1.025); z-index: 4; }
+    .arena-tilting img { box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--bg-canvas) 90%, transparent), 0 0 18px -4px color-mix(in srgb, var(--brand-light) 55%, transparent); }
+    .arena-tilting::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; mix-blend-mode: screen; opacity: 0.45;
+        background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), color-mix(in srgb, var(--text-heading) 55%, transparent), color-mix(in srgb, var(--brand-light) 18%, transparent) 32%, transparent 65%); }
+    .ctile.arena-tilting::after { bottom: auto; aspect-ratio: 63 / 88; border-radius: 5% / 3.6%; }
+    .mx-preview.arena-tilting { transform: perspective(900px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg)); }
+    .mx-preview.arena-tilting::after { bottom: auto; aspect-ratio: 63 / 88; border-radius: 4.75% / 3.5%; }
+}
+
+/* ---- Battle Table & Open Board Arena Polish ---- */
+#game {
+    background:
+        radial-gradient(ellipse 95% 42% at 50% 50%, color-mix(in srgb, var(--brand-light) 11%, transparent), transparent 70%),
+        repeating-linear-gradient(45deg, color-mix(in srgb, var(--brand-light) 3%, transparent) 0 2px, transparent 2px 8px),
+        radial-gradient(ellipse 85% 75% at 50% 50%, var(--felt-1), var(--felt-2) 64%, var(--bg-canvas) 100%); }
+/* Subtle battle-line glow across the center seam in Open Board */
+#game.open-board .midbar::before { content: ""; position: absolute; left: 4%; right: 4%; top: 50%; height: 1px; pointer-events: none; z-index: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-light) 35%, transparent) 22%, color-mix(in srgb, var(--gold) 45%, transparent) 50%, color-mix(in srgb, var(--brand-light) 35%, transparent) 78%, transparent); }
+#game.open-board .midbar > * { position: relative; z-index: 1; }
+
+/* Turn handoff sweep along the playmat */
+#game.turn-flash-mine::after, #game.turn-flash-theirs::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 2;
+    animation: arenaTurnSweep 0.65s ease-out forwards; }
+#game.turn-flash-mine::after { box-shadow: inset 0 0 70px -12px color-mix(in srgb, var(--gold) 65%, transparent); }
+#game.turn-flash-theirs::after { box-shadow: inset 0 0 70px -12px color-mix(in srgb, var(--color-error) 55%, transparent); }
+@keyframes arenaTurnSweep { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Enhanced Life Medallions & Impact Feedback */
+#game.open-board .life {
+    background: radial-gradient(circle at 38% 26%, color-mix(in srgb, var(--text-heading) 16%, var(--bg-panel-raised)), var(--bg-panel) 48%, var(--bg-inset) 88%);
+    box-shadow: inset 0 2px 4px color-mix(in srgb, var(--text-heading) 18%, transparent), 0 0 0 2px var(--bg-canvas), 0 6px 18px -4px color-mix(in srgb, var(--bg-canvas) 90%, transparent);
+    transition: transform 0.2s cubic-bezier(.2, 1.3, .3, 1), box-shadow 0.25s ease, border-color 0.25s ease; }
+#game.open-board #meBar .life {
+    border-color: var(--gold);
+    box-shadow: inset 0 2px 5px color-mix(in srgb, var(--gold) 32%, transparent), 0 0 0 2px var(--bg-canvas), 0 0 22px -2px color-mix(in srgb, var(--gold) 62%, transparent); }
+#game .life.life-low { border-color: var(--color-error) !important; color: var(--color-error);
+    animation: arenaLowLife 1.8s ease-in-out infinite; }
+@keyframes arenaLowLife {
+    0%, 100% { box-shadow: 0 0 0 2px var(--bg-canvas), 0 0 12px color-mix(in srgb, var(--color-error) 45%, transparent); }
+    50% { box-shadow: 0 0 0 2px var(--bg-canvas), 0 0 26px 3px color-mix(in srgb, var(--color-error) 85%, transparent); } }
+#game .life.life-hit { animation: arenaLifeHit 0.45s cubic-bezier(.36, .07, .19, .97); }
+#game .life.life-heal { animation: arenaLifeHeal 0.55s ease-out; }
+@keyframes arenaLifeHit {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.16) translateX(-3px); border-color: var(--color-error); box-shadow: 0 0 28px 4px var(--color-error); }
+    45% { transform: scale(0.96) translateX(3px); }
+    70% { transform: scale(1.04) translateX(-1px); }
+    100% { transform: scale(1); } }
+@keyframes arenaLifeHeal {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.16); border-color: var(--color-success); box-shadow: 0 0 28px 4px var(--color-success); }
+    100% { transform: scale(1); } }
+
+/* Floating life delta callouts (-4 / +3), positioned outside .life so innerText stays pure */
+.arena-delta { position: fixed; z-index: var(--z-banner); pointer-events: none; transform: translate(-50%, -50%);
+    font-family: var(--font-display); font-weight: 700; font-size: 1.55rem; letter-spacing: 0.02em;
+    padding: 2px 10px; border-radius: 999px;
+    background: color-mix(in srgb, var(--bg-canvas) 82%, transparent);
+    text-shadow: 0 2px 10px var(--bg-canvas);
+    animation: arenaDeltaFloat 0.95s cubic-bezier(.16, .9, .24, 1) forwards; }
+.arena-delta.hit { color: var(--color-error); border: 1px solid color-mix(in srgb, var(--color-error) 75%, transparent);
+    box-shadow: 0 0 18px -2px var(--color-error); }
+.arena-delta.heal { color: var(--color-success); border: 1px solid color-mix(in srgb, var(--color-success) 75%, transparent);
+    box-shadow: 0 0 18px -2px var(--color-success); }
+@keyframes arenaDeltaFloat {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.65); }
+    18% { opacity: 1; transform: translate(-50%, -14px) scale(1.15); }
+    45% { opacity: 1; transform: translate(-50%, -26px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -54px) scale(0.95); } }
+
+/* Board permanents: summon slam, sharper shadows & pulsing combat auras */
+#game .perm { transition: transform 0.22s cubic-bezier(.2, .85, .25, 1), filter 0.2s ease; }
+#game .perm:hover:not(.tapped):not(.attacking) { transform: translateY(-4px) scale(1.03); z-index: 5; }
+#game .perm img { box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--bg-canvas) 92%, transparent), 0 0 0 1px color-mix(in srgb, var(--text-heading) 10%, transparent); }
+#game .perm.just-entered { animation: arenaPermIn 0.38s cubic-bezier(.16, 1.15, .3, 1); }
+@keyframes arenaPermIn {
+    0% { opacity: 0; transform: scale(1.24) translateY(-10px); filter: brightness(1.45); }
+    65% { opacity: 1; transform: scale(0.98) translateY(1px); filter: brightness(1.1); }
+    100% { opacity: 1; transform: none; filter: none; } }
+#game .perm.attacking img { animation: arenaAtkPulse 1.5s ease-in-out infinite; }
+@keyframes arenaAtkPulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--mana-R), 0 0 16px color-mix(in srgb, var(--mana-R) 85%, transparent); }
+    50% { box-shadow: 0 0 0 3px var(--mana-R), 0 0 26px 4px color-mix(in srgb, var(--mana-R) 95%, transparent); } }
+#game .perm.selectable img, #game .perm.selectable .noimg { animation: arenaSelPulse 1.4s ease-in-out infinite; }
+@keyframes arenaSelPulse {
+    0%, 100% { box-shadow: 0 0 0 2px var(--gold), 0 0 10px color-mix(in srgb, var(--gold) 70%, transparent); }
+    50% { box-shadow: 0 0 0 3px var(--gold), 0 0 20px 2px var(--gold); } }
+#game .perm .pt { box-shadow: 0 2px 6px color-mix(in srgb, var(--bg-canvas) 85%, transparent), inset 0 1px 0 color-mix(in srgb, var(--text-heading) 16%, transparent); }
+
+/* Hand cards: Arena playable aura & draw entrance */
+.dock { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel) 55%, var(--bg-canvas)), color-mix(in srgb, var(--bg-canvas) 94%, transparent)); }
+.dock .hand .hc { transition: transform 0.18s cubic-bezier(.2, 1.1, .3, 1), filter 0.18s ease; }
+.dock .hand .hc img { box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--bg-canvas) 90%, transparent); transition: box-shadow 0.2s ease; }
+.hand .hc.playable img { box-shadow: 0 0 0 2px var(--color-success), 0 0 16px color-mix(in srgb, var(--color-success) 75%, transparent), 0 6px 16px -4px var(--bg-canvas);
+    animation: arenaPlayableGlow 2.4s ease-in-out infinite; }
+@keyframes arenaPlayableGlow {
+    0%, 100% { box-shadow: 0 0 0 2px var(--color-success), 0 0 12px color-mix(in srgb, var(--color-success) 60%, transparent), 0 6px 16px -4px var(--bg-canvas); }
+    50% { box-shadow: 0 0 0 2px var(--brand-light), 0 0 20px 1px color-mix(in srgb, var(--color-success) 88%, transparent), 0 6px 16px -4px var(--bg-canvas); } }
+.dock .hand .hc.just-drawn { animation: arenaDrawIn 0.34s cubic-bezier(.18, 1.1, .3, 1) backwards; }
+@keyframes arenaDrawIn { from { opacity: 0; transform: translate(36px, 28px) rotate(12deg) scale(0.86); } }
+
+/* Phase Rail, Stack & Turn Button */
+#game .phase-strip { box-shadow: inset 0 1px 4px color-mix(in srgb, var(--bg-canvas) 85%, transparent), 0 2px 10px -4px var(--bg-canvas); }
+.turn-btn { position: relative; overflow: hidden;
+    background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+    transition: transform 0.14s ease, box-shadow 0.2s ease, background 0.2s ease, filter 0.16s ease; }
+.turn-btn.ready {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 34%, var(--bg-panel-raised)), color-mix(in srgb, var(--gold) 16%, var(--bg-panel)));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 24%, transparent), 0 0 18px color-mix(in srgb, var(--gold) 45%, transparent); }
+.turn-btn.ready:hover { filter: brightness(1.1); transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 32%, transparent), 0 0 26px color-mix(in srgb, var(--gold) 70%, transparent); }
+.turn-btn.ready::after { content: ""; position: absolute; top: 0; bottom: 0; left: -45%; width: 32%; pointer-events: none;
+    background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--text-heading) 24%, transparent), transparent);
+    transform: skewX(-18deg); animation: go-sweep 3.2s ease-in-out infinite; }
+.stack-item { background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+    box-shadow: 0 4px 12px -4px var(--bg-canvas); transition: transform 0.14s ease, box-shadow 0.16s ease; }
+.stack-item:hover { transform: translateY(-1px); border-color: var(--brand-light); }
+
+/* Card Peek & Play-by-Play Banner */
+.card-peek img { border-radius: 14px; border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--border));
+    box-shadow: 0 20px 44px -8px var(--bg-canvas), 0 0 28px -8px color-mix(in srgb, var(--brand-light) 45%, transparent); }
+.peek-stats { background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-inset)); border-color: color-mix(in srgb, var(--gold) 50%, var(--border)); }
+.act-banner { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 94%, transparent), color-mix(in srgb, var(--bg-panel) 96%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 24%, transparent), 0 16px 42px -8px var(--bg-canvas), 0 0 24px -10px var(--gold); }
+
+/* ---- Deck Builder, Precons, Welcome Decks & Packs ---- */
+.mx-bar { background: color-mix(in srgb, var(--bg-panel-raised) 88%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-color: color-mix(in srgb, var(--brand-light) 35%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent), 0 -10px 28px -8px color-mix(in srgb, var(--bg-canvas) 80%, transparent); }
+.mx-row { padding: 3px 6px; transition: background 0.14s ease, box-shadow 0.14s ease; }
+.mx-row:hover { box-shadow: inset 2px 0 0 var(--brand-light); }
+.wd-card, .opp {
+    background: linear-gradient(165deg, color-mix(in srgb, var(--brand) 10%, var(--bg-panel-raised)), var(--bg-panel));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 8%, transparent), 0 4px 14px -10px var(--bg-canvas);
+    transition: transform 0.14s ease, border-color 0.16s ease, box-shadow 0.16s ease; }
+.wd-card:hover { transform: translateY(-2px); border-color: var(--brand-light); box-shadow: 0 6px 18px -10px var(--brand-light); }
+.wd-card[aria-pressed="true"] { background: linear-gradient(160deg, color-mix(in srgb, var(--gold) 18%, var(--bg-panel-raised)), var(--bg-panel));
+    box-shadow: 0 0 0 1px var(--gold), 0 0 16px -4px var(--gold); }
+.chip { transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, color 0.14s ease; }
+.chip:hover { border-color: var(--brand-light); color: var(--text-heading); }
+.chip.on { background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 26%, var(--brand)), var(--brand));
+    border-color: var(--brand-light); box-shadow: 0 0 12px -4px var(--brand-light); }
+
+/* ---- Campaign (Planeswalker's Ascent) & Shop Simulator ---- */
+.shop-floor {
+    border: 1px solid color-mix(in srgb, var(--brand-light) 20%, var(--border-subtle));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 8%, transparent), 0 16px 40px -20px var(--bg-canvas); }
+.pos { box-shadow: 0 10px 30px -14px var(--bg-canvas), inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent); }
+.pos-stats > div {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 55%, var(--bg-inset)), color-mix(in srgb, var(--bg-inset) 82%, transparent));
+    border-color: color-mix(in srgb, var(--brand-light) 18%, var(--border-subtle));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 7%, transparent); }
+.tier-band { background: linear-gradient(165deg, color-mix(in srgb, var(--bg-panel-raised) 45%, var(--bg-inset)), color-mix(in srgb, var(--bg-inset) 70%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 7%, transparent); }
+.trail-node .dot { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 20%, transparent), 0 4px 12px -4px var(--bg-canvas);
+    transition: transform 0.16s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.trail-node.sel .dot { box-shadow: 0 0 0 3px var(--gold), 0 0 18px -2px var(--gold); animation: arenaNodePulse 2s ease-in-out infinite; }
+@keyframes arenaNodePulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--gold), 0 0 14px -2px var(--gold); }
+    50% { box-shadow: 0 0 0 3px var(--gold), 0 0 24px 2px var(--gold); } }
+.asc-bubble { background: linear-gradient(165deg, var(--bg-panel-raised), var(--bg-panel));
+    border-color: color-mix(in srgb, var(--brand-light) 26%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 10%, transparent), 0 6px 18px -12px var(--bg-canvas); }
+.offer-card { background: linear-gradient(165deg, color-mix(in srgb, var(--brand) 10%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-panel) 78%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 9%, transparent);
+    transition: transform 0.15s ease, border-color 0.16s ease, box-shadow 0.16s ease; }
+.offer-card:hover { transform: translateY(-2px); border-color: var(--brand-light); box-shadow: 0 8px 20px -12px var(--brand-light); }
+.cust { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 9%, transparent), 0 6px 16px -10px var(--bg-canvas); }
+.patience span { background: linear-gradient(90deg, var(--brand-light), var(--gold)); }
+.vault-slot:not(.empty) { box-shadow: 0 0 18px -4px var(--gold), 0 8px 18px -8px var(--bg-canvas); }
+
+/* ---- Phone Bottom Navigation Glass ---- */
+@media (max-width: 600px) {
+    .bottom-nav { background: color-mix(in srgb, var(--bg-panel) 88%, transparent);
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border-top-color: color-mix(in srgb, var(--brand-light) 30%, var(--border));
+        box-shadow: 0 -8px 24px -10px var(--bg-canvas); }
+    .bottom-nav button[aria-current="page"] {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 28%, transparent), transparent);
+        box-shadow: inset 0 2px 0 var(--gold); }
+    .modebar { padding: 4px; }
+    .panel { padding: 12px; }
+}
+
+/* ---- Reduced Motion Safety ---- */
+@media (prefers-reduced-motion: reduce) {
+    main > section:not(.hidden), .home-hero::after, .modal, .modal .box, .sheet-bg, .sheet,
+    #game.turn-flash-mine::after, #game.turn-flash-theirs::after, #game .life.life-low,
+    #game .life.life-hit, #game .life.life-heal, .arena-delta, #game .perm.just-entered,
+    #game .perm.attacking img, #game .perm.selectable img, #game .perm.selectable .noimg,
+    .hand .hc.playable img, .dock .hand .hc.just-drawn, .turn-btn.ready::after, .trail-node.sel .dot {
+        animation: none !important;
+    }
+    .home-hero::after, .turn-btn.ready::after, .home-tile::after { display: none; }
+    .arena-tilting { transform: none !important; }
+    .arena-tilting::after { display: none; }
+}
