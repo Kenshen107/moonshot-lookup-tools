@@ -42,8 +42,8 @@
             if (!r.width || !r.height) return;
             const px = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
             const py = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
-            const ry = ((px - 0.5) * 12).toFixed(2);
-            const rx = ((0.5 - py) * 12).toFixed(2);
+            const ry = ((px - 0.5) * 8).toFixed(2);
+            const rx = ((0.5 - py) * 8).toFixed(2);
             el.style.setProperty('--tilt-rx', rx + 'deg');
             el.style.setProperty('--tilt-ry', ry + 'deg');
             el.style.setProperty('--glare-x', (px * 100).toFixed(1) + '%');

@@ -671,16 +671,24 @@ function fitTable() {
     fitHand();
 }
 window.addEventListener('resize', () => fitTable());
-// Big preview of whatever card you point at (mouse only)
+// Big preview of whatever card you point at (desktop fine mouse only; never stuck on touch phones, never rebuilds DOM on child micro-moves)
 document.addEventListener('mouseover', e => {
     const peek = $('cardPeek');
-    if (!peek || !G || !matchMedia('(hover: hover)').matches) return;
+    if (!peek || !G || isPhone() || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     const el = e.target.closest && e.target.closest('#game [data-uid]');
-    if (!el) { peek.classList.add('hidden'); return; }
+    if (!el) { peek.classList.add('hidden'); delete peek.dataset.uid; return; }
+    // On desktop Open Board, hovered hand cards already glide up at full readability, so skip redundant side-peek flicker
+    if (el.classList.contains('hc') && typeof openBoard === 'function' && openBoard()) {
+        peek.classList.add('hidden'); delete peek.dataset.uid; return;
+    }
     const o = findObj(Number(el.dataset.uid));
-    if (!o || !o.card.img) { peek.classList.add('hidden'); return; }
+    if (!o || !o.card.img) { peek.classList.add('hidden'); delete peek.dataset.uid; return; }
     const rect = el.getBoundingClientRect();
-    peek.innerHTML = `<img src="${o.card.img}" alt="">${onBf(o.uid) && isCreature(o) ? `<div class="peek-stats">${pow(o)}/${tou(o) - o.dmg}${o.counters ? ` · ${o.counters > 0 ? '+1/+1' : '-1/-1'} ×${Math.abs(o.counters)}` : ''}</div>` : ''}`;
+    const uidKey = `${o.uid}:${onBf(o.uid) && isCreature(o) ? `${pow(o)}/${tou(o) - o.dmg}/${o.counters}` : ''}`;
+    if (peek.dataset.uid !== uidKey) {
+        peek.dataset.uid = uidKey;
+        peek.innerHTML = `<img src="${o.card.img}" alt="">${onBf(o.uid) && isCreature(o) ? `<div class="peek-stats">${pow(o)}/${tou(o) - o.dmg}${o.counters ? ` · ${o.counters > 0 ? '+1/+1' : '-1/-1'} ×${Math.abs(o.counters)}` : ''}</div>` : ''}`;
+    }
     peek.classList.toggle('left', rect.left + rect.width / 2 > innerWidth / 2);
     peek.classList.remove('hidden');
 });

@@ -356,7 +356,7 @@
         .opp small { color: var(--text-secondary); }
 
         /* ---- The game table ---- */
-        #game { position: fixed; inset: 0; z-index: var(--z-game); background: radial-gradient(ellipse at center, var(--felt-1), var(--felt-2) 70%, var(--bg-canvas)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto auto; overflow: hidden; }
+        #game { position: fixed; inset: 0; height: 100vh; height: 100dvh; z-index: var(--z-game); background: radial-gradient(ellipse at center, var(--felt-1), var(--felt-2) 70%, var(--bg-canvas)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto auto; overflow: hidden; }
         .pbar { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 6px 14px; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); border-bottom: 1px solid var(--border-subtle); }
         .talk-layer { position: fixed; top: 74px; right: 12px; width: min(340px, calc(100vw - 24px)); display: flex; flex-direction: column; gap: 8px; z-index: var(--z-banner); pointer-events: none; }
         .talk-bubble { pointer-events: auto; display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius-lg); background: var(--panel-base); border: 1px solid var(--brand-light); color: var(--text-primary); font-size: 0.9em; box-shadow: 0 6px 22px var(--bg-canvas); animation: tbIn 0.25s ease-out; cursor: pointer; }
@@ -538,8 +538,10 @@
         .seg button { background: var(--bg-panel); border: 0; color: var(--text-soft); padding: 1px 9px; font-size: 0.8rem; }
         .seg button[aria-pressed="true"] { background: var(--brand); color: var(--text-heading); }
         .dock .hand { gap: 0; justify-content: center; overflow: visible; background: none; padding: 14px 28px 22px; min-height: calc(var(--hand-h) + 36px); }
-        .dock .hand .hc { width: calc(var(--hand-h) * 63 / 88); transform: translateY(var(--dip, 0px)) rotate(var(--rot, 0deg)); transform-origin: 50% 100%; }
-        .dock .hand .hc:hover, .dock .hand .hc:focus-visible { transform: translateY(-16px) scale(1.12); z-index: var(--z-lift) !important; }
+        .dock .hand .hc { width: calc(var(--hand-h) * 63 / 88); transform: none; }
+        .dock .hand .hc img, .dock .hand .hc .noimg { transform: translateY(var(--dip, 0px)) rotate(var(--rot, 0deg)); transform-origin: 50% 100%; transition: transform 0.16s ease, box-shadow 0.18s ease; }
+        .dock .hand .hc:hover, .dock .hand .hc:focus-visible { transform: none; z-index: var(--z-lift) !important; }
+        .dock .hand .hc:hover img, .dock .hand .hc:focus-visible img, .dock .hand .hc:hover .noimg, .dock .hand .hc:focus-visible .noimg { transform: translateY(-16px) scale(1.12); }
         .logwrap { border-left: 1px solid var(--border-subtle); padding: 4px 8px; min-width: 0; }
         .logwrap .log { max-height: calc(var(--hand-h) + 10px); background: none; padding: 4px 2px; }
         .logwrap summary { cursor: pointer; }
@@ -583,7 +585,7 @@
         .hand .hc { width: var(--hand-w); flex: none; border: 0; background: none; padding: 0; transition: transform 0.15s; position: relative; }
         .hand .hc img, .hand .hc .noimg { width: 100%; aspect-ratio: 63 / 88; display: block; border-radius: 6px; object-fit: cover; background: var(--bg-inset); }
         .hand .hc .noimg { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; text-align: center; padding: 4px; border: 1px solid var(--border); }
-        .hand .hc:hover { transform: translateY(-8px); }
+        .hand .hc:hover img, .hand .hc:hover .noimg { transform: translateY(-8px); }
         .hand .hc.playable img { box-shadow: 0 0 0 2px var(--color-success), 0 0 10px var(--color-success); }
         .hand .hc.chosen img { box-shadow: 0 0 0 3px var(--gold); }
         .hand .hc .sup { position: absolute; top: 4px; right: 4px; }
@@ -1700,16 +1702,18 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 45%, transparent), 0 0 12px -2px var(--gold); }
 .cov-bar { box-shadow: inset 0 1px 3px color-mix(in srgb, var(--bg-canvas) 75%, transparent); }
 
-/* ---- Interactive 3D Holographic Card Tilt & Specular Sheen ---- */
+/* ---- Interactive 3D Holographic Card Tilt & Specular Sheen (tilts inner <img> only so hit-box never moves or flickers!) ---- */
 @media (hover: hover) and (pointer: fine) {
-    .ctile, .mx-preview, .asc-tile, .vault-slot:not(.empty) { position: relative; transition: transform 0.22s cubic-bezier(.2, .8, .2, 1), box-shadow 0.22s ease; }
-    .ctile img, .mx-preview img, .asc-tile img, .vault-slot img { transition: box-shadow 0.22s ease, filter 0.22s ease; }
-    .arena-tilting { transform: perspective(760px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg)) translateY(-4px) scale(1.025); z-index: 4; }
-    .arena-tilting img { box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--bg-canvas) 90%, transparent), 0 0 18px -4px color-mix(in srgb, var(--brand-light) 55%, transparent); }
-    .arena-tilting::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; mix-blend-mode: screen; opacity: 0.45;
-        background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), color-mix(in srgb, var(--text-heading) 55%, transparent), color-mix(in srgb, var(--brand-light) 18%, transparent) 32%, transparent 65%); }
+    .ctile, .mx-preview, .asc-tile, .vault-slot:not(.empty) { position: relative; }
+    .ctile img, .mx-preview img, .asc-tile img, .vault-slot img { transition: transform 0.22s cubic-bezier(.2, .8, .2, 1), box-shadow 0.22s ease, filter 0.22s ease; will-change: transform; }
+    .arena-tilting { z-index: 4; }
+    .arena-tilting > img { transform: perspective(760px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg)) scale(1.02);
+        transition: transform 0.08s ease-out, box-shadow 0.18s ease;
+        box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--bg-canvas) 90%, transparent), 0 0 18px -4px color-mix(in srgb, var(--brand-light) 55%, transparent); }
+    .arena-tilting::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; mix-blend-mode: screen; opacity: 0.4;
+        background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), color-mix(in srgb, var(--text-heading) 50%, transparent), color-mix(in srgb, var(--brand-light) 16%, transparent) 32%, transparent 65%); }
     .ctile.arena-tilting::after { bottom: auto; aspect-ratio: 63 / 88; border-radius: 5% / 3.6%; }
-    .mx-preview.arena-tilting { transform: perspective(900px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg)); }
+    .mx-preview.arena-tilting > img { transform: perspective(900px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg)); }
     .mx-preview.arena-tilting::after { bottom: auto; aspect-ratio: 63 / 88; border-radius: 4.75% / 3.5%; }
 }
 
@@ -2546,7 +2550,7 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     #game.open-board .gear-lbl { font-family: var(--font-display); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-soft); }
     #game.open-board .gear-menu .mm-word { display: inline; }
 
-    /* Half-Sunk MTG Arena Hand Fan (+80px more battlefield room! Hover rises smoothly to reveal full rules text!) */
+    /* Half-Sunk MTG Arena Hand Fan (+80px more battlefield room! Stationary .hc hit-box + animated child <img> = ZERO hover flicker!) */
     #game.open-board .hand-wrap { max-width: calc(100vw - 380px); }
     #game.open-board .dock { overflow: visible; }
     #game.open-board .dock .hand {
@@ -2556,11 +2560,25 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
         align-items: flex-start;
         overflow: visible; }
     #game.open-board .dock .hand .hc {
+        transform: none !important;
+        transition: none; }
+    #game.open-board .dock .hand .hc img,
+    #game.open-board .dock .hand .hc .noimg {
         transform: translateY(var(--dip, 0px)) rotate(var(--rot, 0deg));
-        transition: transform 0.2s cubic-bezier(.18, 1.12, .28, 1), filter 0.18s ease; }
-    #game.open-board .dock .hand .hc:hover, #game.open-board .dock .hand .hc:focus-visible {
-        transform: translateY(calc(var(--hand-h) * -0.58 - 18px)) scale(1.24);
+        transform-origin: 50% 100%;
+        transition: transform 0.18s cubic-bezier(.18, 1.06, .28, 1), box-shadow 0.18s ease;
+        will-change: transform; }
+    #game.open-board .dock .hand .hc:hover,
+    #game.open-board .dock .hand .hc:focus-visible {
+        transform: none !important;
         z-index: var(--z-lift) !important; }
+    #game.open-board .dock .hand .hc:hover img,
+    #game.open-board .dock .hand .hc:focus-visible img,
+    #game.open-board .dock .hand .hc:hover .noimg,
+    #game.open-board .dock .hand .hc:focus-visible .noimg {
+        transform: translateY(calc(var(--hand-h) * -0.52 - 14px)) scale(1.22); }
+    #game.open-board .dock .hand .hc:hover .sup,
+    #game.open-board .dock .hand .hc:focus-visible .sup { opacity: 0; }
     #game.open-board #meBar { padding-bottom: 2px; }
     #game.open-board #meBar .av-medallion .life { margin-top: -18px; }
 }
@@ -2615,17 +2633,19 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
         var(--bg-canvas); }
 #game.open-board::before { display: none; }
 
-/* Custom generated ornate deck card-back on 3D Library stack & opponent hand backs */
-#game.open-board .pile-deck {
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--brand) 12%, transparent), color-mix(in srgb, var(--bg-canvas) 18%, transparent)),
-        url('art/ui/arena-cardback.jpg') center / cover no-repeat,
-        repeating-linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, var(--bg-inset)) 0 4px, var(--felt-2) 4px 8px);
-    border: 1.5px solid color-mix(in srgb, var(--gold) 78%, var(--text-heading));
-    box-shadow: -2px 2px 0 color-mix(in srgb, var(--gold) 35%, var(--bg-panel-raised)),
-                -4px 4px 0 var(--bg-panel),
-                -6px 6px 0 var(--bg-inset),
-                -7px 9px 18px var(--bg-canvas); }
+/* Custom generated ornate deck card-back on 3D Library stack (desktop >= 760px ONLY so phone inline zone badges stay clean!) */
+@media (min-width: 760px) {
+    #game.open-board .pile-deck {
+        background:
+            linear-gradient(180deg, color-mix(in srgb, var(--brand) 12%, transparent), color-mix(in srgb, var(--bg-canvas) 18%, transparent)),
+            url('art/ui/arena-cardback.jpg') center / cover no-repeat,
+            repeating-linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, var(--bg-inset)) 0 4px, var(--felt-2) 4px 8px);
+        border: 1.5px solid color-mix(in srgb, var(--gold) 78%, var(--text-heading));
+        box-shadow: -2px 2px 0 color-mix(in srgb, var(--gold) 35%, var(--bg-panel-raised)),
+                    -4px 4px 0 var(--bg-panel),
+                    -6px 6px 0 var(--bg-inset),
+                    -7px 9px 18px var(--bg-canvas); }
+}
 
 /* ZERO SCROLLBARS on desktop Open Board battlefields! */
 @media (min-width: 760px) {
@@ -2650,31 +2670,35 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     #game.open-board.pod-mode #oppBar .av-crest { display: none; }
 }
 
-/* ---- Sculpted MTG Arena Battlefield Card Assets ---- */
+/* ---- Sculpted MTG Arena Battlefield Card Assets (scoped to .lane:not(.compact) so mobile compact tiles stay crisp!) ---- */
 /* 1. Beveled metallic P/T shield (white-silver bevel, Arena blue buffed numerals, crimson hurt numerals) */
-#game.open-board .perm .pt {
+#game.open-board .lane:not(.compact) .perm .pt {
     font-family: var(--font-display); font-weight: 800; font-size: 0.82rem; line-height: 1.15;
     padding: 1px 7px; border-radius: 6px; right: 3px; bottom: 3px;
     background: linear-gradient(180deg, color-mix(in srgb, var(--text-heading) 96%, var(--bg-panel)), color-mix(in srgb, var(--text-soft) 82%, var(--bg-panel)));
     color: var(--bg-canvas);
     border: 1.5px solid color-mix(in srgb, var(--gold) 65%, var(--bg-canvas));
     box-shadow: inset 0 1px 0 var(--text-heading), 0 2px 6px var(--bg-canvas); }
-#game.open-board .perm .pt.up { color: var(--brand); border-color: var(--brand-light);
+#game.open-board .lane:not(.compact) .perm .pt.up { color: var(--brand); border-color: var(--brand-light);
     box-shadow: inset 0 1px 0 var(--text-heading), 0 0 10px -1px var(--brand-light), 0 2px 6px var(--bg-canvas); }
-#game.open-board .perm .pt.hurt { color: var(--mana-R); border-color: var(--mana-R);
+#game.open-board .lane:not(.compact) .perm .pt.hurt { color: var(--mana-R); border-color: var(--mana-R);
     box-shadow: inset 0 1px 0 var(--text-heading), 0 0 10px -1px var(--mana-R), 0 2px 6px var(--bg-canvas); }
 #game.open-board .lane.arena-dense .perm .pt { font-size: 0.7rem; padding: 0 5px; right: 2px; bottom: 2px; }
 
 /* 2. Sapphire-blue glowing circular +1/+1 counter orb pinned top-right (exact MTG Arena look!) */
-#game.open-board .perm .chips { top: 3px; right: 3px; left: auto; bottom: auto; flex-direction: column; align-items: flex-end; max-width: none; gap: 2px; }
-#game.open-board .perm .chip.c-plus {
+#game.open-board .lane:not(.compact) .perm .chips { top: 3px; right: 3px; left: auto; bottom: auto; flex-direction: column; align-items: flex-end; max-width: none; gap: 2px; }
+#game.open-board .lane:not(.compact) .perm .chip.c-plus {
     width: 22px; height: 22px; padding: 0; border-radius: 50%; display: grid; place-items: center;
     font-family: var(--font-display); font-size: 0.78rem; font-weight: 800;
     background: radial-gradient(circle at 35% 28%, var(--brand-light), var(--mana-U) 55%, var(--brand) 100%);
     color: var(--text-heading); border: 1.5px solid color-mix(in srgb, var(--text-heading) 75%, var(--brand-light));
     box-shadow: 0 0 10px color-mix(in srgb, var(--mana-U) 80%, transparent), 0 2px 5px var(--bg-canvas); }
 #game.open-board .lane.arena-dense .perm .chip.c-plus { width: 17px; height: 17px; font-size: 0.66rem; }
-#game.open-board .perm .chip.c-cmd { background: color-mix(in srgb, var(--gold) 26%, var(--bg-canvas)); border-color: var(--gold); border-radius: 999px; }
+#game.open-board .lane:not(.compact) .perm .chip.c-cmd { background: color-mix(in srgb, var(--gold) 26%, var(--bg-canvas)); border-color: var(--gold); border-radius: 999px; }
+/* Compact tiles keep clean inline sapphire pill for +1/+1 counters */
+#game.open-board .lane.compact .perm .chip.c-plus {
+    background: color-mix(in srgb, var(--mana-U) 85%, var(--brand)); color: var(--text-heading);
+    border: 1px solid var(--brand-light); border-radius: 999px; padding: 0 5px; font-weight: 700; }
 
 /* 3. Crisp Inline SVG Keyword Medallions along bottom-left of creatures */
 .kw-strip { position: absolute; left: 3px; bottom: 3px; z-index: 3; display: flex; gap: 2px; pointer-events: none; }
@@ -2695,19 +2719,19 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
 #game .lane.compact .kw-strip { display: none; }
 
 /* 4. Ornate Legendary Crown Header + Token Arched Accent + Physical Shingled Stacks */
-#game.open-board .perm.is-legendary img, #game.open-board .perm.is-legendary .noimg {
+#game.open-board .lane:not(.compact) .perm.is-legendary img, #game.open-board .lane:not(.compact) .perm.is-legendary .noimg {
     border-top: 2.5px solid var(--gold);
     box-shadow: 0 -2px 10px -2px color-mix(in srgb, var(--gold) 65%, transparent), 0 6px 16px -4px var(--bg-canvas); }
-#game.open-board .perm.is-token img { border: 1.5px solid color-mix(in srgb, var(--text-soft) 55%, var(--border)); }
-#game.open-board .perm.pile { margin-left: 8px; }
-#game.open-board .perm.pile img {
+#game.open-board .lane:not(.compact) .perm.is-token img { border: 1.5px solid color-mix(in srgb, var(--text-soft) 55%, var(--border)); }
+#game.open-board .lane:not(.compact) .perm.pile { margin-left: 8px; }
+#game.open-board .lane:not(.compact) .perm.pile img {
     box-shadow: -3px -2px 0 -0.5px color-mix(in srgb, var(--text-soft) 35%, var(--bg-panel-raised)),
                 -3px -2px 0 0.5px var(--bg-canvas),
                 -6px -4px 0 -0.5px color-mix(in srgb, var(--text-soft) 25%, var(--bg-panel)),
                 -6px -4px 0 0.5px var(--bg-canvas),
                 -9px -6px 0 -0.5px var(--bg-inset),
                 0 6px 16px -4px var(--bg-canvas); }
-#game.open-board .pile-n {
+#game.open-board .lane:not(.compact) .pile-n {
     left: -4px; top: -6px; right: auto; bottom: auto; transform: none; z-index: 4;
     font-family: var(--font-display); font-size: 0.72rem; font-weight: 800; padding: 1px 6px; border-radius: 5px;
     background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-canvas));
@@ -2725,6 +2749,69 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     @keyframes arenaStackFire {
         0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 55%, transparent), 0 0 22px 1px color-mix(in srgb, var(--mythic) 55%, transparent), 0 14px 36px -6px var(--bg-canvas); }
         50% { box-shadow: 0 0 0 1.5px var(--gold), 0 0 34px 5px color-mix(in srgb, var(--mythic) 80%, transparent), 0 14px 36px -6px var(--bg-canvas); } }
+}
+
+/* =====================================================================
+   Phone & Touch-Device Layout Polish (<= 600px, always last so desktop
+   Arena overrides never leak onto small screens!)
+   ===================================================================== */
+@media (max-width: 600px), (hover: none) {
+    #cardPeek { display: none !important; }
+}
+@media (max-width: 600px) {
+    /* 1. Compact 4-player Commander seat strip: readable names, tight life pill, full-width stats */
+    #game.pod-mode .pod-strip { flex-wrap: wrap; gap: 4px; }
+    #game.pod-mode .pod-chip.seat {
+        flex: 1 1 calc(33.33% - 4px); min-width: 0; padding: 4px 5px 6px; border-radius: 8px;
+        column-gap: 4px; row-gap: 2px;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "av main life" "stats stats stats"; }
+    #game.pod-mode .seat-av { width: 22px; height: 22px; border-radius: 5px; border-width: 1.5px; }
+    #game.pod-mode .seat-av-clip { border-radius: 4px; }
+    #game.pod-mode .seat-mood { display: none; }
+    #game.pod-mode .seat-main b { font-size: 0.74rem; gap: 2px; }
+    #game.pod-mode .seat-cmdr, #game.pod-mode .seat-lib, #game.pod-mode .seat-tags { display: none; }
+    #game.pod-mode .seat-life-wrap { min-width: 24px; padding: 1px 5px; border-radius: 5px; }
+    #game.pod-mode .seat-life { font-size: 0.88rem; }
+    #game.pod-mode .seat-stats { gap: 4px; font-size: 0.64rem; }
+    #game.pod-mode .pod-utils { flex-direction: row; flex: 1 1 100%; justify-content: flex-end; gap: 4px; }
+    #game.pod-mode .pod-utils .pod-chip { padding: 2px 8px; font-size: 0.72rem; }
+    #game.pod-mode .pod-utils .pod-chip.meters { display: none; }
+
+    /* 2. Slim single-row #oppBar & #meBar on phones (reclaims ~110px of vertical battlefield space!) */
+    #game.open-board .pbar { padding: 3px 8px; gap: 4px 6px; }
+    #game.open-board .life { width: 34px; height: 34px; font-size: 0.96rem; border-width: 2px; }
+    #game.open-board.pod-mode #oppBar .life:not(.targetable) { display: none; }
+    #game.open-board #meBar .arena-av, #game.open-board #oppBar .arena-av { display: none; }
+    #game.open-board .pile-card { width: auto; height: auto; padding: 0; border: 0; background: none; box-shadow: none; transform: none; }
+    #game.open-board .pile-cnt { background: none; border: 0; padding: 0; font-size: 0.8rem; }
+    #game.open-board .zones { gap: 6px; padding: 1px 6px; }
+    #game.open-board #oppBar .btn.small, #game.open-board #meBar .btn.small { padding: 2px 7px; font-size: 0.74rem; min-height: 26px; white-space: nowrap; flex: none; }
+    #game.open-board #meBar .who { display: none; }
+    #game.open-board #meBar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    #game.open-board #meBar::-webkit-scrollbar { display: none; }
+    #game.open-board #meBar > *, #game.open-board #meBar .cmd-chip, #game.open-board #meBar .zones, #game.open-board #meBar .pool { flex: none; white-space: nowrap; }
+    #game.open-board.pod-mode #oppBar .bar-left, #game.open-board.pod-mode #oppBar .bar-right { font-size: 0.78rem; }
+
+    /* 3. Clean mobile battlefields, compact tile chip clearance & unobstructed .board-sum badges */
+    #game.open-board .side { padding: 3px 6px; gap: 3px; overflow-y: auto; margin: 0; }
+    #game.open-board .lane.compact .perm .pt { font-size: 0.66rem; padding: 0 4px; }
+    #game.open-board .lane.compact .perm .chips { gap: 1px; }
+    #game.open-board .lane.compact .perm .chip { font-size: 0.64rem; padding: 0 3px; }
+    #game.open-board .board-sum { top: 1px; right: 2px; left: auto; font-size: 0.66rem; padding: 0 6px; }
+    #game.open-board .opp-side .board-sum { top: auto; bottom: 1px; right: 2px; left: auto; }
+    #game.open-board .lane:not(.compact) .perm.pile { margin-left: 5px; }
+    #game.open-board .lane:not(.compact) .pile-n { font-size: 0.64rem; padding: 0 4px; top: -4px; left: -3px; }
+
+    /* 4. Clean phone hand toggle & bottom action dock */
+    #game .phone-hand-toggle.phone-only { margin: 2px auto 1px; padding: 2px 12px; }
+    #game:not(.phone-hand-open) .dock .hand { max-height: 74px; padding: 3px 8px 0; }
+    #game.phone-hand-open .dock .hand { max-height: none; padding: 4px 8px 6px; }
+    #game.open-board .dock .hand .hc img, #game.open-board .dock .hand .hc .noimg { transform: none !important; transition: none; }
+    #game.open-board #midBar { padding: 4px 8px calc(6px + env(safe-area-inset-bottom)); gap: 4px; }
+    #game.open-board #midBar .turn-btn { min-height: 46px; min-width: 92px; padding: 4px 10px; }
+    #game.open-board #midBar .combat-pill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.7rem; padding: 2px 8px; }
+    #game.open-board #midBar .prompt { font-size: 0.8rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
