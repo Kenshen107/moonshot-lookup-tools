@@ -2626,6 +2626,8 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
 
 .arena-motes { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; display: none; }
 #game.open-board .arena-motes { display: block; }
+.arena-life { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; display: none; }
+#game.open-board .arena-life { display: block; }
 .av-crest { display: none; }
 
 /* Custom generated Arena playmat + light token color-grading veil so all 7 Looks harmonize while stone carvings, corner lanterns & brushed gold shine */
@@ -2824,7 +2826,7 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .arena-motes { display: none !important; }
+    .arena-motes, .arena-life { display: none !important; }
     #game.open-board #midBar .stackbar .stack-item.top { animation: none !important; }
     .arena-prop { animation: none !important; transition: none !important; }
 }
