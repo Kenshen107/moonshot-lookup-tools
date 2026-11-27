@@ -25,7 +25,10 @@ async function ascProbeArt() {
     ];
     await Promise.all(tasks);
     if (typeof ascUiApply === 'function') ascUiApply();
-    if (Object.values(ASC_ART.ok).some(Boolean) || (typeof ASC_UI !== 'undefined' && Object.values(ASC_UI.ok).some(Boolean))) renderAscentIfOpen();
+    if (Object.values(ASC_ART.ok).some(Boolean) || (typeof ASC_UI !== 'undefined' && Object.values(ASC_UI.ok).some(Boolean))) {
+        renderAscentIfOpen();
+        if (typeof G !== 'undefined' && G && $('game') && !$('game').classList.contains('hidden') && typeof renderGame === 'function') renderGame();
+    }
 }
 
 // ---- Portraits and dialogue ----

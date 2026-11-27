@@ -32,7 +32,13 @@ function boardToggleHTML(reopen) {
         if (!openBoard()) return base.apply(this, arguments);
         const m = G.mode, out = [], byKey = new Map();
         list.forEach(o => {
-            const plain = !m && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.dmg && !o.tp && !o.tq && !o.tkw.length
+            const mCanPick = m && (
+                (m.type === 'target' && (m.valid || []).some(v => v.o && v.o.uid === o.uid))
+                || (m.type === 'attack' && o.owner === G.view && canAttackWith(o))
+                || (m.type === 'block' && ((o.owner === G.view && isCreature(o) && !o.tapped) || (o.owner !== G.view && G.attackers.includes(o.uid))))
+                || (m.type === 'pay' && o.owner === G.view && helpsPay(me(), o))
+            );
+            const plain = !mCanPick && !o.attachedTo && !allPerms().some(a => a.attachedTo === o.uid) && !o.dmg && !o.tp && !o.tq && !o.tkw.length
                 && !G.attackers.includes(o.uid) && !Object.values(G.blocks).some(bs => bs.includes(o.uid)) && !o.isCommander;
             if (!plain) { out.push([o]); return; }
             const land = Rx(o).kind === 'land' && !isCreature(o);
@@ -57,7 +63,7 @@ function stackSheet() {
         const m = G.mode;
         if (m && m.type === 'target' && G.stack.some(it => m.valid.some(v => v.item && v.item.id === it.id))) return base.apply(this, arguments); // a target on the stack: show them all
         const it = G.stack[G.stack.length - 1];
-        return `<div class="stackbar open" aria-label="The stack, top first"><span class="lane-label">Stack</span><button type="button" class="stack-item top" onclick="stackClick(${it.id})" title="${esc(it.name)}">${it.o.card.imgS ? `<img src="${it.o.card.imgS}" alt="">` : ''}<span>${esc(it.name)}${it.target ? ` → ${esc(targetName(it.target))}` : ''}</span></button><button type="button" class="stack-more" onclick="stackSheet()" title="See everything on the stack">+${G.stack.length - 1} more</button></div>`;
+        return `<div class="stackbar open" aria-label="The stack, top first"><span class="lane-label">Stack</span><button type="button" class="stack-item top" data-stack-id="${it.id}" onclick="stackClick(${it.id})" title="${esc(it.name)}">${it.o.card.imgS ? `<img src="${it.o.card.imgS}" alt="">` : ''}<span>${esc(it.name)}${it.target ? ` → ${esc(targetName(it.target))}` : ''}</span></button><button type="button" class="stack-more" onclick="stackSheet()" title="See everything on the stack">+${G.stack.length - 1} more</button></div>`;
     };
 }
 
@@ -71,7 +77,7 @@ const PHASE_RAIL_ICONS = ['🔄', '🪄', '⚔️', '🪄', '🌙'];
         return `<ol class="phase-strip rail ${mine ? 'mine' : 'theirs'}" aria-label="Turn ${G.turn}: ${esc(whose)}">
             <li class="whose" title="${esc(whose)}"><span class="rail-dot" aria-hidden="true"></span>${mine ? 'You' : esc(String(turnName()).split(/[ ,(]/)[0])}</li>${PHASE_STEPS.map(([label, ids], pi) => {
                 const now = ids.includes(G.phase);
-                return `<li title="${esc(label)}"${now ? ' class="now" aria-current="step"' : ''}><span class="rail-ico" aria-hidden="true">${typeof ascIco === 'function' ? ascIco(['phase-upkeep', 'phase-main', 'phase-combat', 'phase-main', 'phase-end'][pi], PHASE_RAIL_ICONS[pi], 16) : PHASE_RAIL_ICONS[pi]}</span>${now ? `<span class="rail-name">${label}</span>` : `<span class="sr-only">${label}</span>`}</li>`;
+                return `<li title="${esc(label)}"${now ? ' class="now" aria-current="step"' : ''}><span class="rail-ico" aria-hidden="true">${typeof ascIco === 'function' ? ascIco(['phase-upkeep', 'phase-main', 'phase-combat', 'phase-main', 'phase-end'][pi], PHASE_RAIL_ICONS[pi], 18) : PHASE_RAIL_ICONS[pi]}</span>${now ? `<span class="rail-name">${label}</span>` : `<span class="sr-only">${label}</span>`}</li>`;
             }).join('')}</ol>`;
     };
 }

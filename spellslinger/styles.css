@@ -356,7 +356,7 @@
         .opp small { color: var(--text-secondary); }
 
         /* ---- The game table ---- */
-        #game { position: fixed; inset: 0; z-index: var(--z-game); background: radial-gradient(ellipse at center, var(--felt-1), var(--felt-2) 70%, var(--bg-canvas)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto auto; overflow: hidden; }
+        #game { position: fixed; inset: 0; height: 100vh; height: 100dvh; z-index: var(--z-game); background: radial-gradient(ellipse at center, var(--felt-1), var(--felt-2) 70%, var(--bg-canvas)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto auto; overflow: hidden; }
         .pbar { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 6px 14px; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); border-bottom: 1px solid var(--border-subtle); }
         .talk-layer { position: fixed; top: 74px; right: 12px; width: min(340px, calc(100vw - 24px)); display: flex; flex-direction: column; gap: 8px; z-index: var(--z-banner); pointer-events: none; }
         .talk-bubble { pointer-events: auto; display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius-lg); background: var(--panel-base); border: 1px solid var(--brand-light); color: var(--text-primary); font-size: 0.9em; box-shadow: 0 6px 22px var(--bg-canvas); animation: tbIn 0.25s ease-out; cursor: pointer; }
@@ -538,8 +538,10 @@
         .seg button { background: var(--bg-panel); border: 0; color: var(--text-soft); padding: 1px 9px; font-size: 0.8rem; }
         .seg button[aria-pressed="true"] { background: var(--brand); color: var(--text-heading); }
         .dock .hand { gap: 0; justify-content: center; overflow: visible; background: none; padding: 14px 28px 22px; min-height: calc(var(--hand-h) + 36px); }
-        .dock .hand .hc { width: calc(var(--hand-h) * 63 / 88); transform: translateY(var(--dip, 0px)) rotate(var(--rot, 0deg)); transform-origin: 50% 100%; }
-        .dock .hand .hc:hover, .dock .hand .hc:focus-visible { transform: translateY(-16px) scale(1.12); z-index: var(--z-lift) !important; }
+        .dock .hand .hc { width: calc(var(--hand-h) * 63 / 88); transform: none; }
+        .dock .hand .hc img, .dock .hand .hc .noimg { transform: translateY(var(--dip, 0px)) rotate(var(--rot, 0deg)); transform-origin: 50% 100%; transition: transform 0.16s ease, box-shadow 0.18s ease; }
+        .dock .hand .hc:hover, .dock .hand .hc:focus-visible { transform: none; z-index: var(--z-lift) !important; }
+        .dock .hand .hc:hover img, .dock .hand .hc:focus-visible img, .dock .hand .hc:hover .noimg, .dock .hand .hc:focus-visible .noimg { transform: translateY(-16px) scale(1.12); }
         .logwrap { border-left: 1px solid var(--border-subtle); padding: 4px 8px; min-width: 0; }
         .logwrap .log { max-height: calc(var(--hand-h) + 10px); background: none; padding: 4px 2px; }
         .logwrap summary { cursor: pointer; }
@@ -583,7 +585,7 @@
         .hand .hc { width: var(--hand-w); flex: none; border: 0; background: none; padding: 0; transition: transform 0.15s; position: relative; }
         .hand .hc img, .hand .hc .noimg { width: 100%; aspect-ratio: 63 / 88; display: block; border-radius: 6px; object-fit: cover; background: var(--bg-inset); }
         .hand .hc .noimg { display: flex; align-items: center; justify-content: center; font-size: 0.72rem; text-align: center; padding: 4px; border: 1px solid var(--border); }
-        .hand .hc:hover { transform: translateY(-8px); }
+        .hand .hc:hover img, .hand .hc:hover .noimg { transform: translateY(-8px); }
         .hand .hc.playable img { box-shadow: 0 0 0 2px var(--color-success), 0 0 10px var(--color-success); }
         .hand .hc.chosen img { box-shadow: 0 0 0 3px var(--gold); }
         .hand .hc .sup { position: absolute; top: 4px; right: 4px; }
@@ -1174,7 +1176,7 @@
         /* talks for 3 loops (about 3 seconds, the second row), then settles into the idle row for good */
         .asc-portrait.sprite.talk { background-position-y: -96px; animation: asc-idle var(--tdur, 0.6s) steps(var(--cols, 4)) 3, asc-idle var(--idle, 0.8s) steps(var(--cols, 4)) calc(var(--tdur, 0.6s) * 3) infinite, asc-rest 0.01s linear calc(var(--tdur, 0.6s) * 3) forwards, asc-breathe var(--breath, 3.4s) steps(1, end) var(--ph, 0s) infinite; }
         @keyframes asc-rest { to { background-position-y: 0; } }
-        @keyframes asc-idle { to { background-position-x: calc(var(--cols, 4) * -96px); } } }
+        @keyframes asc-idle { to { background-position-x: calc(var(--cols, 4) * -96px); } }
         /* sheets made before the portrait framing (256 x 192, full body, 64 x 96 frames) still display until they are remade */
         .asc-portrait.sprite.old { width: 64px; background-size: 256px 192px; }
           .asc-portrait.sprite.old, .asc-portrait.sprite.old.talk { animation: asc-idle-old 0.8s steps(4) infinite; }
@@ -1198,7 +1200,7 @@
         @keyframes fx-ph { 0% { transform: scale(0.3); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
 
         /* Planeswalker's Ascent extra art (2026-10-21): every rule below applies only when the matching PNG exists (13j sets the classes and variables) */
-        .asc-ico { image-rendering: pixelated; vertical-align: -0.2em; }
+        .asc-ico { image-rendering: auto; object-fit: contain; vertical-align: -0.2em; }
         .cur .asc-ico { vertical-align: -0.3em; }
         .phase-strip li .asc-ico { margin-right: 4px; vertical-align: -3px; }
         .asc-barface { display: inline-block; width: 48px; height: 48px; margin-right: 6px; vertical-align: middle; border-radius: var(--radius-sm); border: 2px solid var(--border); background-size: 144px 48px; background-repeat: no-repeat; image-rendering: pixelated; }
@@ -1436,6 +1438,7 @@ details.get-deck > summary { color: var(--brand-light); }
 #game.open-board .perm .pt { font-size: 0.85rem; padding: 0 6px; border-radius: 999px; right: 4px; bottom: 4px; background: color-mix(in srgb, var(--bg-canvas) 88%, transparent); border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); }
 #game.open-board .perm .chips { top: auto; bottom: 4px; left: 4px; flex-direction: row; flex-wrap: wrap; max-width: 62%; }
 #game.open-board .pile-n { left: auto; right: 4px; top: 4px; bottom: auto; transform: none; font-size: 0.72rem; padding: 0 6px; }
+#game.open-board .perm.pile { margin-left: 8px; }
 #game.open-board .perm.pile img { box-shadow: 3px -3px 0 -1px var(--bg-panel-raised), 6px -6px 0 -2px var(--bg-panel), 0 3px 8px color-mix(in srgb, var(--bg-canvas) 80%, transparent); }
 #game.open-board .perm.tapped { transform: rotate(10deg) translateY(3px); }
 /* 3. one mat: no panels between the sides, bars and middle */
@@ -1509,3 +1512,1401 @@ details.get-deck > summary { color: var(--brand-light); }
 .dg-badge.k-official { border-color: var(--gold); color: var(--gold); }
 .dg-badge.k-verified { border-color: var(--ok, var(--gold)); }
 @media (prefers-reduced-motion: reduce) { .dg-group > summary::before { transition: none; } }
+
+/* =====================================================================
+   Arena UI Polish (2026-11-27): sleek dark glass, layered depth, crisp
+   glow, smooth motion, interactive card tilt & battle table feedback.
+   Strictly design-token driven so all 7 Looks restyle everything cleanly.
+   ===================================================================== */
+
+/* ---- Ambient arcane atmosphere behind the app shell ---- */
+#arenaBg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+    background:
+        radial-gradient(65% 48% at 12% 0%, color-mix(in srgb, var(--brand) 26%, transparent), transparent 68%),
+        radial-gradient(52% 45% at 88% 8%, color-mix(in srgb, var(--gold) 15%, transparent), transparent 66%),
+        radial-gradient(60% 55% at 50% 100%, color-mix(in srgb, var(--felt-1) 48%, transparent), transparent 72%),
+        var(--bg-canvas); }
+#arenaBg::after { content: ""; position: absolute; inset: 0; opacity: 0.32;
+    background-image: radial-gradient(color-mix(in srgb, var(--brand-light) 22%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(ellipse 85% 60% at 50% 18%, #000, transparent 78%);
+    mask-image: radial-gradient(ellipse 85% 60% at 50% 18%, #000, transparent 78%); }
+body { background: transparent; }
+
+/* Custom slim scrollbars */
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--brand-light) 35%, var(--border)) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--brand-light) 30%, var(--border)); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--brand-light) 65%, var(--border)); background-clip: content-box; }
+
+/* ---- Topbar, Brand & Currency Pills ---- */
+.topbar { position: relative; padding: 16px 0 12px; margin-bottom: 10px; }
+.topbar::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-light) 45%, var(--border)) 18%, color-mix(in srgb, var(--gold) 40%, var(--border)) 50%, color-mix(in srgb, var(--brand-light) 45%, var(--border)) 82%, transparent); }
+.brand h1 { font-size: 1.55rem; font-weight: 700; letter-spacing: 0.03em;
+    text-shadow: 0 2px 14px color-mix(in srgb, var(--brand) 55%, transparent); }
+.brand .tag { background: color-mix(in srgb, var(--color-warning) 12%, var(--bg-inset));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-warning) 28%, transparent); }
+.coins { background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 14%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-inset) 92%, var(--bg-panel)));
+    border-color: color-mix(in srgb, var(--gold) 65%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent), 0 3px 12px -4px color-mix(in srgb, var(--bg-canvas) 85%, transparent);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease; }
+.coins.cash { background: linear-gradient(180deg, color-mix(in srgb, var(--color-success) 14%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-inset) 92%, var(--bg-panel)));
+    border-color: color-mix(in srgb, var(--color-success) 65%, var(--border)); }
+.coins.cash:hover { transform: translateY(-1px); border-color: var(--color-success);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 18%, transparent), 0 4px 16px -4px color-mix(in srgb, var(--color-success) 45%, transparent); }
+.coins.aether { background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 18%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-inset) 92%, var(--bg-panel)));
+    border-color: color-mix(in srgb, var(--brand-light) 65%, var(--border)); color: var(--brand-light); }
+.acct select { background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-inset)); border-radius: var(--radius-md);
+    border-color: color-mix(in srgb, var(--brand-light) 28%, var(--border)); transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.acct select:hover { border-color: var(--brand-light); }
+
+/* ---- Mode Switcher & Primary Navigation Tabs ---- */
+.modebar { padding: 6px 8px; border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--bg-inset) 78%, var(--bg-panel));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 18%, var(--border-subtle));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 5%, transparent), 0 4px 14px -10px var(--bg-canvas); }
+.mode-btn { background: transparent; border-color: transparent; color: var(--text-soft); font-weight: 600;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease; }
+.mode-btn:hover { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--text-heading); }
+.mode-btn[aria-selected="true"] {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 26%, var(--brand)), var(--brand));
+    border-color: color-mix(in srgb, var(--brand-light) 75%, var(--border));
+    color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 24%, transparent), 0 4px 16px -6px var(--brand); }
+
+.tabs { gap: 6px; padding: 4px; border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--bg-panel) 52%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 65%, transparent); }
+.tab { position: relative; background: transparent; border: 1px solid transparent; padding: 8px 15px; border-radius: var(--radius-md);
+    color: var(--text-soft); font-family: var(--font-display); font-size: 0.94rem; letter-spacing: 0.02em;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease; }
+.tab:hover { background: color-mix(in srgb, var(--bg-panel-raised) 85%, transparent); border-color: color-mix(in srgb, var(--brand-light) 45%, var(--border)); color: var(--text-heading); }
+.tab[aria-selected="true"] {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 24%, var(--brand)), color-mix(in srgb, var(--brand) 88%, var(--bg-canvas)));
+    border-color: var(--brand-light); color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 26%, transparent), 0 4px 18px -6px var(--brand); }
+.tab[aria-selected="true"]::after { content: ""; position: absolute; left: 16%; right: 16%; bottom: 2px; height: 2px; border-radius: 999px;
+    background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+/* Smooth view switching without lasting stacking contexts */
+main > section:not(.hidden) { animation: arenaViewIn 0.28s cubic-bezier(.2, .85, .25, 1) backwards; }
+@keyframes arenaViewIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ---- Layered Panels (no border-image, no backdrop-filter so dropdowns & looks.js stay clean) ---- */
+.panel {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 52%, var(--bg-panel)), var(--bg-panel) 54%, color-mix(in srgb, var(--bg-inset) 38%, var(--bg-panel)));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 18%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 9%, transparent), 0 12px 30px -18px color-mix(in srgb, var(--bg-canvas) 95%, transparent);
+    transition: border-color 0.2s ease; }
+.panel h2 { letter-spacing: 0.03em; }
+
+/* ---- Tactile Arena Buttons & Inputs ---- */
+.btn {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--text-heading) 6%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-panel) 92%, var(--bg-canvas)));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 20%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 10%, transparent), 0 2px 6px -3px color-mix(in srgb, var(--bg-canvas) 85%, transparent);
+    transition: transform 0.12s ease, border-color 0.16s ease, box-shadow 0.18s ease, filter 0.16s ease, background 0.16s ease, color 0.16s ease; }
+.btn:hover:not(:disabled) { border-color: var(--brand-light); color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 18%, transparent), 0 4px 16px -6px color-mix(in srgb, var(--brand-light) 60%, transparent);
+    transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(1px); filter: brightness(0.96); }
+.btn.primary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 30%, var(--brand)), var(--brand) 60%, color-mix(in srgb, var(--brand) 82%, var(--bg-canvas)));
+    border-color: var(--brand-light); color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 28%, transparent), 0 4px 16px -6px var(--brand); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.1);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 34%, transparent), 0 6px 22px -6px var(--brand-light); }
+.btn.gold {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 28%, var(--bg-panel-raised)), color-mix(in srgb, var(--gold) 14%, var(--bg-panel)));
+    border-color: var(--gold); color: var(--gold);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 28%, transparent), 0 4px 16px -8px var(--gold); }
+.btn.gold:hover:not(:disabled) { color: var(--text-heading);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 40%, transparent), 0 6px 22px -6px var(--gold); }
+.btn.danger {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-error) 16%, var(--bg-panel-raised)), var(--bg-panel));
+    border-color: color-mix(in srgb, var(--color-error) 75%, var(--border)); }
+.btn.danger:hover:not(:disabled) { border-color: var(--color-error);
+    box-shadow: 0 4px 16px -6px var(--color-error); }
+
+select, input[type="text"], input[type="search"], input[type="number"] {
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease; }
+select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="number"]:focus {
+    border-color: var(--brand-light);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-light) 22%, transparent); outline: none; }
+
+/* ---- Modals, Sheets & Toasts (frosted overlay glass + smooth pop-in) ---- */
+.modal { background: color-mix(in srgb, var(--bg-canvas) 82%, transparent);
+    backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); animation: arenaFade 0.18s ease-out; }
+.modal .box {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 58%, var(--bg-panel)), var(--bg-panel) 50%, color-mix(in srgb, var(--bg-inset) 50%, var(--bg-panel)));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent), 0 24px 60px -12px var(--bg-canvas), 0 0 38px -16px var(--brand);
+    animation: arenaPop 0.22s cubic-bezier(.2, 1.1, .3, 1); }
+.sheet-bg { background: color-mix(in srgb, var(--bg-canvas) 68%, transparent);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: arenaFade 0.16s ease-out; }
+.sheet {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 56%, var(--bg-panel)), var(--bg-panel));
+    border-color: color-mix(in srgb, var(--brand-light) 35%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent), 0 24px 56px -12px var(--bg-canvas);
+    animation: arenaPop 0.2s cubic-bezier(.2, 1.08, .3, 1); }
+@keyframes arenaFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes arenaPop { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+.toast { background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 26%, var(--brand)), var(--brand));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 75%, var(--gold));
+    border-radius: 999px; padding: 10px 22px;
+    box-shadow: 0 10px 30px -6px var(--bg-canvas), 0 0 22px -6px var(--brand-light);
+    transform: translate(-50%, 10px); transition: opacity 0.25s ease, transform 0.25s cubic-bezier(.2, .9, .3, 1); }
+.toast.show { transform: translate(-50%, 0); }
+
+/* Look picker cards */
+.look-card { transition: transform 0.14s ease, border-color 0.16s ease, box-shadow 0.16s ease; }
+.look-card:hover { transform: translateY(-2px); border-color: var(--brand-light);
+    box-shadow: 0 6px 18px -10px var(--brand-light); }
+.look-card.on { box-shadow: 0 0 0 1px var(--brand-light), 0 0 18px -6px var(--brand-light); }
+
+/* ---- Home Screen Hero, Mana Orbs & Action Tiles ---- */
+.home-hero {
+    border-color: color-mix(in srgb, var(--gold) 72%, var(--brand-light));
+    background:
+        radial-gradient(95% 130% at 50% -15%, color-mix(in srgb, var(--brand-light) 42%, transparent), transparent 62%),
+        radial-gradient(60% 90% at 85% 100%, color-mix(in srgb, var(--gold) 20%, transparent), transparent 65%),
+        radial-gradient(60% 90% at 15% 100%, color-mix(in srgb, var(--brand) 28%, transparent), transparent 65%),
+        linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel) 55%, var(--bg-inset));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 35%, transparent), 0 18px 46px -18px var(--bg-canvas), 0 0 38px -14px var(--brand); }
+.home-hero::after { content: ""; position: absolute; top: 0; bottom: 0; left: -35%; width: 28%; pointer-events: none;
+    background: linear-gradient(105deg, transparent, color-mix(in srgb, var(--gold) 14%, transparent) 48%, color-mix(in srgb, var(--text-heading) 16%, transparent) 52%, transparent);
+    transform: skewX(-20deg); animation: heroSheen 9s ease-in-out infinite; }
+@keyframes heroSheen { 0%, 62% { left: -35%; opacity: 0; } 68% { opacity: 1; } 100% { left: 125%; opacity: 0; } }
+.home-pips i { width: 18px; height: 18px;
+    box-shadow: inset 0 3px 4px color-mix(in srgb, var(--text-heading) 55%, transparent), inset 0 -3px 4px color-mix(in srgb, var(--bg-canvas) 45%, transparent), 0 0 12px currentColor; }
+.home-title { letter-spacing: 0.03em;
+    text-shadow: 0 3px 0 color-mix(in srgb, var(--bg-canvas) 85%, transparent), 0 0 28px color-mix(in srgb, var(--brand-light) 75%, transparent); }
+.hstat { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 72%, transparent), color-mix(in srgb, var(--bg-canvas) 82%, transparent));
+    border-color: color-mix(in srgb, var(--brand-light) 22%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 10%, transparent), 0 4px 12px -6px var(--bg-canvas); }
+
+.home-tile { position: relative; overflow: hidden;
+    background: linear-gradient(155deg, color-mix(in srgb, var(--tc, var(--brand)) 34%, var(--bg-panel-raised)), color-mix(in srgb, var(--tc, var(--brand)) 10%, var(--bg-panel)) 55%, var(--bg-panel));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 18%, transparent), 0 4px 0 color-mix(in srgb, var(--tc, var(--brand)) 55%, var(--bg-canvas)), 0 12px 24px -14px var(--bg-canvas); }
+.home-tile::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 42%; pointer-events: none;
+    background: linear-gradient(105deg, transparent, color-mix(in srgb, var(--text-heading) 20%, transparent), transparent);
+    transform: skewX(-20deg); transition: left 0.55s ease; }
+.home-tile:hover::after { left: 130%; }
+.home-tile:hover { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 24%, transparent), 0 6px 0 color-mix(in srgb, var(--tc, var(--brand)) 60%, var(--bg-canvas)), 0 0 24px -4px var(--tc, var(--brand)); }
+.home-tile .ht-ico { filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--tc, var(--brand)) 65%, transparent)); transition: transform 0.18s ease; }
+.home-tile:hover .ht-ico { transform: scale(1.1) rotate(-3deg); }
+
+.hs-n { background: linear-gradient(160deg, color-mix(in srgb, var(--text-heading) 25%, var(--gold)), var(--gold));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 45%, transparent), 0 0 12px -2px var(--gold); }
+.cov-bar { box-shadow: inset 0 1px 3px color-mix(in srgb, var(--bg-canvas) 75%, transparent); }
+
+/* ---- Interactive 3D Holographic Card Tilt & Specular Sheen (tilts inner <img> only so hit-box never moves or flickers!) ---- */
+@media (hover: hover) and (pointer: fine) {
+    .ctile, .mx-preview, .asc-tile, .vault-slot:not(.empty) { position: relative; }
+    .ctile img, .mx-preview img, .asc-tile img, .vault-slot img { transition: transform 0.22s cubic-bezier(.2, .8, .2, 1), box-shadow 0.22s ease, filter 0.22s ease; will-change: transform; }
+    .arena-tilting { z-index: 4; }
+    .arena-tilting > img { transform: perspective(760px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg)) scale(1.02);
+        transition: transform 0.08s ease-out, box-shadow 0.18s ease;
+        box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--bg-canvas) 90%, transparent), 0 0 18px -4px color-mix(in srgb, var(--brand-light) 55%, transparent); }
+    .arena-tilting::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; mix-blend-mode: screen; opacity: 0.4;
+        background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), color-mix(in srgb, var(--text-heading) 50%, transparent), color-mix(in srgb, var(--brand-light) 16%, transparent) 32%, transparent 65%); }
+    .ctile.arena-tilting::after { bottom: auto; aspect-ratio: 63 / 88; border-radius: 5% / 3.6%; }
+    .mx-preview.arena-tilting > img { transform: perspective(900px) rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg)); }
+    .mx-preview.arena-tilting::after { bottom: auto; aspect-ratio: 63 / 88; border-radius: 4.75% / 3.5%; }
+}
+
+/* ---- Battle Table & Open Board Arena Polish ---- */
+#game {
+    background:
+        radial-gradient(ellipse 95% 42% at 50% 50%, color-mix(in srgb, var(--brand-light) 11%, transparent), transparent 70%),
+        repeating-linear-gradient(45deg, color-mix(in srgb, var(--brand-light) 3%, transparent) 0 2px, transparent 2px 8px),
+        radial-gradient(ellipse 85% 75% at 50% 50%, var(--felt-1), var(--felt-2) 64%, var(--bg-canvas) 100%); }
+/* Subtle battle-line glow across the center seam in Open Board */
+#game.open-board .midbar::before { content: ""; position: absolute; left: 4%; right: 4%; top: 50%; height: 1px; pointer-events: none; z-index: 0;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-light) 35%, transparent) 22%, color-mix(in srgb, var(--gold) 45%, transparent) 50%, color-mix(in srgb, var(--brand-light) 35%, transparent) 78%, transparent); }
+#game.open-board .midbar > * { position: relative; z-index: 1; }
+
+/* Turn handoff sweep along the playmat */
+#game.turn-flash-mine::after, #game.turn-flash-theirs::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 2;
+    animation: arenaTurnSweep 0.65s ease-out forwards; }
+#game.turn-flash-mine::after { box-shadow: inset 0 0 70px -12px color-mix(in srgb, var(--gold) 65%, transparent); }
+#game.turn-flash-theirs::after { box-shadow: inset 0 0 70px -12px color-mix(in srgb, var(--color-error) 55%, transparent); }
+@keyframes arenaTurnSweep { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Enhanced Life Medallions & Impact Feedback */
+#game.open-board .life {
+    background: radial-gradient(circle at 38% 26%, color-mix(in srgb, var(--text-heading) 16%, var(--bg-panel-raised)), var(--bg-panel) 48%, var(--bg-inset) 88%);
+    box-shadow: inset 0 2px 4px color-mix(in srgb, var(--text-heading) 18%, transparent), 0 0 0 2px var(--bg-canvas), 0 6px 18px -4px color-mix(in srgb, var(--bg-canvas) 90%, transparent);
+    transition: transform 0.2s cubic-bezier(.2, 1.3, .3, 1), box-shadow 0.25s ease, border-color 0.25s ease; }
+#game.open-board #meBar .life {
+    border-color: var(--gold);
+    box-shadow: inset 0 2px 5px color-mix(in srgb, var(--gold) 32%, transparent), 0 0 0 2px var(--bg-canvas), 0 0 22px -2px color-mix(in srgb, var(--gold) 62%, transparent); }
+#game .life.life-low { border-color: var(--color-error) !important; color: var(--color-error);
+    animation: arenaLowLife 1.8s ease-in-out infinite; }
+@keyframes arenaLowLife {
+    0%, 100% { box-shadow: 0 0 0 2px var(--bg-canvas), 0 0 12px color-mix(in srgb, var(--color-error) 45%, transparent); }
+    50% { box-shadow: 0 0 0 2px var(--bg-canvas), 0 0 26px 3px color-mix(in srgb, var(--color-error) 85%, transparent); } }
+#game .life.life-hit { animation: arenaLifeHit 0.45s cubic-bezier(.36, .07, .19, .97); }
+#game .life.life-heal { animation: arenaLifeHeal 0.55s ease-out; }
+@keyframes arenaLifeHit {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.16) translateX(-3px); border-color: var(--color-error); box-shadow: 0 0 28px 4px var(--color-error); }
+    45% { transform: scale(0.96) translateX(3px); }
+    70% { transform: scale(1.04) translateX(-1px); }
+    100% { transform: scale(1); } }
+@keyframes arenaLifeHeal {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.16); border-color: var(--color-success); box-shadow: 0 0 28px 4px var(--color-success); }
+    100% { transform: scale(1); } }
+
+/* Floating life delta callouts (-4 / +3), positioned outside .life so innerText stays pure */
+.arena-delta { position: fixed; z-index: var(--z-banner); pointer-events: none; transform: translate(-50%, -50%);
+    font-family: var(--font-display); font-weight: 700; font-size: 1.55rem; letter-spacing: 0.02em;
+    padding: 2px 10px; border-radius: 999px;
+    background: color-mix(in srgb, var(--bg-canvas) 82%, transparent);
+    text-shadow: 0 2px 10px var(--bg-canvas);
+    animation: arenaDeltaFloat 0.95s cubic-bezier(.16, .9, .24, 1) forwards; }
+.arena-delta.hit { color: var(--color-error); border: 1px solid color-mix(in srgb, var(--color-error) 75%, transparent);
+    box-shadow: 0 0 18px -2px var(--color-error); }
+.arena-delta.heal { color: var(--color-success); border: 1px solid color-mix(in srgb, var(--color-success) 75%, transparent);
+    box-shadow: 0 0 18px -2px var(--color-success); }
+@keyframes arenaDeltaFloat {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.65); }
+    18% { opacity: 1; transform: translate(-50%, -14px) scale(1.15); }
+    45% { opacity: 1; transform: translate(-50%, -26px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -54px) scale(0.95); } }
+
+/* Board permanents: summon slam, sharper shadows & pulsing combat auras */
+#game .perm { transition: transform 0.22s cubic-bezier(.2, .85, .25, 1), filter 0.2s ease; }
+#game .perm:hover:not(.tapped):not(.attacking) { transform: translateY(-4px) scale(1.03); z-index: 5; }
+#game .perm img { box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--bg-canvas) 92%, transparent), 0 0 0 1px color-mix(in srgb, var(--text-heading) 10%, transparent); }
+#game .perm.just-entered { animation: arenaPermIn 0.38s cubic-bezier(.16, 1.15, .3, 1); }
+@keyframes arenaPermIn {
+    0% { opacity: 0; transform: scale(1.24) translateY(-10px); filter: brightness(1.45); }
+    65% { opacity: 1; transform: scale(0.98) translateY(1px); filter: brightness(1.1); }
+    100% { opacity: 1; transform: none; filter: none; } }
+#game .perm.attacking img { animation: arenaAtkPulse 1.5s ease-in-out infinite; }
+@keyframes arenaAtkPulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--mana-R), 0 0 16px color-mix(in srgb, var(--mana-R) 85%, transparent); }
+    50% { box-shadow: 0 0 0 3px var(--mana-R), 0 0 26px 4px color-mix(in srgb, var(--mana-R) 95%, transparent); } }
+#game .perm.selectable img, #game .perm.selectable .noimg { animation: arenaSelPulse 1.4s ease-in-out infinite; }
+@keyframes arenaSelPulse {
+    0%, 100% { box-shadow: 0 0 0 2px var(--gold), 0 0 10px color-mix(in srgb, var(--gold) 70%, transparent); }
+    50% { box-shadow: 0 0 0 3px var(--gold), 0 0 20px 2px var(--gold); } }
+#game .perm .pt { box-shadow: 0 2px 6px color-mix(in srgb, var(--bg-canvas) 85%, transparent), inset 0 1px 0 color-mix(in srgb, var(--text-heading) 16%, transparent); }
+
+/* Hand cards: Arena playable aura & draw entrance */
+.dock { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel) 55%, var(--bg-canvas)), color-mix(in srgb, var(--bg-canvas) 94%, transparent)); }
+.dock .hand .hc { transition: transform 0.18s cubic-bezier(.2, 1.1, .3, 1), filter 0.18s ease; }
+.dock .hand .hc img { box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--bg-canvas) 90%, transparent); transition: box-shadow 0.2s ease; }
+.hand .hc.playable img { box-shadow: 0 0 0 2px var(--color-success), 0 0 16px color-mix(in srgb, var(--color-success) 75%, transparent), 0 6px 16px -4px var(--bg-canvas);
+    animation: arenaPlayableGlow 2.4s ease-in-out infinite; }
+@keyframes arenaPlayableGlow {
+    0%, 100% { box-shadow: 0 0 0 2px var(--color-success), 0 0 12px color-mix(in srgb, var(--color-success) 60%, transparent), 0 6px 16px -4px var(--bg-canvas); }
+    50% { box-shadow: 0 0 0 2px var(--brand-light), 0 0 20px 1px color-mix(in srgb, var(--color-success) 88%, transparent), 0 6px 16px -4px var(--bg-canvas); } }
+.dock .hand .hc.just-drawn { animation: arenaDrawIn 0.34s cubic-bezier(.18, 1.1, .3, 1) backwards; }
+@keyframes arenaDrawIn { from { opacity: 0; transform: translate(36px, 28px) rotate(12deg) scale(0.86); } }
+
+/* Phase Rail, Stack & Turn Button */
+#game .phase-strip { box-shadow: inset 0 1px 4px color-mix(in srgb, var(--bg-canvas) 85%, transparent), 0 2px 10px -4px var(--bg-canvas); }
+.turn-btn { position: relative; overflow: hidden;
+    background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+    transition: transform 0.14s ease, box-shadow 0.2s ease, background 0.2s ease, filter 0.16s ease; }
+.turn-btn.ready {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 34%, var(--bg-panel-raised)), color-mix(in srgb, var(--gold) 16%, var(--bg-panel)));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 24%, transparent), 0 0 18px color-mix(in srgb, var(--gold) 45%, transparent); }
+.turn-btn.ready:hover { filter: brightness(1.1); transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 32%, transparent), 0 0 26px color-mix(in srgb, var(--gold) 70%, transparent); }
+.turn-btn.ready::after { content: ""; position: absolute; top: 0; bottom: 0; left: -45%; width: 32%; pointer-events: none;
+    background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--text-heading) 24%, transparent), transparent);
+    transform: skewX(-18deg); animation: go-sweep 3.2s ease-in-out infinite; }
+.stack-item { background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+    box-shadow: 0 4px 12px -4px var(--bg-canvas); transition: transform 0.14s ease, box-shadow 0.16s ease; }
+.stack-item:hover { transform: translateY(-1px); border-color: var(--brand-light); }
+
+/* Card Peek & Play-by-Play Banner */
+.card-peek img { border-radius: 14px; border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--border));
+    box-shadow: 0 20px 44px -8px var(--bg-canvas), 0 0 28px -8px color-mix(in srgb, var(--brand-light) 45%, transparent); }
+.peek-stats { background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-inset)); border-color: color-mix(in srgb, var(--gold) 50%, var(--border)); }
+.act-banner { background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 94%, transparent), color-mix(in srgb, var(--bg-panel) 96%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 24%, transparent), 0 16px 42px -8px var(--bg-canvas), 0 0 24px -10px var(--gold); }
+
+/* ---- Deck Builder, Precons, Welcome Decks & Packs ---- */
+.mx-bar { background: color-mix(in srgb, var(--bg-panel-raised) 88%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-color: color-mix(in srgb, var(--brand-light) 35%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent), 0 -10px 28px -8px color-mix(in srgb, var(--bg-canvas) 80%, transparent); }
+.mx-row { padding: 3px 6px; transition: background 0.14s ease, box-shadow 0.14s ease; }
+.mx-row:hover { box-shadow: inset 2px 0 0 var(--brand-light); }
+.wd-card, .opp {
+    background: linear-gradient(165deg, color-mix(in srgb, var(--brand) 10%, var(--bg-panel-raised)), var(--bg-panel));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 8%, transparent), 0 4px 14px -10px var(--bg-canvas);
+    transition: transform 0.14s ease, border-color 0.16s ease, box-shadow 0.16s ease; }
+.wd-card:hover { transform: translateY(-2px); border-color: var(--brand-light); box-shadow: 0 6px 18px -10px var(--brand-light); }
+.wd-card[aria-pressed="true"] { background: linear-gradient(160deg, color-mix(in srgb, var(--gold) 18%, var(--bg-panel-raised)), var(--bg-panel));
+    box-shadow: 0 0 0 1px var(--gold), 0 0 16px -4px var(--gold); }
+.chip { transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, color 0.14s ease; }
+.chip:hover { border-color: var(--brand-light); color: var(--text-heading); }
+.chip.on { background: linear-gradient(180deg, color-mix(in srgb, var(--brand-light) 26%, var(--brand)), var(--brand));
+    border-color: var(--brand-light); box-shadow: 0 0 12px -4px var(--brand-light); }
+
+/* ---- Campaign (Planeswalker's Ascent) & Shop Simulator ---- */
+.shop-floor {
+    border: 1px solid color-mix(in srgb, var(--brand-light) 20%, var(--border-subtle));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 8%, transparent), 0 16px 40px -20px var(--bg-canvas); }
+.pos { box-shadow: 0 10px 30px -14px var(--bg-canvas), inset 0 1px 0 color-mix(in srgb, var(--text-heading) 14%, transparent); }
+.pos-stats > div {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 55%, var(--bg-inset)), color-mix(in srgb, var(--bg-inset) 82%, transparent));
+    border-color: color-mix(in srgb, var(--brand-light) 18%, var(--border-subtle));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 7%, transparent); }
+.tier-band { background: linear-gradient(165deg, color-mix(in srgb, var(--bg-panel-raised) 45%, var(--bg-inset)), color-mix(in srgb, var(--bg-inset) 70%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 7%, transparent); }
+.trail-node .dot { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 20%, transparent), 0 4px 12px -4px var(--bg-canvas);
+    transition: transform 0.16s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.trail-node.sel .dot { box-shadow: 0 0 0 3px var(--gold), 0 0 18px -2px var(--gold); animation: arenaNodePulse 2s ease-in-out infinite; }
+@keyframes arenaNodePulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--gold), 0 0 14px -2px var(--gold); }
+    50% { box-shadow: 0 0 0 3px var(--gold), 0 0 24px 2px var(--gold); } }
+.asc-bubble { background: linear-gradient(165deg, var(--bg-panel-raised), var(--bg-panel));
+    border-color: color-mix(in srgb, var(--brand-light) 26%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 10%, transparent), 0 6px 18px -12px var(--bg-canvas); }
+.offer-card { background: linear-gradient(165deg, color-mix(in srgb, var(--brand) 10%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-panel) 78%, transparent));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 9%, transparent);
+    transition: transform 0.15s ease, border-color 0.16s ease, box-shadow 0.16s ease; }
+.offer-card:hover { transform: translateY(-2px); border-color: var(--brand-light); box-shadow: 0 8px 20px -12px var(--brand-light); }
+.cust { box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 9%, transparent), 0 6px 16px -10px var(--bg-canvas); }
+.patience span { background: linear-gradient(90deg, var(--brand-light), var(--gold)); }
+.vault-slot:not(.empty) { box-shadow: 0 0 18px -4px var(--gold), 0 8px 18px -8px var(--bg-canvas); }
+
+/* ---- Phone Bottom Navigation Glass ---- */
+@media (max-width: 600px) {
+    .bottom-nav { background: color-mix(in srgb, var(--bg-panel) 88%, transparent);
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border-top-color: color-mix(in srgb, var(--brand-light) 30%, var(--border));
+        box-shadow: 0 -8px 24px -10px var(--bg-canvas); }
+    .bottom-nav button[aria-current="page"] {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 28%, transparent), transparent);
+        box-shadow: inset 0 2px 0 var(--gold); }
+    .modebar { padding: 4px; }
+    .panel { padding: 12px; }
+}
+
+/* ---- Reduced Motion Safety ---- */
+@media (prefers-reduced-motion: reduce) {
+    main > section:not(.hidden), .home-hero::after, .modal, .modal .box, .sheet-bg, .sheet,
+    #game.turn-flash-mine::after, #game.turn-flash-theirs::after, #game .life.life-low,
+    #game .life.life-hit, #game .life.life-heal, .arena-delta, #game .perm.just-entered,
+    #game .perm.attacking img, #game .perm.selectable img, #game .perm.selectable .noimg,
+    .hand .hc.playable img, .dock .hand .hc.just-drawn, .turn-btn.ready::after, .trail-node.sel .dot {
+        animation: none !important;
+    }
+    .home-hero::after, .turn-btn.ready::after, .home-tile::after { display: none; }
+    .arena-tilting { transform: none !important; }
+    .arena-tilting::after { display: none; }
+}
+
+/* =====================================================================
+   Modern 4-Player Commander HUD & Game Flow (2026-11-27):
+   - Commander-art broadcast seat cards with live mana/board/deal telemetry
+   - Streamlined focused opponent context bar in pods (more room for cards)
+   - Side-docked Arena action showcase with category pill & timer progress
+   - Cinematic non-blocking turn banner, combat matchup pill, speed toggle
+   - Color-coded combat/action log & Commander-portrait dialogue toasts
+   Strictly token-driven so all 7 Looks restyle seamlessly.
+   ===================================================================== */
+
+/* ---- Pro Broadcast Commander Seat Cards ---- */
+#game.pod-mode .pod-strip { display: flex; align-items: stretch; gap: 8px; flex-wrap: nowrap; width: 100%; min-width: 0; }
+#game.pod-mode .pod-chip.seat {
+    flex: 1 1 0; max-width: none; min-width: 0;
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "av main life" "av stats stats";
+    align-items: center; column-gap: 10px; row-gap: 3px;
+    padding: 7px 12px 10px; border-radius: var(--radius-lg);
+    background: linear-gradient(155deg, color-mix(in srgb, var(--sc) 18%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-panel) 94%, var(--bg-canvas)) 62%, var(--bg-inset));
+    border: 1px solid color-mix(in srgb, var(--sc) 42%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 12%, transparent), 0 6px 18px -10px var(--bg-canvas); }
+#game.pod-mode .pod-chip.seat::before { content: ""; position: absolute; left: 0; top: 0; bottom: 4px; width: 3px; background: var(--sc); opacity: 0.78; pointer-events: none; }
+#game.pod-mode .pod-chip.seat:hover:not(:disabled) { transform: translateY(-2px); border-color: color-mix(in srgb, var(--sc) 80%, var(--brand-light));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 18%, transparent), 0 10px 22px -10px var(--bg-canvas), 0 0 18px -8px var(--sc); }
+#game.pod-mode .pod-chip.seat.on {
+    background: linear-gradient(155deg, color-mix(in srgb, var(--brand-light) 22%, var(--bg-panel-raised)), color-mix(in srgb, var(--sc) 14%, var(--bg-panel)) 55%, var(--bg-inset));
+    border-color: var(--brand-light);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 22%, transparent), 0 0 0 1px var(--brand-light), 0 8px 22px -10px var(--brand-light); }
+#game.pod-mode .pod-chip.seat.turn {
+    background: linear-gradient(155deg, color-mix(in srgb, var(--gold) 24%, var(--bg-panel-raised)), color-mix(in srgb, var(--sc) 14%, var(--bg-panel)) 58%, var(--bg-inset));
+    border-color: var(--gold);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 35%, transparent), 0 0 0 2px var(--gold), 0 0 22px -4px color-mix(in srgb, var(--gold) 70%, transparent); }
+#game.pod-mode .pod-chip.seat.turn.on {
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gold) 35%, transparent), 0 0 0 2px var(--gold), 0 0 0 4px var(--brand-light), 0 0 24px -4px var(--gold); }
+
+/* Commander art portrait inside seat card (zoomed into illustration so card borders stay cropped out) */
+#game.pod-mode .seat-av { position: relative; width: 46px; height: 46px; border-radius: 10px; overflow: visible;
+    border: 2px solid var(--sc); box-shadow: 0 3px 10px -2px var(--bg-canvas), 0 0 12px -4px var(--sc); }
+.seat-av-clip { display: block; width: 100%; height: 100%; border-radius: 8px; overflow: hidden; }
+.seat-av-clip img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; transform: scale(1.42); transform-origin: 50% 26%; display: block; }
+.seat-mood { position: absolute; right: -6px; bottom: -5px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 0.72rem; line-height: 1; background: var(--bg-canvas); border: 1px solid color-mix(in srgb, var(--sc) 65%, var(--border));
+    box-shadow: 0 2px 6px var(--bg-canvas); }
+
+/* Seat typography, keyboard shortcut hint, deal/archenemy tags & life badge */
+#game.pod-mode .seat-main { gap: 1px; }
+#game.pod-mode .seat-main b { display: flex; align-items: center; gap: 5px; font-size: 0.96rem; letter-spacing: 0.01em; }
+.seat-key { margin-left: auto; font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; line-height: 1;
+    padding: 2px 5px; border-radius: 4px; color: var(--text-muted);
+    background: color-mix(in srgb, var(--bg-canvas) 75%, transparent); border: 1px solid var(--border-subtle); opacity: 0.7; }
+#game.pod-mode .pod-chip.seat.on .seat-key { color: var(--brand-light); border-color: color-mix(in srgb, var(--brand-light) 55%, transparent); opacity: 1; }
+.seat-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.seat-tag { display: inline-flex; align-items: center; gap: 2px; font-size: 0.66rem; font-weight: 700; line-height: 1.25;
+    padding: 0 6px; border-radius: 999px; letter-spacing: 0.02em; white-space: nowrap; }
+.seat-tag.arch { background: color-mix(in srgb, var(--color-error) 22%, var(--bg-canvas)); border: 1px solid var(--color-error); color: var(--color-error); }
+.seat-tag.deal { background: color-mix(in srgb, var(--gold) 18%, var(--bg-canvas)); border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent); color: var(--gold); }
+.seat-tag.atk { position: static; background: color-mix(in srgb, var(--color-warning) 18%, var(--bg-canvas)); border: 1px solid var(--color-warning); color: var(--color-warning); }
+.seat-tag.atk-danger { position: static; background: color-mix(in srgb, var(--color-error) 24%, var(--bg-canvas)); border: 1px solid var(--color-error); color: var(--color-error); box-shadow: 0 0 8px -2px var(--color-error); }
+
+.seat-life-wrap { grid-area: life; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-width: 46px; padding: 3px 8px; border-radius: 10px;
+    background: radial-gradient(circle at 50% 20%, var(--bg-panel-raised), var(--bg-inset));
+    border: 1px solid color-mix(in srgb, var(--sc) 45%, var(--border));
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 10%, transparent); }
+#game.pod-mode .seat-life { font-size: 1.32rem; line-height: 1; }
+.seat-life-lbl { font-size: 0.56rem; font-weight: 700; letter-spacing: 0.12em; color: var(--text-muted); margin-top: 1px; }
+#game.pod-mode .pod-chip.seat.mid .seat-bar i { background: var(--gold); }
+#game.pod-mode .pod-chip.seat.low .seat-life-wrap { border-color: var(--color-error); background: color-mix(in srgb, var(--color-error) 16%, var(--bg-inset)); }
+#game.pod-mode .pod-chip.seat.low .seat-bar i { background: var(--color-error); }
+
+#game.pod-mode .seat-stats { gap: 8px; font-size: 0.76rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.seat-cz { opacity: 0.7; }
+.seat-cz.live { color: var(--gold); opacity: 1; font-weight: 700; }
+.seat-cdmg { color: var(--color-warning); font-weight: 700; }
+#game.pod-mode .pod-chip.seat .atk { top: 4px; right: 64px; padding: 1px 7px; border-radius: 999px;
+    background: color-mix(in srgb, var(--bg-canvas) 88%, transparent); border: 1px solid var(--color-warning); }
+#game.pod-mode .pod-chip.seat .atk.atk-danger { color: var(--color-error); border-color: var(--color-error);
+    background: color-mix(in srgb, var(--color-error) 22%, var(--bg-canvas)); box-shadow: 0 0 10px -2px var(--color-error); }
+#game.pod-mode .pod-chip.seat:has(.atk) .seat-life { margin-top: 0; }
+
+/* Right-side compact utility cluster (Deals, Ask, Salt/Cool) */
+.pod-utils { display: flex; flex-direction: column; gap: 4px; justify-content: center; flex: none; }
+.pod-utils .pod-chip { padding: 4px 10px; font-size: 0.78rem; justify-content: center; border-radius: var(--radius-md);
+    background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-panel));
+    border-color: color-mix(in srgb, var(--brand-light) 28%, var(--border)); transition: border-color 0.15s, transform 0.12s, box-shadow 0.15s; }
+.pod-utils .pod-chip:not(.meters):hover { border-color: var(--gold); transform: translateY(-1px); box-shadow: 0 4px 12px -6px var(--gold); }
+.pod-badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+    font-size: 0.7rem; font-weight: 700; background: var(--gold); color: var(--bg-canvas); }
+
+/* ---- Streamlined Focused Opponent Bar in 4-Player Pods (saves vertical room for cards!) ---- */
+#game.pod-mode #oppBar { row-gap: 5px; padding: 6px 12px 4px; }
+.pod-viewing-tag { display: inline-block; font-family: var(--font-display); font-size: 0.66rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em; padding: 1px 7px; margin-right: 6px; border-radius: 999px;
+    background: color-mix(in srgb, var(--brand-light) 20%, var(--bg-inset));
+    border: 1px solid color-mix(in srgb, var(--brand-light) 65%, transparent); color: var(--brand-light); vertical-align: 1px; }
+/* Hide the redundant second life circle & mood on the focused opponent bar in pods (it's already featured on their seat card above), UNLESS targetable! */
+#game.pod-mode #oppBar .life:not(.targetable) { display: none; }
+#game.pod-mode #oppBar .who .mood { display: none; }
+#game.pod-mode #oppBar .who { font-size: 0.9rem; color: var(--text-soft); }
+
+/* ---- Commander Art Chips on Player Bars ---- */
+.cmd-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 3px; border-radius: 999px;
+    border-color: color-mix(in srgb, var(--gold) 55%, var(--border));
+    background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 14%, var(--bg-panel-raised)), var(--bg-panel)); }
+.cmd-chip.playable { border-color: var(--color-success);
+    box-shadow: 0 0 12px -2px color-mix(in srgb, var(--color-success) 70%, transparent); }
+.cmd-thumb-wrap { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; border: 1px solid var(--gold); flex: none; display: block; }
+.cmd-thumb { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; transform: scale(1.48); transform-origin: 50% 26%; display: block; }
+.cmd-nm { max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 0.84rem; color: var(--text-heading); }
+.cmd-tax { font-size: 0.72rem; font-weight: 700; padding: 0 5px; border-radius: 999px;
+    background: color-mix(in srgb, var(--gold) 24%, var(--bg-canvas)); color: var(--gold); }
+
+/* Keep desktop hand tools sleek on a single row */
+.hand-tools { flex-wrap: nowrap; gap: 6px; white-space: nowrap; }
+.hand-tools .btn.small { padding: 2px 8px; font-size: 0.8rem; }
+.hand-tools .seg button { padding: 2px 7px; font-size: 0.78rem; }
+
+/* ---- Active Combat Matchup Pill in Pods ---- */
+.combat-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px;
+    font-size: 0.82rem; color: var(--text-heading);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-warning) 22%, var(--bg-panel)), color-mix(in srgb, var(--bg-panel) 92%, transparent));
+    border: 1px solid color-mix(in srgb, var(--color-warning) 75%, transparent);
+    box-shadow: 0 0 16px -6px var(--color-warning); }
+.combat-pill.danger {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-error) 30%, var(--bg-panel)), color-mix(in srgb, var(--bg-panel) 92%, transparent));
+    border-color: var(--color-error); box-shadow: 0 0 18px -4px var(--color-error); }
+.combat-pill span { color: var(--text-soft); }
+
+/* ---- Side-Docked Modern Arena Action Feed (Desktop: left rail, never covers center cards!) ---- */
+@media (min-width: 601px) {
+    .act-banner {
+        left: 14px; top: auto; bottom: calc(var(--hand-h, 160px) + 108px);
+        transform: translateX(-18px) scale(0.97);
+        width: auto; min-width: 240px; max-width: min(360px, 34vw);
+        padding: 10px 14px 12px; gap: 12px; overflow: hidden;
+        border-radius: var(--radius-lg); border: 1px solid var(--act-c, var(--gold));
+        border-left: 4px solid var(--act-c, var(--gold));
+        background: linear-gradient(160deg, color-mix(in srgb, var(--bg-panel-raised) 95%, transparent), color-mix(in srgb, var(--bg-canvas) 95%, transparent));
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 14px 36px -8px var(--bg-canvas), 0 0 24px -10px var(--act-c, var(--gold)); }
+    .act-banner.show { opacity: 1; transform: translateX(0) scale(1); }
+    .act-cards.one img, .act-cards.one .noimg { width: 84px; border-radius: 6px; box-shadow: 0 6px 16px -4px var(--bg-canvas); }
+    .act-cards img, .act-cards .noimg { width: 52px; border-radius: 5px; }
+}
+.act-banner[data-kind="cast"] { --act-c: var(--brand-light); }
+.act-banner[data-kind="combat"] { --act-c: var(--color-error); }
+.act-banner[data-kind="land"] { --act-c: var(--color-success); }
+.act-banner[data-kind="ability"] { --act-c: var(--gold); }
+.act-banner[data-kind="counter"] { --act-c: var(--color-warning); }
+.act-banner[data-kind="turn"] { --act-c: var(--gold); }
+.act-pill { display: inline-block; width: fit-content; font-family: var(--font-display); font-size: 0.66rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px;
+    background: color-mix(in srgb, var(--act-c, var(--gold)) 20%, var(--bg-inset));
+    border: 1px solid color-mix(in srgb, var(--act-c, var(--gold)) 65%, transparent);
+    color: var(--act-c, var(--gold)); margin-bottom: 2px; }
+.act-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; transform-origin: left center;
+    background: linear-gradient(90deg, var(--act-c, var(--gold)), color-mix(in srgb, var(--text-heading) 45%, var(--act-c, var(--gold))));
+    animation: actCountdown var(--act-ms, 1500ms) linear forwards; }
+@keyframes actCountdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* ---- Cinematic Non-Blocking Turn Banner ---- */
+.turn-toast { position: fixed; left: 50%; top: 44%; transform: translate(-50%, -50%) scale(0.92); z-index: var(--z-banner);
+    pointer-events: none; opacity: 0; display: inline-flex; align-items: center; gap: 12px;
+    padding: 10px 22px 10px 12px; border-radius: 999px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--tt-c, var(--gold)) 24%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-canvas) 94%, transparent));
+    border: 1px solid color-mix(in srgb, var(--tt-c, var(--gold)) 80%, transparent);
+    box-shadow: 0 18px 46px -8px var(--bg-canvas), 0 0 34px -6px var(--tt-c, var(--gold));
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transition: opacity 0.24s ease, transform 0.28s cubic-bezier(.16, 1.12, .3, 1); }
+.turn-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.tt-av { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-size: 1.4rem; flex: none;
+    background: var(--bg-inset); border: 2px solid var(--tt-c, var(--gold)); box-shadow: 0 0 14px -2px var(--tt-c, var(--gold)); overflow: hidden; }
+.tt-av.has-art img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 24%; transform: scale(1.42); transform-origin: 50% 26%; display: block; }
+.tt-copy { display: grid; line-height: 1.15; text-align: left; }
+.tt-copy small { font-family: var(--font-display); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--tt-c, var(--gold)); }
+.tt-copy strong { font-family: var(--font-display); font-size: 1.25rem; color: var(--text-heading); letter-spacing: 0.02em; }
+.tt-copy em { font-style: normal; font-size: 0.78rem; color: var(--text-soft); max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---- Commander-Portrait Speech Bubbles ---- */
+.talk-bubble {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--bg-panel-raised) 96%, transparent), color-mix(in srgb, var(--bg-panel) 96%, transparent));
+    border-color: color-mix(in srgb, var(--tb-c, var(--gold)) 70%, var(--border));
+    border-left: 3px solid var(--tb-c, var(--gold));
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.tb-av { position: relative; width: 38px; height: 38px; border-radius: 9px; flex: none;
+    border: 2px solid var(--tb-c, var(--gold)); box-shadow: 0 2px 8px var(--bg-canvas); }
+.tb-av img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; border-radius: 7px; display: block; }
+.tb-mood-pip { position: absolute; right: -5px; bottom: -5px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 0.68rem; background: var(--bg-canvas); border: 1px solid var(--tb-c, var(--gold)); }
+
+/* ---- Color-Coded Modern Game Log ---- */
+.logwrap { background: color-mix(in srgb, var(--bg-inset) 65%, transparent); }
+.log > div { padding: 2px 6px; border-radius: 4px; border-left: 2px solid transparent; margin-bottom: 1px; line-height: 1.35; }
+.log > div.log-turn { margin-top: 5px; padding: 3px 7px; font-family: var(--font-display); font-weight: 700; font-size: 0.78rem;
+    color: var(--gold); border-left-color: var(--gold);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 16%, transparent), transparent); }
+.log > div.log-combat { border-left-color: var(--color-error); color: color-mix(in srgb, var(--color-error) 75%, var(--text-heading)); }
+.log > div.log-cast { border-left-color: var(--brand-light); color: var(--text-primary); }
+.log > div.log-death { border-left-color: var(--color-warning); color: var(--text-soft); }
+.log > div.log-deal { border-left-color: var(--gold); color: var(--gold); }
+.log > div.log-talk { border-left-color: color-mix(in srgb, var(--brand-light) 55%, var(--border)); font-style: italic; color: var(--text-soft); }
+.log > div.log-life { border-left-color: var(--color-success); color: color-mix(in srgb, var(--color-success) 70%, var(--text-primary)); }
+
+/* ---- Phone Overrides for 4-Player Commander Pod ---- */
+@media (max-width: 600px) {
+    #game.pod-mode .pod-strip { flex-wrap: wrap; gap: 4px; }
+    #game.pod-mode .pod-chip.seat { flex: 1 1 calc(33.33% - 4px); padding: 4px 6px 7px; border-radius: var(--radius-md); column-gap: 4px; row-gap: 2px;
+        grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "av main life" "stats stats stats"; }
+    #game.pod-mode .seat-av { width: 24px; height: 24px; border-radius: 6px; border-width: 1.5px; }
+    #game.pod-mode .seat-av-clip { border-radius: 5px; }
+    .seat-mood { display: none; }
+    #game.pod-mode .seat-main b { font-size: 0.72rem; }
+    .seat-tags { display: none; }
+    .seat-life-wrap { min-width: 0; padding: 1px 4px; border-radius: 5px; }
+    #game.pod-mode .seat-life { font-size: 0.85rem; }
+    .seat-life-lbl { display: none; }
+    #game.pod-mode .seat-stats { gap: 5px; font-size: 0.62rem; }
+    #game.pod-mode .seat-stats > span:nth-child(4), #game.pod-mode .seat-stats .seat-cz { display: none; }
+    #game.pod-mode .pod-chip.seat .atk { right: 4px; top: auto; bottom: 6px; padding: 0 4px; font-size: 0.54rem; }
+    .pod-utils { flex-direction: row; flex: 1 1 100%; justify-content: flex-end; gap: 4px; }
+    .pod-utils .pod-chip { padding: 2px 8px; font-size: 0.72rem; color: var(--text-heading); }
+    .pod-utils .pod-chip.meters { display: none; }
+    .cmd-chip { padding: 2px 7px 2px 2px; gap: 4px; }
+    .cmd-thumb-wrap { width: 18px; height: 18px; }
+    .cmd-nm { max-width: 9ch; font-size: 0.76rem; }
+    .turn-toast { top: 36%; padding: 7px 16px 7px 9px; gap: 8px; }
+    .tt-av { width: 32px; height: 32px; font-size: 1.1rem; }
+    .tt-copy strong { font-size: 1rem; }
+    .combat-pill { font-size: 0.72rem; padding: 2px 8px; }
+    .act-pill { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .act-prog { animation: none !important; }
+    .turn-toast { transition: none !important; }
+}
+
+/* =====================================================================
+   MTG Arena Play-Style Replication (2026-11-27, analyzed from live MTG
+   Arena Brawl gameplay):
+   - Centered face-to-face creature battle-line & sunlit/vignette mat
+   - Live SVG curved targeting, attack & block arrows (#arenaArrows)
+   - Attack-ready cyan halo + top chevron (^), tapped curved arrow (↪),
+     summoning-sickness swirling mist, electric cyan castable hand glow
+   - Right-side vertical Arena stack cards on desktop Open Board
+   - Player Commander avatar beside circular life medallion & Arena pills
+   ===================================================================== */
+
+/* ---- Arena Playmat Spotlight + Atmospheric Perimeter Vignette ---- */
+#game.open-board {
+    background:
+        radial-gradient(ellipse 68% 44% at 50% 47%, color-mix(in srgb, var(--gold) 9%, color-mix(in srgb, var(--brand-light) 12%, transparent)), transparent 72%),
+        radial-gradient(ellipse 105% 95% at 50% 50%, transparent 48%, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 100%),
+        repeating-linear-gradient(45deg, color-mix(in srgb, var(--brand-light) 2.5%, transparent) 0 2px, transparent 2px 9px),
+        radial-gradient(ellipse 82% 72% at 50% 48%, var(--felt-1), var(--felt-2) 66%, var(--bg-canvas) 100%); }
+
+/* ---- Centered Face-to-Face Creature Battle-Line (like MTG Arena!) ---- */
+#game.open-board .lane.creatures:not(.compact) { justify-content: center; gap: 10px; }
+#game.open-board .row-back { padding: 0 6px; }
+
+/* ---- Signature Arena Card Signifiers ---- */
+/* 1. Attack-ready cyan halo + glowing top chevron (^) during Declare Attackers */
+#game .perm.can-atk { position: relative; }
+#game .perm.can-atk img, #game .perm.can-atk .noimg {
+    box-shadow: 0 0 0 2.5px var(--brand-light), 0 0 20px 2px color-mix(in srgb, var(--brand-light) 85%, transparent), 0 6px 16px -4px var(--bg-canvas) !important;
+    animation: arenaAtkReady 1.6s ease-in-out infinite; }
+#game .perm.can-atk::before { content: ""; position: absolute; left: 50%; top: -11px; transform: translateX(-50%);
+    width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent;
+    border-bottom: 9px solid var(--brand-light);
+    filter: drop-shadow(0 0 6px var(--brand-light)); pointer-events: none; z-index: 4;
+    animation: arenaChevronBob 1.3s ease-in-out infinite; }
+@keyframes arenaAtkReady {
+    0%, 100% { box-shadow: 0 0 0 2px var(--brand-light), 0 0 14px 1px color-mix(in srgb, var(--brand-light) 70%, transparent); }
+    50% { box-shadow: 0 0 0 3px var(--brand-light), 0 0 26px 4px var(--brand-light); } }
+@keyframes arenaChevronBob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -3px); } }
+
+/* 2. Translucent curved tap arrow badge (↪) over tapped permanents */
+.tap-ico { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-10deg);
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 1.15rem; font-weight: 800; line-height: 1; pointer-events: none; z-index: 3;
+    color: color-mix(in srgb, var(--text-heading) 88%, transparent);
+    background: color-mix(in srgb, var(--bg-canvas) 52%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--text-heading) 32%, transparent);
+    text-shadow: 0 1px 4px var(--bg-canvas); }
+#game .perm.land .tap-ico { width: 22px; height: 22px; font-size: 0.85rem; }
+#game .lane.compact .tap-ico { display: none; }
+
+/* 3. Swirling misty summoning-sickness overlay (like MTG Arena!) */
+#game .perm.sick-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2;
+    background:
+        radial-gradient(circle at 28% 35%, color-mix(in srgb, var(--text-heading) 24%, transparent), transparent 55%),
+        radial-gradient(circle at 74% 62%, color-mix(in srgb, var(--brand-light) 22%, transparent), transparent 58%);
+    animation: arenaSickMist 3.2s ease-in-out infinite alternate; }
+#game .lane.compact .perm.sick-card::after { display: none; }
+@keyframes arenaSickMist { from { opacity: 0.45; } to { opacity: 0.85; } }
+
+/* 4. MTG Arena Electric Cyan Castable Hand Glow */
+.hand .hc.playable img {
+    box-shadow: 0 0 0 2.5px var(--brand-light), 0 0 18px 2px color-mix(in srgb, var(--brand-light) 82%, transparent), 0 8px 18px -4px var(--bg-canvas);
+    animation: arenaCyanPlayable 2.2s ease-in-out infinite; }
+@keyframes arenaCyanPlayable {
+    0%, 100% { box-shadow: 0 0 0 2px var(--brand-light), 0 0 14px 1px color-mix(in srgb, var(--brand-light) 68%, transparent), 0 8px 18px -4px var(--bg-canvas); }
+    50% { box-shadow: 0 0 0 3px var(--mana-U), 0 0 24px 3px color-mix(in srgb, var(--brand-light) 95%, transparent), 0 8px 18px -4px var(--bg-canvas); } }
+
+/* ---- Player Commander Avatar beside Circular Life Medallion ---- */
+.me-av { display: inline-block; width: 38px; height: 38px; border-radius: 50%; margin-right: 6px; vertical-align: middle;
+    border: 2px solid var(--gold); box-shadow: 0 0 14px -2px color-mix(in srgb, var(--gold) 65%, transparent), 0 3px 10px var(--bg-canvas); overflow: hidden; }
+.me-av .seat-av-clip { border-radius: 50%; }
+#meBar .who { display: inline-flex; align-items: center; }
+
+/* ---- Right-Side Vertical Arena Stack Cards (Desktop Open Board; DOM remains inside #midBar for tests!) ---- */
+@media (min-width: 760px) {
+    #game.open-board #midBar .stackbar {
+        position: fixed; right: 16px; top: 40%; transform: translateY(-50%); z-index: 14;
+        flex-direction: column; align-items: flex-end; gap: 6px; max-width: 176px; pointer-events: auto; }
+    #game.open-board #midBar .stackbar .lane-label {
+        background: color-mix(in srgb, var(--bg-canvas) 82%, transparent);
+        border: 1px solid color-mix(in srgb, var(--brand-light) 45%, var(--border));
+        color: var(--brand-light); padding: 2px 10px; border-radius: 999px; font-weight: 700; }
+    #game.open-board #midBar .stackbar .stack-item {
+        flex-direction: column; align-items: stretch; gap: 4px; width: 154px; max-width: 154px; padding: 5px;
+        border-radius: 10px; text-align: left;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 96%, transparent), color-mix(in srgb, var(--bg-canvas) 96%, transparent));
+        border: 1.5px solid color-mix(in srgb, var(--brand-light) 70%, var(--border));
+        box-shadow: 0 12px 28px -6px var(--bg-canvas), 0 0 22px -6px color-mix(in srgb, var(--brand-light) 70%, transparent);
+        animation: arenaStackIn 0.28s cubic-bezier(.16, 1.12, .3, 1); }
+    #game.open-board #midBar .stackbar .stack-item.top {
+        border-color: var(--gold);
+        box-shadow: 0 14px 32px -6px var(--bg-canvas), 0 0 26px -4px color-mix(in srgb, var(--gold) 75%, transparent); }
+    #game.open-board #midBar .stackbar .stack-item img { width: 100%; aspect-ratio: 1 / 0.78; object-fit: cover; object-position: 50% 16%; border-radius: 6px; display: block; }
+    #game.open-board #midBar .stackbar .stack-item span { font-size: 0.76rem; font-weight: 600; color: var(--text-heading); white-space: normal; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    @keyframes arenaStackIn { from { opacity: 0; transform: translateX(26px) scale(0.92); } to { opacity: 1; transform: none; } }
+}
+
+/* ---- Arena Beveled Combat / Resolve Action Pills ---- */
+.btn.act-atk {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--mythic) 78%, var(--text-heading)), var(--mythic) 52%, color-mix(in srgb, var(--mana-R) 75%, var(--bg-canvas)));
+    border: 1.5px solid color-mix(in srgb, var(--gold) 65%, var(--mythic)); color: var(--text-heading);
+    border-radius: 999px; padding: 8px 22px; font-weight: 700; letter-spacing: 0.03em;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 38%, transparent), 0 4px 20px -4px var(--mythic); }
+.btn.act-atk:hover:not(:disabled) { filter: brightness(1.12);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 45%, transparent), 0 6px 26px -2px var(--mythic); }
+.btn.act-resolve {
+    min-height: 44px; font-family: var(--font-display); font-weight: 700; letter-spacing: 0.03em;
+    border-radius: 999px; padding: 8px 22px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 68%, var(--text-heading)), color-mix(in srgb, var(--gold) 82%, var(--mythic)));
+    border: 1.5px solid var(--gold); color: var(--bg-canvas);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 48%, transparent), 0 4px 20px -4px var(--gold); }
+.btn.act-go { border-radius: 999px; padding: 8px 20px; }
+
+/* ---- Live SVG Targeting & Combat Arrows Overlay ---- */
+.arena-arrows { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 56; overflow: visible; }
+.arw-glow { fill: none; stroke-width: 9; stroke-linecap: round; opacity: 0.28; filter: blur(3px); }
+.arw-line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-dasharray: 10 6; animation: arenaArrowFlow 0.7s linear infinite; }
+.arw-glow.spell, .arw-line.spell { stroke: var(--brand-light); }
+.arw-glow.attack, .arw-line.attack { stroke: var(--mythic); }
+.arw-glow.block, .arw-line.block { stroke: var(--mana-U); }
+.arw-glow.target-lock, .arw-line.target-lock { stroke: var(--gold); opacity: 0.95; }
+.arw-head.spell { fill: var(--brand-light); }
+.arw-head.attack { fill: var(--mythic); }
+.arw-head.block { fill: var(--mana-U); }
+.arw-head.target-lock { fill: var(--gold); }
+@keyframes arenaArrowFlow { from { stroke-dashoffset: 32; } to { stroke-dashoffset: 0; } }
+
+@media (max-width: 600px) {
+    .me-av { width: 28px; height: 28px; margin-right: 4px; }
+    .tap-ico { width: 20px; height: 20px; font-size: 0.78rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #game .perm.can-atk img, #game .perm.can-atk .noimg, #game .perm.can-atk::before,
+    #game .perm.sick-card::after, .hand .hc.playable img, .arw-line,
+    #game.open-board #midBar .stackbar .stack-item { animation: none !important; }
+}
+
+/* =====================================================================
+   Full-Bleed MTG Arena Table Overhaul (2026-11-27, owner: "make our game
+   while playing look more like arena? like overhauling the ui?").
+   Active under #game.open-board on desktop (>= 760px); Classic board and
+   phone layouts stay clean and intact. Strictly design-token driven.
+   ===================================================================== */
+
+/* Shared bar-section wrappers so Classic board & phones keep flat horizontal flow */
+.bar-left, .bar-center, .bar-right { display: contents; }
+.av-medallion { display: inline-flex; align-items: center; gap: 6px; }
+.arena-av { width: 32px; height: 32px; border-radius: 50%; display: inline-grid; place-items: center; flex: none; overflow: hidden;
+    background: var(--bg-inset); border: 2px solid var(--sc, var(--gold)); font-size: 1rem; }
+.arena-av .seat-av-clip { border-radius: 50%; }
+#game.pod-mode #oppBar .opp-av { display: none; }
+.arena-corner-actions { display: contents; }
+.pile-card { display: inline-flex; align-items: center; gap: 3px; }
+.pile-card .pile-art { display: none; }
+@media (max-width: 600px) {
+    .arena-av { width: 24px; height: 24px; font-size: 0.8rem; }
+    #game.pod-mode .pod-chip.seat { padding: 4px 4px 7px; column-gap: 3px; }
+    #game.pod-mode .seat-av { width: 20px; height: 20px; }
+    #game.pod-mode .seat-main b { font-size: 0.68rem; }
+}
+
+@media (min-width: 760px) {
+    /* 1. Full-bleed scenic Arena playmat with faint etched arcane battle-ring */
+    #game.open-board {
+        grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) auto auto;
+        background:
+            radial-gradient(ellipse 64% 48% at 50% 47%, color-mix(in srgb, var(--gold) 11%, color-mix(in srgb, var(--brand-light) 13%, transparent)), transparent 70%),
+            radial-gradient(ellipse 102% 96% at 50% 50%, transparent 46%, color-mix(in srgb, var(--bg-canvas) 90%, transparent) 100%),
+            repeating-linear-gradient(45deg, color-mix(in srgb, var(--brand-light) 2%, transparent) 0 2px, transparent 2px 10px),
+            radial-gradient(ellipse 84% 72% at 50% 48%, var(--felt-1), var(--felt-2) 64%, var(--bg-canvas) 100%); }
+    /* Etched concentric Arena battle-ring in the center of the mat */
+    #game.open-board::before { content: ""; position: fixed; left: 50%; top: 45%; width: min(56vw, 560px); height: min(56vw, 560px);
+        transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; z-index: 0;
+        border: 1px solid color-mix(in srgb, var(--gold) 12%, transparent);
+        box-shadow: inset 0 0 0 28px color-mix(in srgb, var(--brand-light) 2.5%, transparent),
+                    inset 0 0 0 29px color-mix(in srgb, var(--brand-light) 9%, transparent),
+                    0 0 60px -20px color-mix(in srgb, var(--gold) 14%, transparent); }
+    #game.open-board > .pbar, #game.open-board > .side { position: relative; z-index: 1; }
+    /* Keep #midBar and .dock out of trapped z-index:1 stacking contexts so fixed #turnBtn, .stackbar, .logwrap, .hand-tools, and lifted .hc cards all layer cleanly and receive clicks! */
+    #game.open-board > .midbar, #game.open-board > .dock { position: relative; z-index: auto; }
+
+    /* 2. Seamless 3-column Arena Player Bars (Avatar + Life Medallion DEAD CENTER, 3D Piles bottom-left!) */
+    #game.open-board .pbar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px;
+        padding: 4px 18px; background: none; border: 0; }
+    #game.open-board .bar-left { grid-column: 1; grid-row: 1; display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; min-width: 0; justify-self: start; }
+    #game.open-board .bar-center { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; justify-self: center; position: relative; }
+    #game.open-board .bar-right { grid-column: 3; grid-row: 1; display: flex; align-items: center; gap: 8px; justify-self: end; }
+    #game.open-board .bar-left .zones { order: -2; }
+    #game.open-board .bar-left .cmd-zone { order: -1; }
+    #game.open-board .pbar .bar-right > .btn.small[onclick^="boardOverview"] { display: none; }
+
+    /* Centered MTG Arena Circular Avatar + Overlapping Sculpted Life Medallion */
+    #game.open-board .av-medallion { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+    #game.open-board .arena-av { width: 64px; height: 64px; border-radius: 50%; margin: 0; display: grid; place-items: center; font-size: 1.8rem;
+        background: radial-gradient(circle at 50% 30%, var(--bg-panel-raised), var(--bg-inset));
+        border: 3px solid var(--sc, var(--gold));
+        box-shadow: 0 0 0 2px var(--bg-canvas), 0 8px 24px -4px var(--bg-canvas), 0 0 26px -4px color-mix(in srgb, var(--sc, var(--gold)) 65%, transparent);
+        overflow: hidden; }
+    #game.open-board .arena-av .seat-av-clip { border-radius: 50%; }
+    #game.open-board #meBar .arena-av { width: 68px; height: 68px; border-color: var(--gold);
+        box-shadow: 0 0 0 2px var(--bg-canvas), 0 8px 28px -4px var(--bg-canvas), 0 0 32px -4px color-mix(in srgb, var(--gold) 72%, transparent); }
+    #game.open-board .av-medallion .life { position: relative; z-index: 2; margin-top: -22px; width: 48px; height: 48px; font-size: 1.32rem; font-weight: 800;
+        border: 2.5px solid color-mix(in srgb, var(--gold) 80%, var(--border));
+        background: radial-gradient(circle at 38% 24%, color-mix(in srgb, var(--text-heading) 20%, var(--bg-panel-raised)), var(--bg-panel) 50%, var(--bg-inset) 92%);
+        box-shadow: inset 0 2px 4px color-mix(in srgb, var(--text-heading) 24%, transparent), 0 0 0 2.5px var(--bg-canvas), 0 6px 16px var(--bg-canvas); }
+    #game.open-board #meBar .av-medallion .life { width: 52px; height: 52px; font-size: 1.42rem; }
+    #game.open-board #meBar .bar-center .who { display: none; }
+    #game.open-board #oppBar:not(:has(.pod-strip)) .bar-center .who { font-size: 0.78rem; letter-spacing: 0.04em; color: var(--text-soft); margin-bottom: 2px;
+        background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); padding: 1px 10px; border-radius: 999px; border: 1px solid var(--border-subtle); }
+
+    /* In 4-player Commander pods: keep top broadcast seat strip full-width & streamline focused-opponent row into a sleek translucent bar */
+    #game.open-board.pod-mode #oppBar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 6px 14px 2px; }
+    #game.open-board.pod-mode #oppBar .pod-strip { flex: 1 1 100%; }
+    #game.open-board.pod-mode #oppBar .bar-center { order: 1; flex-direction: row; gap: 6px; }
+    #game.open-board.pod-mode #oppBar .bar-center .arena-av { display: none; }
+    #game.open-board.pod-mode #oppBar .bar-center .life:not(.targetable) { display: none; }
+    #game.open-board.pod-mode #oppBar .bar-center .life.targetable { margin-top: 0; width: 34px; height: 34px; font-size: 0.95rem; }
+    #game.open-board.pod-mode #oppBar .bar-left { order: 2; gap: 8px; }
+    #game.open-board.pod-mode #oppBar .bar-right { order: 3; margin-left: auto; }
+    #game.open-board.pod-mode #oppBar .bar-right > .btn.small[onclick^="boardOverview"] { display: inline-flex; }
+
+    /* 3. 3D Angled Library Deck Stack & Graveyard Art Pile (MTG Arena bottom-left & top-left!) */
+    #game.open-board .zones { background: none; border: 0; padding: 0; gap: 10px; }
+    #game.open-board .pile-card { position: relative; width: 42px; height: 56px; border-radius: 6px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; overflow: hidden;
+        transform: perspective(260px) rotateX(12deg) rotateZ(-4deg);
+        transition: transform 0.16s ease, box-shadow 0.16s ease; }
+    #game.open-board .pile-deck {
+        background:
+            radial-gradient(circle at 50% 44%, color-mix(in srgb, var(--gold) 55%, var(--brand-light)), transparent 42%),
+            repeating-linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, var(--bg-inset)) 0 4px, var(--felt-2) 4px 8px);
+        border: 1.5px solid color-mix(in srgb, var(--gold) 55%, var(--brand-light));
+        box-shadow: -2px 2px 0 var(--bg-panel-raised), -4px 4px 0 var(--bg-inset), -5px 6px 14px var(--bg-canvas); }
+    #game.open-board .pile-gy {
+        background: linear-gradient(160deg, var(--bg-panel-raised), var(--bg-inset));
+        border: 1.5px dashed color-mix(in srgb, var(--border) 90%, var(--brand-light));
+        box-shadow: -2px 3px 10px color-mix(in srgb, var(--bg-canvas) 85%, transparent); }
+    #game.open-board .pile-gy.has-art { border-style: solid; border-color: color-mix(in srgb, var(--brand-light) 55%, var(--border)); }
+    #game.open-board .pile-gy:hover { transform: perspective(260px) rotateX(6deg) rotateZ(-1deg) translateY(-3px); border-color: var(--gold);
+        box-shadow: 0 8px 18px -4px var(--bg-canvas), 0 0 14px -4px var(--gold); }
+    #game.open-board .pile-card .pile-art { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+    #game.open-board .pile-card .pile-ico { font-size: 0.95rem; opacity: 0.72; line-height: 1; }
+    #game.open-board .pile-deck .pile-ico { display: none; }
+    #game.open-board .pile-cnt { position: relative; z-index: 2; font-family: var(--font-display); font-weight: 800; font-size: 0.88rem;
+        color: var(--text-heading); padding: 1px 6px; border-radius: 999px;
+        background: color-mix(in srgb, var(--bg-canvas) 84%, transparent);
+        border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--border)); font-variant-numeric: tabular-nums; }
+    #game.open-board.pod-mode #oppBar .pile-card { width: auto; height: auto; transform: none; padding: 2px 8px; border-radius: 999px;
+        flex-direction: row; gap: 4px; background: color-mix(in srgb, var(--bg-inset) 80%, transparent); border: 1px solid var(--border-subtle); box-shadow: none; }
+    #game.open-board.pod-mode #oppBar .pile-card .pile-art { display: none; }
+    #game.open-board.pod-mode #oppBar .pile-deck .pile-ico { display: inline; }
+    #game.open-board.pod-mode #oppBar .pile-gy.has-art::before { content: "🪦"; font-size: 0.85rem; }
+    #game.open-board.pod-mode #oppBar .pile-cnt { background: none; border: 0; padding: 0; font-size: 0.82rem; }
+
+    /* 4. Uncluttered Center Battle-Line (#midBar) + Iconic Bottom-Right MTG Arena Action Dock */
+    #game.open-board #midBar { display: flex; justify-content: center; align-items: center; min-height: 30px; padding: 2px 16px;
+        background: none !important; pointer-events: none; }
+    #game.open-board #midBar > * { pointer-events: auto; }
+    #game.open-board #midBar .mid-main { gap: 4px; }
+    #game.open-board #midBar .prompt, #game.open-board #midBar .hint {
+        font-family: var(--font-display); font-size: 0.92rem; letter-spacing: 0.04em;
+        color: color-mix(in srgb, var(--text-heading) 88%, transparent);
+        text-shadow: 0 2px 12px var(--bg-canvas), 0 0 20px var(--bg-canvas); }
+    #game.open-board #midBar .hint { font-size: 0.82rem; color: var(--text-soft); }
+
+    /* Center Battle-Line Phase Rail (always unobstructed, never behind hand cards!) */
+    #game.open-board #midBar .phase-strip.rail {
+        position: static;
+        background: color-mix(in srgb, var(--bg-canvas) 78%, transparent);
+        border: 1px solid color-mix(in srgb, var(--gold) 38%, var(--border));
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 6px 20px -6px var(--bg-canvas); }
+    /* Bottom-Right Arena Action Button (always crisp & clickable above .dock and hand edge!) */
+    #game.open-board #midBar .turn-btn {
+        position: fixed; right: 18px; bottom: 18px; z-index: 22; pointer-events: auto;
+        min-width: 156px; min-height: 52px; border-radius: 999px; padding: 8px 22px;
+        box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text-heading) 24%, transparent), 0 10px 26px -6px var(--bg-canvas); }
+    #game.open-board #midBar .turn-btn.ready {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 74%, var(--text-heading)), color-mix(in srgb, var(--gold) 68%, var(--mythic)) 58%, color-mix(in srgb, var(--mythic) 55%, var(--bg-panel)));
+        border: 2px solid color-mix(in srgb, var(--gold) 90%, var(--text-heading)); color: var(--bg-canvas);
+        box-shadow: inset 0 2px 0 color-mix(in srgb, var(--text-heading) 45%, transparent), 0 0 28px -4px color-mix(in srgb, var(--gold) 80%, transparent), 0 10px 28px -6px var(--bg-canvas); }
+    #game.open-board #midBar .turn-btn.ready .tb-label { color: var(--bg-canvas); text-shadow: 0 1px 0 color-mix(in srgb, var(--text-heading) 35%, transparent); }
+    #game.open-board #midBar .turn-btn.ready .tb-sub { color: color-mix(in srgb, var(--bg-canvas) 82%, transparent); font-weight: 700; }
+
+    /* 5. Full-Bleed Transparent Floating Hand Fan (NO heavy dark dock box! NO permanent 300px log wall!) */
+    #game.open-board .dock {
+        grid-template-columns: minmax(0, 1fr);
+        background: linear-gradient(to top, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 0%, color-mix(in srgb, var(--bg-canvas) 30%, transparent) 55%, transparent 100%);
+        border: 0; box-shadow: none; position: relative; pointer-events: none; }
+    #game.open-board .dock .hand .hc,
+    #game.open-board .dock .hand-tools,
+    #game.open-board .dock .logwrap { pointer-events: auto; }
+    #game.open-board .hand-wrap { max-width: calc(100vw - 420px); margin: 0 auto; width: 100%; }
+    #game.open-board .dock .hand { padding: 6px 28px 10px; min-height: calc(var(--hand-h) + 12px); }
+    #game.open-board .dock .hand .hc { transform: translateY(calc(var(--dip, 0px) + 10px)) rotate(var(--rot, 0deg)); }
+    #game.open-board .dock .hand .hc:hover, #game.open-board .dock .hand .hc:focus-visible {
+        transform: translateY(-34px) scale(1.22); z-index: var(--z-lift) !important; }
+    #game.open-board .dock .hand .hc:hover img {
+        box-shadow: 0 20px 44px -8px var(--bg-canvas), 0 0 28px -2px color-mix(in srgb, var(--brand-light) 75%, transparent); }
+
+    /* Unobtrusive minimal corner utility cluster (2 compact rows inside bottom-left pocket, never touching hand cards!) */
+    #game.open-board .hand-tools {
+        position: fixed; left: 12px; bottom: 12px; z-index: 15; padding: 5px 7px; gap: 4px;
+        flex-wrap: wrap; max-width: 186px; border-radius: 12px; width: auto;
+        background: color-mix(in srgb, var(--bg-canvas) 76%, transparent);
+        border: 1px solid color-mix(in srgb, var(--brand-light) 22%, var(--border-subtle));
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        opacity: 0.78; transition: opacity 0.18s ease, border-color 0.18s ease; }
+    #game.open-board .hand-tools:hover, #game.open-board .hand-tools:focus-within { opacity: 1; border-color: var(--brand-light); }
+    #game.open-board .hand-tools .mm-word { display: none; }
+    #game.open-board .hand-tools #handCount { display: none; }
+
+    /* 6. Collapsible Floating Frosted Game Log Drawer (bottom-right with generous clearance above Turn Button & hand!) */
+    #game.open-board .logwrap {
+        position: fixed; right: 18px; bottom: 96px; z-index: 16; border: 0; padding: 0;
+        background: transparent; display: flex; flex-direction: column-reverse; align-items: flex-end; }
+    #game.open-board .logwrap[open] { z-index: 25; }
+    #game.open-board .logwrap > summary {
+        list-style: none; padding: 5px 12px; border-radius: 999px;
+        background: color-mix(in srgb, var(--bg-canvas) 78%, transparent);
+        border: 1px solid color-mix(in srgb, var(--brand-light) 32%, var(--border));
+        color: var(--text-soft); font-family: var(--font-display); font-size: 0.76rem; font-weight: 700;
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 6px 18px -6px var(--bg-canvas); transition: border-color 0.15s, color 0.15s; }
+    #game.open-board .logwrap > summary::-webkit-details-marker { display: none; }
+    #game.open-board .logwrap > summary::before { content: "📜 "; }
+    #game.open-board .logwrap > summary:hover { border-color: var(--gold); color: var(--text-heading); }
+    #game.open-board .logwrap[open] > summary { border-color: var(--gold); color: var(--gold); }
+    #game.open-board .logwrap[open] .log {
+        width: min(340px, 34vw); max-height: 44vh; margin-bottom: 8px; padding: 10px;
+        border-radius: var(--radius-lg);
+        background: color-mix(in srgb, var(--bg-panel) 92%, var(--bg-canvas));
+        border: 1px solid color-mix(in srgb, var(--brand-light) 40%, var(--border));
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 18px 46px -8px var(--bg-canvas); }
+
+    /* Keep side-docked Action Feed clear of bottom-left piles & utility pills */
+    #game.open-board .act-banner { bottom: calc(var(--hand-h, 150px) + 128px); }
+}
+/* =====================================================================
+   MTG Arena Table Refinement v2 (2026-11-27, owner feedback):
+   1. Sleek single-row bottom-left Arena pill (💧 · 1× · ⚙️ gear popover)
+   2. Space-efficient compact 4-player Commander top strip (~52px tall!)
+   3. Half-sunk desktop hand fan that glides up on hover to reveal text
+   4. Peekable compact mobile hand strip with 1-tap ▲/▼ expand toggle
+   ===================================================================== */
+
+/* Classic board keeps gear contents flat inline so Classic toolbar stays unchanged */
+.arena-gear { display: inline-flex; position: relative; }
+.arena-gear > summary { list-style: none; }
+.arena-gear > summary::-webkit-details-marker { display: none; }
+#game:not(.open-board) .arena-gear, #game:not(.open-board) .gear-menu, #game:not(.open-board) .gear-row { display: contents; }
+#game:not(.open-board) .arena-gear > summary, #game:not(.open-board) .gear-lbl, #game:not(.open-board) .speed-cycle-btn { display: none; }
+
+/* Tighter Commander portrait crop so zero white border or card type-line peeks in */
+.seat-av-clip img { object-position: 50% 21%; transform: scale(1.62); transform-origin: 50% 23%; }
+.cmd-thumb { object-position: 50% 21%; transform: scale(1.64); transform-origin: 50% 23%; }
+
+/* Compact 4-player top broadcast seat bar (cuts top chrome height nearly in half!) */
+#game.pod-mode .pod-strip { gap: 6px; align-items: stretch; }
+#game.pod-mode .pod-chip.seat {
+    padding: 5px 9px 7px; border-radius: 10px; column-gap: 8px; row-gap: 1px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "av main life" "av stats life"; }
+#game.pod-mode .seat-av { width: 38px; height: 38px; border-radius: 8px; }
+#game.pod-mode .seat-av-clip { border-radius: 6px; }
+.seat-mood { width: 17px; height: 17px; font-size: 0.64rem; right: -5px; bottom: -4px; }
+#game.pod-mode .seat-main b { font-size: 0.88rem; gap: 6px; align-items: baseline; }
+.seat-cmdr { font-family: var(--font-body); font-size: 0.72rem; font-weight: 400; color: var(--text-soft);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.seat-life-wrap { min-width: 38px; padding: 4px 8px; border-radius: 8px; }
+#game.pod-mode .seat-life { font-size: 1.22rem; }
+#game.pod-mode .seat-stats { gap: 6px; font-size: 0.72rem; }
+.seat-lib { opacity: 0.8; }
+.pod-utils { gap: 3px; }
+.pod-util-row { display: flex; gap: 4px; }
+.pod-utils .pod-chip { padding: 3px 8px; font-size: 0.74rem; }
+.pod-utils .pod-chip.meters { padding: 2px 8px; font-size: 0.72rem; }
+
+@media (min-width: 760px) {
+    /* Streamline pod #oppBar's second row into an ultra-slim floating strip (no duplicate stats!) */
+    #game.open-board.pod-mode #oppBar { padding: 4px 12px 0; row-gap: 3px; }
+    #game.open-board.pod-mode #oppBar .bar-center .who { font-size: 0.78rem; }
+    #game.open-board.pod-mode #oppBar .zones .pile-deck,
+    #game.open-board.pod-mode #oppBar .bar-left > .zone-count:not(.pile-gy):not(.cmd-dmg-pill) { display: none; }
+    #game.open-board.pod-mode #oppBar .cmd-chip { padding: 1px 8px 1px 2px; font-size: 0.76rem; }
+    #game.open-board.pod-mode #oppBar .bar-right .btn.small { padding: 2px 8px; font-size: 0.76rem; }
+
+    /* Sleek single-row bottom-left Arena control pill (💧 · 1× · ⚙️) with clean upward popover */
+    #game.open-board .hand-tools {
+        left: 14px; bottom: 14px; max-width: none; flex-wrap: nowrap; padding: 4px 6px; gap: 4px;
+        border-radius: 999px; opacity: 0.82; }
+    #game.open-board .hand-tools > .btn.small,
+    #game.open-board .arena-gear > summary {
+        min-width: 30px; height: 28px; padding: 0 8px; border-radius: 999px;
+        display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    #game.open-board .arena-gear > summary { cursor: pointer; }
+    #game.open-board .arena-gear[open] > summary { border-color: var(--gold); color: var(--gold); }
+    #game.open-board .gear-menu {
+        position: absolute; left: 0; bottom: calc(100% + 10px); z-index: 30;
+        min-width: 224px; padding: 10px 12px; border-radius: var(--radius-lg);
+        display: grid; gap: 8px;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--bg-panel-raised) 96%, transparent), color-mix(in srgb, var(--bg-canvas) 97%, transparent));
+        border: 1px solid color-mix(in srgb, var(--brand-light) 45%, var(--border));
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 18px 44px -8px var(--bg-canvas); }
+    #game.open-board .gear-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    #game.open-board .gear-lbl { font-family: var(--font-display); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-soft); }
+    #game.open-board .gear-menu .mm-word { display: inline; }
+
+    /* Half-Sunk MTG Arena Hand Fan (+80px more battlefield room! Stationary .hc hit-box + animated child <img> = ZERO hover flicker!) */
+    #game.open-board .hand-wrap { max-width: calc(100vw - 380px); }
+    #game.open-board .dock { overflow: visible; }
+    #game.open-board .dock .hand {
+        padding: 4px 28px 0;
+        height: calc(var(--hand-h) * 0.56 + 10px);
+        min-height: 0;
+        align-items: flex-start;
+        overflow: visible; }
+    #game.open-board .dock .hand .hc {
+        transform: none !important;
+        transition: none; }
+    #game.open-board .dock .hand .hc img,
+    #game.open-board .dock .hand .hc .noimg {
+        transform: translateY(var(--dip, 0px)) rotate(var(--rot, 0deg));
+        transform-origin: 50% 100%;
+        transition: transform 0.18s cubic-bezier(.18, 1.06, .28, 1), box-shadow 0.18s ease;
+        will-change: transform; }
+    #game.open-board .dock .hand .hc:hover,
+    #game.open-board .dock .hand .hc:focus-visible {
+        transform: none !important;
+        z-index: var(--z-lift) !important; }
+    #game.open-board .dock .hand .hc:hover img,
+    #game.open-board .dock .hand .hc:focus-visible img,
+    #game.open-board .dock .hand .hc:hover .noimg,
+    #game.open-board .dock .hand .hc:focus-visible .noimg {
+        transform: translateY(calc(var(--hand-h) * -0.52 - 14px)) scale(1.22); }
+    #game.open-board .dock .hand .hc:hover .sup,
+    #game.open-board .dock .hand .hc:focus-visible .sup { opacity: 0; }
+    #game.open-board #meBar { padding-bottom: 2px; }
+    #game.open-board #meBar .av-medallion .life { margin-top: -18px; }
+}
+@media (min-width: 760px) and (max-width: 1080px) {
+    #game.open-board .hand-wrap { max-width: calc(100vw - 320px); }
+    #game.open-board .hand-tools { left: 10px; bottom: 10px; max-width: none; }
+    #game.open-board #midBar .turn-btn { bottom: 10px; right: 10px; min-width: 132px; min-height: 48px; padding: 6px 14px; }
+    #game.open-board .logwrap { bottom: 78px; right: 10px; }
+}
+
+/* ---- Phone Space-Saving Peekable Hand Strip (<= 600px) ---- */
+.phone-hand-toggle { display: none; }
+@media (max-width: 600px) {
+    #game.pod-mode .seat-cmdr, #game.pod-mode .seat-lib { display: none; }
+    .pod-util-row { display: flex; gap: 4px; }
+    #game .phone-hand-toggle.phone-only {
+        display: inline-flex !important; align-items: center; justify-content: center; gap: 6px;
+        align-self: center; margin: -12px auto 2px; padding: 2px 12px; border-radius: 999px;
+        font-family: var(--font-display); font-size: 0.72rem; font-weight: 700;
+        background: color-mix(in srgb, var(--bg-panel-raised) 92%, transparent);
+        border: 1px solid color-mix(in srgb, var(--brand-light) 45%, var(--border));
+        color: var(--text-heading); position: relative; z-index: 5; }
+    /* Compact art-peek hand by default on phones (+65px more battlefield space!) */
+    #game:not(.phone-hand-open) .dock .hand {
+        max-height: 76px; padding: 4px 10px 0; overflow-y: hidden; align-items: flex-start; }
+    #game.phone-hand-open .dock .hand { max-height: none; padding: 6px 10px; }
+}
+
+/* =====================================================================
+   MTG Arena Scenic Assets, Zero-Scrollbar Battlefield & Sculpted Cards
+   (2026-11-27, owner: "get away from scroll bars and have nice beautiful
+   assets even we need to program more complicated elements"):
+   - Bespoke high-res Arena playmat (spellslinger/art/ui/arena-mat.jpg)
+     tinted by every Look's design tokens + animated floating embers canvas
+   - Zero-scrollbar dynamic 2-3 row creature layout on desktop Open Board
+   - Sculpted metallic beveled P/T shields, sapphire blue counter orbs,
+     inline SVG keyword medallions, gilded legendary crowns, shingled stacks,
+     fiery active stack border, ornate SVG avatar crests & custom deck back
+   ===================================================================== */
+
+.arena-motes { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; display: none; }
+#game.open-board .arena-motes { display: block; }
+.av-crest { display: none; }
+
+/* Custom generated Arena playmat + light token color-grading veil so all 7 Looks harmonize while stone carvings, corner lanterns & brushed gold shine */
+#game.open-board {
+    background:
+        radial-gradient(ellipse 68% 52% at 50% 47%, color-mix(in srgb, var(--gold) 7%, transparent), transparent 68%),
+        radial-gradient(ellipse 106% 102% at 50% 50%, color-mix(in srgb, var(--felt-1) 18%, transparent) 30%, color-mix(in srgb, var(--bg-canvas) 68%, transparent) 100%),
+        linear-gradient(180deg, color-mix(in srgb, var(--felt-2) 26%, transparent), color-mix(in srgb, var(--felt-1) 16%, transparent) 50%, color-mix(in srgb, var(--bg-canvas) 40%, transparent)),
+        url('art/ui/arena-mat.jpg') center / cover no-repeat,
+        var(--bg-canvas); }
+#game.open-board::before { display: none; }
+
+/* Custom generated ornate deck card-back on 3D Library stack (desktop >= 760px ONLY so phone inline zone badges stay clean!) */
+@media (min-width: 760px) {
+    #game.open-board .pile-deck {
+        background:
+            linear-gradient(180deg, color-mix(in srgb, var(--brand) 12%, transparent), color-mix(in srgb, var(--bg-canvas) 18%, transparent)),
+            url('art/ui/arena-cardback.jpg') center / cover no-repeat,
+            repeating-linear-gradient(135deg, color-mix(in srgb, var(--brand) 65%, var(--bg-inset)) 0 4px, var(--felt-2) 4px 8px);
+        border: 1.5px solid color-mix(in srgb, var(--gold) 78%, var(--text-heading));
+        box-shadow: -2px 2px 0 color-mix(in srgb, var(--gold) 35%, var(--bg-panel-raised)),
+                    -4px 4px 0 var(--bg-panel),
+                    -6px 6px 0 var(--bg-inset),
+                    -7px 9px 18px var(--bg-canvas); }
+}
+
+/* ZERO SCROLLBARS on desktop Open Board battlefields! */
+@media (min-width: 760px) {
+    #game.open-board .side { overflow: hidden !important; padding: 4px 12px; gap: 4px; }
+    #game.open-board .lane.creatures:not(.compact) { gap: 8px; row-gap: 6px; }
+    #game.open-board .lane.creatures.arena-dense { gap: 5px; row-gap: 5px; }
+    #game.open-board .lane.creatures.compact { scrollbar-width: none; }
+    #game.open-board .lane.creatures.compact::-webkit-scrollbar { width: 0; height: 0; }
+    #game.open-board .row-front { margin-top: 6px; }
+    #game.open-board .opp-side .row-front { margin-bottom: 6px; }
+    #game.open-board .board-sum { top: -14px; left: 0; right: auto; font-size: 0.68rem; padding: 0 7px; opacity: 0.78; }
+    #game.open-board .opp-side .board-sum { top: auto; bottom: -14px; left: 0; right: auto; }
+
+    /* Ornate gilded Art-Deco SVG crest behind Avatar & Life Shield (like MTG Arena!) */
+    #game.open-board .av-crest { display: block; position: absolute; left: 50%; top: 50%; width: 124px; height: 78px;
+        transform: translate(-50%, -46%); pointer-events: none; z-index: 0;
+        filter: drop-shadow(0 4px 12px var(--bg-canvas)) drop-shadow(0 0 12px color-mix(in srgb, var(--gold) 35%, transparent)); }
+    #game.open-board .av-crest .crest-wing { fill: color-mix(in srgb, var(--gold) 30%, var(--bg-panel-raised));
+        stroke: color-mix(in srgb, var(--gold) 85%, var(--text-heading)); stroke-width: 1.8; }
+    #game.open-board .av-crest .crest-trim { stroke: color-mix(in srgb, var(--text-heading) 42%, var(--gold)); stroke-width: 1.2; opacity: 0.8; }
+    #game.open-board .av-medallion .arena-av { position: relative; z-index: 1; }
+    #game.open-board.pod-mode #oppBar .av-crest { display: none; }
+}
+
+/* ---- Sculpted MTG Arena Battlefield Card Assets (scoped to .lane:not(.compact) so mobile compact tiles stay crisp!) ---- */
+/* 1. Beveled metallic P/T shield (white-silver bevel, Arena blue buffed numerals, crimson hurt numerals) */
+#game.open-board .lane:not(.compact) .perm .pt {
+    font-family: var(--font-display); font-weight: 800; font-size: 0.82rem; line-height: 1.15;
+    padding: 1px 7px; border-radius: 6px; right: 3px; bottom: 3px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--text-heading) 96%, var(--bg-panel)), color-mix(in srgb, var(--text-soft) 82%, var(--bg-panel)));
+    color: var(--bg-canvas);
+    border: 1.5px solid color-mix(in srgb, var(--gold) 65%, var(--bg-canvas));
+    box-shadow: inset 0 1px 0 var(--text-heading), 0 2px 6px var(--bg-canvas); }
+#game.open-board .lane:not(.compact) .perm .pt.up { color: var(--brand); border-color: var(--brand-light);
+    box-shadow: inset 0 1px 0 var(--text-heading), 0 0 10px -1px var(--brand-light), 0 2px 6px var(--bg-canvas); }
+#game.open-board .lane:not(.compact) .perm .pt.hurt { color: var(--mana-R); border-color: var(--mana-R);
+    box-shadow: inset 0 1px 0 var(--text-heading), 0 0 10px -1px var(--mana-R), 0 2px 6px var(--bg-canvas); }
+#game.open-board .lane.arena-dense .perm .pt { font-size: 0.7rem; padding: 0 5px; right: 2px; bottom: 2px; }
+
+/* 2. Sapphire-blue glowing circular +1/+1 counter orb pinned top-right (exact MTG Arena look!) */
+#game.open-board .lane:not(.compact) .perm .chips { top: 3px; right: 3px; left: auto; bottom: auto; flex-direction: column; align-items: flex-end; max-width: none; gap: 2px; }
+#game.open-board .lane:not(.compact) .perm .chip.c-plus {
+    width: 22px; height: 22px; padding: 0; border-radius: 50%; display: grid; place-items: center;
+    font-family: var(--font-display); font-size: 0.78rem; font-weight: 800;
+    background: radial-gradient(circle at 35% 28%, var(--brand-light), var(--mana-U) 55%, var(--brand) 100%);
+    color: var(--text-heading); border: 1.5px solid color-mix(in srgb, var(--text-heading) 75%, var(--brand-light));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--mana-U) 80%, transparent), 0 2px 5px var(--bg-canvas); }
+#game.open-board .lane.arena-dense .perm .chip.c-plus { width: 17px; height: 17px; font-size: 0.66rem; }
+#game.open-board .lane:not(.compact) .perm .chip.c-cmd { background: color-mix(in srgb, var(--gold) 26%, var(--bg-canvas)); border-color: var(--gold); border-radius: 999px; }
+/* Compact tiles keep clean inline sapphire pill for +1/+1 counters */
+#game.open-board .lane.compact .perm .chip.c-plus {
+    background: color-mix(in srgb, var(--mana-U) 85%, var(--brand)); color: var(--text-heading);
+    border: 1px solid var(--brand-light); border-radius: 999px; padding: 0 5px; font-weight: 700; }
+
+/* 3. Crisp Inline SVG Keyword Medallions along bottom-left of creatures */
+.kw-strip { position: absolute; left: 3px; bottom: 3px; z-index: 3; display: flex; gap: 2px; pointer-events: none; }
+.kw-ico { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+    background: radial-gradient(circle at 35% 30%, var(--bg-panel-raised), var(--bg-canvas));
+    border: 1.2px solid color-mix(in srgb, var(--gold) 70%, var(--border));
+    color: var(--text-heading); box-shadow: 0 2px 5px var(--bg-canvas); }
+.kw-ico svg { width: 11px; height: 11px; fill: currentColor; display: block; }
+.kw-ico.kw-flying { border-color: var(--brand-light); color: var(--brand-light); }
+.kw-ico.kw-deathtouch { border-color: var(--color-success); color: var(--color-success); }
+.kw-ico.kw-lifelink { border-color: var(--mana-W); color: var(--mana-W); }
+.kw-ico.kw-haste, .kw-ico.kw-menace { border-color: var(--mana-R); color: var(--mana-R); }
+.kw-ico.kw-trample { border-color: var(--mana-G); color: var(--mana-G); }
+.kw-ico.kw-indestructible, .kw-ico.kw-vigilance { border-color: var(--gold); color: var(--gold); }
+.kw-ico.kw-hexproof { border-color: var(--color-link); color: var(--color-link); }
+#game.open-board .lane.arena-dense .kw-ico { width: 14px; height: 14px; }
+#game.open-board .lane.arena-dense .kw-ico svg { width: 9px; height: 9px; }
+.kw-ico.has-art { width: 22px; height: 22px; background: none; border: 0; box-shadow: none; filter: drop-shadow(0 1px 3px var(--bg-canvas)); }
+.kw-ico.has-art img { width: 100%; height: 100%; display: block; object-fit: contain; }
+#game.open-board .lane.arena-dense .kw-ico.has-art { width: 18px; height: 18px; }
+#game.open-board .phase-strip.rail .rail-ico .asc-ico { width: 18px; height: 18px; margin-right: 0; vertical-align: -3px; filter: drop-shadow(0 1px 3px var(--bg-canvas)); }
+#game .lane.compact .kw-strip { display: none; }
+
+/* 4. Ornate Legendary Crown Header + Token Arched Accent + Physical Shingled Stacks */
+#game.open-board .lane:not(.compact) .perm.is-legendary img, #game.open-board .lane:not(.compact) .perm.is-legendary .noimg {
+    border-top: 2.5px solid var(--gold);
+    box-shadow: 0 -2px 10px -2px color-mix(in srgb, var(--gold) 65%, transparent), 0 6px 16px -4px var(--bg-canvas); }
+#game.open-board .lane:not(.compact) .perm.is-token img { border: 1.5px solid color-mix(in srgb, var(--text-soft) 55%, var(--border)); }
+#game.open-board .lane:not(.compact) .perm.pile { margin-left: 8px; }
+#game.open-board .lane:not(.compact) .perm.pile img {
+    box-shadow: -3px -2px 0 -0.5px color-mix(in srgb, var(--text-soft) 35%, var(--bg-panel-raised)),
+                -3px -2px 0 0.5px var(--bg-canvas),
+                -6px -4px 0 -0.5px color-mix(in srgb, var(--text-soft) 25%, var(--bg-panel)),
+                -6px -4px 0 0.5px var(--bg-canvas),
+                -9px -6px 0 -0.5px var(--bg-inset),
+                0 6px 16px -4px var(--bg-canvas); }
+#game.open-board .lane:not(.compact) .pile-n {
+    left: -4px; top: -6px; right: auto; bottom: auto; transform: none; z-index: 4;
+    font-family: var(--font-display); font-size: 0.72rem; font-weight: 800; padding: 1px 6px; border-radius: 5px;
+    background: linear-gradient(180deg, var(--bg-panel-raised), var(--bg-canvas));
+    color: var(--text-heading); border: 1.5px solid color-mix(in srgb, var(--gold) 70%, var(--border));
+    box-shadow: 0 2px 8px var(--bg-canvas); }
+
+/* 5. Fiery Arcane Rim Glow on Active Right-Side Arena Stack Card (like The One Ring on Arena!) */
+@media (min-width: 760px) {
+    #game.open-board #midBar .stackbar .stack-item.top {
+        border: 2px solid color-mix(in srgb, var(--mythic) 75%, var(--gold));
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 65%, transparent),
+                    0 0 26px 2px color-mix(in srgb, var(--mythic) 65%, transparent),
+                    0 14px 36px -6px var(--bg-canvas);
+        animation: arenaStackIn 0.28s cubic-bezier(.16, 1.12, .3, 1), arenaStackFire 2.4s ease-in-out infinite; }
+    @keyframes arenaStackFire {
+        0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 55%, transparent), 0 0 22px 1px color-mix(in srgb, var(--mythic) 55%, transparent), 0 14px 36px -6px var(--bg-canvas); }
+        50% { box-shadow: 0 0 0 1.5px var(--gold), 0 0 34px 5px color-mix(in srgb, var(--mythic) 80%, transparent), 0 14px 36px -6px var(--bg-canvas); } }
+}
+
+/* =====================================================================
+   Phone & Touch-Device Layout Polish (<= 600px, always last so desktop
+   Arena overrides never leak onto small screens!)
+   ===================================================================== */
+@media (max-width: 600px), (hover: none) {
+    #cardPeek { display: none !important; }
+}
+@media (max-width: 600px) {
+    /* 1. Compact 4-player Commander seat strip: readable names, tight life pill, full-width stats */
+    #game.pod-mode .pod-strip { flex-wrap: wrap; gap: 4px; }
+    #game.pod-mode .pod-chip.seat {
+        flex: 1 1 calc(33.33% - 4px); min-width: 0; padding: 4px 5px 6px; border-radius: 8px;
+        column-gap: 4px; row-gap: 2px;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "av main life" "stats stats stats"; }
+    #game.pod-mode .seat-av { width: 22px; height: 22px; border-radius: 5px; border-width: 1.5px; }
+    #game.pod-mode .seat-av-clip { border-radius: 4px; }
+    #game.pod-mode .seat-mood { display: none; }
+    #game.pod-mode .seat-main b { font-size: 0.74rem; gap: 2px; }
+    #game.pod-mode .seat-cmdr, #game.pod-mode .seat-lib, #game.pod-mode .seat-tags { display: none; }
+    #game.pod-mode .seat-life-wrap { min-width: 24px; padding: 1px 5px; border-radius: 5px; }
+    #game.pod-mode .seat-life { font-size: 0.88rem; }
+    #game.pod-mode .seat-stats { gap: 4px; font-size: 0.64rem; }
+    #game.pod-mode .pod-utils { flex-direction: row; flex: 1 1 100%; justify-content: flex-end; gap: 4px; }
+    #game.pod-mode .pod-utils .pod-chip { padding: 2px 8px; font-size: 0.72rem; }
+    #game.pod-mode .pod-utils .pod-chip.meters { display: none; }
+
+    /* 2. Slim single-row #oppBar & #meBar on phones (reclaims ~110px of vertical battlefield space!) */
+    #game.open-board .pbar { padding: 3px 8px; gap: 4px 6px; }
+    #game.open-board .life { width: 34px; height: 34px; font-size: 0.96rem; border-width: 2px; }
+    #game.open-board.pod-mode #oppBar .life:not(.targetable) { display: none; }
+    #game.open-board #meBar .arena-av, #game.open-board #oppBar .arena-av { display: none; }
+    #game.open-board .pile-card { width: auto; height: auto; padding: 0; border: 0; background: none; box-shadow: none; transform: none; }
+    #game.open-board .pile-cnt { background: none; border: 0; padding: 0; font-size: 0.8rem; }
+    #game.open-board .zones { gap: 6px; padding: 1px 6px; }
+    #game.open-board #oppBar .btn.small, #game.open-board #meBar .btn.small { padding: 2px 7px; font-size: 0.74rem; min-height: 26px; white-space: nowrap; flex: none; }
+    #game.open-board #meBar .who { display: none; }
+    #game.open-board #meBar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    #game.open-board #meBar::-webkit-scrollbar { display: none; }
+    #game.open-board #meBar > *, #game.open-board #meBar .cmd-chip, #game.open-board #meBar .zones, #game.open-board #meBar .pool { flex: none; white-space: nowrap; }
+    #game.open-board.pod-mode #oppBar .bar-left, #game.open-board.pod-mode #oppBar .bar-right { font-size: 0.78rem; }
+
+    /* 3. Clean mobile battlefields, compact tile chip clearance & unobstructed .board-sum badges */
+    #game.open-board .side { padding: 3px 6px; gap: 3px; overflow-y: auto; margin: 0; }
+    #game.open-board .lane.compact .perm .pt { font-size: 0.66rem; padding: 0 4px; }
+    #game.open-board .lane.compact .perm .chips { gap: 1px; }
+    #game.open-board .lane.compact .perm .chip { font-size: 0.64rem; padding: 0 3px; }
+    #game.open-board .board-sum { top: 1px; right: 2px; left: auto; font-size: 0.66rem; padding: 0 6px; }
+    #game.open-board .opp-side .board-sum { top: auto; bottom: 1px; right: 2px; left: auto; }
+    #game.open-board .lane:not(.compact) .perm.pile { margin-left: 5px; }
+    #game.open-board .lane:not(.compact) .pile-n { font-size: 0.64rem; padding: 0 4px; top: -4px; left: -3px; }
+
+    /* 4. Clean phone hand toggle & bottom action dock */
+    #game .phone-hand-toggle.phone-only { margin: 2px auto 1px; padding: 2px 12px; }
+    #game:not(.phone-hand-open) .dock .hand { max-height: 74px; padding: 3px 8px 0; }
+    #game.phone-hand-open .dock .hand { max-height: none; padding: 4px 8px 6px; }
+    #game.open-board .dock .hand .hc img, #game.open-board .dock .hand .hc .noimg { transform: none !important; transition: none; }
+    #game.open-board #midBar { padding: 4px 8px calc(6px + env(safe-area-inset-bottom)); gap: 4px; }
+    #game.open-board #midBar .turn-btn { min-height: 46px; min-width: 92px; padding: 4px 10px; }
+    #game.open-board #midBar .combat-pill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.7rem; padding: 2px 8px; }
+    #game.open-board #midBar .prompt { font-size: 0.8rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .arena-motes { display: none !important; }
+    #game.open-board #midBar .stackbar .stack-item.top { animation: none !important; }
+    .arena-prop { animation: none !important; transition: none !important; }
+}
+
+/* =====================================================================
+   Interactive Living MTG-Themed Battlefields (08g-arena-mats.js)
+   6 planes (Sanctum, Radiant Citadel, Astral Tidepool, Shadowed Crypt,
+   Volcanic Caldera, Whispering Wildwood) + clickable corner ornaments
+   ===================================================================== */
+#game.open-board[data-mat="plains"] {
+    background:
+        radial-gradient(ellipse 76% 58% at 50% 42%, color-mix(in srgb, var(--mana-W) 22%, transparent), transparent 72%),
+        radial-gradient(ellipse 108% 102% at 50% 50%, color-mix(in srgb, var(--gold) 18%, transparent) 22%, color-mix(in srgb, var(--bg-canvas) 78%, transparent) 100%),
+        linear-gradient(160deg, color-mix(in srgb, var(--mana-W) 18%, var(--bg-panel)), color-mix(in srgb, var(--gold) 14%, var(--bg-inset)) 52%, var(--bg-canvas)),
+        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+#game.open-board[data-mat="island"] {
+    background:
+        radial-gradient(ellipse 74% 56% at 50% 46%, color-mix(in srgb, var(--mana-U) 26%, transparent), transparent 70%),
+        radial-gradient(ellipse 108% 102% at 50% 50%, color-mix(in srgb, var(--brand-light) 16%, transparent) 24%, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 100%),
+        linear-gradient(180deg, color-mix(in srgb, var(--mana-U) 28%, var(--bg-canvas)), color-mix(in srgb, var(--brand) 22%, var(--bg-inset)) 52%, var(--bg-canvas)),
+        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+#game.open-board[data-mat="swamp"] {
+    background:
+        radial-gradient(ellipse 72% 54% at 50% 48%, color-mix(in srgb, var(--mana-B) 28%, transparent), transparent 72%),
+        radial-gradient(ellipse 106% 100% at 50% 50%, color-mix(in srgb, var(--color-success) 10%, transparent) 26%, color-mix(in srgb, var(--bg-canvas) 86%, transparent) 100%),
+        linear-gradient(180deg, color-mix(in srgb, var(--mana-B) 26%, var(--bg-canvas)), color-mix(in srgb, var(--bg-inset) 70%, transparent) 54%, var(--bg-canvas)),
+        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+#game.open-board[data-mat="mountain"] {
+    background:
+        radial-gradient(ellipse 74% 54% at 50% 50%, color-mix(in srgb, var(--mana-R) 24%, transparent), transparent 72%),
+        radial-gradient(ellipse 106% 100% at 50% 50%, color-mix(in srgb, var(--mythic) 18%, transparent) 22%, color-mix(in srgb, var(--bg-canvas) 84%, transparent) 100%),
+        linear-gradient(180deg, color-mix(in srgb, var(--mana-R) 24%, var(--bg-canvas)), color-mix(in srgb, var(--mythic) 16%, var(--bg-inset)) 52%, var(--bg-canvas)),
+        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+#game.open-board[data-mat="forest"] {
+    background:
+        radial-gradient(ellipse 76% 56% at 50% 46%, color-mix(in srgb, var(--mana-G) 24%, transparent), transparent 72%),
+        radial-gradient(ellipse 106% 100% at 50% 50%, color-mix(in srgb, var(--gold) 12%, transparent) 24%, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 100%),
+        linear-gradient(180deg, color-mix(in srgb, var(--mana-G) 26%, var(--bg-canvas)), color-mix(in srgb, var(--color-success) 16%, var(--bg-inset)) 52%, var(--bg-canvas)),
+        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+
+/* 4 Clickable Interactive Corner Ornaments (desktop >= 900px outer margins, never covering cards or HUD) */
+.arena-props { display: none; }
+@media (min-width: 900px) {
+    #game.open-board .arena-props { display: block; position: fixed; inset: 0; pointer-events: none; z-index: 6; }
+    #game.open-board .arena-prop {
+        position: fixed; pointer-events: auto; width: 34px; height: 34px; border-radius: 50%; padding: 0;
+        display: grid; place-items: center; font-size: 1rem; line-height: 1; cursor: pointer;
+        background: radial-gradient(circle at 38% 30%, color-mix(in srgb, var(--gold) 28%, var(--bg-panel-raised)), color-mix(in srgb, var(--bg-canvas) 88%, transparent));
+        border: 1.5px solid color-mix(in srgb, var(--gold) 55%, var(--border));
+        box-shadow: 0 4px 14px var(--bg-canvas), 0 0 16px -4px color-mix(in srgb, var(--gold) 55%, transparent);
+        opacity: 0.72; transition: transform 0.2s cubic-bezier(.18, 1.3, .3, 1), opacity 0.2s ease, box-shadow 0.22s ease, border-color 0.2s ease; }
+    #game.open-board .arena-prop:hover { opacity: 1; transform: scale(1.16); border-color: var(--gold);
+        box-shadow: 0 6px 20px var(--bg-canvas), 0 0 22px color-mix(in srgb, var(--gold) 80%, transparent); }
+    #game.open-board .arena-prop.prop-fired { animation: arenaPropBurst 0.55s cubic-bezier(.18, 1.35, .3, 1); opacity: 1; }
+    @keyframes arenaPropBurst {
+        0% { transform: scale(1); }
+        35% { transform: scale(1.34) rotate(-8deg); box-shadow: 0 0 32px 6px var(--gold); }
+        70% { transform: scale(0.95) rotate(4deg); }
+        100% { transform: scale(1); } }
+    #game.open-board .prop-tl { left: 10px; top: 22%; }
+    #game.open-board .prop-tr { right: 10px; top: 22%; }
+    #game.open-board .prop-bl { left: 10px; top: 66%; }
+    #game.open-board .prop-br { right: 10px; top: 66%; }
+}
+
+/* Battlefield Picker in 🎨 Looks modal + compact Mat selector in ⚙️ gear menu */
+#matSelect { font: inherit; font-size: 0.78rem; padding: 3px 6px; border-radius: 6px;
+    background: var(--bg-inset); color: var(--text-heading); border: 1px solid var(--border); max-width: 136px; }
+.mat-pick-h { margin: 16px 0 4px; font-size: 1.05rem; color: var(--text-heading); text-align: left; }
+.mat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; text-align: left; }
+.mat-card { display: grid; gap: 3px; padding: 8px 10px; border-radius: var(--radius-md); cursor: pointer;
+    background: var(--bg-panel-raised); border: 1.5px solid var(--border); color: var(--text-primary); font: inherit; text-align: left;
+    transition: border-color 0.16s ease, transform 0.14s ease, box-shadow 0.16s ease; }
+.mat-card:hover { border-color: var(--brand-light); transform: translateY(-1px); }
+.mat-card.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 6px 18px -8px var(--gold); }
+.mat-card strong { font-size: 0.86rem; color: var(--text-heading); }
+.mat-card small { font-size: 0.74rem; color: var(--text-soft); line-height: 1.3; }
+.mat-sw { height: 10px; border-radius: 999px; margin-bottom: 2px; border: 1px solid color-mix(in srgb, var(--text-heading) 18%, transparent); }
+.mat-card[data-mat-pick="auto"] .mat-sw { background: linear-gradient(90deg, var(--mana-W), var(--mana-U), var(--mana-B), var(--mana-R), var(--mana-G)); }
+.mat-card[data-mat-pick="sanctum"] .mat-sw { background: linear-gradient(90deg, #12171e, #e8c25a, #3aa3d1); }
+.mat-card[data-mat-pick="plains"] .mat-sw { background: linear-gradient(90deg, #3c3424, #ffe79e, #f2b84b); }
+.mat-card[data-mat-pick="island"] .mat-sw { background: linear-gradient(90deg, #0b1c30, #2986cc, #5ce1ff); }
+.mat-card[data-mat-pick="swamp"] .mat-sw { background: linear-gradient(90deg, #160d24, #7d3fb8, #52e09b); }
+.mat-card[data-mat-pick="mountain"] .mat-sw { background: linear-gradient(90deg, #240d0b, #e63928, #ffd166); }
+.mat-card[data-mat-pick="forest"] .mat-sw { background: linear-gradient(90deg, #0d2115, #2db362, #ffe875); }

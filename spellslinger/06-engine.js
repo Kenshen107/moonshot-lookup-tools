@@ -185,13 +185,26 @@ const has = (o, k) => (k === 'defender' && !!G && o.dcNoDefTurn === G.turn) ? fa
 const lockedOut = o => !!o.lockedBy && (() => { const a = onBf(o.lockedBy); return !!a && a.owner === o.owner; })();
 const canAttackWith = o => isCreature(o) && !o.tapped && !preconCantAttack(o) && !(Rx(o).attackCond && !condOk(Rx(o).attackCond, ctrl(o), o)) && !(typeof cmdCantAttack === 'function' && cmdCantAttack(o)) && !(Rx(o).attackNeedsLand && !opp(ctrl(o)).bf.some(l => hasType(l, Rx(o).attackNeedsLand))) && (!o.sick || has(o, 'haste')) && !(has(o, 'defender') && !(typeof sxDefAttack === 'function' && sxDefAttack(o))) && !has(o, 'cantattack') && !(o.detainedUntil > G.turn) && !lockedOut(o) && !(Rx(o).attackCond && !lostAbilities(o) && !condOk(Rx(o).attackCond, ctrl(o), o));
 
+function logLineClass(l) {
+    if (/^— |'s turn —|^Your turn —/.test(l)) return 'log-turn';
+    if (/\b(?:attacks? with|deals? \d+.*damage|blocks?\b|combat damage|takes? \d+.*damage)\b|^Blocks:/i.test(l)) return 'log-combat';
+    if (/\b(?:dies|is destroyed|destroyed by|exiled|sacrifices?|is out|loses the game|wins the game)\b/i.test(l)) return 'log-death';
+    if (/\b(?:casts?|counters?)\b/i.test(l)) return 'log-cast';
+    if (/\b(?:peace|alliance|hands off|gang up|breaks? their word|deal)\b/i.test(l)) return 'log-deal';
+    if (/: "/.test(l)) return 'log-talk';
+    if (/\b(?:gains? \d+ life|loses? \d+ life)\b/i.test(l)) return 'log-life';
+    return '';
+}
 function log(msg) {
     G.log.push(msg);
     showActBanner(msg);
     if (G.log.length > 80) G.log.shift();
     const el = $('log');
     if (el) {
-        el.innerHTML = G.log.slice(-40).map(l => `<div>${esc(l).replace(/rule (\d{3}\.\d+[a-z]?)/g, (m, n) => `<a href="#" onclick="openRule('${n}'); return false;">rule ${n}</a>`)}</div>`).join('');
+        el.innerHTML = G.log.slice(-40).map(l => {
+            const cls = logLineClass(l);
+            return `<div${cls ? ` class="${cls}"` : ''}>${esc(l).replace(/rule (\d{3}\.\d+[a-z]?)/g, (m, n) => `<a href="#" onclick="openRule('${n}'); return false;">rule ${n}</a>`)}</div>`;
+        }).join('');
         el.scrollTop = el.scrollHeight;
     }
 }

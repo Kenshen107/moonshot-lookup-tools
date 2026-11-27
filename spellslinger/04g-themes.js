@@ -28,10 +28,16 @@ function setLook(key, frames) {
     if (document.querySelector('#modalHost .looks')) lookPanel();
 }
 function lookPanel() {
+    const matsHTML = (typeof ARENA_MATS !== 'undefined' && Array.isArray(ARENA_MATS))
+        ? `<h3 class="mat-pick-h">🗺️ Interactive Battlefields</h3>
+           <p class="note">Pick a living MTG-themed tabletop — click empty mat space or the glowing corner ornaments during a match to interact!</p>
+           <div class="mat-grid">${ARENA_MATS.map(m => `<button type="button" class="mat-card${m.key === arenaMatPref ? ' on' : ''}" data-mat-pick="${m.key}" onclick="setArenaMat('${m.key}')" aria-pressed="${m.key === arenaMatPref}"><span class="mat-sw" aria-hidden="true"></span><strong>${m.icon} ${m.name}</strong><small>${m.note}</small></button>`).join('')}</div>`
+        : '';
     showModal(`<div class="looks"><h2>🎨 Looks and frames</h2>
         <p class="note">Pick a look. It changes the colors of the whole game and is saved on this device. Frames draw a pixel border around panels and dialogs.</p>
         <div class="look-grid">${SP_LOOKS.map(l => `<button type="button" class="look-card${l.key === spLook.name ? ' on' : ''}" data-look="${l.key}" onclick="setLook('${l.key}')" aria-pressed="${l.key === spLook.name}"><span class="look-sw" aria-hidden="true"></span><strong>${l.icon} ${l.name}</strong><small>${l.note}</small></button>`).join('')}</div>
         <label class="look-frames"><input type="checkbox" ${spLook.frames ? 'checked' : ''} onchange="setLook(null, this.checked)"> Show pixel frames</label>
+        ${matsHTML}
         <div class="row" style="justify-content:center; margin-top:12px;"><button class="btn primary" onclick="closeModal()">Done</button></div></div>`);
 }
 (function initLook() {
