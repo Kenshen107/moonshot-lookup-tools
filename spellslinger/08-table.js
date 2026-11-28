@@ -768,22 +768,36 @@ function adjCounter(uid, kind, d) {
     if (onBf(uid)) showGameCard(uid); else closeSheet();
 }
 const PLAYER_COUNTERS = [['life', '❤️ Life'], ['poison', '☠️ Poison (10 loses)'], ['energy', '🔋 Energy'], ['exp', '🎓 Experience']];
-function showGraveyard(i) {
+function showGraveyard(i, filter = 'all') {
     const P = G.players[i];
     if (!P.gy.length) { toast('The graveyard is empty.'); return; }
+    const isCastable = o => you(P) && (Rx(o).flashback || (typeof gyCastOk === 'function' && gyCastOk(P, o)) || (typeof castAsOk === 'function' && ['escape', 'disturb', 'retrace', 'blitz', 'beam'].some(m => castAsOk(P, o, m))));
+    const items = P.gy.map((o, k) => ({ o, k, cast: isCastable(o), kind: Rx(o).kind }))
+        .sort((a, b) => (b.cast - a.cast) || (b.k - a.k));
+    const shown = items.filter(x => filter === 'all' ? true : filter === 'cast' ? x.cast : filter === 'creature' ? x.kind === 'creature' : ['instant', 'sorcery'].includes(x.kind));
+    const castN = items.filter(x => x.cast).length;
     window.__gy = k => { closeModal(); const o = P.gy[k]; if (o) showGameCard(o.uid); };
-    showModal(`<h2>🪦 ${you(P) ? 'Your graveyard' : `${esc(P.name)}'s graveyard`}</h2>${P.i === 0 && P.gy.some(o => Rx(o).flashback) ? '<p class="note">Cards with flashback can be cast from here.</p>' : ''}
-        <div class="pick-grid">${P.gy.map((o, k) => `<button type="button" class="pick-card" onclick="__gy(${k})" title="${esc(o.card.name)}">${o.card.imgS ? `<img src="${o.card.imgS}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</button>`).join('')}</div>
+    const chip = (k, lbl) => `<button type="button" class="chip${filter === k ? ' on' : ''}" onclick="showGraveyard(${i}, '${k}')">${lbl}</button>`;
+    showModal(`<h2>🪦 ${you(P) ? 'Your graveyard' : `${esc(P.name)}'s graveyard`} (${P.gy.length})</h2>
+        <div class="chips zone-filters">${chip('all', `All (${items.length})`)}${castN ? chip('cast', `✨ Castable (${castN})`) : ''}${chip('creature', 'Creatures')}${chip('spell', 'Spells')}</div>
+        <div class="pick-grid">${shown.length ? shown.map(({ o, k, cast }) => `<button type="button" class="pick-card${cast ? ' pick-castable' : ''}" onclick="__gy(${k})" title="${esc(o.card.name)}${cast ? ' — castable from graveyard' : ''}">${o.card.imgS ? `<img src="${o.card.imgS}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}${cast ? '<span class="pick-badge">✨ Castable</span>' : ''}</button>`).join('') : '<p class="note">No cards match this filter.</p>'}</div>
         <div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
 }
 // What a player has in exile; face-down cards stay hidden from everyone but their owner (foretold, hideaway and the like)
-function showExile(i) {
+function showExile(i, filter = 'all') {
     const P = G.players[i];
     if (!P.exile.length) { toast('Nothing is in exile.'); return; }
     const hidden = o => (o.faceDown || o.foretoldTurn) && !you(P);
+    const isCastable = o => you(P) && !hidden(o) && (o.playUntil >= G.turn || o.advReady || (o.foretoldTurn && o.foretoldTurn < G.turn) || (o.warpedTurn && o.warpedTurn < G.turn));
+    const items = P.exile.map((o, k) => ({ o, k, hid: hidden(o), cast: isCastable(o), kind: Rx(o).kind }))
+        .sort((a, b) => (b.cast - a.cast) || (b.k - a.k));
+    const shown = items.filter(x => filter === 'all' ? true : filter === 'cast' ? x.cast : !x.hid && x.kind === 'creature');
+    const castN = items.filter(x => x.cast).length;
     window.__ex = k => { const o = P.exile[k]; if (!o || hidden(o)) return; closeModal(); showGameCard(o.uid); };
-    showModal(`<h2>${uiIco('zone-exile', '🌀', 26)} ${you(P) ? 'Your exile' : `${esc(P.name)}'s exile`}</h2>${P.exile.some(o => o.playUntil >= G.turn) && you(P) ? '<p class="note">Cards you may play this turn are at the end of your hand too.</p>' : ''}
-        <div class="pick-grid">${P.exile.map((o, k) => hidden(o) ? `<span class="pick-card" title="A face-down card"><span class="noimg">Face down</span></span>` : `<button type="button" class="pick-card" onclick="__ex(${k})" title="${esc(o.card.name)}">${o.card.imgS ? `<img src="${o.card.imgS}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</button>`).join('')}</div>
+    const chip = (k, lbl) => `<button type="button" class="chip${filter === k ? ' on' : ''}" onclick="showExile(${i}, '${k}')">${lbl}</button>`;
+    showModal(`<h2>${uiIco('zone-exile', '🌀', 26)} ${you(P) ? 'Your exile' : `${esc(P.name)}'s exile`} (${P.exile.length})</h2>
+        <div class="chips zone-filters">${chip('all', `All (${items.length})`)}${castN ? chip('cast', `✨ Playable (${castN})`) : ''}${chip('creature', 'Creatures')}</div>
+        <div class="pick-grid">${shown.length ? shown.map(({ o, k, hid, cast }) => hid ? `<span class="pick-card" title="A face-down card"><span class="noimg">Face down</span></span>` : `<button type="button" class="pick-card${cast ? ' pick-castable' : ''}" onclick="__ex(${k})" title="${esc(o.card.name)}${cast ? ' — playable from exile' : ''}">${o.card.imgS ? `<img src="${o.card.imgS}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}${cast ? '<span class="pick-badge">✨ Playable</span>' : ''}</button>`).join('') : '<p class="note">No cards match this filter.</p>'}</div>
         <div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
 }
 function playerSheet(i) {

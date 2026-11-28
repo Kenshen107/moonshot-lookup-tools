@@ -42,15 +42,22 @@
             osc.start(t0); osc.stop(t0 + dur + 0.02);
         } catch (e) { /* audio blocked */ }
     }
+    function vibe(pat) {
+        if (!sfxOn || silent() || reduced()) return;
+        try {
+            if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
+            if (navigator && typeof navigator.vibrate === 'function') navigator.vibrate(pat);
+        } catch (e) { /* unsupported */ }
+    }
     const SFX = {
-        snap() { tone(420, 0.055, 'triangle', 0.06, 180); },
-        tap() { tone(520, 0.04, 'sine', 0.04, 680); },
-        cast() { tone(392, 0.14, 'triangle', 0.07, 587); tone(587, 0.18, 'sine', 0.05, 880, 0.05); },
-        hit() { tone(140, 0.16, 'sawtooth', 0.09, 48); },
+        snap() { tone(420, 0.055, 'triangle', 0.06, 180); vibe(10); },
+        tap() { tone(520, 0.04, 'sine', 0.04, 680); vibe(8); },
+        cast() { tone(392, 0.14, 'triangle', 0.07, 587); tone(587, 0.18, 'sine', 0.05, 880, 0.05); vibe(14); },
+        hit() { tone(140, 0.16, 'sawtooth', 0.09, 48); vibe(32); },
         heal() { tone(440, 0.14, 'sine', 0.06, 554); tone(554, 0.18, 'sine', 0.05, 659, 0.06); },
-        sparkle() { [659, 880, 1175, 1568].forEach((f, i) => tone(f, 0.16, 'sine', 0.055, f * 1.04, i * 0.055)); },
-        victory() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.22, 'triangle', 0.075, null, i * 0.09)); },
-        defeat() { [330, 294, 247, 196].forEach((f, i) => tone(f, 0.24, 'sawtooth', 0.05, null, i * 0.11)); }
+        sparkle() { [659, 880, 1175, 1568].forEach((f, i) => tone(f, 0.16, 'sine', 0.055, f * 1.04, i * 0.055)); vibe([16, 30, 22]); },
+        victory() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.22, 'triangle', 0.075, null, i * 0.09)); vibe([20, 40, 25, 40, 40]); },
+        defeat() { [330, 294, 247, 196].forEach((f, i) => tone(f, 0.24, 'sawtooth', 0.05, null, i * 0.11)); vibe(45); }
     };
     window.SFX = SFX;
     function syncSfxBtn() {
@@ -346,4 +353,148 @@
         toast(`＋ Added ${CARDS.get(id).name}`);
         if (typeof builderChanged === 'function') builderChanged();
     };
+
+    // ---- 7. Sticky "Match Ready" Bar & Commander Art Portraits on Play Tab ----
+    function updateStickyMatchBar() {
+        const vp = $('view-play');
+        if (!vp || vp.classList.contains('hidden')) return;
+        const sel = $('playDeck');
+        const d = sel && profile && profile.decks && profile.decks[Number(sel.value)];
+        let bar = $('stickyMatchBar');
+        if (!d) { if (bar) bar.remove(); return; }
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'stickyMatchBar';
+            bar.className = 'sticky-match-bar';
+            vp.appendChild(bar);
+        }
+        const probs = typeof deckProblems === 'function' ? deckProblems(d) : [];
+        const oppName = (typeof chosenOpponent !== 'undefined' && chosenOpponent && chosenOpponent.name) || 'Surprise opponent';
+        const cmdr = d.commander && CARDS.get(d.commander);
+        const art = cmdr && (cmdr.imgS || cmdr.img);
+        bar.innerHTML = `<div class="smb-info">${art ? `<img class="smb-av" src="${art}" alt="">` : ''}<div class="smb-txt"><strong>${esc(d.name)}</strong><span class="note">vs ${esc(oppName)} · ${esc(FORMATS[d.format].name)}${probs.length ? ` · ⚠ ${probs.length} to fix` : ''}</span></div></div>
+            <button type="button" class="btn primary smb-go" ${probs.length ? 'disabled' : ''} onclick="const sb = document.getElementById('startBtn'); if (sb && !sb.disabled) sb.click(); else startMatch();">⚔️ Start Match</button>`;
+        // Inject commander art thumbnails into deck tiles inside #deckPick
+        document.querySelectorAll('#deckPick .opp.dk').forEach(btn => {
+            if (btn.querySelector('.dk-art')) return;
+            const m = (btn.getAttribute('onclick') || '').match(/playPickDeck\((\d+)\)/);
+            if (!m) return;
+            const dk = profile.decks[Number(m[1])];
+            const c = dk && dk.commander && CARDS.get(dk.commander);
+            if (c && (c.imgS || c.img)) {
+                const img = document.createElement('img');
+                img.className = 'dk-art';
+                img.src = c.imgS || c.img;
+                img.alt = '';
+                btn.prepend(img);
+            }
+        });
+    }
+    if (typeof window.renderOpponents === 'function') {
+        const origOpp = window.renderOpponents;
+        window.renderOpponents = function () {
+            const res = origOpp.apply(this, arguments);
+            try { updateStickyMatchBar(); } catch (e) { /* ok */ }
+            return res;
+        };
+    }
+
+    // ---- 8. Mobile Deck Builder Sub-Tabs (Decklist | Collection | Curve & Hand) ----
+    let mobDeckTab = 'deck';
+    window.setMobDeckTab = function (t) {
+        mobDeckTab = t;
+        const b = $('builder');
+        if (b) b.dataset.mobTab = t;
+        document.querySelectorAll('#mobDeckTabs [data-mt]').forEach(el => el.classList.toggle('on', el.dataset.mt === t));
+    };
+    if (typeof window.renderBuilderHead === 'function') {
+        const origBH = window.renderBuilderHead;
+        window.renderBuilderHead = function () {
+            const res = origBH.apply(this, arguments);
+            try {
+                const b = $('builder');
+                if (!b) return res;
+                b.dataset.mobTab = mobDeckTab;
+                if (!$('mobDeckTabs')) {
+                    const bar = document.createElement('div');
+                    bar.id = 'mobDeckTabs';
+                    bar.className = 'chips phone-only mob-deck-tabs';
+                    bar.innerHTML = `<button type="button" class="chip on" data-mt="deck" onclick="setMobDeckTab('deck')">🗂️ Decklist</button><button type="button" class="chip" data-mt="browse" onclick="setMobDeckTab('browse')">➕ Collection</button><button type="button" class="chip" data-mt="stats" onclick="setMobDeckTab('stats')">📊 Curve &amp; Hand</button>`;
+                    const head = $('mxHead');
+                    if (head) head.after(bar);
+                }
+                window.setMobDeckTab(mobDeckTab);
+            } catch (e) { /* ok */ }
+            return res;
+        };
+    }
+
+    // ---- 9. Locker "Live Setup Preview" Banner ----
+    function injectLockerPreview() {
+        const host = document.querySelector('#modalHost .locker');
+        if (!host || typeof cosState !== 'function') return;
+        const old = $('lockerPreview');
+        if (old) old.remove();
+        const s = cosState();
+        const slv = cosItem(s.sleeve) || COSMETICS[0];
+        const comp = cosItem(s.companion);
+        const look = (() => { try { return JSON.parse(localStorage.getItem('spLook') || '{}').name || 'classic'; } catch (e) { return 'classic'; } })();
+        const matKey = (() => { try { return localStorage.getItem('arenaMat') || 'auto'; } catch (e) { return 'auto'; } })();
+        const matObj = typeof ARENA_MATS !== 'undefined' ? (ARENA_MATS.find(m => m.id === matKey) || ARENA_MATS[0]) : null;
+        const bgStyle = matObj && matObj.img ? `background-image: linear-gradient(color-mix(in srgb, var(--bg-canvas) 45%, transparent), color-mix(in srgb, var(--bg-canvas) 65%, transparent)), url('${matObj.img}');` : '';
+        const slvHTML = slv && slv.img ? `<img class="lp-sleeve" src="${slv.img}" alt="${esc(slv.name)}">` : `<span class="lp-sleeve lp-css" style="background:${slv && slv.css ? slv.css : 'var(--bg-inset)'}"></span>`;
+        const compHTML = comp && comp.thumb ? `<img class="lp-comp" src="${comp.thumb}" alt="${esc(comp.name)}">` : `<span class="lp-comp empty">🐾</span>`;
+        const prev = document.createElement('div');
+        prev.id = 'lockerPreview';
+        prev.className = 'locker-preview';
+        if (bgStyle) prev.setAttribute('style', bgStyle);
+        prev.innerHTML = `<div class="lp-items">${slvHTML}${compHTML}</div><div class="lp-meta"><small>Active table loadout</small><strong>${esc(look.charAt(0).toUpperCase() + look.slice(1))} · ${esc(slv ? slv.name : 'Classic')}</strong><span>${esc(matObj ? matObj.name : 'Auto Playmat')} · ${esc(comp && comp.id !== 'none' ? comp.name : 'No companion')}</span></div>`;
+        const tabs = host.querySelector('.locker-tabs');
+        if (tabs) tabs.before(prev);
+    }
+    if (typeof window.lockerPanel === 'function') {
+        const origLP = window.lockerPanel;
+        window.lockerPanel = function () {
+            const res = origLP.apply(this, arguments);
+            try { injectLockerPreview(); } catch (e) { /* ok */ }
+            return res;
+        };
+        window.lookPanel = function () { window.lockerPanel(); };
+    }
+
+    // ---- 10. Desktop Power-User Hotkeys & ? Cheat-Sheet ----
+    window.showHotkeysModal = function () {
+        showModal(`<h2>⌨️ Keyboard Shortcuts</h2>
+            <div class="hotkey-grid">
+                <div><kbd>E</kbd><span>End your turn</span></div>
+                <div><kbd>A</kbd><span>Go to combat / All Attack</span></div>
+                <div><kbd>R</kbd><span>Resolve / Pass priority</span></div>
+                <div><kbd>Shift+Enter</kbd><span>Toggle Auto-pass turn</span></div>
+                <div><kbd>Space</kbd><span>Skip opponent play-by-play</span></div>
+                <div><kbd>L</kbd><span>Open / close Game Log</span></div>
+                <div><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd><span>Switch opponent seat (4P Pod)</span></div>
+                <div><kbd>Esc</kbd><span>Close sheet / modal</span></div>
+            </div>
+            <div class="row" style="justify-content:center; margin-top:12px;"><button class="btn primary" onclick="closeModal()">Got it</button></div>`);
+    };
+    document.addEventListener('keydown', e => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        if (!$('game') || $('game').classList.contains('hidden')) return;
+        if (e.key === '?') { e.preventDefault(); window.showHotkeysModal(); return; }
+        if ($('modalHost') && $('modalHost').innerHTML.trim()) return;
+        const k = e.key.toLowerCase();
+        if (k === 'e' && $('turnBtn') && !$('turnBtn').disabled && typeof endMyTurn === 'function') { e.preventDefault(); endMyTurn(); }
+        else if (k === 'a') {
+            if (typeof G !== 'undefined' && G && G.mode && G.mode.type === 'attack' && typeof allAttack === 'function') { e.preventDefault(); allAttack(); }
+            else if (typeof G !== 'undefined' && G && G.phase === 'main1' && G.active === G.view && !G.busy && typeof goToCombat === 'function') { e.preventDefault(); goToCombat(); }
+        }
+        else if (k === 'r' && typeof G !== 'undefined' && G && G.mode && G.mode.type === 'respond' && typeof passPriority === 'function') { e.preventDefault(); passPriority(); }
+        else if (k === 'l') {
+            e.preventDefault();
+            if (typeof toggleLog === 'function' && !isPhone()) toggleLog();
+            else if (typeof logSheet === 'function') logSheet();
+        }
+    });
 })();

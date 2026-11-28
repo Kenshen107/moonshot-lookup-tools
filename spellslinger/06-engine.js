@@ -362,7 +362,16 @@ async function mulligan(P) {
     }
     while (true) {
         const choice = await new Promise(resolve => {
+            const mLands = P.hand.filter(o => Rx(o).kind === 'land').length;
+            const mEarly = P.hand.filter(o => Rx(o).kind !== 'land' && (o.card.cmc || 0) <= 3).length;
+            const coachCls = mLands === 0 || mLands >= 6 ? 'warn' : (mLands >= 2 && mLands <= 4 && mEarly >= 1) ? 'ok' : 'mid';
+            const coachTxt = mLands === 0 ? '⚠ 0 lands — strongly consider a mulligan'
+                : mLands === 1 ? `⚠ 1 land · ${mEarly} early play${mEarly === 1 ? '' : 's'} — risky keep`
+                : mLands >= 6 ? `⚠ ${mLands} lands — land-heavy hand`
+                : mEarly >= 1 ? `✓ ${mLands} lands · ${mEarly} early play${mEarly === 1 ? '' : 's'} (MV ≤ 3) ready`
+                : `${mLands} lands · slow start (no MV ≤ 3 plays)`;
             showModal(`<h2>Your opening hand</h2>
+                <div class="mull-coach ${coachCls}">${coachTxt}</div>
                 <p class="note">${P.mulligans ? (mullBottom(P) ? `Mulligan ${P.mulligans}: you'll put ${mullBottom(P)} card${mullBottom(P) === 1 ? '' : 's'} on the bottom if you keep.` : `Free mulligan: keep all seven of this new hand, or mulligan again.`) : G.players.length > 2 ? 'Keep these seven, or take a free mulligan (a new seven, nothing on the bottom).' : 'Keep these seven, or shuffle and draw a new seven (and put one on the bottom).'}</p>
                 <div class="hand mull-hand">${P.hand.map(o => `<span class="hc">${o.card.imgS || o.card.img ? `<img src="${o.card.imgS || o.card.img}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</span>`).join('')}</div>
                 <div class="mull-actions"><button class="btn primary" id="keepBtn">✔ Keep ${P.hand.length - mullBottom(P)}</button><button class="btn" id="mullBtn" ${P.mulligans >= 4 ? 'disabled' : ''}>↻ Mulligan</button></div>`);
