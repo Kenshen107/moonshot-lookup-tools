@@ -292,25 +292,44 @@ async function buyPack(kind) {
 // ---------------------------------------------------------------------
 // Card details popup, used everywhere outside the game
 // ---------------------------------------------------------------------
+function inlineManaHTML(text) {
+    if (!text) return '';
+    return esc(text).replace(/\{([^}]+)\}/g, (m, sym) => {
+        if (typeof costHTML === 'function') return costHTML(`{${sym}}`);
+        return m;
+    });
+}
 function cardTextHTML(card) {
-    return `<div class="otext">${esc(card.cost)}${card.cost ? '\n' : ''}${esc(card.type)}${card.text ? `\n\n${esc(card.text)}` : ''}${card.power !== undefined ? `\n\n${esc(card.power)}/${esc(card.toughness)}` : ''}</div>`;
+    const typeLine = card.type ? `<div class="cs-type">${esc(card.type)}${card.power !== undefined ? `<span class="cs-pt">${esc(card.power)}/${esc(card.toughness)}</span>` : ''}</div>` : '';
+    const body = card.text ? `<div class="otext">${inlineManaHTML(card.text)}</div>` : '';
+    return typeLine + body;
 }
 function showCardSheet(id, actionsHTML = '') {
     const card = CARDS.get(id);
     if (!card) return;
     const R = rulesFor(card);
+    const cost = card.cost && typeof costHTML === 'function' ? `<span class="cs-cost">${costHTML(card.cost)}</span>` : '';
+    const meta = [
+        card.setName ? esc(card.setName) : '',
+        card.rarity ? `${typeof rarityIco === 'function' ? rarityIco(card.rarity) : ''}${esc(card.rarity)}` : '',
+        profile.collection[id] ? `Owned ×${profile.collection[id]}` : '',
+        +card.usd ? usd(+card.usd) : ''
+    ].filter(Boolean).join(' · ');
+    const sup = R.support === 'full' ? '' : `<div class="cs-sup">${supportBadge(card)} <span class="note">${esc(R.why || '')}</span></div>`;
     $('sheetHost').innerHTML = `
         <div class="sheet-bg" onclick="if (event.target === this) closeSheet()">
-            <div class="sheet" role="dialog" aria-label="${esc(card.name)}">
-                <div>${card.img ? `<img src="${card.img}" alt="${esc(card.name)}">` : ''}</div>
-                <div>
-                    <h3>${esc(card.fullName)}</h3>
-                    <div class="note">${esc(card.setName || '')} · ${typeof rarityIco === 'function' ? rarityIco(card.rarity) : ''}${esc(card.rarity || '')}${profile.collection[id] ? ` · you own ${profile.collection[id]}` : ''}</div>
+            <div class="sheet card-sheet" role="dialog" aria-label="${esc(card.name)}">
+                <span class="sheet-handle phone-only" aria-hidden="true"></span>
+                <button type="button" class="sheet-x" onclick="closeSheet()" aria-label="Close">✕</button>
+                <div class="cs-art">${card.img ? `<img src="${card.img}" alt="${esc(card.name)}" onclick="this.classList.toggle('zoomed')" title="Tap to zoom card art">` : `<div class="noimg">${esc(card.name)}</div>`}</div>
+                <div class="cs-body">
+                    <div class="cs-head"><h3>${esc(card.fullName)}</h3>${cost}</div>
+                    ${meta ? `<div class="cs-meta">${meta}</div>` : ''}
                     ${cardTextHTML(card)}
-                    <div>${supportBadge(card)} <span class="note">${esc(R.why || 'Everything on this card works in the game.')}</span></div>
+                    ${sup}
                     <div id="kwHelp"></div>
-                    <div class="actions">${actionsHTML}<button class="btn" onclick="closeSheet()">Close</button></div>
                 </div>
+                <div class="actions cs-actions">${actionsHTML}<button class="btn" onclick="closeSheet()">Close</button></div>
             </div>
         </div>`;
     fillKeywordHelp(card);

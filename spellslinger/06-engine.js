@@ -5038,19 +5038,42 @@ function showGameCard(uid) {
     if (P.hand.includes(o) && r.ninjutsu && canNinjutsu(P, o)) actions += `<button class="btn gold" onclick="humanNinjutsu(${uid})" title="Ninjutsu: return an unblocked attacker to your hand; this enters tapped and attacking (rule 702.49)">Ninjutsu ${costSymbols(r.ninjutsu)}</button>`;
     if (P.hand.includes(o) && r.overload) actions += `<button class="btn" onclick="humanCastOverload(${uid})" title="Overload: every &quot;target&quot; becomes &quot;each&quot; (rule 702.96)">Cast with overload ${esc(r.overload.text)}</button>`;
     if (o.front && o.front.back && o.front.layout === 'transform') actions += `<span class="note">Other face: <strong>${esc(o.card === o.front ? o.front.back.name : o.front.name)}</strong></span>`;
-    const temp = o.tp || o.tq || o.tkw.length ? `, until end of turn ${[o.tp || o.tq ? `${o.tp >= 0 ? '+' : ''}${o.tp}/${o.tq >= 0 ? '+' : ''}${o.tq}` : '', ...o.tkw].filter(Boolean).join(', ')}` : '';
-    const stats = isCreature(o) && onBf(uid) ? `<div class="note">Now: ${pow(o)}/${tou(o)}${o.dmg ? `, ${o.dmg} damage` : ''}${o.counters ? `, ${Math.abs(o.counters)} ${o.counters > 0 ? '+1/+1' : '-1/-1'} counter${Math.abs(o.counters) === 1 ? '' : 's'}` : ''}${temp}${o.sick && !has(o, 'haste') && o.owner === G.active ? ', summoning sick' : ''}</div>` : '';
+    const statPills = [];
+    if (isCreature(o) && onBf(uid)) {
+        statPills.push(`<span class="cs-pill pt">⚔️ ${pow(o)}/${tou(o)}</span>`);
+        if (o.dmg) statPills.push(`<span class="cs-pill dmg">💥 ${o.dmg} dmg</span>`);
+        if (o.counters) statPills.push(`<span class="cs-pill ctr">${o.counters > 0 ? `+1/+1 ×${o.counters}` : `-1/-1 ×${-o.counters}`}</span>`);
+        if (o.tp || o.tq) statPills.push(`<span class="cs-pill temp">⏱ ${o.tp >= 0 ? '+' : ''}${o.tp}/${o.tq >= 0 ? '+' : ''}${o.tq}</span>`);
+        if (o.tkw.length) statPills.push(`<span class="cs-pill temp">⏱ ${esc(o.tkw.join(', '))}</span>`);
+        if (o.sick && !has(o, 'haste') && o.owner === G.active) statPills.push('<span class="cs-pill sick">💤 Summoning sick</span>');
+    }
+    const zoneTag = P.hand.includes(o) ? '✋ In your hand'
+        : P.command.includes(o) ? '👑 Command zone'
+        : P.gy.includes(o) ? '🪦 Graveyard'
+        : P.exile.includes(o) ? '🌀 Exile'
+        : onBf(uid) ? (o.owner === P.i ? '⚔️ Your battlefield' : `⚔️ ${esc(who(G.players[o.owner]))}'s battlefield`)
+        : '';
+    const stats = statPills.length ? `<div class="cs-stats">${statPills.join('')}</div>` : '';
     const tracker = onBf(uid) ? counterTrackerHTML(o) : '';
     if (o.fdCard && onBf(uid) && o.owner === me().i) actions = `<span class="note">Face-down: it's really <strong>${esc(o.fdCard.fullName || o.fdCard.name)}</strong>.</span> <button class="btn primary" ${canTurnUp(me(), o) ? '' : 'disabled'} onclick="humanTurnUp(${uid})" title="Pay its morph cost to turn it face up (any time you have priority; rule 702.37)">Turn face up ${costSymbols(fdTurnCost(o) || Rx({ card: o.fdCard }).morph)}</button>` + actions;
+    const cost = o.card.cost && typeof costHTML === 'function' ? `<span class="cs-cost">${costHTML(o.card.cost)}</span>` : '';
+    const sup = o.token ? '<span class="cs-pill">Token</span>' : (r.support !== 'full' ? `<div class="cs-sup">${supportBadge(o.card)} <span class="note">${esc(r.why || '')}</span></div>` : '');
     $('sheetHost').innerHTML = `
         <div class="sheet-bg" onclick="if (event.target === this) closeSheet()">
-            <div class="sheet" role="dialog" aria-label="${esc(o.card.name)}">
-                <div>${o.card.img ? `<img src="${o.card.img}" alt="${esc(o.card.name)}">` : `<div class="otext">${esc(o.card.name)}</div>`}</div>
-                <div><h3>${esc(o.card.fullName || o.card.name)}</h3>${cardTextHTML(o.card)}${stats}
-                    <div>${o.token ? '<span class="note">Token</span>' : supportBadge(o.card)} <span class="note">${esc(r.why || '')}</span></div>
+            <div class="sheet card-sheet" role="dialog" aria-label="${esc(o.card.name)}">
+                <span class="sheet-handle phone-only" aria-hidden="true"></span>
+                <button type="button" class="sheet-x" onclick="closeSheet()" aria-label="Close">✕</button>
+                <div class="cs-art">${o.card.img ? `<img src="${o.card.img}" alt="${esc(o.card.name)}" onclick="this.classList.toggle('zoomed')" title="Tap to zoom card art">` : `<div class="noimg">${esc(o.card.name)}</div>`}</div>
+                <div class="cs-body">
+                    <div class="cs-head"><h3>${esc(o.card.fullName || o.card.name)}</h3>${cost}</div>
+                    ${zoneTag ? `<div class="cs-meta">${zoneTag}${o.tapped ? ' · ↪ Tapped' : ''}</div>` : ''}
+                    ${stats}
+                    ${cardTextHTML(o.card)}
+                    ${sup}
                     ${tracker}
                     <div id="kwHelp"></div>
-                    <div class="actions">${actions}<button class="btn" onclick="closeSheet()">Close</button></div></div>
+                </div>
+                <div class="actions cs-actions">${actions}<button class="btn" onclick="closeSheet()">Close</button></div>
             </div>
         </div>`;
     fillKeywordHelp(o.card);
