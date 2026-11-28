@@ -22,15 +22,7 @@ TRIG_FN.selfUnblocked = (o, ctx) => ctx.o === o;
 TRIG_FN.ownNontokenToGy = (o, ctx) => !!ctx.o && !ctx.o.token && ctx.o.owner === o.owner;
 
 // ---- Giving permanents away ----
-function giveControl(o, to) {
-    const from = G.players[o.owner];
-    if (!o || !onBf(o.uid) || !to || to.out || from === to) return false;
-    pull(from.bf, o);
-    o.realOwner = o.realOwner ?? o.owner; o.owner = to.i; delete o.stolenTurn; o.sick = true;
-    to.bf.push(o);
-    log(`${to.name} ${you(to) ? 'gain' : 'gains'} control of ${o.card.name}.`);
-    return true;
-}
+// giveControl() is unified in 06-engine.js (0 dupes)
 const LIABILITY_RE = /deals? \d+ damage to you|you lose \d+ life|sacrifice .* at the beginning of your upkeep/i;
 const isLiability = o => LIABILITY_RE.test(String((o.card && o.card.text) || ''));
 // Who the computer gives something to

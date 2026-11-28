@@ -2585,14 +2585,15 @@ async function applyChoiceEffect(P, e, src, t) {
 function discardMark(cards) { cards.forEach(c => { if (c) c.discardTurn = G.turn; }); }
 // ---- Mirrodin (2026-10-08) helpers ----
 // A permanent changes controller for good (Loxodon Peacekeeper, Jinxed Choker, Confusion in the Ranks)
-function giveControl(o, X) {
-    if (!onBf(o.uid) || o.owner === X.i) return;
+function giveControl(o, to) {
+    if (!o || !onBf(o.uid) || !to || to.out || o.owner === to.i) return false;
     const real = o.realOwner ?? o.owner;
     pull(G.players[o.owner].bf, o);
-    if (X.i === real) delete o.realOwner; else o.realOwner = real;
-    o.owner = X.i; o.sick = true;
-    X.bf.push(o);
-    log(`${X.name} ${you(X) ? 'gain' : 'gains'} control of ${o.card.name}.`);
+    if (to.i === real) delete o.realOwner; else o.realOwner = real;
+    o.owner = to.i; delete o.stolenTurn; o.sick = true;
+    to.bf.push(o);
+    log(`${to.name} ${you(to) ? 'gain' : 'gains'} control of ${o.card.name}.`);
+    return true;
 }
 // A library shuffled by a spell or ability (Psychogenic Probe)
 function libShuffle(P) { shuffle(P.library); if (G && G.phase !== 'setup') fire('shuffled', { P }); }

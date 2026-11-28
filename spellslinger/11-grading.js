@@ -139,7 +139,7 @@ function sweepBulk() {
         if (!card || isBasic(card) || !['common', 'uncommon'].includes(card.rarity)) return;
         let spare = (profile.collection[id] || 0) - (used[id] || 0);
         while (spare-- > 0) {
-            const copy = ownedCopies(id).filter(c => !c.s).sort((a, b) => copyValue(card, a) - copyValue(card, b))[0];
+            const copy = ownedCopies(id).filter(c => !c.s && !c.g).sort((a, b) => copyValue(card, a) - copyValue(card, b))[0];
             if (!copy || copyValue(card, copy) >= 0.5) break;
             takeCopy(id, copy);
             profile.bulkBox.push({ id, condition: copy.c, foil: copy.f ? 1 : 0 });
@@ -150,10 +150,34 @@ function sweepBulk() {
     toast(moved ? `${moved} bulk card${moved === 1 ? '' : 's'} went in the bin.` : 'No spare commons or uncommons under $0.50.');
     renderShop();
 }
+function autoStockSingles() {
+    const used = {};
+    profile.decks.forEach(d => Object.entries(d.cards || {}).forEach(([id, n]) => { used[id] = Math.max(used[id] || 0, n); }));
+    const picks = [];
+    Object.keys(profile.collection).forEach(id => {
+        const card = CARDS.get(id);
+        if (!card || isBasic(card) || profile.vault.includes(id)) return;
+        const spare = (profile.collection[id] || 0) - (used[id] || 0);
+        if (spare <= 0) return;
+        const best = ownedCopies(id).filter(c => !c.s && !c.g).sort((a, b) => copyValue(card, b) - copyValue(card, a))[0];
+        if (!best) return;
+        const v = copyValue(card, best);
+        if (v >= 2) picks.push({ id, card, copy: best, v });
+    });
+    picks.sort((a, b) => b.v - a.v).slice(0, 8).forEach(p => {
+        takeCopy(p.id, p.copy);
+        profile.displayCase.push({ id: p.id, condition: p.copy.c, foil: p.copy.f ? 1 : 0, serial: 0, askingPrice: suggestedAsk(p.card, p.copy) });
+    });
+    const added = Math.min(8, picks.length);
+    saveProfile();
+    toast(added ? `✨ Auto-stocked ${added} top spare single${added === 1 ? '' : 's'} ($2+) into the Display Case.` : 'No spare $2+ singles outside your decks/vault.');
+    renderShop();
+}
 function toggleVault(id) {
+    const maxV = typeof shopMaxVault === 'function' ? shopMaxVault() : 3;
     const i = profile.vault.indexOf(id);
     if (i >= 0) profile.vault.splice(i, 1);
-    else if (profile.vault.length >= 3) { toast('The vault holds 3 trophies. Take one out first.'); return; }
+    else if (profile.vault.length >= maxV) { toast(`The vault holds ${maxV} trophies. Take one out first.`); return; }
     else profile.vault.push(id);
     saveProfile();
     renderShop();
@@ -188,15 +212,19 @@ async function renderShop() {
 function renderShopFloor() {
     const T = profile.shopToday;
     const e = todayEvent();
+    const rep = profile.shopReputation || 0;
+    const nextGoal = rep < 5 ? { n: 5, perk: '+1 Vault slot' } : rep < 10 ? { n: 10, perk: '+1 Counter queue' } : rep < 15 ? { n: 15, perk: 'Master Shopkeeper' } : null;
+    const repBar = nextGoal ? `<div class="shop-rep-bar"><small>⭐ Next milestone (${rep}/${nextGoal.n}): <strong>${nextGoal.perk}</strong></small><span class="srb-track"><i style="width:${Math.min(100, Math.round(rep / nextGoal.n * 100))}%"></i></span></div>` : '<div class="shop-rep-bar ok"><small>⭐ Max shop tier unlocked: 4 Vault slots &amp; 4 Counter queue!</small></div>';
     setHTML($('shopHead'), `
         <div class="pos-stats">
             <div><span class="pos-k">Day</span><strong>${profile.shopDay}</strong></div>
             <div><span class="pos-k">Shop cash</span><strong class="${profile.usd < 0 ? 'neg' : ''}">💵 ${usd(profile.usd)}</strong></div>
-            <div><span class="pos-k">Reputation</span><strong>⭐ ${profile.shopReputation}</strong></div>
-            <div><span class="pos-k">Today</span><strong>${T.sales.length} sale${T.sales.length === 1 ? '' : 's'} · ${usd(T.revenue)}</strong>${T.bought ? `<span class="note">bought ${usd(T.bought)}</span>` : ''}</div>
+            <div><span class="pos-k">Reputation</span><strong>⭐ ${rep}</strong></div>
+            <div><span class="pos-k">Today</span><strong>${T.sales.length} sale${T.sales.length === 1 ? '' : 's'} · ${usd(T.revenue)}</strong>${T.bought ? `<span class="note"> · bought ${usd(T.bought)}</span>` : ''}</div>
             <div><span class="pos-k">Day ends in</span><strong class="day-clock">⏱ ${clockText(T.timeLeft)}</strong></div>
             <div><span class="pos-k">Customers due</span><strong>${T.timeLeft > 0 ? T.visitsLeft : 0}</strong></div>
         </div>
+        ${repBar}
         ${e ? `<div class="pos-event"><span aria-hidden="true">${e.icon}</span> <strong>${esc(e.title)}:</strong> ${esc(e.text)}</div>` : ''}
         <div class="row">
             ${SHOP.open ? '<button class="btn" onclick="pauseShop(); renderShopFloor();">⏸ Pause</button>' : `<button class="btn primary" onclick="openShop()" ${T.visitsLeft <= 0 || T.timeLeft <= 0 ? 'disabled' : ''}>🔓 Open the shop</button>`}
@@ -204,12 +232,23 @@ function renderShopFloor() {
             <button class="btn small" onclick="addTestCash()" title="Test build: add free shop cash">＋💵 Add cash</button>
             <span class="note">${SHOP.open ? 'Open: a day is 10 minutes; the clock runs while you\'re on this tab. Some customers come to sell you cards.' : 'Closed: open up to let customers in.'}</span>
         </div>`);
-    // The floor redraws every few seconds: keep a half-typed counteroffer (and its open box) as it was
-    // (Phase 1c: each panel is only rebuilt when its HTML changed, so usually nothing is touched at all)
-    const customersHtml = SHOP.queue.length ? SHOP.queue.map(c => customerHTML(c)).join('') : `<p class="note">${SHOP.open ? 'Waiting for customers...' : 'No one here. Open the shop.'}</p>`;
-    const keep = $('shopCustomers')._html === customersHtml ? [] : [...document.querySelectorAll('#shopCustomers .counter-in')].map(i => ({ id: i.id, v: i.value, focus: document.activeElement === i, open: i.closest('details') && i.closest('details').open }));
-    setHTML($('shopCustomers'), customersHtml);
-    setHTML($('shopCase'), profile.displayCase.length ? `<table class="pos-table"><thead><tr><th>Card</th><th>Worth today</th><th>Your price</th><th></th></tr></thead><tbody>${profile.displayCase.map((l, i) => {
+    // Update patience bars in-place when customer queue structure/offers haven't changed (never wipes open "Other amount" input!)
+    const custHost = $('shopCustomers');
+    const sig = SHOP.open + '|' + SHOP.queue.map(c => `${c.id}:${c.rounds}:${c.offer || ''}:${c.asking || ''}:${c.say || ''}`).join(';');
+    if (custHost._sig === sig && SHOP.queue.length) {
+        SHOP.queue.forEach(c => {
+            const bar = custHost.querySelector(`.patience[data-pat-id="${c.id}"] span`);
+            if (bar) bar.style.width = `${Math.max(0, c.patience / SHOP_PATIENCE_TICKS * 100)}%`;
+        });
+    } else {
+        custHost._sig = sig;
+        const customersHtml = SHOP.queue.length ? SHOP.queue.map(c => customerHTML(c)).join('') : `<p class="note">${SHOP.open ? 'Waiting for customers...' : 'No one here. Open the shop.'}</p>`;
+        const keep = [...document.querySelectorAll('#shopCustomers .counter-in')].map(i => ({ id: i.id, v: i.value, focus: document.activeElement === i, open: i.closest('details') && i.closest('details').open }));
+        setHTML(custHost, customersHtml);
+        keep.forEach(k => { const i = $(k.id); if (!i) return; i.value = k.v; if (k.open) i.closest('details').open = true; if (k.focus) i.focus(); });
+    }
+    const autoBtn = '<div class="row" style="margin-bottom:8px;"><button class="btn small gold" onclick="autoStockSingles()" title="Stock up to 8 spare $2+ singles (not in your decks or vault) at your markup">✨ Auto-stock best singles ($2+)</button></div>';
+    setHTML($('shopCase'), autoBtn + (profile.displayCase.length ? `<table class="pos-table"><thead><tr><th>Card</th><th>Worth today</th><th>Your price</th><th></th></tr></thead><tbody>${profile.displayCase.map((l, i) => {
         if (l.sealed) return `<tr><td>📦 <strong>${esc(l.meta.name)}</strong> <span class="note">${kindLabel(l.meta)} pack</span></td>
             <td>${usd(packMarket(l.meta))}</td>
             <td><input type="text" inputmode="decimal" value="${l.askingPrice.toFixed(2)}" onchange="setAsk(${i}, this.value)" aria-label="Asking price" class="ask-in"></td>
@@ -219,18 +258,18 @@ function renderShopFloor() {
             <td>${usd(listingValue(l))}</td>
             <td><input type="text" inputmode="decimal" value="${l.askingPrice.toFixed(2)}" onchange="setAsk(${i}, this.value)" aria-label="Asking price" class="ask-in"></td>
             <td><button class="btn small" onclick="unlist(${i})" title="Back to your collection">↩</button></td></tr>`;
-    }).join('')}</tbody></table>` : '<p class="note">The case is empty. Add cards from your collection below.</p>');
+    }).join('')}</tbody></table>` : '<p class="note">The case is empty. Add cards from your collection below, or tap Auto-stock.</p>'));
     setHTML($('shopBulk'), `<div class="row"><span>🧺 <strong>${profile.bulkBox.length}</strong> card${profile.bulkBox.length === 1 ? '' : 's'} in the bin</span>
         <label class="note">Price each: <input type="text" inputmode="decimal" value="${profile.bulkPrice.toFixed(2)}" onchange="setBulkPrice(this.value)" class="ask-in" aria-label="Bulk price per card"></label>
         <button class="btn small" onclick="sweepBulk()" title="Spare commons and uncommons under $0.50 (copies your decks use stay)">🧹 Sweep bulk in</button>
         ${profile.bulkBox.length ? '<button class="btn small" onclick="emptyBulkBin()">↩ Empty the bin</button>' : ''}</div>`);
-    setHTML($('shopVault'), [0, 1, 2].map(i => {
+    const maxV = typeof shopMaxVault === 'function' ? shopMaxVault() : 3;
+    setHTML($('shopVault'), Array.from({ length: maxV }, (_, i) => {
         const id = profile.vault[i];
         const card = id && CARDS.get(id);
         return card ? `<button class="vault-slot" onclick="showCardSheet('${id}')" title="${esc(card.name)} · ${usd(baseUsd(card))}">${card.imgS ? `<img src="${card.imgS}" alt="${esc(card.name)}">` : esc(card.name)}</button>`
             : '<div class="vault-slot empty">🏆<span class="note">empty</span></div>';
     }).join('') + `<p class="note" style="grid-column:1/-1;">Trophies aren't for sale; they draw a crowd (up to +15% customers).${vaultBonus() ? ` Now: +${Math.round(vaultBonus() * 100)}%.` : ''}</p>`);
-    keep.forEach(k => { const i = $(k.id); if (!i) return; i.value = k.v; if (k.open) i.closest('details').open = true; if (k.focus) i.focus(); });
     renderGrading();
     setHTML($('shopLog'), SHOP.log.length ? SHOP.log.map(m => `<li>${m}</li>`).join('') : '<li class="note">Nothing yet today.</li>');
 }

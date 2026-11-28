@@ -46,15 +46,15 @@ function packArtProbe() {
     });
 }
 function packApplyArt(el, key) {
-    if (PACK_ART.wrap[key]) { el.style.setProperty('--pk-art', `url('spellslinger/art/packs/${key}.png')`); el.classList.add('has-art'); }
-    if (PACK_ART.open[key]) { el.style.setProperty('--pk-open', `url('spellslinger/art/packs/${key}-open.png')`); el.classList.add('has-open'); }
+    if (PACK_ART.wrap[key]) { el.style.setProperty('--pk-art', `url('art/packs/${key}.png')`); el.classList.add('has-art'); }
+    if (PACK_ART.open[key]) { el.style.setProperty('--pk-open', `url('art/packs/${key}-open.png')`); el.classList.add('has-open'); }
 }
 // The pack wrapper itself (used by the pack reveal and by Ascent boosters). `attrs` is extra markup for the outer element.
 function packWrapperHTML(key, code, title, sub, attrs) {
     packArtProbe();
     const L = PACK_LOOKS[key] || PACK_LOOKS.standard;
     const cls = (PACK_ART.wrap[key] ? ' has-art' : '') + (PACK_ART.open[key] ? ' has-open' : '');
-    const style = (PACK_ART.wrap[key] ? `--pk-art:url('spellslinger/art/packs/${key}.png');` : '') + (PACK_ART.open[key] ? `--pk-open:url('spellslinger/art/packs/${key}-open.png');` : '');
+    const style = (PACK_ART.wrap[key] ? `--pk-art:url('art/packs/${key}.png');` : '') + (PACK_ART.open[key] ? `--pk-open:url('art/packs/${key}-open.png');` : '');
     return `<div class="pack3d${cls}" data-look="${key}"${style ? ` style="${style}"` : ''} ${attrs || ''}>
         <div class="pk-flap"><span>${esc(code || '')}</span></div>
         <div class="pk-body"><span class="pk-spark" aria-hidden="true">✨</span><strong>${esc(title || L.label)}</strong><small>${esc(sub || L.label)}</small><em>Tap to tear open</em></div>

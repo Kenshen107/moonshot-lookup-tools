@@ -214,10 +214,13 @@ function vaultBonus() {
 }
 function shopLog(msg) { SHOP.log.unshift(msg); SHOP.log.length = Math.min(SHOP.log.length, 30); }
 
+function shopMaxQueue() { return SHOP_MAX_QUEUE + (profile && profile.shopReputation >= 10 ? 1 : 0); }
+function shopMaxVault() { return 3 + (profile && profile.shopReputation >= 5 ? 1 : 0); }
 function openShop() {
     ensureShopDay();
     if (profile.shopToday.visitsLeft <= 0 || profile.shopToday.timeLeft <= 0) { toast('The day is over - close up to start a new day.'); return; }
     SHOP.open = true;
+    SHOP.justOpened = true;
     clearInterval(SHOP.timer);
     SHOP.timer = setInterval(shopTick, SHOP_TICK_MS);
     shopLog(`🔓 Day ${profile.shopDay}: the shop is open.`);
@@ -236,10 +239,11 @@ function shopTick() {
     SHOP.queue = SHOP.queue.filter(c => c.patience > 0);
     const T = profile.shopToday;
     if (SHOP.open) T.timeLeft = Math.max(0, T.timeLeft - SHOP_TICK_MS);
-    if (SHOP.open && T.timeLeft > 0 && T.visitsLeft > 0 && SHOP.queue.length < SHOP_MAX_QUEUE) {
-        // Spread the day's customers over its 10 minutes; reputation and trophies bring them sooner
+    if (SHOP.open && T.timeLeft > 0 && T.visitsLeft > 0 && SHOP.queue.length < shopMaxQueue()) {
+        // Spread the day's customers over its 10 minutes; guarantee an immediate first walk-in on open!
         const ticksLeft = Math.max(1, T.timeLeft / SHOP_TICK_MS);
-        const chance = Math.min(0.7, (T.visitsLeft / ticksLeft) * 1.6 * (1 + Math.min(profile.shopReputation, 40) * 0.01 + vaultBonus()));
+        const chance = SHOP.justOpened && !SHOP.queue.length ? 1 : Math.min(0.7, (T.visitsLeft / ticksLeft) * 1.6 * (1 + Math.min(profile.shopReputation, 40) * 0.01 + vaultBonus()));
+        SHOP.justOpened = false;
         if (Math.random() < chance) {
             T.visitsLeft--;
             spawnCustomer();
@@ -354,7 +358,7 @@ function completeSale(c, price) {
     if (price <= c.value * 1.1) profile.shopReputation++;
     removeCustomer(c);
     // Other customers' baskets may hold the sold items now: send them home politely
-    SHOP.queue.filter(o => o.basket.items.some(x => !(o.basket.from === 'bulk' ? profile.bulkBox : profile.displayCase).includes(x.l)))
+    SHOP.queue.filter(o => o.basket && o.basket.items.some(x => !(o.basket.from === 'bulk' ? profile.bulkBox : profile.displayCase).includes(x.l)))
         .forEach(o => { shopLog(`🤷 ${o.p.name} saw their pick get sold and left.`); removeCustomer(o); });
     shopLog(`💵 Sold ${c.basket.items.length > 1 ? `${c.basket.items.length} cards` : esc(CARDS.get(c.basket.items[0].l.id)?.name || 'a card')} to ${c.p.name} for ${usd(price)}.`);
     saveProfile();
@@ -438,7 +442,7 @@ function customerHTML(c) {
     const head = `<div class="cust-head"><span class="cust-face" aria-hidden="true">${c.p.emoji}</span><div><strong>${esc(c.p.name)}</strong> <span class="note">the ${esc(c.p.archetype)}${c.kind === 'sell' ? ' · selling' : ''}</span>${c.kind === 'sell' ? '' : `<div class="note">${esc(c.p.shop.desc)}</div>`}</div></div>`;
     const say = `<div class="cust-say">💬 ${esc(c.say || '')}</div>`;
     const custom = `<details class="note" id="oth-${c.id}" style="margin-top:4px;"><summary>Other amount</summary><div class="row" style="margin-top:4px;"><input type="text" inputmode="decimal" id="counter-${c.id}" placeholder="$" aria-label="Your price" class="counter-in"><button class="btn small" onclick="counterOffer(${c.id})">↔ Offer</button></div></details>`;
-    const bar = `<div class="patience" aria-hidden="true"><span style="width:${Math.max(0, c.patience / SHOP_PATIENCE_TICKS * 100)}%"></span></div>`;
+    const bar = `<div class="patience" data-pat-id="${c.id}" aria-hidden="true"><span style="width:${Math.max(0, c.patience / SHOP_PATIENCE_TICKS * 100)}%"></span></div>`;
     if (c.kind === 'sell') {
         const items = c.items.map(x => { const card = CARDS.get(x.id); return `<li><button class="linkish" onclick="showCardSheet('${x.id}')">${esc(card ? card.name : '?')}</button> ${condBadge(x.copy)} <span class="note">worth ${usd(copyValue(card, x.copy))}</span></li>`; }).join('');
         return `<div class="cust seller">${head}${say}<ul class="cust-items">${items}</ul>
@@ -456,21 +460,45 @@ function customerHTML(c) {
 function closeShop() {
     ensureShopDay();
     const T = profile.shopToday;
+    const closedDay = profile.shopDay;
     pauseShop();
     SHOP.queue.forEach(c => shopLog(`🚪 ${c.p.name} left at closing.`));
     SHOP.queue = [];
-    profile.usd = Math.round((profile.usd - SHOP_RENT) * 100) / 100;
-    profile.shopLedger.unshift({ day: profile.shopDay, revenue: T.revenue, bought: T.bought || 0, rent: SHOP_RENT, sales: T.sales.length, event: profile.marketEvent && profile.marketEvent.key });
+    const rentPaid = Math.min(SHOP_RENT, Math.max(0, profile.usd));
+    const waived = Math.round((SHOP_RENT - rentPaid) * 100) / 100;
+    profile.usd = Math.max(0, Math.round((profile.usd - SHOP_RENT) * 100) / 100);
+    const net = Math.round((T.revenue - (T.bought || 0) - rentPaid) * 100) / 100;
+    const bestSale = (T.sales || []).slice().sort((a, b) => b.price - a.price)[0] || null;
+    profile.shopLedger.unshift({ day: closedDay, revenue: T.revenue, bought: T.bought || 0, rent: rentPaid, sales: T.sales.length, event: profile.marketEvent && profile.marketEvent.key });
     profile.shopLedger.length = Math.min(profile.shopLedger.length, 14);
-    shopLog(`🔒 Closed day ${profile.shopDay}: ${T.sales.length} sale${T.sales.length === 1 ? '' : 's'}, ${usd(T.revenue)} in${T.bought ? `, ${usd(T.bought)} spent buying cards` : ''}, ${usd(SHOP_RENT)} rent.`);
+    shopLog(`🔒 Closed day ${closedDay}: ${T.sales.length} sale${T.sales.length === 1 ? '' : 's'}, ${usd(T.revenue)} in${T.bought ? `, ${usd(T.bought)} spent buying cards` : ''}, ${usd(rentPaid)} rent${waived > 0 ? ` (${usd(waived)} landlord grace)` : ''}.`);
     profile.shopDay++;
     rollMarketEvent();
     profile.shopToday = null;
     ensureShopDay();
+    const ca = $('crackArea');
+    if (ca) ca.innerHTML = '';
     // The distributor restocks for the new day (ensureDistStock)
     saveProfile();
     const e = todayEvent();
-    toast(`Day ${profile.shopDay}: ${e.icon} ${e.title}`);
+    const slabsReady = (profile.grading || []).filter(g => g.due <= profile.shopDay).length;
     renderShop();
+    showModal(`<div class="shop-receipt">
+        <h2>🧾 Day ${closedDay} Summary</h2>
+        <div class="end-stats">
+            <div class="es-card"><strong>${T.sales.length}</strong><span>Sales</span></div>
+            <div class="es-card"><strong>${usd(T.revenue)}</strong><span>Revenue</span></div>
+            <div class="es-card"><strong>${usd(T.bought || 0)}</strong><span>Card buys</span></div>
+            <div class="es-card"><strong>${usd(rentPaid)}</strong><span>Rent${waived > 0 ? ' (grace)' : ''}</span></div>
+            <div class="es-card ${net >= 0 ? 'gold' : ''}"><strong>${net >= 0 ? '+' : '−'}${usd(Math.abs(net))}</strong><span>Net profit</span></div>
+        </div>
+        ${bestSale ? `<p class="note">🏆 Best sale: <strong>${esc(bestSale.cards.join(', '))}</strong> to ${esc(bestSale.who)} for <strong>${usd(bestSale.price)}</strong></p>` : ''}
+        ${slabsReady ? `<p class="ok">📬 ${slabsReady} graded slab${slabsReady === 1 ? ' is' : 's are'} back and ready to open!</p>` : ''}
+        ${e ? `<div class="pos-event" style="margin:10px 0; text-align:left;"><span aria-hidden="true">${e.icon}</span> <strong>Day ${profile.shopDay} — ${esc(e.title)}:</strong> ${esc(e.text)}</div>` : ''}
+        <div class="row" style="justify-content:center; margin-top:12px; gap:8px;">
+            <button class="btn primary" onclick="closeModal(); openShop();">🔓 Open Day ${profile.shopDay}</button>
+            <button class="btn" onclick="closeModal(); showView('dist');">📦 Visit Distributor</button>
+            <button class="btn" onclick="closeModal();">Stay Closed</button>
+        </div></div>`);
 }
 

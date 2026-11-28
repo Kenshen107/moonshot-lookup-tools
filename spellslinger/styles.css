@@ -3243,3 +3243,53 @@ html[data-theme-art] .home-hero { background: linear-gradient(color-mix(in srgb,
     .sheet.card-sheet .cs-actions .btn:not(.primary) { flex: 1 1 auto; min-height: 38px; }
 }
 @media (prefers-reduced-motion: reduce) { .sheet.card-sheet .cs-art img { transition: none; } }
+
+/* ===== Master Audit Fix & Cross-Mode Engagement Pack (Phases 2–7, 2026-11-28) ===== */
+/* Phase 2.2: High-contrast #oppBar / #meBar stat pills over bright playmats */
+#game.open-board .pbar .bar-left > .zone-count,
+#game.open-board .pbar .bar-left > .cmd-dmg-pill { background: color-mix(in srgb, var(--bg-canvas) 72%, transparent); border: 1px solid color-mix(in srgb, var(--border) 60%, transparent); border-radius: 999px; padding: 2px 8px; backdrop-filter: blur(4px); }
+
+/* Phase 3.3: Balanced 3-column desktop Distributor grid */
+@media (min-width: 960px) { .offer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Phase 4: Mobile Topbar fit, compact Deck Builder header + #mxBar clearance, single-row #stickyMatchBar */
+@media (max-width: 600px) {
+    .topbar { gap: 4px; padding: 6px 10px; }
+    .topbar .brand h1 { font-size: 0.96rem; }
+    .topbar .coins { padding: 2px 6px; font-size: 0.76rem; }
+    .sticky-match-bar .smb-txt span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.74rem; }
+    #builder .mx-head { padding: 10px; gap: 6px; }
+    #builder .mx-bar { bottom: calc(58px + env(safe-area-inset-bottom)); padding: 6px 10px; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    #builder .mx-bar::-webkit-scrollbar { display: none; }
+    #builder .mx-bar .mx-bar-end .btn.primary { display: none; }
+}
+
+/* Phase 5: Drag-to-Tear seam indicator + Holographic foil/slab shimmer */
+.pack3d::after { content: ""; position: absolute; left: 0; top: 14%; height: 3px; width: var(--tear-pct, 0%); background: linear-gradient(90deg, var(--gold), var(--text-heading)); box-shadow: 0 0 10px var(--gold); pointer-events: none; z-index: 6; border-radius: 999px; }
+@keyframes holo-sweep { 0% { background-position: -120% 0; } 100% { background-position: 220% 0; } }
+.scard.foil::after, .scard.serial::after, .slab-case::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: linear-gradient(115deg, transparent 30%, color-mix(in srgb, var(--gold) 26%, transparent) 48%, color-mix(in srgb, var(--brand-light) 22%, transparent) 54%, transparent 70%); background-size: 220% 100%; animation: holo-sweep 3.2s linear infinite; }
+.slab-case { position: relative; overflow: hidden; }
+
+/* Phase 6: Shop Reputation Milestone bar & End-of-Day Receipt */
+.shop-rep-bar { display: flex; align-items: center; gap: 10px; margin: 6px 0 8px; padding: 6px 10px; border-radius: var(--radius-sm); background: var(--bg-inset); border: 1px solid var(--border-subtle); font-size: 0.82rem; }
+.shop-rep-bar.ok { border-color: color-mix(in srgb, var(--color-success) 50%, var(--border)); color: var(--color-success); }
+.srb-track { flex: 1; height: 7px; border-radius: 999px; background: var(--bg-panel-raised); overflow: hidden; display: inline-block; min-width: 60px; }
+.srb-track i { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), var(--gold)); border-radius: 999px; transition: width 0.3s ease; }
+
+/* Phase 7: Ascent Campaign Progress, Visual Matchup Gauge, Tab Badges & Draft Fit */
+.tab-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: var(--brand); color: var(--text-heading); }
+.tab-badge.gold { background: color-mix(in srgb, var(--gold) 28%, var(--bg-panel)); color: var(--gold); }
+.asc-hero-prog { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; margin-bottom: 12px; border-radius: var(--radius-md); background: var(--bg-inset); border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--border)); }
+.ahp-left { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 180px; }
+.asc-matchup { padding: 10px 12px; margin: 10px 0; border-radius: var(--radius-md); background: var(--bg-inset); border: 1px solid var(--border-subtle); }
+.asc-matchup .am-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; font-size: 0.88rem; margin-bottom: 6px; }
+.asc-matchup .am-bar { height: 8px; border-radius: 999px; background: var(--bg-panel-raised); overflow: hidden; }
+.asc-matchup .am-bar i { display: block; height: 100%; border-radius: 999px; background: var(--brand-light); }
+.asc-matchup.fav { border-color: color-mix(in srgb, var(--color-success) 50%, var(--border)); }
+.asc-matchup.fav .am-bar i { background: var(--color-success); }
+.asc-matchup.dog { border-color: color-mix(in srgb, var(--color-warning) 55%, var(--border)); }
+.asc-matchup.dog .am-bar i { background: var(--color-warning); }
+.asc-trophy .srb-track { width: 100%; margin-top: 4px; }
+.ctile.dr-fit { outline: 2px solid color-mix(in srgb, var(--gold) 70%, transparent); }
+.dr-fit-tag { display: inline-block; margin-left: 4px; padding: 0 5px; border-radius: 999px; font-size: 0.68rem; font-weight: 700; background: color-mix(in srgb, var(--gold) 24%, var(--bg-panel)); color: var(--gold); }
+@media (prefers-reduced-motion: reduce) { .scard.foil::after, .scard.serial::after, .slab-case::after { animation: none !important; } .srb-track i { transition: none; } }

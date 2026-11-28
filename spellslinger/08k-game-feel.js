@@ -49,13 +49,21 @@
             if (navigator && typeof navigator.vibrate === 'function') navigator.vibrate(pat);
         } catch (e) { /* unsupported */ }
     }
+    const PITCH_STEPS = [1, 1.12, 1.26, 1.33, 1.5, 1.68, 1.89, 2.0];
+    let streakN = 0, streakAt = 0;
+    function streakMult() {
+        const now = Date.now();
+        streakN = (now - streakAt) < 1100 ? Math.min(PITCH_STEPS.length - 1, streakN + 1) : 0;
+        streakAt = now;
+        return PITCH_STEPS[streakN];
+    }
     const SFX = {
-        snap() { tone(420, 0.055, 'triangle', 0.06, 180); vibe(10); },
+        snap() { const m = streakMult(); tone(420 * m, 0.055, 'triangle', 0.06, 180 * m); vibe(10); },
         tap() { tone(520, 0.04, 'sine', 0.04, 680); vibe(8); },
-        cast() { tone(392, 0.14, 'triangle', 0.07, 587); tone(587, 0.18, 'sine', 0.05, 880, 0.05); vibe(14); },
-        hit() { tone(140, 0.16, 'sawtooth', 0.09, 48); vibe(32); },
+        cast() { const m = streakMult(); tone(392 * m, 0.14, 'triangle', 0.07, 587 * m); tone(587 * m, 0.18, 'sine', 0.05, 880 * m, 0.05); vibe(14); },
+        hit() { const m = streakMult(); tone(140 * Math.min(1.35, m), 0.16, 'sawtooth', 0.09, 48); vibe(32); },
         heal() { tone(440, 0.14, 'sine', 0.06, 554); tone(554, 0.18, 'sine', 0.05, 659, 0.06); },
-        sparkle() { [659, 880, 1175, 1568].forEach((f, i) => tone(f, 0.16, 'sine', 0.055, f * 1.04, i * 0.055)); vibe([16, 30, 22]); },
+        sparkle() { const m = streakMult(); [659, 880, 1175, 1568].forEach((f, i) => tone(f * Math.min(1.25, m), 0.16, 'sine', 0.055, f * 1.04, i * 0.055)); vibe([16, 30, 22]); },
         victory() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.22, 'triangle', 0.075, null, i * 0.09)); vibe([20, 40, 25, 40, 40]); },
         defeat() { [330, 294, 247, 196].forEach((f, i) => tone(f, 0.24, 'sawtooth', 0.05, null, i * 0.11)); vibe(45); }
     };
@@ -500,4 +508,36 @@
             else if (typeof logSheet === 'function') logSheet();
         }
     });
+
+    // ---- 11. Pokémon TCG Pocket-Style Drag-to-Tear Pack Seam & Swipe-to-Flip Stack ----
+    let packDrag = null;
+    document.addEventListener('pointerdown', e => {
+        const pk = e.target && e.target.closest ? e.target.closest('.pack3d:not(.peeling)') : null;
+        if (pk) { packDrag = { kind: 'tear', el: pk, x0: e.clientX, done: false }; return; }
+        const st = e.target && e.target.closest ? e.target.closest('.pstack') : null;
+        if (st) { packDrag = { kind: 'flip', el: st, x0: e.clientX, done: false }; }
+    }, { passive: true });
+    document.addEventListener('pointermove', e => {
+        if (!packDrag || packDrag.done) return;
+        const dx = Math.abs(e.clientX - packDrag.x0);
+        if (packDrag.kind === 'tear') {
+            const pct = Math.min(100, Math.round(dx / 65 * 100));
+            packDrag.el.style.setProperty('--tear-pct', pct + '%');
+            if (dx >= 58) {
+                packDrag.done = true;
+                packDrag.el.style.removeProperty('--tear-pct');
+                const areaId = (packDrag.el.id || '').replace(/^p3d-/, '');
+                if (areaId && typeof peelPack === 'function') peelPack(areaId);
+                else packDrag.el.click();
+            }
+        } else if (packDrag.kind === 'flip' && dx >= 46) {
+            packDrag.done = true;
+            const areaId = (packDrag.el.id || '').replace(/^ps-/, '');
+            if (areaId && typeof nextPackCard === 'function') nextPackCard(areaId);
+        }
+    }, { passive: true });
+    document.addEventListener('pointerup', () => {
+        if (packDrag && packDrag.el) packDrag.el.style.removeProperty('--tear-pct');
+        packDrag = null;
+    }, { passive: true });
 })();

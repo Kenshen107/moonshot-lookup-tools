@@ -198,11 +198,23 @@ function draftPoolSummary(pool) {
 function renderDraftPick(el, D) {
     const pack = D.packs[0];
     const dir = D.packNo === 1 ? 'right' : 'left';
+    const pool = D.pools[0];
+    const topCols = pool.length >= 3 ? topColors(draftColorWeights(pool)) : [];
+    const crs = pool.filter(p => { const c = draftCard(p); return c && rulesFor(c).kind === 'creature'; }).length;
+    const spls = pool.filter(p => { const c = draftCard(p); return c && rulesFor(c).kind !== 'creature' && rulesFor(c).kind !== 'land'; }).length;
+    const coach = pool.length ? `<div class="dr-stats" style="margin:6px 0 8px;"><span>🐉 Creatures: <strong>${crs}</strong></span><span>✨ Spells: <strong>${spls}</strong></span>${topCols.length ? `<span>🎯 Top colors: ${topCols.map(c => `<span class="pip ${c}"></span>`).join('')}</span>` : ''}</div>` : '';
     el.innerHTML = `<div class="draft-head"><div><strong>${esc(D.name)} · Pack ${D.packNo + 1} of ${DRAFT_PACKS} · Pick ${D.pickNo + 1}</strong><div class="note">Tap a card to look at it, then pick it. This pack goes to the ${dir} next. ${pack.length} card${pack.length === 1 ? '' : 's'} left in it.</div></div>
         <button class="btn small" onclick="leaveDraft()">Leave draft</button></div>
-        <div class="cards draft-pack">${pack.map((p, i) => { const c = draftCard(p); return c ? `<button type="button" class="ctile${p.foil ? ' foil' : ''}" onclick="draftCardSheet(${i})" title="${esc(c.name)}">${cardImg(c)}<span class="meta">${esc(c.name)}${p.foil ? ' ✨' : ''}<br>${supportBadge(c)}</span></button>` : ''; }).join('')}</div>
-        <h3 class="opp-h">Your picks (${D.pools[0].length})</h3><div class="dr-sum">${draftPoolSummary(D.pools[0])}</div>
-        <div class="draft-picks">${D.pools[0].map(p => { const c = draftCard(p); return c ? `<button type="button" class="dr-mini" onclick="showCardSheet('${c.id}')" title="${esc(c.name)}">${cardImg(c)}</button>` : ''; }).join('')}</div>`;
+        ${coach}
+        <div class="cards draft-pack">${pack.map((p, i) => {
+            const c = draftCard(p);
+            if (!c) return '';
+            const cs = cardColors(c);
+            const inCol = topCols.length > 0 && (!cs.length || cs.every(col => topCols.includes(col)));
+            return `<button type="button" class="ctile${p.foil ? ' foil' : ''}${inCol ? ' dr-fit' : ''}" onclick="draftCardSheet(${i})" title="${esc(c.name)}${inCol ? ' — matches your drafted colors' : ''}">${cardImg(c)}<span class="meta">${esc(c.name)}${p.foil ? ' ✨' : ''}${inCol ? '<span class="dr-fit-tag">🎯 Fits</span>' : ''}<br>${supportBadge(c)}</span></button>`;
+        }).join('')}</div>
+        <h3 class="opp-h">Your picks (${pool.length})</h3><div class="dr-sum">${draftPoolSummary(pool)}</div>
+        <div class="draft-picks">${pool.map(p => { const c = draftCard(p); return c ? `<button type="button" class="dr-mini" onclick="showCardSheet('${c.id}')" title="${esc(c.name)}">${cardImg(c)}</button>` : ''; }).join('')}</div>`;
 }
 function draftCardSheet(i) {
     const D = profile.draft, p = D && D.packs[0][i];

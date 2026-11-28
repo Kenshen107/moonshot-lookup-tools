@@ -106,6 +106,7 @@ window.__UI_LAB = (function () {
         const preset = typeof opts === 'string' ? (PRESETS[opts] || PRESETS.stress) : Object.assign({}, PRESETS.stress, opts || {});
         if (typeof closeModal === 'function') closeModal();
         if (typeof closeSheet === 'function') closeSheet();
+        if (typeof actReset === 'function') actReset();
         const C = await loadPool();
         const cmdrs = ['Tyrox, Saurid Tyrant', 'Brudiclad, Telchor Engineer', 'Sandman, Shifting Scoundrel', 'Odric, Lunarch Marshal'];
         const basics = ['Mountain', 'Island', 'Forest', 'Plains'];

@@ -26,7 +26,12 @@ async function renderAscent() {
                 <div><span class="pos-k">Cards owned</span><strong>${cards}</strong></div>
             </div>
             <label class="note asc-fxtoggle"><input type="checkbox" ${ascFxPref() ? 'checked' : ''} onchange="ascFxSet(this.checked)"> Play pixel-art effects in games</label>
-            <div class="tabs" role="tablist">${[['map', ascIco('tab-map', '🗺️', 18) + ' Map'], ['packs', ascIco('tab-packs', '📦', 18) + ' Packs'], ['coll', ascIco('tab-collection', '🃏', 18) + ' Collection'], ['decks', ascIco('tab-decks', '🛠️', 18) + ' Decks']].map(([k, l]) => `<button class="tab" role="tab" aria-selected="${ASC.tab === k}" onclick="ascTab('${k}')">${l}</button>`).join('')}</div>
+            <div class="tabs" role="tablist">${[
+                ['map', ascIco('tab-map', '🗺️', 18) + ' Map'],
+                ['packs', ascIco('tab-packs', '📦', 18) + ` Packs${sealed.play + sealed.collector ? ` <span class="tab-badge">${sealed.play + sealed.collector}</span>` : ''}`],
+                ['coll', ascIco('tab-collection', '🃏', 18) + ` Collection${st.aether >= 80 ? ' <span class="tab-badge gold">✨</span>' : ''}`],
+                ['decks', ascIco('tab-decks', '🛠️', 18) + ' Decks']
+            ].map(([k, l]) => `<button class="tab" role="tab" aria-selected="${ASC.tab === k}" onclick="ascTab('${k}')">${l}</button>`).join('')}</div>
             <div id="ascBody"></div>
         </div>`;
     ({ map: ascMap, packs: ascPacks, coll: ascColl, decks: ascDecks })[ASC.tab]();
@@ -49,7 +54,13 @@ function ascMap() {
             <div class="asc-colors">${Object.entries(ASC_COLORS).map(([c, [e, n]]) => `<button class="btn" onclick="ascChooseStarter('${c}')"><span class="asc-big">${ascIco('mana-' + c, ascIco('gem-' + c, e, 28), 28)}</span> ${n}</button>`).join('')}</div></div>`;
         return;
     }
-    body.innerHTML = ascNpcHTML('map') + ASCENT_TIERS.map(t => {
+    const nextOpp = ASCENT_OPPONENTS.find(o => ascentOpponentOpen(o) && !ascentBeaten(o.id)) || ASCENT_OPPONENTS.find(o => ascentOpponentOpen(o));
+    const pctAll = Math.round(100 * st.progress.length / Math.max(1, ASCENT_OPPONENTS.length));
+    const progressHero = `<div class="asc-hero-prog">
+        <div class="ahp-left"><strong>🌌 Campaign Progress: ${st.progress.length} / ${ASCENT_OPPONENTS.length} (${pctAll}%)</strong><span class="srb-track"><i style="width:${pctAll}%"></i></span></div>
+        ${nextOpp ? `<button type="button" class="btn primary small" onclick="ascSelectOpp('${nextOpp.id}'); setTimeout(()=>{const el=$('ascOpp'); if(el) el.scrollIntoView({behavior:'smooth', block:'nearest'});}, 60);">⚔️ Next: ${esc(nextOpp.name)}</button>` : '<span class="ok">🏆 All leagues conquered!</span>'}
+    </div>`;
+    body.innerHTML = progressHero + ascNpcHTML('map') + ASCENT_TIERS.map(t => {
         const open = ascentTierOpen(t.tier), opps = ASCENT_OPPONENTS.filter(o => o.tier === t.tier);
         return `<div class="tier-band tier-${t.tier}${open ? '' : ' locked'}${ASC_UI.ok['bg-tier-' + t.tier] ? ' has-bg' : ''}">
             <div class="tier-head"><span class="tier-icon" aria-hidden="true">${ascIco('tier-' + t.tier, t.icon, 44)}</span><div><strong>Tier ${t.tier}: ${esc(t.name)}</strong>
@@ -84,7 +95,11 @@ async function ascOppPanel() {
         <div class="asc-grid">${sigs.map(id => ascTile(id, { sig: true })).join('')}</div>
         <h4>🏆 Trophies: win ${ASCENT_TROPHY_WINS[ASCENT_TROPHY_WINS.length - 1]} times to earn them all (you have ${ascentWins(o.id)} wins)</h4>
         <p class="note">The strongest cards in the pool. They can only be won this way, one copy each: the first at ${ASCENT_TROPHY_WINS[0]} wins against ${esc(o.name)}.</p>
-        <div class="asc-grid asc-trophies">${trophyIds.map((id, i) => `<div class="asc-trophy${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? ' earned' : ''}">${ascIco('badge-' + ASCENT_TROPHY_WINS[i], '', 32)}${ascTile(id, { trophy: true })}<small class="note">${ascentWins(o.id) >= ASCENT_TROPHY_WINS[i] ? '✔ earned' : `${ASCENT_TROPHY_WINS[i]} wins`}</small></div>`).join('')}</div>
+        <div class="asc-grid asc-trophies">${trophyIds.map((id, i) => {
+            const targetW = ASCENT_TROPHY_WINS[i], curW = ascentWins(o.id), earned = curW >= targetW;
+            const pct = Math.min(100, Math.round(100 * curW / targetW));
+            return `<div class="asc-trophy${earned ? ' earned' : ''}">${ascIco('badge-' + targetW, '', 32)}${ascTile(id, { trophy: true })}<small class="note">${earned ? '✔ earned' : `${curW}/${targetW} wins`}</small><span class="srb-track"><i style="width:${pct}%"></i></span></div>`;
+        }).join('')}</div>
         ${ascMatchupHTML(o)}
         <div class="row" style="margin-top:12px;"><select id="ascDeckPick" aria-label="Your deck" onchange="ASC.deck=Number(this.value)||0; ascOppPanel()">${st.decks.map((d, i) => `<option value="${i}" ${i === ASC.deck ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
             <button class="btn primary" onclick="ascPlay('${o.id}')" ${open ? '' : 'disabled'}>⚔️ Battle ${esc(o.name)}</button>
@@ -95,7 +110,12 @@ function ascMatchupHTML(o) {
     const st = ascentState(), deck = st.decks[Math.min(ASC.deck, st.decks.length - 1)];
     if (!deck) return '';
     const mine = ascentDeckPower(deck), theirs = ascentOpponentPower(o.id), m = ascentMatchupWords(mine, theirs);
-    return `<p class="asc-matchup" title="Deck power is fitted from lab games: a gap of 100 points is about a 64% win chance for the stronger deck. It is a guide, not a promise.">⚡ <strong>${esc(deck.name)}</strong> power <strong>${mine}</strong> vs ${esc(o.name)} <strong>${theirs}</strong>: ${esc(m.label)} (about ${m.percent}%).</p>`;
+    const tone = m.percent >= 55 ? 'fav' : m.percent <= 44 ? 'dog' : 'even';
+    return `<div class="asc-matchup ${tone}" title="Deck power is fitted from lab games: a gap of 100 points is about a 64% win chance for the stronger deck. It is a guide, not a promise.">
+        <div class="am-top"><span>⚡ <strong>${esc(deck.name)}</strong> (${mine}) vs ${esc(o.name)} (${theirs})</span><strong>${esc(m.label)} · ~${m.percent}%</strong></div>
+        <div class="am-bar"><i style="width:${Math.max(8, Math.min(92, m.percent))}%"></i></div>
+        ${m.percent < 48 ? '<div class="row" style="margin-top:6px;"><button type="button" class="btn small gold" onclick="ascTab(\'decks\')">🛠️ Upgrade your deck</button><button type="button" class="btn small" onclick="ascTab(\'coll\')">✨ Craft cards</button></div>' : ''}
+    </div>`;
 }
 async function ascPlay(oppId) {
     ASC.deck = Number($('ascDeckPick').value) || 0;
