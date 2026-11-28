@@ -17,6 +17,12 @@ const counterIco = k => ['loyalty', 'charge'].includes(k) ? uiIco('ctr-' + k, co
 const MOOD_ICO = { angry: 'angry', annoyed: 'salty', salty: 'salty', worried: 'worried', nervous: 'worried', smug: 'confident', determined: 'confident', calm: 'calm', scheming: 'calm', nerdy: 'calm', cheerful: 'happy', impressed: 'happy' };
 const moodIco = (m, px) => MOOD_ICO[m] ? uiIco('mood-' + MOOD_ICO[m], MOODS[m].emoji, px || 18) : (MOODS[m] || MOODS.calm).emoji;
 // Keywords written with a number or a quality (ward:2, pro:red, toxic:1)
+// A permanent's type as a painted icon (tokens first, then the main card type); '' when there's no art
+const TYPE_ICO_ORDER = ['battle', 'planeswalker', 'creature', 'land', 'artifact', 'enchantment', 'instant', 'sorcery'];
+function typeKey(o) { if (o.token) return 'token'; const t = (o.card && o.card.type || '').toLowerCase(); return TYPE_ICO_ORDER.find(k => t.includes(k)) || ''; }
+function typeIco(o, px) { const k = typeKey(o); return k ? uiIco('type-' + k, '', px || 16) : ''; }
+// A card's rarity as its painted gem (special and bonus share one)
+function rarityIco(r, px) { r = String(r || '').toLowerCase(); const k = r === 'bonus' ? 'special' : r; return ['common', 'uncommon', 'rare', 'mythic', 'special'].includes(k) ? uiIco('rarity-' + k, '', px || 14) : ''; }
 const kwPrefixed = (o, p) => !lostAbilities(o) && ([...Rx(o).kw].concat(o.tkw || []).some(x => typeof x === 'string' && (x === p || x.startsWith(p + ':') || x.startsWith(p + ' '))));
 
 // Crisp MTG Arena-style inline SVG keyword medallions (compact, legible even on shrunk 2-row boards)
@@ -171,7 +177,7 @@ function manaSourcesSummary(P) {
     const counts = {};
     srcs.forEach(o => { const m = manaOf(o); const key = m.colors.length > 1 ? 'any' : m.colors[0]; counts[key] = (counts[key] || 0) + m.n; });
     const total = availableMana(P);
-    return `<span class="pool" title="Untapped mana">⚡ ${total}${Object.entries(counts).map(([c, n]) => c === 'any' ? ` · ${n} multi` : ` · ${n}<span class="pip ${c}"></span>`).join('')}</span>`;
+    return `<span class="pool" title="Untapped mana">⚡ ${total}${Object.entries(counts).map(([c, n]) => c === 'any' ? ` · ${n}${uiIco('gem-multi', ' multi', 15)}` : ` · ${n}<span class="pip ${c}"></span>`).join('')}</span>`;
 }
 
 // Commander metadata for a player (art portrait, color identity glow, current zone)
@@ -287,6 +293,8 @@ function barHTML(P) {
     const topGy = P.gy && P.gy.length ? P.gy[P.gy.length - 1] : null;
     const gyArt = topGy && topGy.card && (topGy.card.imgS || topGy.card.img);
     const gyPile = `<button type="button" class="zone-count zone-btn pile-card pile-gy${gyArt ? ' has-art' : ''}" title="Graveyard (${P.gy.length}): tap to look" onclick="showGraveyard(${P.i})">${gyArt ? `<img class="pile-art" src="${gyArt}" alt="">` : `<span class="pile-ico" aria-hidden="true">${uiIco('zone-graveyard', '🪦', 22)}</span>`}<span class="pile-cnt">${P.gy.length}</span></button>`;
+    // Exile (2026-11-28): a pile next to the graveyard, shown only once something is exiled
+    const exPile = (P.exile || []).length ? `<button type="button" class="zone-count zone-btn pile-card pile-ex" title="Exile (${P.exile.length}): tap to look" onclick="showExile(${P.i})"><span class="pile-ico" aria-hidden="true">${uiIco('zone-exile', '🌀', 22)}</span><span class="pile-cnt">${P.exile.length}</span></button>` : '';
     const slv = typeof sleeveAttr === 'function' ? sleeveAttr(P) : { cls: '', style: '' };
     const libPile = `<span class="zone-count pile-card pile-deck${slv.cls}"${slv.style} title="Library: ${P.library.length} cards"><span class="pile-ico" aria-hidden="true">${uiIco('zone-library', '📚', 22)}</span><span class="pile-cnt">${P.library.length}</span></span>`;
     const crestSVG = `<svg class="av-crest" viewBox="0 0 120 76" aria-hidden="true"><path class="crest-wing" d="M8 58 L28 32 L38 42 L60 12 L82 42 L92 32 L112 58 L94 64 L60 54 L26 64 Z"/><path class="crest-trim" d="M18 55 L32 39 L43 47 L60 22 L77 47 L88 39 L102 55" fill="none"/></svg>`;
@@ -299,7 +307,7 @@ function barHTML(P) {
             ${G.format === 'commander' ? `<span class="zone-count cmd-dmg-pill" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
             ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">${uiIco('ctr-poison', '☠️', 16)} ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">${uiIco('ctr-energy', '🔋', 16)} ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
             ${P === me() && P.bf.some(o => Rx(o).peekTop) && P.library.length ? `<span class="pc" title="You may look at the top card of your library any time">👁 ${esc(P.library[P.library.length - 1].card.name)}</span>` : ''}
-            <span class="zones">${libPile}${gyPile}</span>
+            <span class="zones">${libPile}${gyPile}${exPile}</span>
             ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand${slv.cls}"${slv.style}>${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
             <span class="cmd-zone">${cmd}</span>
         </span>
@@ -744,6 +752,16 @@ function showGraveyard(i) {
     window.__gy = k => { closeModal(); const o = P.gy[k]; if (o) showGameCard(o.uid); };
     showModal(`<h2>🪦 ${you(P) ? 'Your graveyard' : `${esc(P.name)}'s graveyard`}</h2>${P.i === 0 && P.gy.some(o => Rx(o).flashback) ? '<p class="note">Cards with flashback can be cast from here.</p>' : ''}
         <div class="pick-grid">${P.gy.map((o, k) => `<button type="button" class="pick-card" onclick="__gy(${k})" title="${esc(o.card.name)}">${o.card.imgS ? `<img src="${o.card.imgS}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</button>`).join('')}</div>
+        <div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
+}
+// What a player has in exile; face-down cards stay hidden from everyone but their owner (foretold, hideaway and the like)
+function showExile(i) {
+    const P = G.players[i];
+    if (!P.exile.length) { toast('Nothing is in exile.'); return; }
+    const hidden = o => (o.faceDown || o.foretoldTurn) && !you(P);
+    window.__ex = k => { const o = P.exile[k]; if (!o || hidden(o)) return; closeModal(); showGameCard(o.uid); };
+    showModal(`<h2>${uiIco('zone-exile', '🌀', 26)} ${you(P) ? 'Your exile' : `${esc(P.name)}'s exile`}</h2>${P.exile.some(o => o.playUntil >= G.turn) && you(P) ? '<p class="note">Cards you may play this turn are at the end of your hand too.</p>' : ''}
+        <div class="pick-grid">${P.exile.map((o, k) => hidden(o) ? `<span class="pick-card" title="A face-down card"><span class="noimg">Face down</span></span>` : `<button type="button" class="pick-card" onclick="__ex(${k})" title="${esc(o.card.name)}">${o.card.imgS ? `<img src="${o.card.imgS}" alt="${esc(o.card.name)}">` : `<span class="noimg">${esc(o.card.name)}</span>`}</button>`).join('')}</div>
         <div class="row" style="justify-content:center; margin-top:10px;"><button class="btn" onclick="closeModal()">Close</button></div>`);
 }
 function playerSheet(i) {

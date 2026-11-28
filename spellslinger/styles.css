@@ -2382,6 +2382,12 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
         background: linear-gradient(160deg, var(--bg-panel-raised), var(--bg-inset));
         border: 1.5px dashed color-mix(in srgb, var(--border) 90%, var(--brand-light));
         box-shadow: -2px 3px 10px color-mix(in srgb, var(--bg-canvas) 85%, transparent); }
+    #game.open-board .pile-ex {
+        background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--mana-B) 35%, transparent), transparent 70%), linear-gradient(160deg, var(--bg-panel-raised), var(--bg-inset));
+        border: 1.5px solid color-mix(in srgb, var(--mana-B) 55%, var(--border));
+        box-shadow: -2px 3px 10px color-mix(in srgb, var(--bg-canvas) 85%, transparent); }
+    #game.open-board .pile-ex:hover { transform: perspective(260px) rotateX(6deg) rotateZ(-1deg) translateY(-3px); border-color: var(--gold); }
+    #game.open-board .pile-card .pile-ico .asc-ico { width: 26px; height: 26px; }
     #game.open-board .pile-gy.has-art { border-style: solid; border-color: color-mix(in srgb, var(--brand-light) 55%, var(--border)); }
     #game.open-board .pile-gy:hover { transform: perspective(260px) rotateX(6deg) rotateZ(-1deg) translateY(-3px); border-color: var(--gold);
         box-shadow: 0 8px 18px -4px var(--bg-canvas), 0 0 14px -4px var(--gold); }
@@ -3009,3 +3015,10 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
 .mat-card[data-mat-pick="swamp"] .mat-sw { background: url('art/mats/swamp/thumb.jpg') center / cover no-repeat, var(--bg-inset); height: 54px; border-radius: var(--radius-sm); }
 .mat-card[data-mat-pick="mountain"] .mat-sw { background: url('art/mats/mountain/thumb.jpg') center / cover no-repeat, var(--bg-inset); height: 54px; border-radius: var(--radius-sm); }
 .mat-card[data-mat-pick="forest"] .mat-sw { background: url('art/mats/forest/thumb.jpg') center / cover no-repeat, var(--bg-inset); height: 54px; border-radius: var(--radius-sm); }
+
+/* Board overview: the type (or token) icon in a picture tile's corner (08b-board-overview.js typeIco) */
+.ov-tile { position: relative; }
+.ov-type { position: absolute; left: 4px; bottom: 4px; z-index: 2; line-height: 0; border-radius: 50%; background: color-mix(in srgb, var(--bg-canvas) 70%, transparent); padding: 2px; }
+.ov-tile.row-tile b .asc-ico, .ov-detail .note .asc-ico { margin-right: 4px; }
+.ov-tile img.asc-ico, .ov-detail img.asc-ico { width: 16px; height: 16px; min-width: 0; aspect-ratio: auto; object-fit: contain; display: inline-block; position: static; vertical-align: -3px; border-radius: 0; box-shadow: none; }
+.ov-type img.asc-ico { width: 18px; height: 18px; vertical-align: top; }

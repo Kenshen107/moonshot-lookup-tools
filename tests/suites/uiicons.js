@@ -33,6 +33,21 @@ const { launch, openTestPage, formatChecks, printResults, writeOut, ROOT } = req
             ok('a ward:2 creature gets the ward badge', !!document.querySelector(`#game [data-uid="${c.uid}"] .kw-ward`) || /kw-ward/.test(kwBadgesHTML(c)), kwBadgesHTML(c));
             ok('a mood maps to a painted face', /mood-worried\.png/.test(moodIco('nervous')) && /mood-salty\.png/.test(moodIco('salty')));
             ok('a loyalty counter uses its icon', /ctr-loyalty\.png/.test(counterIco('loyalty')) && !/img/.test(counterIco('oil')));
+            // the last six icons (2026-11-28): exile pile and viewer, multicolour gem, token and type icons, draw, special rarity
+            A.exile.push(A.library.pop()); renderGame();
+            ok('a player with exiled cards gets an exile pile with its icon', !!document.querySelector('#game .pile-ex img.asc-ico[src$="zone-exile.png"]'));
+            const B = G.players[1]; const fd = B.library.pop(); fd.faceDown = true; B.exile.push(fd); showExile(1);
+            ok('the exile viewer hides an opponent\'s face-down card', /Face down/.test(document.querySelector('#modalHost').textContent) && !document.querySelector('#modalHost').textContent.includes(fd.card.name));
+            closeModal(); B.exile.pop(); renderGame();
+            ok('exile is hidden when empty', !document.querySelector('#oppBar .pile-ex'));
+            const tok = A.bf.find(isCreature); tok.token = true;
+            ok('a token shows the token icon, a land its type', /type-token\.png/.test(typeIco(tok)) && /type-land\.png/.test(typeIco(A.bf.find(o => /Land/.test(o.card.type)))));
+            ok('special and bonus rarities share the special gem', /rarity-special\.png/.test(rarityIco('special')) && /rarity-special\.png/.test(rarityIco('bonus')) && rarityIco('weird') === '');
+            ok('the multicolour gem is ready for the mana summary', /gem-multi\.png/.test(uiIco('gem-multi', ' multi', 15)) && ASC_UI.ok['phase-draw']);
+            OV.mode = 'list'; boardOverview(0);
+            const ico = document.querySelector('#modalHost .ov-tile img.asc-ico');
+            ok('the Board list shows type icons at icon size', !!ico && ico.getBoundingClientRect().width <= 20, ico && ico.getBoundingClientRect().width);
+            closeModal();
             await window.__UI_LAB.spawn('pod'); setArenaMat('island'); renderGame();
             const bg = getComputedStyle(document.getElementById('game')).backgroundImage;
             ok('the Island mat shows its painting', /mats\/island\/base\.jpg/.test(bg), bg.slice(0, 200));

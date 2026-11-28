@@ -192,7 +192,7 @@ function renderBoxResult(packs, cards, s, areaId) {
         <p class="note">Prices: Scryfall's TCGplayer price × condition × today's market. Every card is in your collection. Below: the ${hits.length} best hits, cheapest first, as a stack - tap to send each one flying.</p>
         <div id="${id}"></div>
         <details class="note" style="margin-top:10px;"><summary>All ${cards.length} cards, most valuable first</summary>
-            <ul class="box-all">${byVal.map(p => `<li><button class="linkish" onclick="showCardSheet('${p.card.id}')">${esc(p.card.name)}</button> ${p.copy ? condBadge(p.copy) : ''} <span class="note">${p.card.rarity}${p.foil ? ' · foil' : ''}</span> <strong>${usd(pullValue(p))}</strong></li>`).join('')}</ul>
+            <ul class="box-all">${byVal.map(p => `<li><button class="linkish" onclick="showCardSheet('${p.card.id}')">${esc(p.card.name)}</button> ${p.copy ? condBadge(p.copy) : ''} <span class="note">${typeof rarityIco === 'function' ? rarityIco(p.card.rarity) : ''}${p.card.rarity}${p.foil ? ' · foil' : ''}</span> <strong>${usd(pullValue(p))}</strong></li>`).join('')}</ul>
         </details>
     </div>`;
     renderPackReveal({ isHits: true, name: `The ${hits.length} best hits`, set: { code: packs[0].set.code, name: `${s.name}: best of ${packs.length} packs` }, cards: hits }, id);
@@ -292,7 +292,7 @@ function showCardSheet(id, actionsHTML = '') {
                 <div>${card.img ? `<img src="${card.img}" alt="${esc(card.name)}">` : ''}</div>
                 <div>
                     <h3>${esc(card.fullName)}</h3>
-                    <div class="note">${esc(card.setName || '')} · ${esc(card.rarity || '')}${profile.collection[id] ? ` · you own ${profile.collection[id]}` : ''}</div>
+                    <div class="note">${esc(card.setName || '')} · ${typeof rarityIco === 'function' ? rarityIco(card.rarity) : ''}${esc(card.rarity || '')}${profile.collection[id] ? ` · you own ${profile.collection[id]}` : ''}</div>
                     ${cardTextHTML(card)}
                     <div>${supportBadge(card)} <span class="note">${esc(R.why || 'Everything on this card works in the game.')}</span></div>
                     <div id="kwHelp"></div>
@@ -929,7 +929,7 @@ function mxHandHTML() {
     return `<div class="mx-hand">${hand.map((c, i) => `<button type="button" class="th-card" style="--i:${i}" onclick="showCardSheet('${c.id}')" onmouseenter="mxHover('${c.id}')" title="${esc(c.name)}">${c.imgS || c.img ? `<img src="${c.img || c.imgS}" alt="${esc(c.name)}">` : `<span class="noimg">${esc(c.name)}</span>`}</button>`).join('')}</div>
         <div class="row" style="margin-top:8px;">
             <button type="button" class="btn small gold" onclick="playtestDeck()">🧪 Playtest</button>
-            <button type="button" class="btn small" onclick="bxDraw()"${BXS.lib.length ? '' : ' disabled'}>Draw</button>
+            <button type="button" class="btn small" onclick="bxDraw()"${BXS.lib.length ? '' : ' disabled'}>${typeof uiIco === 'function' ? uiIco('phase-draw', '', 16) : ''}Draw</button>
             <button type="button" class="btn small" onclick="bxDeal()">Deal another hand</button>
         </div>
         <div class="note" style="margin-top:6px;">${hand.length ? `This hand: ${lands} land${lands === 1 ? '' : 's'} of ${hand.length}. ` : ''}Average lands in an opening hand: <strong>${(7 * L / N).toFixed(1)}</strong> (${L} lands in ${N} cards). ${Math.round(p24 * 100)}% of opening hands have 2-4 lands.</div>`;

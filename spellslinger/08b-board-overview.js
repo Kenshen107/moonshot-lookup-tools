@@ -27,15 +27,15 @@ function ovTile(o) {
     if (G.attackers.includes(o.uid)) cls.push('attacking');
     if (OV.sel === o.uid) cls.push('sel');
     const pt = isCreature(o) ? `<span class="pt${o.dmg ? ' hurt' : ''}">${pow(o)}/${tou(o) - o.dmg}</span>` : '';
-    if (OV.mode === 'list') return `<button type="button" class="${cls.join(' ')} row-tile" onclick="ovPick(${o.uid})"><b>${esc(o.card.name)}</b>${pt}<span class="ov-kw">${esc(ovKeywords(o).join(', '))}</span><span class="ov-st">${esc(st.join(' · '))}</span></button>`;
-    return `<button type="button" class="${cls.join(' ')}" onclick="ovPick(${o.uid})" title="${esc(o.card.name)}${st.length ? ' — ' + esc(st.join(', ')) : ''}">${cardImg(o.card)}${pt}${o.attachedTo && onBf(o.attachedTo) ? `<span class="ov-on">on ${esc(onBf(o.attachedTo).card.name.split(',')[0])}</span>` : ''}${(allPerms().some(a => a.attachedTo === o.uid)) ? `<span class="ov-on">📎 ${esc(allPerms().filter(a => a.attachedTo === o.uid).map(a => a.card.name.split(',')[0]).join(', '))}</span>` : ''}${st.length ? `<span class="ov-badges">${o.tapped ? '↪' : ''}${G.attackers.includes(o.uid) ? '⚔️' : ''}${o.counters ? (o.counters > 0 ? '＋' : '−') : ''}${o.dmg ? '💥' : ''}</span>` : ''}</button>`;
+    if (OV.mode === 'list') return `<button type="button" class="${cls.join(' ')} row-tile" onclick="ovPick(${o.uid})"><b>${typeIco(o, 16)}${esc(o.card.name)}</b>${pt}<span class="ov-kw">${esc(ovKeywords(o).join(', '))}</span><span class="ov-st">${esc(st.join(' · '))}</span></button>`;
+    return `<button type="button" class="${cls.join(' ')}" onclick="ovPick(${o.uid})" title="${esc(o.card.name)}${o.token ? ' (token)' : ''}${st.length ? ' — ' + esc(st.join(', ')) : ''}">${cardImg(o.card)}${pt}${typeIco(o) ? `<span class="ov-type">${typeIco(o, 18)}</span>` : ''}${o.attachedTo && onBf(o.attachedTo) ? `<span class="ov-on">on ${esc(onBf(o.attachedTo).card.name.split(',')[0])}</span>` : ''}${(allPerms().some(a => a.attachedTo === o.uid)) ? `<span class="ov-on">📎 ${esc(allPerms().filter(a => a.attachedTo === o.uid).map(a => a.card.name.split(',')[0]).join(', '))}</span>` : ''}${st.length ? `<span class="ov-badges">${o.tapped ? '↪' : ''}${G.attackers.includes(o.uid) ? '⚔️' : ''}${o.counters ? (o.counters > 0 ? '＋' : '−') : ''}${o.dmg ? '💥' : ''}</span>` : ''}</button>`;
 }
 function ovDetail() {
     const o = OV.sel != null ? onBf(OV.sel) : null;
     if (!o) return '<p class="note">Tap a creature below to read it here.</p>';
     const r = Rx(o), st = ovStatus(o), att = allPerms().filter(a => a.attachedTo === o.uid).map(a => a.card.name);
     return `<div class="ov-detail">${cardImg(o.card, true)}<div style="text-align:left;"><h3>${esc(o.card.name)} ${isCreature(o) ? `<span class="pt-big">${pow(o)}/${tou(o) - o.dmg}</span>` : ''}</h3>
-        <p class="note">${esc(o.card.type)}${o.card.cost ? ` · ${esc(o.card.cost)}` : ''}${r.support !== 'full' ? ` · ${r.support === 'partial' ? 'partly automated' : 'not automated'}` : ''}</p>
+        <p class="note">${typeIco(o, 16)}${o.token ? 'Token · ' : ''}${esc(o.card.type)}${o.card.cost ? ` · ${esc(o.card.cost)}` : ''}${r.support !== 'full' ? ` · ${r.support === 'partial' ? 'partly automated' : 'not automated'}` : ''}</p>
         ${st.length ? `<p>${esc(st.join(' · '))}</p>` : ''}${ovKeywords(o).length ? `<p><b>Has:</b> ${esc(ovKeywords(o).join(', '))}</p>` : ''}${att.length ? `<p><b>Attached:</b> ${esc(att.join(', '))}</p>` : ''}
         <p class="ov-text">${esc((o.card.text || '').replace(/~/g, o.card.name))}</p>
         <button class="btn small" onclick="ovFull(${o.uid})">Open the full card (abilities)</button></div></div>`;

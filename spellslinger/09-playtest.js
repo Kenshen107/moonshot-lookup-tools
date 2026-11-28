@@ -108,7 +108,7 @@ function ptRender() {
         <span class="title">🧪 Playtest · ${esc(PT.name)}</span>
         <span class="note">Turn ${PT.turn}</span>
         <span class="pt-life"><button class="btn small" onclick="ptAdjustLife(-1)" aria-label="Lose 1 life">−</button><b aria-label="Life">${PT.life}</b><button class="btn small" onclick="ptAdjustLife(1)" aria-label="Gain 1 life">+</button></span>
-        <button class="btn small primary" onclick="ptDraw()" title="Draw a card (D)">Draw</button>
+        <button class="btn small primary" onclick="ptDraw()" title="Draw a card (D)">${typeof uiIco === 'function' ? uiIco('phase-draw', '', 16) : ''}Draw</button>
         <button class="btn small" onclick="ptNextTurn()" title="Untap and draw (N)">Next turn</button>
         <button class="btn small" onclick="ptUntap()" title="Untap all (U)">Untap all</button>
         <button class="btn small" onclick="ptShuffle()" title="Shuffle the library (S)">Shuffle</button>
