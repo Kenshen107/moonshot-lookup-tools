@@ -3153,3 +3153,20 @@ html[data-theme-art] .home-hero { background: linear-gradient(color-mix(in srgb,
 .land-rec.ok { border-color: color-mix(in srgb, var(--color-success) 45%, var(--border)); color: var(--color-success); }
 .land-rec.warn { border-color: color-mix(in srgb, var(--color-warning) 50%, var(--border)); color: var(--color-warning); }
 @media (prefers-reduced-motion: reduce) { .home-fold > summary::after { transition: none; } }
+
+/* ===== Game Feel & QoL Suite (08k-game-feel.js, 2026-11-28) ===== */
+#sfxBtn { min-width: 34px; padding: 4px 8px; display: inline-flex !important; align-items: center; justify-content: center; }
+.perm.mana-preview { outline: 2px solid var(--gold); box-shadow: 0 0 14px color-mix(in srgb, var(--gold) 65%, transparent) !important; transform: translateY(-2px); }
+@keyframes perm-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px) rotate(-1.5deg); } 55% { transform: translateX(4px) rotate(1.5deg); } 80% { transform: translateX(-2px); } }
+.perm.perm-hit-shake { animation: perm-shake 0.36s ease-out; }
+.instant-match-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; margin-bottom: 12px; border-radius: var(--radius-md); background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 22%, var(--bg-panel)), var(--bg-panel-raised)); border: 1px solid color-mix(in srgb, var(--gold) 50%, var(--border)); }
+.instant-match-card .im-info { display: flex; flex-direction: column; gap: 2px; }
+.new-pulls-strip { margin-top: 12px; }
+.new-pulls-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.new-pull-chip { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px 5px 5px; border-radius: var(--radius-md); background: var(--bg-inset); border: 1px solid var(--border-subtle); color: var(--text-primary); cursor: pointer; text-align: left; }
+.new-pull-chip:hover { border-color: var(--gold); background: var(--bg-panel-raised); }
+.new-pull-chip img { width: 28px; height: 39px; object-fit: cover; border-radius: 3px; }
+.new-pull-chip span { display: flex; flex-direction: column; line-height: 1.2; font-size: 0.82rem; }
+.new-pull-chip small { color: var(--text-muted); font-size: 0.72rem; }
+.new-pull-chip b { color: var(--gold); font-size: 1rem; margin-left: 2px; }
+@media (prefers-reduced-motion: reduce) { .perm.perm-hit-shake { animation: none !important; } .perm.mana-preview { transform: none; } }
