@@ -2809,7 +2809,7 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     #game.open-board .zones { gap: 4px; padding: 1px 5px; }
     #game.open-board .zone-count { white-space: nowrap; display: inline-flex; align-items: center; gap: 2px; font-size: 0.78rem; }
     #game.open-board #oppBar .btn.small, #game.open-board #meBar .btn.small { padding: 2px 6px; font-size: 0.72rem; min-height: 26px; white-space: nowrap; flex: none; }
-    #game.open-board #meBar .who { display: none; }
+    #game.open-board #meBar .who, #game.open-board #oppBar .who { display: none; }
     #game.open-board #meBar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-right: 4px; }
     #game.open-board #meBar::-webkit-scrollbar { display: none; }
     #game.open-board #meBar > *, #game.open-board #meBar .cmd-chip, #game.open-board #meBar .zones, #game.open-board #meBar .pool { flex: none; white-space: nowrap; }
@@ -3197,7 +3197,8 @@ html[data-theme-art] .home-hero { background: linear-gradient(color-mix(in srgb,
 .hotkey-grid > div { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.85rem; }
 .hotkey-grid kbd { background: var(--bg-panel-raised); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: inherit; font-weight: 700; font-size: 0.78rem; color: var(--gold); }
 @media (max-width: 600px) {
-    .sticky-match-bar { bottom: calc(62px + env(safe-area-inset-bottom)); }
+    .sticky-match-bar { bottom: calc(62px + env(safe-area-inset-bottom)); flex-wrap: nowrap; padding: 7px 10px; gap: 8px; }
+    .sticky-match-bar .smb-go { flex: none; padding: 7px 12px; font-size: 0.84rem; }
     .mob-deck-tabs { position: sticky; top: 0; z-index: 8; background: var(--bg-canvas); padding: 6px 0; margin: 4px 0 8px; justify-content: center; }
     #builder[data-mob-tab="deck"] #mxBrowse, #builder[data-mob-tab="deck"] #mxStats, #builder[data-mob-tab="deck"] #newPullsStrip { display: none; }
     #builder[data-mob-tab="browse"] .mx-main, #builder[data-mob-tab="browse"] #mxStats, #builder[data-mob-tab="browse"] #newPullsStrip { display: none; }

@@ -360,20 +360,23 @@
         if (!vp || vp.classList.contains('hidden')) return;
         const sel = $('playDeck');
         const d = sel && profile && profile.decks && profile.decks[Number(sel.value)];
+        const opp = typeof chosenOpponent !== 'undefined' ? chosenOpponent : null;
         let bar = $('stickyMatchBar');
-        if (!d) { if (bar) bar.remove(); return; }
-        if (!bar) {
-            bar = document.createElement('div');
-            bar.id = 'stickyMatchBar';
-            bar.className = 'sticky-match-bar';
-            vp.appendChild(bar);
+        // Only show the sticky Match Ready bar once both a deck AND an opponent are picked (so it never occludes step 2 or misleads!)
+        if (!d || !opp) { if (bar) bar.remove(); }
+        else {
+            if (!bar) {
+                bar = document.createElement('div');
+                bar.id = 'stickyMatchBar';
+                bar.className = 'sticky-match-bar';
+                vp.appendChild(bar);
+            }
+            const probs = typeof deckProblems === 'function' ? deckProblems(d) : [];
+            const cmdr = d.commander && CARDS.get(d.commander);
+            const art = cmdr && (cmdr.imgS || cmdr.img);
+            bar.innerHTML = `<div class="smb-info">${art ? `<img class="smb-av" src="${art}" alt="">` : ''}<div class="smb-txt"><strong>${esc(d.name)}</strong><span class="note">vs ${esc(opp.name || 'Opponent')} · ${esc(FORMATS[d.format].name)}${probs.length ? ` · ⚠ ${probs.length} to fix` : ''}</span></div></div>
+                <button type="button" class="btn primary smb-go" ${probs.length ? 'disabled' : ''} onclick="const sb = document.getElementById('startBtn'); if (sb && !sb.disabled) sb.click(); else startMatch();">⚔️ Start Match</button>`;
         }
-        const probs = typeof deckProblems === 'function' ? deckProblems(d) : [];
-        const oppName = (typeof chosenOpponent !== 'undefined' && chosenOpponent && chosenOpponent.name) || 'Surprise opponent';
-        const cmdr = d.commander && CARDS.get(d.commander);
-        const art = cmdr && (cmdr.imgS || cmdr.img);
-        bar.innerHTML = `<div class="smb-info">${art ? `<img class="smb-av" src="${art}" alt="">` : ''}<div class="smb-txt"><strong>${esc(d.name)}</strong><span class="note">vs ${esc(oppName)} · ${esc(FORMATS[d.format].name)}${probs.length ? ` · ⚠ ${probs.length} to fix` : ''}</span></div></div>
-            <button type="button" class="btn primary smb-go" ${probs.length ? 'disabled' : ''} onclick="const sb = document.getElementById('startBtn'); if (sb && !sb.disabled) sb.click(); else startMatch();">⚔️ Start Match</button>`;
         // Inject commander art thumbnails into deck tiles inside #deckPick
         document.querySelectorAll('#deckPick .opp.dk').forEach(btn => {
             if (btn.querySelector('.dk-art')) return;

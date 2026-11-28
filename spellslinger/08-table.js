@@ -513,9 +513,10 @@ function combatBannerHTML() {
     const defText = defs.length ? defs.map(i => G.players[i] === me() ? 'You' : who(G.players[i]).split(',')[0]).join(' & ') : (primaryDef ? (primaryDef === me() ? 'You' : who(primaryDef).split(',')[0]) : '');
     const hitsMe = defs.includes(me().i) || (primaryDef === me());
     const lethal = primaryDef && unblocked >= primaryDef.life;
+    const anyUnblocked = objs.some(o => !((G.blocks && G.blocks[o.uid]) || []).length);
     const dmgNote = unblocked > 0
         ? (lethal ? ` · <strong class="lethal-tag">💀 LETHAL (${unblocked} dmg)</strong>` : ` · 💥 ${unblocked} unblocked${primaryDef ? ` (${defText} → ${Math.max(0, primaryDef.life - unblocked)})` : ''}`)
-        : ' · 🛡️ All blocked';
+        : anyUnblocked ? ' · 0 dmg' : ' · 🛡️ All blocked';
     return `<div class="combat-pill${hitsMe || lethal ? ' danger' : ''}${lethal ? ' is-lethal' : ''}" role="status">⚔️ <strong>${att === me() ? 'You' : esc(who(att).split(',')[0])}</strong>${defText ? ` → <strong>${esc(defText)}</strong>` : ''} <span>· ${objs.length} ${objs.length === 1 ? 'attacker' : 'attackers'} (${tot} pwr)${dmgNote}</span></div>`;
 }
 
