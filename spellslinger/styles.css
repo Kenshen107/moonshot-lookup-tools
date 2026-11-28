@@ -2971,3 +2971,10 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
 #companionDock.ducked { opacity: 0; } #companionDock.ducked .comp-stage { pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .comp-spark { display: none; } }
 .comp-part img { width: 100%; height: 100%; display: block; }
+
+/* Add money (test build, 01-core.js addMoneyPanel) */
+.add-money .am-row { padding: 10px 0; border-top: 1px solid var(--border-subtle); display: grid; gap: 4px; }
+.add-money .am-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.add-money .am-have { color: var(--gold); font-size: 0.9em; }
+.add-money .am-ctl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+.add-money .am-ctl input { flex: 1 1 110px; min-width: 0; max-width: 160px; }

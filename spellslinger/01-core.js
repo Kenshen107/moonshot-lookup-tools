@@ -87,7 +87,7 @@ function moreSheet() { menuSheet('More', `<div class="menu-list">${MORE_VIEWS.fi
 function accountSheet() {
     menuSheet('Player', `<label class="note" for="acctSel2">Who's playing</label>
         <select id="acctSel2" onchange="closeSheet(); pickAccount(this.value)" style="width:100%; margin-top:4px;">${$('acctSel').innerHTML}</select>
-        <div class="menu-list"><button class="btn" onclick="closeSheet(); lookPanel()">🎨 Locker (looks, sleeves, companions)</button><button class="btn primary" onclick="closeSheet(); setMode('sandbox')">🧪 Sandbox</button><button class="btn primary" onclick="closeSheet(); setMode('campaign')">🗺️ Campaign</button><button class="btn primary" onclick="closeSheet(); setMode('shop')">🏪 Shop Simulator</button>${modeKey() === 'sandbox' ? `<button class="btn" onclick="closeSheet(); addTestCoins()">＋🪙 Add coins (test build)</button><button class="btn" onclick="closeSheet(); restartPlayer()">↺ Start over (test build)</button>` : ''}</div>`);
+        <div class="menu-list"><button class="btn" onclick="closeSheet(); lookPanel()">🎨 Locker (looks, sleeves, companions)</button><button class="btn primary" onclick="closeSheet(); setMode('sandbox')">🧪 Sandbox</button><button class="btn primary" onclick="closeSheet(); setMode('campaign')">🗺️ Campaign</button><button class="btn primary" onclick="closeSheet(); setMode('shop')">🏪 Shop Simulator</button>${modeKey() !== 'sandbox' ? `<button class="btn" onclick="closeSheet(); addMoneyPanel()">＋ Add money (test build)</button>` : ''}${modeKey() === 'sandbox' ? `<button class="btn" onclick="closeSheet(); addTestCoins()">＋🪙 Add coins (test build)</button><button class="btn" onclick="closeSheet(); restartPlayer()">↺ Start over (test build)</button>` : ''}</div>`);
     $('acctSel2').value = accounts.current;
 }
 function renderAccounts() {
@@ -137,6 +137,41 @@ function addTestCoins() {
     if (!$('view-home').classList.contains('hidden')) renderHome();
     if (!$('view-packs').classList.contains('hidden')) renderPacksView();
     toast(`🪙 +${Math.min(n, 1e7).toLocaleString()} coins for ${accounts.current}.`);
+}
+// Test build (2026-11-28, owner: "a way for me to add money to the campaign and shop"): add coins, shop cash and Aether in Campaign and
+// Shop Simulator. Campaign and Shop share one bucket (04b-modes.js), so coins and cash added in either show in both; Aether is Ascent's.
+const ADD_MONEY = [
+    { k: 'coins', icon: '🪙', name: 'Coins', note: 'Campaign and Shop coins (the Locker spends these too)', quick: [1000, 10000, 100000] },
+    { k: 'usd', icon: '💵', name: 'Shop cash', note: 'Spent at the Distributor and on imported decks', quick: [100, 1000, 10000], money: true },
+    { k: 'aether', icon: '✨', name: 'Aether', note: 'Planeswalker\'s Ascent crafting and upgrades', quick: [500, 5000, 50000] }
+];
+function addMoneyNow(k, raw) {
+    const n = Math.round(Number(String(raw ?? '').replace(/[$, ]/g, '')) * 100) / 100;
+    if (!(n > 0)) { toast('Type an amount above 0.'); return; }
+    const amt = Math.min(n, 1e8), d = ADD_MONEY.find(x => x.k === k);
+    if (!d) return;
+    if (k === 'coins') profile.coins = Math.floor((profile.coins || 0) + amt);
+    else if (k === 'usd') profile.usd = Math.round(((profile.usd || 0) + amt) * 100) / 100;
+    else if (k === 'aether') { const st = ascentState(); st.aether = Math.floor((st.aether || 0) + amt); }
+    saveProfile(); renderCoins();
+    const shown = k === 'usd' ? `$${amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : Math.floor(amt).toLocaleString();
+    toast(`${d.icon} +${shown} ${k === 'usd' ? 'shop cash' : d.name.toLowerCase()} for ${accounts.current}.`);
+    try { const v = VIEWS.find(x => !$(`view-${x}`).classList.contains('hidden')); if (v && v !== 'home') showView(v); else if (v === 'home') renderHome(); } catch (e) { /* the view redraws on its own */ }
+    addMoneyPanel();
+}
+function addMoneyPanel() {
+    const st = typeof ascentState === 'function' ? ascentState() : { aether: 0 };
+    const have = { coins: (profile.coins || 0).toLocaleString(), usd: `$${(profile.usd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, aether: (st.aether || 0).toLocaleString() };
+    const html = `<div class="add-money"><h2>＋ Add money <small class="muted">(test build)</small></h2>
+        <p class="note">Free in-game money for ${esc(accounts.current)}, for trying things out. Campaign and Shop Simulator share coins and cash. Nothing here is real money.</p>
+        ${ADD_MONEY.map(d => `<div class="am-row"><div class="am-head"><strong>${d.icon} ${d.name}</strong><span class="am-have">You have ${have[d.k]}</span></div>
+            <small class="muted">${d.note}</small>
+            <div class="am-ctl">${d.quick.map(q => `<button type="button" class="btn small" onclick="addMoneyNow('${d.k}', ${q})">+${d.money ? '$' : ''}${q.toLocaleString()}</button>`).join('')}
+            <input type="text" inputmode="decimal" id="am-${d.k}" placeholder="Other amount" aria-label="Other amount of ${d.name}" onkeydown="if(event.key==='Enter')addMoneyNow('${d.k}', this.value)">
+            <button type="button" class="btn small primary" onclick="addMoneyNow('${d.k}', document.getElementById('am-${d.k}').value)">Add</button></div></div>`).join('')}
+        <div class="row" style="justify-content:center; margin-top:12px;"><button class="btn primary" onclick="closeModal()">Done</button></div></div>`;
+    const open = document.querySelector('#modalHost .add-money');
+    if (open) open.outerHTML = html; else showModal(html);
 }
 // Phones show big amounts short (12.5k, $1.2k) so the header stays one row
 const shortNum = n => n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)}M` : n >= 1e4 ? `${(n / 1e3).toFixed(n >= 1e5 ? 0 : 1)}k` : Math.round(n).toLocaleString();
