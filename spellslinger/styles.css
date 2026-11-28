@@ -2838,22 +2838,22 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
    ===================================================================== */
 #game.open-board[data-mat="plains"] {
     background:
-        radial-gradient(ellipse 76% 58% at 50% 42%, color-mix(in srgb, var(--mana-W) 22%, transparent), transparent 72%),
-        radial-gradient(ellipse 108% 102% at 50% 50%, color-mix(in srgb, var(--gold) 18%, transparent) 22%, color-mix(in srgb, var(--bg-canvas) 78%, transparent) 100%),
-        linear-gradient(160deg, color-mix(in srgb, var(--mana-W) 18%, var(--bg-panel)), color-mix(in srgb, var(--gold) 14%, var(--bg-inset)) 52%, var(--bg-canvas)),
-        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+        radial-gradient(ellipse 76% 58% at 50% 42%, color-mix(in srgb, var(--mana-W) 12%, transparent), transparent 72%),
+        radial-gradient(ellipse 108% 102% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 62%, transparent) 100%),
+        url('art/mats/plains/base.jpg') center / cover no-repeat,
+        var(--bg-canvas); }
 #game.open-board[data-mat="island"] {
     background:
-        radial-gradient(ellipse 74% 56% at 50% 46%, color-mix(in srgb, var(--mana-U) 26%, transparent), transparent 70%),
-        radial-gradient(ellipse 108% 102% at 50% 50%, color-mix(in srgb, var(--brand-light) 16%, transparent) 24%, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 100%),
-        linear-gradient(180deg, color-mix(in srgb, var(--mana-U) 28%, var(--bg-canvas)), color-mix(in srgb, var(--brand) 22%, var(--bg-inset)) 52%, var(--bg-canvas)),
-        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+        radial-gradient(ellipse 74% 56% at 50% 46%, color-mix(in srgb, var(--mana-U) 14%, transparent), transparent 70%),
+        radial-gradient(ellipse 108% 102% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 62%, transparent) 100%),
+        url('art/mats/island/base.jpg') center / cover no-repeat,
+        var(--bg-canvas); }
 #game.open-board[data-mat="swamp"] {
     background:
-        radial-gradient(ellipse 72% 54% at 50% 48%, color-mix(in srgb, var(--mana-B) 28%, transparent), transparent 72%),
-        radial-gradient(ellipse 106% 100% at 50% 50%, color-mix(in srgb, var(--color-success) 10%, transparent) 26%, color-mix(in srgb, var(--bg-canvas) 86%, transparent) 100%),
-        linear-gradient(180deg, color-mix(in srgb, var(--mana-B) 26%, var(--bg-canvas)), color-mix(in srgb, var(--bg-inset) 70%, transparent) 54%, var(--bg-canvas)),
-        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+        radial-gradient(ellipse 72% 54% at 50% 48%, color-mix(in srgb, var(--mana-B) 14%, transparent), transparent 72%),
+        radial-gradient(ellipse 106% 100% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 66%, transparent) 100%),
+        url('art/mats/swamp/base.jpg') center / cover no-repeat,
+        var(--bg-canvas); }
 #game.open-board[data-mat="mountain"] {
     background:
         radial-gradient(ellipse 74% 54% at 50% 50%, color-mix(in srgb, var(--mana-R) 14%, transparent), transparent 72%),
@@ -2862,10 +2862,10 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
         var(--bg-canvas); }
 #game.open-board[data-mat="forest"] {
     background:
-        radial-gradient(ellipse 76% 56% at 50% 46%, color-mix(in srgb, var(--mana-G) 24%, transparent), transparent 72%),
-        radial-gradient(ellipse 106% 100% at 50% 50%, color-mix(in srgb, var(--gold) 12%, transparent) 24%, color-mix(in srgb, var(--bg-canvas) 82%, transparent) 100%),
-        linear-gradient(180deg, color-mix(in srgb, var(--mana-G) 26%, var(--bg-canvas)), color-mix(in srgb, var(--color-success) 16%, var(--bg-inset)) 52%, var(--bg-canvas)),
-        url('art/ui/arena-mat.jpg') center / cover no-repeat; }
+        radial-gradient(ellipse 76% 56% at 50% 46%, color-mix(in srgb, var(--mana-G) 14%, transparent), transparent 72%),
+        radial-gradient(ellipse 106% 100% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 62%, transparent) 100%),
+        url('art/mats/forest/base.jpg') center / cover no-repeat,
+        var(--bg-canvas); }
 
 /* 4 Clickable Interactive Corner Ornaments (desktop >= 900px outer margins, never covering cards or HUD) */
 .arena-props { display: none; }
