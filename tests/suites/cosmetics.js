@@ -75,7 +75,10 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             await new Promise(r => setTimeout(r, 500));
             const myPile = document.querySelector('#meBar .pile-deck, #myBar .pile-deck') || [...document.querySelectorAll('.pile-deck')].find(e => !e.closest('#oppBar'));
             ok('your library pile wears your sleeve', myPile && myPile.dataset.sleeve === 'ember-weave', myPile && myPile.outerHTML.slice(0, 160));
-            ok('the computer wears its own sleeve (Marcus: Tide Weave)', sleeveIdFor(G.players[1]) === 'tide-weave' && !!document.querySelector('[data-sleeve="tide-weave"]'));
+            ok('the computer wears its own sleeve (Marcus: Koi Pair)', sleeveIdFor(G.players[1]) === 'koi-pair' && !!document.querySelector('[data-sleeve="koi-pair"]'));
+            ok('a picture sleeve uses an absolute address (a url() in --slv is read from styles.css\'s folder otherwise)', /url\('http[^']*\/spellslinger\/art\/sleeves\/koi-pair\.png'\)/.test(sleeveAttr(G.players[1]).style), sleeveAttr(G.players[1]).style);
+            ok('the drake\'s head is its face drawing, and all six faces are listed', COMPANION_RIGS['ember-drake'].parts.find(p => p.k === 'head').src === 'face-happy.png' && COMPANION_RIGS['ember-drake'].faces.length === 6);
+            ok('the new sleeves are in the Locker', ['ember-crest', 'dragon-coil', 'koi-pair', 'night-owl'].every(id => cosItem(id) && cosItem(id).img));
             cosDeckSleeve('My Deck', 'gilded-sanctum');
             ok('a deck can have its own sleeve', sleeveIdFor(G.players[0]) === 'gilded-sanctum');
             cosDeckSleeve('My Deck', 'default'); ok('...and go back to the usual one', sleeveIdFor(G.players[0]) === 'ember-weave');

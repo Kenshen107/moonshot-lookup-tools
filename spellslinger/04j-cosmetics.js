@@ -17,14 +17,18 @@ const COSMETICS = [
     { id: 'grove-weave', slot: 'sleeve', rarity: 'common', name: 'Grove Weave', note: 'Green woven stripes with a gold stud.', css: weave('G', -45) },
     { id: 'dawn-weave', slot: 'sleeve', rarity: 'common', name: 'Dawn Weave', note: 'Pale gold woven stripes.', css: weave('W') },
     { id: 'gilded-sanctum', slot: 'sleeve', rarity: 'rare', name: 'Gilded Sanctum', note: 'Art-deco navy and gold around a glowing crystal.', img: 'spellslinger/art/sleeves/gilded-sanctum.png' },
+    { id: 'ember-crest', slot: 'sleeve', rarity: 'common', name: 'Ember Crest', note: 'Deep red with a gold flame crest.', img: 'spellslinger/art/sleeves/ember-crest.png' },
+    { id: 'dragon-coil', slot: 'sleeve', rarity: 'rare', name: 'Dragon Coil', note: 'A gold dragon coiled on dark red.', img: 'spellslinger/art/sleeves/dragon-coil.png' },
+    { id: 'koi-pair', slot: 'sleeve', rarity: 'rare', name: 'Koi Pair', note: 'Two gold koi circling in deep blue water.', img: 'spellslinger/art/sleeves/koi-pair.png' },
+    { id: 'night-owl', slot: 'sleeve', rarity: 'rare', name: 'Night Owl', note: 'A gold owl under a crescent moon on violet.', img: 'spellslinger/art/sleeves/night-owl.png' },
     // Table companions (08i-companion.js draws and moves them)
     { id: 'none', slot: 'companion', rarity: 'free', name: 'No companion', note: 'Keep your corner of the table empty.' },
     { id: 'ember-drake', slot: 'companion', rarity: 'rare', name: 'Ember Drake', note: 'A dragon whelp who cheers your hits, flinches when you are hurt and naps when nothing happens. Tap it to pet it.', thumb: 'spellslinger/art/companions/ember-drake/thumb.png' }
 ];
 // The computer characters each have a sleeve of their own, so a table of four looks like four people
-const BOT_SLEEVES = { greg: 'grove-weave', marcus: 'tide-weave', sarah: 'gilded-sanctum', leo: 'dawn-weave', trevor: 'grave-weave', sam: 'ember-weave', arthur: 'gilded-sanctum', brenda: 'dawn-weave', luke: 'grave-weave' };
+const BOT_SLEEVES = { greg: 'grove-weave', marcus: 'koi-pair', sarah: 'gilded-sanctum', leo: 'night-owl', trevor: 'grave-weave', sam: 'ember-crest', arthur: 'dragon-coil', brenda: 'dawn-weave', luke: 'grave-weave' };
 const COS_SEAT_SLEEVES = ['tide-weave', 'ember-weave', 'grove-weave', 'grave-weave'];
-const COS_SOON = [['🎲', 'Desk props', 'a life-counter d20, an hourglass that turns on your turn, a candle, a crystal ball'], ['🧙', 'Avatars', '24 portraits for your seat'], ['😄', 'Emotes', '24 stickers to send at the table'], ['🎆', 'Win celebrations', 'fireworks, a dragon flyover, a rain of coins and more'], ['🖼️', 'Themes', '12 painted themes with backgrounds and frames'], ['🃏', 'More sleeves and companions', '30 sleeves and 16 companions in all']];
+const COS_SOON = [['🎲', 'Desk props', 'a life-counter d20, an hourglass that turns on your turn, a candle, a crystal ball'], ['🧙', 'Avatars', '24 portraits for your seat'], ['😄', 'Emotes', '24 stickers to send at the table'], ['🎆', 'Win celebrations', 'fireworks, a dragon flyover, a rain of coins and more'], ['🖼️', 'Themes', '12 painted themes with backgrounds and frames'], ['🃏', 'More sleeves and companions', '30 sleeves and 16 companions in all (11 sleeves and 1 companion so far)']];
 
 function cosItem(id) { return COSMETICS.find(c => c.id === id) || null; }
 function cosPrice(c) { return c.rarity === 'free' ? 0 : COS_PRICES[c.rarity] || 0; }
@@ -88,7 +92,8 @@ function sleeveIdFor(P) {
     const s = cosState();
     return (P.deckName && s.deckSleeves[P.deckName]) || s.sleeve || 'classic';
 }
-function sleeveBg(c) { return c.css ? c.css : `url('${c.img}') center / cover no-repeat`; }
+// A picture's address is made absolute: a url() inside --slv would otherwise be read from styles.css's folder (spellslinger/spellslinger/art/...)
+function sleeveBg(c) { if (c.css) return c.css; let u = c.img; try { u = new URL(c.img, document.baseURI).href; } catch (e) { /* keep it */ } return `url('${u}') center / cover no-repeat`; }
 // Class and style for the library pile and the hand backs (08-table.js). Classic keeps the table's own drawing.
 function sleeveAttr(P) {
     const c = cosItem(sleeveIdFor(P));

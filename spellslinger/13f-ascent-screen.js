@@ -46,7 +46,7 @@ function ascMap() {
     if (!st.started) {
         body.innerHTML = `<div class="asc-start"><h3>Choose your starter deck</h3>
             <p class="note">One color, 40 cards of simple creatures, plus 3 Play Boosters to open. You can only choose once, but every color is open to you later through packs and crafting.</p>
-            <div class="asc-colors">${Object.entries(ASC_COLORS).map(([c, [e, n]]) => `<button class="btn" onclick="ascChooseStarter('${c}')"><span class="asc-big">${ascIco('mana-' + c, e, 28)}</span> ${n}</button>`).join('')}</div></div>`;
+            <div class="asc-colors">${Object.entries(ASC_COLORS).map(([c, [e, n]]) => `<button class="btn" onclick="ascChooseStarter('${c}')"><span class="asc-big">${ascIco('mana-' + c, ascIco('gem-' + c, e, 28), 28)}</span> ${n}</button>`).join('')}</div></div>`;
         return;
     }
     body.innerHTML = ascNpcHTML('map') + ASCENT_TIERS.map(t => {
@@ -186,7 +186,7 @@ function ascModuleText(up) {
 function ascGradeBadge(g) { return `<span class="asc-grade g${g}" title="Grade ${g}: ${ASCENT_GRADES[g]}">${ASCENT_GRADES[g]}</span>`; }
 function ascSalvageBar() {
     const sv = ascentSalvage();
-    return `<span class="asc-salv">${ASCENT_COLORS.concat('C').map(ch => `<span title="${ch === 'C' ? 'Colorless' : ASC_COLORS[ch][1]} salvage">${ch === 'C' ? '◇' : ASC_COLORS[ch][0]} ${sv[ch] || 0}</span>`).join('')}</span>`;
+    return `<span class="asc-salv">${ascIco('cur-salvage', '', 18)}${ASCENT_COLORS.concat('C').map(ch => `<span title="${ch === 'C' ? 'Colorless' : ASC_COLORS[ch][1]} salvage">${ascIco('gem-' + ch, ch === 'C' ? '◇' : ASC_COLORS[ch][0], 16)} ${sv[ch] || 0}</span>`).join('')}</span>`;
 }
 function ascUpgradeDialog(key) {
     const f = ascentFindCopy(key), st = ascentState();

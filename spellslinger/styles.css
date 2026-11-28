@@ -2636,7 +2636,7 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
         radial-gradient(ellipse 68% 52% at 50% 47%, color-mix(in srgb, var(--gold) 7%, transparent), transparent 68%),
         radial-gradient(ellipse 106% 102% at 50% 50%, color-mix(in srgb, var(--felt-1) 18%, transparent) 30%, color-mix(in srgb, var(--bg-canvas) 68%, transparent) 100%),
         linear-gradient(180deg, color-mix(in srgb, var(--felt-2) 26%, transparent), color-mix(in srgb, var(--felt-1) 16%, transparent) 50%, color-mix(in srgb, var(--bg-canvas) 40%, transparent)),
-        url('art/ui/arena-mat.jpg') center / cover no-repeat,
+        var(--mat-img, url('art/mats/sanctum/base.jpg')) center / cover no-repeat,
         var(--bg-canvas); }
 #game.open-board::before { display: none; }
 
@@ -2840,31 +2840,31 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     background:
         radial-gradient(ellipse 76% 58% at 50% 42%, color-mix(in srgb, var(--mana-W) 12%, transparent), transparent 72%),
         radial-gradient(ellipse 108% 102% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 62%, transparent) 100%),
-        url('art/mats/plains/base.jpg') center / cover no-repeat,
+        var(--mat-img, url('art/mats/plains/base.jpg')) center / cover no-repeat,
         var(--bg-canvas); }
 #game.open-board[data-mat="island"] {
     background:
         radial-gradient(ellipse 74% 56% at 50% 46%, color-mix(in srgb, var(--mana-U) 14%, transparent), transparent 70%),
         radial-gradient(ellipse 108% 102% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 62%, transparent) 100%),
-        url('art/mats/island/base.jpg') center / cover no-repeat,
+        var(--mat-img, url('art/mats/island/base.jpg')) center / cover no-repeat,
         var(--bg-canvas); }
 #game.open-board[data-mat="swamp"] {
     background:
         radial-gradient(ellipse 72% 54% at 50% 48%, color-mix(in srgb, var(--mana-B) 14%, transparent), transparent 72%),
         radial-gradient(ellipse 106% 100% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 66%, transparent) 100%),
-        url('art/mats/swamp/base.jpg') center / cover no-repeat,
+        var(--mat-img, url('art/mats/swamp/base.jpg')) center / cover no-repeat,
         var(--bg-canvas); }
 #game.open-board[data-mat="mountain"] {
     background:
         radial-gradient(ellipse 74% 54% at 50% 50%, color-mix(in srgb, var(--mana-R) 14%, transparent), transparent 72%),
         radial-gradient(ellipse 106% 100% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 62%, transparent) 100%),
-        url('art/mats/mountain/base.jpg') center / cover no-repeat,
+        var(--mat-img, url('art/mats/mountain/base.jpg')) center / cover no-repeat,
         var(--bg-canvas); }
 #game.open-board[data-mat="forest"] {
     background:
         radial-gradient(ellipse 76% 56% at 50% 46%, color-mix(in srgb, var(--mana-G) 14%, transparent), transparent 72%),
         radial-gradient(ellipse 106% 100% at 50% 50%, transparent 32%, color-mix(in srgb, var(--bg-canvas) 62%, transparent) 100%),
-        url('art/mats/forest/base.jpg') center / cover no-repeat,
+        var(--mat-img, url('art/mats/forest/base.jpg')) center / cover no-repeat,
         var(--bg-canvas); }
 
 /* 4 Clickable Interactive Corner Ornaments (desktop >= 900px outer margins, never covering cards or HUD) */
@@ -2991,3 +2991,21 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
 .comp-z { position: absolute; font: 700 30px/1 var(--font-display, sans-serif); color: var(--text-soft); pointer-events: none; animation: comp-z 2.4s ease-out forwards; text-shadow: 0 0 6px var(--bg-canvas); }
 @keyframes comp-z { 0% { transform: translate(0, 0) scale(0.6); opacity: 0; } 20% { opacity: 0.9; } 100% { transform: translate(28px, -70px) scale(1.3); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .comp-flame { animation: none; } .comp-fire, .comp-z { display: none; } }
+
+/* Painted playmats (Antigravity, 2026-11-28): a tall version for portrait screens (phones held upright). 08h-arena-life.js uses the
+   same test (max-aspect-ratio: 10/13) to switch the Sanctum's glow positions to the tall picture. */
+@media (max-aspect-ratio: 10/13) {
+    #game.open-board { --mat-img: url('art/mats/sanctum/base-phone.jpg'); }
+    #game.open-board[data-mat="plains"] { --mat-img: url('art/mats/plains/base-phone.jpg'); }
+    #game.open-board[data-mat="island"] { --mat-img: url('art/mats/island/base-phone.jpg'); }
+    #game.open-board[data-mat="swamp"] { --mat-img: url('art/mats/swamp/base-phone.jpg'); }
+    #game.open-board[data-mat="mountain"] { --mat-img: url('art/mats/mountain/base-phone.jpg'); }
+    #game.open-board[data-mat="forest"] { --mat-img: url('art/mats/forest/base-phone.jpg'); }
+}
+/* The Locker's battlefield picker shows each painted mat's thumbnail */
+.mat-card[data-mat-pick="sanctum"] .mat-sw { background: url('art/mats/sanctum/thumb.jpg') center / cover no-repeat, var(--bg-inset); height: 54px; border-radius: var(--radius-sm); }
+.mat-card[data-mat-pick="plains"] .mat-sw { background: url('art/mats/plains/thumb.jpg') center / cover no-repeat, var(--bg-inset); height: 54px; border-radius: var(--radius-sm); }
+.mat-card[data-mat-pick="island"] .mat-sw { background: url('art/mats/island/thumb.jpg') center / cover no-repeat, var(--bg-inset); height: 54px; border-radius: var(--radius-sm); }
+.mat-card[data-mat-pick="swamp"] .mat-sw { background: url('art/mats/swamp/thumb.jpg') center / cover no-repeat, var(--bg-inset); height: 54px; border-radius: var(--radius-sm); }
+.mat-card[data-mat-pick="mountain"] .mat-sw { background: url('art/mats/mountain/thumb.jpg') center / cover no-repeat, var(--bg-inset); height: 54px; border-radius: var(--radius-sm); }
+.mat-card[data-mat-pick="forest"] .mat-sw { background: url('art/mats/forest/thumb.jpg') center / cover no-repeat, var(--bg-inset); height: 54px; border-radius: var(--radius-sm); }

@@ -11,6 +11,13 @@ function cardImg(card, big) {
 
 const COUNTER_KINDS = [['loyalty', '🔷'], ['charge', '🔌'], ['oil', '🛢️'], ['stun', '💫'], ['shield', '🔰'], ['lore', '📖'], ['time', '⏳'], ['ice', '🧊'], ['fade', '🌫️'], ['age', '📅'], ['quest', '🗝️'], ['level', '📶'], ['flood', '🌊'], ['other', '🔹']];
 const counterIcon = k => (COUNTER_KINDS.find(x => x[0] === k) || [k, '🔹'])[1];
+// Painted icons (Antigravity Batch 2, 2026-11-28) when the file exists, else the emoji; ascIco is in 13j-ascent-ui-art.js
+const uiIco = (id, fb, px) => typeof ascIco === 'function' ? ascIco(id, fb, px || 16) : fb;
+const counterIco = k => ['loyalty', 'charge'].includes(k) ? uiIco('ctr-' + k, counterIcon(k), 14) : counterIcon(k);
+const MOOD_ICO = { angry: 'angry', annoyed: 'salty', salty: 'salty', worried: 'worried', nervous: 'worried', smug: 'confident', determined: 'confident', calm: 'calm', scheming: 'calm', nerdy: 'calm', cheerful: 'happy', impressed: 'happy' };
+const moodIco = (m, px) => MOOD_ICO[m] ? uiIco('mood-' + MOOD_ICO[m], MOODS[m].emoji, px || 18) : (MOODS[m] || MOODS.calm).emoji;
+// Keywords written with a number or a quality (ward:2, pro:red, toxic:1)
+const kwPrefixed = (o, p) => !lostAbilities(o) && ([...Rx(o).kw].concat(o.tkw || []).some(x => typeof x === 'string' && (x === p || x.startsWith(p + ':') || x.startsWith(p + ' '))));
 
 // Crisp MTG Arena-style inline SVG keyword medallions (compact, legible even on shrunk 2-row boards)
 const KW_ICONS = [
@@ -26,14 +33,20 @@ const KW_ICONS = [
     ['hexproof', 'Hexproof', '<path d="M8 1.8l5.2 3v6.4L8 14.2l-5.2-3V4.8z"/>'],
     ['menace', 'Menace', '<path d="M5 13c-1.5-2.5-.5-6 2-8.5 0 2 1.2 3 2 3 0-2 1-3.5 2.2-5 2 2.5 2.8 6.5 1.3 10.5H5z"/>'],
     ['reach', 'Reach', '<path d="M3 13L13 3m0 0H7.5M13 3v5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>'],
-    ['defender', 'Defender', '<rect x="3" y="3" width="10" height="10" rx="1.5"/><path d="M3 7.5h10M8 3v9.5" stroke="var(--bg-canvas)" stroke-width="1.3"/>']
+    ['defender', 'Defender', '<rect x="3" y="3" width="10" height="10" rx="1.5"/><path d="M3 7.5h10M8 3v9.5" stroke="var(--bg-canvas)" stroke-width="1.3"/>'],
+    ['infect', 'Infect', '<circle cx="8" cy="8" r="2.6"/><circle cx="8" cy="3" r="1.6"/><circle cx="3.7" cy="10.5" r="1.6"/><circle cx="12.3" cy="10.5" r="1.6"/>', 'infect'],
+    ['toxic', 'Toxic', '<path d="M8 1.8c2.6 3.4 4.4 5.7 4.4 8a4.4 4.4 0 0 1-8.8 0c0-2.3 1.8-4.6 4.4-8z"/>', 'toxic'],
+    ['ward', 'Ward', '<path d="M8 1.8L13.5 4v4.2c0 3.2-2.4 5.3-5.5 6.3-3.1-1-5.5-3.1-5.5-6.3V4L8 1.8z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="7.5" r="1.8"/>', 'ward'],
+    ['protection', 'Protection', '<circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 8h6" stroke="currentColor" stroke-width="1.8"/>', 'pro'],
+    ['prowess', 'Prowess', '<path d="M8 1.5l1.8 4.2 4.5.4-3.4 3 1 4.4L8 11.2l-3.9 2.3 1-4.4-3.4-3 4.5-.4z"/>'],
+    ['flash', 'Flash', '<path d="M8 1.5l1.6 4.9L14.5 8l-4.9 1.6L8 14.5 6.4 9.6 1.5 8l4.9-1.6z"/>']
 ];
 function kwBadgesHTML(o) {
     if (!isCreature(o) || typeof has !== 'function') return '';
     const out = [];
-    for (const [k, label, path] of KW_ICONS) {
+    for (const [k, label, path, pre] of KW_ICONS) {
         if (k === 'first strike' && has(o, 'double strike')) continue;
-        if (has(o, k)) {
+        if (pre ? (has(o, k) || kwPrefixed(o, pre)) : has(o, k)) {
             const slug = k.replace(/\s+/g, '-');
             const art = typeof ASC_UI !== 'undefined' && ASC_UI.ok['kw-' + slug];
             out.push(art
@@ -70,7 +83,7 @@ function permHTML(o, count = 1) {
     if (o.isCommander) chips.push('<span class="chip c-cmd" title="Commander">👑</span>');
     if (o.counters > 0) chips.push(`<span class="chip c-plus" title="${o.counters} +1/+1 counter${o.counters === 1 ? '' : 's'}">${o.counters}</span>`);
     if (o.counters < 0) chips.push(`<span class="chip c-minus" title="${-o.counters} -1/-1 counter${o.counters === -1 ? '' : 's'}">−${-o.counters}</span>`);
-    Object.entries(o.ctr || {}).forEach(([k, n]) => chips.push(`<span class="chip" title="${n} ${esc(k)} counter${n === 1 ? '' : 's'}">${counterIcon(k)}${n}</span>`));
+    Object.entries(o.ctr || {}).forEach(([k, n]) => chips.push(`<span class="chip" title="${n} ${esc(k)} counter${n === 1 ? '' : 's'}">${counterIco(k)}${n}</span>`));
     if (o.tp || o.tq || o.tkw.length) chips.push(`<span class="chip c-temp" title="Until end of turn: ${[o.tp || o.tq ? `${o.tp >= 0 ? '+' : ''}${o.tp}/${o.tq >= 0 ? '+' : ''}${o.tq}` : '', ...o.tkw].filter(Boolean).join(', ')}">⏱</span>`);
     if (o.dmg) chips.push(`<span class="chip c-dmg" title="${o.dmg} damage marked (wears off at end of turn)">💥${o.dmg}</span>`);
     if (isSick) chips.push('<span class="chip sick" title="Summoning sick">💤</span>');
@@ -240,18 +253,18 @@ function podStripHTML() {
         else if (atkOther) tags.push(`<span class="seat-tag atk">⚔️ → ${esc(atkOther)}</span>`);
         else if (G.defender === X.i && G.active === v.i) tags.push('<span class="seat-tag atk">🎯 Target</span>');
         const avHTML = cmdr && cmdr.art
-            ? `<span class="seat-av has-art" aria-hidden="true"><span class="seat-av-clip"><img src="${cmdr.art}" alt=""></span><span class="seat-mood">${X.out ? '💀' : MOODS[mood.mood].emoji}</span></span>`
-            : `<span class="seat-av" aria-hidden="true">${X.out ? '💀' : MOODS[mood.mood].emoji}</span>`;
+            ? `<span class="seat-av has-art" aria-hidden="true"><span class="seat-av-clip"><img src="${cmdr.art}" alt=""></span><span class="seat-mood">${X.out ? '💀' : moodIco(mood.mood, 16)}</span></span>`
+            : `<span class="seat-av" aria-hidden="true">${X.out ? '💀' : moodIco(mood.mood, 22)}</span>`;
         return `<button type="button" data-seat="${X.i}" style="--sc:${col}" class="pod-chip seat${on ? ' on' : ''}${turn ? ' turn' : ''}${X.out ? ' out' : ''}${tgt ? ' targetable' : ''}${X.life <= 10 && !X.out ? ' low' : pct <= 50 && !X.out ? ' mid' : ''}" onclick="${tgt ? `pickTarget({ p: G.players[${X.i}] })` : `podFocus(${X.i})`}" ${X.out ? 'disabled' : ''}
             title="${esc(X.name)}${X.out ? ' (out of the game)' : ''}: ${X.life} life, ${avail} open mana, ${X.hand.length} in hand, ${X.library.length} in library, ${crs.length} creatures (power ${power}), ${X.gy.length} in graveyard${styleLbl ? `, ${esc(styleLbl)}` : ''}. Feeling ${esc(MOODS[mood.mood].name)}: ${esc(mood.why)}${dmg ? `. Commander damage to you: ${dmg}/21` : ''}. Press ${idx + 1} to view board.">
             ${avHTML}
             <span class="seat-main"><b>${esc(who(X))}${typeof reliTag === 'function' ? reliTag(X) : ''}<span class="seat-cmdr">${turn ? '<span class="seat-think" aria-label="taking their turn"><i></i><i></i><i></i></span>' : ''}${esc(sub)}</span><kbd class="seat-key desk-only">${idx + 1}</kbd></b>${tags.length ? `<span class="seat-tags">${tags.join('')}</span>` : ''}</span>
             <span class="seat-life-wrap"><span class="seat-life">${X.out ? 'OUT' : X.life}</span></span>
-            <span class="seat-stats"><span title="Cards in hand">✋${X.hand.length}</span><span title="Untapped open mana">💧${avail}</span><span title="Creatures and total power">⚔️${crs.length}${power ? `·${power}` : ''}</span><span title="Graveyard">🪦${X.gy.length}</span><span class="seat-lib" title="Library">📚${X.library.length}</span>${cmdr && !X.out ? `<span class="seat-cz${cmdr.onBf ? ' live' : ''}" title="${cmdr.onBf ? 'Commander is on the battlefield' : cmdr.inCmd ? 'Commander is in the command zone' : 'Commander is in another zone'}">👑${cmdr.onBf ? '●' : ''}</span>` : ''}${dmg ? `<span class="seat-cdmg" title="Commander damage you have taken from them">🩸${dmg}</span>` : ''}${(X.salt || 0) >= 3 ? `<span title="Salt level: how annoyed they are with the table">🧂${Math.round(X.salt)}</span>` : ''}</span>
+            <span class="seat-stats"><span title="Cards in hand">✋${X.hand.length}</span><span title="Untapped open mana">💧${avail}</span><span title="Creatures and total power">⚔️${crs.length}${power ? `·${power}` : ''}</span><span title="Graveyard">${uiIco('zone-graveyard', '🪦', 14)}${X.gy.length}</span><span class="seat-lib" title="Library">${uiIco('zone-library', '📚', 14)}${X.library.length}</span>${cmdr && !X.out ? `<span class="seat-cz${cmdr.onBf ? ' live' : ''}" title="${cmdr.onBf ? 'Commander is on the battlefield' : cmdr.inCmd ? 'Commander is in the command zone' : 'Commander is in another zone'}">${uiIco('zone-command', '👑', 14)}${cmdr.onBf ? '●' : ''}</span>` : ''}${dmg ? `<span class="seat-cdmg" title="Commander damage you have taken from them">🩸${dmg}</span>` : ''}${(X.salt || 0) >= 3 ? `<span title="Salt level: how annoyed they are with the table">🧂${Math.round(X.salt)}</span>` : ''}</span>
             <span class="seat-bar" aria-hidden="true"><i style="width:${X.out ? 0 : pct}%"></i></span></button>`;
     }).join('');
     const mine = dealsOf(v.i).length;
-    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<div class="pod-utils"><div class="pod-util-row"><button type="button" class="pod-chip pod-act" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>🤝<span class="lbl"> Deals</span></b>${mine ? `<span class="pod-badge">${mine}</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}</div><span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div></div>`;
+    return `<div class="pod-strip" role="group" aria-label="Opponents">${chips}<div class="pod-utils"><div class="pod-util-row"><button type="button" class="pod-chip pod-act" onclick="dealDialog()" title="Make a deal with a bot: peace, hands off, or gang up"><b>${uiIco('act-deal', '🤝', 16)}<span class="lbl"> Deals</span></b>${mine ? `<span class="pod-badge">${mine}</span>` : ''}</button>${typeof askButtonHTML === 'function' ? askButtonHTML() : ''}</div><span class="pod-chip meters" title="Table salt: how annoyed the bots are. Cool: impressive plays so far (they earn you style points)."><span>🧂 ${tableSalt()}</span><span>✨ ${(G.cool || []).reduce((a, b) => a + b, 0)}</span></span></div></div>`;
 }
 function podFocus(i) { G.focusPick = i; renderGame(); }
 
@@ -273,18 +286,18 @@ function barHTML(P) {
         : `<span class="${you(P) ? 'me-av' : 'opp-av'} arena-av no-art" style="--sc:${avCol}" aria-hidden="true">${you(P) ? '🧙' : '🤖'}</span>`;
     const topGy = P.gy && P.gy.length ? P.gy[P.gy.length - 1] : null;
     const gyArt = topGy && topGy.card && (topGy.card.imgS || topGy.card.img);
-    const gyPile = `<button type="button" class="zone-count zone-btn pile-card pile-gy${gyArt ? ' has-art' : ''}" title="Graveyard (${P.gy.length}): tap to look" onclick="showGraveyard(${P.i})">${gyArt ? `<img class="pile-art" src="${gyArt}" alt="">` : '<span class="pile-ico" aria-hidden="true">🪦</span>'}<span class="pile-cnt">${P.gy.length}</span></button>`;
+    const gyPile = `<button type="button" class="zone-count zone-btn pile-card pile-gy${gyArt ? ' has-art' : ''}" title="Graveyard (${P.gy.length}): tap to look" onclick="showGraveyard(${P.i})">${gyArt ? `<img class="pile-art" src="${gyArt}" alt="">` : `<span class="pile-ico" aria-hidden="true">${uiIco('zone-graveyard', '🪦', 22)}</span>`}<span class="pile-cnt">${P.gy.length}</span></button>`;
     const slv = typeof sleeveAttr === 'function' ? sleeveAttr(P) : { cls: '', style: '' };
-    const libPile = `<span class="zone-count pile-card pile-deck${slv.cls}"${slv.style} title="Library: ${P.library.length} cards"><span class="pile-ico" aria-hidden="true">📚</span><span class="pile-cnt">${P.library.length}</span></span>`;
+    const libPile = `<span class="zone-count pile-card pile-deck${slv.cls}"${slv.style} title="Library: ${P.library.length} cards"><span class="pile-ico" aria-hidden="true">${uiIco('zone-library', '📚', 22)}</span><span class="pile-cnt">${P.library.length}</span></span>`;
     const crestSVG = `<svg class="av-crest" viewBox="0 0 120 76" aria-hidden="true"><path class="crest-wing" d="M8 58 L28 32 L38 42 L60 12 L82 42 L92 32 L112 58 L94 64 L60 54 L26 64 Z"/><path class="crest-trim" d="M18 55 L32 39 L43 47 L60 22 L77 47 L88 39 L102 55" fill="none"/></svg>`;
     return `
         <span class="bar-center">
-            <span class="who">${isPodOpp ? '<span class="pod-viewing-tag">Viewing</span>' : ''}${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? 'You' : esc(P.name)}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${MOODS[botMood(P).mood].emoji}</span>` : ''}</span>
+            <span class="who">${isPodOpp ? '<span class="pod-viewing-tag">Viewing</span>' : ''}${typeof ascBarFace === 'function' ? ascBarFace(P) : ''}${you(P) ? 'You' : esc(P.name)}${P.isAI && !you(P) ? ` <span class="mood" title="${esc(P.name.split(',')[0])} is feeling ${esc(MOODS[botMood(P).mood].name)}: ${esc(botMood(P).why)}">${moodIco(botMood(P).mood, 18)}</span>` : ''}</span>
             <span class="av-medallion">${crestSVG}${avHTML}<button type="button" class="life${targetable ? ' targetable' : ''}" onclick="pickTarget({ p: G.players[${P.i}] })" ${targetable ? '' : 'tabindex="-1"'} aria-label="${you(P) ? 'Your' : `${esc(P.name)}'s`} life: ${P.life}"><span class="lh">❤️ </span>${P.life}</button></span>
         </span>
         <span class="bar-left">
             ${G.format === 'commander' ? `<span class="zone-count cmd-dmg-pill" title="Commander damage taken (21 loses)">⚔️ ${P.cmdDmg}/21</span>` : ''}
-            ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">☠️ ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">🔋 ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
+            ${G.monarch === P.i ? '<span class="pc" title="The monarch draws a card at the end of their turn; deal them combat damage to take it">👑 Monarch</span>' : ''}${P.poison ? `<span class="pc poison" title="Poison counters (10 loses)">${uiIco('ctr-poison', '☠️', 16)} ${P.poison}/10</span>` : ''}${P.energy ? `<span class="pc" title="Energy counters">${uiIco('ctr-energy', '🔋', 16)} ${P.energy}</span>` : ''}${P.exp ? `<span class="pc" title="Experience counters">🎓 ${P.exp}</span>` : ''}
             ${P === me() && P.bf.some(o => Rx(o).peekTop) && P.library.length ? `<span class="pc" title="You may look at the top card of your library any time">👁 ${esc(P.library[P.library.length - 1].card.name)}</span>` : ''}
             <span class="zones">${libPile}${gyPile}</span>
             ${P !== me() ? (handRevealed(P) ? `<button type="button" class="zone-count" onclick="showRevealedHand(${P.i})" title="Telepathy: their hand is revealed">✋ ${P.hand.length} 👁</button>` : `<span class="zone-count">✋ ${P.hand.length}</span>`) + `<span class="opp-hand${slv.cls}"${slv.style}>${'<i></i>'.repeat(Math.min(P.hand.length, 12))}</span>` : manaSummary(P)}
@@ -302,7 +315,7 @@ function barMenu(i) {
     const P = G.players[i];
     menuSheet(you(P) ? 'You' : esc(P.name), `<div class="menu-list">
         <button class="btn" onclick="closeSheet(); playerSheet(${i})">🧮 Life, poison, energy and experience</button>
-        ${you(P) ? '<button class="btn danger" onclick="closeSheet(); concede()">🏳️ Concede</button>' : `<p class="note">${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</p>`}</div>`);
+        ${you(P) ? `<button class="btn danger" onclick="closeSheet(); concede()">${uiIco('act-concede', '🏳️', 18)} Concede</button>` : `<p class="note">${esc(P.deckName)}${P.source ? ` · ${esc(P.source)}` : ''}</p>`}</div>`);
 }
 // Phones: the game menu (log, trackers, paying mana, concede) and the full log
 function gameMenu() {
@@ -316,7 +329,7 @@ function gameMenu() {
         <div class="seg" role="group" aria-label="Stops at the end of their turn" style="width:100%;"><button type="button" style="flex:1; padding:10px;" aria-pressed="${endStops === 'on'}" onclick="setEndStops('on'); gameMenu()" title="Ask me at the end of an opponent's turn when I can still cast an instant or use an ability">⏸ Ask at their end step</button><button type="button" style="flex:1; padding:10px;" aria-pressed="${endStops === 'off'}" onclick="setEndStops('off'); gameMenu()">⏩ Don't ask</button></div>
         ${speedToggleHTML('gameMenu()')}
         <p class="note">${esc(foe().deckName)}${foe().source ? ` · ${esc(foe().source)}` : ''}</p>
-        <button class="btn danger" onclick="closeSheet(); concede()">🏳️ Concede</button></div>`);
+        <button class="btn danger" onclick="closeSheet(); concede()">${uiIco('act-concede', '🏳️', 18)} Concede</button></div>`);
 }
 // Telepathy (Magic 2010): a player who controls it sees the opponent's hand
 function handRevealed(P) { return !!G && foes(P).some(F => F.bf.some(x => Rx(x).telepathy && !lostAbilities(x))); }
@@ -503,7 +516,7 @@ function turnButtonHTML() {
     else if (G.extraCombat > 0 && (G.phase === 'main1' || G.phase === 'main2')) { sub = 'Additional combat first'; label = 'Extra combat'; title = 'You have an additional combat phase coming'; }
     else if (G.phase === 'main1') sub = 'Skips combat';
     const nudge = !dis && typeof MAIN !== 'undefined' && MAIN.includes(G.phase) && !m && !G.busy && !nextStepHint();
-    return `<button type="button" id="turnBtn" class="turn-btn${dis ? '' : ' ready'}${nudge ? ' nudge' : ''}" ${dis ? 'disabled' : ''} onclick="endMyTurn()" title="${esc(title)}"><span class="tb-label">${label}${G.active === G.view ? ' ⏭' : ''}</span>${sub ? `<span class="tb-sub">${esc(sub)}</span>` : ''}</button>`;
+    return `<button type="button" id="turnBtn" class="turn-btn${dis ? '' : ' ready'}${nudge ? ' nudge' : ''}" ${dis ? 'disabled' : ''} onclick="endMyTurn()" title="${esc(title)}"><span class="tb-label">${label}${G.active === G.view ? ` ${uiIco('act-end-turn', '⏭', 18)}` : ''}</span>${sub ? `<span class="tb-sub">${esc(sub)}</span>` : ''}</button>`;
 }
 // A short hint about what you can do right now
 function nextStepHint() {
@@ -538,23 +551,23 @@ function midControlsHTML() {
     if (m && m.type === 'attack') {
         const avail = me().bf.filter(canAttackWith).length;
         const primaryAtk = m.sel.size
-            ? `<button class="btn primary act-atk" onclick="confirmAttack()">⚔️ Attack with ${m.sel.size}</button>${m.sel.size < avail ? `<button class="btn gold" onclick="allAttack()" title="Attack with all ${avail} eligible creatures">⚔️ All Attack (${avail})</button>` : ''}`
-            : `<button class="btn primary act-atk" onclick="allAttack()" title="Attack with all ${avail} eligible creatures">⚔️ All Attack${avail > 1 ? ` (${avail})` : ''}</button>`;
+            ? `<button class="btn primary act-atk" onclick="confirmAttack()">${uiIco('act-attack', '⚔️', 18)} Attack with ${m.sel.size}</button>${m.sel.size < avail ? `<button class="btn gold" onclick="allAttack()" title="Attack with all ${avail} eligible creatures">⚔️ All Attack (${avail})</button>` : ''}`
+            : `<button class="btn primary act-atk" onclick="allAttack()" title="Attack with all ${avail} eligible creatures">${uiIco('act-attack', '⚔️', 18)} All Attack${avail > 1 ? ` (${avail})` : ''}</button>`;
         return `${phase}<span class="prompt">Choose attackers${m.sel.size ? ` (${m.sel.size}/${avail})` : ''}</span>${primaryAtk}${typeof attackListButton === 'function' ? attackListButton() : ''}<button class="btn" onclick="throughCombat()" title="Beginning-of-combat effects stay; no attack; on to your second main phase">⏭️ No attack: to Main 2</button><button class="btn" onclick="cancelAttack()">Back</button>`;
     }
     if (m && m.type === 'respond') {
         const it = m.item;
         if (it.window) return `${phase}<span class="prompt">⏳ ${esc(it.name)}: cast an instant or activate an ability, or:</span><button class="btn primary act-resolve" onclick="passPriority()">✔ Continue</button>`;
-        return `${phase}<span class="prompt">↩️ ${esc(it.name)}${it.target ? ` (targeting ${esc(targetName(it.target))})` : ''} is on the stack.</span><button class="btn primary act-resolve" onclick="passPriority()">✔ Resolve</button>`;
+        return `${phase}<span class="prompt">↩️ ${esc(it.name)}${it.target ? ` (targeting ${esc(targetName(it.target))})` : ''} is on the stack.</span><button class="btn primary act-resolve" onclick="passPriority()">${uiIco('act-pass', '✔', 18)} Resolve</button>`;
     }
     if (m && m.type === 'block') {
-        return `${phase}<span class="prompt">🛡️ ${m.picked && onBf(m.picked) ? `Now tap the attacker ${esc(onBf(m.picked).card.name.split(',')[0])} should block` : 'Tap one of your creatures, then the attacker it blocks. You can cast instants now.'}</span><button class="btn primary" onclick="confirmBlocks()">✔ Done blocking</button>`;
+        return `${phase}<span class="prompt">🛡️ ${m.picked && onBf(m.picked) ? `Now tap the attacker ${esc(onBf(m.picked).card.name.split(',')[0])} should block` : 'Tap one of your creatures, then the attacker it blocks. You can cast instants now.'}</span><button class="btn primary" onclick="confirmBlocks()">${uiIco('act-block', '✔', 18)} Done blocking</button>`;
     }
     if (G.active === G.view && !G.busy) {
         const hint = nextStepHint();
         const hintHTML = hint ? `<span class="hint">${esc(hint)}</span>` : '';
-        if (G.phase === 'main1') return `${hintHTML}<button class="btn primary act-go" onclick="goToCombat()">⚔️ Go to combat</button><button class="btn" onclick="throughCombat()" title="Go through combat without attacking (combat abilities still happen), then your second main phase">⏭️ Through combat to Main 2</button>`;
-        if (G.phase === 'afterBlocks') return `<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary act-atk" onclick="dealDamage()">💥 Deal damage</button>`;
+        if (G.phase === 'main1') return `${hintHTML}<button class="btn primary act-go" onclick="goToCombat()">${uiIco('phase-combat', '⚔️', 18)} Go to combat</button><button class="btn" onclick="throughCombat()" title="Go through combat without attacking (combat abilities still happen), then your second main phase">⏭️ Through combat to Main 2</button>`;
+        if (G.phase === 'afterBlocks') return `<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary act-atk" onclick="dealDamage()">${uiIco('phase-damage', '💥', 18)} Deal damage</button>`;
         if (G.phase === 'main2') return hintHTML || '<span class="hint">Second main phase: cast anything else, then end your turn.</span>';
     }
     return `<span class="note">${G.players[G.active] && G.players[G.active].isAI && G.active !== G.view ? `${esc(turnName())} is thinking…` : ''}</span>`;

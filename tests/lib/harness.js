@@ -75,6 +75,8 @@ async function openTestPage(ctx, server, query = 'autoplay&format=none') {
     page.on('pageerror', e => errors.push(String(e.message || e)));
     await page.goto(`${server.url}/Spellslinger_Duels.html?${query}`);
     await page.waitForFunction(() => typeof newGame === 'function' && typeof rulesFor === 'function', null, { timeout: 30000 });
+    // ...and the last script too: under load a suite could start before the late files (banter, politics, cosmetics) had arrived
+    await page.waitForFunction(() => window.__gameLoaded === true, null, { timeout: 60000 }).catch(() => {});
     await page.waitForTimeout(800);
     return { page, errors };
 }

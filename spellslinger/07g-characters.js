@@ -101,7 +101,7 @@ function emote(i, kind) {
 }
 function emoteButtonsHTML(B) {
     const ready = emoteReady(B);
-    return `<button class="btn small" ${ready ? '' : 'disabled'} title="Taunt ${esc(who(B))}: they will remember it, and may come after you." onclick="emote(${B.i}, 'taunt')">😏 Taunt</button><button class="btn small" ${ready ? '' : 'disabled'} title="Compliment ${esc(who(B))}: a little trust, a little less salt." onclick="emote(${B.i}, 'compliment')">👏 Compliment</button>`;
+    return `<button class="btn small" ${ready ? '' : 'disabled'} title="Taunt ${esc(who(B))}: they will remember it, and may come after you." onclick="emote(${B.i}, 'taunt')">${uiIco('act-taunt', '😏', 16)} Taunt</button><button class="btn small" ${ready ? '' : 'disabled'} title="Compliment ${esc(who(B))}: a little trust, a little less salt." onclick="emote(${B.i}, 'compliment')">${uiIco('act-compliment', '👏', 16)} Compliment</button>`;
 }
 
 // ---- A draw offer ----

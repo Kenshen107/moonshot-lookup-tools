@@ -13,12 +13,12 @@ const COMPANION_RIGS = {
             { k: 'wingF', src: 'wing.png', x: 248, y: 98, s: 200, px: 22, py: 255, r0: -22 },
             { k: 'tail', src: 'tail.png', x: 22, y: 222, s: 200, px: 32, py: 60, flip: true },
             { k: 'body', src: 'body.png', x: 110, y: 150, s: 250, px: 256, py: 500 },
-            { k: 'head', src: 'head.png', x: 186, y: 4, s: 196, px: 256, py: 470 }
+            { k: 'head', src: 'face-happy.png', x: 170, y: -8, s: 226, px: 256, py: 470 } // the face drawings (2026-11-28) are the head; head.png is the older painted one
         ],
         ember: { part: 'tail', x: 462, y: 64 }, // the tail's flame tip, in the tail's own 512 pixels (before the flip)
         glow: { part: 'tail', x: 450, y: 120 }, // the middle of the tail's flame, where the flicker glow sits
-        mouth: { part: 'head', x: 352, y: 392 }, // where fire breath comes out, in the head's own 512 pixels
-        faces: ['happy', 'angry', 'scared', 'sleepy', 'cheer', 'blink'] // optional face-<name>.png head variants (used when the files exist)
+        mouth: { part: 'head', x: 404, y: 300 }, // where fire breath comes out, in the head's own 512 pixels
+        faces: ['happy', 'angry', 'scared', 'sleepy', 'cheer', 'blink'] // face-<name>.png head drawings, swapped in for moods (each one only once it has loaded)
     }
 };
 const COMP = { live: [], raf: 0, last: 0, dock: null, ctl: null, seen: null, idleSince: 0, mx: null, my: null };
@@ -55,7 +55,7 @@ function compMount(host, id, opts = {}) {
     stage.appendChild(inner); host.appendChild(stage);
     const ctl = { id, rig, el: stage, inner, els, faces, headImg, headSrc: headImg && headImg.src, face: '', preview: !!opts.preview, t0: performance.now(), act: null, idle: null, mood: null,
         nextIdle: performance.now() + 3500 + Math.random() * 4000, nextEmber: 0, nextZ: 0, nextBlink: performance.now() + 2500,
-        react(kind, ms) { if (compReduced()) return; this.act = { kind, t0: performance.now(), ms: ms || COMP_REACT_MS[kind] || 1000 }; this.idle = null; if (kind === 'happy' || kind === 'cheer' || kind === 'win') compSparks(this, kind); if (kind === 'cheer' || kind === 'win') compBreath(this, true); },
+        react(kind, ms) { if (compReduced()) return; this.act = { kind, t0: performance.now(), ms: ms || COMP_REACT_MS[kind] || 1000 }; this.idle = null; if (kind === 'happy' || kind === 'cheer' || kind === 'win') compSparks(this, kind); if (kind === 'cheer' || kind === 'win') compBreath(this, true); if (kind === 'angry') setTimeout(() => compBreath(this, false), 350); },
         destroy() { stage.remove(); COMP.live = COMP.live.filter(c => c !== this); } };
     const fit = () => { const w = stage.clientWidth || host.clientWidth || 120; inner.style.transform = `scale(${w / rig.w})`; };
     ctl.fit = fit; fit();
@@ -64,7 +64,7 @@ function compMount(host, id, opts = {}) {
     COMP.live.push(ctl); compKick();
     return ctl;
 }
-const COMP_REACT_MS = { perk: 900, cheer: 1300, hurt: 800, happy: 1100, win: 1e9, lose: 1e9 };
+const COMP_REACT_MS = { perk: 900, cheer: 1300, hurt: 800, angry: 1500, happy: 1100, win: 1e9, lose: 1e9 };
 
 // One pose per frame: idle breathing plus the current reaction
 function compPose(ctl, now) {
@@ -120,6 +120,7 @@ function compPose(ctl, now) {
             if (a.kind === 'win' && Math.random() < 0.04) compSparks(ctl, 'cheer');
         }
         else if (a.kind === 'hurt') { P.all.tx = Math.sin(u * 60) * 10 * k; P.body.sy -= 0.06 * k; P.head.r += 14 * k; P.head.ty += 10 * k; P.wingF.r += 14 * k; P.wingB.r -= 14 * k; ctl.el.classList.toggle('hurt', k > 0.35); }
+        else if (a.kind === 'angry') { const sh = e < 0.25 ? Math.sin(u * 60) * 6 * (1 - e * 4) : 0; P.all.tx = sh; P.head.r -= 8 * k; P.head.tx += 4 * k; P.body.sy += 0.03 * k; P.wingF.r -= 18 * k; P.wingB.r += 18 * k; P.tail.r += 12 * Math.sin(u * 20) * k; }
         else if (a.kind === 'happy') { const hop = Math.abs(Math.sin(Math.PI * e * 2)); P.all.ty = -16 * hop; P.head.r += 10 * Math.sin(Math.PI * e * 2); P.tail.r += 18 * Math.sin(u * 16) * k; }
         else if (a.kind === 'lose') { P.head.r += 16; P.head.ty += 18; P.wingF.r += 22; P.wingB.r -= 22; P.tail.r = P.tail.r * 0.3 - 8; P.all.ty = 4; ctl.el.classList.add('down'); }
         if (a.kind !== 'hurt') ctl.el.classList.remove('hurt');
@@ -132,7 +133,7 @@ function compPose(ctl, now) {
     ctl.inner.style.translate = `${P.all.tx.toFixed(1)}px ${P.all.ty.toFixed(1)}px`;
     // face drawings, when the art has them
     const ak = a && a.kind, F = ctl.faces;
-    let face = ak === 'cheer' || ak === 'win' ? (F.cheer ? 'cheer' : 'happy') : ak === 'happy' || ak === 'perk' ? 'happy' : ak === 'hurt' ? 'scared' : ak === 'lose' ? (F.sleepy ? 'sleepy' : 'scared') : ctl.sleepy ? 'sleepy' : '';
+    let face = ak === 'cheer' || ak === 'win' ? (F.cheer ? 'cheer' : 'happy') : ak === 'happy' || ak === 'perk' ? 'happy' : ak === 'hurt' ? 'scared' : ak === 'angry' ? 'angry' : ctl.idle && ctl.idle.kind === 'puff' ? 'angry' : ak === 'lose' ? (F.sleepy ? 'sleepy' : 'scared') : ctl.sleepy ? 'sleepy' : '';
     if (!face && ctl.blinkUntil && now < ctl.blinkUntil) face = 'blink';
     if (face && !F[face]) face = '';
     if (ctl.headImg && face !== ctl.face) { ctl.face = face; ctl.headImg.src = face ? F[face] : ctl.headSrc; }
@@ -245,7 +246,7 @@ function compWatch(now) {
     const o = COMP.seen; COMP.seen = s;
     if (!o || o.turn > s.turn) return;
     if (s.over && !o.over) { const won = G.winner === me || G.winner === 0 || (me && !me.out && G.players.slice(1).every(P => P.out)); ctl.react(won ? 'win' : 'lose'); COMP.idleSince = now; return; }
-    if (s.life < o.life) { ctl.react('hurt'); COMP.idleSince = now; }
+    if (s.life < o.life) { ctl.react(o.life - s.life >= 5 ? 'angry' : 'hurt'); COMP.idleSince = now; } // a big hit makes it cross: it glares and snorts fire
     else if (s.foes < o.foes) { ctl.react('cheer'); COMP.idleSince = now; }
     else if (s.life > o.life) { ctl.react('happy'); COMP.idleSince = now; }
 }

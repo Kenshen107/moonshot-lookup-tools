@@ -124,7 +124,7 @@ function loadGame(files) {
     STORAGE.ready.then(() => {
         let i = 0;
         (function next() {
-            if (i >= files.length) return;
+            if (i >= files.length) { window.__gameLoaded = true; return; } // every script is in (tests wait for this)
             const s = document.createElement('script');
             s.src = 'spellslinger/' + files[i++] + (typeof SPV === 'string' ? SPV : '');
             s.onload = next;

@@ -30,11 +30,15 @@
     if (!ctx) return;
 
     // The painted mat is 1376 x 768 and drawn "cover, center"; these are positions of its features in that picture.
-    const IMG_W = 1376, IMG_H = 768;
-    const LANTERNS = [[103, 80], [1262, 84], [103, 686], [1262, 682]];
-    const RUNES = [[368, 57, 0, 150], [1005, 57, 0, 150], [350, 713, 0, 150], [1008, 713, 0, 150],
-                   [88, 270, 1, 130], [88, 495, 1, 130], [1300, 270, 1, 130], [1300, 495, 1, 130]];
-    const CIRCLES = [[688, 383, 203], [688, 383, 349]];
+    // The wide picture (desktop): mats/<mat>/base.jpg, 1920 x 1080, the same layout as the first 1376 x 768 painting, so these numbers still fit.
+    const WIDE = { w: 1376, h: 768, lanterns: [[103, 80], [1262, 84], [103, 686], [1262, 682]],
+        runes: [[368, 57, 0, 150], [1005, 57, 0, 150], [350, 713, 0, 150], [1008, 713, 0, 150],
+                [88, 270, 1, 130], [88, 495, 1, 130], [1300, 270, 1, 130], [1300, 495, 1, 130]],
+        circles: [[688, 383, 203], [688, 383, 349]] };
+    // The tall picture (base-phone.jpg, 1080 x 1920) used on portrait screens (styles.css, same media test): no runes, corner ornaments, one big circle.
+    const TALL = { w: 1080, h: 1920, lanterns: [[70, 90], [1010, 90], [70, 1830], [1010, 1830]], runes: [], circles: [[540, 962, 480], [540, 962, 506]] };
+    let IMG_W = WIDE.w, IMG_H = WIDE.h, LANTERNS = WIDE.lanterns, RUNES = WIDE.runes, CIRCLES = WIDE.circles;
+    const tallMq = window.matchMedia ? matchMedia('(max-aspect-ratio: 10/13)') : null;
     const TINT = {
         sanctum:  { flame: [255, 168, 72],  core: [255, 232, 170], rune: [90, 232, 224],  sweep: [240, 200, 100] },
         plains:   { flame: [255, 226, 140], core: [255, 250, 220], rune: [255, 224, 130], sweep: [255, 236, 170] },
@@ -57,6 +61,8 @@
         const w = innerWidth, h = innerHeight;
         if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
         W = w; H = h;
+        const g = tallMq && tallMq.matches ? TALL : WIDE;
+        IMG_W = g.w; IMG_H = g.h; LANTERNS = g.lanterns; RUNES = g.runes; CIRCLES = g.circles;
         S = Math.max(W / IMG_W, H / IMG_H);
         OX = (W - IMG_W * S) / 2; OY = (H - IMG_H * S) / 2;
     }

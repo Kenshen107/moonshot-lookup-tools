@@ -6,13 +6,38 @@
 //   spellslinger/art/poses/<id>.png     win row and lose row per opponent, 16 frames of 96 x 96
 const ASC_UI = { ok: {}, opp: {}, last: {} };
 const ASC_MOODS = ['happy', 'angry', 'worried'];
-const KW_UI_ICONS = ['kw-flying', 'kw-trample', 'kw-deathtouch', 'kw-lifelink', 'kw-vigilance', 'kw-haste', 'kw-double-strike', 'kw-first-strike', 'kw-indestructible', 'kw-hexproof', 'kw-menace', 'kw-reach', 'kw-defender'];
+const KW_UI_ICONS = ['kw-flying', 'kw-trample', 'kw-deathtouch', 'kw-lifelink', 'kw-vigilance', 'kw-haste', 'kw-double-strike', 'kw-first-strike', 'kw-indestructible', 'kw-hexproof', 'kw-menace', 'kw-reach', 'kw-defender',
+    'kw-infect', 'kw-toxic', 'kw-ward', 'kw-protection', 'kw-prowess', 'kw-flash'];
+// Batch 2 icons (Antigravity, 2026-11-28): menus, table buttons, counters, zones, moods, gems. Each is used only when its file loads.
+const UI_BATCH2_ICONS = ['act-ask', 'act-attack', 'act-block', 'act-compliment', 'act-concede', 'act-deal', 'act-end-turn', 'act-pass', 'act-taunt',
+    'ctr-charge', 'ctr-energy', 'ctr-loyalty', 'ctr-poison', 'cur-salvage', 'gem-W', 'gem-U', 'gem-B', 'gem-R', 'gem-G', 'gem-C', 'gem-multi',
+    'mood-angry', 'mood-calm', 'mood-confident', 'mood-happy', 'mood-salty', 'mood-worried',
+    'nav-campaign', 'nav-decks', 'nav-draft', 'nav-home', 'nav-locker', 'nav-packs', 'nav-play', 'nav-records', 'nav-rules', 'nav-settings', 'nav-shop',
+    'phase-attack', 'phase-block', 'phase-damage', 'phase-draw', 'phase-main2', 'phase-untap', 'rarity-special', 'type-battle', 'type-token',
+    'zone-command', 'zone-exile', 'zone-graveyard', 'zone-library'];
+// The page's fixed menus: a view's tab, its phone button and other buttons whose leading emoji becomes the painted icon
+const UI_STATIC_ICONS = [['#tab-home, .bottom-nav [data-v="home"] .bn-ico', 'nav-home'], ['#tab-packs, .bottom-nav [data-v="packs"] .bn-ico', 'nav-packs'],
+    ['#tab-decks, .bottom-nav [data-v="decks"] .bn-ico', 'nav-decks'], ['#tab-play, .bottom-nav [data-v="play"] .bn-ico', 'nav-play'], ['#tab-draft', 'nav-draft'],
+    ['#tab-campaign', 'nav-campaign'], ['#tab-shop', 'nav-shop'], ['#tab-rules', 'nav-rules'], ['#lockerBtn', 'nav-locker'], ['#recordsLink', 'nav-records']];
+function uiStaticIcons() {
+    UI_STATIC_ICONS.forEach(([sel, id]) => {
+        if (!ASC_UI.ok[id]) return;
+        document.querySelectorAll(sel).forEach(el => {
+            if (el.querySelector(':scope > img.asc-ico')) return;
+            const t = el.firstChild; if (!t || t.nodeType !== 3) return;
+            const m = t.textContent.match(/^\s*(\S+)\s?/); if (!m || /[A-Za-z0-9]/.test(m[1])) return; // only a leading emoji is replaced
+            t.textContent = t.textContent.slice(m[0].length) ? ' ' + t.textContent.slice(m[0].length) : '';
+            el.insertAdjacentHTML('afterbegin', ascIco(id, '', el.classList.contains('bn-ico') ? 22 : 18));
+        });
+    });
+}
 
 // ---- Probing (called from ascProbeArt, 13h) ----
 function ascExtraProbeTasks() {
     return [
         ...Object.keys(ASCENT_ICONS).map(async k => { ASC_UI.ok[k] = await ascProbe(`spellslinger/art/ui/${k}.png`); }),
         ...KW_UI_ICONS.map(async k => { ASC_UI.ok[k] = await ascProbe(`spellslinger/art/ui/${k}.png`); }),
+        ...UI_BATCH2_ICONS.map(async k => { ASC_UI.ok[k] = await ascProbe(`spellslinger/art/ui/${k}.png`); }),
         ...Object.keys(ASCENT_FX_IDEAS).map(async k => { ASC_FX_KINDS_ART[k] = await ascProbe(`spellslinger/art/fx/${k}.png`); })
     ];
 }
@@ -31,6 +56,7 @@ function ascUiApply() {
         if (ASC_UI.ok[id]) root.setProperty('--ui-' + id, `url('spellslinger/art/ui/${id}.png')`);
     }
     document.body.classList.toggle('asc-has-mat', !!ASC_UI.ok['mat-table']);
+    try { uiStaticIcons(); } catch (e) { /* the emoji stay */ }
     document.body.classList.toggle('asc-has-frames', !!(ASC_UI.ok['card-frame-common'] || ASC_UI.ok['card-frame-rare'] || ASC_UI.ok['card-frame-mythic']));
 }
 // An icon image when its art exists, otherwise the fallback markup (usually the emoji used before)

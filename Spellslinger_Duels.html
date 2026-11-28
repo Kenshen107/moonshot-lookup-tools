@@ -27,7 +27,7 @@
         <span class="coins" id="coinPill" data-modes="sandbox shop" title="Coins: free, in-game only. Win games to earn more."><span class="cur" data-ico="cur-coin">🪙</span> <span id="coinCount">0</span></span>
         <button type="button" class="coins cash" id="cashPill" data-modes="shop" onclick="cashPillClick()" title="Shop cash: in-game money. Earn it in the Shop; spend it at the Distributor and on imported decks. Tap to open the Shop."><span class="cur" data-ico="cur-cash">💵</span> <span id="cashCount">$0.00</span></button>
         <span class="coins aether" id="aetherPill" data-modes="campaign" title="Aether: Ascent's crafting currency. Dust spare cards to earn it."><span class="cur" data-ico="cur-aether">✨</span> <span id="aetherCount">0</span></span>
-        <button type="button" class="btn small desk-only" onclick="lookPanel()" title="Locker: looks, sleeves, playmats and companions">🎨 Locker</button>
+        <button type="button" class="btn small desk-only" id="lockerBtn" onclick="lookPanel()" title="Locker: looks, sleeves, playmats and companions">🎨 Locker</button>
         <button type="button" class="btn small desk-only" onclick="aboutPanel()" title="What this game is, what it can do, and what changed lately">ℹ️ About</button>
         <button class="btn small" data-modes="campaign shop" onclick="addMoneyPanel()" title="Test build: add free coins, shop cash or Aether">＋ Add money</button>
         <button class="btn small" data-modes="sandbox" onclick="addTestCoins()" title="Test build: add free coins to this player">＋🪙 Add coins</button>
@@ -308,7 +308,7 @@
     </main>
 
     <footer>
-        <a href="#" onclick="aboutPanel(); return false;">ℹ️ About this game and what's new</a> &middot; <a href="#" onclick="recordsPanel(); return false;">📋 Game records</a><br>
+        <a href="#" onclick="aboutPanel(); return false;">ℹ️ About this game and what's new</a> &middot; <a href="#" id="recordsLink" onclick="recordsPanel(); return false;">📋 Game records</a><br>
         Spellslinger Duels is a free, fan-made test game. Card data and images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall</a>; pack odds from <a href="https://mtgjson.com" target="_blank" rel="noopener">MTGJSON</a>; Commander decks from <a href="https://edhrec.com" target="_blank" rel="noopener">EDHREC</a>. Coins and shop cash are in-game only and can't be bought or cashed out.<br>
         Spellslinger Duels is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
     </footer>
