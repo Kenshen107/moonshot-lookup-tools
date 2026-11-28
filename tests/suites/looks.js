@@ -13,7 +13,7 @@ const BODY = async function () {
     ok('starts Classic with frames on', !root.hasAttribute('data-theme') && root.getAttribute('data-frames') === 'on', root.getAttribute('data-frames'));
     ok('the header has a Locker button (looks, sleeves, companions)', [...document.querySelectorAll('.topbar .btn')].some(b => /Locker/.test(b.textContent)));
     lookPanel();
-    ok('the panel lists every look', document.querySelectorAll('#modalHost .look-card').length === SP_LOOKS.length && SP_LOOKS.length === 7);
+    ok('the panel lists every look (7 free ones and the painted themes, 2026-11-28)', document.querySelectorAll('#modalHost .look-card').length === SP_LOOKS.length && SP_LOOKS.filter(l => !l.painted).length === 7);
     document.querySelector('#modalHost .look-card[data-look="ember"]').click();
     ok('picking Ember sets the theme and changes the colors', root.getAttribute('data-theme') === 'ember' && brand() !== classic && brand() === '#b8561f', brand());
     ok('the frame picture follows the look', /art\/site\/frame-panel-autumn\.png/.test(root.style.getPropertyValue('--sp-frame')), root.style.getPropertyValue('--sp-frame'));
@@ -22,12 +22,12 @@ const BODY = async function () {
     const plain = document.querySelector('.panel'); ok('ordinary panels have no stretched frame (2026-11-16 audit)', !plain || getComputedStyle(plain).borderImageSource === 'none', plain && getComputedStyle(plain).borderImageSource);
     ok('modal boxes draw the frame (border-image set)', panel && getComputedStyle(panel).borderImageSource.includes('frame-panel-autumn'), panel && getComputedStyle(panel).borderImageSource);
     const u = (getComputedStyle(panel).borderImageSource.match(/url\("?([^")]+)/) || [])[1];
-    window.__frameUrls = SP_LOOKS.map(l => { setLook(l.key, true); return (getComputedStyle(document.querySelector('.modal .box')).borderImageSource.match(/url\("?([^")]+)/) || [])[1]; }); setLook('ember', true);
+    window.__frameUrls = SP_LOOKS.filter(l => !l.painted).map(l => { setLook(l.key, true); return (getComputedStyle(document.querySelector('.modal .box')).borderImageSource.match(/url\("?([^")]+)/) || [])[1]; }); setLook('ember', true);
     setLook(null, false);
     ok('frames can be turned off', root.getAttribute('data-frames') === 'off' && (() => { const pn = document.querySelector('.modal .box'); return !pn || getComputedStyle(pn).borderImageSource === 'none'; })());
     ok('the choice is mirrored for the next page load', JSON.parse(localStorage.getItem('spLook')).name === 'ember' && JSON.parse(localStorage.getItem('spLook')).frames === false);
     setLook('royal', true);
-    ok('every look sets its own colors', SP_LOOKS.every(l => { setLook(l.key); return l.key === 'classic' ? brand() === classic : brand() !== classic; }));
+    ok('every look sets its own colors', SP_LOOKS.filter(l => !l.painted).every(l => { setLook(l.key); return l.key === 'classic' ? brand() === classic : brand() !== classic; }));
     setLook('classic', true); closeModal();
     ok('Classic restores the original', !root.hasAttribute('data-theme') && brand() === classic);
     accountSheet();

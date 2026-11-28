@@ -19,6 +19,42 @@ const COMPANION_RIGS = {
         glow: { part: 'tail', x: 450, y: 120 }, // the middle of the tail's flame, where the flicker glow sits
         mouth: { part: 'head', x: 404, y: 300 }, // where fire breath comes out, in the head's own 512 pixels
         faces: ['happy', 'angry', 'scared', 'sleepy', 'cheer', 'blink'] // face-<name>.png head drawings, swapped in for moods (each one only once it has loaded)
+    },
+    // Batch 4 (2026-11-28): each face drawing is the head, like the drake. `amp` scales the shared motions per part, `follow` makes a part
+    // move with another one, `motion` adds the creature's own (run every frame after the shared poses).
+    'lantern-wisp': {
+        dir: 'spellslinger/art/companions/lantern-wisp/', w: 440, h: 430,
+        parts: [
+            { k: 'lamp', src: 'flame.png', x: 155, y: 220, s: 130, px: 256, py: 470 }, // not 'flame': .comp-flame is the drake's glow
+            { k: 'body', src: 'body.png', x: 90, y: 180, s: 260, px: 256, py: 500 },
+            { k: 'handle', src: 'handle.png', x: 150, y: 61, s: 150, px: 256, py: 470 },
+            { k: 'head', src: 'face-happy.png', x: 30, y: -10, s: 180, px: 256, py: 470 }
+        ],
+        ember: { part: 'lamp', x: 256, y: 60 }, amp: { body: 0.4 },
+        motion(P, t, ctl, still) { if (still) return; P.head.ty += Math.sin(t * 1.7) * 9; P.head.tx += Math.sin(t * 0.8) * 6; P.lamp.s = 1 + Math.sin(t * 9) * 0.04 + Math.sin(t * 23) * 0.025; P.lamp.r = Math.sin(t * 5) * 3; },
+        faces: ['happy', 'angry', 'scared', 'sleepy', 'cheer', 'blink']
+    },
+    'moss-golem': {
+        dir: 'spellslinger/art/companions/moss-golem/', w: 440, h: 430,
+        parts: [
+            { k: 'body', src: 'body.png', x: 70, y: 125, s: 300, px: 256, py: 500 },
+            { k: 'wingB', src: 'arm-l.png', x: 0, y: 160, s: 200, px: 256, py: 40 },
+            { k: 'wingF', src: 'arm-r.png', x: 240, y: 160, s: 200, px: 256, py: 40 },
+            { k: 'head', src: 'face-happy.png', x: 120, y: -10, s: 200, px: 256, py: 470 }
+        ],
+        amp: { wingF: 0.55, wingB: 0.55, head: 0.7 }, // heavy stone: the arms swing less than wings
+        faces: ['happy', 'angry', 'scared', 'sleepy', 'cheer', 'blink']
+    },
+    'tidepool-axolotl': {
+        dir: 'spellslinger/art/companions/tidepool-axolotl/', w: 440, h: 430,
+        parts: [
+            { k: 'tail', src: 'tail.png', x: -10, y: 255, s: 170, px: 100, py: 60, flip: true },
+            { k: 'body', src: 'body.png', x: 80, y: 120, s: 300, px: 256, py: 500 },
+            { k: 'gills', src: 'gills.png', x: 157, y: -30, s: 280, px: 256, py: 300, follow: 'head' },
+            { k: 'head', src: 'face-happy.png', x: 177, y: -10, s: 240, px: 256, py: 400 }
+        ],
+        motion(P, t, ctl, still) { if (still) return; P.gills.s = 1 + Math.sin(t * 2.6) * 0.035; P.gills.r = (P.gills.r || 0) + Math.sin(t * 1.9) * 3; },
+        faces: ['happy', 'angry', 'scared', 'sleepy', 'cheer', 'blink']
     }
 };
 const COMP = { live: [], raf: 0, last: 0, dock: null, ctl: null, seen: null, idleSince: 0, mx: null, my: null };
@@ -125,8 +161,13 @@ function compPose(ctl, now) {
         else if (a.kind === 'lose') { P.head.r += 16; P.head.ty += 18; P.wingF.r += 22; P.wingB.r -= 22; P.tail.r = P.tail.r * 0.3 - 8; P.all.ty = 4; ctl.el.classList.add('down'); }
         if (a.kind !== 'hurt') ctl.el.classList.remove('hurt');
     } else ctl.el.classList.remove('hurt', 'down');
-    const tf = (o, r0 = 0) => `translate(${(o.tx || 0).toFixed(1)}px, ${(o.ty || 0).toFixed(1)}px) rotate(${((o.r || 0) + r0).toFixed(2)}deg)`;
-    ctl.rig.parts.forEach(p => {
+    const rig = ctl.rig;
+    rig.parts.forEach(p => { if (!P[p.k]) P[p.k] = {}; });
+    if (rig.amp) for (const k in rig.amp) if (P[k]) { P[k].r = (P[k].r || 0) * rig.amp[k]; if (P[k].ty) P[k].ty *= rig.amp[k]; }
+    rig.parts.forEach(p => { if (p.follow && P[p.follow]) { const f = P[p.follow], o = P[p.k]; o.tx = (o.tx || 0) + (f.tx || 0); o.ty = (o.ty || 0) + (f.ty || 0); o.r = (o.r || 0) + (f.r || 0) * 0.6; } });
+    if (typeof rig.motion === 'function') rig.motion(P, t, ctl, still);
+    const tf = (o, r0 = 0) => `translate(${(o.tx || 0).toFixed(1)}px, ${(o.ty || 0).toFixed(1)}px) rotate(${((o.r || 0) + r0).toFixed(2)}deg)${o.s && o.s !== 1 ? ` scale(${o.s.toFixed(4)})` : ''}`;
+    rig.parts.forEach(p => {
         const el = ctl.els[p.k], o = P[p.k] || {};
         el.style.transform = p.k === 'body' ? `${tf(o, p.r0 || 0)} scale(${o.sx.toFixed(4)}, ${o.sy.toFixed(4)})` : tf(o, p.r0 || 0);
     });

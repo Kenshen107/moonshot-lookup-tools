@@ -1242,7 +1242,7 @@
         html[data-theme="grove"] { --brand: #2f7d40; --brand-light: #7fd58f; --bg-canvas: #131f17; --bg-panel: #1c2c20; --bg-panel-raised: #263a2a; --bg-inset: #0e1710; --border: #3d5a41; --border-subtle: #2a4030; --color-link: #a6e8b0; --felt-1: #12331f; --felt-2: #0b2415; --gold: #f0d77a; }
         html[data-theme="royal"] { --brand: #8f6d12; --brand-light: #f0cf62; --bg-canvas: #1a1710; --bg-panel: #29241a; --bg-panel-raised: #352e21; --bg-inset: #141109; --border: #5f5230; --border-subtle: #3b3320; --color-link: #ffe08a; --felt-1: #2c2410; --felt-2: #201a0a; --gold: #ffd860; }
         /* Pixel frames (modals only since 2026-11-16: on wide panels the stretched edge ornament showed as flecks): the 9-slice is drawn over the box's padding (the 1px border stays, so nothing moves). The picture is chosen with the look (--sp-frame). */
-        html[data-frames="on"] .modal .box { border-image: var(--sp-frame, none) 16 / 12px / 0 stretch; image-rendering: pixelated; border-radius: 2px; }
+        html[data-frames="on"] .modal .box { border-image: var(--sp-frame, none) var(--sp-frame-slice, 16) / var(--sp-frame-w, 12px) / 0 stretch; image-rendering: pixelated; border-radius: 2px; }
         .looks h2 { font-size: 1.4rem; margin-bottom: 6px; }
         .look-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; text-align: left; }
         .look-card { display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-panel-raised); color: var(--text-primary); text-align: left; }
@@ -3022,3 +3022,41 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
 .ov-tile.row-tile b .asc-ico, .ov-detail .note .asc-ico { margin-right: 4px; }
 .ov-tile img.asc-ico, .ov-detail img.asc-ico { width: 16px; height: 16px; min-width: 0; aspect-ratio: auto; object-fit: contain; display: inline-block; position: static; vertical-align: -3px; border-radius: 0; box-shadow: none; }
 .ov-type img.asc-ico { width: 18px; height: 18px; vertical-align: top; }
+
+/* ===== Cosmetics part 2 (08j-cosmetics-2.js, 2026-11-28) ===== */
+/* Painted themes: colors (white on --brand stays readable, about 5:1 or more) */
+html[data-theme="gilded"] { --brand: #8a6416; --brand-light: #e0b84a; --bg-canvas: #0f141c; --bg-panel: #1a2230; --bg-panel-raised: #222c3d; --bg-inset: #0b1018; --border: #3a4558; --border-subtle: #263042; --color-link: #f0cf6a; --felt-1: #13202e; --felt-2: #0e1722; --gold: #e8c25a; }
+html[data-theme="emberforge"] { --brand: #a8401c; --brand-light: #f07a3a; --bg-canvas: #170e0b; --bg-panel: #24160f; --bg-panel-raised: #2f1d14; --bg-inset: #110a07; --border: #5a3420; --border-subtle: #3a2418; --color-link: #ffb070; --felt-1: #2a140c; --felt-2: #1c0d08; --gold: #f0a840; }
+html[data-theme="tidecrown"] { --brand: #136a8a; --brand-light: #3ec3e0; --bg-canvas: #08141c; --bg-panel: #0f2130; --bg-panel-raised: #152b3d; --bg-inset: #061018; --border: #2a4a60; --border-subtle: #1a3446; --color-link: #7fdcff; --felt-1: #0b2433; --felt-2: #071a26; --gold: #e0c070; }
+/* the painted page background, with a veil so text reads; the tall picture on portrait screens */
+html[data-theme-art] body { background: linear-gradient(color-mix(in srgb, var(--bg-canvas) 62%, transparent), color-mix(in srgb, var(--bg-canvas) 62%, transparent)), var(--theme-bg) center / cover fixed no-repeat, var(--bg-canvas); }
+@media (max-aspect-ratio: 10/13) { html[data-theme-art] body { background: linear-gradient(color-mix(in srgb, var(--bg-canvas) 62%, transparent), color-mix(in srgb, var(--bg-canvas) 62%, transparent)), var(--theme-bg-phone) center / cover fixed no-repeat, var(--bg-canvas); } }
+html[data-theme-art] .home-hero { background: linear-gradient(color-mix(in srgb, var(--bg-canvas) 50%, transparent), color-mix(in srgb, var(--bg-canvas) 72%, transparent)), var(--theme-banner) center / cover no-repeat, var(--bg-panel); }
+.look-sw.painted { height: 54px; background-size: cover; background-position: center; border-radius: var(--radius-sm); }
+.look-card.locked { opacity: 0.92; }
+.look-price { display: block; margin-top: 4px; font-size: 0.85em; color: var(--gold); font-weight: 700; }
+/* Desk props */
+.cos-prop { display: grid; place-items: center; height: 96px; }
+.cos-prop img { max-height: 92px; max-width: 92px; }
+#game.has-lifeskin #meBar .life { position: relative; isolation: isolate; }
+#game.has-lifeskin #meBar .life::after { content: ""; position: absolute; inset: -34%; background: var(--lifeskin) center / contain no-repeat; z-index: -1; pointer-events: none; filter: drop-shadow(0 2px 6px var(--bg-canvas)); }
+#game.has-lifeskin #meBar .life.skin-roll::after { animation: skin-roll 0.7s ease-out; }
+@keyframes skin-roll { 0% { transform: rotate(0) scale(1); } 45% { transform: rotate(200deg) scale(1.12); } 100% { transform: rotate(360deg) scale(1); } }
+#deskProp { position: fixed; z-index: calc(var(--z-game, 50) + 1); pointer-events: none; transform: rotate(var(--flip, 0deg)); transition: transform 0.9s cubic-bezier(.5, -0.3, .4, 1.4); }
+#deskProp img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 5px var(--bg-canvas)); }
+#deskProp.turn img { filter: drop-shadow(0 0 8px var(--gold)) drop-shadow(0 3px 5px var(--bg-canvas)); }
+#deskProp.ducked { display: none; }
+/* Moving playmat layers: the painted border laid over the mat and animated, behind the cards; wide screens only (the tall pictures have none) */
+.mat-layer { position: fixed; inset: 0; pointer-events: none; z-index: 0; background: center / cover no-repeat; display: none; transform-origin: 50% 50%; }
+#game.open-board .mat-layer:not([hidden]) { display: block; }
+@media (max-aspect-ratio: 10/13) { #game.open-board .mat-layer { display: none !important; } }
+.mat-layer[data-kind="lights"] { animation: ml-glow 4.5s ease-in-out infinite; }
+.mat-layer[data-kind="water"] { animation: ml-water 9s ease-in-out infinite; }
+.mat-layer[data-kind="fire"] { animation: ml-fire 1.6s steps(1, end) infinite, ml-fire-swell 5s ease-in-out infinite; }
+.mat-layer[data-kind="foliage"] { animation: ml-sway 7s ease-in-out infinite; }
+@keyframes ml-glow { 0%, 100% { opacity: 0.72; } 50% { opacity: 1; } }
+@keyframes ml-water { 0%, 100% { transform: scale(1.01) translate(0, 0); opacity: 0.88; } 50% { transform: scale(1.03) translate(-0.4%, 0.3%); opacity: 1; } }
+@keyframes ml-fire { 0% { opacity: 0.86; } 20% { opacity: 1; } 40% { opacity: 0.8; } 60% { opacity: 0.97; } 80% { opacity: 0.84; } }
+@keyframes ml-fire-swell { 0%, 100% { transform: scale(1.005); } 50% { transform: scale(1.025); } }
+@keyframes ml-sway { 0%, 100% { transform: scale(1.015) rotate(0deg); } 30% { transform: scale(1.02) rotate(0.25deg); } 70% { transform: scale(1.02) rotate(-0.25deg); } }
+@media (prefers-reduced-motion: reduce) { .mat-layer { animation: none !important; } #deskProp { transition: none; } #game.has-lifeskin #meBar .life.skin-roll::after { animation: none; } }

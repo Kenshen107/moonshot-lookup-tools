@@ -26,7 +26,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             lookPanel();
             const lk = document.querySelector('#modalHost .locker');
             ok('the 🎨 button opens the Locker', !!lk);
-            ok('it has 5 tabs (Looks, Sleeves, Playmats, Companions, Coming soon)', document.querySelectorAll('#modalHost .locker-tab').length === 5);
+            ok('it has 6 tabs (Looks, Sleeves, Playmats, Companions, Props, Coming soon)', document.querySelectorAll('#modalHost .locker-tab').length === 6);
             ok('Looks tab shows the looks', !!document.querySelector('#modalHost .look-grid'));
             lockerPanel('mats'); ok('Playmats tab shows the battlefields', !!document.querySelector('#modalHost .mat-grid'));
             lockerPanel('sleeves'); ok('Sleeves tab shows every sleeve', document.querySelectorAll('#modalHost .cos-card').length === COSMETICS.filter(c => c.slot === 'sleeve').length);
@@ -48,7 +48,7 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
             ok('the Ember Drake is bought and put on', cosOwns('ember-drake') && cosState().companion === 'ember-drake' && profile.coins === 4000, profile.coins);
             lockerPanel('companions');
             await new Promise(r => setTimeout(r, 400));
-            ok('the Companions tab shows a live preview built from the parts', document.querySelectorAll('#modalHost .cos-comp .comp-stage .comp-part').length === 5);
+            ok('the Companions tab shows a live preview built from the parts', document.querySelectorAll('#modalHost .cos-comp .comp-stage[data-comp="ember-drake"] .comp-part').length === 5);
             ok('the Locker has no sideways scroll at 1280px', document.documentElement.scrollWidth <= innerWidth + 1);
         } catch (e) { out.push(['locker threw: ' + e.message, false, String(e.stack).slice(0, 300)]); }
         return out;

@@ -21,14 +21,23 @@ const COSMETICS = [
     { id: 'dragon-coil', slot: 'sleeve', rarity: 'rare', name: 'Dragon Coil', note: 'A gold dragon coiled on dark red.', img: 'spellslinger/art/sleeves/dragon-coil.png' },
     { id: 'koi-pair', slot: 'sleeve', rarity: 'rare', name: 'Koi Pair', note: 'Two gold koi circling in deep blue water.', img: 'spellslinger/art/sleeves/koi-pair.png' },
     { id: 'night-owl', slot: 'sleeve', rarity: 'rare', name: 'Night Owl', note: 'A gold owl under a crescent moon on violet.', img: 'spellslinger/art/sleeves/night-owl.png' },
+    { id: 'tide-crest', slot: 'sleeve', rarity: 'common', name: 'Tide Crest', note: 'Deep blue with an embossed wave crest.', img: 'spellslinger/art/sleeves/tide-crest.png' },
+    { id: 'grave-crest', slot: 'sleeve', rarity: 'common', name: 'Grave Crest', note: 'Dark violet with an embossed skull crest.', img: 'spellslinger/art/sleeves/grave-crest.png' },
+    { id: 'grove-crest', slot: 'sleeve', rarity: 'common', name: 'Grove Crest', note: 'Forest green with an embossed leaf crest.', img: 'spellslinger/art/sleeves/grove-crest.png' },
+    { id: 'dawn-crest', slot: 'sleeve', rarity: 'common', name: 'Dawn Crest', note: 'Pale gold with an embossed sun crest.', img: 'spellslinger/art/sleeves/dawn-crest.png' },
+    { id: 'onyx-plain', slot: 'sleeve', rarity: 'common', name: 'Onyx Plain', note: 'Plain black with a thin silver border.', img: 'spellslinger/art/sleeves/onyx-plain.png' },
+    { id: 'pearl-plain', slot: 'sleeve', rarity: 'common', name: 'Pearl Plain', note: 'Pearl white with a silver pinstripe.', img: 'spellslinger/art/sleeves/pearl-plain.png' },
     // Table companions (08i-companion.js draws and moves them)
     { id: 'none', slot: 'companion', rarity: 'free', name: 'No companion', note: 'Keep your corner of the table empty.' },
-    { id: 'ember-drake', slot: 'companion', rarity: 'rare', name: 'Ember Drake', note: 'A dragon whelp who cheers your hits, flinches when you are hurt and naps when nothing happens. Tap it to pet it.', thumb: 'spellslinger/art/companions/ember-drake/thumb.png' }
+    { id: 'ember-drake', slot: 'companion', rarity: 'rare', name: 'Ember Drake', note: 'A dragon whelp who cheers your hits, flinches when you are hurt and naps when nothing happens. Tap it to pet it.', thumb: 'spellslinger/art/companions/ember-drake/thumb.png' },
+    { id: 'lantern-wisp', slot: 'companion', rarity: 'rare', name: 'Lantern Wisp', note: 'A little spirit that floats above its lantern. Its flame flickers, it glares at a big hit and dozes when the table is quiet.', thumb: 'spellslinger/art/companions/lantern-wisp/thumb.png' },
+    { id: 'moss-golem', slot: 'companion', rarity: 'rare', name: 'Moss Golem', note: 'A sleepy stone friend with a sprout on its head. Slow, heavy arm swings and a big grin when you win.', thumb: 'spellslinger/art/companions/moss-golem/thumb.png' },
+    { id: 'tidepool-axolotl', slot: 'companion', rarity: 'rare', name: 'Tidepool Axolotl', note: 'A cheerful axolotl whose gills sway as it breathes. It wiggles its tail when happy and pouts when you are hurt.', thumb: 'spellslinger/art/companions/tidepool-axolotl/thumb.png' }
 ];
 // The computer characters each have a sleeve of their own, so a table of four looks like four people
-const BOT_SLEEVES = { greg: 'grove-weave', marcus: 'koi-pair', sarah: 'gilded-sanctum', leo: 'night-owl', trevor: 'grave-weave', sam: 'ember-crest', arthur: 'dragon-coil', brenda: 'dawn-weave', luke: 'grave-weave' };
+const BOT_SLEEVES = { greg: 'grove-crest', marcus: 'koi-pair', sarah: 'gilded-sanctum', leo: 'night-owl', trevor: 'onyx-plain', sam: 'ember-crest', arthur: 'dragon-coil', brenda: 'dawn-crest', luke: 'grave-crest' };
 const COS_SEAT_SLEEVES = ['tide-weave', 'ember-weave', 'grove-weave', 'grave-weave'];
-const COS_SOON = [['🎲', 'Desk props', 'a life-counter d20, an hourglass that turns on your turn, a candle, a crystal ball'], ['🧙', 'Avatars', '24 portraits for your seat'], ['😄', 'Emotes', '24 stickers to send at the table'], ['🎆', 'Win celebrations', 'fireworks, a dragon flyover, a rain of coins and more'], ['🖼️', 'Themes', '12 painted themes with backgrounds and frames'], ['🃏', 'More sleeves and companions', '30 sleeves and 16 companions in all (11 sleeves and 1 companion so far)']];
+const COS_SOON = [['🕯️', 'More desk props', 'a candle that burns down, a crystal ball that clouds when an opponent thinks'], ['🧙', 'Avatars', '24 portraits for your seat'], ['😄', 'Emotes', '24 stickers to send at the table'], ['🎆', 'Win celebrations', 'fireworks, a dragon flyover, a rain of coins and more'], ['🖼️', 'More themes', '12 painted themes in all (3 so far, in the Looks tab)'], ['🃏', 'More sleeves and companions', '30 sleeves and 16 companions in all (17 sleeves and 4 companions so far)']];
 
 function cosItem(id) { return COSMETICS.find(c => c.id === id) || null; }
 function cosPrice(c) { return c.rarity === 'free' ? 0 : COS_PRICES[c.rarity] || 0; }
