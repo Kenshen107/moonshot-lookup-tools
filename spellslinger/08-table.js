@@ -292,7 +292,7 @@ function barHTML(P) {
         : `<span class="${you(P) ? 'me-av' : 'opp-av'} arena-av no-art" style="--sc:${avCol}" aria-hidden="true">${you(P) ? '🧙' : '🤖'}</span>`;
     const topGy = P.gy && P.gy.length ? P.gy[P.gy.length - 1] : null;
     const gyArt = topGy && topGy.card && (topGy.card.imgS || topGy.card.img);
-    const gyPile = `<button type="button" class="zone-count zone-btn pile-card pile-gy${gyArt ? ' has-art' : ''}" title="Graveyard (${P.gy.length}): tap to look" onclick="showGraveyard(${P.i})">${gyArt ? `<img class="pile-art" src="${gyArt}" alt="">` : `<span class="pile-ico" aria-hidden="true">${uiIco('zone-graveyard', '🪦', 22)}</span>`}<span class="pile-cnt">${P.gy.length}</span></button>`;
+    const gyPile = `<button type="button" class="zone-count zone-btn pile-card pile-gy${gyArt ? ' has-art' : ''}" title="Graveyard (${P.gy.length}): tap to look" onclick="showGraveyard(${P.i})">${gyArt ? `<img class="pile-art" src="${gyArt}" alt="">` : ''}<span class="pile-ico" aria-hidden="true">${uiIco('zone-graveyard', '🪦', 22)}</span><span class="pile-cnt">${P.gy.length}</span></button>`;
     // Exile (2026-11-28): a pile next to the graveyard, shown only once something is exiled
     const exPile = (P.exile || []).length ? `<button type="button" class="zone-count zone-btn pile-card pile-ex" title="Exile (${P.exile.length}): tap to look" onclick="showExile(${P.i})"><span class="pile-ico" aria-hidden="true">${uiIco('zone-exile', '🌀', 22)}</span><span class="pile-cnt">${P.exile.length}</span></button>` : '';
     const slv = typeof sleeveAttr === 'function' ? sleeveAttr(P) : { cls: '', style: '' };

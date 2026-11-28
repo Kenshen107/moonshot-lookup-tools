@@ -56,7 +56,7 @@ const { launch, openTestPage, formatChecks, printResults, writeOut, ROOT } = req
     });
     const results = formatChecks(r);
     await page.setViewportSize({ width: 412, height: 900 }); await page.waitForTimeout(300);
-    const r2 = await page.evaluate(() => { const bg = getComputedStyle(document.getElementById('game')).backgroundImage; return [['a portrait screen uses the tall mat picture', /mats\/island\/base-phone\.jpg/.test(bg), bg.slice(0, 200)], ['no sideways scroll at 412px', document.documentElement.scrollWidth <= innerWidth + 1, document.documentElement.scrollWidth]]; });
+    const r2 = await page.evaluate(() => { const bg = getComputedStyle(document.getElementById('game')).backgroundImage; return [['a portrait screen uses the tall mat picture', /mats\/island\/base-phone\.jpg/.test(bg), bg.slice(0, 200)], ['no sideways scroll at 412px', document.documentElement.scrollWidth <= innerWidth + 1, document.documentElement.scrollWidth], (() => { const g = document.querySelector('#meBar .pile-gy'); const extra = g && getComputedStyle(g, '::before').content; return ['phone graveyard pile: one icon, none added by CSS (2026-11-28)', !!g && g.querySelectorAll('.pile-ico').length === 1 && (!extra || extra === 'none' || extra === 'normal'), extra]; })()]; });
     results.push(...formatChecks(r2), ...formatChecks([['no page errors', errors.length === 0, errors.slice(0, 3)]]));
     const good = printResults('uiicons', results); writeOut('uiicons', results); await h.close(); process.exit(good ? 0 : 1);
 })().catch(e => { console.error(e); process.exit(2); });
