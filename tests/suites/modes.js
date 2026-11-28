@@ -14,6 +14,8 @@ const BODY = async function () {
     const ok = (label, cond, detail) => out.push([label, !!cond, detail]);
     ensureProfile();
     const shown = () => VIEWS.filter(k => !$(`tab-${k}`).classList.contains('hidden'));
+    // The test buttons live in the ⚙️ Menu sheet (desktopMenuSheet, 2026-11-28) instead of the header
+    const menuHasAddCoins = () => { desktopMenuSheet(); const b = [...document.querySelectorAll('#sheetHost .btn')].some(x => /Add coins/.test(x.textContent)); closeSheet(); return b; };
     const money = () => ({ coins: profile.coins, usd: profile.usd, wins: profile.wins, losses: profile.losses, freePacks: profile.freePacks });
 
     // ---- an old save (no mode fields) is read as Campaign/Shop's save; Sandbox starts fresh ----
@@ -31,12 +33,12 @@ const BODY = async function () {
     ok('Sandbox starts fresh: 500 coins, no wins', profile.coins === START_COINS && profile.wins === 0 && profile.losses === 0, money());
     ok('Sandbox shows Packs, Play, Precons, Draft, Welcome Decks, no Shop or Campaign', JSON.stringify(shown()) === JSON.stringify(['home', 'packs', 'decks', 'play', 'precons', 'draft', 'welcome', 'rules']), shown());
     ok('the collection and decks are shared', profile.collection.abc === 2 && profile.decks.length === 1);
-    ok('the test buttons show only in Sandbox', !document.querySelector('[data-modes="sandbox"]').classList.contains('hidden'));
+    ok('the test buttons show only in Sandbox', menuHasAddCoins());
     profile.coins += 4000; profile.wins = 5; profile.usd = 999; saveProfile();
     setMode('shop', { quiet: true });
     ok('Shop gets Campaign\'s money, not Sandbox\'s', profile.coins === 1234 && profile.usd === 77.5 && profile.wins === 9 && profile.losses === 4, money());
     ok('Shop shows Shop, Distributor, Decks', JSON.stringify(shown()) === JSON.stringify(['home', 'decks', 'shop', 'dist', 'rules']), shown());
-    ok('the test buttons are hidden outside Sandbox', document.querySelector('[data-modes="sandbox"]').classList.contains('hidden'));
+    ok('the test buttons are hidden outside Sandbox', !menuHasAddCoins());
     profile.usd = round2(profile.usd - 20); profile.coins -= 100; saveProfile();
     setMode('campaign', { quiet: true });
     ok('Campaign and Shop share one purse', profile.coins === 1134 && profile.usd === 57.5, money());
@@ -66,7 +68,7 @@ const BODY = async function () {
     ok('Campaign opens in Campaign', !$('view-campaign').classList.contains('hidden'));
     setMode('shop', { quiet: true });
     ok('the cash pill opens the Shop in Shop mode', modeAllows('shop'));
-    ok('the phone bottom bar follows the mode', [...document.querySelectorAll('.bottom-nav [data-v]')].filter(b => !b.classList.contains('hidden')).map(b => b.dataset.v).join() === 'home,decks,more', [...document.querySelectorAll('.bottom-nav [data-v]')].filter(b => !b.classList.contains('hidden')).map(b => b.dataset.v));
+    ok('the phone bottom bar follows the mode', [...document.querySelectorAll('.bottom-nav [data-v]')].filter(b => !b.classList.contains('hidden')).map(b => b.dataset.v).join() === 'home,decks,shop,dist,more', [...document.querySelectorAll('.bottom-nav [data-v]')].filter(b => !b.classList.contains('hidden')).map(b => b.dataset.v));
 
     // ---- Campaign deck-value limits ----
     const [k, f, r] = CAMPAIGN_TIERS;

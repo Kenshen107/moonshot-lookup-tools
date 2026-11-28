@@ -3235,7 +3235,9 @@ html[data-theme-art] .home-hero { background: linear-gradient(color-mix(in srgb,
     .sheet.card-sheet .cs-art img { max-width: 118px; border-radius: 8px; }
     .sheet.card-sheet .cs-art img.zoomed { position: fixed; left: 50%; top: 44%; transform: translate(-50%, -50%) scale(1); max-width: min(86vw, 320px); width: min(86vw, 320px); z-index: 30; box-shadow: 0 20px 60px var(--bg-canvas); }
     .sheet.card-sheet .cs-body { padding-right: 38px; }
-    .sheet.card-sheet .trk-row { flex-wrap: nowrap; gap: 4px; }
+    .sheet.card-sheet .trk-row { flex-wrap: wrap; gap: 4px; }
+    .sheet.card-sheet .trk-row > .note { flex-basis: 100%; }
+    .sheet.card-sheet .trk-row > span:first-child { min-width: 0; margin-right: auto; }
     .sheet.card-sheet .cs-head h3 { font-size: 1.02rem; }
     .sheet.card-sheet .otext { font-size: 0.84rem; padding: 8px 10px; line-height: 1.42; }
     .sheet.card-sheet .cs-actions { position: sticky; bottom: 0; background: var(--bg-panel); padding: 10px 0 4px; margin: 4px -2px 0; }

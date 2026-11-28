@@ -702,8 +702,9 @@ function fitHand() {
     if (!cards.length) return;
     const W = el.clientWidth - 56, w = cards[0].offsetWidth, n = cards.length;
     const over = n * w + (n - 1) * 6 > W && n > 1;
-    // Never shingle past 44% overlap so every card's center remains directly clickable (even with 14+ cards!)
-    const step = over ? Math.max(Math.ceil(w * 0.56), (W - w) / (n - 1)) : w + 6;
+    // Fit the fan inside the dock (a card under the pointer lifts, so a deep overlap stays clickable).
+    // A 56% minimum step (2026-11-28) pushed big hands out of the dock, so the fit wins.
+    const step = over ? (W - w) / (n - 1) : w + 6;
     cards.forEach((c, i) => {
         c.style.marginLeft = i ? `${Math.round(step - w)}px` : '0';
         // A gentle fan: small tilt, outer cards dip a little

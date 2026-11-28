@@ -24,8 +24,10 @@ const BODY = async function () {
     ok('"Got it" closes it', !open());
     document.querySelector('footer a').click();
     ok('the footer link opens it', open()); closeModal();
-    const hb = [...document.querySelectorAll('.topbar .btn')].find(b => /About/.test(b.textContent));
-    ok('the header has an About button', !!hb);
+    // About moved from the header into the ⚙️ Menu sheet (desktopMenuSheet, 2026-11-28)
+    desktopMenuSheet();
+    const hb = [...document.querySelectorAll('#sheetHost .btn')].find(b => /About/.test(b.textContent));
+    ok('the ⚙️ Menu has About', !!hb); closeSheet();
     moreSheet();
     const mb = [...document.querySelectorAll('#sheetHost .btn')].find(b => /About/.test(b.textContent));
     ok('the More sheet has About', !!mb);

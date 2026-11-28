@@ -11,10 +11,10 @@ const { launch, openTestPage, installHelpers, formatChecks, printResults, writeO
     const r = await page.evaluate(async () => {
         const out = []; const ok = (l, c, d) => out.push([l, !!c, d]);
         try {
-            const btn = () => [...document.querySelectorAll('.topbar .btn, header .btn')].find(b => /Add money/.test(b.textContent));
-            const shown = () => { const b = btn(); return !!b && getComputedStyle(b).display !== 'none'; };
+            // The test buttons live in the ⚙️ Menu sheet (desktopMenuSheet, 2026-11-28) instead of the header
+            const shown = () => { desktopMenuSheet(); const b = [...document.querySelectorAll('#sheetHost .btn')].find(x => /Add money/.test(x.textContent)); closeSheet(); return !!b; };
             setMode('campaign'); applyModeUI(true);
-            ok('Campaign: the header has ＋ Add money', shown());
+            ok('Campaign: the ⚙️ Menu has ＋ Add money', shown());
             const c0 = profile.coins, u0 = profile.usd, a0 = ascentState().aether;
             addMoneyPanel();
             ok('the panel opens with coins, shop cash and Aether', document.querySelectorAll('#modalHost .add-money .am-row').length === 3);
