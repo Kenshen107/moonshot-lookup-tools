@@ -28,10 +28,7 @@
         <button type="button" class="coins cash" id="cashPill" data-modes="shop" onclick="cashPillClick()" title="Shop cash: in-game money. Earn it in the Shop; spend it at the Distributor and on imported decks. Tap to open the Shop."><span class="cur" data-ico="cur-cash">💵</span> <span id="cashCount">$0.00</span></button>
         <span class="coins aether" id="aetherPill" data-modes="campaign" title="Aether: Ascent's crafting currency. Dust spare cards to earn it."><span class="cur" data-ico="cur-aether">✨</span> <span id="aetherCount">0</span></span>
         <button type="button" class="btn small desk-only" id="lockerBtn" onclick="lookPanel()" title="Locker: looks, sleeves, playmats and companions">🎨 Locker</button>
-        <button type="button" class="btn small desk-only" onclick="aboutPanel()" title="What this game is, what it can do, and what changed lately">ℹ️ About</button>
-        <button class="btn small" data-modes="campaign shop" onclick="addMoneyPanel()" title="Test build: add free coins, shop cash or Aether">＋ Add money</button>
-        <button class="btn small" data-modes="sandbox" onclick="addTestCoins()" title="Test build: add free coins to this player">＋🪙 Add coins</button>
-        <button class="btn small" data-modes="sandbox" onclick="restartPlayer()" title="Test build: wipe this player's coins, cards, decks and record and start fresh">↺ Start over</button>
+        <button type="button" class="btn small desk-only" id="deskMenuBtn" onclick="desktopMenuSheet()" title="Menu: rules, records, about and test options">⚙️ Menu</button>
         <button type="button" class="btn small phone-only" id="acctBtn" onclick="accountSheet()" aria-label="Player and test options">👤 <span id="acctName"></span></button>
     </header>
 
@@ -59,17 +56,19 @@
                 <div class="home-kicker">Test build · fan-made</div>
                 <h2 class="home-title">Spellslinger Duels</h2>
                 <p class="home-tag">Crack packs, build a deck and duel real Magic decks. Free coins, real pack odds.</p>
+                <div class="home-quick" id="homeQuickPlay"></div>
                 <div class="home-stats" id="homeStats"></div>
             </div>
             <div class="home-actions">
-                <button class="home-tile t-play" data-needs="play" onclick="showView('play')"><span class="ht-ico">⚔️</span><span class="ht-name">Play a game</span><span class="ht-sub">Pick a deck and an opponent</span></button>
+                <button class="home-tile t-play" data-needs="play" onclick="showView('play')"><span class="ht-ico">⚔️</span><span class="ht-name">Play a game</span><span class="ht-sub">1v1, 4P Commander &amp; more</span></button>
                 <button class="home-tile t-packs" data-needs="packs" onclick="showView('packs')"><span class="ht-ico">🎴</span><span class="ht-name">Open packs</span><span class="ht-sub">Any set, Alpha to today</span></button>
                 <button class="home-tile t-draft" data-needs="draft" onclick="showView('draft')"><span class="ht-ico">🃏</span><span class="ht-name">Draft</span><span class="ht-sub">8 players, 3 packs, 3 rounds</span></button>
                 <button class="home-tile t-welcome" data-needs="welcome" onclick="showView('welcome')"><span class="ht-ico">🎁</span><span class="ht-name">Welcome Deck Duels</span><span class="ht-sub">Battle a ready-made deck</span></button>
                 <button class="home-tile t-precon" id="homePrecon" onclick="preconPicker()"><span class="ht-ico">✨</span><span class="ht-name">Free starter precon</span><span class="ht-sub">Pick your first deck</span></button>
+                <button class="home-tile t-locker" onclick="lookPanel()"><span class="ht-ico">🎨</span><span class="ht-name">Locker</span><span class="ht-sub">Looks, sleeves, playmats &amp; pets</span></button>
             </div>
-            <div class="panel home-card">
-                <h3>🗺️ How it works</h3>
+            <details class="panel home-card home-fold">
+                <summary>🗺️ How it works</summary>
                 <ol class="home-steps">
                     <li><span class="hs-n">1</span><div><strong>Packs</strong><span>Spend coins on packs from any set. What's inside follows the real pack odds (MTGJSON).</span></div></li>
                     <li><span class="hs-n">2</span><div><strong>Decks</strong><span><strong>Modern</strong> (60 cards, up to 4 of each) or <strong>Commander</strong> (100 cards, singleton, plus a commander). Basic lands are free, or grab a starter deck.</span></div></li>
@@ -77,11 +76,11 @@
                     <li><span class="hs-n">4</span><div><strong>Earn</strong><span>150 coins for a win (200 in Commander), 40 for trying.</span></div></li>
                     <li><span class="hs-n">5</span><div><strong>Shop</strong><span>Run a card shop: fill your display case, haggle with customers and close up each day (rent is due). Every card has a condition, and a rare few are serialized.</span></div></li>
                 </ol>
-            </div>
-            <div class="panel home-card">
-                <h3>📚 Card library</h3>
+            </details>
+            <details class="panel home-card home-fold">
+                <summary>📚 Card library coverage</summary>
                 <div class="coverage" id="homeCoverage"></div>
-            </div>
+            </details>
             <details class="panel home-card home-engine">
                 <summary>⚙️ What the rules engine does (and doesn't, yet)</summary><div class="home-engine-body">
                 <p class="note">This is a base model. It plays real turns: untap, draw, a land a turn, mana from lands and mana rocks, summoning sickness, combat with attackers and blockers, and Commander damage and commander tax. These keywords work: flying, reach, trample, first strike, double strike, deathtouch, lifelink, vigilance, haste, defender, menace, indestructible and hexproof. Card text is read automatically: damage, destroy / exile / bounce, draw, life gain and loss, pump spells, +1/+1 counters, tapping, tokens, discard, auras and equipment that give +N/+N, and "when this enters" effects.</p>

@@ -51,6 +51,19 @@ function renderHome() {
     const owned = Object.values(profile.collection).reduce((a, b) => a + b, 0);
     const chip = (ico, n, label) => `<div class="hstat"><span class="hs-ico">${ico}</span><strong>${n}</strong><span>${label}</span></div>`;
     const plural = (n, w, pl) => n === 1 ? w : (pl || w + 's');
+    const qp = $('homeQuickPlay');
+    if (qp) {
+        const m = modeKey();
+        if (m === 'campaign') {
+            qp.innerHTML = `<button type="button" class="btn primary home-cta" onclick="showView('campaign')">🗺️ Continue Ascent</button><button type="button" class="btn gold" onclick="lookPanel()">🎨 Locker</button>`;
+        } else if (m === 'shop') {
+            qp.innerHTML = `<button type="button" class="btn primary home-cta" onclick="showView('shop')">🏪 Open Your Shop</button><button type="button" class="btn" onclick="showView('dist')">📦 Distributor</button>`;
+        } else if (!profile.decks.length && !profile.starterDeck) {
+            qp.innerHTML = `<button type="button" class="btn primary home-cta" onclick="preconPicker()">✨ Pick Your Free Starter Deck</button><button type="button" class="btn gold" onclick="showView('packs')">🎴 Open Free Packs</button>`;
+        } else {
+            qp.innerHTML = `<button type="button" class="btn primary home-cta" onclick="showView('play')">⚔️ Play Now</button><button type="button" class="btn gold" onclick="showView('packs')">🎴 Open Packs${profile.freePacks ? ` (${profile.freePacks} free)` : ''}</button><button type="button" class="btn" onclick="showView('decks')">🗂️ Decks (${profile.decks.length})</button>`;
+        }
+    }
     $('homeStats').innerHTML =
         chip('🪙', profile.coins.toLocaleString(), 'coins') +
         (profile.freePacks ? chip('🎁', profile.freePacks, `free ${plural(profile.freePacks, 'pack')} to open`) : '') +
@@ -871,6 +884,15 @@ function mxColorsHTML(all) {
     const target = editing.format === 'casual' ? 40 : FORMATS[editing.format].size;
     const fill = Math.max(0, target - deckCount(editing));
     const allowed = cmd ? COLORS.filter(c => cmdCi.includes(c)) : COLORS;
+    // Live Land Count Recommendation (scaled by format + average nonland mana value)
+    const curLands = all.filter(({ c }) => rulesFor(c).kind === 'land').reduce((a, e) => a + e.n, 0);
+    const nonLands = all.filter(({ c }) => rulesFor(c).kind !== 'land');
+    const nlCount = nonLands.reduce((a, e) => a + e.n, 0);
+    const avgMv = nlCount ? nonLands.reduce((a, e) => a + (e.c.cmc || 0) * e.n, 0) / nlCount : 2.8;
+    const baseRec = editing.format === 'commander' ? 37 : editing.format === 'limited' ? 17 : editing.format === 'casual' ? 17 : 24;
+    const recLands = Math.max(12, Math.min(44, Math.round(baseRec + (avgMv - 2.8) * (editing.format === 'commander' ? 2.2 : 1.5))));
+    const landDiff = recLands - curLands;
+    const landTip = `<div class="land-rec ${Math.abs(landDiff) <= 2 ? 'ok' : 'warn'}">🗺️ Lands: <strong>${curLands}</strong> / ~${recLands} recommended${landDiff > 2 ? ` · add ~${landDiff} more` : landDiff < -2 ? ` · could cut ~${-landDiff}` : ' · looking balanced ✓'}</div>`;
     return `${cols.length ? cols.map(c => {
         const ps = pct(sym[c], ts), pp = pct(prod[c], tp), short = ts && pp + 10 < ps;
         return `<div class="mx-color">
@@ -879,6 +901,7 @@ function mxColorsHTML(all) {
             <div class="mx-cbar" title="${prod[c]} land${prod[c] === 1 ? '' : 's'} and mana source${prod[c] === 1 ? '' : 's'} that make ${BX_COLOR_NAMES[c].toLowerCase()}"><span class="lbl">Mana</span><span class="track"><i class="m-${c}" style="width:${pp}%"></i></span><span class="v">${pp}%</span></div>
         </div>`;
     }).join('') : '<p class="note">Add some colored cards to see how your mana lines up.</p>'}
+        ${landTip}
         <div class="lane-label" style="margin-top:10px;">Quick add basics</div>
         <div class="row">${allowed.map(c => `<button type="button" class="btn small" onclick="addBasic('${c}')"><span class="pip ${c}"></span> ${BASIC_FOR[c]}</button>`).join('')}</div>
         <div class="row" style="margin-top:6px;"><button type="button" class="btn small" onclick="fillBasics()"${fill && ts ? '' : ' disabled'}>Fill to ${target} with basics${fill ? ` (+${fill})` : ''}</button><span class="note">split by your cost symbols</span></div>`;

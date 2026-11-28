@@ -2849,7 +2849,7 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
     #game.open-board #midBar .stack-item { padding: 2px 6px 2px 2px; font-size: 0.74rem; max-width: 184px; }
     #game.open-board #midBar .stack-item img { width: 24px; }
     #game.open-board #midBar .turn-btn { min-height: 44px; min-width: 86px; padding: 4px 10px; font-size: 0.82rem; }
-    #game.open-board #midBar .combat-pill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.66rem; padding: 1px 7px; }
+    #game.open-board #midBar .combat-pill { max-width: 100%; white-space: normal; line-height: 1.25; font-size: 0.66rem; padding: 2px 7px; }
     #game.open-board #midBar .prompt { font-size: 0.76rem; line-height: 1.25; }
 
     /* 5. Compact non-blocking opponent speech bubbles & mobile-friendly Locker modal */
@@ -3095,3 +3095,59 @@ html[data-theme-art] .home-hero { background: linear-gradient(color-mix(in srgb,
 @keyframes ml-fire-swell { 0%, 100% { transform: scale(1.005); } 50% { transform: scale(1.025); } }
 @keyframes ml-sway { 0%, 100% { transform: scale(1.015) rotate(0deg); } 30% { transform: scale(1.02) rotate(0.25deg); } 70% { transform: scale(1.02) rotate(-0.25deg); } }
 @media (prefers-reduced-motion: reduce) { .mat-layer { animation: none !important; } #deskProp { transition: none; } #game.has-lifeskin #meBar .life.skin-roll::after { animation: none; } }
+
+/* ===== Play Experience Overhaul (Stages 1–4, 2026-11-28) ===== */
+/* Stage 1: 1-Tap Home Hero CTA, Locker tile, collapsible Home reference folds */
+.home-quick { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 14px 0 6px; }
+.home-quick .home-cta { padding: 11px 22px; font-size: 1.02rem; font-weight: 700; box-shadow: 0 4px 18px color-mix(in srgb, var(--brand) 42%, transparent); }
+.home-tile.t-locker { border-color: color-mix(in srgb, var(--gold) 50%, var(--border)); }
+.home-fold { padding: 12px 16px; }
+.home-fold > summary { cursor: pointer; font-weight: 700; font-size: 0.98rem; color: var(--text-heading); list-style: none; display: flex; align-items: center; justify-content: space-between; }
+.home-fold > summary::-webkit-details-marker { display: none; }
+.home-fold > summary::after { content: "▾"; color: var(--text-muted); font-size: 0.9rem; transition: transform 0.2s; }
+.home-fold[open] > summary::after { transform: rotate(180deg); }
+.home-fold[open] > summary { margin-bottom: 10px; }
+
+/* Stage 2: Mobile bottom-sheet card inspector + Dedicated Landscape Phone Mode */
+@media (max-width: 600px) {
+    .sheet-bg { align-items: flex-end; padding: 0; }
+    .sheet { width: 100%; max-width: 100%; max-height: 88vh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 14px 14px calc(12px + env(safe-area-inset-bottom)); gap: 10px; }
+    .sheet:not(.one) { grid-template-columns: 112px 1fr; }
+    .sheet:not(.one) img { max-width: 112px; border-radius: var(--radius-sm); }
+    .sheet .actions { position: sticky; bottom: 0; background: var(--bg-panel); padding: 10px 0 2px; border-top: 1px solid var(--border-subtle); margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .sheet .actions .btn.primary { flex: 1 1 100%; min-height: 42px; font-size: 0.96rem; font-weight: 700; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+    #game.open-board .pbar { padding: 2px 8px; gap: 4px 6px; min-height: 32px; height: 36px; }
+    #game.open-board .pbar .who, #game.open-board .av-crest, #game.open-board .arena-av { display: none; }
+    #game.open-board .pile-card { width: 26px; height: 32px; }
+    #game.open-board .life { width: 32px; height: 32px; font-size: 0.9rem; }
+    #game.open-board .side { padding: 1px 8px; gap: 1px; }
+    #game.open-board .board-sum { font-size: 0.62rem; padding: 0 5px; }
+    #game.open-board #midBar { padding: 1px 10px; gap: 2px; }
+    #game.open-board #midBar .phase-strip.rail { padding: 1px 6px; font-size: 0.68rem; }
+    #game.open-board #midBar .mid-controls .btn { min-height: 26px; padding: 2px 8px; font-size: 0.72rem; }
+    #game.open-board #midBar .turn-btn { min-height: 34px; min-width: 82px; padding: 3px 10px; font-size: 0.78rem; }
+    #game.open-board:not(.phone-hand-open) .dock .hand { height: 44px; max-height: 44px; overflow-y: hidden; scrollbar-width: none; }
+    #game.open-board:not(.phone-hand-open) .dock .hand .hc { height: 42px; overflow: hidden; }
+    #game.open-board #logToggle { right: 54px; }
+}
+
+/* Stage 3: Live Lethal Combat Math, Stack Top Glow, & Post-Match Summary */
+.combat-pill.is-lethal { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 24%, var(--bg-panel)); box-shadow: 0 0 12px color-mix(in srgb, var(--danger) 40%, transparent); }
+.lethal-tag { color: var(--color-warning); letter-spacing: 0.02em; }
+.stack-item.top { border-color: var(--gold); box-shadow: 0 0 10px color-mix(in srgb, var(--gold) 35%, transparent); }
+.end-summary { text-align: center; }
+.end-summary .end-reason { margin: 4px 0 12px; color: var(--text-soft); }
+.end-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 8px; margin: 12px 0; }
+.es-card { background: var(--bg-inset); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.es-card strong { font-size: 1.15rem; color: var(--text-heading); font-family: 'Chakra Petch', sans-serif; }
+.es-card span { font-size: 0.74rem; color: var(--text-muted); }
+.es-card.gold { border-color: color-mix(in srgb, var(--gold) 55%, var(--border)); }
+.es-card.gold strong { color: var(--gold); }
+
+/* Stage 4: Deck Builder Live Land Recommendation */
+.land-rec { margin-top: 10px; padding: 6px 10px; border-radius: var(--radius-sm); font-size: 0.84rem; background: var(--bg-inset); border: 1px solid var(--border-subtle); }
+.land-rec.ok { border-color: color-mix(in srgb, var(--color-success) 45%, var(--border)); color: var(--color-success); }
+.land-rec.warn { border-color: color-mix(in srgb, var(--color-warning) 50%, var(--border)); color: var(--color-warning); }
+@media (prefers-reduced-motion: reduce) { .home-fold > summary::after { transition: none; } }

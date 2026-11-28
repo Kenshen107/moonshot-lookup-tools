@@ -451,7 +451,10 @@ function packSummary(areaId) {
     const best = cards.slice().sort((a, b) => pullValue(b) - pullValue(a))[0];
     const sum = $(`sum-${areaId}`);
     if (REVEALS[areaId].pack.isHits) { sum.innerHTML = `That's the best of the box: ${cards.length} hits worth about ${usd(total)} together. Tap any card above for details.`; sum.classList.remove('hidden'); return; }
-    sum.innerHTML = `${cards.length} cards added to your collection${best ? ` · best pull: <strong>${esc(best.card.name)}</strong> (${usd(pullValue(best))})` : ''} · pack total about ${usd(total)} (Scryfall's TCGplayer prices × condition × today's market). Tap a card above for details.`;
+    const again = areaId === 'packArea'
+        ? `<div class="row" style="justify-content:center; margin-top:10px; gap:8px;"><button type="button" class="btn gold" onclick="buyPack('${/collector/i.test(REVEALS[areaId].pack.name || '') ? 'collector' : 'play'}')">🎴 Open another pack</button>${modeAllows('decks') ? '<button type="button" class="btn" onclick="showView(\'decks\')">🗂️ Go to Decks</button>' : ''}</div>`
+        : '';
+    sum.innerHTML = `${cards.length} cards added to your collection${best ? ` · best pull: <strong>${esc(best.card.name)}</strong> (${usd(pullValue(best))})` : ''} · pack total about ${usd(total)} (Scryfall's TCGplayer prices × condition × today's market). Tap a card above for details.${again}`;
     sum.classList.remove('hidden');
 }
 

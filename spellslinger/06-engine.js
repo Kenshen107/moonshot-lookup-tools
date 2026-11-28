@@ -1738,6 +1738,7 @@ function instantOptions(P) {
 // Sandman's graveyard ability "can be activated like an instant")
 async function humanWindow(P, label) {
     G.priority = P.i;
+    if (G.autoPassTurn === G.turn && !P.isAI) { G.priority = null; return false; }
     const prevMode = G.mode && G.mode.type !== 'respond' ? G.mode : null;
     const prevBusy = G.busy;
     await actDrain();
@@ -1816,6 +1817,7 @@ async function offerPriority(P, top) {
         await castSpellAsResponse(P, r.o, r.target);
         return true;
     }
+    if (G.autoPassTurn === G.turn && !P.isAI) { G.priority = null; return false; }
     const prevMode = G.mode && G.mode.type !== 'respond' ? G.mode : null;
     const prevBusy = G.busy;
     await actDrain();
@@ -1836,6 +1838,23 @@ function passPriority() {
     const m = G.mode;
     if (m && m.type === 'respond') m.resolve(false);
 }
+function toggleAutoPass() {
+    if (!G || G.over) return;
+    G.autoPassTurn = G.autoPassTurn === G.turn ? null : G.turn;
+    if (G.autoPassTurn === G.turn) {
+        toast('⏩ Auto-passing remaining responses this turn.');
+        if (G.mode && G.mode.type === 'respond') passPriority();
+    } else {
+        toast('⏸ Auto-pass cancelled.');
+    }
+    renderGame();
+}
+document.addEventListener('keydown', e => {
+    if (e.shiftKey && e.key === 'Enter' && typeof G !== 'undefined' && G && !G.over && $('game') && !$('game').classList.contains('hidden')) {
+        e.preventDefault();
+        toggleAutoPass();
+    }
+});
 
 async function resolveTop() {
     const item = G.stack.pop();
@@ -5053,13 +5072,25 @@ function endGame(winner, reason) {
     window.lastResult = { winner, reason, turns: G.turn };
     renderGame();
     if (AUTOPLAY) return;
-    showModal(`<h2>${winner === null ? '🤝 Draw' : won ? '🏆 You win!' : '💀 You lose'}</h2>${typeof ascResultFlair === 'function' && winner !== null ? ascResultFlair(won) : ''}
-        <p>${esc(reason)}</p><p class="note">${G.turn} turns${G.campaign || G.draftRound !== undefined ? '' : ` · 🪙 +${reward} coins`}</p>${talk ? talk.html : ''}${campLine ? `<p class="ok">${esc(campLine)}</p>` : ''}
-        <div class="row" style="justify-content:center; margin-top:14px;">
-            ${G.draftRound !== undefined ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'draft\');">🃏 Back to the draft</button>' : G.campaign ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'campaign\');">🗺️ Back to the map</button>' : '<button class="btn primary" onclick="closeModal(); leaveGame(); startMatch(true);">Play again</button>'}
-            <button class="btn gold" onclick="closeModal(); leaveGame(); showView('packs');">🎴 Open packs</button>
-            <button class="btn" onclick="closeModal(); leaveGame();">Back</button>
-        </div>`);
+    const meP = G.players[0];
+    const myCrs = meP ? meP.bf.filter(isCreature).length : 0;
+    const myGy = meP ? meP.gy.length : 0;
+    const myLife = meP ? meP.life : 0;
+    const endStats = `<div class="end-stats">
+        <div class="es-card"><strong>${G.turn}</strong><span>Turns</span></div>
+        <div class="es-card"><strong>${myLife}</strong><span>Your life</span></div>
+        <div class="es-card"><strong>${myCrs}</strong><span>Creatures</span></div>
+        <div class="es-card"><strong>${myGy}</strong><span>Graveyard</span></div>
+        ${G.campaign || G.draftRound !== undefined ? '' : `<div class="es-card gold"><strong>+${reward}</strong><span>🪙 Coins</span></div>`}
+    </div>`;
+    showModal(`<div class="end-summary ${winner === null ? 'draw' : won ? 'win' : 'loss'}"><h2>${winner === null ? '🤝 Draw' : won ? '🏆 Victory!' : '💀 Defeat'}</h2>${typeof ascResultFlair === 'function' && winner !== null ? ascResultFlair(won) : ''}
+        <p class="end-reason">${esc(reason)}</p>${endStats}${talk ? talk.html : ''}${campLine ? `<p class="ok">${esc(campLine)}</p>` : ''}
+        <div class="row" style="justify-content:center; margin-top:14px; gap:8px;">
+            ${G.draftRound !== undefined ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'draft\');">🃏 Back to the draft</button>' : G.campaign ? '<button class="btn primary" onclick="closeModal(); leaveGame(); showView(\'campaign\');">🗺️ Back to the map</button>' : '<button class="btn primary" onclick="closeModal(); leaveGame(); startMatch(true);">🔁 Rematch</button>'}
+            ${modeAllows('decks') ? '<button class="btn" onclick="closeModal(); leaveGame(); showView(\'decks\');">🗂️ Decks</button>' : ''}
+            ${modeAllows('packs') ? '<button class="btn gold" onclick="closeModal(); leaveGame(); showView(\'packs\');">🎴 Open packs</button>' : ''}
+            <button class="btn" onclick="closeModal(); leaveGame();">🏠 Lobby</button>
+        </div></div>`);
 }
 // A pass-and-play game: each account gets its own win or loss and coins
 function endFriendGame(winner, reason) {

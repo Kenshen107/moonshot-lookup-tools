@@ -487,16 +487,36 @@ function stackClick(id) {
 }
 
 function combatBannerHTML() {
-    if (!G || G.players.length <= 2 || !G.attackers || !G.attackers.length) return '';
+    if (!G || G.over) return '';
+    const picking = G.mode && G.mode.type === 'attack' && G.mode.sel && G.mode.sel.size > 0;
+    const uids = picking ? [...G.mode.sel] : (G.attackers || []);
+    if (!uids.length) return '';
     const att = G.players[G.active];
     if (!att) return '';
-    const objs = G.attackers.map(onBf).filter(Boolean);
+    const objs = uids.map(onBf).filter(Boolean);
     if (!objs.length) return '';
     const tot = objs.reduce((n, o) => n + Math.max(0, pow(o)), 0);
+    // Live unblocked damage math (accounts for blockers, double strike, and trample)
+    let unblocked = 0;
+    objs.forEach(o => {
+        const p = Math.max(0, pow(o));
+        const mult = has(o, 'double strike') ? 2 : 1;
+        const blks = ((G.blocks && G.blocks[o.uid]) || []).map(onBf).filter(Boolean);
+        if (!blks.length) { unblocked += p * mult; }
+        else if (has(o, 'trample')) {
+            const soak = blks.reduce((s, b) => s + Math.max(0, tou(b) - (b.dmg || 0)), 0);
+            unblocked += Math.max(0, p * mult - soak);
+        }
+    });
     const defs = [...new Set(objs.map(o => o.atkTo != null ? o.atkTo : G.defender).filter(i => i != null && G.players[i]))];
-    const defText = defs.length ? defs.map(i => G.players[i] === me() ? 'You' : who(G.players[i]).split(',')[0]).join(' & ') : '';
-    const hitsMe = defs.includes(me().i);
-    return `<div class="combat-pill${hitsMe ? ' danger' : ''}" role="status">⚔️ <strong>${att === me() ? 'You' : esc(who(att).split(',')[0])}</strong>${defText ? ` → <strong>${esc(defText)}</strong>` : ''} <span>· ${objs.length} ${objs.length === 1 ? 'attacker' : 'attackers'} · ${tot} power</span></div>`;
+    const primaryDef = defs.length === 1 ? G.players[defs[0]] : (G.players.length === 2 ? G.players[1 - att.i] : null);
+    const defText = defs.length ? defs.map(i => G.players[i] === me() ? 'You' : who(G.players[i]).split(',')[0]).join(' & ') : (primaryDef ? (primaryDef === me() ? 'You' : who(primaryDef).split(',')[0]) : '');
+    const hitsMe = defs.includes(me().i) || (primaryDef === me());
+    const lethal = primaryDef && unblocked >= primaryDef.life;
+    const dmgNote = unblocked > 0
+        ? (lethal ? ` · <strong class="lethal-tag">💀 LETHAL (${unblocked} dmg)</strong>` : ` · 💥 ${unblocked} unblocked${primaryDef ? ` (${defText} → ${Math.max(0, primaryDef.life - unblocked)})` : ''}`)
+        : ' · 🛡️ All blocked';
+    return `<div class="combat-pill${hitsMe || lethal ? ' danger' : ''}${lethal ? ' is-lethal' : ''}" role="status">⚔️ <strong>${att === me() ? 'You' : esc(who(att).split(',')[0])}</strong>${defText ? ` → <strong>${esc(defText)}</strong>` : ''} <span>· ${objs.length} ${objs.length === 1 ? 'attacker' : 'attackers'} (${tot} pwr)${dmgNote}</span></div>`;
 }
 
 // The mid bar: the phase strip, what you can do now, and the turn button,
@@ -565,8 +585,9 @@ function midControlsHTML() {
     }
     if (m && m.type === 'respond') {
         const it = m.item;
-        if (it.window) return `${phase}<span class="prompt">⏳ ${esc(it.name)}: cast an instant or activate an ability, or:</span><button class="btn primary act-resolve" onclick="passPriority()">✔ Continue</button>`;
-        return `${phase}<span class="prompt">↩️ ${esc(it.name)}${it.target ? ` (targeting ${esc(targetName(it.target))})` : ''} is on the stack.</span><button class="btn primary act-resolve" onclick="passPriority()">${uiIco('act-pass', '✔', 18)} Resolve</button>`;
+        const apBtn = `<button type="button" class="btn small" onclick="toggleAutoPass()" title="Auto-pass all remaining priority stops this turn (Shift+Enter)">⏩ Auto-pass turn</button>`;
+        if (it.window) return `${phase}<span class="prompt">⏳ ${esc(it.name)}: cast an instant or activate an ability, or:</span><button class="btn primary act-resolve" onclick="passPriority()">✔ Continue</button>${apBtn}`;
+        return `${phase}<span class="prompt">↩️ ${esc(it.name)}${it.target ? ` (targeting ${esc(targetName(it.target))})` : ''} is on the stack.</span><button class="btn primary act-resolve" onclick="passPriority()">${uiIco('act-pass', '✔', 18)} Resolve</button>${apBtn}`;
     }
     if (m && m.type === 'block') {
         return `${phase}<span class="prompt">🛡️ ${m.picked && onBf(m.picked) ? `Now tap the attacker ${esc(onBf(m.picked).card.name.split(',')[0])} should block` : 'Tap one of your creatures, then the attacker it blocks. You can cast instants now.'}</span><button class="btn primary" onclick="confirmBlocks()">${uiIco('act-block', '✔', 18)} Done blocking</button>`;
@@ -578,7 +599,8 @@ function midControlsHTML() {
         if (G.phase === 'afterBlocks') return `<span class="prompt">Blocks are set. Cast a trick now, or:</span><button class="btn primary act-atk" onclick="dealDamage()">${uiIco('phase-damage', '💥', 18)} Deal damage</button>`;
         if (G.phase === 'main2') return hintHTML || '<span class="hint">Second main phase: cast anything else, then end your turn.</span>';
     }
-    return `<span class="note">${G.players[G.active] && G.players[G.active].isAI && G.active !== G.view ? `${esc(turnName())} is thinking…` : ''}</span>`;
+    const apActive = G.autoPassTurn === G.turn ? `<button type="button" class="btn small gold" onclick="toggleAutoPass()" title="Click to stop auto-passing">⏩ Auto-passing (Cancel)</button>` : '';
+    return `${apActive}<span class="note">${G.players[G.active] && G.players[G.active].isAI && G.active !== G.view ? `${esc(turnName())} is thinking…` : ''}</span>`;
 }
 
 function handHTML() {

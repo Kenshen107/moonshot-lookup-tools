@@ -84,6 +84,18 @@ function setHTML(el, html) {
 const isPhone = () => window.matchMedia('(max-width: 600px)').matches;
 function menuSheet(title, inner) { $('sheetHost').innerHTML = `<div class="sheet-bg" onclick="if (event.target === this) closeSheet()"><div class="sheet one" role="dialog" aria-label="${esc(title)}"><div><h3>${esc(title)}</h3>${inner}<div class="actions"><button class="btn" onclick="closeSheet()">Close</button></div></div></div></div>`; }
 function moreSheet() { menuSheet('More', `<div class="menu-list"><button class="btn" onclick="closeSheet(); lookPanel()">🎨 Locker (looks, sleeves, companions)</button>${MORE_VIEWS.filter(([k]) => modeAllows(k)).map(([k, label]) => `<button class="btn${$(`view-${k}`).classList.contains('hidden') ? '' : ' primary'}" onclick="showView('${k}')">${label}</button>`).join('')}<button class="btn" onclick="closeSheet(); aboutPanel()">ℹ️ About</button><button class="btn" onclick="closeSheet(); recordsPanel()">📋 Game records</button></div>`); }
+function desktopMenuSheet() {
+    const m = modeKey();
+    menuSheet('Menu', `<div class="menu-list">
+        <button class="btn" onclick="closeSheet(); lookPanel()">🎨 Locker (looks, sleeves, playmats &amp; pets)</button>
+        ${modeAllows('rules') ? '<button class="btn" onclick="closeSheet(); showView(\'rules\')">📖 Comprehensive Rules</button>' : ''}
+        <button class="btn" onclick="closeSheet(); recordsPanel()">📋 Game records</button>
+        <button class="btn" onclick="closeSheet(); aboutPanel()">ℹ️ About Spellslinger Duels</button>
+        <hr style="border:0; border-top:1px solid var(--border-subtle); margin:4px 0;">
+        ${m !== 'sandbox' ? '<button class="btn" onclick="closeSheet(); addMoneyPanel()">＋ Add money (test build)</button>' : ''}
+        ${m === 'sandbox' ? '<button class="btn" onclick="closeSheet(); addTestCoins()">＋🪙 Add coins (test build)</button><button class="btn danger" onclick="closeSheet(); restartPlayer()">↺ Start over (test build)</button>' : ''}
+    </div>`);
+}
 function accountSheet() {
     menuSheet('Player', `<label class="note" for="acctSel2">Who's playing</label>
         <select id="acctSel2" onchange="closeSheet(); pickAccount(this.value)" style="width:100%; margin-top:4px;">${$('acctSel').innerHTML}</select>
