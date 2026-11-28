@@ -9,13 +9,16 @@ const COMPANION_RIGS = {
     'ember-drake': {
         dir: 'spellslinger/art/companions/ember-drake/', w: 440, h: 430,
         parts: [
-            { k: 'wingB', src: 'wing.png', x: 92, y: 96, s: 200, px: 470, py: 250, flip: true, dim: 0.72 },
-            { k: 'tail', src: 'tail.png', x: 22, y: 222, s: 200, px: 480, py: 60, flip: true },
+            { k: 'wingB', src: 'wing.png', x: 44, y: 98, s: 200, px: 22, py: 255, flip: true, dim: 0.7, r0: 22 },
+            { k: 'wingF', src: 'wing.png', x: 248, y: 98, s: 200, px: 22, py: 255, r0: -22 },
+            { k: 'tail', src: 'tail.png', x: 22, y: 222, s: 200, px: 32, py: 60, flip: true },
             { k: 'body', src: 'body.png', x: 110, y: 150, s: 250, px: 256, py: 500 },
-            { k: 'wingF', src: 'wing.png', x: 236, y: 92, s: 200, px: 40, py: 250 },
             { k: 'head', src: 'head.png', x: 186, y: 4, s: 196, px: 256, py: 470 }
         ],
-        ember: { part: 'tail', x: 462, y: 64 } // the tail's flame tip, in the tail's own 512 pixels (before the flip)
+        ember: { part: 'tail', x: 462, y: 64 }, // the tail's flame tip, in the tail's own 512 pixels (before the flip)
+        glow: { part: 'tail', x: 450, y: 120 }, // the middle of the tail's flame, where the flicker glow sits
+        mouth: { part: 'head', x: 352, y: 392 }, // where fire breath comes out, in the head's own 512 pixels
+        faces: ['happy', 'angry', 'scared', 'sleepy', 'cheer', 'blink'] // optional face-<name>.png head variants (used when the files exist)
     }
 };
 const COMP = { live: [], raf: 0, last: 0, dock: null, ctl: null, seen: null, idleSince: 0, mx: null, my: null };
@@ -41,14 +44,23 @@ function compMount(host, id, opts = {}) {
         if (p.dim) im.style.filter = `brightness(${p.dim})`;
         im.addEventListener('error', () => { stage.classList.add('comp-missing'); });
         box.appendChild(im); inner.appendChild(box); els[p.k] = box;
+        if (rig.glow && rig.glow.part === p.k) { // a flickering glow on the tail's flame, moving with the tail
+            const g = document.createElement('span'); g.className = 'comp-flame';
+            g.style.left = `${(p.flip ? 512 - rig.glow.x : rig.glow.x) * sc}px`; g.style.top = `${rig.glow.y * sc}px`;
+            box.appendChild(g);
+        }
     });
+    const faces = {}, headImg = els.head && els.head.querySelector('img');
+    (rig.faces || []).forEach(f => { const t = new Image(); t.onload = () => { faces[f] = t.src; }; t.src = `${rig.dir}face-${f}.png`; });
     stage.appendChild(inner); host.appendChild(stage);
-    const ctl = { id, rig, el: stage, inner, els, preview: !!opts.preview, t0: performance.now(), act: null, mood: null,
-        react(kind, ms) { if (compReduced()) return; this.act = { kind, t0: performance.now(), ms: ms || COMP_REACT_MS[kind] || 1000 }; if (kind === 'happy' || kind === 'cheer' || kind === 'win') compSparks(this, kind); },
+    const ctl = { id, rig, el: stage, inner, els, faces, headImg, headSrc: headImg && headImg.src, face: '', preview: !!opts.preview, t0: performance.now(), act: null, idle: null, mood: null,
+        nextIdle: performance.now() + 3500 + Math.random() * 4000, nextEmber: 0, nextZ: 0, nextBlink: performance.now() + 2500,
+        react(kind, ms) { if (compReduced()) return; this.act = { kind, t0: performance.now(), ms: ms || COMP_REACT_MS[kind] || 1000 }; this.idle = null; if (kind === 'happy' || kind === 'cheer' || kind === 'win') compSparks(this, kind); if (kind === 'cheer' || kind === 'win') compBreath(this, true); },
         destroy() { stage.remove(); COMP.live = COMP.live.filter(c => c !== this); } };
     const fit = () => { const w = stage.clientWidth || host.clientWidth || 120; inner.style.transform = `scale(${w / rig.w})`; };
     ctl.fit = fit; fit();
     stage.addEventListener('pointerdown', e => { e.stopPropagation(); ctl.react('happy'); COMP.idleSince = performance.now(); });
+    stage.addEventListener('pointerenter', () => { if (!ctl.act) ctl.react('perk', 700); });
     COMP.live.push(ctl); compKick();
     return ctl;
 }
@@ -72,6 +84,30 @@ function compPose(ctl, now) {
         }
         const sleepy = !ctl.preview && COMP.idleSince && now - COMP.idleSince > 60000 && !ctl.act;
         if (sleepy) { P.head.r += 12; P.head.ty += 14; P.wingF.r -= 10; P.wingB.r += 10; P.body.sy = 1 + br * 0.02; ctl.el.classList.add('sleepy'); } else ctl.el.classList.remove('sleepy');
+        ctl.sleepy = sleepy;
+        if (sleepy && now > ctl.nextZ) { ctl.nextZ = now + 1500; compFloat(ctl, 'z'); }
+        // the tail flame sheds an ember now and then
+        if (!sleepy && now > ctl.nextEmber) { ctl.nextEmber = now + 900 + Math.random() * 1200; compSparks(ctl, 'ember'); }
+        // an idle habit every so often, so it doesn't just sway
+        if (!ctl.act && !ctl.idle && !sleepy && now > ctl.nextIdle) {
+            const kinds = ['stretch', 'look', 'wag', 'flap', 'puff', 'look', 'wag'];
+            const kind = kinds[Math.floor(Math.random() * kinds.length)];
+            ctl.idle = { kind, t0: now, ms: COMP_IDLE_MS[kind] };
+            ctl.nextIdle = now + 7000 + Math.random() * 7000;
+            if (kind === 'puff') compBreath(ctl, false);
+        }
+        const d = ctl.idle;
+        if (d) {
+            const e = (now - d.t0) / d.ms, w = Math.sin(Math.PI * Math.min(1, e)), u = now / 1000;
+            if (e > 1) ctl.idle = null;
+            else if (d.kind === 'stretch') { P.wingF.r -= 26 * w; P.wingB.r += 26 * w; P.head.r -= 10 * w; P.head.ty -= 8 * w; P.body.sy += 0.04 * w; P.tail.r += 10 * w; }
+            else if (d.kind === 'look') { P.head.r += 14 * Math.sin(e * Math.PI * 2) * w; P.head.tx += 6 * Math.sin(e * Math.PI * 2); }
+            else if (d.kind === 'wag') { P.tail.r += 16 * Math.sin(u * 18) * w; }
+            else if (d.kind === 'flap') { P.wingF.r -= 22 * Math.abs(Math.sin(u * 16)) * w + 6 * w; P.wingB.r += 22 * Math.abs(Math.sin(u * 16)) * w + 6 * w; P.all = { ...P.all, ty: -10 * w }; }
+            else if (d.kind === 'puff') { P.head.r -= 6 * w; P.head.tx += 3 * w; }
+        }
+        // blink (only with a face-blink.png drawing)
+        if (ctl.faces.blink && now > ctl.nextBlink) { ctl.blinkUntil = now + 140; ctl.nextBlink = now + 2500 + Math.random() * 4000; }
     }
     const a = ctl.act;
     if (a) {
@@ -88,12 +124,43 @@ function compPose(ctl, now) {
         else if (a.kind === 'lose') { P.head.r += 16; P.head.ty += 18; P.wingF.r += 22; P.wingB.r -= 22; P.tail.r = P.tail.r * 0.3 - 8; P.all.ty = 4; ctl.el.classList.add('down'); }
         if (a.kind !== 'hurt') ctl.el.classList.remove('hurt');
     } else ctl.el.classList.remove('hurt', 'down');
-    const tf = (o, extra = '') => `translate(${(o.tx || 0).toFixed(1)}px, ${(o.ty || 0).toFixed(1)}px) rotate(${(o.r || 0).toFixed(2)}deg)${extra}`;
+    const tf = (o, r0 = 0) => `translate(${(o.tx || 0).toFixed(1)}px, ${(o.ty || 0).toFixed(1)}px) rotate(${((o.r || 0) + r0).toFixed(2)}deg)`;
     ctl.rig.parts.forEach(p => {
         const el = ctl.els[p.k], o = P[p.k] || {};
-        el.style.transform = p.k === 'body' ? `${tf(o)} scale(${o.sx.toFixed(4)}, ${o.sy.toFixed(4)})` : tf(o);
+        el.style.transform = p.k === 'body' ? `${tf(o, p.r0 || 0)} scale(${o.sx.toFixed(4)}, ${o.sy.toFixed(4)})` : tf(o, p.r0 || 0);
     });
     ctl.inner.style.translate = `${P.all.tx.toFixed(1)}px ${P.all.ty.toFixed(1)}px`;
+    // face drawings, when the art has them
+    const ak = a && a.kind, F = ctl.faces;
+    let face = ak === 'cheer' || ak === 'win' ? (F.cheer ? 'cheer' : 'happy') : ak === 'happy' || ak === 'perk' ? 'happy' : ak === 'hurt' ? 'scared' : ak === 'lose' ? (F.sleepy ? 'sleepy' : 'scared') : ctl.sleepy ? 'sleepy' : '';
+    if (!face && ctl.blinkUntil && now < ctl.blinkUntil) face = 'blink';
+    if (face && !F[face]) face = '';
+    if (ctl.headImg && face !== ctl.face) { ctl.face = face; ctl.headImg.src = face ? F[face] : ctl.headSrc; }
+}
+const COMP_IDLE_MS = { stretch: 1700, look: 2200, wag: 1300, flap: 1400, puff: 1100 };
+// A floating letter (Zz while it naps)
+function compFloat(ctl, ch) {
+    if (compReduced()) return;
+    const p = ctl.rig.parts.find(x => x.k === 'head'); if (!p) return;
+    const s = document.createElement('span'); s.className = 'comp-z'; s.textContent = ch;
+    s.style.left = `${p.x + p.s * 0.8}px`; s.style.top = `${p.y + p.s * 0.15}px`;
+    ctl.inner.appendChild(s); setTimeout(() => s.remove(), 2400);
+}
+// Fire breath from the mouth (a big burst on a cheer, a little smoke-and-ember puff when idle)
+function compBreath(ctl, big) {
+    if (compReduced()) return;
+    const m = ctl.rig.mouth; if (!m) return;
+    const p = ctl.rig.parts.find(x => x.k === m.part), sc = p.s / 512, host = ctl.els[m.part];
+    const x = m.x * sc, y = m.y * sc, n = big ? 12 : 4; // inside the head's box, so the breath follows the head
+    for (let i = 0; i < n; i++) {
+        const s = document.createElement('span');
+        s.className = `comp-fire${big ? '' : ' small'}`;
+        s.style.left = `${x}px`; s.style.top = `${y}px`;
+        s.style.setProperty('--dx', `${(big ? 70 : 30) + Math.random() * (big ? 90 : 30)}px`);
+        s.style.setProperty('--dy', `${-10 - Math.random() * (big ? 60 : 30)}px`);
+        s.style.animationDelay = `${i * (big ? 35 : 80)}ms`;
+        host.appendChild(s); setTimeout(() => s.remove(), 1400);
+    }
 }
 // Little embers (or hearts) from the tail's flame
 function compSparks(ctl, kind) {
@@ -101,10 +168,10 @@ function compSparks(ctl, kind) {
     const rig = ctl.rig, em = rig.ember; if (!em) return;
     const p = rig.parts.find(x => x.k === em.part), sc = p.s / 512;
     const x = p.x + (p.flip ? 512 - em.x : em.x) * sc, y = p.y + em.y * sc;
-    const n = kind === 'happy' ? 4 : 7;
+    const n = kind === 'happy' ? 4 : kind === 'ember' ? 1 : 7;
     for (let i = 0; i < n; i++) {
         const s = document.createElement('span');
-        s.className = `comp-spark${kind === 'happy' ? ' heart' : ''}`;
+        s.className = `comp-spark${kind === 'happy' ? ' heart' : kind === 'ember' ? ' drift' : ''}`;
         if (kind === 'happy') s.textContent = '\u2665';
         s.style.left = `${x}px`; s.style.top = `${y}px`;
         s.style.setProperty('--dx', `${(Math.random() - 0.5) * 90}px`); s.style.setProperty('--dy', `${-60 - Math.random() * 90}px`);

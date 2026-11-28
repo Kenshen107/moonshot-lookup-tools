@@ -2957,7 +2957,7 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
 /* ===== Table companions (08i-companion.js) ===== */
 .comp-stage { position: relative; width: 100%; aspect-ratio: calc(var(--cw) / var(--ch)); cursor: pointer; touch-action: manipulation; }
 .comp-inner { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-.comp-part { position: absolute; user-select: none; pointer-events: none; will-change: transform; }
+.comp-part { position: absolute; user-select: none; pointer-events: none; will-change: transform; overflow: visible; }
 .comp-stage.comp-missing { display: none; }
 .comp-stage.hurt .comp-inner { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--mana-R) 70%, transparent)) brightness(1.15) saturate(1.3); }
 .comp-stage.down .comp-inner { filter: saturate(0.6) brightness(0.85); }
@@ -2978,3 +2978,16 @@ select:focus, input[type="text"]:focus, input[type="search"]:focus, input[type="
 .add-money .am-have { color: var(--gold); font-size: 0.9em; }
 .add-money .am-ctl { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
 .add-money .am-ctl input { flex: 1 1 110px; min-width: 0; max-width: 160px; }
+.comp-flame { position: absolute; width: 80px; height: 80px; margin: -40px 0 0 -40px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, color-mix(in srgb, var(--gold) 38%, transparent) 0 20%, color-mix(in srgb, var(--mana-R) 22%, transparent) 45%, transparent 70%);
+    animation: comp-flicker 0.9s ease-in-out infinite alternate; }
+@keyframes comp-flicker { 0% { opacity: 0.55; transform: scale(0.9); } 40% { opacity: 0.85; transform: scale(1.05) translateY(-2px); } 100% { opacity: 0.65; transform: scale(0.95) translateY(1px); } }
+.comp-spark.drift { width: 7px; height: 7px; margin: -3px 0 0 -3px; animation-duration: 1.6s; }
+.comp-fire { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, var(--gold) 0 25%, color-mix(in srgb, var(--mana-R) 85%, transparent) 55%, transparent 72%);
+    animation: comp-fire 0.9s ease-out forwards; }
+.comp-fire.small { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: radial-gradient(circle, color-mix(in srgb, var(--text-soft) 70%, transparent) 0 30%, transparent 70%); }
+@keyframes comp-fire { 0% { transform: translate(0, 0) scale(0.5); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(1.8); opacity: 0; } }
+.comp-z { position: absolute; font: 700 30px/1 var(--font-display, sans-serif); color: var(--text-soft); pointer-events: none; animation: comp-z 2.4s ease-out forwards; text-shadow: 0 0 6px var(--bg-canvas); }
+@keyframes comp-z { 0% { transform: translate(0, 0) scale(0.6); opacity: 0; } 20% { opacity: 0.9; } 100% { transform: translate(28px, -70px) scale(1.3); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .comp-flame { animation: none; } .comp-fire, .comp-z { display: none; } }
